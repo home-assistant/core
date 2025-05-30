@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from aioambient.errors import AmbientError
 import pytest
 
-from homeassistant.components.ambient_station import CONF_APP_KEY, DOMAIN
+from homeassistant.components.ambient_station.const import CONF_APP_KEY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant

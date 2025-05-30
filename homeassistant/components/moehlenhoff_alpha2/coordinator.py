@@ -8,6 +8,7 @@ import logging
 import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -20,12 +21,17 @@ UPDATE_INTERVAL = timedelta(seconds=60)
 class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Keep the base instance in one place and centralize the update."""
 
-    def __init__(self, hass: HomeAssistant, base: Alpha2Base) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, base: Alpha2Base
+    ) -> None:
         """Initialize Alpha2Base data updater."""
         self.base = base
         super().__init__(
             hass=hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name="alpha2_base",
             update_interval=UPDATE_INTERVAL,
         )

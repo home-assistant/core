@@ -9,7 +9,6 @@ from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
 from enum import Enum, IntFlag, auto
 import functools as ft
-from functools import cached_property
 import logging
 import math
 from operator import attrgetter
@@ -19,9 +18,9 @@ import time
 from types import FunctionType
 from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
 
+from propcache.api import cached_property
 import voluptuous as vol
 
-from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ATTRIBUTION,
@@ -49,11 +48,8 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
     get_release_channel,
 )
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    InvalidStateError,
-    NoEntitySpecifiedError,
-)
+from homeassistant.core_config import DATA_CUSTOMIZE
+from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
@@ -263,8 +259,6 @@ class CalculatedState:
     attributes: dict[str, Any]
     # Capability attributes returned by the capability_attributes property
     capability_attributes: Mapping[str, Any] | None
-    # Attributes which may be overridden by the entity registry
-    shadowed_attributes: Mapping[str, Any]
 
 
 class CachedProperties(type):
@@ -283,7 +277,7 @@ class CachedProperties(type):
     """
 
     def __new__(
-        mcs,  # noqa: N804  ruff bug, ruff does not understand this is a metaclass
+        mcs,
         name: str,
         bases: tuple[type, ...],
         namespace: dict[Any, Any],
@@ -339,7 +333,9 @@ class CachedProperties(type):
                 Also invalidates the corresponding cached_property by calling
                 delattr on it.
                 """
-                if getattr(o, private_attr_name, _SENTINEL) == val:
+                if (
+                    old_val := getattr(o, private_attr_name, _SENTINEL)
+                ) == val and type(old_val) is type(val):
                     return
                 setattr(o, private_attr_name, val)
                 # Invalidate the cache of the cached property
@@ -385,7 +381,7 @@ class CachedProperties(type):
         for parent in cls.__mro__[:0:-1]:
             if "_CachedProperties__cached_properties" not in parent.__dict__:
                 continue
-            cached_properties = getattr(parent, "_CachedProperties__cached_properties")
+            cached_properties = getattr(parent, "_CachedProperties__cached_properties")  # noqa: B009
             for property_name in cached_properties:
                 if property_name in seen_props:
                     continue
@@ -645,6 +641,22 @@ class Entity(
         return (
             f"component.{platform.platform_name}.entity.{platform.domain}"
             f".{self.translation_key}.name"
+        )
+
+    @cached_property
+    def _unit_of_measurement_translation_key(self) -> str | None:
+        """Return translation key for unit of measurement."""
+        if self.translation_key is None:
+            return None
+        if self.platform is None:
+            raise ValueError(
+                f"Entity {type(self)} cannot have a translation key for "
+                "unit of measurement before being added to the entity platform"
+            )
+        platform = self.platform
+        return (
+            f"component.{platform.platform_name}.entity.{platform.domain}"
+            f".{self.translation_key}.unit_of_measurement"
         )
 
     def _substitute_name_placeholders(self, name: str) -> str:
@@ -1012,7 +1024,7 @@ class Entity(
             return STATE_UNAVAILABLE
         if (state := self.state) is None:
             return STATE_UNKNOWN
-        if type(state) is str:  # noqa: E721
+        if type(state) is str:
             # fast path for strings
             return state
         if isinstance(state, float):
@@ -1042,18 +1054,20 @@ class Entity(
     @callback
     def _async_calculate_state(self) -> CalculatedState:
         """Calculate state string and attribute mapping."""
-        return CalculatedState(*self.__async_calculate_state())
+        state, attr, capabilities, _, _ = self.__async_calculate_state()
+        return CalculatedState(state, attr, capabilities)
 
     def __async_calculate_state(
         self,
-    ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, Mapping[str, Any]]:
+    ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, str | None, int | None]:
         """Calculate state string and attribute mapping.
 
-        Returns a tuple (state, attr, capability_attr, shadowed_attr).
+        Returns a tuple:
         state - the stringified state
         attr - the attribute dictionary
         capability_attr - a mapping with capability attributes
-        shadowed_attr - a mapping with attributes which may be overridden
+        original_device_class - the device class which may be overridden
+        supported_features - the supported features
 
         This method is called when writing the state to avoid the overhead of creating
         a dataclass object.
@@ -1062,15 +1076,14 @@ class Entity(
 
         capability_attr = self.capability_attributes
         attr = capability_attr.copy() if capability_attr else {}
-        shadowed_attr = {}
 
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
         if available:
             if state_attributes := self.state_attributes:
-                attr.update(state_attributes)
+                attr |= state_attributes
             if extra_state_attributes := self.extra_state_attributes:
-                attr.update(extra_state_attributes)
+                attr |= extra_state_attributes
 
         if (unit_of_measurement := self.unit_of_measurement) is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
@@ -1081,30 +1094,27 @@ class Entity(
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
 
-        shadowed_attr[ATTR_DEVICE_CLASS] = self.device_class
+        original_device_class = self.device_class
         if (
-            device_class := (entry and entry.device_class)
-            or shadowed_attr[ATTR_DEVICE_CLASS]
+            device_class := (entry and entry.device_class) or original_device_class
         ) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:
             attr[ATTR_ENTITY_PICTURE] = entity_picture
 
-        shadowed_attr[ATTR_ICON] = self.icon
-        if (icon := (entry and entry.icon) or shadowed_attr[ATTR_ICON]) is not None:
+        if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        shadowed_attr[ATTR_FRIENDLY_NAME] = self._friendly_name_internal()
         if (
-            name := (entry and entry.name) or shadowed_attr[ATTR_FRIENDLY_NAME]
+            name := (entry and entry.name) or self._friendly_name_internal()
         ) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        return (state, attr, capability_attr, shadowed_attr)
+        return (state, attr, capability_attr, original_device_class, supported_features)
 
     @callback
     def _async_write_ha_state(self) -> None:
@@ -1112,9 +1122,6 @@ class Entity(
         if self._platform_state is EntityPlatformState.REMOVED:
             # Polling returned after the entity has already been removed
             return
-
-        hass = self.hass
-        entity_id = self.entity_id
 
         if (entry := self.registry_entry) and entry.disabled_by:
             if not self._disabled_reported:
@@ -1124,20 +1131,21 @@ class Entity(
                         "Entity %s is incorrectly being triggered for updates while it"
                         " is disabled. This is a bug in the %s integration"
                     ),
-                    entity_id,
+                    self.entity_id,
                     self.platform.platform_name,
                 )
             return
 
         state_calculate_start = timer()
-        state, attr, capabilities, shadowed_attr = self.__async_calculate_state()
+        state, attr, capabilities, original_device_class, supported_features = (
+            self.__async_calculate_state()
+        )
         time_now = timer()
 
         if entry:
             # Make sure capabilities in the entity registry are up to date. Capabilities
             # include capability attributes, device class and supported features
-            original_device_class: str | None = shadowed_attr[ATTR_DEVICE_CLASS]
-            supported_features: int = attr.get(ATTR_SUPPORTED_FEATURES) or 0
+            supported_features = supported_features or 0
             if (
                 capabilities != entry.capabilities
                 or original_device_class != entry.original_device_class
@@ -1165,7 +1173,7 @@ class Entity(
                                 "Entity %s (%s) is updating its capabilities too often,"
                                 " please %s"
                             ),
-                            entity_id,
+                            self.entity_id,
                             type(self),
                             report_issue,
                         )
@@ -1182,17 +1190,24 @@ class Entity(
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
                 "Updating state for %s (%s) took %.3f seconds. Please %s",
-                entity_id,
+                self.entity_id,
                 type(self),
                 time_now - state_calculate_start,
                 report_issue,
             )
 
-        # Overwrite properties that have been set in the config file.
-        if (customize := hass.data.get(DATA_CUSTOMIZE)) and (
-            custom := customize.get(entity_id)
-        ):
-            attr.update(custom)
+        try:
+            # Most of the time this will already be
+            # set and since try is near zero cost
+            # on py3.11+ its faster to assume it is
+            # set and catch the exception if it is not.
+            custom = self.hass.data[DATA_CUSTOMIZE].get(self.entity_id)
+        except KeyError:
+            pass
+        else:
+            # Overwrite properties that have been set in the config file.
+            if custom:
+                attr |= custom
 
         if (
             self._context_set is not None
@@ -1201,23 +1216,16 @@ class Entity(
             self._context = None
             self._context_set = None
 
-        try:
-            hass.states.async_set(
-                entity_id,
-                state,
-                attr,
-                self.force_update,
-                self._context,
-                self._state_info,
-                time_now,
-            )
-        except InvalidStateError:
-            _LOGGER.exception(
-                "Failed to set state for %s, fall back to %s", entity_id, STATE_UNKNOWN
-            )
-            hass.states.async_set(
-                entity_id, STATE_UNKNOWN, {}, self.force_update, self._context
-            )
+        # Intentionally called with positional args for performance reasons
+        self.hass.states.async_set_internal(
+            self.entity_id,
+            state,
+            attr,
+            self.force_update,
+            self._context,
+            self._state_info,
+            time_now,
+        )
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.
@@ -1458,9 +1466,9 @@ class Entity(
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
-            assert (
-                not self.registry_entry.disabled_by
-            ), f"Entity '{self.entity_id}' is being added while it's disabled"
+            assert not self.registry_entry.disabled_by, (
+                f"Entity '{self.entity_id}' is being added while it's disabled"
+            )
 
             self.async_on_remove(
                 async_track_entity_registry_updated_event(

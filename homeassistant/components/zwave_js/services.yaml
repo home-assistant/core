@@ -51,16 +51,6 @@ set_lock_configuration:
           min: 0
           max: 65535
           unit_of_measurement: sec
-    outside_handles_can_open_door_configuration:
-      required: false
-      example: [true, true, true, false]
-      selector:
-        object:
-    inside_handles_can_open_door_configuration:
-      required: false
-      example: [true, true, true, false]
-      selector:
-        object:
     auto_relock_time:
       required: false
       example: 1
@@ -89,10 +79,28 @@ set_lock_configuration:
         boolean:
 
 set_config_parameter:
-  target:
-    entity:
-      integration: zwave_js
   fields:
+    area_id:
+      example: living_room
+      selector:
+        area:
+          device:
+            - integration: zwave_js
+          multiple: true
+    device_id:
+      example: "8f4219cfa57e23f6f669c4616c2205e2"
+      selector:
+        device:
+          filter:
+            - integration: zwave_js
+          multiple: true
+    entity_id:
+      example: sensor.living_room_temperature
+      selector:
+        entity:
+          filter:
+            - integration: zwave_js
+          multiple: true
     endpoint:
       example: 1
       default: 0
@@ -127,10 +135,28 @@ set_config_parameter:
           max: 3
 
 bulk_set_partial_config_parameters:
-  target:
-    entity:
-      integration: zwave_js
   fields:
+    area_id:
+      example: living_room
+      selector:
+        area:
+          device:
+            - integration: zwave_js
+          multiple: true
+    device_id:
+      example: "8f4219cfa57e23f6f669c4616c2205e2"
+      selector:
+        device:
+          filter:
+            - integration: zwave_js
+          multiple: true
+    entity_id:
+      example: sensor.living_room_temperature
+      selector:
+        entity:
+          filter:
+            - integration: zwave_js
+          multiple: true
     endpoint:
       example: 1
       default: 0
@@ -169,10 +195,28 @@ refresh_value:
         boolean:
 
 set_value:
-  target:
-    entity:
-      integration: zwave_js
   fields:
+    area_id:
+      example: living_room
+      selector:
+        area:
+          device:
+            - integration: zwave_js
+          multiple: true
+    device_id:
+      example: "8f4219cfa57e23f6f669c4616c2205e2"
+      selector:
+        device:
+          filter:
+            - integration: zwave_js
+          multiple: true
+    entity_id:
+      example: sensor.living_room_temperature
+      selector:
+        entity:
+          filter:
+            - integration: zwave_js
+          multiple: true
     command_class:
       example: 117
       required: true
@@ -208,10 +252,28 @@ set_value:
         boolean:
 
 multicast_set_value:
-  target:
-    entity:
-      integration: zwave_js
   fields:
+    area_id:
+      example: living_room
+      selector:
+        area:
+          device:
+            - integration: zwave_js
+          multiple: true
+    device_id:
+      example: "8f4219cfa57e23f6f669c4616c2205e2"
+      selector:
+        device:
+          filter:
+            - integration: zwave_js
+          multiple: true
+    entity_id:
+      example: sensor.living_room_temperature
+      selector:
+        entity:
+          filter:
+            - integration: zwave_js
+          multiple: true
     broadcast:
       example: true
       required: false
@@ -248,16 +310,55 @@ multicast_set_value:
         object:
 
 ping:
-  target:
-    entity:
-      integration: zwave_js
+  fields:
+    area_id:
+      example: living_room
+      selector:
+        area:
+          device:
+            - integration: zwave_js
+          multiple: true
+    device_id:
+      example: "8f4219cfa57e23f6f669c4616c2205e2"
+      selector:
+        device:
+          filter:
+            - integration: zwave_js
+          multiple: true
+    entity_id:
+      example: sensor.living_room_temperature
+      selector:
+        entity:
+          filter:
+            - integration: zwave_js
+          multiple: true
 
 reset_meter:
-  target:
-    entity:
-      domain: sensor
-      integration: zwave_js
   fields:
+    area_id:
+      example: living_room
+      selector:
+        area:
+          entity:
+            - integration: zwave_js
+              domain: sensor
+          multiple: true
+    device_id:
+      example: "8f4219cfa57e23f6f669c4616c2205e2"
+      selector:
+        device:
+          entity:
+            - integration: zwave_js
+              domain: sensor
+          multiple: true
+    entity_id:
+      example: sensor.living_room_temperature
+      selector:
+        entity:
+          filter:
+            - integration: zwave_js
+              domain: sensor
+          multiple: true
     meter_type:
       example: 1
       required: false
@@ -270,10 +371,28 @@ reset_meter:
         text:
 
 invoke_cc_api:
-  target:
-    entity:
-      integration: zwave_js
   fields:
+    area_id:
+      example: living_room
+      selector:
+        area:
+          device:
+            - integration: zwave_js
+          multiple: true
+    device_id:
+      example: "8f4219cfa57e23f6f669c4616c2205e2"
+      selector:
+        device:
+          filter:
+            - integration: zwave_js
+          multiple: true
+    entity_id:
+      example: sensor.living_room_temperature
+      selector:
+        entity:
+          filter:
+            - integration: zwave_js
+          multiple: true
     command_class:
       example: 132
       required: true
@@ -296,10 +415,28 @@ invoke_cc_api:
         object:
 
 refresh_notifications:
-  target:
-    entity:
-      integration: zwave_js
   fields:
+    area_id:
+      example: living_room
+      selector:
+        area:
+          device:
+            - integration: zwave_js
+          multiple: true
+    device_id:
+      example: "8f4219cfa57e23f6f669c4616c2205e2"
+      selector:
+        device:
+          filter:
+            - integration: zwave_js
+          multiple: true
+    entity_id:
+      example: sensor.living_room_temperature
+      selector:
+        entity:
+          filter:
+            - integration: zwave_js
+          multiple: true
     notification_type:
       example: 1
       required: true

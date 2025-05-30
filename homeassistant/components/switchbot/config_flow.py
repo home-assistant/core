@@ -10,7 +10,7 @@ from switchbot import (
     SwitchBotAdvertisement,
     SwitchbotApiError,
     SwitchbotAuthenticationError,
-    SwitchbotLock,
+    SwitchbotModel,
     parse_advertisement_data,
 )
 import voluptuous as vol
@@ -38,13 +38,17 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
+    CONF_LOCK_NIGHTLATCH,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_LOCK_NIGHTLATCH,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
+    ENCRYPTED_MODELS,
+    ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS,
     NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
-    SUPPORTED_LOCK_MODELS,
     SUPPORTED_MODEL_TYPES,
+    SupportedModels,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +67,7 @@ def short_address(address: str) -> str:
 
 def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
     """Get the name from a discovery."""
-    return f'{discovery.data["modelFriendlyName"]} {short_address(discovery.address)}'
+    return f"{discovery.data['modelFriendlyName']} {short_address(discovery.address)}"
 
 
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -77,7 +81,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> SwitchbotOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SwitchbotOptionsFlowHandler(config_entry)
+        return SwitchbotOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -109,8 +113,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": data["modelFriendlyName"],
             "address": short_address(discovery_info.address),
         }
-        if model_name in SUPPORTED_LOCK_MODELS:
-            return await self.async_step_lock_choose_method()
+        if model_name in ENCRYPTED_MODELS:
+            return await self.async_step_encrypted_choose_method()
         if self._discovered_adv.data["isEncrypted"]:
             return await self.async_step_password()
         return await self.async_step_confirm()
@@ -168,7 +172,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_lock_auth(
+    async def async_step_encrypted_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the SwitchBot API auth step."""
@@ -176,8 +180,10 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovered_adv is not None
         description_placeholders = {}
         if user_input is not None:
+            model: SwitchbotModel = self._discovered_adv.data["modelName"]
+            cls = ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS[model]
             try:
-                key_details = await SwitchbotLock.async_retrieve_encryption_key(
+                key_details = await cls.async_retrieve_encryption_key(
                     async_get_clientsession(self.hass),
                     self._discovered_adv.address,
                     user_input[CONF_USERNAME],
@@ -195,11 +201,11 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": "auth_failed"}
                 description_placeholders = {"error_detail": str(ex)}
             else:
-                return await self.async_step_lock_key(key_details)
+                return await self.async_step_encrypted_key(key_details)
 
         user_input = user_input or {}
         return self.async_show_form(
-            step_id="lock_auth",
+            step_id="encrypted_auth",
             errors=errors,
             data_schema=vol.Schema(
                 {
@@ -215,32 +221,34 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_lock_choose_method(
+    async def async_step_encrypted_choose_method(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the SwitchBot API chose method step."""
         assert self._discovered_adv is not None
 
         return self.async_show_menu(
-            step_id="lock_choose_method",
-            menu_options=["lock_auth", "lock_key"],
+            step_id="encrypted_choose_method",
+            menu_options=["encrypted_auth", "encrypted_key"],
             description_placeholders={
                 "name": name_from_discovery(self._discovered_adv),
             },
         )
 
-    async def async_step_lock_key(
+    async def async_step_encrypted_key(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the encryption key step."""
         errors = {}
         assert self._discovered_adv is not None
         if user_input is not None:
-            if not await SwitchbotLock.verify_encryption_key(
+            model: SwitchbotModel = self._discovered_adv.data["modelName"]
+            cls = ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS[model]
+            if not await cls.verify_encryption_key(
                 self._discovered_adv.device,
                 user_input[CONF_KEY_ID],
                 user_input[CONF_ENCRYPTION_KEY],
-                model=self._discovered_adv.data["modelName"],
+                model=model,
             ):
                 errors = {
                     "base": "encryption_key_invalid",
@@ -249,7 +257,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self._async_create_entry_from_discovery(user_input)
 
         return self.async_show_form(
-            step_id="lock_key",
+            step_id="encrypted_key",
             errors=errors,
             data_schema=vol.Schema(
                 {
@@ -264,7 +272,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_discover_devices(self) -> None:
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for connectable in (True, False):
             for discovery_info in async_discovered_service_info(self.hass, connectable):
                 address = discovery_info.address
@@ -306,8 +314,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             device_adv = self._discovered_advs[user_input[CONF_ADDRESS]]
             await self._async_set_device(device_adv)
-            if device_adv.data.get("modelName") in SUPPORTED_LOCK_MODELS:
-                return await self.async_step_lock_choose_method()
+            if device_adv.data.get("modelName") in ENCRYPTED_MODELS:
+                return await self.async_step_encrypted_choose_method()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
             return await self._async_create_entry_from_discovery(user_input)
@@ -318,8 +326,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             # or simply confirm it
             device_adv = list(self._discovered_advs.values())[0]
             await self._async_set_device(device_adv)
-            if device_adv.data.get("modelName") in SUPPORTED_LOCK_MODELS:
-                return await self.async_step_lock_choose_method()
+            if device_adv.data.get("modelName") in ENCRYPTED_MODELS:
+                return await self.async_step_encrypted_choose_method()
             if device_adv.data["isEncrypted"]:
                 return await self.async_step_password()
             return await self.async_step_confirm()
@@ -343,10 +351,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 class SwitchbotOptionsFlowHandler(OptionsFlow):
     """Handle Switchbot options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -355,7 +359,7 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
             # Update common entity options for all other entities.
             return self.async_create_entry(title="", data=user_input)
 
-        options = {
+        options: dict[vol.Optional, Any] = {
             vol.Optional(
                 CONF_RETRY_COUNT,
                 default=self.config_entry.options.get(
@@ -363,5 +367,16 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                 ),
             ): int
         }
+        if self.config_entry.data.get(CONF_SENSOR_TYPE) == SupportedModels.LOCK_PRO:
+            options.update(
+                {
+                    vol.Optional(
+                        CONF_LOCK_NIGHTLATCH,
+                        default=self.config_entry.options.get(
+                            CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
+                        ),
+                    ): bool
+                }
+            )
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

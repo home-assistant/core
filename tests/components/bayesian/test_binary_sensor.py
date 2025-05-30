@@ -1,6 +1,7 @@
 """The test for the bayesian sensor platform."""
 
 import json
+from logging import WARNING
 from unittest.mock import patch
 
 import pytest
@@ -20,16 +21,14 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
-async def test_load_values_when_added_to_hass(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_load_values_when_added_to_hass(hass: HomeAssistant) -> None:
     """Test that sensor initializes with observations of relevant entities."""
 
     config = {
@@ -57,11 +56,6 @@ async def test_load_values_when_added_to_hass(
 
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
-
-    assert (
-        entity_registry.entities["binary_sensor.test_binary"].unique_id
-        == "bayesian-3b4c9563-5e84-4167-8fe7-8f507e796d72"
-    )
 
     state = hass.states.get("binary_sensor.test_binary")
     assert state.attributes.get("device_class") == "connectivity"
@@ -331,6 +325,75 @@ async def test_sensor_value_template(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
 
+async def test_mixed_states(hass: HomeAssistant) -> None:
+    """Test sensor on probability threshold limits."""
+    config = {
+        "binary_sensor": {
+            "name": "should_HVAC",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "template",
+                    "value_template": "{{states('sensor.guest_sensor') != 'off'}}",
+                    "prob_given_true": 0.3,
+                    "prob_given_false": 0.15,
+                },
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.anyone_home",
+                    "to_state": "on",
+                    "prob_given_true": 0.6,
+                    "prob_given_false": 0.05,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.temperature",
+                    "below": 24,
+                    "above": 19,
+                    "prob_given_true": 0.1,
+                    "prob_given_false": 0.6,
+                },
+            ],
+            "prior": 0.3,
+            "probability_threshold": 0.5,
+        }
+    }
+    assert await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.guest_sensor", "UNKNOWN")
+    hass.states.async_set("sensor.anyone_home", "on")
+    hass.states.async_set("sensor.temperature", 15)
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.should_HVAC")
+
+    assert set(state.attributes.get("occurred_observation_entities")) == {
+        "sensor.anyone_home",
+        "sensor.temperature",
+    }
+    template_obs = {
+        "platform": "template",
+        "value_template": "{{states('sensor.guest_sensor') != 'off'}}",
+        "prob_given_true": 0.3,
+        "prob_given_false": 0.15,
+        "observed": True,
+    }
+    assert template_obs in state.attributes.get("observations")
+
+    assert abs(0.95857988 - state.attributes.get("probability")) < 0.01
+    # A = binary_sensor.should_HVAC being TRUE, P(A) being the prior
+    # B = value_template evaluating to TRUE
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Calculated where P(A) = 0.3, P(B|A) = 0.3 , P(B|notA) = 0.15 = 0.46153846
+    # Step 2, prior is now 0.46153846, B now refers to sensor.anyone_home=='on'
+    # P(A) = 0.46153846, P(B|A) = 0.6 , P(B|notA) = 0.05, result = 0.91139240
+    # Step 3, prior is now 0.91139240, B now refers to sensor.temperature in range [19,24]
+    # However since the temp is 15 we take the inverse probability for this negative observation
+    # P(A) = 0.91139240, P(B|A) = (1-0.1) , P(B|notA) = (1-0.6), result = 0.95857988
+
+
 async def test_threshold(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
     """Test sensor on probability threshold limits."""
     config = {
@@ -367,7 +430,7 @@ async def test_threshold(hass: HomeAssistant, issue_registry: ir.IssueRegistry) 
 async def test_multiple_observations(hass: HomeAssistant) -> None:
     """Test sensor with multiple observations of same entity.
 
-    these entries should be labelled as 'multi_state' and negative observations ignored - as the outcome is not known to be binary.
+    these entries should be labelled as 'state' and negative observations ignored - as the outcome is not known to be binary.
     Before the merge of #67631 this practice was a common work-around for bayesian's ignoring of negative observations,
     this also preserves that function
     """
@@ -436,83 +499,203 @@ async def test_multiple_observations(hass: HomeAssistant) -> None:
     # Calculated using bayes theorum where P(A) = 0.2, P(B|A) = 0.2, P(B|notA) = 0.6
 
     assert state.state == "off"
-    assert state.attributes.get("observations")[0]["platform"] == "multi_state"
-    assert state.attributes.get("observations")[1]["platform"] == "multi_state"
+    assert state.attributes.get("observations")[0]["platform"] == "state"
+    assert state.attributes.get("observations")[1]["platform"] == "state"
 
 
-async def test_multiple_numeric_observations(hass: HomeAssistant) -> None:
-    """Test sensor with multiple numeric observations of same entity."""
+async def test_multiple_numeric_observations(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test sensor on numeric state platform observations with more than one range.
+
+    This tests an example where the probability of it being a 'nice day' varies over
+    a series of temperatures. Since this is a multi-state, all the non-observed ranges
+    should be ignored and only the range including the observed value should update
+    the prior. When a value lands on above or below (15 is tested) it is included if it
+    equals `below`, and ignored if it equals `above`.
+    """
 
     config = {
         "binary_sensor": {
             "platform": "bayesian",
-            "name": "Test_Binary",
+            "name": "nice_day",
             "observations": [
                 {
                     "platform": "numeric_state",
-                    "entity_id": "sensor.test_monitored",
-                    "below": 10,
-                    "above": 0,
-                    "prob_given_true": 0.4,
-                    "prob_given_false": 0.0001,
+                    "entity_id": "sensor.test_temp",
+                    "below": 0,
+                    "prob_given_true": 0.05,
+                    "prob_given_false": 0.2,
                 },
                 {
                     "platform": "numeric_state",
-                    "entity_id": "sensor.test_monitored",
-                    "below": 100,
-                    "above": 30,
-                    "prob_given_true": 0.6,
-                    "prob_given_false": 0.0001,
+                    "entity_id": "sensor.test_temp",
+                    "below": 10,
+                    "above": 0,
+                    "prob_given_true": 0.1,
+                    "prob_given_false": 0.25,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_temp",
+                    "below": 15,
+                    "above": 10,
+                    "prob_given_true": 0.2,
+                    "prob_given_false": 0.35,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_temp",
+                    "below": 25,
+                    "above": 15,
+                    "prob_given_true": 0.5,
+                    "prob_given_false": 0.15,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_temp",
+                    "above": 25,
+                    "prob_given_true": 0.15,
+                    "prob_given_false": 0.05,
                 },
             ],
-            "prior": 0.1,
+            "prior": 0.3,
         }
     }
-
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
 
-    hass.states.async_set("sensor.test_monitored", STATE_UNKNOWN)
+    hass.states.async_set("sensor.test_temp", -5)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test_binary")
+    state = hass.states.get("binary_sensor.nice_day")
 
     for attrs in state.attributes.values():
         json.dumps(attrs)
-    assert state.attributes.get("occurred_observation_entities") == []
+    assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
     assert state.attributes.get("probability") == 0.1
+
     # No observations made so probability should be the prior
+    assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
+    assert abs(state.attributes.get("probability") - 0.09677) < 0.01
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range (, 0]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
+    # Calculated using P(A) = 0.3, P(B|A) = 0.05, P(B|~A) = 0.2 -> 0.09677
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_temp", 5)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+
+    assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
+    assert abs(state.attributes.get("probability") - 0.14634146) < 0.01
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range (0, 10]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
+    # Calculated using P(A) = 0.3, P(B|A) = 0.1, P(B|~A) = 0.25 -> 0.14634146
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
 
     assert state.state == "off"
 
-    hass.states.async_set("sensor.test_monitored", 20)
+    hass.states.async_set("sensor.test_temp", 12)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test_binary")
-
-    assert state.attributes.get("occurred_observation_entities") == [
-        "sensor.test_monitored"
-    ]
-    assert round(abs(0.026 - state.attributes.get("probability")), 7) < 0.01
-    # Step 1 Calculated where P(A) = 0.1, P(~B|A) = 0.6 (negative obs), P(~B|notA) = 0.9999 -> 0.0625
-    # Step 2 P(A) = 0.0625, P(B|A) = 0.4 (negative obs), P(B|notA) = 0.9999 -> 0.26
+    state = hass.states.get("binary_sensor.nice_day")
+    assert abs(state.attributes.get("probability") - 0.19672131) < 0.01
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range (10, 15]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
+    # Calculated using P(A) = 0.3, P(B|A) = 0.2, P(B|~A) = 0.35 -> 0.19672131
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
 
     assert state.state == "off"
 
-    hass.states.async_set("sensor.test_monitored", 35)
+    hass.states.async_set("sensor.test_temp", 22)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test_binary")
-    assert state.attributes.get("occurred_observation_entities") == [
-        "sensor.test_monitored"
-    ]
-    assert abs(1 - state.attributes.get("probability")) < 0.01
-    # Step 1 Calculated where P(A) = 0.1, P(~B|A) = 0.6 (negative obs), P(~B|notA) = 0.9999 -> 0.0625
-    # Step 2 P(A) = 0.0625, P(B|A) = 0.6, P(B|notA) = 0.0001 -> 0.9975
+    state = hass.states.get("binary_sensor.nice_day")
+    assert abs(state.attributes.get("probability") - 0.58823529) < 0.01
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range (15, 25]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
+    # Calculated using P(A) = 0.3, P(B|A) = 0.5, P(B|~A) = 0.15 -> 0.58823529
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
 
     assert state.state == "on"
+
+    hass.states.async_set("sensor.test_temp", 30)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+    assert abs(state.attributes.get("probability") - 0.562500) < 0.01
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range (25, ]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
+    # Calculated using P(A) = 0.3, P(B|A) = 0.15, P(B|~A) = 0.05 -> 0.562500
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
+
+    assert state.state == "on"
+
+    # Edge cases
+    # if on a threshold only one observation should be included and not both
+    hass.states.async_set("sensor.test_temp", 15)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+
+    assert state.attributes.get("occurred_observation_entities") == ["sensor.test_temp"]
+
+    assert abs(state.attributes.get("probability") - 0.19672131) < 0.01
+    # Where there are multi numeric ranges when on the threshold, use below
+    # A = binary_sensor.nice_day being TRUE
+    # B = sensor.test_temp in the range (10, 15]
+    # Bayes theorum  is P(A|B) = P(B|A) * P(A) / ( P(B|A)*P(A) + P(B|~A)*P(~A) ).
+    # Where P(B|A) is prob_given_true and P(B|~A) is prob_given_false
+    # Calculated using P(A) = 0.3, P(B|A) = 0.2, P(B|~A) = 0.35 -> 0.19672131
+    # Because >1 range is defined for sensor.test_temp we should not infer anything from the
+    # ranges not observed
+
+    assert state.state == "off"
+
+    assert len(issue_registry.issues) == 0
     assert state.attributes.get("observations")[0]["platform"] == "numeric_state"
-    assert state.attributes.get("observations")[1]["platform"] == "numeric_state"
+
+    hass.states.async_set("sensor.test_temp", "badstate")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+
+    assert state.attributes.get("occurred_observation_entities") == []
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_temp", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+
+    assert state.attributes.get("occurred_observation_entities") == []
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_temp", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.nice_day")
+
+    assert state.attributes.get("occurred_observation_entities") == []
+    assert state.state == "off"
 
 
 async def test_mirrored_observations(
@@ -651,6 +834,127 @@ async def test_missing_prob_given_false(
     )
 
 
+async def test_bad_multi_numeric(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test whether missing prob_given_false are detected and appropriate issues are created."""
+
+    config = {
+        "binary_sensor": {
+            "platform": "bayesian",
+            "name": "bins_out",
+            "observations": [
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.signal_strength",
+                    "above": 10,
+                    "prob_given_true": 0.01,
+                    "prob_given_false": 0.3,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.signal_strength",
+                    "above": 5,
+                    "below": 10,
+                    "prob_given_true": 0.02,
+                    "prob_given_false": 0.5,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.signal_strength",
+                    "above": 0,
+                    "below": 6,  # overlaps
+                    "prob_given_true": 0.07,
+                    "prob_given_false": 0.1,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.signal_strength",
+                    "above": -10,
+                    "below": 0,
+                    "prob_given_true": 0.3,
+                    "prob_given_false": 0.07,
+                },
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.signal_strength",
+                    "below": -10,
+                    "prob_given_true": 0.6,
+                    "prob_given_false": 0.03,
+                },
+            ],
+            "prior": 0.2,
+        }
+    }
+    caplog.clear()
+    caplog.set_level(WARNING)
+
+    assert await async_setup_component(hass, "binary_sensor", config)
+
+    assert "entities must not overlap" in caplog.text
+
+
+async def test_inverted_numeric(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test whether missing prob_given_false are detected and appropriate logs are created."""
+
+    config = {
+        "binary_sensor": {
+            "platform": "bayesian",
+            "name": "goldilocks_zone",
+            "observations": [
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.temp",
+                    "above": 23,
+                    "below": 20,
+                    "prob_given_true": 0.9,
+                    "prob_given_false": 0.2,
+                },
+            ],
+            "prior": 0.4,
+        }
+    }
+
+    assert await async_setup_component(hass, "binary_sensor", config)
+    assert (
+        "bayesian numeric state 'above' (23.0) must be less than 'below' (20.0)"
+        in caplog.text
+    )
+
+
+async def test_no_value_numeric(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test whether missing prob_given_false are detected and appropriate logs are created."""
+
+    config = {
+        "binary_sensor": {
+            "platform": "bayesian",
+            "name": "goldilocks_zone",
+            "observations": [
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.temp",
+                    "prob_given_true": 0.9,
+                    "prob_given_false": 0.2,
+                },
+            ],
+            "prior": 0.4,
+        }
+    }
+
+    assert await async_setup_component(hass, "binary_sensor", config)
+    assert "at least one of 'above' or 'below' must be specified" in caplog.text
+
+
 async def test_probability_updates(hass: HomeAssistant) -> None:
     """Test probability update function."""
     prob_given_true = [0.3, 0.6, 0.8]
@@ -718,17 +1022,18 @@ async def test_observed_entities(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_binary")
-    assert ["sensor.test_monitored"] == state.attributes.get(
-        "occurred_observation_entities"
-    )
+    assert state.attributes.get("occurred_observation_entities") == [
+        "sensor.test_monitored"
+    ]
 
     hass.states.async_set("sensor.test_monitored1", "on")
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_binary")
-    assert ["sensor.test_monitored", "sensor.test_monitored1"] == sorted(
-        state.attributes.get("occurred_observation_entities")
-    )
+    assert sorted(state.attributes.get("occurred_observation_entities")) == [
+        "sensor.test_monitored",
+        "sensor.test_monitored1",
+    ]
 
 
 async def test_state_attributes_are_serializable(hass: HomeAssistant) -> None:
@@ -785,9 +1090,10 @@ async def test_state_attributes_are_serializable(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_binary")
-    assert ["sensor.test_monitored", "sensor.test_monitored1"] == sorted(
-        state.attributes.get("occurred_observation_entities")
-    )
+    assert sorted(state.attributes.get("occurred_observation_entities")) == [
+        "sensor.test_monitored",
+        "sensor.test_monitored1",
+    ]
 
     for attrs in state.attributes.values():
         json.dumps(attrs)

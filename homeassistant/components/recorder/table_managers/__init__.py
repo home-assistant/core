@@ -24,7 +24,6 @@ class BaseTableManager[_DataT]:
         for a table. When data is committed to the database, the
         manager will move the data from the pending to the id map.
         """
-        self.active = False
         self.recorder = recorder
         self._pending: dict[EventType[Any] | str, _DataT] = {}
 

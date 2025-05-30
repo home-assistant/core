@@ -1,9 +1,9 @@
 """conftest for the GitHub integration."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN

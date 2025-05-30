@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 from asyncsleepiq import (
@@ -17,7 +18,6 @@ from asyncsleepiq import (
     SleepIQSleeper,
 )
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.sleepiq import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME

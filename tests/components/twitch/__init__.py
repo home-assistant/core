@@ -1,12 +1,11 @@
 """Tests for the Twitch component."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 from typing import Any, Generic, TypeVar
 
 from twitchAPI.object.base import TwitchObject
-from typing_extensions import AsyncGenerator
 
-from homeassistant.components.twitch import DOMAIN
+from homeassistant.components.twitch.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_array_fixture

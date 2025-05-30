@@ -28,7 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, TYPE_TO_PLATFORM
 from .coordinator import LookinDataUpdateCoordinator
@@ -65,7 +65,7 @@ LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the climate platform for lookin from a config entry."""
     lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
@@ -107,7 +107,6 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
     _attr_target_temperature_step = PRECISION_WHOLE
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

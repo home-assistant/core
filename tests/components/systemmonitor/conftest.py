@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import socket
 from unittest.mock import AsyncMock, Mock, NonCallableMock, patch
 
 from psutil import NoSuchProcess, Process
 from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr, sswap
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.components.systemmonitor.coordinator import VirtualMemory
@@ -174,11 +174,11 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
         mock_psutil.disk_partitions.return_value = [
-            sdiskpart("test", "/", "ext4", "", 1, 1),
-            sdiskpart("test2", "/media/share", "ext4", "", 1, 1),
-            sdiskpart("test3", "/incorrect", "", "", 1, 1),
-            sdiskpart("hosts", "/etc/hosts", "bind", "", 1, 1),
-            sdiskpart("proc", "/proc/run", "proc", "", 1, 1),
+            sdiskpart("test", "/", "ext4", ""),
+            sdiskpart("test2", "/media/share", "ext4", ""),
+            sdiskpart("test3", "/incorrect", "", ""),
+            sdiskpart("hosts", "/etc/hosts", "bind", ""),
+            sdiskpart("proc", "/proc/run", "proc", ""),
         ]
         mock_psutil.boot_time.return_value = 1708786800.0
         mock_psutil.NoSuchProcess = NoSuchProcess

@@ -71,7 +71,7 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     return _storage
 
 
-async def async_set_value(hass, entity_id, value):
+async def async_set_value(hass: HomeAssistant, entity_id: str, value: str) -> None:
     """Set input_text to value."""
     await hass.services.async_call(
         DOMAIN,

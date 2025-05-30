@@ -11,12 +11,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
-from . import RainMachineData, RainMachineEntity
-from .const import DATA_RESTRICTIONS_UNIVERSAL, DOMAIN
-from .model import RainMachineEntityDescription
+from . import RainMachineConfigEntry, RainMachineData
+from .const import DATA_RESTRICTIONS_UNIVERSAL
+from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import key_exists
 
 
@@ -81,10 +81,12 @@ SELECT_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: RainMachineConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RainMachine selects based on a config entry."""
-    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     entity_map = {
         TYPE_FREEZE_PROTECTION_TEMPERATURE: FreezeProtectionTemperatureSelect,

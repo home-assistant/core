@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, TRANSLATED_ERRORS
 from .coordinator import (
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
@@ -42,6 +42,7 @@ class TessieBaseEntity(
         self.key = key
         self._attr_translation_key = key
         super().__init__(coordinator)
+        self._async_update_attrs()
 
     @property
     def _value(self) -> Any:
@@ -106,10 +107,11 @@ class TessieEntity(TessieBaseEntity):
         if response["result"] is False:
             name: str = getattr(self, "name", self.entity_id)
             reason: str = response.get("reason", "unknown")
+            translation_key = TRANSLATED_ERRORS.get(reason, "command_failed")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=reason.replace(" ", "_"),
-                translation_placeholders={"name": name},
+                translation_key=translation_key,
+                translation_placeholders={"name": name, "message": reason},
             )
 
     def _async_update_attrs(self) -> None:
@@ -127,12 +129,11 @@ class TessieEnergyEntity(TessieBaseEntity):
         key: str,
     ) -> None:
         """Initialize common aspects of a Tessie energy site entity."""
-
+        self.api = data.api
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
         super().__init__(coordinator, key)
-        self._async_update_attrs()
 
 
 class TessieWallConnectorEntity(TessieBaseEntity):
@@ -154,7 +155,7 @@ class TessieWallConnectorEntity(TessieBaseEntity):
             via_device=(DOMAIN, str(data.id)),
             serial_number=din.split("-")[-1],
         )
-
+        assert data.live_coordinator
         super().__init__(data.live_coordinator, key)
 
     @property

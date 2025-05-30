@@ -12,10 +12,20 @@
     }
   },
   "services": {
-    "record": "mdi:video-box",
-    "trigger_camera": "mdi:image-refresh",
-    "save_video": "mdi:file-video",
-    "save_recent_clips": "mdi:file-video",
-    "send_pin": "mdi:two-factor-authentication"
+    "record": {
+      "service": "mdi:video-box"
+    },
+    "trigger_camera": {
+      "service": "mdi:image-refresh"
+    },
+    "save_video": {
+      "service": "mdi:file-video"
+    },
+    "save_recent_clips": {
+      "service": "mdi:file-video"
+    },
+    "send_pin": {
+      "service": "mdi:two-factor-authentication"
+    }
   }
 }

@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
@@ -23,15 +22,18 @@ from homeassistant.const import (
     UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
-from .coordinator import AvmWrapper, ConnectionInfo
+from .const import DSL_CONNECTION, UPTIME_DEVIATION
+from .coordinator import ConnectionInfo, FritzConfigEntry
 from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 def _uptime_calculation(seconds_uptime: float, last_value: datetime | None) -> datetime:
@@ -194,7 +196,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="max_kb_s_sent",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -202,7 +203,6 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="max_kb_s_received",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
@@ -226,6 +226,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="link_kb_s_sent",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_link_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -233,12 +234,15 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         translation_key="link_kb_s_received",
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_link_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="link_noise_margin_sent",
         translation_key="link_noise_margin_sent",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_noise_margin_sent_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -246,6 +250,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_noise_margin_received",
         translation_key="link_noise_margin_received",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_noise_margin_received_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -253,6 +259,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_attenuation_sent",
         translation_key="link_attenuation_sent",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_attenuation_sent_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -260,6 +268,8 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="link_attenuation_received",
         translation_key="link_attenuation_received",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_attenuation_received_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
@@ -267,11 +277,13 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box sensors")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = entry.runtime_data
 
     connection_info = await avm_wrapper.async_get_connection_info()
 

@@ -11,12 +11,13 @@ from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
+from propcache.api import cached_property
 import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
 from homeassistant.const import (
     CONF_MODE,
@@ -25,8 +26,7 @@ from homeassistant.const import (
     EVENT_THEMES_UPDATED,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import service
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
@@ -52,10 +52,9 @@ CONF_JS_VERSION = "javascript_version"
 DEFAULT_THEME_COLOR = "#03A9F4"
 
 
-DATA_PANELS = "frontend_panels"
-DATA_JS_VERSION = "frontend_js_version"
-DATA_EXTRA_MODULE_URL = "frontend_extra_module_url"
-DATA_EXTRA_JS_URL_ES5 = "frontend_extra_js_url_es5"
+DATA_PANELS: HassKey[dict[str, Panel]] = HassKey("frontend_panels")
+DATA_EXTRA_MODULE_URL: HassKey[UrlManager] = HassKey("frontend_extra_module_url")
+DATA_EXTRA_JS_URL_ES5: HassKey[UrlManager] = HassKey("frontend_extra_js_url_es5")
 
 DATA_WS_SUBSCRIBERS: HassKey[set[tuple[websocket_api.ActiveConnection, int]]] = HassKey(
     "frontend_ws_subscribers"
@@ -64,8 +63,8 @@ DATA_WS_SUBSCRIBERS: HassKey[set[tuple[websocket_api.ActiveConnection, int]]] = 
 THEMES_STORAGE_KEY = f"{DOMAIN}_theme"
 THEMES_STORAGE_VERSION = 1
 THEMES_SAVE_DELAY = 60
-DATA_THEMES_STORE = "frontend_themes_store"
-DATA_THEMES = "frontend_themes"
+DATA_THEMES_STORE: HassKey[Store] = HassKey("frontend_themes_store")
+DATA_THEMES: HassKey[dict[str, Any]] = HassKey("frontend_themes")
 DATA_DEFAULT_THEME = "frontend_default_theme"
 DATA_DEFAULT_DARK_THEME = "frontend_default_dark_theme"
 DEFAULT_THEME = "default"
@@ -189,7 +188,7 @@ MANIFEST_JSON = Manifest(
         ],
         "lang": "en-US",
         "name": "Home Assistant",
-        "short_name": "Assistant",
+        "short_name": "Home Assistant",
         "start_url": "/?homescreen=1",
         "id": "/?homescreen=1",
         "theme_color": DEFAULT_THEME_COLOR,
@@ -242,7 +241,7 @@ class Panel:
     sidebar_title: str | None = None
 
     # Url to show the panel in the frontend
-    frontend_url_path: str | None = None
+    frontend_url_path: str
 
     # Config to pass to the webcomponent
     config: dict[str, Any] | None = None
@@ -273,7 +272,7 @@ class Panel:
         self.config_panel_domain = config_panel_domain
 
     @callback
-    def to_response(self) -> PanelRespons:
+    def to_response(self) -> PanelResponse:
         """Panel as dictionary."""
         return {
             "component_name": self.component_name,
@@ -399,6 +398,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for path, should_cache in (
         ("service_worker.js", False),
+        ("sw-modern.js", False),
+        ("sw-modern.js.map", False),
+        ("sw-legacy.js", False),
+        ("sw-legacy.js.map", False),
         ("robots.txt", False),
         ("onboarding.html", not is_dev),
         ("static", not is_dev),
@@ -585,12 +588,12 @@ class IndexView(web_urldispatcher.AbstractResource):
         self.hass = hass
         self._template_cache: jinja2.Template | None = None
 
-    @property
+    @cached_property
     def canonical(self) -> str:
         """Return resource's canonical path."""
         return "/"
 
-    @property
+    @cached_property
     def _route(self) -> web_urldispatcher.ResourceRoute:
         """Return the index route."""
         return web_urldispatcher.ResourceRoute("GET", self.get, self)
@@ -627,7 +630,8 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     def get_info(self) -> dict[str, list[str]]:  # type: ignore[override]
         """Return a dict with additional info useful for introspection."""
-        return {"panels": list(self.hass.data[DATA_PANELS])}
+        panels = self.hass.data[DATA_PANELS]
+        return {"panels": list(panels)}
 
     def raw_match(self, path: str) -> bool:
         """Perform a raw match against path."""
@@ -837,13 +841,13 @@ def websocket_subscribe_extra_js(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-class PanelRespons(TypedDict):
+class PanelResponse(TypedDict):
     """Represent the panel response type."""
 
     component_name: str
     icon: str | None
     title: str | None
     config: dict[str, Any] | None
-    url_path: str | None
+    url_path: str
     require_admin: bool
     config_panel_domain: str | None

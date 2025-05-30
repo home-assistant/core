@@ -16,7 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 
@@ -73,7 +73,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 }
             ),
-            cv.has_at_least_one_key("auth"),
+            cv.has_at_least_one_key(CONF_API_KEY, CONF_PASSWORD),
         )
     },
     extra=vol.ALLOW_EXTRA,

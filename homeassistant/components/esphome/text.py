@@ -17,6 +17,8 @@ from .entity import (
 )
 from .enum_mapper import EsphomeEnumMapper
 
+PARALLEL_UPDATES = 0
+
 TEXT_MODES: EsphomeEnumMapper[EsphomeTextMode, TextMode] = EsphomeEnumMapper(
     {
         EsphomeTextMode.TEXT: TextMode.TEXT,
@@ -43,9 +45,7 @@ class EsphomeText(EsphomeEntity[TextInfo, TextState], TextEntity):
     def native_value(self) -> str | None:
         """Return the state of the entity."""
         state = self._state
-        if state.missing_state:
-            return None
-        return state.state
+        return None if state.missing_state else state.state
 
     @convert_api_error_ha_error
     async def async_set_value(self, value: str) -> None:

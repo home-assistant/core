@@ -1,5 +1,5 @@
 {
   "domain": "tesla",
   "name": "Tesla",
-  "integrations": ["powerwall", "tesla_wall_connector"]
+  "integrations": ["powerwall", "tesla_wall_connector", "tesla_fleet"]
 }

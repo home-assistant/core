@@ -1,11 +1,11 @@
 """Test Rainforest RAVEn config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from aioraven.device import RAVEnConnectionError
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
-from typing_extensions import Generator
 
 from homeassistant.components.rainforest_raven.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER

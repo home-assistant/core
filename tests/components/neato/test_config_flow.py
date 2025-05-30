@@ -111,16 +111,15 @@ async def test_reauth(
         hass, NEATO_DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         entry_id="my_entry",
         domain=NEATO_DOMAIN,
         data={"username": "abcdef", "password": "123456", "vendor": "neato"},
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Should show form
-    result = await hass.config_entries.flow.async_init(
-        "neato", context={"source": config_entries.SOURCE_REAUTH}
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

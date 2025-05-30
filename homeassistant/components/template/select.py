@@ -13,11 +13,21 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SelectEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    CONF_STATE,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
+from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.device import async_device_info_to_link_from_device_id
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
@@ -31,6 +41,7 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_OPTIONS = "options"
 CONF_SELECT_OPTION = "select_option"
 
 DEFAULT_NAME = "Template Select"
@@ -49,6 +60,17 @@ SELECT_SCHEMA = (
     )
     .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
+)
+
+
+SELECT_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.template,
+        vol.Required(CONF_STATE): cv.template,
+        vol.Required(CONF_OPTIONS): cv.template,
+        vol.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+    }
 )
 
 
@@ -92,6 +114,18 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    _options = dict(config_entry.options)
+    _options.pop("template_type")
+    validated_config = SELECT_CONFIG_SCHEMA(_options)
+    async_add_entities([TemplateSelect(hass, validated_config, config_entry.entry_id)])
+
+
 class TemplateSelect(TemplateEntity, SelectEntity):
     """Representation of a template select."""
 
@@ -107,13 +141,17 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         super().__init__(hass, config=config, unique_id=unique_id)
         assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
-        self._command_select_option = Script(
-            hass, config[CONF_SELECT_OPTION], self._attr_name, DOMAIN
-        )
+        # Scripts can be an empty list, therefore we need to check for None
+        if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
+            self.add_script(CONF_SELECT_OPTION, select_option, self._attr_name, DOMAIN)
         self._options_template = config[ATTR_OPTIONS]
-        self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
+        self._attr_assumed_state = self._optimistic = config.get(CONF_OPTIMISTIC, False)
         self._attr_options = []
         self._attr_current_option = None
+        self._attr_device_info = async_device_info_to_link_from_device_id(
+            hass,
+            config.get(CONF_DEVICE_ID),
+        )
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -137,11 +175,12 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         if self._optimistic:
             self._attr_current_option = option
             self.async_write_ha_state()
-        await self.async_run_script(
-            self._command_select_option,
-            run_variables={ATTR_OPTION: option},
-            context=self._context,
-        )
+        if select_option := self._action_scripts.get(CONF_SELECT_OPTION):
+            await self.async_run_script(
+                select_option,
+                run_variables={ATTR_OPTION: option},
+                context=self._context,
+            )
 
 
 class TriggerSelectEntity(TriggerEntity, SelectEntity):
@@ -159,12 +198,14 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
-        self._command_select_option = Script(
-            hass,
-            config[CONF_SELECT_OPTION],
-            self._rendered.get(CONF_NAME, DEFAULT_NAME),
-            DOMAIN,
-        )
+        # Scripts can be an empty list, therefore we need to check for None
+        if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
+            self.add_script(
+                CONF_SELECT_OPTION,
+                select_option,
+                self._rendered.get(CONF_NAME, DEFAULT_NAME),
+                DOMAIN,
+            )
 
     @property
     def current_option(self) -> str | None:
@@ -181,6 +222,9 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
         if self._config[CONF_OPTIMISTIC]:
             self._attr_current_option = option
             self.async_write_ha_state()
-        await self._command_select_option.async_run(
-            {ATTR_OPTION: option}, context=self._context
-        )
+        if select_option := self._action_scripts.get(CONF_SELECT_OPTION):
+            await self.async_run_script(
+                select_option,
+                run_variables={ATTR_OPTION: option},
+                context=self._context,
+            )

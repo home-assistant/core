@@ -1,5 +1,6 @@
 """Support for departure information for public transport in Munich."""
 
+# mypy: ignore-errors
 from __future__ import annotations
 
 from copy import deepcopy
@@ -15,7 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 

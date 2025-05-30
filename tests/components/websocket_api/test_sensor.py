@@ -1,10 +1,10 @@
 """Test cases for the API stream sensor."""
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.websocket_api.auth import TYPE_AUTH_REQUIRED
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .test_auth import test_auth_active_with_token
 

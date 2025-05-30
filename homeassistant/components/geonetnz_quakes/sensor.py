@@ -5,13 +5,12 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, FEED
+from . import GeonetnzQuakesConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,10 +30,12 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GeonetnzQuakesConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GeoNet NZ Quakes Feed platform."""
-    manager = hass.data[DOMAIN][FEED][entry.entry_id]
+    manager = entry.runtime_data
     sensor = GeonetnzQuakesSensor(entry.entry_id, entry.unique_id, entry.title, manager)
     async_add_entities([sensor])
     _LOGGER.debug("Sensor setup done")
@@ -137,16 +138,16 @@ class GeonetnzQuakesSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_STATUS, self._status),
-            (ATTR_LAST_UPDATE, self._last_update),
-            (ATTR_LAST_UPDATE_SUCCESSFUL, self._last_update_successful),
-            (ATTR_LAST_TIMESTAMP, self._last_timestamp),
-            (ATTR_CREATED, self._created),
-            (ATTR_UPDATED, self._updated),
-            (ATTR_REMOVED, self._removed),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_STATUS, self._status),
+                (ATTR_LAST_UPDATE, self._last_update),
+                (ATTR_LAST_UPDATE_SUCCESSFUL, self._last_update_successful),
+                (ATTR_LAST_TIMESTAMP, self._last_timestamp),
+                (ATTR_CREATED, self._created),
+                (ATTR_UPDATED, self._updated),
+                (ATTR_REMOVED, self._removed),
+            )
+            if value or isinstance(value, bool)
+        }

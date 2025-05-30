@@ -1,8 +1,8 @@
 """Tests for the YouTube integration."""
 
+from collections.abc import AsyncGenerator
 import json
 
-from typing_extensions import AsyncGenerator
 from youtubeaio.models import YouTubeChannel, YouTubePlaylistItem, YouTubeSubscription
 from youtubeaio.types import AuthScope
 

@@ -2,22 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 import copy
-from dataclasses import dataclass, field
-import time
+from dataclasses import dataclass
+import re
 from typing import Any
 
-from google_nest_sdm.auth import AbstractAuth
-from google_nest_sdm.device import Device
-from google_nest_sdm.device_manager import DeviceManager
-from google_nest_sdm.event import EventMessage
-from google_nest_sdm.event_media import CachePolicy
-from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
-from typing_extensions import Generator
+from google_nest_sdm.streaming_manager import Message
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.components.nest import DOMAIN
+from homeassistant.components.nest.const import API_URL
 
 # Typing helpers
 type PlatformSetup = Callable[[], Awaitable[None]]
@@ -31,13 +26,13 @@ CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
 CLOUD_PROJECT_ID = "cloud-id-9876"
 SUBSCRIBER_ID = "projects/cloud-id-9876/subscriptions/subscriber-id-9876"
+SUBSCRIPTION_NAME = "projects/cloud-id-9876/subscriptions/subscriber-id-9876"
 
 
 @dataclass
 class NestTestConfig:
     """Holder for integration configuration."""
 
-    config: dict[str, Any] = field(default_factory=dict)
     config_entry_data: dict[str, Any] | None = None
     credential: ClientCredential | None = None
 
@@ -54,100 +49,36 @@ TEST_CONFIG_APP_CREDS = NestTestConfig(
     credential=ClientCredential(CLIENT_ID, CLIENT_SECRET),
 )
 TEST_CONFIGFLOW_APP_CREDS = NestTestConfig(
-    config=TEST_CONFIG_APP_CREDS.config,
     credential=ClientCredential(CLIENT_ID, CLIENT_SECRET),
 )
 
-TEST_CONFIG_LEGACY = NestTestConfig(
-    config={
-        "nest": {
-            "client_id": "some-client-id",
-            "client_secret": "some-client-secret",
-        },
-    },
+TEST_CONFIG_NEW_SUBSCRIPTION = NestTestConfig(
     config_entry_data={
-        "auth_implementation": "local",
-        "tokens": {
-            "expires_at": time.time() + 86400,
-            "access_token": {
-                "token": "some-token",
-            },
-        },
+        "sdm": {},
+        "project_id": PROJECT_ID,
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "subscription_name": SUBSCRIPTION_NAME,
+        "auth_implementation": "imported-cred",
     },
-)
-TEST_CONFIG_ENTRY_LEGACY = NestTestConfig(
-    config_entry_data={
-        "auth_implementation": "local",
-        "tokens": {
-            "expires_at": time.time() + 86400,
-            "access_token": {
-                "token": "some-token",
-            },
-        },
-    },
+    credential=ClientCredential(CLIENT_ID, CLIENT_SECRET),
 )
 
-
-class FakeSubscriber(GoogleNestSubscriber):
-    """Fake subscriber that supplies a FakeDeviceManager."""
-
-    stop_calls = 0
-
-    def __init__(self):  # pylint: disable=super-init-not-called
-        """Initialize Fake Subscriber."""
-        self._device_manager = DeviceManager()
-
-    def set_update_callback(self, target: Callable[[EventMessage], Awaitable[None]]):
-        """Capture the callback set by Home Assistant."""
-        self._device_manager.set_update_callback(target)
-
-    async def create_subscription(self):
-        """Create the subscription."""
-        return
-
-    async def delete_subscription(self):
-        """Delete the subscription."""
-        return
-
-    async def start_async(self):
-        """Return the fake device manager."""
-        return self._device_manager
-
-    async def async_get_device_manager(self) -> DeviceManager:
-        """Return the fake device manager."""
-        return self._device_manager
-
-    @property
-    def cache_policy(self) -> CachePolicy:
-        """Return the cache policy."""
-        return self._device_manager.cache_policy
-
-    def stop_async(self):
-        """No-op to stop the subscriber."""
-        self.stop_calls += 1
-
-    async def async_receive_event(self, event_message: EventMessage):
-        """Simulate a received pubsub message, invoked by tests."""
-        # Update device state, then invoke HomeAssistant to refresh
-        await self._device_manager.async_handle_event(event_message)
-
-
-DEVICE_ID = "enterprise/project-id/devices/device-id"
+DEVICE_ID = "enterprises/project-id/devices/device-id"
 DEVICE_COMMAND = f"{DEVICE_ID}:executeCommand"
+DEVICE_URL_MATCH = re.compile(
+    f"{API_URL}/enterprises/project-id/devices/[^:]+:executeCommand"
+)
+TEST_IMAGE_URL = "https://domain/sdm_event_snapshot/dGTZwR3o4Y1..."
+TEST_CLIP_URL = "https://domain/clip/XyZ.mp4"
 
 
 class CreateDevice:
     """Fixture used for creating devices."""
 
-    def __init__(
-        self,
-        device_manager: DeviceManager,
-        auth: AbstractAuth,
-    ) -> None:
+    def __init__(self) -> None:
         """Initialize CreateDevice."""
-        self.device_manager = device_manager
-        self.auth = auth
         self.data = {"traits": {}}
+        self.devices = []
 
     def create(
         self,
@@ -158,4 +89,9 @@ class CreateDevice:
         data = copy.deepcopy(self.data)
         data.update(raw_data if raw_data else {})
         data["traits"].update(raw_traits if raw_traits else {})
-        self.device_manager.add_device(Device.MakeDevice(data, auth=self.auth))
+        self.devices.append(data)
+
+
+def create_nest_event(data: dict[str, Any]) -> Message:
+    """Create a pub/sub event message for testing."""
+    return Message.from_data(data)

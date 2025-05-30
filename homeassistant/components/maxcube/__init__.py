@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
@@ -98,7 +98,7 @@ class MaxCubeHandle:
         self.mutex = Lock()
         self._updatets = time.monotonic()
 
-    def update(self):
+    def update(self) -> None:
         """Pull the latest data from the MAX! Cube."""
         # Acquire mutex to prevent simultaneous update from multiple threads
         with self.mutex:
@@ -110,7 +110,7 @@ class MaxCubeHandle:
                     self.cube.update()
                 except TimeoutError:
                     _LOGGER.error("Max!Cube connection failed")
-                    return False
+                    return
 
                 self._updatets = time.monotonic()
             else:

@@ -6,6 +6,7 @@ from functools import partial
 import logging
 from typing import Any
 
+from pyhomeworks import exceptions as hw_exceptions
 from pyhomeworks.pyhomeworks import Homeworks
 import voluptuous as vol
 
@@ -13,7 +14,13 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import async_get_hass, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import (
@@ -29,9 +36,9 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import slugify
 
-from . import DEFAULT_FADE_RATE, calculate_unique_id
 from .const import (
     CONF_ADDR,
     CONF_BUTTONS,
@@ -48,8 +55,11 @@ from .const import (
     DEFAULT_LIGHT_NAME,
     DOMAIN,
 )
+from .util import calculate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_FADE_RATE = 1.0
 
 CONTROLLER_EDIT = {
     vol.Required(CONF_HOST): selector.TextSelector(),
@@ -60,9 +70,13 @@ CONTROLLER_EDIT = {
             mode=selector.NumberSelectorMode.BOX,
         )
     ),
+    vol.Optional(CONF_USERNAME): selector.TextSelector(),
+    vol.Optional(CONF_PASSWORD): selector.TextSelector(
+        selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+    ),
 }
 
-LIGHT_EDIT = {
+LIGHT_EDIT: VolDictType = {
     vol.Optional(CONF_RATE, default=DEFAULT_FADE_RATE): selector.NumberSelector(
         selector.NumberSelectorConfig(
             min=0,
@@ -73,7 +87,7 @@ LIGHT_EDIT = {
     ),
 }
 
-BUTTON_EDIT = {
+BUTTON_EDIT: VolDictType = {
     vol.Optional(CONF_LED, default=False): selector.BooleanSelector(),
     vol.Optional(CONF_RELEASE_DELAY, default=0): selector.NumberSelector(
         selector.NumberSelectorConfig(
@@ -87,13 +101,20 @@ BUTTON_EDIT = {
 }
 
 
-validate_addr = cv.matches_regex(r"\[(?:\d\d:)?\d\d:\d\d:\d\d\]")
+validate_addr = cv.matches_regex(r"\[(?:\d\d:){2,4}\d\d\]")
+
+
+def _validate_credentials(user_input: dict[str, Any]) -> None:
+    """Validate credentials."""
+    if CONF_PASSWORD in user_input and CONF_USERNAME not in user_input:
+        raise SchemaFlowError("need_username_with_password")
 
 
 async def validate_add_controller(
     handler: ConfigFlow | SchemaOptionsFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate controller setup."""
+    _validate_credentials(user_input)
     user_input[CONF_CONTROLLER_ID] = slugify(user_input[CONF_NAME])
     user_input[CONF_PORT] = int(user_input[CONF_PORT])
     try:
@@ -126,19 +147,32 @@ async def _try_connection(user_input: dict[str, Any]) -> None:
         _LOGGER.debug(
             "Trying to connect to %s:%s", user_input[CONF_HOST], user_input[CONF_PORT]
         )
-        controller = Homeworks(host, port, lambda msg_types, values: None)
+        controller = Homeworks(
+            host,
+            port,
+            lambda msg_types, values: None,
+            user_input.get(CONF_USERNAME),
+            user_input.get(CONF_PASSWORD),
+        )
+        controller.connect()
         controller.close()
-        controller.join()
 
     hass = async_get_hass()
     try:
         await hass.async_add_executor_job(
             _try_connect, user_input[CONF_HOST], user_input[CONF_PORT]
         )
-    except ConnectionError as err:
+    except hw_exceptions.HomeworksConnectionFailed as err:
+        _LOGGER.debug("Caught HomeworksConnectionFailed")
         raise SchemaFlowError("connection_error") from err
+    except hw_exceptions.HomeworksInvalidCredentialsProvided as err:
+        _LOGGER.debug("Caught HomeworksInvalidCredentialsProvided")
+        raise SchemaFlowError("invalid_credentials") from err
+    except hw_exceptions.HomeworksNoCredentialsProvided as err:
+        _LOGGER.debug("Caught HomeworksNoCredentialsProvided")
+        raise SchemaFlowError("credentials_needed") from err
     except Exception as err:
-        _LOGGER.exception("Caught unexpected exception")
+        _LOGGER.exception("Caught unexpected exception %s")
         raise SchemaFlowError("unknown_error") from err
 
 
@@ -524,22 +558,19 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Lutron Homeworks."""
 
     async def _validate_edit_controller(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, Any], reconfigure_entry: ConfigEntry
     ) -> dict[str, Any]:
         """Validate controller setup."""
+        _validate_credentials(user_input)
         user_input[CONF_PORT] = int(user_input[CONF_PORT])
 
-        our_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert our_entry
-        other_entries = self._async_current_entries()
-        for entry in other_entries:
-            if entry.entry_id == our_entry.entry_id:
-                continue
-            if (
-                user_input[CONF_HOST] == entry.options[CONF_HOST]
-                and user_input[CONF_PORT] == entry.options[CONF_PORT]
-            ):
-                raise SchemaFlowError("duplicated_host_port")
+        if any(
+            entry.entry_id != reconfigure_entry.entry_id
+            and user_input[CONF_HOST] == entry.options[CONF_HOST]
+            and user_input[CONF_PORT] == entry.options[CONF_PORT]
+            for entry in self._async_current_entries()
+        ):
+            raise SchemaFlowError("duplicated_host_port")
 
         await _try_connection(user_input)
         return user_input
@@ -548,33 +579,41 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfigure flow."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
-
         errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
         suggested_values = {
-            CONF_HOST: entry.options[CONF_HOST],
-            CONF_PORT: entry.options[CONF_PORT],
+            CONF_HOST: reconfigure_entry.options[CONF_HOST],
+            CONF_PORT: reconfigure_entry.options[CONF_PORT],
+            CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
+            CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD),
         }
 
         if user_input:
             suggested_values = {
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
             }
             try:
-                await self._validate_edit_controller(user_input)
+                await self._validate_edit_controller(user_input, reconfigure_entry)
             except SchemaFlowError as err:
                 errors["base"] = str(err)
             else:
-                new_options = entry.options | {
+                password = user_input.pop(CONF_PASSWORD, None)
+                username = user_input.pop(CONF_USERNAME, None)
+                new_data = reconfigure_entry.data | {
+                    CONF_PASSWORD: password,
+                    CONF_USERNAME: username,
+                }
+                new_options = reconfigure_entry.options | {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                 }
                 return self.async_update_reload_and_abort(
-                    entry,
+                    reconfigure_entry,
+                    data=new_data,
                     options=new_options,
-                    reason="reconfigure_successful",
                     reload_even_if_entry_is_unchanged=False,
                 )
 
@@ -601,12 +640,20 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
                 )
                 name = user_input.pop(CONF_NAME)
+                password = user_input.pop(CONF_PASSWORD, None)
+                username = user_input.pop(CONF_USERNAME, None)
                 user_input |= {CONF_DIMMERS: [], CONF_KEYPADS: []}
-                return self.async_create_entry(title=name, data={}, options=user_input)
+                return self.async_create_entry(
+                    title=name,
+                    data={CONF_PASSWORD: password, CONF_USERNAME: username},
+                    options=user_input,
+                )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA_ADD_CONTROLLER,
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA_ADD_CONTROLLER, user_input
+            ),
             errors=errors,
         )
 

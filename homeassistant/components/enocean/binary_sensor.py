@@ -13,11 +13,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .device import EnOceanEntity
+from .entity import EnOceanEntity
 
 DEFAULT_NAME = "EnOcean binary sensor"
 DEPENDENCIES = ["enocean"]

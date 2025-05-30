@@ -29,10 +29,17 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.FAN]
 
 
 async def test_generic_fan(
@@ -653,7 +660,12 @@ async def test_thermostat_fan(
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FAN_STATE) == "Idle / off"
     assert state.attributes.get(ATTR_PRESET_MODE) == "Auto low"
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == FanEntityFeature.PRESET_MODE
+    assert (
+        state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        == FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
     # Test setting preset mode
     await hass.services.async_call(

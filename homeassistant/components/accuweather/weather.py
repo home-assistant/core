@@ -30,10 +30,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
-from . import AccuWeatherConfigEntry, AccuWeatherData
 from .const import (
     API_METRIC,
     ATTR_DIRECTION,
@@ -43,7 +42,9 @@ from .const import (
     CONDITION_MAP,
 )
 from .coordinator import (
+    AccuWeatherConfigEntry,
     AccuWeatherDailyForecastDataUpdateCoordinator,
+    AccuWeatherData,
     AccuWeatherObservationDataUpdateCoordinator,
 )
 
@@ -53,7 +54,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AccuWeatherConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a AccuWeather weather entity from a config_entry."""
     async_add_entities([AccuWeatherEntity(entry.runtime_data)])

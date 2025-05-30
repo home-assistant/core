@@ -1,10 +1,10 @@
 """Common fixtures for the ista EcoTrend tests."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.ista_ecotrend.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -80,7 +80,7 @@ def mock_ista() -> Generator[MagicMock]:
             "26e93f1a-c828-11ea-87d0-0242ac130003",
             "eaf5c5c8-889f-4a3c-b68c-e9a676505762",
         ]
-        client.get_consumption_data = get_consumption_data
+        client.get_consumption_data.side_effect = get_consumption_data
 
         yield client
 
@@ -166,3 +166,52 @@ def get_consumption_data(obj_uuid: str | None = None) -> dict[str, Any]:
             },
         ],
     }
+
+
+def extend_statistics(obj_uuid: str | None = None) -> dict[str, Any]:
+    """Extend statistics data with new values."""
+    stats = get_consumption_data(obj_uuid)
+
+    stats["costs"].insert(
+        0,
+        {
+            "date": {"month": 6, "year": 2024},
+            "costsByEnergyType": [
+                {
+                    "type": "heating",
+                    "value": 9000,
+                },
+                {
+                    "type": "warmwater",
+                    "value": 9000,
+                },
+                {
+                    "type": "water",
+                    "value": 9000,
+                },
+            ],
+        },
+    )
+    stats["consumptions"].insert(
+        0,
+        {
+            "date": {"month": 6, "year": 2024},
+            "readings": [
+                {
+                    "type": "heating",
+                    "value": "9000",
+                    "additionalValue": "9000,0",
+                },
+                {
+                    "type": "warmwater",
+                    "value": "9999,0",
+                    "additionalValue": "90000,0",
+                },
+                {
+                    "type": "water",
+                    "value": "9000,0",
+                },
+            ],
+        },
+    )
+    return stats

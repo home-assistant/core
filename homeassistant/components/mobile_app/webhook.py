@@ -721,10 +721,15 @@ async def webhook_get_config(
     """Handle a get config webhook."""
     hass_config = hass.config.as_dict()
 
+    device: dr.DeviceEntry = hass.data[DOMAIN][DATA_DEVICES][
+        config_entry.data[CONF_WEBHOOK_ID]
+    ]
+
     resp = {
         "latitude": hass_config["latitude"],
         "longitude": hass_config["longitude"],
         "elevation": hass_config["elevation"],
+        "hass_device_id": device.id,
         "unit_system": hass_config["unit_system"],
         "location_name": hass_config["location_name"],
         "time_zone": hass_config["time_zone"],

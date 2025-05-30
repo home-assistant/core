@@ -1,11 +1,10 @@
 """IKEA Idasen Desk fixtures."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture(autouse=True)
@@ -20,9 +19,14 @@ def mock_bluetooth(enable_bluetooth: None) -> Generator[None]:
 @pytest.fixture(autouse=False)
 def mock_desk_api():
     """Set up idasen desk API fixture."""
-    with mock.patch(
-        "homeassistant.components.idasen_desk.coordinator.Desk"
-    ) as desk_patched:
+    with (
+        mock.patch(
+            "homeassistant.components.idasen_desk.coordinator.Desk"
+        ) as desk_patched,
+        mock.patch(
+            "homeassistant.components.idasen_desk.config_flow.Desk", new=desk_patched
+        ),
+    ):
         mock_desk = MagicMock()
 
         def mock_init(
@@ -34,17 +38,20 @@ def mock_desk_api():
 
         desk_patched.side_effect = mock_init
 
-        async def mock_connect(ble_device):
+        async def mock_connect(ble_device, retry: bool = True):
             mock_desk.is_connected = True
-            mock_desk.trigger_update_callback(None)
+            if mock_desk.trigger_update_callback:
+                mock_desk.trigger_update_callback(None)
 
         async def mock_disconnect():
             mock_desk.is_connected = False
-            mock_desk.trigger_update_callback(None)
+            if mock_desk.trigger_update_callback:
+                mock_desk.trigger_update_callback(None)
 
         async def mock_move_to(height: float):
             mock_desk.height_percent = height
-            mock_desk.trigger_update_callback(height)
+            if mock_desk.trigger_update_callback:
+                mock_desk.trigger_update_callback(height)
 
         async def mock_move_up():
             await mock_move_to(100)

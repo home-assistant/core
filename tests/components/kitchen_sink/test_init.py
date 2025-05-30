@@ -5,10 +5,13 @@ from http import HTTPStatus
 from unittest.mock import ANY
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.kitchen_sink import DOMAIN
-from homeassistant.components.recorder import Recorder, get_instance
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import (
+    StatisticMeanType,
     async_add_external_statistics,
     get_last_statistics,
     list_statistic_ids,
@@ -16,7 +19,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
@@ -24,14 +27,13 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
-def mock_history(hass):
+def mock_history(hass: HomeAssistant) -> None:
     """Mock history component loaded."""
     hass.config.components.add("history")
 
 
-async def test_demo_statistics(
-    recorder_mock: Recorder, mock_history, hass: HomeAssistant
-) -> None:
+@pytest.mark.usefixtures("recorder_mock", "mock_history")
+async def test_demo_statistics(hass: HomeAssistant) -> None:
     """Test that the kitchen sink component makes some statistics available."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -44,6 +46,7 @@ async def test_demo_statistics(
     assert {
         "display_unit_of_measurement": "°C",
         "has_mean": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
         "name": "Outdoor temperature",
         "source": DOMAIN,
@@ -54,6 +57,7 @@ async def test_demo_statistics(
     assert {
         "display_unit_of_measurement": "kWh",
         "has_mean": False,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
         "name": "Energy consumption 1",
         "source": DOMAIN,
@@ -63,9 +67,8 @@ async def test_demo_statistics(
     } in statistic_ids
 
 
-async def test_demo_statistics_growth(
-    recorder_mock: Recorder, mock_history, hass: HomeAssistant
-) -> None:
+@pytest.mark.usefixtures("recorder_mock", "mock_history")
+async def test_demo_statistics_growth(hass: HomeAssistant) -> None:
     """Test that the kitchen sink sum statistics adds to the previous state."""
     hass.config.units = US_CUSTOMARY_SYSTEM
 
@@ -103,9 +106,28 @@ async def test_demo_statistics_growth(
     assert statistics[statistic_id][0]["sum"] <= (2**20 + 24)
 
 
+@pytest.mark.usefixtures("recorder_mock", "mock_history")
+async def test_statistics_issues(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the kitchen sink sum statistics causes statistics issues."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await async_wait_recording_done(hass)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "recorder/validate_statistics"})
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+
+
 @pytest.mark.freeze_time("2023-10-21")
+@pytest.mark.usefixtures("mock_history")
 async def test_issues_created(
-    mock_history,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
@@ -326,3 +348,24 @@ async def test_issues_created(
             },
         ]
     }
+
+
+async def test_service(
+    hass: HomeAssistant,
+) -> None:
+    """Test we can call the service."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    with pytest.raises(vol.error.MultipleInvalid):
+        await hass.services.async_call(DOMAIN, "test_service_1", blocking=True)
+
+    await hass.services.async_call(
+        DOMAIN, "test_service_1", {"field_1": 1, "field_2": "auto"}, blocking=True
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        "test_service_1",
+        {"field_1": 1, "field_2": "auto", "field_3": 1, "field_4": "forwards"},
+        blocking=True,
+    )

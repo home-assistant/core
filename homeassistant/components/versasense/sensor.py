@@ -30,7 +30,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the sensor platform."""
     if discovery_info is None:
-        return None
+        return
 
     consumer = hass.data[DOMAIN][KEY_CONSUMER]
 
@@ -86,7 +86,7 @@ class VSensor(SensorEntity):
         return self._unit
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if the sensor is available."""
         return self._available
 

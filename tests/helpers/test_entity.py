@@ -5,34 +5,38 @@ from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
 from enum import IntFlag
-from functools import cached_property
 import logging
 import threading
 from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from propcache.api import cached_property
 import pytest
+from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import (
     Context,
     HassJobType,
     HomeAssistant,
-    HomeAssistantError,
     ReleaseChannel,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import (
@@ -41,6 +45,7 @@ from tests.common import (
     MockEntityPlatform,
     MockModule,
     MockPlatform,
+    RegistryEntryWithDefaults,
     mock_integration,
     mock_registry,
 )
@@ -389,7 +394,7 @@ async def test_async_parallel_updates_with_zero_on_sync_update(
             await asyncio.sleep(0)
 
         assert len(updates) == 2
-        assert updates == [1, 2]
+        assert updates == unordered([1, 2])
     finally:
         test_lock.set()
         await asyncio.sleep(0)
@@ -680,7 +685,7 @@ async def test_warn_disabled(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we warn once if we write to a disabled entity."""
-    entry = er.RegistryEntry(
+    entry = RegistryEntryWithDefaults(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
@@ -707,7 +712,7 @@ async def test_warn_disabled(
 
 async def test_disabled_in_entity_registry(hass: HomeAssistant) -> None:
     """Test entity is removed if we disable entity registry entry."""
-    entry = er.RegistryEntry(
+    entry = RegistryEntryWithDefaults(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
@@ -922,13 +927,13 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
         key="abc", entity_category="ignore_me"
     )
     mock_entity1.entity_id = "hello.world"
-    mock_entity1._attr_entity_category = entity.EntityCategory.CONFIG
+    mock_entity1._attr_entity_category = EntityCategory.CONFIG
     assert mock_entity1.entity_category == "config"
 
     mock_entity2 = entity.Entity()
     mock_entity2.hass = hass
     mock_entity2.entity_description = entity.EntityDescription(
-        key="abc", entity_category=entity.EntityCategory.CONFIG
+        key="abc", entity_category=EntityCategory.CONFIG
     )
     mock_entity2.entity_id = "hello.world"
     assert mock_entity2.entity_category == "config"
@@ -937,8 +942,8 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
-        ("config", entity.EntityCategory.CONFIG),
-        ("diagnostic", entity.EntityCategory.DIAGNOSTIC),
+        ("config", EntityCategory.CONFIG),
+        ("diagnostic", EntityCategory.DIAGNOSTIC),
     ],
 )
 def test_entity_category_schema(value, expected) -> None:
@@ -946,7 +951,7 @@ def test_entity_category_schema(value, expected) -> None:
     schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     result = schema(value)
     assert result == expected
-    assert isinstance(result, entity.EntityCategory)
+    assert isinstance(result, EntityCategory)
 
 
 @pytest.mark.parametrize("value", [None, "non_existing"])
@@ -980,10 +985,13 @@ async def _test_friendly_name(
 ) -> None:
     """Test friendly name."""
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities([ent])
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -1305,10 +1313,13 @@ async def test_entity_name_translation_placeholder_errors(
         """Return all backend translations."""
         return translations[language]
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities([ent])
-        return True
 
     ent = MockEntity(
         unique_id="qwer",
@@ -1530,7 +1541,11 @@ async def test_friendly_name_updated(
 ) -> None:
     """Test friendly name is updated when device or entity registry updates."""
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities(
             [
@@ -1546,7 +1561,6 @@ async def test_friendly_name_updated(
                 ),
             ]
         )
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -1693,13 +1707,15 @@ async def test_invalid_state(
     assert hass.states.get("test.test").state == "x" * 255
 
     caplog.clear()
-    ent._attr_state = "x" * 256
+    long_state = "x" * 256
+    ent._attr_state = long_state
     ent.async_write_ha_state()
     assert hass.states.get("test.test").state == STATE_UNKNOWN
     assert (
-        "homeassistant.helpers.entity",
+        "homeassistant.core",
         logging.ERROR,
-        f"Failed to set state for test.test, fall back to {STATE_UNKNOWN}",
+        f"State {long_state} for test.test is longer than 255, "
+        f"falling back to {STATE_UNKNOWN}",
     ) in caplog.record_tuples
 
     ent._attr_state = "x" * 255
@@ -2302,7 +2318,12 @@ async def test_update_capabilities_too_often_cooldown(
 
 
 @pytest.mark.parametrize(
-    ("property", "default_value", "values"), [("attribution", None, ["abcd", "efgh"])]
+    ("property", "default_value", "values"),
+    [
+        ("attribution", None, ["abcd", "efgh"]),
+        ("attribution", None, [True, 1]),
+        ("attribution", None, [1.0, 1]),
+    ],
 )
 async def test_cached_entity_properties(
     hass: HomeAssistant, property: str, default_value: Any, values: Any
@@ -2311,22 +2332,30 @@ async def test_cached_entity_properties(
     ent1 = entity.Entity()
     ent2 = entity.Entity()
     assert getattr(ent1, property) == default_value
+    assert type(getattr(ent1, property)) is type(default_value)
     assert getattr(ent2, property) == default_value
+    assert type(getattr(ent2, property)) is type(default_value)
 
     # Test set
     setattr(ent1, f"_attr_{property}", values[0])
     assert getattr(ent1, property) == values[0]
+    assert type(getattr(ent1, property)) is type(values[0])
     assert getattr(ent2, property) == default_value
+    assert type(getattr(ent2, property)) is type(default_value)
 
     # Test update
     setattr(ent1, f"_attr_{property}", values[1])
     assert getattr(ent1, property) == values[1]
+    assert type(getattr(ent1, property)) is type(values[1])
     assert getattr(ent2, property) == default_value
+    assert type(getattr(ent2, property)) is type(default_value)
 
     # Test delete
     delattr(ent1, f"_attr_{property}")
     assert getattr(ent1, property) == default_value
+    assert type(getattr(ent1, property)) is type(default_value)
     assert getattr(ent2, property) == default_value
+    assert type(getattr(ent2, property)) is type(default_value)
 
 
 async def test_cached_entity_property_delete_attr(hass: HomeAssistant) -> None:

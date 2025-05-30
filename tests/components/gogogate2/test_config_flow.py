@@ -8,7 +8,6 @@ from ismartgate.common import ApiError
 from ismartgate.const import GogoGate2ApiErrorCode
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.gogogate2.const import (
     DEVICE_TYPE_GOGOGATE2,
     DEVICE_TYPE_ISMARTGATE,
@@ -23,6 +22,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from . import _mocked_ismartgate_closed_door_response
 
@@ -105,13 +109,13 @@ async def test_form_homekit_unique_id_already_setup(hass: HomeAssistant) -> None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.4"),
             ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            properties={ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
             type="mock_type",
         ),
     )
@@ -133,13 +137,13 @@ async def test_form_homekit_unique_id_already_setup(hass: HomeAssistant) -> None
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.4"),
             ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            properties={ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
             type="mock_type",
         ),
     )
@@ -158,13 +162,13 @@ async def test_form_homekit_ip_address_already_setup(hass: HomeAssistant) -> Non
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.4"),
             ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            properties={ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
             type="mock_type",
         ),
     )
@@ -177,13 +181,13 @@ async def test_form_homekit_ip_address(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.4"),
             ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            properties={ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
             type="mock_type",
         ),
     )
@@ -213,7 +217,7 @@ async def test_discovered_dhcp(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.2.3.4", macaddress=MOCK_MAC_ADDR, hostname="mock_hostname"
         ),
     )
@@ -260,13 +264,13 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.2.3.4"),
             ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            properties={ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
             type="mock_type",
         ),
     )
@@ -276,7 +280,7 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.2.3.4", macaddress=MOCK_MAC_ADDR, hostname="mock_hostname"
         ),
     )
@@ -286,7 +290,7 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.2.3.4", macaddress="00:00:00:00:00:00", hostname="mock_hostname"
         ),
     )

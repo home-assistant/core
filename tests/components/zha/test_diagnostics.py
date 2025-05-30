@@ -3,13 +3,17 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import security
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.zha.core.device import ZHADevice
-from homeassistant.components.zha.core.helpers import get_zha_gateway
-from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
+from homeassistant.components.zha.helpers import (
+    ZHADeviceProxy,
+    ZHAGatewayProxy,
+    get_zha_gateway,
+    get_zha_gateway_proxy,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -23,14 +27,6 @@ from tests.components.diagnostics import (
 )
 from tests.typing import ClientSessionGenerator
 
-CONFIG_ENTRY_DIAGNOSTICS_KEYS = [
-    "config",
-    "config_entry",
-    "application_state",
-    "versions",
-    "devices",
-]
-
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
@@ -41,64 +37,47 @@ def required_platforms_only():
         yield
 
 
-@pytest.fixture
-def zigpy_device(zigpy_device_mock):
-    """Device tracker zigpy device."""
-    endpoints = {
-        1: {
-            SIG_EP_INPUT: [security.IasAce.cluster_id, security.IasZone.cluster_id],
-            SIG_EP_OUTPUT: [],
-            SIG_EP_TYPE: zha.DeviceType.IAS_ANCILLARY_CONTROL,
-            SIG_EP_PROFILE: zha.PROFILE_ID,
-        }
-    }
-    return zigpy_device_mock(
-        endpoints, node_descriptor=b"\x02@\x8c\x02\x10RR\x00\x00\x00R\x00\x00"
-    )
-
-
 async def test_diagnostics_for_config_entry(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
-    zha_device_joined,
-    zigpy_device,
+    setup_zha,
+    zigpy_device_mock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for config entry."""
-    await zha_device_joined(zigpy_device)
 
+    await setup_zha()
     gateway = get_zha_gateway(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [security.IasAce.cluster_id, security.IasZone.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.IAS_ANCILLARY_CONTROL,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        ieee="01:2d:6f:00:0a:90:69:e8",
+        node_descriptor=b"\x02@\x8c\x02\x10RR\x00\x00\x00R\x00\x00",
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     scan = {c: c for c in range(11, 26 + 1)}
 
-    with patch.object(gateway.application_controller, "energy_scan", return_value=scan):
-        diagnostics_data = await get_diagnostics_for_config_entry(
-            hass, hass_client, config_entry
-        )
+    gateway.application_controller.energy_scan.side_effect = None
+    gateway.application_controller.energy_scan.return_value = scan
+    diagnostics_data = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    )
 
-    for key in CONFIG_ENTRY_DIAGNOSTICS_KEYS:
-        assert key in diagnostics_data
-        assert diagnostics_data[key] is not None
-
-    # Energy scan results are presented as a percentage. JSON object keys also must be
-    # strings, not integers.
-    assert diagnostics_data["energy_scan"] == {
-        str(k): 100 * v / 255 for k, v in scan.items()
-    }
-
-    assert isinstance(diagnostics_data["devices"], list)
-    assert len(diagnostics_data["devices"]) == 2
-    assert diagnostics_data["devices"] == [
-        {
-            "manufacturer": "Coordinator Manufacturer",
-            "model": "Coordinator Model",
-            "logical_type": "Coordinator",
-        },
-        {
-            "manufacturer": "FakeManufacturer",
-            "model": "FakeModel",
-            "logical_type": "EndDevice",
-        },
-    ]
+    assert diagnostics_data == snapshot(
+        exclude=props("created_at", "modified_at", "entry_id", "versions")
+    )
 
 
 async def test_diagnostics_for_device(
@@ -106,19 +85,41 @@ async def test_diagnostics_for_device(
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
-    zha_device_joined,
-    zigpy_device,
+    setup_zha,
+    zigpy_device_mock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for device."""
-    zha_device: ZHADevice = await zha_device_joined(zigpy_device)
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [security.IasAce.cluster_id, security.IasZone.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.IAS_ANCILLARY_CONTROL,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        ieee="01:2d:6f:00:0a:90:69:e8",
+        node_descriptor=b"\x02@\x8c\x02\x10RR\x00\x00\x00R\x00\x00",
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
 
     # add unknown unsupported attribute with id and name
-    zha_device.device.endpoints[1].in_clusters[
+    zha_device_proxy.device.device.endpoints[1].in_clusters[
         security.IasAce.cluster_id
     ].unsupported_attributes.update({0x1000, "unknown_attribute_name"})
 
     # add known unsupported attributes with id and name
-    zha_device.device.endpoints[1].in_clusters[
+    zha_device_proxy.device.device.endpoints[1].in_clusters[
         security.IasZone.cluster_id
     ].unsupported_attributes.update(
         {
@@ -128,17 +129,11 @@ async def test_diagnostics_for_device(
     )
 
     device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device.ieee))}
+        identifiers={("zha", str(zha_device_proxy.device.ieee))}
     )
     assert device
     diagnostics_data = await get_diagnostics_for_device(
         hass, hass_client, config_entry, device
     )
-    assert diagnostics_data
-    device_info: dict = zha_device.zha_device_info
-    for key in device_info:
-        assert key in diagnostics_data
-        if key not in KEYS_TO_REDACT:
-            assert key in diagnostics_data
-        else:
-            assert diagnostics_data[key] == REDACTED
+
+    assert diagnostics_data == snapshot(exclude=props("device_reg_id", "last_seen"))

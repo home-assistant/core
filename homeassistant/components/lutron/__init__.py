@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     lutron_client = Lutron(host, uid, pwd)
     await hass.async_add_executor_job(lutron_client.load_xml_db)
     lutron_client.connect()
-    _LOGGER.info("Connected to main repeater at %s", host)
+    _LOGGER.debug("Connected to main repeater at %s", host)
 
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -82,8 +82,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             elif output.type == "CEILING_FAN_TYPE":
                 entry_data.fans.append((area.name, output))
                 platform = Platform.FAN
-                # Deprecated, should be removed in 2024.8
-                entry_data.lights.append((area.name, output))
             elif output.is_dimmable:
                 entry_data.lights.append((area.name, output))
                 platform = Platform.LIGHT

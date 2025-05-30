@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -29,16 +30,16 @@
     'original_name': 'AC current limit',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current_limit',
-    'unique_id': 'WBY00000000REXI01-ac_current_limit',
+    'unique_id': 'WBY00000000REXI01-charging_profile.ac_current_limit',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_ac_current_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'current',
       'friendly_name': 'i3 (+ REX) AC current limit',
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
@@ -58,6 +59,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -78,16 +80,16 @@
     'original_name': 'Charging end time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_end_time',
-    'unique_id': 'WBY00000000REXI01-charging_end_time',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_end_time',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_charging_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'i3 (+ REX) Charging end time',
     }),
@@ -106,6 +108,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -126,16 +129,16 @@
     'original_name': 'Charging start time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_start_time',
-    'unique_id': 'WBY00000000REXI01-charging_start_time',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_start_time',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_charging_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'i3 (+ REX) Charging start time',
     }),
@@ -169,6 +172,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -189,16 +193,16 @@
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_status',
-    'unique_id': 'WBY00000000REXI01-charging_status',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_status',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'i3 (+ REX) Charging status',
       'options': list([
@@ -231,6 +235,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -249,22 +254,21 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_target',
-    'unique_id': 'WBY00000000REXI01-charging_target',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.charging_target',
     'unit_of_measurement': '%',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_charging_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'device_class': 'battery',
       'friendly_name': 'i3 (+ REX) Charging target',
       'unit_of_measurement': '%',
     }),
@@ -285,6 +289,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -308,6 +313,7 @@
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'WBY00000000REXI01-mileage',
@@ -317,7 +323,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -340,6 +345,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -363,16 +369,16 @@
     'original_name': 'Remaining battery percent',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_battery_percent',
-    'unique_id': 'WBY00000000REXI01-remaining_battery_percent',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_battery_percent',
     'unit_of_measurement': '%',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_battery_percent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery',
       'friendly_name': 'i3 (+ REX) Remaining battery percent',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -395,6 +401,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -413,22 +420,22 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Remaining fuel',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel',
-    'unique_id': 'WBY00000000REXI01-remaining_fuel',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_fuel',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_fuel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'device_class': 'volume',
+      'device_class': 'volume_storage',
       'friendly_name': 'i3 (+ REX) Remaining fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
@@ -450,6 +457,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -473,16 +481,16 @@
     'original_name': 'Remaining fuel percent',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel_percent',
-    'unique_id': 'WBY00000000REXI01-remaining_fuel_percent',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_fuel_percent',
     'unit_of_measurement': '%',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_fuel_percent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'i3 (+ REX) Remaining fuel percent',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -504,6 +512,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -527,16 +536,16 @@
     'original_name': 'Remaining range electric',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_electric',
-    'unique_id': 'WBY00000000REXI01-remaining_range_electric',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_range_electric',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_range_electric-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Remaining range electric',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -559,6 +568,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -582,16 +592,16 @@
     'original_name': 'Remaining range fuel',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_fuel',
-    'unique_id': 'WBY00000000REXI01-remaining_range_fuel',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_range_fuel',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_range_fuel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Remaining range fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -614,6 +624,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -637,16 +648,16 @@
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
-    'unique_id': 'WBY00000000REXI01-remaining_range_total',
+    'unique_id': 'WBY00000000REXI01-fuel_and_battery.remaining_range_total',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i3_rex_remaining_range_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i3 (+ REX) Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -667,6 +678,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -690,16 +702,16 @@
     'original_name': 'AC current limit',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current_limit',
-    'unique_id': 'WBA00000000DEMO02-ac_current_limit',
+    'unique_id': 'WBA00000000DEMO02-charging_profile.ac_current_limit',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_ac_current_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'current',
       'friendly_name': 'i4 eDrive40 AC current limit',
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
@@ -719,6 +731,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -739,16 +752,16 @@
     'original_name': 'Charging end time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_end_time',
-    'unique_id': 'WBA00000000DEMO02-charging_end_time',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_end_time',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'i4 eDrive40 Charging end time',
     }),
@@ -767,6 +780,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -787,16 +801,16 @@
     'original_name': 'Charging start time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_start_time',
-    'unique_id': 'WBA00000000DEMO02-charging_start_time',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_start_time',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'i4 eDrive40 Charging start time',
     }),
@@ -830,6 +844,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -850,16 +865,16 @@
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_status',
-    'unique_id': 'WBA00000000DEMO02-charging_status',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_status',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'i4 eDrive40 Charging status',
       'options': list([
@@ -892,6 +907,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -910,22 +926,21 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_target',
-    'unique_id': 'WBA00000000DEMO02-charging_target',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.charging_target',
     'unit_of_measurement': '%',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'device_class': 'battery',
       'friendly_name': 'i4 eDrive40 Charging target',
       'unit_of_measurement': '%',
     }),
@@ -946,11 +961,13 @@
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -971,21 +988,22 @@
     'original_name': 'Climate status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_status',
-    'unique_id': 'WBA00000000DEMO02-activity',
+    'unique_id': 'WBA00000000DEMO02-climate.activity',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_climate_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'i4 eDrive40 Climate status',
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),
@@ -998,6 +1016,242 @@
     'state': 'heating',
   })
 # ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_left_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_front_left_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_target_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.front_left.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_left_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Front left target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_front_left_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.69',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_left_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_front_left_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.front_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Front left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_front_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_front_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_target_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.front_right.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_right_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Front right target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_front_right_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.69',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_front_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.front_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_front_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Front right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_front_right_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.55',
+  })
+# ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1007,6 +1261,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1030,6 +1285,7 @@
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'WBA00000000DEMO02-mileage',
@@ -1039,7 +1295,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i4 eDrive40 Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1053,6 +1308,242 @@
     'state': '1121',
   })
 # ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_left_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_rear_left_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear left target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_left_target_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.rear_left.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_left_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Rear left target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_rear_left_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.03',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_left_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_rear_left_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.rear_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Rear left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_rear_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.24',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_rear_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_right_target_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.rear_right.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_right_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Rear right target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_rear_right_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.03',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.i4_edrive40_rear_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO02-tires.rear_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.i4_edrive40_rear_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'i4 eDrive40 Rear right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.i4_edrive40_rear_right_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.31',
+  })
+# ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_remaining_battery_percent-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1062,6 +1553,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1085,16 +1577,16 @@
     'original_name': 'Remaining battery percent',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_battery_percent',
-    'unique_id': 'WBA00000000DEMO02-remaining_battery_percent',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.remaining_battery_percent',
     'unit_of_measurement': '%',
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_remaining_battery_percent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery',
       'friendly_name': 'i4 eDrive40 Remaining battery percent',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1117,6 +1609,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1140,16 +1633,16 @@
     'original_name': 'Remaining range electric',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_electric',
-    'unique_id': 'WBA00000000DEMO02-remaining_range_electric',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.remaining_range_electric',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_remaining_range_electric-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i4 eDrive40 Remaining range electric',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1172,6 +1665,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1195,16 +1689,16 @@
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
-    'unique_id': 'WBA00000000DEMO02-remaining_range_total',
+    'unique_id': 'WBA00000000DEMO02-fuel_and_battery.remaining_range_total',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.i4_edrive40_remaining_range_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'i4 eDrive40 Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1225,6 +1719,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1248,16 +1743,16 @@
     'original_name': 'AC current limit',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current_limit',
-    'unique_id': 'WBA00000000DEMO01-ac_current_limit',
+    'unique_id': 'WBA00000000DEMO01-charging_profile.ac_current_limit',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_ac_current_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'current',
       'friendly_name': 'iX xDrive50 AC current limit',
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
@@ -1277,6 +1772,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1297,16 +1793,16 @@
     'original_name': 'Charging end time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_end_time',
-    'unique_id': 'WBA00000000DEMO01-charging_end_time',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_end_time',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'iX xDrive50 Charging end time',
     }),
@@ -1325,6 +1821,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1345,16 +1842,16 @@
     'original_name': 'Charging start time',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_start_time',
-    'unique_id': 'WBA00000000DEMO01-charging_start_time',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_start_time',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'timestamp',
       'friendly_name': 'iX xDrive50 Charging start time',
     }),
@@ -1388,6 +1885,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1408,16 +1906,16 @@
     'original_name': 'Charging status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_status',
-    'unique_id': 'WBA00000000DEMO01-charging_status',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_status',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'iX xDrive50 Charging status',
       'options': list([
@@ -1450,6 +1948,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1468,22 +1967,21 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_target',
-    'unique_id': 'WBA00000000DEMO01-charging_target',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.charging_target',
     'unit_of_measurement': '%',
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'device_class': 'battery',
       'friendly_name': 'iX xDrive50 Charging target',
       'unit_of_measurement': '%',
     }),
@@ -1504,11 +2002,13 @@
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1529,21 +2029,22 @@
     'original_name': 'Climate status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_status',
-    'unique_id': 'WBA00000000DEMO01-activity',
+    'unique_id': 'WBA00000000DEMO01-climate.activity',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_climate_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'iX xDrive50 Climate status',
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),
@@ -1556,6 +2057,242 @@
     'state': 'inactive',
   })
 # ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_left_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_front_left_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_target_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.front_left.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_left_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Front left target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_front_left_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_left_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_front_left_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.front_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Front left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_front_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_front_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_target_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.front_right.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_right_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Front right target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_front_right_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_front_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.front_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_front_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Front right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_front_right_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1565,6 +2302,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1588,6 +2326,7 @@
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'WBA00000000DEMO01-mileage',
@@ -1597,7 +2336,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'iX xDrive50 Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1611,6 +2349,242 @@
     'state': '1121',
   })
 # ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_left_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_rear_left_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear left target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_left_target_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.rear_left.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_left_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Rear left target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_rear_left_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.69',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_left_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_rear_left_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.rear_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Rear left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_rear_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.61',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_rear_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_right_target_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.rear_right.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_right_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Rear right target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_rear_right_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.69',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ix_xdrive50_rear_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO01-tires.rear_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.ix_xdrive50_rear_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'iX xDrive50 Rear right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ix_xdrive50_rear_right_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.69',
+  })
+# ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_remaining_battery_percent-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1620,6 +2594,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1643,16 +2618,16 @@
     'original_name': 'Remaining battery percent',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_battery_percent',
-    'unique_id': 'WBA00000000DEMO01-remaining_battery_percent',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.remaining_battery_percent',
     'unit_of_measurement': '%',
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_remaining_battery_percent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery',
       'friendly_name': 'iX xDrive50 Remaining battery percent',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1675,6 +2650,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1698,16 +2674,16 @@
     'original_name': 'Remaining range electric',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_electric',
-    'unique_id': 'WBA00000000DEMO01-remaining_range_electric',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.remaining_range_electric',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_remaining_range_electric-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'iX xDrive50 Remaining range electric',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1730,6 +2706,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1753,16 +2730,16 @@
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
-    'unique_id': 'WBA00000000DEMO01-remaining_range_total',
+    'unique_id': 'WBA00000000DEMO01-fuel_and_battery.remaining_range_total',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.ix_xdrive50_remaining_range_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'iX xDrive50 Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1785,11 +2762,13 @@
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1810,21 +2789,22 @@
     'original_name': 'Climate status',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_status',
-    'unique_id': 'WBA00000000DEMO03-activity',
+    'unique_id': 'WBA00000000DEMO03-climate.activity',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_climate_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'enum',
       'friendly_name': 'M340i xDrive Climate status',
       'options': list([
         'cooling',
         'heating',
+        'ventilation',
         'inactive',
         'standby',
       ]),
@@ -1837,6 +2817,242 @@
     'state': 'inactive',
   })
 # ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_left_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_front_left_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_target_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.front_left.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_left_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Front left target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_front_left_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_left_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_front_left_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.front_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Front left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_front_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.41',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_front_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_target_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.front_right.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_right_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Front right target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_front_right_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_front_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.front_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_front_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Front right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_front_right_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.55',
+  })
+# ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_mileage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1846,6 +3062,7 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1869,6 +3086,7 @@
     'original_name': 'Mileage',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mileage',
     'unique_id': 'WBA00000000DEMO03-mileage',
@@ -1878,7 +3096,6 @@
 # name: test_entity_state_attrs[sensor.m340i_xdrive_mileage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'M340i xDrive Mileage',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1892,6 +3109,242 @@
     'state': '1121',
   })
 # ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_left_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_rear_left_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear left target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_left_target_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.rear_left.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_left_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Rear left target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_rear_left_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_left_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_rear_left_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear left tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_left_current_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.rear_left.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_left_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Rear left tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_rear_left_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.24',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_right_target_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_rear_right_target_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right target pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_right_target_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.rear_right.target_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_right_target_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Rear right target pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_rear_right_target_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_right_tire_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m340i_xdrive_rear_right_tire_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right tire pressure',
+    'platform': 'bmw_connected_drive',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_right_current_pressure',
+    'unique_id': 'WBA00000000DEMO03-tires.rear_right.current_pressure',
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+  })
+# ---
+# name: test_entity_state_attrs[sensor.m340i_xdrive_rear_right_tire_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'M340i xDrive Rear right tire pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m340i_xdrive_rear_right_tire_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.31',
+  })
+# ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_fuel-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1901,6 +3354,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1919,22 +3373,22 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Remaining fuel',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel',
-    'unique_id': 'WBA00000000DEMO03-remaining_fuel',
+    'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_fuel',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_fuel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'device_class': 'volume',
+      'device_class': 'volume_storage',
       'friendly_name': 'M340i xDrive Remaining fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
@@ -1956,6 +3410,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1979,16 +3434,16 @@
     'original_name': 'Remaining fuel percent',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_fuel_percent',
-    'unique_id': 'WBA00000000DEMO03-remaining_fuel_percent',
+    'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_fuel_percent',
     'unit_of_measurement': '%',
   })
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_fuel_percent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'M340i xDrive Remaining fuel percent',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -2010,6 +3465,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2033,16 +3489,16 @@
     'original_name': 'Remaining range fuel',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_fuel',
-    'unique_id': 'WBA00000000DEMO03-remaining_range_fuel',
+    'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_range_fuel',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_range_fuel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'M340i xDrive Remaining range fuel',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2065,6 +3521,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2088,16 +3545,16 @@
     'original_name': 'Remaining range total',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'remaining_range_total',
-    'unique_id': 'WBA00000000DEMO03-remaining_range_total',
+    'unique_id': 'WBA00000000DEMO03-fuel_and_battery.remaining_range_total',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_entity_state_attrs[sensor.m340i_xdrive_remaining_range_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'distance',
       'friendly_name': 'M340i xDrive Remaining range total',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

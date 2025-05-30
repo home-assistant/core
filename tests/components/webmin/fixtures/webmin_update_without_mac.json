@@ -1,0 +1,108 @@
+{
+  "disk_total": 18104905818112,
+  "io": [0, 4],
+  "load": [
+    1.29,
+    1.36,
+    1.37,
+    3589,
+    "Intel(R) Core(TM) i7-5820K CPU @ 3.30GHz",
+    "GenuineIntel",
+    15728640,
+    12
+  ],
+  "disk_free": 7749321486336,
+  "kernel": { "os": "Linux", "arch": "x86_64", "version": "6.6.18-1-lts" },
+  "disk_fs": [
+    {
+      "device": "UUID=00000000-80b6-0000-8a06-000000000000",
+      "dir": "/",
+      "ifree": 14927206,
+      "total": 248431161344,
+      "used_percent": 80,
+      "type": "ext4",
+      "itotal": 15482880,
+      "iused": 555674,
+      "free": 49060442112,
+      "used": 186676502528,
+      "iused_percent": 4
+    },
+    {
+      "total": 11903838912512,
+      "used_percent": 38,
+      "iused": 3542318,
+      "type": "ext4",
+      "itotal": 366198784,
+      "device": "/dev/md127",
+      "ifree": 362656466,
+      "dir": "/media/disk2",
+      "iused_percent": 1,
+      "free": 7028764823552,
+      "used": 4275077644288
+    },
+    {
+      "dir": "/media/disk1",
+      "ifree": 183130757,
+      "device": "UUID=00000000-2bb2-0000-896c-000000000000",
+      "type": "ext4",
+      "itotal": 183140352,
+      "iused": 9595,
+      "used_percent": 89,
+      "total": 5952635744256,
+      "used": 4981066997760,
+      "free": 671496220672,
+      "iused_percent": 1
+    }
+  ],
+  "drivetemps": [
+    { "temp": 49, "device": "/dev/sda", "failed": "", "errors": "" },
+    { "failed": "", "errors": "", "device": "/dev/sdb", "temp": 49 },
+    { "device": "/dev/sdc", "temp": 51, "failed": "", "errors": "" },
+    { "failed": "", "errors": "", "device": "/dev/sdd", "temp": 51 },
+    { "errors": "", "failed": "", "temp": 43, "device": "/dev/sde" },
+    { "device": "/dev/sdf", "temp": 40, "errors": "", "failed": "" }
+  ],
+  "mem": [32766344, 28530480, 1953088, 1944384, 27845756, ""],
+  "disk_used": 9442821144576,
+  "cputemps": [
+    { "temp": 51, "core": 0 },
+    { "temp": 49, "core": 1 },
+    { "core": 2, "temp": 59 },
+    { "temp": 51, "core": 3 },
+    { "temp": 50, "core": 4 },
+    { "temp": 49, "core": 5 }
+  ],
+  "procs": 310,
+  "cpu": [0, 8, 92, 0, 0],
+  "cpufans": [
+    { "rpm": 0, "fan": 1 },
+    { "fan": 2, "rpm": 1371 },
+    { "rpm": 0, "fan": 3 },
+    { "rpm": 927, "fan": 4 },
+    { "rpm": 801, "fan": 5 }
+  ],
+  "load_1m": 1.29,
+  "load_5m": 1.36,
+  "load_15m": 1.37,
+  "mem_total": 32766344,
+  "mem_free": 28530480,
+  "swap_total": 1953088,
+  "swap_free": 1944384,
+  "uptime": { "days": 11, "minutes": 1, "seconds": 28 },
+  "active_interfaces": [
+    {
+      "scope6": ["host"],
+      "address": "127.0.0.1",
+      "address6": ["::1"],
+      "name": "lo",
+      "broadcast": 0,
+      "up": 1,
+      "index": 0,
+      "fullname": "lo",
+      "netmask6": [128],
+      "netmask": "255.0.0.0",
+      "mtu": 65536,
+      "edit": 1
+    }
+  ]
+}

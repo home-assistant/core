@@ -1,12 +1,12 @@
 """Test account link services."""
 
 import asyncio
+from collections.abc import Generator
 import logging
 from time import time
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.cloud import account_link

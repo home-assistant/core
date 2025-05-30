@@ -1,5 +1,7 @@
 {
   "services": {
-    "set_vacation": "mdi:beach"
+    "set_vacation": {
+      "service": "mdi:beach"
+    }
   }
 }

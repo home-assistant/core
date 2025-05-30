@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pytedee_async.bridge import TedeeBridge
-from pytedee_async.lock import TedeeLock
+from aiotedee.bridge import TedeeBridge
+from aiotedee.lock import TedeeLock
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+
+from . import setup_integration
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -84,8 +86,6 @@ async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tedee: MagicMock
 ) -> MockConfigEntry:
     """Set up the Tedee integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     return mock_config_entry

@@ -1,0 +1,65 @@
+# serializer version: 1
+# name: test_directory[system_bridge_media_source_directory]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'TestSystem - documents',
+  })
+# ---
+# name: test_entry[system_bridge_media_source_entry]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'TestSystem',
+  })
+# ---
+# name: test_file[system_bridge_media_source_file_image]
+  dict({
+    'mime_type': 'image/jpeg',
+    'url': 'http://127.0.0.1:9170/api/media/file/data?token=abc-123-def-456-ghi&base=documents&path=testimage.jpg',
+  })
+# ---
+# name: test_file[system_bridge_media_source_file_text]
+  dict({
+    'mime_type': 'text/plain',
+    'url': 'http://127.0.0.1:9170/api/media/file/data?token=abc-123-def-456-ghi&base=documents&path=testfile.txt',
+  })
+# ---
+# name: test_root[system_bridge_media_source_root]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'System Bridge',
+  })
+# ---
+# name: test_subdirectory[system_bridge_media_source_subdirectory]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'TestSystem - documents/testsubdirectory',
+  })
+# ---

@@ -186,28 +186,46 @@ effect_move:
           options:
             - "autumn"
             - "blissful"
+            - "bias_lighting"
+            - "calaveras"
             - "cheerful"
+            - "christmas"
             - "dream"
             - "energizing"
             - "epic"
+            - "evening"
             - "exciting"
+            - "fantasy"
             - "focusing"
+            - "gentle"
             - "halloween"
             - "hanukkah"
             - "holly"
-            - "independence_day"
+            - "hygge"
+            - "independence"
             - "intense"
+            - "love"
+            - "kwanzaa"
             - "mellow"
+            - "party"
             - "peaceful"
             - "powerful"
+            - "proud"
+            - "pumpkin"
             - "relaxing"
+            - "romance"
             - "santa"
             - "serene"
+            - "shamrock"
             - "soothing"
+            - "spacey"
             - "sports"
             - "spring"
+            - "stardust"
+            - "thanksgiving"
             - "tranquil"
             - "warming"
+            - "zombie"
     power_on:
       default: true
       selector:
@@ -255,34 +273,174 @@ effect_morph:
           options:
             - "autumn"
             - "blissful"
+            - "bias_lighting"
+            - "calaveras"
             - "cheerful"
+            - "christmas"
             - "dream"
             - "energizing"
             - "epic"
+            - "evening"
             - "exciting"
+            - "fantasy"
             - "focusing"
+            - "gentle"
             - "halloween"
             - "hanukkah"
             - "holly"
-            - "independence_day"
+            - "hygge"
+            - "independence"
             - "intense"
+            - "love"
+            - "kwanzaa"
             - "mellow"
+            - "party"
             - "peaceful"
             - "powerful"
+            - "proud"
+            - "pumpkin"
             - "relaxing"
+            - "romance"
             - "santa"
             - "serene"
+            - "shamrock"
             - "soothing"
+            - "spacey"
             - "sports"
             - "spring"
+            - "stardust"
+            - "thanksgiving"
             - "tranquil"
             - "warming"
+            - "zombie"
     power_on:
       default: true
       selector:
         boolean:
+effect_sky:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    power_on:
+      default: true
+      selector:
+        boolean:
+    speed:
+      default: 50
+      example: 50
+      selector:
+        number:
+          min: 1
+          max: 86400
+          step: 1
+          unit_of_measurement: seconds
+    sky_type:
+      default: "Clouds"
+      example: "Clouds"
+      selector:
+        select:
+          options:
+            - "Clouds"
+            - "Sunrise"
+            - "Sunset"
+    cloud_saturation_min:
+      default: 50
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 255
+    cloud_saturation_max:
+      default: 180
+      example: 180
+      selector:
+        number:
+          min: 0
+          max: 255
+    palette:
+      example:
+        - "[200, 1, 1, 3500]"
+        - "[241, 1, 0.01, 3500]"
+        - "[189, 1, 0.08, 3500]"
+        - "[40, 1, 1, 3500]"
+        - "[40, 0.5, 1, 3500]"
+        - "[40, 0, 1, 6500]"
+      selector:
+        object:
 effect_stop:
   target:
     entity:
       integration: lifx
       domain: light
+paint_theme:
+  target:
+    entity:
+      integration: lifx
+      domain: light
+  fields:
+    palette:
+      example:
+        - "[[0, 100, 100, 3500], [60, 100, 100, 3500]]"
+      selector:
+        object:
+    theme:
+      example: exciting
+      default: exciting
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - "autumn"
+            - "blissful"
+            - "bias_lighting"
+            - "calaveras"
+            - "cheerful"
+            - "christmas"
+            - "dream"
+            - "energizing"
+            - "epic"
+            - "evening"
+            - "exciting"
+            - "fantasy"
+            - "focusing"
+            - "gentle"
+            - "halloween"
+            - "hanukkah"
+            - "holly"
+            - "hygge"
+            - "independence"
+            - "intense"
+            - "love"
+            - "kwanzaa"
+            - "mellow"
+            - "party"
+            - "peaceful"
+            - "powerful"
+            - "proud"
+            - "pumpkin"
+            - "relaxing"
+            - "romance"
+            - "santa"
+            - "serene"
+            - "shamrock"
+            - "soothing"
+            - "spacey"
+            - "sports"
+            - "spring"
+            - "stardust"
+            - "thanksgiving"
+            - "tranquil"
+            - "warming"
+            - "zombie"
+    transition:
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    power_on:
+      default: true
+      selector:
+        boolean:

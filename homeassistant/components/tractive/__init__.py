@@ -31,6 +31,7 @@ from .const import (
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
+    ATTR_POWER_SAVING,
     ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
     CLIENT_ID,
@@ -132,11 +133,11 @@ async def _generate_trackables(
     trackable = await trackable.details()
 
     # Check that the pet has tracker linked.
-    if not trackable["device_id"]:
+    if not trackable.get("device_id"):
         return None
 
     if "details" not in trackable:
-        _LOGGER.info(
+        _LOGGER.warning(
             "Tracker %s has no details and will be skipped. This happens for shared trackers",
             trackable["device_id"],
         )
@@ -277,6 +278,7 @@ class TractiveClient:
         payload = {
             ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
             ATTR_TRACKER_STATE: event["tracker_state"].lower(),
+            ATTR_POWER_SAVING: event.get("tracker_state_reason") == "POWER_SAVING",
             ATTR_BATTERY_CHARGING: event["charging_state"] == "CHARGING",
         }
         self._dispatch_tracker_event(

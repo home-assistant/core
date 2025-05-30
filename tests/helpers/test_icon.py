@@ -25,12 +25,8 @@ def test_battery_icon() -> None:
     iconbase = "mdi:battery"
     for level in range(0, 100, 5):
         print(  # noqa: T201
-            "Level: %d. icon: %s, charging: %s"
-            % (
-                level,
-                icon.icon_for_battery_level(level, False),
-                icon.icon_for_battery_level(level, True),
-            )
+            f"Level: {level}. icon: {icon.icon_for_battery_level(level, False)}, "
+            f"charging: {icon.icon_for_battery_level(level, True)}"
         )
         if level <= 10:
             postfix_charging = "-outline"
@@ -101,7 +97,7 @@ async def test_get_icons(hass: HomeAssistant) -> None:
     # Test services icons are available
     icons = await icon.async_get_icons(hass, "services")
     assert len(icons) == 1
-    assert icons["switch"]["turn_off"] == "mdi:toggle-switch-variant-off"
+    assert icons["switch"]["turn_off"] == {"service": "mdi:toggle-switch-variant-off"}
 
     # Ensure icons file for platform isn't loaded, as that isn't supported
     icons = await icon.async_get_icons(hass, "entity")
@@ -126,7 +122,7 @@ async def test_get_icons(hass: HomeAssistant) -> None:
 
     icons = await icon.async_get_icons(hass, "services")
     assert len(icons) == 2
-    assert icons["test_package"]["enable_god_mode"] == "mdi:shield"
+    assert icons["test_package"]["enable_god_mode"] == {"service": "mdi:shield"}
 
     # Load another one
     hass.config.components.add("test_embedded")

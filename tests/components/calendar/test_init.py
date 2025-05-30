@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
+import re
 from typing import Any
 
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.dt as dt_util
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
 
@@ -23,7 +25,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(name="frozen_time")
-def mock_frozen_time() -> None:
+def mock_frozen_time() -> str | None:
     """Fixture to set a frozen time used in tests.
 
     This is needed so that it can run before other fixtures.
@@ -32,7 +34,7 @@ def mock_frozen_time() -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_set_frozen_time(frozen_time: Any) -> Generator[None]:
+def mock_set_frozen_time(frozen_time: str | None) -> Generator[None]:
     """Fixture to freeze time that also can work for other fixtures."""
     if not frozen_time:
         yield
@@ -44,9 +46,9 @@ def mock_set_frozen_time(frozen_time: Any) -> Generator[None]:
 @pytest.fixture(name="setup_platform", autouse=True)
 async def mock_setup_platform(
     hass: HomeAssistant,
-    set_time_zone: Any,
-    frozen_time: Any,
-    mock_setup_integration: Any,
+    set_time_zone: None,
+    frozen_time: str | None,
+    mock_setup_integration: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Fixture to setup platforms used in the test and fixtures are set up in the right order."""
@@ -214,8 +216,12 @@ async def test_unsupported_websocket(
 
 async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     """Test unsupported service call."""
-
-    with pytest.raises(HomeAssistantError, match="does not support this service"):
+    await async_setup_component(hass, "homeassistant", {})
+    with pytest.raises(
+        ServiceNotSupported,
+        match="Entity calendar.calendar_1 does not "
+        "support action calendar.create_event",
+    ):
         await hass.services.async_call(
             DOMAIN,
             "create_event",
@@ -443,7 +449,7 @@ async def test_list_events_service(
     service: str,
     expected: dict[str, Any],
 ) -> None:
-    """Test listing events from the service call using exlplicit start and end time.
+    """Test listing events from the service call using explicit start and end time.
 
     This test uses a fixed date/time so that it can deterministically test the
     string output values.
@@ -544,6 +550,56 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
             SERVICE_GET_EVENTS,
             {
                 "entity_id": "calendar.calendar_1",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "frozen_time", ["2023-06-22 10:30:00+00:00"], ids=["frozen_time"]
+)
+@pytest.mark.parametrize(
+    ("service_data", "error_msg"),
+    [
+        (
+            {
+                "start_date_time": "2023-06-22T04:30:00-06:00",
+                "end_date_time": "2023-06-22T04:30:00-06:00",
+            },
+            "Expected end time to be after start time (2023-06-22 04:30:00-06:00, 2023-06-22 04:30:00-06:00)",
+        ),
+        (
+            {
+                "start_date_time": "2023-06-22T04:30:00",
+                "end_date_time": "2023-06-22T04:30:00",
+            },
+            "Expected end time to be after start time (2023-06-22 04:30:00, 2023-06-22 04:30:00)",
+        ),
+        (
+            {"start_date_time": "2023-06-22", "end_date_time": "2023-06-22"},
+            "Expected end time to be after start time (2023-06-22 00:00:00, 2023-06-22 00:00:00)",
+        ),
+        (
+            {"start_date_time": "2023-06-22 10:00:00", "duration": "0"},
+            "Expected positive duration (0:00:00)",
+        ),
+    ],
+)
+async def test_list_events_service_same_dates(
+    hass: HomeAssistant,
+    service_data: dict[str, str],
+    error_msg: str,
+) -> None:
+    """Test listing events from the service call using the same start and end time."""
+
+    with pytest.raises(vol.error.MultipleInvalid, match=re.escape(error_msg)):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_EVENTS,
+            service_data={
+                "entity_id": "calendar.calendar_1",
+                **service_data,
             },
             blocking=True,
             return_response=True,

@@ -9,8 +9,11 @@
     }
   },
   "services": {
-    "create_event": "mdi:calendar-plus",
-    "get_events": "mdi:calendar-month",
-    "list_events": "mdi:calendar-month"
+    "create_event": {
+      "service": "mdi:calendar-plus"
+    },
+    "get_events": {
+      "service": "mdi:calendar-month"
+    }
   }
 }

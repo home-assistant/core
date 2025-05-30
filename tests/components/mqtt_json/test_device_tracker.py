@@ -1,21 +1,23 @@
 """The tests for the JSON MQTT device tracker platform."""
 
+from collections.abc import AsyncGenerator
 import json
 import logging
 import os
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.device_tracker.legacy import (
     DOMAIN as DT_DOMAIN,
     YAML_DEVICES,
+    AsyncSeeCallback,
 )
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message
@@ -71,9 +73,15 @@ async def test_setup_fails_without_mqtt_being_setup(
 async def test_ensure_device_tracker_platform_validation(hass: HomeAssistant) -> None:
     """Test if platform validation was done."""
 
-    async def mock_setup_scanner(hass, config, see, discovery_info=None):
+    async def mock_setup_scanner(
+        hass: HomeAssistant,
+        config: ConfigType,
+        see: AsyncSeeCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> bool:
         """Check that Qos was added by validation."""
         assert "qos" in config
+        return True
 
     with patch(
         "homeassistant.components.mqtt_json.device_tracker.async_setup_scanner",

@@ -1,16 +1,12 @@
 """Test ESPHome covers."""
 
-from collections.abc import Awaitable, Callable
 from unittest.mock import call
 
 from aioesphomeapi import (
     APIClient,
     CoverInfo,
     CoverOperation,
-    CoverState,
-    EntityInfo,
-    EntityState,
-    UserService,
+    CoverState as ESPHomeCoverState,
 )
 
 from homeassistant.components.cover import (
@@ -26,24 +22,18 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
+    CoverState,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDeviceType
 
 
 async def test_cover_entity(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a generic cover entity."""
     entity_info = [
@@ -58,7 +48,7 @@ async def test_cover_entity(
         )
     ]
     states = [
-        CoverState(
+        ESPHomeCoverState(
             key=1,
             position=0.5,
             tilt=0.5,
@@ -74,7 +64,7 @@ async def test_cover_entity(
     )
     state = hass.states.get("cover.test_mycover")
     assert state is not None
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
     assert state.attributes[ATTR_CURRENT_POSITION] == 50
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 50
 
@@ -142,37 +132,36 @@ async def test_cover_entity(
     mock_client.cover_command.reset_mock()
 
     mock_device.set_state(
-        CoverState(key=1, position=0.0, current_operation=CoverOperation.IDLE)
+        ESPHomeCoverState(key=1, position=0.0, current_operation=CoverOperation.IDLE)
     )
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_mycover")
     assert state is not None
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     mock_device.set_state(
-        CoverState(key=1, position=0.5, current_operation=CoverOperation.IS_CLOSING)
+        ESPHomeCoverState(
+            key=1, position=0.5, current_operation=CoverOperation.IS_CLOSING
+        )
     )
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_mycover")
     assert state is not None
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
     mock_device.set_state(
-        CoverState(key=1, position=1.0, current_operation=CoverOperation.IDLE)
+        ESPHomeCoverState(key=1, position=1.0, current_operation=CoverOperation.IDLE)
     )
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_mycover")
     assert state is not None
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
 
 async def test_cover_entity_without_position(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test a generic cover entity without position, tilt, or stop."""
     entity_info = [
@@ -187,7 +176,7 @@ async def test_cover_entity_without_position(
         )
     ]
     states = [
-        CoverState(
+        ESPHomeCoverState(
             key=1,
             position=0.5,
             tilt=0.5,
@@ -203,6 +192,6 @@ async def test_cover_entity_without_position(
     )
     state = hass.states.get("cover.test_mycover")
     assert state is not None
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
     assert ATTR_CURRENT_POSITION not in state.attributes

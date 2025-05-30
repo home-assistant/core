@@ -1,11 +1,28 @@
 {
   "services": {
-    "create_vacation": "mdi:umbrella-beach",
-    "delete_vacation": "mdi:umbrella-beach-outline",
-    "resume_program": "mdi:play",
-    "set_fan_min_on_time": "mdi:fan-clock",
-    "set_dst_mode": "mdi:sun-clock",
-    "set_mic_mode": "mdi:microphone",
-    "set_occupancy_modes": "mdi:eye-settings"
+    "create_vacation": {
+      "service": "mdi:umbrella-beach"
+    },
+    "delete_vacation": {
+      "service": "mdi:umbrella-beach-outline"
+    },
+    "resume_program": {
+      "service": "mdi:play"
+    },
+    "set_fan_min_on_time": {
+      "service": "mdi:fan-clock"
+    },
+    "set_dst_mode": {
+      "service": "mdi:sun-clock"
+    },
+    "set_mic_mode": {
+      "service": "mdi:microphone"
+    },
+    "set_occupancy_modes": {
+      "service": "mdi:eye-settings"
+    },
+    "set_sensors_used_in_climate": {
+      "service": "mdi:home-thermometer"
+    }
   }
 }

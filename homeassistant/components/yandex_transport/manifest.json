@@ -4,5 +4,6 @@
   "codeowners": ["@rishatik92", "@devbis"],
   "documentation": "https://www.home-assistant.io/integrations/yandex_transport",
   "iot_class": "cloud_polling",
-  "requirements": ["aioymaps==1.2.2"]
+  "quality_scale": "legacy",
+  "requirements": ["aioymaps==1.2.5"]
 }

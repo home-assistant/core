@@ -1,11 +1,11 @@
 """Tests for the arcam_fmj component."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
 from arcam.fmj.client import Client
 from arcam.fmj.state import State
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
@@ -99,6 +99,7 @@ async def player_setup_fixture(
             return state_1
         if zone == 2:
             return state_2
+        raise ValueError(f"Unknown player zone: {zone}")
 
     await async_setup_component(hass, "homeassistant", {})
 

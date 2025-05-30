@@ -1,5 +1,6 @@
 """Define test fixtures for RainMachine."""
 
+from collections.abc import AsyncGenerator
 import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -8,19 +9,20 @@ import pytest
 
 from homeassistant.components.rainmachine import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="client")
-def client_fixture(controller, controller_mac):
+def client_fixture(controller: AsyncMock, controller_mac: str) -> AsyncMock:
     """Define a regenmaschine client."""
     return AsyncMock(load_local=AsyncMock(), controllers={controller_mac: controller})
 
 
 @pytest.fixture(name="config")
-def config_fixture(hass):
+def config_fixture() -> dict[str, Any]:
     """Define a config entry data fixture."""
     return {
         CONF_IP_ADDRESS: "192.168.1.100",
@@ -31,7 +33,9 @@ def config_fixture(hass):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config, controller_mac):
+def config_entry_fixture(
+    hass: HomeAssistant, config: dict[str, Any], controller_mac: str
+) -> MockConfigEntry:
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -78,7 +82,7 @@ def controller_fixture(
 
 
 @pytest.fixture(name="controller_mac")
-def controller_mac_fixture():
+def controller_mac_fixture() -> str:
     """Define a controller MAC address."""
     return "aa:bb:cc:dd:ee:ff"
 
@@ -145,7 +149,9 @@ def data_zones_fixture():
 
 
 @pytest.fixture(name="setup_rainmachine")
-async def setup_rainmachine_fixture(hass, client, config):
+async def setup_rainmachine_fixture(
+    hass: HomeAssistant, client: AsyncMock, config: dict[str, Any]
+) -> AsyncGenerator[None]:
     """Define a fixture to set up RainMachine."""
     with (
         patch("homeassistant.components.rainmachine.Client", return_value=client),

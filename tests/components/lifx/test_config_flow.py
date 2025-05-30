@@ -2,18 +2,24 @@
 
 from ipaddress import ip_address
 import socket
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.lifx import DOMAIN
+from homeassistant.components.lifx.config_flow import LifXConfigFlow
 from homeassistant.components.lifx.const import CONF_SERIAL
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -288,7 +294,7 @@ async def test_manual_dns_error(hass: HomeAssistant) -> None:
     class MockLifxConnectonDnsError:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init connection."""
             self.device = _mocked_failing_bulb()
 
@@ -360,7 +366,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
             ),
         )
@@ -368,17 +374,30 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
-    with _patch_discovery(), _patch_config_flow_try_connect():
+    real_is_matching = LifXConfigFlow.is_matching
+    return_values = []
+
+    def is_matching(self, other_flow) -> bool:
+        return_values.append(real_is_matching(self, other_flow))
+        return return_values[-1]
+
+    with (
+        _patch_discovery(),
+        _patch_config_flow_try_connect(),
+        patch.object(LifXConfigFlow, "is_matching", wraps=is_matching, autospec=True),
+    ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress="000000000000", hostname="mock_hostname"
             ),
         )
         await hass.async_block_till_done()
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "already_in_progress"
+    # Ensure the is_matching method returned True
+    assert return_values == [True]
 
     with (
         _patch_discovery(no_device=True),
@@ -387,7 +406,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.2.3.5", macaddress="000000000001", hostname="mock_hostname"
             ),
         )
@@ -401,19 +420,19 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
             ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address(IP_ADDRESS),
                 ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
-                properties={zeroconf.ATTR_PROPERTIES_ID: "any"},
+                properties={ATTR_PROPERTIES_ID: "any"},
                 type="mock_type",
             ),
         ),
@@ -461,19 +480,19 @@ async def test_discovered_by_dhcp_or_discovery(
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
             ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address(IP_ADDRESS),
                 ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
-                properties={zeroconf.ATTR_PROPERTIES_ID: "any"},
+                properties={ATTR_PROPERTIES_ID: "any"},
                 type="mock_type",
             ),
         ),
@@ -505,19 +524,19 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
             ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address(IP_ADDRESS),
                 ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname=LABEL,
                 name=LABEL,
                 port=None,
-                properties={zeroconf.ATTR_PROPERTIES_ID: "any"},
+                properties={ATTR_PROPERTIES_ID: "any"},
                 type="mock_type",
             ),
         ),
@@ -574,7 +593,7 @@ async def test_suggested_area(
     class MockLifxCommandGetGroup:
         """Mock the get_group method that gets the group name from the bulb."""
 
-        def __init__(self, bulb, **kwargs):
+        def __init__(self, bulb, **kwargs: Any) -> None:
             """Init command."""
             self.bulb = bulb
             self.lifx_group = kwargs.get("lifx_group")

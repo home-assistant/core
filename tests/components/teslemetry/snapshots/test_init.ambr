@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://teslemetry.com/console',
     'connections': set({
     }),
@@ -21,6 +22,7 @@
     }),
     'manufacturer': 'Tesla',
     'model': 'Powerwall 2, Tesla Backup Gateway 2',
+    'model_id': None,
     'name': 'Energy Site',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -30,10 +32,11 @@
     'via_device_id': None,
   })
 # ---
-# name: test_devices[{('teslemetry', 'LRWXF7EK4KC700000')}]
+# name: test_devices[{('teslemetry', 'LRW3F7EK4NC700000')}]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://teslemetry.com/console',
     'connections': set({
     }),
@@ -44,18 +47,19 @@
     'identifiers': set({
       tuple(
         'teslemetry',
-        'LRWXF7EK4KC700000',
+        'LRW3F7EK4NC700000',
       ),
     }),
     'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',
-    'model': 'Model X',
+    'model': 'Model 3',
+    'model_id': None,
     'name': 'Test',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'LRWXF7EK4KC700000',
+    'serial_number': 'LRW3F7EK4NC700000',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
@@ -65,6 +69,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://teslemetry.com/console',
     'connections': set({
     }),
@@ -83,6 +88,7 @@
     }),
     'manufacturer': 'Tesla',
     'model': 'Gen 3 Wall Connector',
+    'model_id': None,
     'name': 'Wall Connector',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -96,6 +102,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://teslemetry.com/console',
     'connections': set({
     }),
@@ -114,6 +121,7 @@
     }),
     'manufacturer': 'Tesla',
     'model': 'Gen 3 Wall Connector',
+    'model_id': None,
     'name': 'Wall Connector',
     'name_by_user': None,
     'primary_config_entry': <ANY>,

@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import WebminConfigEntry
@@ -200,7 +200,7 @@ def generate_filesystem_sensor_description(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WebminConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Webmin sensors based on a config entry."""
     coordinator = entry.runtime_data
@@ -235,7 +235,7 @@ class WebminSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{coordinator.mac_address}_{description.key}"
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
 
     @property
     def native_value(self) -> int | float:

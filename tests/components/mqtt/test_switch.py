@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -198,6 +198,50 @@ async def test_sending_inital_state_and_optimistic(
             mqtt.DOMAIN: {
                 switch.DOMAIN: {
                     "name": "test",
+                    "command_topic": "command-topic",
+                    "command_template": '{"state": "{{ value }}"}',
+                    "payload_on": "beer on",
+                    "payload_off": "beer off",
+                    "qos": "2",
+                }
+            }
+        }
+    ],
+)
+async def test_sending_mqtt_commands_with_command_template(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the sending MQTT commands using a command template."""
+    fake_state = State("switch.test", "on")
+    mock_restore_cache(hass, (fake_state,))
+
+    mqtt_mock = await mqtt_mock_entry()
+
+    state = hass.states.get("switch.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "switch.test")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", '{"state": "beer on"}', 2, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_turn_off(hass, "switch.test")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", '{"state": "beer off"}', 2, False
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                switch.DOMAIN: {
+                    "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
                     "payload_on": "beer on",
@@ -359,7 +403,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG, {}
+        hass, mqtt_mock_entry, switch.DOMAIN, DEFAULT_CONFIG, None
     )
 
 
@@ -379,11 +423,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        switch.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -394,11 +434,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        switch.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, switch.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -524,8 +560,7 @@ async def test_discovery_update_switch_template(
 
 
 async def test_discovery_update_unchanged_switch(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered switch."""
     data1 = (
@@ -675,8 +710,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = switch.DOMAIN
@@ -726,8 +760,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = switch.DOMAIN

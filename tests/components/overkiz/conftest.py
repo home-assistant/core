@@ -1,9 +1,9 @@
 """Configuration for overkiz tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant

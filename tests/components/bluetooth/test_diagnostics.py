@@ -133,6 +133,20 @@ async def test_diagnostics(
                 }
             },
             "manager": {
+                "allocations": {
+                    "00:00:00:00:00:01": {
+                        "allocated": [],
+                        "free": 5,
+                        "slots": 5,
+                        "source": "00:00:00:00:00:01",
+                    },
+                    "00:00:00:00:00:02": {
+                        "allocated": [],
+                        "free": 2,
+                        "slots": 2,
+                        "source": "00:00:00:00:00:02",
+                    },
+                },
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
@@ -168,6 +182,7 @@ async def test_diagnostics(
                 "scanners": [
                     {
                         "adapter": "hci0",
+                        "connectable": True,
                         "discovered_devices_and_advertisement_data": [],
                         "last_detection": ANY,
                         "monotonic_time": ANY,
@@ -204,6 +219,7 @@ async def test_diagnostics(
                                 "rssi": -127,
                             }
                         ],
+                        "connectable": True,
                         "last_detection": ANY,
                         "monotonic_time": ANY,
                         "name": "hci1 (00:00:00:00:00:02)",
@@ -291,6 +307,14 @@ async def test_diagnostics_macos(
                 }
             },
             "manager": {
+                "allocations": {
+                    "Core Bluetooth": {
+                        "allocated": [],
+                        "free": 5,
+                        "slots": 5,
+                        "source": "Core Bluetooth",
+                    },
+                },
                 "adapters": {
                     "Core Bluetooth": {
                         "address": "00:00:00:00:00:00",
@@ -329,6 +353,7 @@ async def test_diagnostics_macos(
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
+                        "raw": None,
                         "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
@@ -358,6 +383,7 @@ async def test_diagnostics_macos(
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
+                        "raw": None,
                         "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
@@ -369,6 +395,7 @@ async def test_diagnostics_macos(
                 "scanners": [
                     {
                         "adapter": "Core Bluetooth",
+                        "connectable": True,
                         "discovered_devices_and_advertisement_data": [
                             {
                                 "address": "44:44:33:11:23:45",
@@ -484,6 +511,14 @@ async def test_diagnostics_remote_adapter(
             },
             "dbus": {},
             "manager": {
+                "allocations": {
+                    "00:00:00:00:00:01": {
+                        "allocated": [],
+                        "free": 5,
+                        "slots": 5,
+                        "source": "00:00:00:00:00:01",
+                    },
+                },
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
@@ -523,6 +558,7 @@ async def test_diagnostics_remote_adapter(
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
+                        "raw": None,
                         "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
@@ -552,6 +588,7 @@ async def test_diagnostics_remote_adapter(
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
+                        "raw": None,
                         "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
@@ -563,6 +600,7 @@ async def test_diagnostics_remote_adapter(
                 "scanners": [
                     {
                         "adapter": "hci0",
+                        "connectable": True,
                         "discovered_devices_and_advertisement_data": [],
                         "last_detection": ANY,
                         "monotonic_time": ANY,
@@ -582,6 +620,8 @@ async def test_diagnostics_remote_adapter(
                     },
                     {
                         "connectable": True,
+                        "current_mode": None,
+                        "requested_mode": None,
                         "discovered_device_timestamps": {"44:44:33:11:23:45": ANY},
                         "discovered_devices_and_advertisement_data": [
                             {

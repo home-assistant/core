@@ -5,11 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_BRAND, DOMAIN
-from .coordinator import NexiaDataUpdateCoordinator
+from .const import CONF_BRAND
+from .types import NexiaConfigEntry
 
 TO_REDACT = {
     "dealer_contact_info",
@@ -17,10 +16,10 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: NexiaConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     nexia_home = coordinator.nexia_home
 
     return {

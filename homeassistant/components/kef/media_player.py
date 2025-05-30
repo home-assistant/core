@@ -161,7 +161,7 @@ async def async_setup_platform(
         },
         "set_mode",
     )
-    platform.async_register_entity_service(SERVICE_UPDATE_DSP, {}, "update_dsp")
+    platform.async_register_entity_service(SERVICE_UPDATE_DSP, None, "update_dsp")
 
     def add_service(name, which, option):
         options = DSP_OPTION_MAPPING[which]

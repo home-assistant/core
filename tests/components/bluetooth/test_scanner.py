@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import time
+from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
 from bleak import BleakError
@@ -28,7 +29,11 @@ from . import (
     patch_bluetooth_time,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_call_logger_set_level,
+    async_fire_time_changed,
+)
 
 # If the adapter is in a stuck state the following errors are raised:
 NEED_RESET_ERRORS = [
@@ -211,7 +216,7 @@ async def test_recovery_from_dbus_restart(hass: HomeAssistant) -> None:
     mock_discovered = []
 
     class MockBleakScanner:
-        def __init__(self, detection_callback, *args, **kwargs):
+        def __init__(self, detection_callback, *args: Any, **kwargs: Any) -> None:
             nonlocal _callback
             _callback = detection_callback
 
@@ -481,70 +486,67 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
 ) -> None:
     """Test we can recover the adapter at startup and we wait for Dbus to init."""
     assert await async_setup_component(hass, "logger", {})
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.bluetooth": "DEBUG"},
-        blocking=True,
-    )
-    called_start = 0
-    called_stop = 0
-    _callback = None
-    mock_discovered = []
-
-    class MockBleakScanner:
-        async def start(self, *args, **kwargs):
-            """Mock Start."""
-            nonlocal called_start
-            called_start += 1
-            if called_start == 1:
-                raise BleakError("org.freedesktop.DBus.Error.UnknownObject")
-            if called_start == 2:
-                raise BleakError("org.bluez.Error.InProgress")
-            if called_start == 3:
-                raise BleakError("org.bluez.Error.InProgress")
-
-        async def stop(self, *args, **kwargs):
-            """Mock Start."""
-            nonlocal called_stop
-            called_stop += 1
-
-        @property
-        def discovered_devices(self):
-            """Mock discovered_devices."""
-            nonlocal mock_discovered
-            return mock_discovered
-
-        def register_detection_callback(self, callback: AdvertisementDataCallback):
-            """Mock Register Detection Callback."""
-            nonlocal _callback
-            _callback = callback
-
-    scanner = MockBleakScanner()
-    start_time_monotonic = time.monotonic()
-
-    with (
-        patch(
-            "habluetooth.scanner.ADAPTER_INIT_TIME",
-            0,
-        ),
-        patch_bluetooth_time(
-            start_time_monotonic,
-        ),
-        patch(
-            "habluetooth.scanner.OriginalBleakScanner",
-            return_value=scanner,
-        ),
-        patch(
-            "habluetooth.util.recover_adapter", return_value=True
-        ) as mock_recover_adapter,
+    async with async_call_logger_set_level(
+        "homeassistant.components.bluetooth", "DEBUG", hass=hass, caplog=caplog
     ):
-        await async_setup_with_one_adapter(hass)
+        called_start = 0
+        called_stop = 0
+        _callback = None
+        mock_discovered = []
 
-        assert called_start == 4
+        class MockBleakScanner:
+            async def start(self, *args, **kwargs):
+                """Mock Start."""
+                nonlocal called_start
+                called_start += 1
+                if called_start == 1:
+                    raise BleakError("org.freedesktop.DBus.Error.UnknownObject")
+                if called_start == 2:
+                    raise BleakError("org.bluez.Error.InProgress")
+                if called_start == 3:
+                    raise BleakError("org.bluez.Error.InProgress")
 
-    assert len(mock_recover_adapter.mock_calls) == 1
-    assert "Waiting for adapter to initialize" in caplog.text
+            async def stop(self, *args, **kwargs):
+                """Mock Start."""
+                nonlocal called_stop
+                called_stop += 1
+
+            @property
+            def discovered_devices(self):
+                """Mock discovered_devices."""
+                nonlocal mock_discovered
+                return mock_discovered
+
+            def register_detection_callback(self, callback: AdvertisementDataCallback):
+                """Mock Register Detection Callback."""
+                nonlocal _callback
+                _callback = callback
+
+        scanner = MockBleakScanner()
+        start_time_monotonic = time.monotonic()
+
+        with (
+            patch(
+                "habluetooth.scanner.ADAPTER_INIT_TIME",
+                0,
+            ),
+            patch_bluetooth_time(
+                start_time_monotonic,
+            ),
+            patch(
+                "habluetooth.scanner.OriginalBleakScanner",
+                return_value=scanner,
+            ),
+            patch(
+                "habluetooth.util.recover_adapter", return_value=True
+            ) as mock_recover_adapter,
+        ):
+            await async_setup_with_one_adapter(hass)
+
+            assert called_start == 4
+
+        assert len(mock_recover_adapter.mock_calls) == 1
+        assert "Waiting for adapter to initialize" in caplog.text
 
 
 @pytest.mark.usefixtures("one_adapter")
@@ -631,7 +633,7 @@ async def test_setup_and_stop_macos(
     init_kwargs = None
 
     class MockBleakScanner:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init the scanner."""
             nonlocal init_kwargs
             init_kwargs = kwargs

@@ -10,17 +10,16 @@ from typing import Any
 from aio_georss_gdacs.feed_entry import GdacsFeedEntry
 
 from homeassistant.components.geo_location import GeolocationEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import GdacsFeedEntityManager
-from .const import DEFAULT_ICON, DOMAIN, FEED
+from . import GdacsConfigEntry, GdacsFeedEntityManager
+from .const import DEFAULT_ICON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,10 +51,12 @@ SOURCE = "gdacs"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GdacsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GDACS Feed platform."""
-    manager: GdacsFeedEntityManager = hass.data[DOMAIN][FEED][entry.entry_id]
+    manager = entry.runtime_data
 
     @callback
     def async_add_geolocation(
@@ -188,20 +189,20 @@ class GdacsEvent(GeolocationEvent):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_DESCRIPTION, self._description),
-            (ATTR_EVENT_TYPE, self._event_type),
-            (ATTR_ALERT_LEVEL, self._alert_level),
-            (ATTR_COUNTRY, self._country),
-            (ATTR_DURATION_IN_WEEK, self._duration_in_week),
-            (ATTR_FROM_DATE, self._from_date),
-            (ATTR_TO_DATE, self._to_date),
-            (ATTR_POPULATION, self._population),
-            (ATTR_SEVERITY, self._severity),
-            (ATTR_VULNERABILITY, self._vulnerability),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_DESCRIPTION, self._description),
+                (ATTR_EVENT_TYPE, self._event_type),
+                (ATTR_ALERT_LEVEL, self._alert_level),
+                (ATTR_COUNTRY, self._country),
+                (ATTR_DURATION_IN_WEEK, self._duration_in_week),
+                (ATTR_FROM_DATE, self._from_date),
+                (ATTR_TO_DATE, self._to_date),
+                (ATTR_POPULATION, self._population),
+                (ATTR_SEVERITY, self._severity),
+                (ATTR_VULNERABILITY, self._vulnerability),
+            )
+            if value or isinstance(value, bool)
+        }

@@ -17,7 +17,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_USER_INPUT
 
-from tests.common import load_json_object_fixture
+from tests.common import async_load_json_object_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -33,15 +33,16 @@ async def user_flow(hass: HomeAssistant) -> str:
     return result["flow_id"]
 
 
+@pytest.mark.parametrize(
+    "fixture", ["webmin_update_without_mac.json", "webmin_update.json"]
+)
 async def test_form_user(
-    hass: HomeAssistant,
-    user_flow: str,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, user_flow: str, mock_setup_entry: AsyncMock, fixture: str
 ) -> None:
     """Test a successful user initiated flow."""
     with patch(
         "homeassistant.components.webmin.helpers.WebminInstance.update",
-        return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
+        return_value=await async_load_json_object_fixture(hass, fixture, DOMAIN),
     ):
         result = await hass.config_entries.flow.async_configure(
             user_flow, TEST_USER_INPUT
@@ -73,7 +74,7 @@ async def test_form_user(
         (Exception, "unknown"),
         (
             Fault("5", "Webmin module net does not exist"),
-            "Fault 5: Webmin module net does not exist",
+            "unknown",
         ),
     ],
 )
@@ -95,7 +96,9 @@ async def test_form_user_errors(
 
     with patch(
         "homeassistant.components.webmin.helpers.WebminInstance.update",
-        return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
+        return_value=await async_load_json_object_fixture(
+            hass, "webmin_update.json", DOMAIN
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_INPUT
@@ -114,7 +117,9 @@ async def test_duplicate_entry(
     """Test a successful user initiated flow."""
     with patch(
         "homeassistant.components.webmin.helpers.WebminInstance.update",
-        return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
+        return_value=await async_load_json_object_fixture(
+            hass, "webmin_update.json", DOMAIN
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             user_flow, TEST_USER_INPUT
@@ -127,7 +132,9 @@ async def test_duplicate_entry(
 
     with patch(
         "homeassistant.components.webmin.helpers.WebminInstance.update",
-        return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
+        return_value=await async_load_json_object_fixture(
+            hass, "webmin_update.json", DOMAIN
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

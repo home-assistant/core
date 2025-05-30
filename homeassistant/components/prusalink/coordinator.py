@@ -10,7 +10,13 @@ from time import monotonic
 from typing import TypeVar
 
 from httpx import ConnectError
-from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
+from pyprusalink import (
+    JobInfo,
+    LegacyPrinterStatus,
+    PrinterInfo,
+    PrinterStatus,
+    PrusaLink,
+)
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 
 from homeassistant.config_entries import ConfigEntry
@@ -31,12 +37,18 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
     config_entry: ConfigEntry
     expect_change_until = 0.0
 
-    def __init__(self, hass: HomeAssistant, api: PrusaLink) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: PrusaLink
+    ) -> None:
         """Initialize the update coordinator."""
         self.api = api
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=self._get_update_interval(None)
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=self._get_update_interval(None),
         )
 
     async def _async_update_data(self) -> T:
@@ -94,3 +106,11 @@ class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):
     async def _fetch_data(self) -> JobInfo:
         """Fetch the printer data."""
         return await self.api.get_job()
+
+
+class InfoUpdateCoordinator(PrusaLinkUpdateCoordinator[PrinterInfo]):
+    """Info update coordinator."""
+
+    async def _fetch_data(self) -> PrinterInfo:
+        """Fetch the printer data."""
+        return await self.api.get_info()

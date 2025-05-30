@@ -26,7 +26,7 @@ from homeassistant.helpers.script import (
     debug_stop,
 )
 
-from .. import trace
+from .util import async_get_trace, async_list_contexts, async_list_traces
 
 TRACE_DOMAINS = ("automation", "script")
 
@@ -66,7 +66,7 @@ async def websocket_trace_get(
     run_id = msg["run_id"]
 
     try:
-        requested_trace = await trace.async_get_trace(hass, key, run_id)
+        requested_trace = await async_get_trace(hass, key, run_id)
     except KeyError:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "The trace could not be found"
@@ -98,7 +98,7 @@ async def websocket_trace_list(
     wanted_domain = msg["domain"]
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
-    traces = await trace.async_list_traces(hass, wanted_domain, key)
+    traces = await async_list_traces(hass, wanted_domain, key)
 
     connection.send_result(msg["id"], traces)
 
@@ -120,7 +120,7 @@ async def websocket_trace_contexts(
     """Retrieve contexts we have traces for."""
     key = f"{msg['domain']}.{msg['item_id']}" if "item_id" in msg else None
 
-    contexts = await trace.async_list_contexts(hass, key)
+    contexts = await async_list_contexts(hass, key)
 
     connection.send_result(msg["id"], contexts)
 

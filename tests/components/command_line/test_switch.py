@@ -30,11 +30,29 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
+
+
+async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+    """Test setting up the platform with platform yaml."""
+    await setup.async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "command_line",
+                "command": "echo 1",
+                "payload_on": "1",
+                "payload_off": "0",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_state_integration_yaml(hass: HomeAssistant) -> None:
@@ -534,7 +552,7 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if this.state=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                                '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}'
                             ),
                             "name": "Test",
                         }
@@ -546,7 +564,7 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if states("switch.test2")=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                                '{% if states("switch.test")=="off" %} mdi:off {% else %} mdi:on {% endif %}'
                             ),
                             "name": "Test2",
                         },
@@ -577,7 +595,7 @@ async def test_templating(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         entity_state2 = hass.states.get("switch.test2")
         assert entity_state.state == STATE_ON
-        assert entity_state.attributes.get("icon") == "mdi:on"
+        assert entity_state.attributes.get("icon") == "mdi:icon2"
         assert entity_state2.state == STATE_ON
         assert entity_state2.attributes.get("icon") == "mdi:on"
 
@@ -717,7 +735,9 @@ async def test_updating_manually(
                         "command_on": "echo 2",
                         "command_off": "echo 3",
                         "name": "Test",
-                        "availability": '{{ states("sensor.input1")=="on" }}',
+                        "value_template": "{{ value_json == 0 }}",
+                        "availability": '{{ "sensor.input1" | has_value }}',
+                        "icon": 'mdi:{{ states("sensor.input1") }}',
                     },
                 }
             ]
@@ -731,16 +751,17 @@ async def test_availability(
 ) -> None:
     """Test availability."""
 
-    hass.states.async_set("sensor.input1", "on")
+    hass.states.async_set("sensor.input1", STATE_OFF)
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("switch.test")
     assert entity_state
-    assert entity_state.state == STATE_ON
+    assert entity_state.state == STATE_OFF
+    assert entity_state.attributes["icon"] == "mdi:off"
 
-    hass.states.async_set("sensor.input1", "off")
+    hass.states.async_set("sensor.input1", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
     with mock_asyncio_subprocess_run(b"50\n"):
         freezer.tick(timedelta(minutes=1))
@@ -750,3 +771,64 @@ async def test_availability(
     entity_state = hass.states.get("switch.test")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
+    assert "icon" not in entity_state.attributes
+
+    hass.states.async_set("sensor.input1", STATE_ON)
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"0\n"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
+    assert entity_state.attributes["icon"] == "mdi:on"
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "switch": {
+                        "command_state": "echo 1",
+                        "command_on": "echo 2",
+                        "command_off": "echo 3",
+                        "name": "Test",
+                        "value_template": "{{ x - 1 }}",
+                        "availability": "{{ value == '50' }}",
+                    },
+                }
+            ]
+        }
+    ],
+)
+async def test_availability_blocks_value_template(
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test availability blocks value_template from rendering."""
+    error = "Error parsing value for switch.test: 'x' is undefined"
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"51\n"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert error not in caplog.text
+
+    entity_state = hass.states.get("switch.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
+
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"50\n"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert error in caplog.text

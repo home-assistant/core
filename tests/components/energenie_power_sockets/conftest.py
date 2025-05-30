@@ -1,11 +1,11 @@
 """Configure tests for Energenie-Power-Sockets."""
 
+from collections.abc import Generator
 from typing import Final
 from unittest.mock import MagicMock, patch
 
 from pyegps.fakes.powerstrip import FakePowerStrip
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.energenie_power_sockets.const import (
     CONF_DEVICE_API_ID,
@@ -44,7 +44,7 @@ def get_pyegps_device_mock() -> MagicMock:
     fkObj = FakePowerStrip(
         devId=DEMO_CONFIG_DATA[CONF_DEVICE_API_ID], number_of_sockets=4
     )
-    fkObj.release = lambda: True
+    fkObj.release = lambda: None
     fkObj._status = [0, 1, 0, 1]
 
     usb_device_mock = MagicMock(wraps=fkObj)

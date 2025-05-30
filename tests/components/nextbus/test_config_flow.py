@@ -1,9 +1,9 @@
 """Test the NextBus config flow."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries, setup
 from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
@@ -44,7 +44,7 @@ async def test_user_config(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_AGENCY: "sf-muni",
+            CONF_AGENCY: "sfmta-cis",
         },
     )
     await hass.async_block_till_done()
@@ -68,16 +68,16 @@ async def test_user_config(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_STOP: "5650",
+            CONF_STOP: "5184",
         },
     )
     await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("data") == {
-        "agency": "sf-muni",
+        "agency": "sfmta-cis",
         "route": "F",
-        "stop": "5650",
+        "stop": "5184",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1

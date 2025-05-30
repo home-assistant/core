@@ -38,13 +38,7 @@
             'setDisplay',
             'setLevel',
           ]),
-          'cid': 'abcdefghabcdefghabcdefghabcdefgh',
-          'config': dict({
-            'auto_target_humidity': 60,
-            'automatic_stop': True,
-            'display': True,
-          }),
-          'config_dict': dict({
+          '_config_dict': dict({
             'features': list([
               'warm_mist',
               'nightlight',
@@ -71,6 +65,7 @@
               'LUH-A602S-WEUR',
               'LUH-A602S-WEU',
               'LUH-A602S-WJP',
+              'LUH-A602S-WUSC',
             ]),
             'module': 'VeSyncHumid200300S',
             'warm_mist_levels': list([
@@ -79,6 +74,16 @@
               2,
               3,
             ]),
+          }),
+          '_features': list([
+            'warm_mist',
+            'nightlight',
+          ]),
+          'cid': 'abcdefghabcdefghabcdefghabcdefgh',
+          'config': dict({
+            'auto_target_humidity': 60,
+            'automatic_stop': True,
+            'display': True,
           }),
           'config_module': 'WFON_AHM_LUH-A602S-WUS_US',
           'connection_status': 'online',
@@ -105,10 +110,6 @@
           'device_type': 'LUH-A602S-WUS',
           'enabled': False,
           'extension': None,
-          'features': list([
-            'warm_mist',
-            'nightlight',
-          ]),
           'mac_id': '**REDACTED**',
           'manager': '**REDACTED**',
           'mist_levels': list([
@@ -127,7 +128,7 @@
             'sleep',
             'manual',
           ]),
-          'mode': None,
+          'mode': 'humidity',
           'night_light': True,
           'pid': None,
           'speed': None,
@@ -159,6 +160,31 @@
 # ---
 # name: test_async_get_device_diagnostics__single_fan
   dict({
+    '_config_dict': dict({
+      'features': list([
+        'air_quality',
+      ]),
+      'levels': list([
+        1,
+        2,
+      ]),
+      'models': list([
+        'LV-PUR131S',
+        'LV-RH131S',
+        'LV-RH131S-WM',
+      ]),
+      'modes': list([
+        'manual',
+        'auto',
+        'sleep',
+        'off',
+      ]),
+      'module': 'VeSyncAir131',
+    }),
+    '_features': list([
+      'air_quality',
+    ]),
+    'air_quality_feature': True,
     'cid': 'abcdefghabcdefghabcdefghabcdefgh',
     'config': dict({
     }),
@@ -179,6 +205,7 @@
     'device_region': 'US',
     'device_status': 'unknown',
     'device_type': 'LV-PUR131S',
+    'enabled': True,
     'extension': None,
     'home_assistant': dict({
       'disabled': False,
@@ -203,7 +230,7 @@
                 'auto',
                 'sleep',
               ]),
-              'supported_features': 9,
+              'supported_features': 57,
             }),
             'entity_id': 'fan.fan',
             'last_changed': str,
@@ -263,6 +290,30 @@
           }),
           'unit_of_measurement': '%',
         }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'domain': 'switch',
+          'entity_category': None,
+          'entity_id': 'switch.fan_display',
+          'icon': None,
+          'name': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'original_name': 'Display',
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Fan Display',
+            }),
+            'entity_id': 'switch.fan_display',
+            'last_changed': str,
+            'last_reported': str,
+            'last_updated': str,
+            'state': 'unavailable',
+          }),
+          'unit_of_measurement': None,
+        }),
       ]),
       'name': 'Fan',
       'name_by_user': None,
@@ -270,6 +321,12 @@
     'mac_id': '**REDACTED**',
     'manager': '**REDACTED**',
     'mode': None,
+    'modes': list([
+      'manual',
+      'auto',
+      'sleep',
+      'off',
+    ]),
     'pid': None,
     'speed': None,
     'sub_device_no': None,

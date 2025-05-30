@@ -6,13 +6,12 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from blebox_uniapi.box import Box
 import blebox_uniapi.light
 from blebox_uniapi.light import BleboxColorMode
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
@@ -21,12 +20,12 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
-from . import BleBoxEntity
-from .const import DOMAIN, PRODUCT
+from . import BleBoxConfigEntry
+from .entity import BleBoxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,13 +34,13 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BleBoxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
-    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
     entities = [
-        BleBoxLightEntity(feature) for feature in product.features.get("lights", [])
+        BleBoxLightEntity(feature)
+        for feature in config_entry.runtime_data.features.get("lights", [])
     ]
     async_add_entities(entities, True)
 
@@ -60,6 +59,9 @@ COLOR_MODE_MAP = {
 class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     """Representation of BleBox lights."""
 
+    _attr_min_color_temp_kelvin = 2700  # 370 Mireds
+    _attr_max_color_temp_kelvin = 6500  # 154 Mireds
+
     def __init__(self, feature: blebox_uniapi.light.Light) -> None:
         """Initialize a BleBox light."""
         super().__init__(feature)
@@ -77,25 +79,20 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return self._feature.brightness
 
     @property
-    def color_temp(self):
-        """Return color temperature."""
-        return self._feature.color_temp
+    def color_temp_kelvin(self) -> int:
+        """Return the color temperature value in Kelvin."""
+        return color_util.color_temperature_mired_to_kelvin(self._feature.color_temp)
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode:
         """Return the color mode.
 
         Set values to _attr_ibutes if needed.
         """
-        color_mode_tmp = COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
-        if color_mode_tmp == ColorMode.COLOR_TEMP:
-            self._attr_min_mireds = 1
-            self._attr_max_mireds = 255
-
-        return color_mode_tmp
+        return COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
 
     @property
-    def supported_color_modes(self):
+    def supported_color_modes(self) -> set[ColorMode]:
         """Return supported color modes."""
         return {self.color_mode}
 
@@ -110,7 +107,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return self._feature.effect
 
     @property
-    def rgb_color(self):
+    def rgb_color(self) -> tuple[int, int, int] | None:
         """Return value for rgb."""
         if (rgb_hex := self._feature.rgb_hex) is None:
             return None
@@ -121,14 +118,14 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         )
 
     @property
-    def rgbw_color(self):
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the hue and saturation."""
         if (rgbw_hex := self._feature.rgbw_hex) is None:
             return None
         return tuple(blebox_uniapi.light.Light.rgb_hex_to_rgb_list(rgbw_hex)[0:4])
 
     @property
-    def rgbww_color(self):
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
         """Return value for rgbww."""
         if (rgbww_hex := self._feature.rgbww_hex) is None:
             return None
@@ -140,7 +137,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         rgbw = kwargs.get(ATTR_RGBW_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
         rgbww = kwargs.get(ATTR_RGBWW_COLOR)
         feature = self._feature
         value = feature.sensible_on_value
@@ -148,9 +145,10 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
 
         if rgbw is not None:
             value = list(rgbw)
-        if color_temp is not None:
+        if color_temp_kelvin is not None:
             value = feature.return_color_temp_with_brightness(
-                int(color_temp), self.brightness
+                int(color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)),
+                self.brightness,
             )
 
         if rgbww is not None:
@@ -162,9 +160,12 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
             value = list(rgb)
 
         if brightness is not None:
-            if self.color_mode == ATTR_COLOR_TEMP:
+            if self.color_mode == ColorMode.COLOR_TEMP:
                 value = feature.return_color_temp_with_brightness(
-                    self.color_temp, brightness
+                    color_util.color_temperature_kelvin_to_mired(
+                        self.color_temp_kelvin
+                    ),
+                    brightness,
                 )
             else:
                 value = feature.apply_brightness(value, brightness)

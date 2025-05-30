@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from open_meteo import Forecast
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.open_meteo.const import DOMAIN
 from homeassistant.const import CONF_ZONE
@@ -43,7 +43,7 @@ def mock_open_meteo(request: pytest.FixtureRequest) -> Generator[MagicMock]:
 
     forecast = Forecast.from_json(load_fixture(fixture, DOMAIN))
     with patch(
-        "homeassistant.components.open_meteo.OpenMeteo", autospec=True
+        "homeassistant.components.open_meteo.coordinator.OpenMeteo", autospec=True
     ) as open_meteo_mock:
         open_meteo = open_meteo_mock.return_value
         open_meteo.forecast.return_value = forecast

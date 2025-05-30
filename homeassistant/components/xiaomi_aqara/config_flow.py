@@ -2,15 +2,16 @@
 
 import logging
 from socket import gaierror
+from typing import Any
 
 import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_INTERFACE,
@@ -49,13 +50,14 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    selected_gateway: XiaomiGateway
+    gateways: dict[str, XiaomiGateway]
+
+    def __init__(self) -> None:
         """Initialize."""
-        self.host = None
+        self.host: str | None = None
         self.interface = DEFAULT_INTERFACE
-        self.sid = None
-        self.gateways = None
-        self.selected_gateway = None
+        self.sid: str | None = None
 
     @callback
     def async_show_form_step_user(self, errors):
@@ -66,9 +68,11 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is None:
             return self.async_show_form_step_user(errors)
 
@@ -125,9 +129,11 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
         errors["base"] = "discovery_error"
         return self.async_show_form_step_user(errors)
 
-    async def async_step_select(self, user_input=None):
+    async def async_step_select(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle multiple aqara gateways found."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             ip_adress = user_input["select_ip"]
             self.selected_gateway = self.gateways[ip_adress]
@@ -147,7 +153,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         name = discovery_info.name
@@ -185,7 +191,9 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_settings(self, user_input=None):
+    async def async_step_settings(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Specify settings and connect aqara gateway."""
         errors = {}
         if user_input is not None:

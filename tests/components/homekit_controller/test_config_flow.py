@@ -2,6 +2,7 @@
 
 import asyncio
 from ipaddress import ip_address
+from typing import Any
 import unittest.mock
 from unittest.mock import AsyncMock, patch
 
@@ -14,7 +15,6 @@ from bleak.exc import BleakError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.components.homekit_controller.storage import async_get_entity_storage
@@ -22,6 +22,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 
@@ -160,7 +164,9 @@ def test_valid_pairing_codes(pairing_code) -> None:
     assert len(valid_pin[2]) == 3
 
 
-def get_flow_context(hass, result):
+def get_flow_context(
+    hass: HomeAssistant, result: config_flow.ConfigFlowResult
+) -> dict[str, Any]:
     """Get the flow context from the result of async_init or async_configure."""
     flow = next(
         flow
@@ -173,9 +179,9 @@ def get_flow_context(hass, result):
 
 def get_device_discovery_info(
     device, upper_case_props=False, missing_csharp=False, paired=False
-) -> zeroconf.ZeroconfServiceInfo:
+) -> ZeroconfServiceInfo:
     """Turn a aiohomekit format zeroconf entry into a homeassistant one."""
-    result = zeroconf.ZeroconfServiceInfo(
+    result = ZeroconfServiceInfo(
         ip_address=ip_address("127.0.0.1"),
         ip_addresses=[ip_address("127.0.0.1")],
         hostname=device.description.name,
@@ -184,7 +190,7 @@ def get_device_discovery_info(
         properties={
             "md": device.description.model,
             "pv": "1.0",
-            zeroconf.ATTR_PROPERTIES_ID: device.description.id,
+            ATTR_PROPERTIES_ID: device.description.id,
             "c#": device.description.config_num,
             "s#": device.description.state_num,
             "ff": "0",
@@ -211,13 +217,13 @@ def setup_mock_accessory(controller):
     bridge = Accessories()
 
     accessory = Accessory.create_with_info(
+        1,
         name="Koogeek-LS1-20833F",
         manufacturer="Koogeek",
         model="LS1",
         serial_number="12345",
         firmware_revision="1.1",
     )
-    accessory.aid = 1
 
     service = accessory.add_service(ServicesTypes.LIGHTBULB)
     on_char = service.add_char(CharacteristicsTypes.ON)
@@ -327,7 +333,7 @@ async def test_id_missing(hass: HomeAssistant, controller) -> None:
     discovery_info = get_device_discovery_info(device)
 
     # Remove id from device
-    del discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
+    del discovery_info.properties[ATTR_PROPERTIES_ID]
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -343,7 +349,7 @@ async def test_discovery_ignored_model(hass: HomeAssistant, controller) -> None:
     """Already paired."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
-    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
+    discovery_info.properties[ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
     discovery_info.properties["md"] = "HHKBridge1,1"
 
     # Device is discovered
@@ -372,7 +378,7 @@ async def test_discovery_ignored_hk_bridge(
         connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
-    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
+    discovery_info.properties[ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -400,7 +406,7 @@ async def test_discovery_does_not_ignore_non_homekit(
         connections={(dr.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
-    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
+    discovery_info.properties[ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -579,7 +585,7 @@ async def test_discovery_already_configured_update_csharp(
     # Set device as already paired
     discovery_info.properties["sf"] = 0x00
     discovery_info.properties["c#"] = 99999
-    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
+    discovery_info.properties[ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -796,7 +802,6 @@ async def test_pair_form_errors_on_finish(
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
-        "pairing": True,
     }
 
 
@@ -847,7 +852,6 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
         "title_placeholders": {"name": "TestDevice", "category": "Outlet"},
         "unique_id": "00:00:00:00:00:00",
         "source": config_entries.SOURCE_ZEROCONF,
-        "pairing": True,
     }
 
 
@@ -956,54 +960,6 @@ async def test_user_no_unpaired_devices(hass: HomeAssistant, controller) -> None
     assert result["reason"] == "no_devices"
 
 
-async def test_unignore_works(hass: HomeAssistant, controller) -> None:
-    """Test rediscovery triggered disovers work."""
-    device = setup_mock_accessory(controller)
-
-    # Device is unignored
-    result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
-        context={"source": config_entries.SOURCE_UNIGNORE},
-        data={"unique_id": device.description.id},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-    assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice", "category": "Other"},
-        "unique_id": "00:00:00:00:00:00",
-        "source": config_entries.SOURCE_UNIGNORE,
-    }
-
-    # User initiates pairing by clicking on 'configure' - device enters pairing mode and displays code
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-
-    # Pairing finalized
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"pairing_code": "111-22-333"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Koogeek-LS1-20833F"
-
-
-async def test_unignore_ignores_missing_devices(
-    hass: HomeAssistant, controller
-) -> None:
-    """Test rediscovery triggered disovers handle devices that have gone away."""
-    setup_mock_accessory(controller)
-
-    # Device is unignored
-    result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
-        context={"source": config_entries.SOURCE_UNIGNORE},
-        data={"unique_id": "00:00:00:00:00:01"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "accessory_not_found_error"
-
-
 async def test_discovery_dismiss_existing_flow_on_paired(
     hass: HomeAssistant, controller
 ) -> None:
@@ -1014,7 +970,7 @@ async def test_discovery_dismiss_existing_flow_on_paired(
     # Set device as already not paired
     discovery_info.properties["sf"] = 0x01
     discovery_info.properties["c#"] = 99999
-    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
+    discovery_info.properties[ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -1248,7 +1204,7 @@ async def test_discovery_updates_ip_when_config_entry_set_up(
 
     # Set device as already paired
     discovery_info.properties["sf"] = 0x00
-    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "Aa:bB:cC:dD:eE:fF"
+    discovery_info.properties[ATTR_PROPERTIES_ID] = "Aa:bB:cC:dD:eE:fF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -1286,7 +1242,7 @@ async def test_discovery_updates_ip_config_entry_not_set_up(
 
     # Set device as already paired
     discovery_info.properties["sf"] = 0x00
-    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "Aa:bB:cC:dD:eE:fF"
+    discovery_info.properties[ATTR_PROPERTIES_ID] = "Aa:bB:cC:dD:eE:fF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(

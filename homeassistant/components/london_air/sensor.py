@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -29,6 +29,7 @@ AUTHORITIES = [
     "Barking and Dagenham",
     "Bexley",
     "Brent",
+    "Bromley",
     "Camden",
     "City of London",
     "Croydon",
@@ -36,10 +37,12 @@ AUTHORITIES = [
     "Enfield",
     "Greenwich",
     "Hackney",
+    "Hammersmith and Fulham",
     "Haringey",
     "Harrow",
     "Havering",
     "Hillingdon",
+    "Hounslow",
     "Islington",
     "Kensington and Chelsea",
     "Kingston",

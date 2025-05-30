@@ -1,5 +1,6 @@
 """Define fixtures for Notion tests."""
 
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -8,7 +9,6 @@ from aionotion.listener.models import Listener
 from aionotion.sensor.models import Sensor
 from aionotion.user.models import UserPreferences
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.notion import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN
 from homeassistant.const import CONF_USERNAME

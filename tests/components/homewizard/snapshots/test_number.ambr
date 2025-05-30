@@ -14,7 +14,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100.0',
+    'state': '100',
   })
 # ---
 # name: test_number_entities[HWE-SKT-11].1
@@ -29,6 +29,7 @@
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -49,9 +50,10 @@
     'original_name': 'Status light brightness',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_light_brightness',
-    'unique_id': 'aabbccddeeff_status_light_brightness',
+    'unique_id': 'HWE-P1_5c2fafabcdef_status_light_brightness',
     'unit_of_measurement': '%',
   })
 # ---
@@ -59,11 +61,12 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -73,14 +76,15 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-SKT',
+    'model': 'Wi-Fi Energy Socket',
+    'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -105,7 +109,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100.0',
+    'state': '100',
   })
 # ---
 # name: test_number_entities[HWE-SKT-21].1
@@ -120,6 +124,7 @@
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -140,9 +145,10 @@
     'original_name': 'Status light brightness',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_light_brightness',
-    'unique_id': 'aabbccddeeff_status_light_brightness',
+    'unique_id': 'HWE-P1_5c2fafabcdef_status_light_brightness',
     'unit_of_measurement': '%',
   })
 # ---
@@ -150,11 +156,12 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -164,14 +171,15 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'HWE-SKT',
+    'model': 'Wi-Fi Energy Socket',
+    'model_id': 'HWE-SKT',
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,

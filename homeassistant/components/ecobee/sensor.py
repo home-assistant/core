@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -21,8 +20,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import EcobeeConfigEntry
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 
@@ -73,11 +73,11 @@ SENSOR_TYPES: tuple[EcobeeSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcobeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ecobee sensors."""
-    data = hass.data[DOMAIN]
+    data = config_entry.runtime_data
     entities = [
         EcobeeSensor(data, sensor["name"], index, description)
         for index in range(len(data.ecobee.thermostats))
@@ -112,7 +112,7 @@ class EcobeeSensor(SensorEntity):
         self._state = None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return a unique identifier for this sensor."""
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] == self.sensor_name:
@@ -120,6 +120,7 @@ class EcobeeSensor(SensorEntity):
                     return f"{sensor['code']}-{self.device_class}"
                 thermostat = self.data.ecobee.get_thermostat(self.index)
                 return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
+        return None
 
     @property
     def device_info(self) -> DeviceInfo | None:

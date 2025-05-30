@@ -1,5 +1,6 @@
 """Fixtures for Sonarr integration tests."""
 
+from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch
 
@@ -13,7 +14,6 @@ from aiopyarr import (
     SystemStatus,
 )
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.sonarr.const import (
     CONF_BASE_PATH,

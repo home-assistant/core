@@ -8,9 +8,11 @@
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -28,9 +30,10 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Charging Mode',
+    'original_name': 'Charging mode',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_mode',
     'unique_id': 'WBY00000000REXI01-charging_mode',
@@ -40,11 +43,11 @@
 # name: test_entity_state_attrs[select.i3_rex_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'friendly_name': 'i3 (+ REX) Charging Mode',
+      'friendly_name': 'i3 (+ REX) Charging mode',
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'context': <ANY>,
@@ -78,6 +81,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -95,9 +99,10 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'AC Charging Limit',
+    'original_name': 'AC charging limit',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_limit',
     'unique_id': 'WBA00000000DEMO02-ac_limit',
@@ -107,8 +112,7 @@
 # name: test_entity_state_attrs[select.i4_edrive40_ac_charging_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'friendly_name': 'i4 eDrive40 AC Charging Limit',
+      'friendly_name': 'i4 eDrive40 AC charging limit',
       'options': list([
         '6',
         '7',
@@ -143,9 +147,11 @@
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -163,9 +169,10 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Charging Mode',
+    'original_name': 'Charging mode',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_mode',
     'unique_id': 'WBA00000000DEMO02-charging_mode',
@@ -175,11 +182,11 @@
 # name: test_entity_state_attrs[select.i4_edrive40_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'friendly_name': 'i4 eDrive40 Charging Mode',
+      'friendly_name': 'i4 eDrive40 Charging mode',
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'context': <ANY>,
@@ -213,6 +220,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -230,9 +238,10 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'AC Charging Limit',
+    'original_name': 'AC charging limit',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_limit',
     'unique_id': 'WBA00000000DEMO01-ac_limit',
@@ -242,8 +251,7 @@
 # name: test_entity_state_attrs[select.ix_xdrive50_ac_charging_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'friendly_name': 'iX xDrive50 AC Charging Limit',
+      'friendly_name': 'iX xDrive50 AC charging limit',
       'options': list([
         '6',
         '7',
@@ -278,9 +286,11 @@
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -298,9 +308,10 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Charging Mode',
+    'original_name': 'Charging mode',
     'platform': 'bmw_connected_drive',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_mode',
     'unique_id': 'WBA00000000DEMO01-charging_mode',
@@ -310,11 +321,11 @@
 # name: test_entity_state_attrs[select.ix_xdrive50_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'friendly_name': 'iX xDrive50 Charging Mode',
+      'friendly_name': 'iX xDrive50 Charging mode',
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'context': <ANY>,

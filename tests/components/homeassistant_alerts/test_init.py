@@ -26,7 +26,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
-def stub_alert(aioclient_mock, alert_id):
+def stub_alert(aioclient_mock: AiohttpClientMocker, alert_id) -> None:
     """Stub an alert."""
     aioclient_mock.get(
         f"https://alerts.home-assistant.io/alerts/{alert_id}.json",
@@ -35,7 +35,7 @@ def stub_alert(aioclient_mock, alert_id):
 
 
 @pytest.fixture(autouse=True)
-async def setup_repairs(hass):
+async def setup_repairs(hass: HomeAssistant) -> None:
     """Set up the repairs integration."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
 
@@ -99,9 +99,9 @@ async def test_alerts(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
-    ha_version,
-    supervisor_info,
-    expected_alerts,
+    ha_version: str,
+    supervisor_info: dict[str, str] | None,
+    expected_alerts: list[tuple[str, str]],
 ) -> None:
     """Test creating issues based on alerts."""
 
@@ -292,12 +292,12 @@ async def test_alerts_refreshed_on_component_load(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
-    ha_version,
-    supervisor_info,
-    initial_components,
-    late_components,
-    initial_alerts,
-    late_alerts,
+    ha_version: str,
+    supervisor_info: dict[str, str] | None,
+    initial_components: list[str],
+    late_components: list[str],
+    initial_alerts: list[tuple[str, str]],
+    late_alerts: list[tuple[str, str]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test alerts are refreshed when components are loaded."""
@@ -433,9 +433,9 @@ async def test_bad_alerts(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
-    ha_version,
-    fixture,
-    expected_alerts,
+    ha_version: str,
+    fixture: str,
+    expected_alerts: list[tuple[str, str]],
 ) -> None:
     """Test creating issues based on alerts."""
     fixture_content = load_fixture(fixture, "homeassistant_alerts")

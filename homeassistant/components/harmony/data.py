@@ -9,6 +9,7 @@ from aioharmony.const import ClientCallbackType, SendCommandDevice
 import aioharmony.exceptions as aioexc
 from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,6 +18,9 @@ from .const import ACTIVITY_POWER_OFF
 from .subscriber import HarmonySubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
+
+
+type HarmonyConfigEntry = ConfigEntry[HarmonyData]
 
 
 class HarmonyData(HarmonySubscriberMixin):
@@ -120,8 +124,7 @@ class HarmonyData(HarmonySubscriberMixin):
         except (ValueError, AttributeError) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
-                f"{self.name}: Error {err} while connected HUB at:"
-                f" {self._address}:8088"
+                f"{self.name}: Error {err} while connected HUB at: {self._address}:8088"
             ) from err
         if not connected:
             await self._client.close()

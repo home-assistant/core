@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/homeworks",
   "iot_class": "local_push",
   "loggers": ["pyhomeworks"],
-  "requirements": ["pyhomeworks==0.0.6"]
+  "requirements": ["pyhomeworks==1.1.2"]
 }

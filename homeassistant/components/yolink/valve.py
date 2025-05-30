@@ -6,7 +6,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from yolink.client_request import ClientRequest
-from yolink.const import ATTR_DEVICE_WATER_METER_CONTROLLER
+from yolink.const import (
+    ATTR_DEVICE_MODEL_A,
+    ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_WATER_METER_CONTROLLER,
+)
 from yolink.device import YoLinkDevice
 
 from homeassistant.components.valve import (
@@ -17,7 +21,7 @@ from homeassistant.components.valve import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEV_MODEL_WATER_METER_YS5007, DOMAIN
 from .coordinator import YoLinkCoordinator
@@ -30,6 +34,7 @@ class YoLinkValveEntityDescription(ValveEntityDescription):
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
     value: Callable = lambda state: state
+    channel_index: int | None = None
 
 
 DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
@@ -37,20 +42,43 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         key="valve_state",
         translation_key="meter_valve_state",
         device_class=ValveDeviceClass.WATER,
-        value=lambda value: value == "closed" if value is not None else None,
+        value=lambda value: value != "open" if value is not None else None,
         exists_fn=lambda device: device.device_type
         == ATTR_DEVICE_WATER_METER_CONTROLLER
         and not device.device_model_name.startswith(DEV_MODEL_WATER_METER_YS5007),
     ),
+    YoLinkValveEntityDescription(
+        key="valve_1_state",
+        translation_key="meter_valve_1_state",
+        device_class=ValveDeviceClass.WATER,
+        value=lambda value: value != "open" if value is not None else None,
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
+        ),
+        channel_index=0,
+    ),
+    YoLinkValveEntityDescription(
+        key="valve_2_state",
+        translation_key="meter_valve_2_state",
+        device_class=ValveDeviceClass.WATER,
+        value=lambda value: value != "open" if value is not None else None,
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
+        ),
+        channel_index=1,
+    ),
 )
 
-DEVICE_TYPE = [ATTR_DEVICE_WATER_METER_CONTROLLER]
+DEVICE_TYPE = [
+    ATTR_DEVICE_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
+]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink valve from a config entry."""
     device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
@@ -102,7 +130,17 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
 
     async def _async_invoke_device(self, state: str) -> None:
         """Call setState api to change valve state."""
-        await self.call_device(ClientRequest("setState", {"valve": state}))
+        if (
+            self.coordinator.device.device_type
+            == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
+        ):
+            channel_index = self.entity_description.channel_index
+            if channel_index is not None:
+                await self.call_device(
+                    ClientRequest("setState", {"valves": {str(channel_index): state}})
+                )
+        else:
+            await self.call_device(ClientRequest("setState", {"valve": state}))
         self._attr_is_closed = state == "close"
         self.async_write_ha_state()
 
@@ -113,3 +151,11 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
     async def async_close_valve(self) -> None:
         """Close valve."""
         await self._async_invoke_device("close")
+
+    @property
+    def available(self) -> bool:
+        """Return true is device is available."""
+        if self.coordinator.dev_net_type is not None:
+            # When the device operates in Class A mode, it cannot be controlled.
+            return self.coordinator.dev_net_type != ATTR_DEVICE_MODEL_A
+        return super().available

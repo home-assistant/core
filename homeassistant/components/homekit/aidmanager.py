@@ -11,10 +11,10 @@ This module generates and stores them in a HA storage.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import random
 
 from fnv_hash_fast import fnv1a_32
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er

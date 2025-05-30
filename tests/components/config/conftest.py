@@ -1,5 +1,6 @@
 """Test fixtures for the config integration."""
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from copy import deepcopy
 import json
@@ -9,7 +10,6 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 

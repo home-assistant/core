@@ -1,8 +1,10 @@
 """Test built-in blueprints."""
 
 import asyncio
+from collections.abc import Iterator
 import contextlib
 from datetime import timedelta
+from os import PathLike
 import pathlib
 from typing import Any
 from unittest.mock import patch
@@ -15,7 +17,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util, yaml
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 
@@ -23,7 +25,9 @@ BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(automation.__file__).parent / "blueprint
 
 
 @contextlib.contextmanager
-def patch_blueprint(blueprint_path: str, data_path):
+def patch_blueprint(
+    blueprint_path: str, data_path: str | PathLike[str]
+) -> Iterator[None]:
     """Patch blueprint loading from a different source."""
     orig_load = models.DomainBlueprints._load_blueprint
 
@@ -34,7 +38,10 @@ def patch_blueprint(blueprint_path: str, data_path):
             return orig_load(self, path)
 
         return models.Blueprint(
-            yaml.load_yaml(data_path), expected_domain=self.domain, path=path
+            yaml_util.load_yaml(data_path),
+            expected_domain=self.domain,
+            path=path,
+            schema=automation.config.AUTOMATION_BLUEPRINT_SCHEMA,
         )
 
     with patch(

@@ -33,7 +33,7 @@ class KrakenConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> KrakenOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return KrakenOptionsFlowHandler(config_entry)
+        return KrakenOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -53,10 +53,6 @@ class KrakenConfigFlow(ConfigFlow, domain=DOMAIN):
 class KrakenOptionsFlowHandler(OptionsFlow):
     """Handle Kraken client options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Kraken options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -75,10 +71,12 @@ class KrakenOptionsFlowHandler(OptionsFlow):
         tracked_asset_pairs = self.config_entry.options.get(
             CONF_TRACKED_ASSET_PAIRS, []
         )
-        for tracked_asset_pair in tracked_asset_pairs:
-            tradable_asset_pairs_for_multi_select[tracked_asset_pair] = (
-                tracked_asset_pair
-            )
+        tradable_asset_pairs_for_multi_select.update(
+            {
+                tracked_asset_pair: tracked_asset_pair
+                for tracked_asset_pair in tracked_asset_pairs
+            }
+        )
 
         options = {
             vol.Optional(

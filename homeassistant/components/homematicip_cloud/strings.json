@@ -2,7 +2,8 @@
   "config": {
     "step": {
       "init": {
-        "title": "Pick HomematicIP Access point",
+        "title": "Pick Homematic IP access point",
+        "description": "If you are about to register a **Homematic IP HCU1**, please press the button on top of the device before you continue.\n\nThe registration process must be completed within 5 minutes.",
         "data": {
           "hapid": "Access point ID (SGTIN)",
           "pin": "[%key:common::config_flow::data::pin%]",
@@ -10,8 +11,8 @@
         }
       },
       "link": {
-        "title": "Link Access point",
-        "description": "Press the blue button on the access point and the submit button to register HomematicIP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)"
+        "title": "Link access point",
+        "description": "Press the blue button on the access point and the **Submit** button to register Homematic IP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)"
       }
     },
     "error": {
@@ -26,24 +27,29 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "exceptions": {
+    "access_point_not_found": {
+      "message": "No matching access point found for access point ID {id}"
+    }
+  },
   "services": {
     "activate_eco_mode_with_duration": {
       "name": "Activate eco mode with duration",
-      "description": "Activates eco mode with period.",
+      "description": "Activates the eco mode for a specified duration.",
       "fields": {
         "duration": {
           "name": "Duration",
           "description": "The duration of eco mode in minutes."
         },
         "accesspoint_id": {
-          "name": "Accesspoint ID",
-          "description": "The ID of the Homematic IP Access Point."
+          "name": "Access point ID",
+          "description": "The ID of the Homematic IP access point."
         }
       }
     },
     "activate_eco_mode_with_period": {
       "name": "Activate eco more with period",
-      "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::description%]",
+      "description": "Activates the eco mode until a given time.",
       "fields": {
         "endtime": {
           "name": "Endtime",
@@ -57,7 +63,7 @@
     },
     "activate_vacation": {
       "name": "Activate vacation",
-      "description": "Activates the vacation mode until the given time.",
+      "description": "Activates the vacation mode until a given time.",
       "fields": {
         "endtime": {
           "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_period::fields::endtime::name%]",
@@ -108,20 +114,20 @@
       }
     },
     "dump_hap_config": {
-      "name": "Dump hap config",
-      "description": "Dumps the configuration of the Homematic IP Access Point(s).",
+      "name": "Dump HAP config",
+      "description": "Dumps the configuration of the Homematic IP access point(s).",
       "fields": {
         "config_output_path": {
           "name": "Config output path",
-          "description": "(Default is 'Your home-assistant config directory') Path where to store the config."
+          "description": "Path where to store the config. Default is 'Your Home Assistant config directory'."
         },
         "config_output_file_prefix": {
           "name": "Config output file prefix",
-          "description": "Name of the config file. The SGTIN of the AP will always be appended."
+          "description": "Name of the config file. The SGTIN of the HAP will always be appended."
         },
         "anonymize": {
           "name": "Anonymize",
-          "description": "Should the Configuration be anonymized?"
+          "description": "Should the configuration be anonymized?"
         }
       }
     },
@@ -132,6 +138,20 @@
         "entity_id": {
           "name": "Entity",
           "description": "The ID of the measuring entity. Use 'all' keyword to reset all energy counters."
+        }
+      }
+    },
+    "set_home_cooling_mode": {
+      "name": "Set home cooling mode",
+      "description": "Sets the heating/cooling mode for the entire home",
+      "fields": {
+        "accesspoint_id": {
+          "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::name%]",
+          "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::description%]"
+        },
+        "cooling": {
+          "name": "Cooling",
+          "description": "Enable for cooling mode, disable for heating mode"
         }
       }
     }

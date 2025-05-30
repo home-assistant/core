@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 from .coordinator import StreamlabsCoordinator
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api_key = entry.data[CONF_API_KEY]
     client = StreamlabsClient(api_key)
-    coordinator = StreamlabsCoordinator(hass, client)
+    coordinator = StreamlabsCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
 

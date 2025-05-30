@@ -50,7 +50,7 @@ async def async_setup_entry(
     _LOGGER.debug("disk arguments to be added: %s", disk_arguments)
 
     coordinator: SystemMonitorCoordinator = SystemMonitorCoordinator(
-        hass, psutil_wrapper, disk_arguments
+        hass, entry, psutil_wrapper, disk_arguments
     )
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = SystemMonitorData(coordinator, psutil_wrapper)
@@ -60,20 +60,28 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: SystemMonitorConfigEntry
+) -> bool:
     """Unload System Monitor config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: SystemMonitorConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: SystemMonitorConfigEntry
+) -> bool:
     """Migrate old entry."""
 
-    if entry.version == 1:
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1 and entry.minor_version < 3:
         new_options = {**entry.options}
         if entry.minor_version == 1:
             # Migration copies process sensors to binary sensors
@@ -83,6 +91,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, options=new_options, version=1, minor_version=2
         )
+
+        if entry.minor_version == 2:
+            new_options = {**entry.options}
+            if SENSOR_DOMAIN in new_options:
+                new_options.pop(SENSOR_DOMAIN)
+            hass.config_entries.async_update_entry(
+                entry, options=new_options, version=1, minor_version=3
+            )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version

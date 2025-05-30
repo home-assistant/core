@@ -11,11 +11,11 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     SERVER_SOFTWARE,
     async_get_clientsession,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -94,7 +94,7 @@ async def _update_no_ip(
 
     params = {"hostname": domain}
 
-    headers = {
+    headers: dict[str, str] = {
         AUTHORIZATION: f"Basic {auth_str.decode('utf-8')}",
         USER_AGENT: HA_USER_AGENT,
     }

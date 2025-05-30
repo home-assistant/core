@@ -1,9 +1,9 @@
 """Test the snapcast config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

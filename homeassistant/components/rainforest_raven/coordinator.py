@@ -20,6 +20,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
+type RAVEnConfigEntry = ConfigEntry[RAVEnDataCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -67,31 +69,17 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
 
     _raven_device: RAVEnSerialDevice | None = None
     _device_info: RAVEnDeviceInfo | None = None
+    config_entry: RAVEnConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: RAVEnConfigEntry) -> None:
         """Initialize the data object."""
-        self.entry = entry
-
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-
-    @property
-    def device_fw_version(self) -> str | None:
-        """Return the firmware version of the device."""
-        if self._device_info:
-            return self._device_info.fw_version
-        return None
-
-    @property
-    def device_hw_version(self) -> str | None:
-        """Return the hardware version of the device."""
-        if self._device_info:
-            return self._device_info.hw_version
-        return None
 
     @property
     def device_mac_address(self) -> str | None:
@@ -101,35 +89,19 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
         return None
 
     @property
-    def device_manufacturer(self) -> str | None:
-        """Return the manufacturer of the device."""
-        if self._device_info:
-            return self._device_info.manufacturer
-        return None
-
-    @property
-    def device_model(self) -> str | None:
-        """Return the model of the device."""
-        if self._device_info:
-            return self._device_info.model_id
-        return None
-
-    @property
-    def device_name(self) -> str:
-        """Return the product name of the device."""
-        return "RAVEn Device"
-
-    @property
     def device_info(self) -> DeviceInfo | None:
         """Return device info."""
-        if self._device_info and self.device_mac_address:
+        if (device_info := self._device_info) and (
+            mac_address := self.device_mac_address
+        ):
             return DeviceInfo(
-                identifiers={(DOMAIN, self.device_mac_address)},
-                manufacturer=self.device_manufacturer,
-                model=self.device_model,
-                name=self.device_name,
-                sw_version=self.device_fw_version,
-                hw_version=self.device_hw_version,
+                identifiers={(DOMAIN, mac_address)},
+                manufacturer=device_info.manufacturer,
+                model=device_info.model_id,
+                model_id=device_info.model_id,
+                name="RAVEn Device",
+                sw_version=device_info.fw_version,
+                hw_version=device_info.hw_version,
             )
         return None
 
@@ -142,7 +114,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
         try:
             device = await self._get_device()
             async with asyncio.timeout(5):
-                return await _get_all_data(device, self.entry.data[CONF_MAC])
+                return await _get_all_data(device, self.config_entry.data[CONF_MAC])
         except RAVEnConnectionError as err:
             await self._cleanup_device()
             raise UpdateFailed(f"RAVEnConnectionError: {err}") from err
@@ -159,7 +131,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
         if self._raven_device is not None:
             return self._raven_device
 
-        device = RAVEnSerialDevice(self.entry.data[CONF_DEVICE])
+        device = RAVEnSerialDevice(self.config_entry.data[CONF_DEVICE])
 
         try:
             async with asyncio.timeout(5):
@@ -167,7 +139,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
                 await device.synchronize()
                 self._device_info = await device.get_device_info()
         except:
-            await device.close()
+            await device.abort()
             raise
 
         self._raven_device = device

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from uiprotect import NotAuthorized, NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
@@ -12,6 +13,9 @@ from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
     CONF_DISABLE_RTSP,
     DOMAIN,
+)
+from homeassistant.components.unifiprotect.data import (
+    async_ufp_instance_for_config_entry_ids,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -114,7 +118,7 @@ async def test_setup_too_old(
 ) -> None:
     """Test setup of unifiprotect entry with too old of version of UniFi Protect."""
 
-    old_bootstrap = ufp.api.bootstrap.copy()
+    old_bootstrap = ufp.api.bootstrap.model_copy()
     old_bootstrap.nvr = old_nvr
     ufp.api.update.return_value = old_bootstrap
     ufp.api.bootstrap = old_bootstrap
@@ -286,3 +290,58 @@ async def test_device_remove_devices_nvr(
     client = await hass_ws_client(hass)
     response = await client.remove_device(live_device_entry.id, entry_id)
     assert not response["success"]
+
+
+@pytest.mark.parametrize(
+    ("mock_entries", "expected_result"),
+    [
+        pytest.param(
+            [
+                MockConfigEntry(
+                    domain=DOMAIN,
+                    entry_id="1",
+                    data={},
+                ),
+                MockConfigEntry(
+                    domain="other_domain",
+                    entry_id="2",
+                    data={},
+                ),
+            ],
+            "mock_api_instance_1",
+            id="one_matching_domain",
+        ),
+        pytest.param(
+            [
+                MockConfigEntry(
+                    domain="other_domain",
+                    entry_id="1",
+                    data={},
+                ),
+                MockConfigEntry(
+                    domain="other_domain",
+                    entry_id="2",
+                    data={},
+                ),
+            ],
+            None,
+            id="no_matching_domain",
+        ),
+    ],
+)
+async def test_async_ufp_instance_for_config_entry_ids(
+    hass: HomeAssistant,
+    mock_entries: list[MockConfigEntry],
+    expected_result: str | None,
+) -> None:
+    """Test async_ufp_instance_for_config_entry_ids with various entry configurations."""
+
+    for index, entry in enumerate(mock_entries):
+        entry.add_to_hass(hass)
+        entry.runtime_data = Mock(api=f"mock_api_instance_{index + 1}")
+
+    entry_ids = {entry.entry_id for entry in mock_entries}
+
+    result = async_ufp_instance_for_config_entry_ids(hass, entry_ids)
+
+    assert result == expected_result

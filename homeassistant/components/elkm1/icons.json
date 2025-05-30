@@ -10,18 +10,44 @@
     }
   },
   "services": {
-    "alarm_bypass": "mdi:shield-off",
-    "alarm_clear_bypass": "mdi:shield",
-    "alarm_arm_home_instant": "mdi:shield-lock",
-    "alarm_arm_night_instant": "mdi:shield-moon",
-    "alarm_arm_vacation": "mdi:beach",
-    "alarm_display_message": "mdi:message-alert",
-    "set_time": "mdi:clock-edit",
-    "speak_phrase": "mdi:message-processing",
-    "speak_word": "mdi:message-minus",
-    "sensor_counter_refresh": "mdi:refresh",
-    "sensor_counter_set": "mdi:counter",
-    "sensor_zone_bypass": "mdi:shield-off",
-    "sensor_zone_trigger": "mdi:shield"
+    "alarm_bypass": {
+      "service": "mdi:shield-off"
+    },
+    "alarm_clear_bypass": {
+      "service": "mdi:shield"
+    },
+    "alarm_arm_home_instant": {
+      "service": "mdi:shield-lock"
+    },
+    "alarm_arm_night_instant": {
+      "service": "mdi:shield-moon"
+    },
+    "alarm_arm_vacation": {
+      "service": "mdi:beach"
+    },
+    "alarm_display_message": {
+      "service": "mdi:message-alert"
+    },
+    "set_time": {
+      "service": "mdi:clock-edit"
+    },
+    "speak_phrase": {
+      "service": "mdi:message-processing"
+    },
+    "speak_word": {
+      "service": "mdi:message-minus"
+    },
+    "sensor_counter_refresh": {
+      "service": "mdi:refresh"
+    },
+    "sensor_counter_set": {
+      "service": "mdi:counter"
+    },
+    "sensor_zone_bypass": {
+      "service": "mdi:shield-off"
+    },
+    "sensor_zone_trigger": {
+      "service": "mdi:shield"
+    }
   }
 }

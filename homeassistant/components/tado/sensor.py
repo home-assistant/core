@@ -13,25 +13,21 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import TadoConnector
+from . import TadoConfigEntry
 from .const import (
     CONDITIONS_MAP,
-    DATA,
-    DOMAIN,
     SENSOR_DATA_CATEGORY_GEOFENCE,
     SENSOR_DATA_CATEGORY_WEATHER,
-    SIGNAL_TADO_UPDATE_RECEIVED,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
     TYPE_HOT_WATER,
 )
+from .coordinator import TadoDataUpdateCoordinator
 from .entity import TadoHomeEntity, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,10 +69,8 @@ def get_automatic_geofencing(data: dict[str, str]) -> bool:
 
 def get_geofencing_mode(data: dict[str, str]) -> str:
     """Return Geofencing Mode based on Presence and Presence Locked attributes."""
-    tado_mode = ""
     tado_mode = data.get("presence", "unknown")
 
-    geofencing_switch_mode = ""
     if "presenceLocked" in data:
         if data["presenceLocked"]:
             geofencing_switch_mode = "manual"
@@ -197,11 +191,13 @@ ZONE_SENSORS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TadoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tado sensor platform."""
 
-    tado = hass.data[DOMAIN][entry.entry_id][DATA]
+    tado = entry.runtime_data.coordinator
     zones = tado.zones
     entities: list[SensorEntity] = []
 
@@ -236,39 +232,22 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     entity_description: TadoSensorEntityDescription
 
     def __init__(
-        self, tado: TadoConnector, entity_description: TadoSensorEntityDescription
+        self,
+        coordinator: TadoDataUpdateCoordinator,
+        entity_description: TadoSensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
-        super().__init__(tado)
-        self._tado = tado
+        super().__init__(coordinator)
 
-        self._attr_unique_id = f"{entity_description.key} {tado.home_id}"
-
-    async def async_added_to_hass(self) -> None:
-        """Register for sensor updates."""
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(self._tado.home_id, "home", "data"),
-                self._async_update_callback,
-            )
-        )
-        self._async_update_home_data()
+        self._attr_unique_id = f"{entity_description.key} {coordinator.home_id}"
 
     @callback
-    def _async_update_callback(self) -> None:
-        """Update and write state."""
-        self._async_update_home_data()
-        self.async_write_ha_state()
-
-    @callback
-    def _async_update_home_data(self) -> None:
-        """Handle update callbacks."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         try:
-            tado_weather_data = self._tado.data["weather"]
-            tado_geofence_data = self._tado.data["geofence"]
+            tado_weather_data = self.coordinator.data["weather"]
+            tado_geofence_data = self.coordinator.data["geofence"]
         except KeyError:
             return
 
@@ -282,6 +261,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
                 tado_sensor_data
             )
+        super()._handle_coordinator_update()
 
 
 class TadoZoneSensor(TadoZoneEntity, SensorEntity):
@@ -291,43 +271,24 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
 
     def __init__(
         self,
-        tado: TadoConnector,
+        coordinator: TadoDataUpdateCoordinator,
         zone_name: str,
         zone_id: int,
         entity_description: TadoSensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
-        self._tado = tado
-        super().__init__(zone_name, tado.home_id, zone_id)
+        super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
 
-        self._attr_unique_id = f"{entity_description.key} {zone_id} {tado.home_id}"
-
-    async def async_added_to_hass(self) -> None:
-        """Register for sensor updates."""
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.home_id, "zone", self.zone_id
-                ),
-                self._async_update_callback,
-            )
+        self._attr_unique_id = (
+            f"{entity_description.key} {zone_id} {coordinator.home_id}"
         )
-        self._async_update_zone_data()
 
     @callback
-    def _async_update_callback(self) -> None:
-        """Update and write state."""
-        self._async_update_zone_data()
-        self.async_write_ha_state()
-
-    @callback
-    def _async_update_zone_data(self) -> None:
-        """Handle update callbacks."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         try:
-            tado_zone_data = self._tado.data["zone"][self.zone_id]
+            tado_zone_data = self.coordinator.data["zone"][self.zone_id]
         except KeyError:
             return
 
@@ -336,3 +297,4 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
                 tado_zone_data
             )
+        super()._handle_coordinator_update()

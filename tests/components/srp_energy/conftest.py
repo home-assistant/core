@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import datetime as dt
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.srp_energy.const import DOMAIN, PHOENIX_TIME_ZONE
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import MOCK_USAGE, TEST_CONFIG_HOME
 

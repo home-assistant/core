@@ -5,18 +5,15 @@ import urllib
 
 import pytest
 
-from homeassistant.components.feedreader import CONF_URLS
 from homeassistant.components.feedreader.const import (
     CONF_MAX_ENTRIES,
     DEFAULT_MAX_ENTRIES,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_URL
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
 
 from . import create_mock_entry
 from .const import FEED_TITLE, URL, VALID_CONFIG_DEFAULT
@@ -83,16 +80,6 @@ async def test_user_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "url_error"}
 
-    # no feed entries returned
-    feedparser.side_effect = None
-    feedparser.return_value = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_URL: URL}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "no_feed_entries"}
-
     # success
     feedparser.side_effect = None
     feedparser.return_value = feed_one_event
@@ -105,78 +92,6 @@ async def test_user_errors(
     assert result["options"][CONF_MAX_ENTRIES] == DEFAULT_MAX_ENTRIES
 
 
-@pytest.mark.parametrize(
-    ("data", "expected_data", "expected_options"),
-    [
-        ({CONF_URLS: [URL]}, {CONF_URL: URL}, {CONF_MAX_ENTRIES: DEFAULT_MAX_ENTRIES}),
-        (
-            {CONF_URLS: [URL], CONF_MAX_ENTRIES: 5},
-            {CONF_URL: URL},
-            {CONF_MAX_ENTRIES: 5},
-        ),
-    ],
-)
-async def test_import(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    data,
-    expected_data,
-    expected_options,
-    feedparser,
-    setup_entry,
-) -> None:
-    """Test starting an import flow."""
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert not config_entries
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: data})
-
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert config_entries
-    assert len(config_entries) == 1
-    assert config_entries[0].title == FEED_TITLE
-    assert config_entries[0].data == expected_data
-    assert config_entries[0].options == expected_options
-
-    assert issue_registry.async_get_issue(HA_DOMAIN, "deprecated_yaml_feedreader")
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "return_value", "expected_issue_id"),
-    [
-        (
-            urllib.error.URLError("Test"),
-            None,
-            "import_yaml_error_feedreader_url_error_http_some_rss_local_rss_feed_xml",
-        ),
-        (
-            None,
-            None,
-            "import_yaml_error_feedreader_no_feed_entries_http_some_rss_local_rss_feed_xml",
-        ),
-    ],
-)
-async def test_import_errors(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    feedparser,
-    setup_entry,
-    feed_one_event,
-    side_effect,
-    return_value,
-    expected_issue_id,
-) -> None:
-    """Test starting an import flow which results in an URL error."""
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert not config_entries
-
-    # raise URLError
-    feedparser.side_effect = side_effect
-    feedparser.return_value = return_value
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_URLS: [URL]}})
-    assert issue_registry.async_get_issue(DOMAIN, expected_issue_id)
-
-
 async def test_reconfigure(hass: HomeAssistant, feedparser) -> None:
     """Test starting a reconfigure flow."""
     entry = create_mock_entry(VALID_CONFIG_DEFAULT)
@@ -185,16 +100,9 @@ async def test_reconfigure(hass: HomeAssistant, feedparser) -> None:
     await hass.async_block_till_done()
 
     # init user flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     # success
     with patch(
@@ -224,16 +132,9 @@ async def test_reconfigure_errors(
     entry.add_to_hass(hass)
 
     # init user flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     # raise URLError
     feedparser.side_effect = urllib.error.URLError("Test")
@@ -245,21 +146,8 @@ async def test_reconfigure_errors(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "url_error"}
-
-    # no feed entries returned
-    feedparser.side_effect = None
-    feedparser.return_value = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_URL: "http://other.rss.local/rss_feed.xml",
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
-    assert result["errors"] == {"base": "no_feed_entries"}
 
     # success
     feedparser.side_effect = None
@@ -296,3 +184,38 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_MAX_ENTRIES: 10,
     }
+
+
+@pytest.mark.parametrize(
+    ("fixture_name", "expected_title"),
+    [
+        ("feed_htmlentities", "RSS en español"),
+        ("feed_atom_htmlentities", "ATOM RSS en español"),
+    ],
+)
+async def test_feed_htmlentities(
+    hass: HomeAssistant,
+    feedparser,
+    setup_entry,
+    fixture_name,
+    expected_title,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test starting a flow by user from a feed with HTML Entities in the title."""
+    with patch(
+        "homeassistant.components.feedreader.config_flow.feedparser.http.get",
+        side_effect=[request.getfixturevalue(fixture_name)],
+    ):
+        # init user flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        # success
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_URL: URL}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == expected_title

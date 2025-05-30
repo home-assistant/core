@@ -3,27 +3,25 @@
 from __future__ import annotations
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import brightness_to_value, value_to_brightness
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: HomeWizardConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up numbers for device."""
-    coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    if coordinator.supports_state():
-        async_add_entities([HWEnergyNumberEntity(coordinator)])
+    if entry.runtime_data.data.device.supports_state():
+        async_add_entities([HWEnergyNumberEntity(entry.runtime_data)])
 
 
 class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
@@ -46,22 +44,21 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
     @homewizard_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
-        await self.coordinator.api.state_set(
-            brightness=value_to_brightness((0, 100), value)
-        )
+        await self.coordinator.api.system(status_led_brightness_pct=int(value))
         await self.coordinator.async_refresh()
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.coordinator.data.state is not None
+        return super().available and self.coordinator.data.system is not None
 
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
         if (
-            not self.coordinator.data.state
-            or (brightness := self.coordinator.data.state.brightness) is None
+            not self.coordinator.data.system
+            or (brightness := self.coordinator.data.system.status_led_brightness_pct)
+            is None
         ):
             return None
-        return brightness_to_value((0, 100), brightness)
+        return round(brightness)

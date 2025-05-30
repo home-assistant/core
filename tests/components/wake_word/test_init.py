@@ -1,20 +1,19 @@
 """Test wake_word component setup."""
 
 import asyncio
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Generator
 from functools import partial
 from pathlib import Path
 from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from .common import mock_wake_word_entity_platform
@@ -119,7 +118,7 @@ async def mock_config_entry_setup(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [wake_word.DOMAIN]
+            config_entry, [Platform.WAKE_WORD]
         )
         return True
 
@@ -128,7 +127,7 @@ async def mock_config_entry_setup(
     ) -> bool:
         """Unload up test config entry."""
         await hass.config_entries.async_forward_entry_unload(
-            config_entry, wake_word.DOMAIN
+            config_entry, Platform.WAKE_WORD
         )
         return True
 
@@ -144,7 +143,7 @@ async def mock_config_entry_setup(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test stt platform via config entry."""
         async_add_entities([mock_provider_entity])

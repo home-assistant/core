@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
@@ -26,7 +26,7 @@ async def test_wait_time_select(
     hass: HomeAssistant, mock_account, entity_registry: er.EntityRegistry
 ) -> None:
     """Tests the wait time select entity."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, SELECT_DOMAIN)
 
     select = hass.states.get(SELECT_ENTITY_ID)
     assert select
@@ -41,7 +41,7 @@ async def test_wait_time_select(
         data[ATTR_OPTION] = wait_time
 
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             data,
             blocking=True,
@@ -52,7 +52,7 @@ async def test_wait_time_select(
 
 async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> None:
     """Tests the wait time select entity with invalid value."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, SELECT_DOMAIN)
 
     select = hass.states.get(SELECT_ENTITY_ID)
     assert select
@@ -61,7 +61,7 @@ async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> No
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             data,
             blocking=True,
@@ -75,7 +75,7 @@ async def test_panel_brightness_select(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Tests the wait time select entity."""
-    await setup_integration(hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account_with_litterrobot_4, SELECT_DOMAIN)
 
     select = hass.states.get(PANEL_BRIGHTNESS_ENTITY_ID)
     assert select
@@ -94,7 +94,7 @@ async def test_panel_brightness_select(
         data[ATTR_OPTION] = option
 
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             data,
             blocking=True,

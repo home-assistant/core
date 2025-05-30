@@ -1,14 +1,13 @@
 """Fixtures for Intergas InComfort integration."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from incomfortclient import DisplayCode
 import pytest
-from typing_extensions import Generator
 
-from homeassistant.components.incomfort import DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.incomfort.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -19,13 +18,35 @@ MOCK_CONFIG = {
     "password": "verysecret",
 }
 
+MOCK_CONFIG_DHCP = {
+    "username": "admin",
+    "password": "verysecret",
+}
+
 MOCK_HEATER_STATUS = {
-    "display_code": DisplayCode(126),
+    "display_code": DisplayCode.STANDBY,
     "display_text": "standby",
     "fault_code": None,
     "is_burning": False,
     "is_failed": False,
     "is_pumping": False,
+    "is_tapping": False,
+    "heater_temp": 35.34,
+    "tap_temp": 30.21,
+    "pressure": 1.86,
+    "serial_no": "c0ffeec0ffee",
+    "nodenr": 249,
+    "rf_message_rssi": 30,
+    "rfstatus_cntr": 0,
+}
+
+MOCK_HEATER_STATUS_HEATING = {
+    "display_code": DisplayCode.OPENTHERM,
+    "display_text": "opentherm",
+    "fault_code": None,
+    "is_burning": True,
+    "is_failed": False,
+    "is_pumping": True,
     "is_tapping": False,
     "heater_temp": 35.34,
     "tap_temp": 30.21,
@@ -54,11 +75,21 @@ def mock_entry_data() -> dict[str, Any]:
 
 
 @pytest.fixture
+def mock_entry_options() -> dict[str, Any] | None:
+    """Mock config entry options for fixture."""
+    return None
+
+
+@pytest.fixture
 def mock_config_entry(
-    hass: HomeAssistant, mock_entry_data: dict[str, Any]
-) -> ConfigEntry:
+    hass: HomeAssistant,
+    mock_entry_data: dict[str, Any],
+    mock_entry_options: dict[str, Any],
+) -> MockConfigEntry:
     """Mock a config entry setup for incomfort integration."""
-    entry = MockConfigEntry(domain=DOMAIN, data=mock_entry_data)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=mock_entry_data, options=mock_entry_options
+    )
     entry.add_to_hass(hass)
     return entry
 
@@ -77,10 +108,9 @@ def mock_room_status() -> dict[str, Any]:
 
 @pytest.fixture
 def mock_incomfort(
-    hass: HomeAssistant,
     mock_heater_status: dict[str, Any],
     mock_room_status: dict[str, Any],
-) -> Generator[MagicMock, None]:
+) -> Generator[MagicMock]:
     """Mock the InComfort gateway client."""
 
     class MockRoom:

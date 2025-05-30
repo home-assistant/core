@@ -10,14 +10,13 @@ from uiprotect.data import (
     LockStatusType,
     ModelType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
 )
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .data import UFPConfigEntry
+from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up locks on a UniFi Protect NVR."""
     data = entry.runtime_data
@@ -60,7 +59,7 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
     )
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         lock_status = self.device.lock_status
 

@@ -14,7 +14,7 @@
       "unknown_device": "The device model is not known, not able to set up the device using config flow.",
       "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
       "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
-      "cloud_login_error": "Could not login to Xiaomi Miio Cloud, check the credentials."
+      "cloud_login_error": "Could not log in to Xiaomi Miio Cloud, check the credentials."
     },
     "flow_title": "{name}",
     "step": {
@@ -82,16 +82,245 @@
       "airpurifier_mode": {
         "state": {
           "silent": "Silent",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "favorite": "Favorite"
         }
       },
       "ptc_level": {
         "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
+      }
+    },
+    "fan": {
+      "generic_fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "nature": "Nature",
+              "normal": "[%key:common::state::normal%]"
+            }
+          }
+        }
+      }
+    },
+    "binary_sensor": {
+      "no_water": {
+        "name": "Water tank empty"
+      },
+      "water_tank_detached": {
+        "name": "Water tank"
+      },
+      "ptc_status": {
+        "name": "Auxiliary heat status"
+      },
+      "powersupply_attached": {
+        "name": "Power supply"
+      },
+      "is_water_box_attached": {
+        "name": "Mop attached"
+      },
+      "is_water_shortage": {
+        "name": "Water shortage"
+      },
+      "is_water_box_carriage_attached": {
+        "name": "[%key:component::xiaomi_miio::entity::binary_sensor::is_water_box_attached::name%]"
+      }
+    },
+    "button": {
+      "reset_dust_filter": {
+        "name": "Reset dust filter"
+      },
+      "reset_upper_filter": {
+        "name": "Reset upper filter"
+      },
+      "reset_vacuum_main_brush": {
+        "name": "Reset main brush"
+      },
+      "reset_vacuum_side_brush": {
+        "name": "Reset side brush"
+      },
+      "reset_vacuum_filter": {
+        "name": "Reset filter"
+      },
+      "reset_vacuum_sensor_dirty": {
+        "name": "Reset sensor dirty"
+      }
+    },
+    "number": {
+      "motor_speed": {
+        "name": "Motor speed"
+      },
+      "favorite_level": {
+        "name": "Favorite level"
+      },
+      "fan_level": {
+        "name": "Fan level"
+      },
+      "volume": {
+        "name": "Volume"
+      },
+      "angle": {
+        "name": "Oscillation angle"
+      },
+      "delay_off_countdown": {
+        "name": "Delay off countdown"
+      },
+      "led_brightness": {
+        "name": "LED brightness"
+      },
+      "led_brightness_level": {
+        "name": "LED brightness"
+      },
+      "favorite_rpm": {
+        "name": "Favorite motor speed"
+      }
+    },
+    "sensor": {
+      "load_power": {
+        "name": "Load power"
+      },
+      "water_level": {
+        "name": "Water level"
+      },
+      "actual_speed": {
+        "name": "Actual speed"
+      },
+      "control_speed": {
+        "name": "Control speed"
+      },
+      "favorite_speed": {
+        "name": "Favorite speed"
+      },
+      "motor_speed": {
+        "name": "[%key:component::xiaomi_miio::entity::number::motor_speed::name%]"
+      },
+      "motor2_speed": {
+        "name": "Second motor speed"
+      },
+      "use_time": {
+        "name": "Use time"
+      },
+      "illuminance": {
+        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
+      },
+      "air_quality": {
+        "name": "Air quality"
+      },
+      "tvoc": {
+        "name": "TVOC"
+      },
+      "air_quality_index": {
+        "name": "Air quality index"
+      },
+      "filter_life_remaining": {
+        "name": "Filter life remaining"
+      },
+      "filter_hours_used": {
+        "name": "Filter use"
+      },
+      "filter_left_time": {
+        "name": "Filter lifetime remaining"
+      },
+      "dust_filter_life_remaining": {
+        "name": "Dust filter life remaining"
+      },
+      "dust_filter_life_remaining_days": {
+        "name": "Dust filter lifetime remaining days"
+      },
+      "upper_filter_life_remaining": {
+        "name": "Upper filter life remaining"
+      },
+      "upper_filter_life_remaining_days": {
+        "name": "Upper filter lifetime remaining days"
+      },
+      "purify_volume": {
+        "name": "Purify volume"
+      },
+      "dnd_start": {
+        "name": "DnD start"
+      },
+      "dnd_end": {
+        "name": "DnD end"
+      },
+      "last_clean_start": {
+        "name": "Last clean start"
+      },
+      "last_clean_end": {
+        "name": "Last clean end"
+      },
+      "duration": {
+        "name": "Last clean duration"
+      },
+      "area": {
+        "name": "Last clean area"
+      },
+      "clean_time": {
+        "name": "Current clean duration"
+      },
+      "clean_area": {
+        "name": "Current clean area"
+      },
+      "total_duration": {
+        "name": "Total duration"
+      },
+      "total_area": {
+        "name": "Total clean area"
+      },
+      "count": {
+        "name": "Total clean count"
+      },
+      "dust_collection_count": {
+        "name": "Total dust collection count"
+      },
+      "main_brush_left": {
+        "name": "Main brush remaining"
+      },
+      "side_brush_left": {
+        "name": "Side brush remaining"
+      },
+      "filter_left": {
+        "name": "Filter remaining"
+      },
+      "sensor_dirty_left": {
+        "name": "Sensor dirty remaining"
+      }
+    },
+    "switch": {
+      "buzzer": {
+        "name": "Buzzer"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "display": {
+        "name": "Display"
+      },
+      "dry": {
+        "name": "Dry mode"
+      },
+      "clean_mode": {
+        "name": "Clean mode"
+      },
+      "led": {
+        "name": "LED"
+      },
+      "learn_mode": {
+        "name": "Learn mode"
+      },
+      "auto_detect": {
+        "name": "Auto detect"
+      },
+      "ionizer": {
+        "name": "Ionizer"
+      },
+      "anion": {
+        "name": "[%key:component::xiaomi_miio::entity::switch::ionizer::name%]"
+      },
+      "ptc": {
+        "name": "Auxiliary heat"
       }
     }
   },
@@ -102,7 +331,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the xiaomi miio entity."
+          "description": "Name of the Xiaomi Miio entity."
         }
       }
     },
@@ -136,7 +365,7 @@
     },
     "light_set_delayed_turn_off": {
       "name": "Light set delayed turn off",
-      "description": "Delayed turn off.",
+      "description": "Sets the delayed turning off of a light.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -144,7 +373,7 @@
         },
         "time_period": {
           "name": "Time period",
-          "description": "Time period for the delayed turn off."
+          "description": "Time period for the delayed turning off."
         }
       }
     },
@@ -169,8 +398,8 @@
       }
     },
     "light_night_light_mode_on": {
-      "name": "Night light mode on",
-      "description": "Turns the eyecare mode on (EYECARE SMART LAMP 2 ONLY).",
+      "name": "Light night light mode on",
+      "description": "Turns on the night light mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -179,8 +408,8 @@
       }
     },
     "light_night_light_mode_off": {
-      "name": "Night light mode off",
-      "description": "Turns the eyecare mode fan_set_dry_off (EYECARE SMART LAMP 2 ONLY).",
+      "name": "Light night light mode off",
+      "description": "Turns off the night light mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -190,7 +419,7 @@
     },
     "light_eyecare_mode_on": {
       "name": "Light eyecare mode on",
-      "description": "[%key:component::xiaomi_miio::services::light_reminder_on::description%]",
+      "description": "Turns on the eyecare mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -200,7 +429,7 @@
     },
     "light_eyecare_mode_off": {
       "name": "Light eyecare mode off",
-      "description": "[%key:component::xiaomi_miio::services::light_reminder_off::description%]",
+      "description": "Turns off the eyecare mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -210,7 +439,7 @@
     },
     "remote_learn_command": {
       "name": "Remote learn command",
-      "description": "Learns an IR command, press \"Call Service\", point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
+      "description": "Learns an IR command. Select **Perform action**, point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
       "fields": {
         "slot": {
           "name": "Slot",
@@ -218,21 +447,21 @@
         },
         "timeout": {
           "name": "Timeout",
-          "description": "Define the timeout, before which the command must be learned."
+          "description": "Define the timeout before which the command must be learned."
         }
       }
     },
     "remote_set_led_on": {
       "name": "Remote set LED on",
-      "description": "Turns on blue LED."
+      "description": "Turns on the remote’s blue LED."
     },
     "remote_set_led_off": {
       "name": "Remote set LED off",
-      "description": "Turns off blue LED."
+      "description": "Turns off the remote’s blue LED."
     },
     "switch_set_wifi_led_on": {
       "name": "Switch set Wi-Fi LED on",
-      "description": "Turns the wifi led on.",
+      "description": "Turns on the Wi-Fi LED of a switch.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -242,7 +471,7 @@
     },
     "switch_set_wifi_led_off": {
       "name": "Switch set Wi-Fi LED off",
-      "description": "Turn the Wi-Fi led off.",
+      "description": "Turns off the Wi-Fi LED of a switch.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -280,7 +509,7 @@
     },
     "vacuum_remote_control_start": {
       "name": "Vacuum remote control start",
-      "description": "Starts remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`."
+      "description": "Starts remote control of the vacuum cleaner. You can then move it with the 'Vacuum remote control move' action, when done use 'Vacuum remote control stop'."
     },
     "vacuum_remote_control_stop": {
       "name": "Vacuum remote control stop",
@@ -288,7 +517,7 @@
     },
     "vacuum_remote_control_move": {
       "name": "Vacuum remote control move",
-      "description": "Remote controls the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.",
+      "description": "Remote controls the vacuum cleaner, make sure you first set it in remote control mode with the 'Vacuum remote control start' action.",
       "fields": {
         "velocity": {
           "name": "Velocity",
@@ -338,7 +567,7 @@
     },
     "vacuum_goto": {
       "name": "Vacuum go to",
-      "description": "Go to the specified coordinates.",
+      "description": "Sends the robot to the specified coordinates.",
       "fields": {
         "x_coord": {
           "name": "X coordinate",

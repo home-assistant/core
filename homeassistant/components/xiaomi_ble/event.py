@@ -9,11 +9,10 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import format_discovered_event_class, format_event_dispatcher_name
 from .const import (
@@ -29,7 +28,7 @@ from .const import (
     EVENT_TYPE,
     XiaomiBleEvent,
 )
-from .coordinator import XiaomiActiveBluetoothProcessorCoordinator
+from .types import XiaomiBLEConfigEntry
 
 DESCRIPTIONS_BY_EVENT_CLASS = {
     EVENT_CLASS_BUTTON: EventEntityDescription(
@@ -183,13 +182,11 @@ class XiaomiEventEntity(EventEntity):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: XiaomiBLEConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xiaomi event."""
-    coordinator: XiaomiActiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator = entry.runtime_data
     address = coordinator.address
     ent_reg = er.async_get(hass)
     async_add_entities(

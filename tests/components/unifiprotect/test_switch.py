@@ -34,21 +34,21 @@ CAMERA_SWITCHES_BASIC = [
     d
     for d in CAMERA_SWITCHES
     if (
-        not d.name.startswith("Detections:")
-        and d.name != "SSH enabled"
-        and d.name != "Color night vision"
-        and d.name != "Tracking: person"
-        and d.name != "HDR mode"
+        not d.translation_key.startswith("detections_")
+        and d.key not in {"ssh", "color_night_vision", "track_person", "hdr_mode"}
     )
-    or d.name == "Detections: motion"
-    or d.name == "Detections: person"
-    or d.name == "Detections: vehicle"
-    or d.name == "Detections: animal"
+    or d.key
+    in {
+        "detections_motion",
+        "detections_person",
+        "detections_vehicle",
+        "detections_animal",
+    }
 ]
 CAMERA_SWITCHES_NO_EXTRA = [
     d
     for d in CAMERA_SWITCHES_BASIC
-    if d.name not in ("High FPS", "Privacy mode", "HDR mode")
+    if d.key not in ("high_fps", "privacy_mode", "hdr_mode")
 ]
 
 
@@ -88,7 +88,7 @@ async def test_switch_nvr(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     assert_entity_counts(hass, Platform.SWITCH, 2, 2)
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["set_insights"] = Mock(final=False)
+    nvr.__pydantic_fields__["set_insights"] = Mock(final=False, frozen=False)
     nvr.set_insights = AsyncMock()
     entity_id = "switch.unifiprotect_insights_enabled"
 
@@ -151,7 +151,7 @@ async def test_switch_setup_light(
     description = LIGHT_SWITCHES[0]
 
     unique_id = f"{light.mac}_{description.key}"
-    entity_id = f"switch.test_light_{description.name.lower().replace(' ', '_')}"
+    entity_id = f"switch.test_light_{description.translation_key}"
 
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -193,11 +193,8 @@ async def test_switch_setup_camera_all(
 
     description = CAMERA_SWITCHES[0]
 
-    description_entity_name = (
-        description.name.lower().replace(":", "").replace(" ", "_")
-    )
     unique_id = f"{doorbell.mac}_{description.key}"
-    entity_id = f"switch.test_camera_{description_entity_name}"
+    entity_id = f"switch.test_camera_{description.translation_key}"
 
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -242,11 +239,8 @@ async def test_switch_setup_camera_none(
 
     description = CAMERA_SWITCHES[0]
 
-    description_entity_name = (
-        description.name.lower().replace(":", "").replace(" ", "_")
-    )
     unique_id = f"{camera.mac}_{description.key}"
-    entity_id = f"switch.test_camera_{description_entity_name}"
+    entity_id = f"switch.test_camera_{description.translation_key}"
 
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -271,7 +265,7 @@ async def test_switch_light_status(
 
     description = LIGHT_SWITCHES[1]
 
-    light.__fields__["set_status_light"] = Mock(final=False)
+    light.__pydantic_fields__["set_status_light"] = Mock(final=False, frozen=False)
     light.set_status_light = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, light, description)
@@ -299,7 +293,7 @@ async def test_switch_camera_ssh(
 
     description = CAMERA_SWITCHES[0]
 
-    doorbell.__fields__["set_ssh"] = Mock(final=False)
+    doorbell.__pydantic_fields__["set_ssh"] = Mock(final=False, frozen=False)
     doorbell.set_ssh = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
@@ -332,7 +326,9 @@ async def test_switch_camera_simple(
 
     assert description.ufp_set_method is not None
 
-    doorbell.__fields__[description.ufp_set_method] = Mock(final=False)
+    doorbell.__pydantic_fields__[description.ufp_set_method] = Mock(
+        final=False, frozen=False
+    )
     setattr(doorbell, description.ufp_set_method, AsyncMock())
     set_method = getattr(doorbell, description.ufp_set_method)
 
@@ -361,7 +357,7 @@ async def test_switch_camera_highfps(
 
     description = CAMERA_SWITCHES[3]
 
-    doorbell.__fields__["set_video_mode"] = Mock(final=False)
+    doorbell.__pydantic_fields__["set_video_mode"] = Mock(final=False, frozen=False)
     doorbell.set_video_mode = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
@@ -392,7 +388,7 @@ async def test_switch_camera_privacy(
 
     description = PRIVACY_MODE_SWITCH
 
-    doorbell.__fields__["set_privacy"] = Mock(final=False)
+    doorbell.__pydantic_fields__["set_privacy"] = Mock(final=False, frozen=False)
     doorbell.set_privacy = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
@@ -408,7 +404,7 @@ async def test_switch_camera_privacy(
 
     doorbell.set_privacy.assert_called_with(True, 0, RecordingMode.NEVER)
 
-    new_doorbell = doorbell.copy()
+    new_doorbell = doorbell.model_copy()
     new_doorbell.add_privacy_zone()
     new_doorbell.mic_volume = 0
     new_doorbell.recording_settings.mode = RecordingMode.NEVER
@@ -444,7 +440,7 @@ async def test_switch_camera_privacy_already_on(
 
     description = PRIVACY_MODE_SWITCH
 
-    doorbell.__fields__["set_privacy"] = Mock(final=False)
+    doorbell.__pydantic_fields__["set_privacy"] = Mock(final=False, frozen=False)
     doorbell.set_privacy = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)

@@ -1,5 +1,6 @@
 """Test the speech-to-text platform for the cloud integration."""
 
+from collections.abc import AsyncGenerator
 from copy import deepcopy
 from http import HTTPStatus
 from typing import Any
@@ -7,7 +8,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from hass_nabucasa.voice import STTResponse, VoiceError
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
 from homeassistant.components.cloud.const import DOMAIN

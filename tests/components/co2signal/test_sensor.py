@@ -11,7 +11,7 @@ from aioelectricitymaps import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -109,4 +109,4 @@ async def test_sensor_reauth_triggered(
 
     assert (flows := hass.config_entries.flow.async_progress())
     assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth"
+    assert flows[0]["step_id"] == "reauth_confirm"

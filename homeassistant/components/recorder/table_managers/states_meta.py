@@ -24,6 +24,8 @@ CACHE_SIZE = 8192
 class StatesMetaManager(BaseLRUTableManager[StatesMeta]):
     """Manage the StatesMeta table."""
 
+    active = True
+
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the states meta manager."""
         self._did_first_load = False

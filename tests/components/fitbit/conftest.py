@@ -9,18 +9,12 @@ from unittest.mock import patch
 
 import pytest
 from requests_mock.mocker import Mocker
-from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.fitbit.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    DOMAIN,
-    OAUTH_SCOPES,
-)
+from homeassistant.components.fitbit.const import DOMAIN, OAUTH_SCOPES
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -84,15 +78,19 @@ def mock_token_entry(token_expiration_time: float, scopes: list[str]) -> dict[st
 
 
 @pytest.fixture(name="config_entry")
-def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
+def mock_config_entry(
+    token_entry: dict[str, Any], imported_config_data: dict[str, Any]
+) -> MockConfigEntry:
     """Fixture for a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={
             "auth_implementation": FAKE_AUTH_IMPL,
             "token": token_entry,
+            **imported_config_data,
         },
         unique_id=PROFILE_USER_ID,
+        title=DISPLAY_NAME,
     )
 
 
@@ -108,37 +106,6 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.fixture(name="fitbit_config_yaml")
-def mock_fitbit_config_yaml(token_expiration_time: float) -> dict[str, Any] | None:
-    """Fixture for the yaml fitbit.conf file contents."""
-    return {
-        CONF_CLIENT_ID: CLIENT_ID,
-        CONF_CLIENT_SECRET: CLIENT_SECRET,
-        "access_token": FAKE_ACCESS_TOKEN,
-        "refresh_token": FAKE_REFRESH_TOKEN,
-        "last_saved_at": token_expiration_time,
-    }
-
-
-@pytest.fixture(name="fitbit_config_setup")
-def mock_fitbit_config_setup(
-    fitbit_config_yaml: dict[str, Any] | None,
-) -> Generator[None]:
-    """Fixture to mock out fitbit.conf file data loading and persistence."""
-    has_config = fitbit_config_yaml is not None
-    with (
-        patch(
-            "homeassistant.components.fitbit.sensor.os.path.isfile",
-            return_value=has_config,
-        ),
-        patch(
-            "homeassistant.components.fitbit.sensor.load_json_object",
-            return_value=fitbit_config_yaml,
-        ),
-    ):
-        yield
-
-
 @pytest.fixture(name="monitored_resources")
 def mock_monitored_resources() -> list[str] | None:
     """Fixture for the fitbit yaml config monitored_resources field."""
@@ -151,8 +118,8 @@ def mock_configured_unit_syststem() -> str | None:
     return None
 
 
-@pytest.fixture(name="sensor_platform_config")
-def mock_sensor_platform_config(
+@pytest.fixture(name="imported_config_data")
+def mock_imported_config_data(
     monitored_resources: list[str] | None,
     configured_unit_system: str | None,
 ) -> dict[str, Any]:
@@ -163,32 +130,6 @@ def mock_sensor_platform_config(
     if configured_unit_system is not None:
         config["unit_system"] = configured_unit_system
     return config
-
-
-@pytest.fixture(name="sensor_platform_setup")
-async def mock_sensor_platform_setup(
-    hass: HomeAssistant,
-    sensor_platform_config: dict[str, Any],
-) -> Callable[[], Awaitable[bool]]:
-    """Fixture to set up the integration."""
-
-    async def run() -> bool:
-        result = await async_setup_component(
-            hass,
-            "sensor",
-            {
-                "sensor": [
-                    {
-                        "platform": DOMAIN,
-                        **sensor_platform_config,
-                    }
-                ]
-            },
-        )
-        await hass.async_block_till_done()
-        return result
-
-    return run
 
 
 @pytest.fixture

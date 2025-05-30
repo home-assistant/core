@@ -17,10 +17,11 @@ async def async_init_integration(
     hass: HomeAssistant,
     skip_setup: bool = False,
     exception: Exception | None = None,
+    *,
+    house_fixture="nexia/mobile_houses_123456.json",
 ) -> MockConfigEntry:
     """Set up the nexia integration in Home Assistant."""
 
-    house_fixture = "nexia/mobile_houses_123456.json"
     session_fixture = "nexia/session_123456.json"
     sign_in_fixture = "nexia/sign_in.json"
     set_fan_speed_fixture = "nexia/set_fan_speed_2293892.json"
@@ -54,7 +55,10 @@ async def async_init_integration(
             text=load_fixture(set_fan_speed_fixture),
         )
         entry = MockConfigEntry(
-            domain=DOMAIN, data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"}
+            domain=DOMAIN,
+            data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"},
+            minor_version=2,
+            unique_id="123456",
         )
         entry.add_to_hass(hass)
 

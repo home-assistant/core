@@ -3,7 +3,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'duration': 60,
-      'fade': True,
       'friendly_name': 'WLED RGB Light Nightlight',
       'target_brightness': 0,
     }),
@@ -22,6 +21,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -42,6 +42,7 @@
     'original_name': 'Nightlight',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nightlight',
     'unique_id': 'aabbccddeeff_nightlight',
@@ -52,6 +53,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(
@@ -61,7 +63,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': 'esp8266',
+    'hw_version': 'esp32',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -73,13 +75,14 @@
     'labels': set({
     }),
     'manufacturer': 'WLED',
-    'model': 'DIY light',
+    'model': 'FOSS',
+    'model_id': None,
     'name': 'WLED RGB Light',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '0.8.5',
+    'sw_version': '0.14.4',
     'via_device_id': None,
   })
 # ---
@@ -103,6 +106,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -123,6 +127,7 @@
     'original_name': 'Reverse',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reverse',
     'unique_id': 'aabbccddeeff_reverse_0',
@@ -133,6 +138,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(
@@ -142,7 +148,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': 'esp8266',
+    'hw_version': 'esp32',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -154,13 +160,14 @@
     'labels': set({
     }),
     'manufacturer': 'WLED',
-    'model': 'DIY light',
+    'model': 'FOSS',
+    'model_id': None,
     'name': 'WLED RGB Light',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '0.8.5',
+    'sw_version': '0.14.4',
     'via_device_id': None,
   })
 # ---
@@ -185,6 +192,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -205,6 +213,7 @@
     'original_name': 'Sync receive',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sync_receive',
     'unique_id': 'aabbccddeeff_sync_receive',
@@ -215,6 +224,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(
@@ -224,7 +234,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': 'esp8266',
+    'hw_version': 'esp32',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -236,13 +246,14 @@
     'labels': set({
     }),
     'manufacturer': 'WLED',
-    'model': 'DIY light',
+    'model': 'FOSS',
+    'model_id': None,
     'name': 'WLED RGB Light',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '0.8.5',
+    'sw_version': '0.14.4',
     'via_device_id': None,
   })
 # ---
@@ -267,6 +278,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -287,6 +299,7 @@
     'original_name': 'Sync send',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sync_send',
     'unique_id': 'aabbccddeeff_sync_send',
@@ -297,6 +310,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(
@@ -306,7 +320,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': 'esp8266',
+    'hw_version': 'esp32',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -318,13 +332,14 @@
     'labels': set({
     }),
     'manufacturer': 'WLED',
-    'model': 'DIY light',
+    'model': 'FOSS',
+    'model_id': None,
     'name': 'WLED RGB Light',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '0.8.5',
+    'sw_version': '0.14.4',
     'via_device_id': None,
   })
 # ---

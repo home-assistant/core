@@ -80,7 +80,6 @@ class XiaomiCamera(Camera):
         self._manager = get_ffmpeg_manager(hass)
         self._name = config[CONF_NAME]
         self.host = config[CONF_HOST]
-        self.host.hass = hass
         self._model = config[CONF_MODEL]
         self.port = config[CONF_PORT]
         self.path = config[CONF_PATH]
@@ -141,7 +140,7 @@ class XiaomiCamera(Camera):
 
         videos = [v for v in ftp.nlst() if ".tmp" not in v]
         if not videos:
-            _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
+            _LOGGER.debug('Video folder "%s" is empty; delaying', latest_dir)
             return False
 
         if self._model == MODEL_XIAOFANG:

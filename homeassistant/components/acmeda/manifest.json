@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/acmeda",
   "iot_class": "local_push",
   "loggers": ["aiopulse"],
-  "requirements": ["aiopulse==0.4.4"]
+  "requirements": ["aiopulse==0.4.6"]
 }

@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["jvcprojector"],
-  "requirements": ["pyjvcprojector==1.0.11"]
+  "requirements": ["pyjvcprojector==1.1.2"]
 }

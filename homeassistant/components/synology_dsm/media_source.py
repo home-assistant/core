@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from logging import getLogger
 import mimetypes
 
 from aiohttp import web
@@ -22,7 +23,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, SHARED_SUFFIX
-from .models import SynologyDSMData
+from .coordinator import SynologyDSMConfigEntry, SynologyDSMData
+
+LOGGER = getLogger(__name__)
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -41,23 +44,27 @@ class SynologyPhotosMediaSourceIdentifier:
         """Split identifier into parts."""
         parts = identifier.split("/")
 
-        self.unique_id = None
+        self.unique_id = parts[0]
         self.album_id = None
         self.cache_key = None
         self.file_name = None
         self.is_shared = False
+        self.passphrase = ""
 
-        if parts:
-            self.unique_id = parts[0]
-            if len(parts) > 1:
-                self.album_id = parts[1]
-            if len(parts) > 2:
-                self.cache_key = parts[2]
-            if len(parts) > 3:
-                self.file_name = parts[3]
-                if self.file_name.endswith(SHARED_SUFFIX):
-                    self.is_shared = True
-                    self.file_name = self.file_name.removesuffix(SHARED_SUFFIX)
+        if len(parts) > 1:
+            album_parts = parts[1].split("_")
+            self.album_id = album_parts[0]
+            if len(album_parts) > 1:
+                self.passphrase = parts[1].replace(f"{self.album_id}_", "")
+
+        if len(parts) > 2:
+            self.cache_key = parts[2]
+
+        if len(parts) > 3:
+            self.file_name = parts[3]
+            if self.file_name.endswith(SHARED_SUFFIX):
+                self.is_shared = True
+                self.file_name = self.file_name.removesuffix(SHARED_SUFFIX)
 
 
 class SynologyPhotosMediaSource(MediaSource):
@@ -76,7 +83,7 @@ class SynologyPhotosMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        if not self.hass.data.get(DOMAIN):
+        if not self.hass.config_entries.async_loaded_entries(DOMAIN):
             raise BrowseError("Diskstation not initialized")
         return BrowseMediaSource(
             domain=DOMAIN,
@@ -110,7 +117,13 @@ class SynologyPhotosMediaSource(MediaSource):
                 for entry in self.entries
             ]
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
-        diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier.unique_id]
+        entry: SynologyDSMConfigEntry | None = (
+            self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, identifier.unique_id
+            )
+        )
+        assert entry
+        diskstation = entry.runtime_data
         assert diskstation.api.photos is not None
 
         if identifier.album_id is None:
@@ -132,10 +145,21 @@ class SynologyPhotosMediaSource(MediaSource):
                     can_expand=True,
                 )
             ]
+            ret += [
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"{item.identifier}/shared",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
+                    title="Shared space",
+                    can_play=False,
+                    can_expand=True,
+                )
+            ]
             ret.extend(
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=f"{item.identifier}/{album.album_id}",
+                    identifier=f"{item.identifier}/{album.album_id}_{album.passphrase}",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaClass.IMAGE,
                     title=album.name,
@@ -149,13 +173,24 @@ class SynologyPhotosMediaSource(MediaSource):
 
         # Request items of album
         # Get Items
-        album = SynoPhotosAlbum(int(identifier.album_id), "", 0)
-        try:
-            album_items = await diskstation.api.photos.get_items_from_album(
-                album, 0, 1000
+        if identifier.album_id == "shared":
+            # Get items from shared space
+            try:
+                album_items = await diskstation.api.photos.get_items_from_shared_space(
+                    0, 1000
+                )
+            except SynologyDSMException:
+                return []
+        else:
+            album = SynoPhotosAlbum(
+                int(identifier.album_id), "", 0, identifier.passphrase
             )
-        except SynologyDSMException:
-            return []
+            try:
+                album_items = await diskstation.api.photos.get_items_from_album(
+                    album, 0, 1000
+                )
+            except SynologyDSMException:
+                return []
         assert album_items is not None
 
         ret = []
@@ -170,7 +205,12 @@ class SynologyPhotosMediaSource(MediaSource):
                 ret.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
-                        identifier=f"{identifier.unique_id}/{identifier.album_id}/{album_item.thumbnail_cache_key}/{album_item.file_name}{suffix}",
+                        identifier=(
+                            f"{identifier.unique_id}/"
+                            f"{identifier.album_id}_{identifier.passphrase}/"
+                            f"{album_item.thumbnail_cache_key}/"
+                            f"{album_item.file_name}{suffix}"
+                        ),
                         media_class=MediaClass.IMAGE,
                         media_content_type=mime_type,
                         title=album_item.file_name,
@@ -197,7 +237,12 @@ class SynologyPhotosMediaSource(MediaSource):
         if identifier.is_shared:
             suffix = SHARED_SUFFIX
         return PlayMedia(
-            f"/synology_dsm/{identifier.unique_id}/{identifier.cache_key}/{identifier.file_name}{suffix}",
+            (
+                f"/synology_dsm/{identifier.unique_id}/"
+                f"{identifier.cache_key}/"
+                f"{identifier.file_name}{suffix}/"
+                f"{identifier.passphrase}"
+            ),
             mime_type,
         )
 
@@ -228,21 +273,33 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         self, request: web.Request, source_dir_id: str, location: str
     ) -> web.Response:
         """Start a GET request."""
-        if not self.hass.data.get(DOMAIN):
+        if not self.hass.config_entries.async_loaded_entries(DOMAIN):
             raise web.HTTPNotFound
         # location: {cache_key}/{filename}
-        cache_key, file_name = location.split("/")
+        cache_key, file_name, passphrase = location.split("/")
         image_id = int(cache_key.split("_")[0])
+
         if shared := file_name.endswith(SHARED_SUFFIX):
             file_name = file_name.removesuffix(SHARED_SUFFIX)
+
         mime_type, _ = mimetypes.guess_type(file_name)
         if not isinstance(mime_type, str):
             raise web.HTTPNotFound
-        diskstation: SynologyDSMData = self.hass.data[DOMAIN][source_dir_id]
+
+        entry: SynologyDSMConfigEntry | None = (
+            self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, source_dir_id
+            )
+        )
+        assert entry
+        diskstation = entry.runtime_data
         assert diskstation.api.photos is not None
-        item = SynoPhotosItem(image_id, "", "", "", cache_key, "", shared)
+        item = SynoPhotosItem(image_id, "", "", "", cache_key, "xl", shared, passphrase)
         try:
-            image = await diskstation.api.photos.download_item(item)
+            if passphrase:
+                image = await diskstation.api.photos.download_item_thumbnail(item)
+            else:
+                image = await diskstation.api.photos.download_item(item)
         except SynologyDSMException as exc:
             raise web.HTTPNotFound from exc
         return web.Response(body=image, content_type=mime_type)

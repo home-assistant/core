@@ -1,11 +1,11 @@
 """Configure tests for the Twitch integration."""
 
+from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from twitchAPI.object.api import FollowedChannel, Stream, TwitchUser, UserSubscription
-from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -111,8 +111,8 @@ def twitch_mock() -> Generator[AsyncMock]:
         mock_client.return_value.get_followed_channels.return_value = TwitchIterObject(
             "get_followed_channels.json", FollowedChannel
         )
-        mock_client.return_value.get_streams.return_value = get_generator(
-            "get_streams.json", Stream
+        mock_client.return_value.get_followed_streams.return_value = get_generator(
+            "get_followed_streams.json", Stream
         )
         mock_client.return_value.check_user_subscription.return_value = (
             UserSubscription(

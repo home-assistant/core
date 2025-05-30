@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/aseko_pool_live",
   "iot_class": "cloud_polling",
   "loggers": ["aioaseko"],
-  "requirements": ["aioaseko==0.1.1"]
+  "requirements": ["aioaseko==1.0.0"]
 }

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from types import MappingProxyType
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -23,11 +24,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     TimestampDataUpdateCoordinator,
 )
+from homeassistant.util.dt import parse_datetime
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     PressureConverter,
@@ -112,6 +114,8 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         icon="mdi:compass-rose",
         native_unit_of_measurement=DEGREE,
         unit_convert=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     NWSSensorEntityDescription(
         key="barometricPressure",
@@ -137,11 +141,18 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.METERS,
         unit_convert=UnitOfLength.MILES,
     ),
+    NWSSensorEntityDescription(
+        key="timestamp",
+        name="Latest Observation Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: NWSConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NWSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NWS weather platform."""
     nws_data = entry.runtime_data
@@ -169,7 +180,7 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
     def __init__(
         self,
         hass: HomeAssistant,
-        entry_data: MappingProxyType[str, Any],
+        entry_data: Mapping[str, Any],
         nws_data: NWSData,
         description: NWSSensorEntityDescription,
         station: str,
@@ -190,7 +201,7 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
         )
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | datetime | None:
         """Return the state."""
         if (
             not (observation := self._nws.observation)
@@ -223,4 +234,6 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
             return round(value, 1)
         if unit_of_measurement == PERCENTAGE:
             return round(value)
+        if self.device_class == SensorDeviceClass.TIMESTAMP:
+            return parse_datetime(value)
         return value

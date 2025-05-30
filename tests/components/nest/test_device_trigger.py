@@ -1,8 +1,8 @@
 """The tests for Nest device triggers."""
 
 from typing import Any
+from unittest.mock import AsyncMock
 
-from google_nest_sdm.event import EventMessage
 import pytest
 from pytest_unordered import unordered
 
@@ -18,9 +18,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
+from .common import DEVICE_ID, CreateDevice, PlatformSetup, create_nest_event
 
-from tests.common import async_get_device_automations, async_mock_service
+from tests.common import async_get_device_automations
 
 DEVICE_NAME = "My Camera"
 DATA_MESSAGE = {"message": "service-called"}
@@ -59,7 +59,9 @@ def make_camera(
     }
 
 
-async def setup_automation(hass, device_id, trigger_type):
+async def setup_automation(
+    hass: HomeAssistant, device_id: str, trigger_type: str
+) -> bool:
     """Set up an automation trigger for testing triggering."""
     return await async_setup_component(
         hass,
@@ -81,12 +83,6 @@ async def setup_automation(hass, device_id, trigger_type):
             ]
         },
     )
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_triggers(
@@ -248,7 +244,7 @@ async def test_fires_on_camera_motion(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test camera_motion triggers firing."""
     create_device.create(
@@ -273,8 +269,8 @@ async def test_fires_on_camera_motion(
     }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data == DATA_MESSAGE
+    assert len(service_calls) == 1
+    assert service_calls[0].data == DATA_MESSAGE
 
 
 async def test_fires_on_camera_person(
@@ -282,7 +278,7 @@ async def test_fires_on_camera_person(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test camera_person triggers firing."""
     create_device.create(
@@ -307,8 +303,8 @@ async def test_fires_on_camera_person(
     }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data == DATA_MESSAGE
+    assert len(service_calls) == 1
+    assert service_calls[0].data == DATA_MESSAGE
 
 
 async def test_fires_on_camera_sound(
@@ -316,7 +312,7 @@ async def test_fires_on_camera_sound(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test camera_sound triggers firing."""
     create_device.create(
@@ -341,8 +337,8 @@ async def test_fires_on_camera_sound(
     }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data == DATA_MESSAGE
+    assert len(service_calls) == 1
+    assert service_calls[0].data == DATA_MESSAGE
 
 
 async def test_fires_on_doorbell_chime(
@@ -350,7 +346,7 @@ async def test_fires_on_doorbell_chime(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test doorbell_chime triggers firing."""
     create_device.create(
@@ -375,8 +371,8 @@ async def test_fires_on_doorbell_chime(
     }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data == DATA_MESSAGE
+    assert len(service_calls) == 1
+    assert service_calls[0].data == DATA_MESSAGE
 
 
 async def test_trigger_for_wrong_device_id(
@@ -384,7 +380,7 @@ async def test_trigger_for_wrong_device_id(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test messages for the wrong device are ignored."""
     create_device.create(
@@ -409,7 +405,7 @@ async def test_trigger_for_wrong_device_id(
     }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
 
 async def test_trigger_for_wrong_event_type(
@@ -417,7 +413,7 @@ async def test_trigger_for_wrong_event_type(
     device_registry: dr.DeviceRegistry,
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test that messages for the wrong event type are ignored."""
     create_device.create(
@@ -442,16 +438,16 @@ async def test_trigger_for_wrong_event_type(
     }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
 
 async def test_subscriber_automation(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     create_device: CreateDevice,
     setup_platform: PlatformSetup,
-    subscriber: FakeSubscriber,
+    subscriber: AsyncMock,
 ) -> None:
     """Test end to end subscriber triggers automation."""
     create_device.create(
@@ -469,7 +465,7 @@ async def test_subscriber_automation(
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 
     # Simulate a pubsub message received by the subscriber with a motion event
-    event = EventMessage.create_event(
+    event = create_nest_event(
         {
             "eventId": "some-event-id",
             "timestamp": "2019-01-01T00:00:01Z",
@@ -483,10 +479,9 @@ async def test_subscriber_automation(
                 },
             },
         },
-        auth=None,
     )
     await subscriber.async_receive_event(event)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data == DATA_MESSAGE
+    assert len(service_calls) == 1
+    assert service_calls[0].data == DATA_MESSAGE

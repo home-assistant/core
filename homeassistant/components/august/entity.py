@@ -20,7 +20,7 @@ from .const import MANUFACTURER
 DEVICE_TYPES = ["keypad", "lock", "camera", "doorbell", "door", "bell"]
 
 
-class AugustEntityMixin(Entity):
+class AugustEntity(Entity):
     """Base implementation for August device."""
 
     _attr_should_poll = False
@@ -87,7 +87,7 @@ class AugustEntityMixin(Entity):
         self._update_from_data()
 
 
-class AugustDescriptionEntity(AugustEntityMixin):
+class AugustDescriptionEntity(AugustEntity):
     """An August entity with a description."""
 
     def __init__(

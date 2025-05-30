@@ -11,13 +11,13 @@
         27.316,
         47.743,
       ),
-      'max_color_temp_kelvin': 6993,
+      'max_color_temp_kelvin': 7000,
       'max_mireds': 344,
-      'min_color_temp_kelvin': 2906,
-      'min_mireds': 143,
+      'min_color_temp_kelvin': 2900,
+      'min_mireds': 142,
       'rgb_color': tuple(
         255,
-        188,
+        189,
         133,
       ),
       'supported_color_modes': list([
@@ -25,8 +25,8 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.465,
-        0.376,
+        0.464,
+        0.377,
       ),
     }),
     'context': <ANY>,
@@ -43,15 +43,16 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max_color_temp_kelvin': 6993,
+      'max_color_temp_kelvin': 7000,
       'max_mireds': 344,
-      'min_color_temp_kelvin': 2906,
-      'min_mireds': 143,
+      'min_color_temp_kelvin': 2900,
+      'min_mireds': 142,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -72,6 +73,7 @@
     'original_name': None,
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CN11A1A00001',
@@ -82,6 +84,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -104,6 +107,7 @@
     }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light',
+    'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -125,13 +129,13 @@
         27.316,
         47.743,
       ),
-      'max_color_temp_kelvin': 6535,
+      'max_color_temp_kelvin': 6500,
       'max_mireds': 285,
-      'min_color_temp_kelvin': 3508,
+      'min_color_temp_kelvin': 3500,
       'min_mireds': 153,
       'rgb_color': tuple(
         255,
-        188,
+        189,
         133,
       ),
       'supported_color_modes': list([
@@ -140,8 +144,8 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.465,
-        0.376,
+        0.464,
+        0.377,
       ),
     }),
     'context': <ANY>,
@@ -158,9 +162,9 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max_color_temp_kelvin': 6535,
+      'max_color_temp_kelvin': 6500,
       'max_mireds': 285,
-      'min_color_temp_kelvin': 3508,
+      'min_color_temp_kelvin': 3500,
       'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -168,6 +172,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -188,6 +193,7 @@
     'original_name': None,
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CN11A1A00001',
@@ -198,6 +204,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -220,6 +227,7 @@
     }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Light Strip',
+    'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -241,13 +249,13 @@
         358.0,
         6.0,
       ),
-      'max_color_temp_kelvin': 6535,
+      'max_color_temp_kelvin': 6500,
       'max_mireds': 285,
-      'min_color_temp_kelvin': 3508,
+      'min_color_temp_kelvin': 3500,
       'min_mireds': 153,
       'rgb_color': tuple(
         255,
-        239,
+        240,
         240,
       ),
       'supported_color_modes': list([
@@ -256,8 +264,8 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.34,
-        0.327,
+        0.339,
+        0.328,
       ),
     }),
     'context': <ANY>,
@@ -274,9 +282,9 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max_color_temp_kelvin': 6535,
+      'max_color_temp_kelvin': 6500,
       'max_mireds': 285,
-      'min_color_temp_kelvin': 3508,
+      'min_color_temp_kelvin': 3500,
       'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -284,6 +292,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -304,6 +313,7 @@
     'original_name': None,
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CN11A1A00001',
@@ -314,6 +324,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -336,6 +347,7 @@
     }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Light Strip',
+    'model_id': None,
     'name': 'Frenck',
     'name_by_user': None,
     'primary_config_entry': <ANY>,

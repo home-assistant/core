@@ -12,9 +12,11 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.utility_meter import (
+    select as um_select,
+    sensor as um_sensor,
+)
 from homeassistant.components.utility_meter.const import DOMAIN, SERVICE_RESET
-import homeassistant.components.utility_meter.select as um_select
-import homeassistant.components.utility_meter.sensor as um_sensor
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -26,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, mock_restore_cache
 

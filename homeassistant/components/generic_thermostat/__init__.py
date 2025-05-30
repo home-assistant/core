@@ -1,15 +1,22 @@
 """The generic_thermostat component."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device import (
+    async_remove_stale_devices_links_keep_entity_device,
+)
 
-DOMAIN = "generic_thermostat"
-PLATFORMS = [Platform.CLIMATE]
+from .const import CONF_HEATER, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+
+    async_remove_stale_devices_links_keep_entity_device(
+        hass,
+        entry.entry_id,
+        entry.options[CONF_HEATER],
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True

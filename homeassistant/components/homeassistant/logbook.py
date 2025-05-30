@@ -15,7 +15,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.typing import NoEventData
 from homeassistant.util.event_type import EventType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 EVENT_TO_NAME: dict[EventType[Any] | str, str] = {
     EVENT_HOMEASSISTANT_STOP: "stopped",

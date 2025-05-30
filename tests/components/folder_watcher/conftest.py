@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.folder_watcher.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -36,7 +36,7 @@ async def load_int(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
-        title=f"Folder Watcher {path!s}",
+        title=f"Folder Watcher {tmp_path.parts[-1]!s}",
         data={},
         options={"folder": str(path), "patterns": ["*"]},
         entry_id="1",

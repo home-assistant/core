@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/azure_data_explorer",
   "iot_class": "cloud_push",
   "loggers": ["azure"],
-  "requirements": ["azure-kusto-ingest==3.1.0", "azure-kusto-data[aio]==3.1.0"]
+  "requirements": ["azure-kusto-ingest==4.5.1", "azure-kusto-data[aio]==4.5.1"]
 }

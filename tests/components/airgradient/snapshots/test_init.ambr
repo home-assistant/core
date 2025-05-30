@@ -3,8 +3,13 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'mac',
+        '84:fc:e6:12:f5:b8',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -20,7 +25,8 @@
     'labels': set({
     }),
     'manufacturer': 'AirGradient',
-    'model': 'I-9PSL',
+    'model': 'AirGradient ONE',
+    'model_id': 'I-9PSL',
     'name': 'Airgradient',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -34,8 +40,13 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'mac',
+        '84:fc:e6:12:f5:b8',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -51,11 +62,12 @@
     'labels': set({
     }),
     'manufacturer': 'AirGradient',
-    'model': 'O-1PPT',
+    'model': 'AirGradient Open Air',
+    'model_id': 'O-1PPT',
     'name': 'Airgradient',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': '84fce60bec38',
+    'serial_number': '84fce612f5b8',
     'suggested_area': None,
     'sw_version': '3.1.1',
     'via_device_id': None,

@@ -1,0 +1,76 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules:
+    status: exempt
+    comment: The integration does not use common patterns.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: The integration connects to a single device.
+  entity-category:
+    status: exempt
+    comment: The integration only registers one entity.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration only registers one entity.
+  entity-translations:
+    status: exempt
+    comment: There are no entities to translate.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The only entity can use the device class.
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: The integration does not have anything to repair.
+  stale-devices:
+    status: exempt
+    comment: The integration connects to a single device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

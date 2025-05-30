@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -28,7 +29,7 @@ from .const import (
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
 )
-from .models import LutronCasetaData
+from .models import LutronCasetaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -276,6 +277,21 @@ FOUR_GROUP_REMOTE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     }
 )
 
+# See mappings at https://github.com/home-assistant/core/issues/137548#issuecomment-2643440119
+PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LIP = {
+    "on": 2,  # 'Number': 2 in LIP
+    "off": 4,  # 'Number': 4 in LIP
+}
+PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LEAP = {
+    "on": 0,  # 'ButtonNumber': 0 in LEAP
+    "off": 2,  # 'ButtonNumber': 2 in LEAP
+}
+PADDLE_SWITCH_PICO_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+    {
+        vol.Required(CONF_SUBTYPE): vol.In(PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LIP),
+    }
+)
+
 
 DEVICE_TYPE_SCHEMA_MAP = {
     "Pico2Button": PICO_2_BUTTON_TRIGGER_SCHEMA,
@@ -287,6 +303,7 @@ DEVICE_TYPE_SCHEMA_MAP = {
     "Pico4ButtonZone": PICO_4_BUTTON_ZONE_TRIGGER_SCHEMA,
     "Pico4Button2Group": PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA,
     "FourGroupRemote": FOUR_GROUP_REMOTE_TRIGGER_SCHEMA,
+    "PaddleSwitchPico": PADDLE_SWITCH_PICO_TRIGGER_SCHEMA,
 }
 
 DEVICE_TYPE_SUBTYPE_MAP_TO_LIP = {
@@ -299,6 +316,7 @@ DEVICE_TYPE_SUBTYPE_MAP_TO_LIP = {
     "Pico4ButtonZone": PICO_4_BUTTON_ZONE_BUTTON_TYPES_TO_LIP,
     "Pico4Button2Group": PICO_4_BUTTON_2_GROUP_BUTTON_TYPES_TO_LIP,
     "FourGroupRemote": FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LIP,
+    "PaddleSwitchPico": PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LIP,
 }
 
 DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP = {
@@ -311,6 +329,7 @@ DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP = {
     "Pico4ButtonZone": PICO_4_BUTTON_ZONE_BUTTON_TYPES_TO_LEAP,
     "Pico4Button2Group": PICO_4_BUTTON_2_GROUP_BUTTON_TYPES_TO_LEAP,
     "FourGroupRemote": FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LEAP,
+    "PaddleSwitchPico": PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LEAP,
 }
 
 LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP: dict[str, dict[int, str]] = {
@@ -325,6 +344,7 @@ TRIGGER_SCHEMA = vol.Any(
     PICO_4_BUTTON_ZONE_TRIGGER_SCHEMA,
     PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA,
     FOUR_GROUP_REMOTE_TRIGGER_SCHEMA,
+    PADDLE_SWITCH_PICO_TRIGGER_SCHEMA,
 )
 
 
@@ -434,11 +454,14 @@ async def async_attach_trigger(
 
 def get_lutron_data_by_dr_id(hass: HomeAssistant, device_id: str):
     """Get a lutron integration data for the given device registry device id."""
-    if DOMAIN not in hass.data:
-        return None
-
-    for entry_id in hass.data[DOMAIN]:
-        data: LutronCasetaData = hass.data[DOMAIN][entry_id]
-        if data.keypad_data.dr_device_id_to_keypad.get(device_id):
-            return data
+    entries = cast(
+        list[LutronCasetaConfigEntry],
+        hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False, include_disabled=False
+        ),
+    )
+    for entry in entries:
+        if hasattr(entry, "runtime_data"):
+            if entry.runtime_data.keypad_data.dr_device_id_to_keypad.get(device_id):
+                return entry.runtime_data
     return None

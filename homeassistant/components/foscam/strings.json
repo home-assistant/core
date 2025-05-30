@@ -25,10 +25,17 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "switch": {
+      "sleep_switch": {
+        "name": "Sleep"
+      }
+    }
+  },
   "services": {
     "ptz": {
       "name": "PTZ",
-      "description": "Pan/Tilt service for Foscam camera.",
+      "description": "Moves a Foscam camera to a specified direction.",
       "fields": {
         "movement": {
           "name": "Movement",
@@ -42,7 +49,7 @@
     },
     "ptz_preset": {
       "name": "PTZ preset",
-      "description": "PTZ Preset service for Foscam camera.",
+      "description": "Moves a Foscam camera to a predefined position.",
       "fields": {
         "preset_name": {
           "name": "Preset name",

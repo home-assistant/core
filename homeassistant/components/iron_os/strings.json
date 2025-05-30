@@ -1,0 +1,295 @@
+{
+  "common": {
+    "slow": "Slow",
+    "fast": "Fast"
+  },
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "Ensure your device is powered on and within Bluetooth range before continuing"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "Do you want to set up {name}?\n\n*Ensure your device is powered on and within Bluetooth range before continuing*"
+      }
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "tip_connected": {
+        "name": "Soldering tip"
+      }
+    },
+    "button": {
+      "settings_save": {
+        "name": "Save settings"
+      },
+      "settings_reset": {
+        "name": "Restore default settings"
+      }
+    },
+    "number": {
+      "setpoint_temperature": {
+        "name": "Setpoint temperature"
+      },
+      "sleep_temperature": {
+        "name": "Sleep temperature"
+      },
+      "sleep_timeout": {
+        "name": "Sleep timeout"
+      },
+      "qc_max_voltage": {
+        "name": "Quick Charge voltage"
+      },
+      "pd_timeout": {
+        "name": "Power Delivery timeout"
+      },
+      "boost_temp": {
+        "name": "Boost temperature"
+      },
+      "shutdown_timeout": {
+        "name": "Shutdown timeout"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
+      },
+      "power_limit": {
+        "name": "Power limit"
+      },
+      "calibration_offset": {
+        "name": "Calibration offset"
+      },
+      "hall_sensitivity": {
+        "name": "Hall effect sensitivity"
+      },
+      "min_voltage_per_cell": {
+        "name": "Min. voltage per cell"
+      },
+      "accel_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "keep_awake_pulse_power": {
+        "name": "Keep-awake pulse intensity"
+      },
+      "keep_awake_pulse_delay": {
+        "name": "Keep-awake pulse delay"
+      },
+      "keep_awake_pulse_duration": {
+        "name": "Keep-awake pulse duration"
+      },
+      "voltage_div": {
+        "name": "Voltage divider"
+      },
+      "temp_increment_short": {
+        "name": "Short-press temperature step"
+      },
+      "temp_increment_long": {
+        "name": "Long-press temperature step"
+      },
+      "hall_effect_sleep_time": {
+        "name": "Hall sensor sleep timeout"
+      }
+    },
+    "select": {
+      "min_dc_voltage_cells": {
+        "name": "Power source",
+        "state": {
+          "no_battery": "External power supply (DC)",
+          "battery_3s": "3S (3 cells)",
+          "battery_4s": "4S (4 cells)",
+          "battery_5s": "5S (5 cells)",
+          "battery_6s": "6S (6 cells)"
+        }
+      },
+      "orientation_mode": {
+        "name": "Display orientation mode",
+        "state": {
+          "right_handed": "Right-handed",
+          "left_handed": "Left-handed",
+          "auto": "[%key:common::state::auto%]"
+        }
+      },
+      "animation_speed": {
+        "name": "Animation speed",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "slow": "[%key:component::iron_os::common::slow%]",
+          "medium": "[%key:common::state::medium%]",
+          "fast": "[%key:component::iron_os::common::fast%]"
+        }
+      },
+      "autostart_mode": {
+        "name": "Start-up behavior",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "soldering": "Soldering mode",
+          "sleeping": "Sleeping mode",
+          "idle": "Idle mode"
+        }
+      },
+      "temp_unit": {
+        "name": "Temperature display unit",
+        "state": {
+          "celsius": "Celsius (°C)",
+          "fahrenheit": "Fahrenheit (°F)"
+        }
+      },
+      "desc_scroll_speed": {
+        "name": "Scrolling speed",
+        "state": {
+          "slow": "[%key:component::iron_os::common::slow%]",
+          "fast": "[%key:component::iron_os::common::fast%]"
+        }
+      },
+      "locking_mode": {
+        "name": "Button locking mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "boost_only": "Boost only",
+          "full_locking": "Full locking"
+        }
+      },
+      "logo_duration": {
+        "name": "Boot logo duration",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "seconds_1": "1 second",
+          "seconds_2": "2 second",
+          "seconds_3": "3 second",
+          "seconds_4": "4 second",
+          "seconds_5": "5 second",
+          "loop": "Loop"
+        }
+      },
+      "usb_pd_mode": {
+        "name": "Power Delivery 3.1 EPR",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "tip_type": {
+        "name": "Soldering tip type",
+        "state": {
+          "auto": "Auto sense",
+          "ts100_long": "TS100 long/Hakko T12 tip",
+          "pine_short": "Pinecil short tip",
+          "pts200": "PTS200 short tip"
+        }
+      }
+    },
+    "sensor": {
+      "live_temperature": {
+        "name": "Tip temperature"
+      },
+      "voltage": {
+        "name": "DC input voltage"
+      },
+      "handle_temperature": {
+        "name": "Handle temperature"
+      },
+      "power_pwm_level": {
+        "name": "Power level"
+      },
+      "power_source": {
+        "name": "Power source",
+        "state": {
+          "dc": "DC input",
+          "qc": "USB Quick Charge",
+          "pd_vbus": "USB PD VBUS",
+          "pd": "USB Power Delivery"
+        }
+      },
+      "tip_resistance": {
+        "name": "Tip resistance"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "movement_time": {
+        "name": "Last movement time"
+      },
+      "max_tip_temp_ability": {
+        "name": "Max tip temperature"
+      },
+      "tip_voltage": {
+        "name": "Raw tip voltage"
+      },
+      "hall_sensor": {
+        "name": "Hall effect strength"
+      },
+      "operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "soldering": "Soldering",
+          "sleeping": "Sleeping",
+          "settings": "Settings",
+          "debug": "Debug",
+          "boost": "Boost",
+          "soldering_profile": "Soldering profile",
+          "temperature_adjust": "Temperature adjust",
+          "usb_pd_debug": "USB PD debug",
+          "thermal_runaway": "Thermal runaway",
+          "startup_logo": "Booting",
+          "cjc_calibration": "CJC calibration",
+          "startup_warnings": "Startup warnings",
+          "initialisation_done": "Initialisation done",
+          "hibernating": "Hibernating"
+        }
+      },
+      "estimated_power": {
+        "name": "Estimated power"
+      }
+    },
+    "switch": {
+      "animation_loop": {
+        "name": "Animation loop"
+      },
+      "cooling_temp_blink": {
+        "name": "Cool down screen flashing"
+      },
+      "idle_screen_details": {
+        "name": "Detailed idle screen"
+      },
+      "solder_screen_details": {
+        "name": "Detailed solder screen"
+      },
+      "invert_buttons": {
+        "name": "Swap +/- buttons"
+      },
+      "display_invert": {
+        "name": "Invert screen"
+      },
+      "calibrate_cjc": {
+        "name": "Calibrate CJC"
+      }
+    }
+  },
+  "exceptions": {
+    "submit_setting_failed": {
+      "message": "Failed to submit setting to device, try again later"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to device {name}"
+    },
+    "update_check_failed": {
+      "message": "Failed to check for latest IronOS update"
+    }
+  }
+}

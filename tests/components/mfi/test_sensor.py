@@ -7,8 +7,8 @@ from mficlient.client import FailedToLogin
 import pytest
 import requests
 
-import homeassistant.components.mfi.sensor as mfi
-import homeassistant.components.sensor as sensor_component
+from homeassistant.components import sensor as sensor_component
+from homeassistant.components.mfi import sensor as mfi
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -116,13 +116,13 @@ async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(name="port")
-def port_fixture():
+def port_fixture() -> mock.MagicMock:
     """Port fixture."""
     return mock.MagicMock()
 
 
 @pytest.fixture(name="sensor")
-def sensor_fixture(hass, port):
+def sensor_fixture(hass: HomeAssistant, port: mock.MagicMock) -> mfi.MfiSensor:
     """Sensor fixture."""
     sensor = mfi.MfiSensor(port, hass)
     sensor.hass = hass

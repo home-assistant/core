@@ -1,6 +1,7 @@
 """Common test tools."""
 
 import asyncio
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from dsmr_parser.clients.protocol import DSMRProtocol
@@ -15,7 +16,6 @@ from dsmr_parser.obis_references import (
 )
 from dsmr_parser.objects import CosemObject
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture
@@ -45,9 +45,9 @@ def dsmr_connection_fixture() -> Generator[tuple[MagicMock, MagicMock, MagicMock
 
 
 @pytest.fixture
-def rfxtrx_dsmr_connection_fixture() -> (
-    Generator[tuple[MagicMock, MagicMock, MagicMock]]
-):
+def rfxtrx_dsmr_connection_fixture() -> Generator[
+    tuple[MagicMock, MagicMock, MagicMock]
+]:
     """Fixture that mocks RFXtrx connection."""
 
     transport = MagicMock(spec=asyncio.Transport)
@@ -73,9 +73,9 @@ def rfxtrx_dsmr_connection_fixture() -> (
 
 
 @pytest.fixture
-def dsmr_connection_send_validate_fixture() -> (
-    Generator[tuple[MagicMock, MagicMock, MagicMock]]
-):
+def dsmr_connection_send_validate_fixture() -> Generator[
+    tuple[MagicMock, MagicMock, MagicMock]
+]:
     """Fixture that mocks serial connection."""
 
     transport = MagicMock(spec=asyncio.Transport)
@@ -111,6 +111,12 @@ def dsmr_connection_send_validate_fixture() -> (
                 ),
                 EQUIPMENT_IDENTIFIER_GAS: CosemObject(
                     EQUIPMENT_IDENTIFIER_GAS, [{"value": "123456789", "unit": ""}]
+                ),
+            }
+        if args[1] == "5EONHU":
+            protocol.telegram = {
+                LUXEMBOURG_EQUIPMENT_IDENTIFIER: CosemObject(
+                    LUXEMBOURG_EQUIPMENT_IDENTIFIER, [{"value": "12345678", "unit": ""}]
                 ),
             }
         if args[1] == "5S":
@@ -156,9 +162,9 @@ def dsmr_connection_send_validate_fixture() -> (
 
 
 @pytest.fixture
-def rfxtrx_dsmr_connection_send_validate_fixture() -> (
-    Generator[tuple[MagicMock, MagicMock, MagicMock]]
-):
+def rfxtrx_dsmr_connection_send_validate_fixture() -> Generator[
+    tuple[MagicMock, MagicMock, MagicMock]
+]:
     """Fixture that mocks serial connection."""
 
     transport = MagicMock(spec=asyncio.Transport)

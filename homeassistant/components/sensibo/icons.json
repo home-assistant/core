@@ -45,10 +45,23 @@
     }
   },
   "services": {
-    "assume_state": "mdi:shape-outline",
-    "enable_timer": "mdi:timer-play",
-    "enable_pure_boost": "mdi:air-filter",
-    "full_state": "mdi:shape",
-    "enable_climate_react": "mdi:wizard-hat"
+    "assume_state": {
+      "service": "mdi:shape-outline"
+    },
+    "enable_timer": {
+      "service": "mdi:timer-play"
+    },
+    "enable_pure_boost": {
+      "service": "mdi:air-filter"
+    },
+    "full_state": {
+      "service": "mdi:shape"
+    },
+    "enable_climate_react": {
+      "service": "mdi:wizard-hat"
+    },
+    "get_device_capabilities": {
+      "service": "mdi:shape-outline"
+    }
   }
 }

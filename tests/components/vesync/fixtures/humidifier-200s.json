@@ -1,0 +1,27 @@
+{
+  "code": 0,
+  "result": {
+    "result": {
+      "humidity": 35,
+      "mist_level": 6,
+      "mist_virtual_level": 6,
+      "mode": "manual",
+      "water_lacks": true,
+      "water_tank_lifted": true,
+      "automatic_stop_reach_target": true,
+      "night_light_brightness": 10,
+      "enabled": true,
+      "level": 1,
+      "display": true,
+      "display_forever": false,
+      "child_lock": false,
+      "night_light": "off",
+      "configuration": {
+        "auto_target_humidity": 40,
+        "display": true,
+        "automatic_stop": true
+      }
+    },
+    "code": 0
+  }
+}

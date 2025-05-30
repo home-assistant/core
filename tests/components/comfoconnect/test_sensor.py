@@ -1,11 +1,11 @@
 """Tests for the comfoconnect sensor platform."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -14,7 +14,7 @@ from tests.common import assert_setup_component
 COMPONENT = "comfoconnect"
 VALID_CONFIG = {
     COMPONENT: {"host": "1.2.3.4"},
-    DOMAIN: {
+    SENSOR_DOMAIN: {
         "platform": COMPONENT,
         "resources": [
             "current_humidity",
@@ -51,8 +51,8 @@ async def setup_sensor(
     mock_comfoconnect_command: MagicMock,
 ) -> None:
     """Set up demo sensor component."""
-    with assert_setup_component(1, DOMAIN):
-        await async_setup_component(hass, DOMAIN, VALID_CONFIG)
+    with assert_setup_component(1, SENSOR_DOMAIN):
+        await async_setup_component(hass, SENSOR_DOMAIN, VALID_CONFIG)
         await hass.async_block_till_done()
 
 

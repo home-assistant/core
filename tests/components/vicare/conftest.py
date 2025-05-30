@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareService import ViCareDeviceAccessor, readFeature
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import ENTRY_CONFIG, MODULE
+from . import ENTRY_CONFIG, MODULE, setup_integration
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -40,7 +40,7 @@ class MockPyViCare:
                     ),
                     f"deviceId{idx}",
                     f"model{idx}",
-                    f"online{idx}",
+                    "online",
                 )
             )
 
@@ -84,13 +84,28 @@ async def mock_vicare_gas_boiler(
     """Return a mocked ViCare API representing a single gas boiler device."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with patch(
-        f"{MODULE}.vicare_login",
+        f"{MODULE}.login",
         return_value=MockPyViCare(fixtures),
     ):
-        mock_config_entry.add_to_hass(hass)
+        await setup_integration(hass, mock_config_entry)
 
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        yield mock_config_entry
+
+
+@pytest.fixture
+async def mock_vicare_room_sensors(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> AsyncGenerator[MockConfigEntry]:
+    """Return a mocked ViCare API representing multiple room sensor devices."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
+    ]
+    with patch(
+        f"{MODULE}.login",
+        return_value=MockPyViCare(fixtures),
+    ):
+        await setup_integration(hass, mock_config_entry)
 
         yield mock_config_entry
 

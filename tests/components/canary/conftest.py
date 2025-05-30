@@ -1,10 +1,10 @@
 """Define fixtures available for all tests."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from canary.api import Api
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 
