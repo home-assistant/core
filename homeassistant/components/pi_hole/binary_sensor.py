@@ -33,15 +33,7 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_value=lambda api: bool(api.data.get("status") == "enabled"),
-    ),
-)
-
-BINARY_SENSOR_TYPES_V6: tuple[PiHoleBinarySensorEntityDescription, ...] = (
-    PiHoleBinarySensorEntityDescription(
-        key="status",
-        translation_key="status",
-        state_value=lambda api: bool(api.blocking_status.get("blocking") == "enabled"),
+        state_value=lambda api: bool(api.status == "enabled"),
     ),
 )
 
@@ -63,11 +55,7 @@ async def async_setup_entry(
             entry.entry_id,
             description,
         )
-        for description in (
-            BINARY_SENSOR_TYPES
-            if entry.data[CONF_API_VERSION] == 5
-            else BINARY_SENSOR_TYPES_V6
-        )
+        for description in BINARY_SENSOR_TYPES
     ]
 
     async_add_entities(binary_sensors, True)
