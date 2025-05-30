@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import _LOGGER, HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -41,7 +41,7 @@ BINARY_SENSOR_TYPES_V6: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_value=lambda api: bool(api.data.get("status") == "enabled"),
+        state_value=lambda api: bool(api.blocking_status.get("blocking") == "enabled"),
     ),
 )
 
@@ -95,7 +95,6 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return if the service is on."""
-
         return self.entity_description.state_value(self.api)
 
     @property
