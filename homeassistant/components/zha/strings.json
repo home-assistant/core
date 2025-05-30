@@ -1451,6 +1451,9 @@
       "tier6_summation_delivered": {
         "name": "Tier 6 summation delivered"
       },
+      "total_active_power": {
+        "name": "Total power"
+      },
       "summation_received": {
         "name": "Summation received"
       },
