@@ -13,6 +13,7 @@ from homematicip.device import (
     DinRailDimmer3,
     FullFlushDimmer,
     PluggableDimmer,
+    SwitchMeasuring,
     WiredDimmer3,
 )
 from packaging.version import Version
@@ -30,6 +31,7 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DEVICE_TYPE_BRAND_SWITCH_MEASURING
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 
@@ -43,6 +45,12 @@ async def async_setup_entry(
     hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = []
     for device in hap.home.devices:
+        if (
+            isinstance(device, SwitchMeasuring)
+            and getattr(device, "deviceType", None)
+            == DEVICE_TYPE_BRAND_SWITCH_MEASURING
+        ):
+            entities.append(HomematicipLightMeasuring(hap, device))
         if isinstance(device, BrandSwitchNotificationLight):
             device_version = Version(device.firmwareVersion)
             entities.append(HomematicipLight(hap, device))
@@ -96,6 +104,10 @@ class HomematicipLight(HomematicipGenericEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._device.turn_off_async()
+
+
+class HomematicipLightMeasuring(HomematicipLight):
+    """Representation of the HomematicIP measuring light."""
 
 
 class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):

@@ -24,6 +24,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DEVICE_TYPE_BRAND_SWITCH_MEASURING
 from .entity import ATTR_GROUP_MEMBER_UNREACHABLE, HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 
@@ -41,7 +42,11 @@ async def async_setup_entry(
         if isinstance(group, (ExtendedLinkedSwitchingGroup, SwitchingGroup))
     ]
     for device in hap.home.devices:
-        if isinstance(device, SwitchMeasuring):
+        if (
+            isinstance(device, SwitchMeasuring)
+            and getattr(device, "deviceType", None)
+            != DEVICE_TYPE_BRAND_SWITCH_MEASURING
+        ):
             entities.append(HomematicipSwitchMeasuring(hap, device))
         elif isinstance(device, WiredSwitch8):
             entities.extend(
