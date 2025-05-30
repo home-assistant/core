@@ -61,7 +61,7 @@ HOME = "home"
 WEATHER = "weather"
 AIR_CARE = "air_care"
 PUBLIC = NetatmoDeviceType.public
-DOOR_TAG = "opening"
+DOOR_TAG = "door_tag"
 EVENT = "event"
 
 PUBLISHERS = {
