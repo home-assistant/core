@@ -26,29 +26,19 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_PRESS, DOMAIN
-from .template_entity import (
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
-    TemplateEntity,
-)
+from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Template Button"
 DEFAULT_OPTIMISTIC = False
 
-BUTTON_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
-)
+BUTTON_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    }
+).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
 CONFIG_BUTTON_SCHEMA = vol.Schema(
     {
