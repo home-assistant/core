@@ -2610,6 +2610,10 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
+        # pylint: disable-next=import-outside-toplevel
+        from .helpers import config_validation as cv
+
+        cv.raise_on_templated_service(domain, service, schema)
         domain = domain.lower()
         service = service.lower()
         service_obj = Service(
