@@ -14,6 +14,7 @@ from homeassistant.components.telegram_bot.const import (
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
     DOMAIN,
+    ISSUE_DEPRECATED_YAML,
     PARSER_HTML,
     PARSER_MD,
     PLATFORM_BROADCAST,
@@ -24,6 +25,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigSuben
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.issue_registry import IssueRegistry
 
 from tests.common import MockConfigEntry
 
@@ -425,7 +427,9 @@ async def test_subentry_flow_chat_error(
     assert result["reason"] == "already_configured"
 
 
-async def test_import_failed(hass: HomeAssistant) -> None:
+async def test_import_failed(
+    hass: HomeAssistant, issue_registry: IssueRegistry
+) -> None:
     """Test import flow failed."""
 
     with patch(
@@ -448,8 +452,16 @@ async def test_import_failed(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "import_failed"
 
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=ISSUE_DEPRECATED_YAML,
+    )
+    assert issue.translation_key == "deprecated_yaml_import_issue_invalid_api_key"
 
-async def test_import_multiple(hass: HomeAssistant) -> None:
+
+async def test_import_multiple(
+    hass: HomeAssistant, issue_registry: IssueRegistry
+) -> None:
     """Test import flow with multiple duplicated entries."""
 
     data = {
@@ -477,6 +489,14 @@ async def test_import_multiple(hass: HomeAssistant) -> None:
         assert result["data"][CONF_PLATFORM] == PLATFORM_BROADCAST
         assert result["data"][CONF_API_KEY] == "mock api key"
         assert result["options"][ATTR_PARSER] == PARSER_MD
+
+        issue = issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=ISSUE_DEPRECATED_YAML,
+        )
+        assert (
+            issue.translation_key == "deprecated_yaml_import_issue_has_more_platforms"
+        )
 
         # test: import 2nd entry failed due to duplicate
 

@@ -7,18 +7,31 @@ from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
 from telegram import Update
-from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
+from telegram.error import (
+    InvalidToken,
+    NetworkError,
+    RetryAfter,
+    TelegramError,
+    TimedOut,
+)
 
 from homeassistant.components.telegram_bot import (
+    ATTR_CALLBACK_QUERY_ID,
+    ATTR_CHAT_ID,
     ATTR_FILE,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_THREAD_ID,
+    ATTR_MESSAGEID,
     ATTR_OPTIONS,
     ATTR_QUESTION,
     ATTR_STICKER_ID,
+    CONF_CONFIG_ENTRY_ID,
     DOMAIN,
+    SERVICE_ANSWER_CALLBACK_QUERY,
+    SERVICE_DELETE_MESSAGE,
+    SERVICE_EDIT_MESSAGE,
     SERVICE_SEND_ANIMATION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
@@ -28,12 +41,14 @@ from homeassistant.components.telegram_bot import (
     SERVICE_SEND_STICKER,
     SERVICE_SEND_VIDEO,
     SERVICE_SEND_VOICE,
+    async_setup_entry,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 from tests.typing import ClientSessionGenerator
 
 
@@ -44,22 +59,7 @@ async def test_webhook_platform_init(hass: HomeAssistant, webhook_platform) -> N
 
 async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> None:
     """Test initialization of the polling platform."""
-    with patch(
-        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
-    ) as application_builder_class:
-        application = (
-            application_builder_class.return_value.bot.return_value.build.return_value
-        )
-        application.initialize = AsyncMock()
-        application.updater.start_polling = AsyncMock()
-        application.start = AsyncMock()
-        application.updater.stop = AsyncMock()
-        application.stop = AsyncMock()
-        application.shutdown = AsyncMock()
-
-        await hass.async_block_till_done()
-
-        assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
+    assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
 @pytest.mark.parametrize(
@@ -488,3 +488,180 @@ async def test_webhook_endpoint_invalid_secret_token_is_denied(
         headers={"X-Telegram-Bot-Api-Secret-Token": incorrect_secret_token},
     )
     assert response.status == 401
+
+
+async def test_multiple_config_entries_error(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    polling_platform,
+    mock_external_calls: None,
+) -> None:
+    """Test multiple config entries error."""
+
+    # setup the second entry (polling_platform is first entry)
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "mock message",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    await hass.async_block_till_done()
+    assert err.value.translation_key == "multiple_config_entry"
+
+
+async def test_send_message_with_config_entry(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message using config entry."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
+            ATTR_MESSAGE: "mock message",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response["chats"][0]["message_id"] == 12345
+
+
+async def test_send_message_config_entry_error(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message config entry error."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
+                ATTR_MESSAGE: "mock message",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    await hass.async_block_till_done()
+    assert err.value.translation_key == "missing_config_entry"
+
+
+async def test_delete_message(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test delete message."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.delete_message",
+        AsyncMock(return_value=True),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DELETE_MESSAGE,
+            {ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once()
+
+
+async def test_edit_message(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test edit message."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.edit_message",
+        AsyncMock(return_value=True),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EDIT_MESSAGE,
+            {ATTR_MESSAGE: "mock message", ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once()
+
+
+async def test_async_setup_entry_failed(
+    hass: HomeAssistant, mock_broadcast_config_entry: MockConfigEntry
+) -> None:
+    """Test setup entry failed."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.telegram_bot.Bot.get_me",
+    ) as mock_bot:
+        mock_bot.side_effect = InvalidToken("mock invalid token error")
+
+        with pytest.raises(ConfigEntryAuthFailed) as err:
+            await async_setup_entry(hass, mock_broadcast_config_entry)
+
+    await hass.async_block_till_done()
+    assert err.value.args[0] == "Invalid API token for Telegram Bot."
+
+
+async def test_answer_callback_query(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test answer callback query."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.answer_callback_query",
+        AsyncMock(),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ANSWER_CALLBACK_QUERY,
+            {
+                ATTR_MESSAGE: "mock message",
+                ATTR_CALLBACK_QUERY_ID: 12345,
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once()

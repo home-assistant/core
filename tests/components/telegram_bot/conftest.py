@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from telegram import Bot, Chat, ChatFullInfo, Message, User
@@ -13,7 +13,6 @@ from homeassistant.components.telegram_bot import (
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
     CONF_TRUSTED_NETWORKS,
-    DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
     PARSER_MD,
 )
@@ -23,12 +22,7 @@ from homeassistant.components.telegram_bot.const import (
     PLATFORM_WEBHOOKS,
 )
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_PLATFORM,
-    CONF_URL,
-    EVENT_HOMEASSISTANT_START,
-)
+from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -281,7 +275,7 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             CONF_API_KEY: "mock api key",
             CONF_URL: "https://test",
-            CONF_TRUSTED_NETWORKS: DEFAULT_TRUSTED_NETWORKS,
+            CONF_TRUSTED_NETWORKS: "149.154.160.0/20,91.108.4.0/22",
         },
         options={ATTR_PARSER: PARSER_MD},
         subentries_data=[
@@ -320,11 +314,23 @@ async def polling_platform(
     hass: HomeAssistant, config_polling: dict[str, Any], mock_external_calls: None
 ) -> None:
     """Fixture for setting up the polling platform using appropriate config and mocks."""
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        config_polling,
-    )
-    # Fire this event to start polling
-    hass.bus.fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
+    ) as application_builder_class:
+        application = (
+            application_builder_class.return_value.bot.return_value.build.return_value
+        )
+        application.initialize = AsyncMock()
+        application.updater.start_polling = AsyncMock()
+        application.start = AsyncMock()
+        application.updater.stop = AsyncMock()
+        application.stop = AsyncMock()
+        application.shutdown = AsyncMock()
+
+        await async_setup_component(
+            hass,
+            DOMAIN,
+            config_polling,
+        )
+
+        await hass.async_block_till_done()

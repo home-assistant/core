@@ -65,6 +65,7 @@ from .const import (
     ATTR_VERIFY_SSL,
     CONF_ALLOWED_CHAT_IDS,
     CONF_BOT_COUNT,
+    CONF_CONFIG_ENTRY_ID,
     CONF_PROXY_PARAMS,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
@@ -125,6 +126,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 BASE_SERVICE_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(ATTR_PARSER): cv.string,
         vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
@@ -298,17 +300,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         kwargs = dict(service.data)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
-        # use the first config entry as default
-        config_entries: list[TelegramBotConfigEntry] = (
-            service.hass.config_entries.async_entries(DOMAIN)
-        )
-        if not config_entries or not hasattr(config_entries[0], "runtime_data"):
+        config_entry_id: str | None = service.data.get(CONF_CONFIG_ENTRY_ID)
+        config_entry: TelegramBotConfigEntry | None = None
+        if config_entry_id:
+            config_entry = hass.config_entries.async_get_known_entry(config_entry_id)
+
+        else:
+            config_entries: list[TelegramBotConfigEntry] = (
+                service.hass.config_entries.async_entries(DOMAIN)
+            )
+
+            if len(config_entries) == 1:
+                config_entry = config_entries[0]
+
+            if len(config_entries) > 1:
+                raise ServiceValidationError(
+                    "Multiple config entries found. Please specify the Telegram bot to use.",
+                    translation_domain=DOMAIN,
+                    translation_key="multiple_config_entry",
+                )
+
+        if not config_entry or not hasattr(config_entry, "runtime_data"):
             raise ServiceValidationError(
                 "No config entries found or setup failed. Please set up the Telegram Bot first.",
                 translation_domain=DOMAIN,
                 translation_key="missing_config_entry",
             )
-        notify_service = config_entries[0].runtime_data
+
+        notify_service = config_entry.runtime_data
 
         messages = None
         if msgtype == SERVICE_SEND_MESSAGE:
