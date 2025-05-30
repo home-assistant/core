@@ -60,7 +60,19 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "amazon_devices",
+        "macaddress": "0CDC91*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "0CEE99*",
+    },
+    {
+        "domain": "amazon_devices",
         "macaddress": "1009F9*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "109693*",
     },
     {
         "domain": "amazon_devices",
@@ -84,7 +96,19 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "amazon_devices",
+        "macaddress": "1C12B0*",
+    },
+    {
+        "domain": "amazon_devices",
         "macaddress": "1C4D66*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "1C93C4*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "1CFE2B*",
     },
     {
         "domain": "amazon_devices",
@@ -93,6 +117,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "amazon_devices",
         "macaddress": "24CE33*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "2873F6*",
     },
     {
         "domain": "amazon_devices",
@@ -108,7 +136,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "amazon_devices",
+        "macaddress": "38F73D*",
+    },
+    {
+        "domain": "amazon_devices",
         "macaddress": "3C5CC4*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "3CE441*",
     },
     {
         "domain": "amazon_devices",
@@ -152,6 +188,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "amazon_devices",
+        "macaddress": "4CEFC0*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "5007C3*",
+    },
+    {
+        "domain": "amazon_devices",
         "macaddress": "50D45C*",
     },
     {
@@ -161,6 +205,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "amazon_devices",
         "macaddress": "50F5DA*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "5C415A*",
     },
     {
         "domain": "amazon_devices",
@@ -213,6 +261,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "amazon_devices",
         "macaddress": "74ECB2*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "786C84*",
     },
     {
         "domain": "amazon_devices",
@@ -272,6 +324,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "amazon_devices",
+        "macaddress": "A0D2B1*",
+    },
+    {
+        "domain": "amazon_devices",
         "macaddress": "A40801*",
     },
     {
@@ -316,7 +372,19 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "amazon_devices",
+        "macaddress": "C49500*",
+    },
+    {
+        "domain": "amazon_devices",
         "macaddress": "C86C3D*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "CC9EA2*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "CCF735*",
     },
     {
         "domain": "amazon_devices",
@@ -328,11 +396,19 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "amazon_devices",
+        "macaddress": "D8FBD6*",
+    },
+    {
+        "domain": "amazon_devices",
         "macaddress": "DC91BF*",
     },
     {
         "domain": "amazon_devices",
         "macaddress": "DCA0D0*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "E0F728*",
     },
     {
         "domain": "amazon_devices",
@@ -349,6 +425,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "amazon_devices",
         "macaddress": "F02F9E*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "F0272D*",
     },
     {
         "domain": "amazon_devices",
