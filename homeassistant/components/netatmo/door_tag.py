@@ -38,8 +38,8 @@ from .const import (
     NETATMO_CREATE_SENSOR,
     SIGNAL_NAME,
 )
-from .data_handler import HOME, NetatmoDevice, NetatmoRoom
-from .entity import NetatmoModuleEntity, NetatmoRoomEntity
+from .data_handler import HOME, NetatmoDevice
+from .entity import NetatmoModuleEntity
 
 #from .helper import NetatmoArea
 
@@ -344,40 +344,3 @@ class NetatmoDoorTagSensor(NetatmoModuleEntity, BinarySensorEntity):
 
         self.async_write_ha_state()
 
-# class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
-#     """Implementation of a Netatmo room sensor (door_tag device???)."""
-
-#     entity_description: NetatmoSensorEntityDescription
-
-#     def __init__(
-#         self,
-#         netatmo_room: NetatmoRoom,
-#         description: NetatmoSensorEntityDescription,
-#     ) -> None:
-#         """Initialize the sensor."""
-#         super().__init__(netatmo_room)
-#         self.entity_description = description
-
-#         self._publishers.extend(
-#             [
-#                 {
-#                     "name": HOME,
-#                     "home_id": self.home.entity_id,
-#                     SIGNAL_NAME: netatmo_room.signal_name,
-#                 },
-#             ]
-#         )
-
-#         self._attr_unique_id = (
-#             f"{self.device.entity_id}-{self.device.entity_id}-{description.key}"
-#         )
-
-#     @callback
-#     def async_update_callback(self) -> None:
-#         """Update the entity's state."""
-#         if (state := getattr(self.device, self.entity_description.key)) is None:
-#             return
-
-#         self._attr_native_value = state
-
-#         self.async_write_ha_state()
