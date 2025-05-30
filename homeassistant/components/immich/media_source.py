@@ -133,10 +133,10 @@ class ImmichMediaSource(MediaSource):
                     identifier=f"{identifier.unique_id}|albums|{album.album_id}",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaClass.IMAGE,
-                    title=album.name,
+                    title=album.album_name,
                     can_play=False,
                     can_expand=True,
-                    thumbnail=f"/immich/{identifier.unique_id}/{album.thumbnail_asset_id}/thumbnail/image/jpg",
+                    thumbnail=f"/immich/{identifier.unique_id}/{album.album_thumbnail_asset_id}/thumbnail/image/jpg",
                 )
                 for album in albums
             ]
@@ -160,18 +160,19 @@ class ImmichMediaSource(MediaSource):
                     f"{identifier.unique_id}|albums|"
                     f"{identifier.collection_id}|"
                     f"{asset.asset_id}|"
-                    f"{asset.file_name}|"
-                    f"{asset.mime_type}"
+                    f"{asset.original_file_name}|"
+                    f"{mime_type}"
                 ),
                 media_class=MediaClass.IMAGE,
-                media_content_type=asset.mime_type,
-                title=asset.file_name,
+                media_content_type=mime_type,
+                title=asset.original_file_name,
                 can_play=False,
                 can_expand=False,
-                thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/thumbnail/{asset.mime_type}",
+                thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/thumbnail/{mime_type}",
             )
             for asset in album_info.assets
-            if asset.mime_type.startswith("image/")
+            if (mime_type := asset.original_mime_type)
+            and mime_type.startswith("image/")
         ]
 
         ret.extend(
@@ -181,18 +182,19 @@ class ImmichMediaSource(MediaSource):
                     f"{identifier.unique_id}|albums|"
                     f"{identifier.collection_id}|"
                     f"{asset.asset_id}|"
-                    f"{asset.file_name}|"
-                    f"{asset.mime_type}"
+                    f"{asset.original_file_name}|"
+                    f"{mime_type}"
                 ),
                 media_class=MediaClass.VIDEO,
-                media_content_type=asset.mime_type,
-                title=asset.file_name,
+                media_content_type=mime_type,
+                title=asset.original_file_name,
                 can_play=True,
                 can_expand=False,
                 thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/thumbnail/image/jpeg",
             )
             for asset in album_info.assets
-            if asset.mime_type.startswith("video/")
+            if (mime_type := asset.original_mime_type)
+            and mime_type.startswith("video/")
         )
 
         return ret
