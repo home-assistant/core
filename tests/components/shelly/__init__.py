@@ -53,7 +53,7 @@ async def init_integration(
         data[CONF_GEN] = gen
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options
+        domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options, title="Test name"
     )
     entry.add_to_hass(hass)
 

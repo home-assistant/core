@@ -29,6 +29,7 @@
     'original_name': 'Activated carbon filter condition',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activated_carbon_filter_condition',
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-ActivatedCarbonFilterCondition-114-0',
@@ -87,6 +88,7 @@
     'original_name': 'Air quality',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-AirQuality-91-0',
@@ -145,6 +147,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-CarbonDioxideSensor-1037-0',
@@ -197,6 +200,7 @@
     'original_name': 'Carbon monoxide',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-CarbonMonoxideSensor-1036-0',
@@ -249,6 +253,7 @@
     'original_name': 'Hepa filter condition',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hepa_filter_condition',
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-HepaFilterCondition-113-0',
@@ -300,6 +305,7 @@
     'original_name': 'Humidity',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-4-HumiditySensor-1029-0',
@@ -352,6 +358,7 @@
     'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-NitrogenDioxideSensor-1043-0',
@@ -404,6 +411,7 @@
     'original_name': 'Ozone',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-OzoneConcentrationSensor-1045-0',
@@ -456,6 +464,7 @@
     'original_name': 'PM1',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM1Sensor-1068-0',
@@ -508,6 +517,7 @@
     'original_name': 'PM10',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM10Sensor-1069-0',
@@ -560,6 +570,7 @@
     'original_name': 'PM2.5',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM25Sensor-1066-0',
@@ -606,12 +617,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-3-TemperatureSensor-1026-0',
@@ -658,12 +673,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-5-ThermostatLocalTemperature-513-0',
@@ -716,6 +735,7 @@
     'original_name': 'Volatile organic compounds parts',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-TotalVolatileOrganicCompoundsSensor-1070-0',
@@ -775,6 +795,7 @@
     'original_name': 'Air quality',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-AirQuality-91-0',
@@ -833,6 +854,7 @@
     'original_name': 'Carbon dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-CarbonDioxideSensor-1037-0',
@@ -885,6 +907,7 @@
     'original_name': 'Humidity',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-HumiditySensor-1029-0',
@@ -937,6 +960,7 @@
     'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-NitrogenDioxideSensor-1043-0',
@@ -989,6 +1013,7 @@
     'original_name': 'PM1',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM1Sensor-1068-0',
@@ -1041,6 +1066,7 @@
     'original_name': 'PM10',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM10Sensor-1069-0',
@@ -1093,6 +1119,7 @@
     'original_name': 'PM2.5',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM25Sensor-1066-0',
@@ -1139,12 +1166,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TemperatureSensor-1026-0',
@@ -1197,6 +1228,7 @@
     'original_name': 'Volatile organic compounds parts',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TotalVolatileOrganicCompoundsSensor-1070-0',
@@ -1243,12 +1275,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-TemperatureSensor-1026-0',
@@ -1301,6 +1337,7 @@
     'original_name': 'Battery',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSource-47-12',
@@ -1347,6 +1384,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
       }),
@@ -1356,6 +1396,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
@@ -1411,6 +1452,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWattCurrent-319486977-319422473',
@@ -1466,6 +1508,7 @@
     'original_name': 'Energy',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWattAccumulated-319486977-319422475',
@@ -1521,6 +1564,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorWatt-319486977-319422474',
@@ -1576,6 +1620,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-EveEnergySensorVoltage-319486977-319422472',
@@ -1634,6 +1679,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
@@ -1692,6 +1738,7 @@
     'original_name': 'Energy',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-2-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
@@ -1750,6 +1797,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
@@ -1808,6 +1856,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
@@ -1860,6 +1909,7 @@
     'original_name': 'Battery',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-PowerSource-47-12',
@@ -1906,12 +1956,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
@@ -1962,6 +2016,7 @@
     'original_name': 'Valve position',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve_position',
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-EveThermoValvePosition-319486977-319422488',
@@ -2006,6 +2061,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
       }),
@@ -2015,6 +2073,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-PowerSourceBatVoltage-47-11',
@@ -2034,7 +2093,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.050',
+    'state': '3.05',
   })
 # ---
 # name: test_sensors[eve_weather_sensor][sensor.eve_weather_battery-entry]
@@ -2067,6 +2126,7 @@
     'original_name': 'Battery',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-PowerSource-47-12',
@@ -2119,6 +2179,7 @@
     'original_name': 'Humidity',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-HumiditySensor-1029-0',
@@ -2174,6 +2235,7 @@
     'original_name': 'Pressure',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-EveWeatherPressure-319486977-319422484',
@@ -2220,12 +2282,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-TemperatureSensor-1026-0',
@@ -2272,6 +2338,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
       }),
@@ -2281,6 +2350,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-PowerSourceBatVoltage-47-11',
@@ -2333,6 +2403,7 @@
     'original_name': 'Flow',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flow',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-FlowSensor-1028-0',
@@ -2352,6 +2423,159 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[generic_switch][sensor.mock_generic_switch_current_switch_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[generic_switch][sensor.mock_generic_switch_current_switch_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Generic Switch Current switch position',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Generic Switch Current switch position (1)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_fancy_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_generic_switch_fancy_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fancy Button',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_fancy_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Generic Switch Fancy Button',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_generic_switch_fancy_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[humidity_sensor][sensor.mock_humidity_sensor_humidity-entry]
@@ -2384,6 +2608,7 @@
     'original_name': 'Humidity',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-HumiditySensor-1029-0',
@@ -2440,6 +2665,7 @@
     'original_name': 'Current phase',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
     'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateCurrentPhase-96-1',
@@ -2500,6 +2726,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalState-96-4',
@@ -2556,6 +2783,7 @@
     'original_name': 'Illuminance',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LightSensor-1024-0',
@@ -2613,6 +2841,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalState-96-4',
@@ -2637,6 +2866,159 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stopped',
+  })
+# ---
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_config-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.inovelli_config',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Config',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-5-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_config-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Config',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inovelli_config',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_down-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.inovelli_down',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Down',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_down-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Down',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inovelli_down',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.inovelli_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Up',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-3-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Inovelli Up',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inovelli_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensors[oven][sensor.mock_oven_current_phase-entry]
@@ -2673,6 +3055,7 @@
     'original_name': 'Current phase',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalStateCurrentPhase-72-1',
@@ -2732,6 +3115,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalState-72-4',
@@ -2781,12 +3165,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature (2)',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureSensor-1026-0',
@@ -2833,12 +3221,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature (4)',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-TemperatureSensor-1026-0',
@@ -2885,12 +3277,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PressureSensor-1027-0',
@@ -2911,6 +3307,72 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[pump][sensor.mock_pump_control_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'constant_speed',
+        'constant_pressure',
+        'proportional_pressure',
+        'constant_flow',
+        'constant_temperature',
+        'automatic',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_pump_control_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Control mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pump_control_mode',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpControlMode-512-33',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[pump][sensor.mock_pump_control_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Pump Control mode',
+      'options': list([
+        'constant_speed',
+        'constant_pressure',
+        'proportional_pressure',
+        'constant_flow',
+        'constant_temperature',
+        'automatic',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_pump_control_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'constant_temperature',
   })
 # ---
 # name: test_sensors[pump][sensor.mock_pump_flow-entry]
@@ -2943,6 +3405,7 @@
     'original_name': 'Flow',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flow',
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-FlowSensor-1028-0',
@@ -2988,12 +3451,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PressureSensor-1027-0',
@@ -3014,6 +3481,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
+  })
+# ---
+# name: test_sensors[pump][sensor.mock_pump_rotation_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_pump_rotation_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rotation speed',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pump_speed',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpSpeed-512-20',
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensors[pump][sensor.mock_pump_rotation_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Pump Rotation speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'rpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_pump_rotation_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1000',
   })
 # ---
 # name: test_sensors[pump][sensor.mock_pump_temperature-entry]
@@ -3040,12 +3559,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-TemperatureSensor-1026-0',
@@ -3092,12 +3615,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-2-TemperatureSensor-1026-0',
@@ -3156,6 +3683,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
@@ -3214,6 +3742,7 @@
     'original_name': 'Energy',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
@@ -3272,6 +3801,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-1-OperationalState-96-4',
@@ -3335,6 +3865,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
@@ -3393,6 +3924,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
@@ -3413,6 +3945,70 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '120.0',
+  })
+# ---
+# name: test_sensors[silabs_evse_charging][sensor.evse_appliance_energy_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'offline',
+        'online',
+        'fault',
+        'power_adjust_active',
+        'paused',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.evse_appliance_energy_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Appliance energy state',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'esa_state',
+    'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-ESAState-152-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_evse_charging][sensor.evse_appliance_energy_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'evse Appliance energy state',
+      'options': list([
+        'offline',
+        'online',
+        'fault',
+        'power_adjust_active',
+        'paused',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.evse_appliance_energy_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
   })
 # ---
 # name: test_sensors[silabs_evse_charging][sensor.evse_circuit_capacity-entry]
@@ -3451,6 +4047,7 @@
     'original_name': 'Circuit capacity',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'evse_circuit_capacity',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseCircuitCapacity-153-5',
@@ -3520,6 +4117,7 @@
     'original_name': 'Fault state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'evse_fault_state',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseFaultState-153-2',
@@ -3594,6 +4192,7 @@
     'original_name': 'Max charge current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'evse_max_charge_current',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseMaximumChargeCurrent-153-7',
@@ -3652,6 +4251,7 @@
     'original_name': 'Min charge current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'evse_min_charge_current',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseMinimumChargeCurrent-153-6',
@@ -3710,6 +4310,7 @@
     'original_name': 'User max charge current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'evse_user_max_charge_current',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseUserMaximumChargeCurrent-153-9',
@@ -3768,6 +4369,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
@@ -3824,6 +4426,7 @@
     'original_name': 'Current phase',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_phase',
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalStateCurrentPhase-96-1',
@@ -3885,6 +4488,7 @@
     'original_name': 'Energy',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
@@ -3942,6 +4546,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-OperationalState-96-4',
@@ -4004,6 +4609,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
@@ -4062,6 +4668,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
@@ -4082,6 +4689,70 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '120.0',
+  })
+# ---
+# name: test_sensors[silabs_water_heater][sensor.water_heater_appliance_energy_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'offline',
+        'online',
+        'fault',
+        'power_adjust_active',
+        'paused',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.water_heater_appliance_energy_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Appliance energy state',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'esa_state',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ESAState-152-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[silabs_water_heater][sensor.water_heater_appliance_energy_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Water Heater Appliance energy state',
+      'options': list([
+        'offline',
+        'online',
+        'fault',
+        'power_adjust_active',
+        'paused',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_heater_appliance_energy_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
   })
 # ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_current-entry]
@@ -4120,6 +4791,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
@@ -4172,6 +4844,7 @@
     'original_name': 'Hot water level',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tank_percentage',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementTankPercentage-148-4',
@@ -4229,6 +4902,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementWatt-144-8',
@@ -4287,6 +4961,7 @@
     'original_name': 'Required heating energy',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'estimated_heat_required',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementEstimatedHeatRequired-148-3',
@@ -4333,12 +5008,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
     'original_name': 'Tank volume',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tank_volume',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementTankVolume-148-2',
@@ -4397,6 +5076,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
@@ -4449,6 +5129,7 @@
     'original_name': 'Battery',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSource-47-12',
@@ -4499,6 +5180,7 @@
     'original_name': 'Battery type',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_replacement_description',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatReplacementDescription-47-19',
@@ -4542,6 +5224,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
       }),
@@ -4551,6 +5236,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
@@ -4570,7 +5256,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[solar_power][sensor.solarpower_current-entry]
@@ -4609,6 +5295,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
@@ -4667,6 +5354,7 @@
     'original_name': 'Energy exported',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_exported',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
@@ -4725,6 +5413,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
@@ -4783,6 +5472,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
@@ -4829,12 +5519,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TemperatureSensor-1026-0',
@@ -4881,12 +5575,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
@@ -4947,6 +5645,7 @@
     'original_name': 'Operational state',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
     'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-RvcOperationalState-97-4',
@@ -4974,6 +5673,104 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_sensors[window_covering_full][sensor.mock_full_window_covering_target_opening_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_full_window_covering_target_opening_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target opening position',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_covering_target_position',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[window_covering_full][sensor.mock_full_window_covering_target_opening_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Full Window Covering Target opening position',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_full_window_covering_target_opening_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target opening position',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_covering_target_position',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Longan link WNCV DA01 Target opening position',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
   })
 # ---
 # name: test_sensors[yandex_smart_socket][sensor.yndx_00540_current-entry]
@@ -5009,6 +5806,7 @@
     'original_name': 'Current',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementRmsCurrent-2820-1288',
@@ -5064,6 +5862,7 @@
     'original_name': 'Power',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementActivePower-2820-1291',
@@ -5119,6 +5918,7 @@
     'original_name': 'Voltage',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ElectricalMeasurementRmsVoltage-2820-1285',

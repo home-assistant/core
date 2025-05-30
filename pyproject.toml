@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2025.6.0.dev0"
+version = "2025.7.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -28,7 +28,7 @@ dependencies = [
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
   "aiohasupervisor==0.3.1",
-  "aiohttp==3.11.18",
+  "aiohttp==3.12.4",
   "aiohttp_cors==0.7.0",
   "aiohttp-fast-zlib==0.2.3",
   "aiohttp-asyncmdnsresolver==0.1.1",
@@ -66,7 +66,7 @@ dependencies = [
   # onboarding->cloud->assist_pipeline->conversation->home_assistant_intents. Onboarding needs
   # to be setup in stage 0, but we don't want to also promote cloud with all its
   # dependencies to stage 0.
-  "home-assistant-intents==2025.5.7",
+  "home-assistant-intents==2025.5.28",
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",
   "lru-dict==1.3.0",
@@ -108,7 +108,7 @@ dependencies = [
   "PyYAML==6.0.2",
   "requests==2.32.3",
   "securetar==2025.2.1",
-  "SQLAlchemy==2.0.40",
+  "SQLAlchemy==2.0.41",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   "typing-extensions>=4.13.0,<5.0",
@@ -604,8 +604,6 @@ filterwarnings = [
   # - pkg_resources
   # https://pypi.org/project/aiomusiccast/ - v0.14.8 - 2023-03-20
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:aiomusiccast",
-  # https://pypi.org/project/habitipy/ - v0.3.3 - 2024-10-28
-  "ignore:pkg_resources is deprecated as an API:DeprecationWarning:habitipy.api",
   # https://github.com/eavanvalkenburg/pysiaalarm/blob/v3.1.1/src/pysiaalarm/data/data.py#L7 - v3.1.1 - 2023-04-17
   "ignore:pkg_resources is deprecated as an API:DeprecationWarning:pysiaalarm.data.data",
   # https://pypi.org/project/pybotvac/ - v0.0.26 - 2025-02-26
@@ -707,6 +705,7 @@ select = [
   "B002",   # Python does not support the unary prefix increment
   "B005",   # Using .strip() with multi-character strings is misleading
   "B007",   # Loop control variable {name} not used within loop body
+  "B009",   # Do not call getattr with a constant attribute value. It is not any safer than normal property access.
   "B014",   # Exception handler with duplicate exception
   "B015",   # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
   "B017",   # pytest.raises(BaseException) should be considered evil
