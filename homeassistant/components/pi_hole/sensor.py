@@ -130,5 +130,5 @@ def get_nested(data: dict[str, dict[str, float | int]], key: str) -> float | int
     for part in key.split("."):
         if not isinstance(data, dict):
             raise KeyError(f"Cannot access '{part}' in non-dict {data}")
-        result = data[part]
-    return result
+        data = data[part]
+    return data
