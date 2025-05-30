@@ -30,3 +30,4 @@ class HERETravelTimeAPIParams:
     route_mode: str
     arrival: datetime | None
     departure: datetime | None
+    traffic_mode: bool
