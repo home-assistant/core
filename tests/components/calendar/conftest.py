@@ -8,13 +8,17 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.calendar import DOMAIN, CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import (
+    DOMAIN,
+    CalendarEntity,
+    CalendarEntityFeature,
+    CalendarEvent,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
-from homeassistant.util.color import RGBColor
 
 from tests.common import (
     MockConfigEntry,
@@ -44,21 +48,12 @@ class MockCalendarEntity(CalendarEntity):
     """Test Calendar entity."""
 
     _attr_has_entity_name = True
+    _attr_supported_features = CalendarEntityFeature.SUPPORTS_COLOR
 
     def __init__(self, name: str, events: list[CalendarEvent] | None = None) -> None:
         """Initialize entity."""
         self._attr_name = name.capitalize()
         self._events = events or []
-        self._attr_color: RGBColor | None = None
-
-    @property
-    def color(self) -> RGBColor | None:
-        """Return the color of the calendar entity as RGBColor."""
-        return self._attr_color
-
-    @color.setter
-    def color(self, value: RGBColor | None) -> None:
-        self._attr_color = value
 
     @property
     def event(self) -> CalendarEvent | None:
