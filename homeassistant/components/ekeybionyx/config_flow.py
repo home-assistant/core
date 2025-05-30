@@ -120,6 +120,8 @@ class OAuth2FlowHandler(
                 cv.url(user_input[CONF_URL])
             except vol.Invalid:
                 errors[CONF_URL] = "invalid_url"
+            if len([x for x in user_input.items() if x[0] != CONF_URL]) == 0:
+                errors["base"] = "no_webhooks_provided"
         if user_input is None or errors:
             data_schema: dict[Any, Any] = {
                 vol.Optional(f"webhook{i + 1}"): vol.All(str, vol.Length(max=50))

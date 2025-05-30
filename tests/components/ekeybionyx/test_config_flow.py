@@ -92,12 +92,11 @@ async def test_full_flow(
     flow3 = await hass.config_entries.flow.async_configure(
         flow2["flow_id"],
         {
-            "webhook1": "Test",
             "url": "localhost:8123",
         },
     )
 
-    assert flow3.get("errors") == {"url": "invalid_url"}
+    assert flow3.get("errors") == {"base": "no_webhooks_provided", "url": "invalid_url"}
 
     with patch(
         "homeassistant.components.ekeybionyx.async_setup_entry", return_value=True
