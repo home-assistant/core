@@ -67,8 +67,7 @@ def add_province_and_language_to_schema(
 
     _country = country_holidays(country=country)
     if country_default_language := (_country.default_language):
-        selectable_languages = _country.supported_languages
-        new_selectable_languages = list(selectable_languages)
+        new_selectable_languages = list(_country.supported_languages)
         language_schema = {
             vol.Optional(
                 CONF_LANGUAGE, default=country_default_language
@@ -154,19 +153,7 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             years=year,
             language=language,
         )
-        if (
-            (supported_languages := obj_holidays.supported_languages)
-            and language
-            and language.startswith("en")
-        ):
-            for lang in supported_languages:
-                if lang.startswith("en"):
-                    obj_holidays = country_holidays(
-                        country,
-                        subdiv=province,
-                        years=year,
-                        language=lang,
-                    )
+
     else:
         obj_holidays = HolidayBase(years=year)
 

@@ -11,7 +11,11 @@ from homeassistant.helpers import entity_registry as er
 
 from . import call_webhook, setup_integration
 
-from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from tests.typing import ClientSessionGenerator
 
 
@@ -45,7 +49,9 @@ async def test_webhook_trigger_update(
 
     await call_webhook(
         hass,
-        load_json_object_fixture("webhook_request_automatically_approved.json", DOMAIN),
+        await async_load_json_object_fixture(
+            hass, "webhook_request_automatically_approved.json", DOMAIN
+        ),
         client,
     )
     await hass.async_block_till_done()

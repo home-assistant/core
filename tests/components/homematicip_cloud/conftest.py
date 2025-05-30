@@ -9,7 +9,7 @@ from homematicip.connection.rest_connection import RestConnection
 import pytest
 
 from homeassistant.components.homematicip_cloud import (
-    DOMAIN as HMIPC_DOMAIN,
+    DOMAIN,
     async_setup as hmip_async_setup,
 )
 from homeassistant.components.homematicip_cloud.const import (
@@ -53,7 +53,7 @@ def hmip_config_entry_fixture() -> MockConfigEntry:
     }
     return MockConfigEntry(
         version=1,
-        domain=HMIPC_DOMAIN,
+        domain=DOMAIN,
         title="Home Test SN",
         unique_id=HAPID,
         data=entry_data,
@@ -80,7 +80,7 @@ def hmip_config_fixture() -> ConfigType:
         HMIPC_PIN: HAPPIN,
     }
 
-    return {HMIPC_DOMAIN: [entry_data]}
+    return {DOMAIN: [entry_data]}
 
 
 @pytest.fixture(name="dummy_config")
@@ -97,7 +97,7 @@ async def mock_hap_with_service_fixture(
     mock_hap = await default_mock_hap_factory.async_get_mock_hap()
     await hmip_async_setup(hass, dummy_config)
     await hass.async_block_till_done()
-    entry = hass.config_entries.async_entries(HMIPC_DOMAIN)[0]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
     entry.runtime_data = mock_hap
     return mock_hap
 

@@ -90,7 +90,7 @@ from .const import (
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_object_fixture,
+    async_load_json_object_fixture,
 )
 
 ENTITY_ID = f"{MP_DOMAIN}.mock_title"
@@ -708,8 +708,8 @@ async def test_turn_off_websocket(
     hass: HomeAssistant, remote_websocket: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off."""
-    remote_websocket.app_list_data = load_json_object_fixture(
-        "ws_installed_app_event.json", DOMAIN
+    remote_websocket.app_list_data = await async_load_json_object_fixture(
+        hass, "ws_installed_app_event.json", DOMAIN
     )
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -749,8 +749,8 @@ async def test_turn_off_websocket_frame(
     hass: HomeAssistant, remote_websocket: Mock, rest_api: Mock
 ) -> None:
     """Test for turn_off."""
-    rest_api.rest_device_info.return_value = load_json_object_fixture(
-        "device_info_UE43LS003.json", DOMAIN
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UE43LS003.json", DOMAIN
     )
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
@@ -1173,8 +1173,8 @@ async def test_play_media_app(hass: HomeAssistant, remote_websocket: Mock) -> No
 @pytest.mark.usefixtures("rest_api")
 async def test_select_source_app(hass: HomeAssistant, remote_websocket: Mock) -> None:
     """Test for select_source."""
-    remote_websocket.app_list_data = load_json_object_fixture(
-        "ws_installed_app_event.json", DOMAIN
+    remote_websocket.app_list_data = await async_load_json_object_fixture(
+        hass, "ws_installed_app_event.json", DOMAIN
     )
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
     remote_websocket.send_commands.reset_mock()

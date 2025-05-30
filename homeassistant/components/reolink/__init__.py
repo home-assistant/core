@@ -233,6 +233,14 @@ async def async_setup_entry(
         "privacy_mode_change", async_privacy_mode_change, 623
     )
 
+    # ensure host device is setup before connected camera devices that use via_device
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, host.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
+    )
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     config_entry.async_on_unload(

@@ -31,6 +31,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNKNOWN,
     EntityCategory,
+    Platform,
     UnitOfApparentPower,
     UnitOfArea,
     UnitOfBloodGlucoseConcentration,
@@ -2704,7 +2705,7 @@ async def test_name(hass: HomeAssistant) -> None:
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [SENSOR_DOMAIN]
+            config_entry, [Platform.SENSOR]
         )
         return True
 
