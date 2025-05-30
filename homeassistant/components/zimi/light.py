@@ -81,8 +81,6 @@ class ZimiDimmer(ZimiLight):
         super().__init__(device, api)
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-        if self._device.type != "dimmer":
-            raise ValueError("ZimiDimmer needs a dimmable light")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on (with optional brightness)."""
