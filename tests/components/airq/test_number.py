@@ -6,13 +6,13 @@ from aioairq import AirQ, DeviceInfo
 import pytest
 
 from homeassistant.components.airq import AirQCoordinator
-from homeassistant.components.airq.number import LED_VALUE_DEFAULT, AirQLEDBrightness
+from homeassistant.components.airq.number import BRIGHTNESS_DEFAULT, AirQLEDBrightness
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-INIT_BRIGHTNESS = 4.2
+INIT_BRIGHTNESS = 42
 TEST_DEVICE_DATA = {"co2": 500.0, "Status": "OK"}
 TEST_DEVICE_INFO = DeviceInfo(
     id="id",
@@ -42,9 +42,7 @@ def patch_aioairq_api(monkeypatch: pytest.MonkeyPatch):
         AsyncMock(return_value=TEST_DEVICE_DATA),
     )
     monkeypatch.setattr(
-        AirQ,
-        "get_current_brightness",
-        AsyncMock(return_value=INIT_BRIGHTNESS),
+        AirQ, "get_current_brightness", AsyncMock(return_value=INIT_BRIGHTNESS)
     )
 
 
@@ -63,7 +61,7 @@ def test_entity_initialization_and_limits(number_entity: AirQLEDBrightness) -> N
     coord: AirQCoordinator = number_entity.coordinator  # type: ignore[assignment]
     assert number_entity.unique_id == f"{coord.device_id}_airq_led_brightness"
     assert number_entity.native_min_value == 0.0
-    assert number_entity.native_max_value == 10.0
+    assert number_entity.native_max_value == 100.0
 
 
 @pytest.mark.asyncio
@@ -77,31 +75,31 @@ async def test_set_native_value_calls_api_and_updates_state(
     assert number_entity.native_value == INIT_BRIGHTNESS
 
     # ensure that the new brightness will be different
-    new_brightness = (INIT_BRIGHTNESS + 1.0) % 10.0
+    new_brightness_percent = (INIT_BRIGHTNESS + 10.0) % 100.0
 
     # spy on the API method
     spy = AsyncMock(return_value=None)
     monkeypatch.setattr(AirQ, "set_current_brightness", spy)
 
     # call the method under test
-    await number_entity.async_set_native_value(new_brightness)
+    await number_entity.async_set_native_value(new_brightness_percent)
 
     # 1) did we call the API?
-    spy.assert_awaited_once_with(new_brightness)
+    spy.assert_awaited_once_with(new_brightness_percent)
 
     # 2) did the coordinator.data update?
     coord: AirQCoordinator = number_entity.coordinator  # type: ignore[assignment]
-    assert coord.data["brightness"] == new_brightness
-    assert number_entity.native_value == new_brightness
+    assert coord.data["brightness"] == new_brightness_percent
+    assert number_entity.native_value == new_brightness_percent
 
     # 3) did HA's state machine get updated?
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert float(state.state) == new_brightness
+    assert float(state.state) == new_brightness_percent
 
 
 def test_default_brightness_fallback(number_entity: AirQLEDBrightness) -> None:
     """If coordinator.data has no 'brightness', native_value falls back to the default."""
     coord: AirQCoordinator = number_entity.coordinator  # type: ignore[assignment]
     coord.data.pop("brightness", None)
-    assert number_entity.native_value == LED_VALUE_DEFAULT
+    assert number_entity.native_value == BRIGHTNESS_DEFAULT
