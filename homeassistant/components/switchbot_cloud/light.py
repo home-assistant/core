@@ -2,14 +2,20 @@
 
 from typing import Any
 
-from switchbot_api import CeilingLightCommands, CommonCommands
+from switchbot_api import (
+    CeilingLightCommands,
+    CommonCommands,
+    Device,
+    Remote,
+    SwitchBotAPI,
+)
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
+from . import SwitchbotCloudData, SwitchBotCoordinator
 from .const import DOMAIN
 from .entity import SwitchBotCloudEntity
 
@@ -46,16 +52,25 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
 
     _attr_is_on: bool | None = None
 
+    def __init__(
+        self,
+        api: SwitchBotAPI,
+        device: Device | Remote,
+        coordinator: SwitchBotCoordinator,
+    ) -> None:
+        """Entity init."""
+        super().__init__(api, device, coordinator)
+        if device.device_type not in "Strip Light":
+            self._attr_supported_color_modes = {ColorMode.RGB, ColorMode.COLOR_TEMP}
+        else:
+            self._attr_supported_color_modes = {ColorMode.RGB}
+
     @property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         response: dict | None = self.coordinator.data
         assert response is not None
-        device_type: str | None = response.get("deviceType")
-        if device_type and device_type not in "Strip Light":
-            self._attr_supported_color_modes = {ColorMode.RGB, ColorMode.COLOR_TEMP}
-        else:
-            self._attr_supported_color_modes = {ColorMode.RGB}
+
         if self._attr_is_on is None:
             self._attr_color_mode = ColorMode.RGB
             power: str | None = response.get("power") if response else None
@@ -85,7 +100,8 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         if brightness:
             self._attr_color_mode = ColorMode.RGB
             await self.send_api_command(
-                CeilingLightCommands.SET_BRIGHTNESS, parameters=str(brightness)
+                CeilingLightCommands.SET_BRIGHTNESS,
+                parameters=str(value_map_brightness(brightness)),
             )
             self._attr_brightness = brightness
         if rgb_color:
