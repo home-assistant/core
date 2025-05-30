@@ -20,6 +20,7 @@ from .helpers import (
     EntityData,
     async_add_entities as zha_async_add_entities,
     get_zha_data,
+    migrate_entities_unique_ids,
 )
 
 
@@ -31,6 +32,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation binary sensor from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms[Platform.BINARY_SENSOR]
+
+    await migrate_entities_unique_ids(hass, Platform.BINARY_SENSOR, entities_to_create)
 
     unsub = async_dispatcher_connect(
         hass,
