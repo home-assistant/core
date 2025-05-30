@@ -32,7 +32,7 @@ async def async_setup_entry(
     ]
 
     lights.extend(
-        [ZimiDimmer(device, api) for device in api.lights if device.type == "dimmer"]
+        ZimiDimmer(device, api) for device in api.lights if device.type == "dimmer"
     )
 
     async_add_entities(lights)
