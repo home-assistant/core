@@ -71,9 +71,6 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=self._config
                 )
 
-            if CONF_API_KEY in errors:
-                return await self.async_step_api_key()
-
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",

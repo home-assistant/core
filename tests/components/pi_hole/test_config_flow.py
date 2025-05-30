@@ -10,7 +10,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import (
     CONFIG_DATA_DEFAULTS,
     CONFIG_ENTRY_WITH_API_KEY,
-    CONFIG_ENTRY_WITHOUT_API_KEY,
     CONFIG_FLOW_API_KEY,
     CONFIG_FLOW_USER,
     NAME,
@@ -70,28 +69,6 @@ async def test_flow_user_with_api_key(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
-
-
-async def test_flow_user_without_api_key(hass: HomeAssistant) -> None:
-    """Test user initialized flow without api key needed."""
-    mocked_hole = _create_mocked_hole()
-    with _patch_config_flow_hole(mocked_hole), _patch_setup_hole() as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {}
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONFIG_FLOW_USER,
-        )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == NAME
-        assert result["data"] == CONFIG_ENTRY_WITHOUT_API_KEY
-        mock_setup.assert_called_once()
 
 
 async def test_flow_user_invalid(hass: HomeAssistant) -> None:

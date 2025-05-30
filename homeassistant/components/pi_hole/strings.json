@@ -9,14 +9,11 @@
           "location": "[%key:common::config_flow::data::location%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "api_version": "Pi-Hole API version"
-        }
-      },
-      "api_key": {
-        "data": {
+          "api_version": "Pi-Hole API version",
           "api_key": "API Key or App Passowrd"
         }
       },
+
       "reauth_confirm": {
         "title": "Reauthenticate Pi-hole",
         "description": "Please enter a new API key for Pi-hole at {host}/{location}",

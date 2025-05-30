@@ -12,6 +12,7 @@ from homeassistant.components.pi_hole.const import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_API_VERSION,
     CONF_HOST,
     CONF_LOCATION,
     CONF_NAME,
@@ -62,6 +63,7 @@ PORT = 80
 LOCATION = "location"
 NAME = "Pi hole"
 API_KEY = "apikey"
+API_VERSION = 6
 SSL = False
 VERIFY_SSL = True
 
@@ -87,6 +89,7 @@ CONFIG_FLOW_USER = {
     CONF_HOST: HOST,
     CONF_PORT: PORT,
     CONF_LOCATION: LOCATION,
+    CONF_API_KEY: API_KEY,
     CONF_NAME: NAME,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
@@ -103,6 +106,7 @@ CONFIG_ENTRY_WITH_API_KEY = {
     CONF_API_KEY: API_KEY,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
+    CONF_API_VERSION: API_VERSION,
 }
 
 CONFIG_ENTRY_WITHOUT_API_KEY = {
@@ -119,6 +123,7 @@ def _create_mocked_hole(
     raise_exception=False, has_versions=True, has_update=True, has_data=True
 ):
     mocked_hole = MagicMock()
+    type(mocked_hole).authenticate = AsyncMock()
     type(mocked_hole).get_data = AsyncMock(
         side_effect=HoleError("") if raise_exception else None
     )
