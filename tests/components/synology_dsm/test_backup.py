@@ -34,7 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
-from homeassistant.util.aiohttp import MockStreamReader
+from homeassistant.util.aiohttp import MockStreamReader, MockStreamReaderChunked
 
 from .common import mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
@@ -43,14 +43,6 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 BASE_FILENAME = "Automatic_backup_2025.2.0.dev0_2025-01-09_20.14_35457323"
-
-
-class MockStreamReaderChunked(MockStreamReader):
-    """Mock a stream reader with simulated chunked data."""
-
-    async def readchunk(self) -> tuple[bytes, bool]:
-        """Read bytes."""
-        return (self._content.read(), False)
 
 
 async def _mock_download_file(path: str, filename: str) -> MockStreamReader:
@@ -350,14 +342,16 @@ async def test_agents_list_backups(
                 }
             },
             "backup_id": "abcd12ef",
-            "date": "2025-01-09T20:14:35.457323+01:00",
             "database_included": True,
+            "date": "2025-01-09T20:14:35.457323+01:00",
             "extra_metadata": {"instance_id": ANY, "with_automatic_settings": True},
+            "failed_addons": [],
+            "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2025.2.0.dev0",
             "name": "Automatic backup 2025.2.0.dev0",
-            "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
     ]
@@ -421,14 +415,16 @@ async def test_agents_list_backups_disabled_filestation(
                     }
                 },
                 "backup_id": "abcd12ef",
-                "date": "2025-01-09T20:14:35.457323+01:00",
                 "database_included": True,
+                "date": "2025-01-09T20:14:35.457323+01:00",
                 "extra_metadata": {"instance_id": ANY, "with_automatic_settings": True},
+                "failed_addons": [],
+                "failed_agent_ids": [],
+                "failed_folders": [],
                 "folders": [],
                 "homeassistant_included": True,
                 "homeassistant_version": "2025.2.0.dev0",
                 "name": "Automatic backup 2025.2.0.dev0",
-                "failed_agent_ids": [],
                 "with_automatic_settings": None,
             },
         ),

@@ -4,22 +4,14 @@ from unittest.mock import patch
 
 from energyflip import EnergyFlipException
 
-from homeassistant.components import huisbaasje
+from homeassistant.components.huisbaasje.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .test_data import MOCK_CURRENT_MEASUREMENTS
 
 from tests.common import MockConfigEntry
-
-
-async def test_setup(hass: HomeAssistant) -> None:
-    """Test for successfully setting up the platform."""
-    assert await async_setup_component(hass, huisbaasje.DOMAIN, {})
-    await hass.async_block_till_done()
-    assert huisbaasje.DOMAIN in hass.config.components
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
@@ -36,10 +28,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             return_value=MOCK_CURRENT_MEASUREMENTS,
         ) as mock_current_measurements,
     ):
-        hass.config.components.add(huisbaasje.DOMAIN)
         config_entry = MockConfigEntry(
             version=1,
-            domain=huisbaasje.DOMAIN,
+            domain=DOMAIN,
             title="userId",
             data={
                 CONF_ID: "userId",
@@ -56,9 +47,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
         # Assert integration is loaded
         assert config_entry.state is ConfigEntryState.LOADED
-        assert huisbaasje.DOMAIN in hass.config.components
-        assert huisbaasje.DOMAIN in hass.data
-        assert config_entry.entry_id in hass.data[huisbaasje.DOMAIN]
 
         # Assert entities are loaded
         entities = hass.states.async_entity_ids("sensor")
@@ -75,10 +63,9 @@ async def test_setup_entry_error(hass: HomeAssistant) -> None:
     with patch(
         "energyflip.EnergyFlip.authenticate", side_effect=EnergyFlipException
     ) as mock_authenticate:
-        hass.config.components.add(huisbaasje.DOMAIN)
         config_entry = MockConfigEntry(
             version=1,
-            domain=huisbaasje.DOMAIN,
+            domain=DOMAIN,
             title="userId",
             data={
                 CONF_ID: "userId",
@@ -95,7 +82,7 @@ async def test_setup_entry_error(hass: HomeAssistant) -> None:
 
         # Assert integration is loaded with error
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
-        assert huisbaasje.DOMAIN not in hass.data
+        assert DOMAIN not in hass.data
 
         # Assert entities are not loaded
         entities = hass.states.async_entity_ids("sensor")
@@ -119,10 +106,9 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
             return_value=MOCK_CURRENT_MEASUREMENTS,
         ) as mock_current_measurements,
     ):
-        hass.config.components.add(huisbaasje.DOMAIN)
         config_entry = MockConfigEntry(
             version=1,
-            domain=huisbaasje.DOMAIN,
+            domain=DOMAIN,
             title="userId",
             data={
                 CONF_ID: "userId",
