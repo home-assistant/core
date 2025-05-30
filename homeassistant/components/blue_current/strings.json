@@ -124,6 +124,17 @@
       "reset": {
         "name": "Reset"
       }
+    },
+    "switch": {
+      "plug_and_charge": {
+        "name": "Plug and charge"
+      },
+      "linked_charge_cards_only": {
+        "name": "Linked charge cards only"
+      },
+      "block": {
+        "name": "Block"
+      }
     }
   }
 }
