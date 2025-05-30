@@ -11,6 +11,7 @@ from here_routing import (
     Return,
     RoutingMode,
     Spans,
+    TrafficMode,
     TransportMode,
 )
 from here_transit import (
@@ -324,6 +325,7 @@ async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock) -> Non
         routing_mode=RoutingMode.FAST,
         arrival_time=None,
         departure_time=None,
+        traffic_mode=TrafficMode.DEFAULT,
         return_values=[Return.POLYINE, Return.SUMMARY],
         spans=[Spans.NAMES],
     )

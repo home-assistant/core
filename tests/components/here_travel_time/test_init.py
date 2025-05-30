@@ -9,9 +9,11 @@ from homeassistant.components.here_travel_time.const import (
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
     CONF_ROUTE_MODE,
+    CONF_TRAFFIC_MODE,
     DOMAIN,
     ROUTE_MODE_FASTEST,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_CONFIG
@@ -50,3 +52,25 @@ async def test_unload_entry(hass: HomeAssistant, options) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.usefixtures("valid_response")
+async def test_migrate_entry_v1_1_v1_2(
+    hass: HomeAssistant,
+) -> None:
+    """Test successful migration of entry data."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        data=DEFAULT_CONFIG,
+        options=DEFAULT_OPTIONS,
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+
+    assert updated_entry.state is ConfigEntryState.LOADED
+    assert updated_entry.minor_version == 2
+    assert updated_entry.options[CONF_TRAFFIC_MODE] is True
