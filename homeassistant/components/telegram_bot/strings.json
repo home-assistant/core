@@ -842,6 +842,20 @@
           "description": "ID of the chat where to delete the message."
         }
       }
+    },
+    "leave_chat": {
+      "name": "Leave chat.",
+      "description": "Remove the bot from the chat.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry ID",
+          "description": "The config entry representing the Telegram bot to leave the chat."
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "ID of the chat where to remove the bot."
+        }
+      }
     }
   },
   "exceptions": {

@@ -779,7 +779,7 @@ class TelegramNotificationService:
             msg_ids[chat_id] = msg.id
         return msg_ids
 
-    async def leave_chat(self, chat_id=None, context=None):
+    async def leave_chat(self, chat_id=None, context=None, **kwargs):
         """Remove bot from chat."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)

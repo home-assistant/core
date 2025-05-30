@@ -171,6 +171,7 @@ SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend(
 
 SERVICE_SCHEMA_SEND_POLL = vol.Schema(
     {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Required(ATTR_QUESTION): cv.string,
         vol.Required(ATTR_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
@@ -185,6 +186,7 @@ SERVICE_SCHEMA_SEND_POLL = vol.Schema(
 
 SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend(
     {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
@@ -194,6 +196,7 @@ SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend(
 
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
     {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
@@ -206,6 +209,7 @@ SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
 
 SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
     {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
@@ -217,6 +221,7 @@ SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
 
 SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
     {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_MESSAGE): cv.string,
         vol.Required(ATTR_CALLBACK_QUERY_ID): vol.Coerce(int),
         vol.Optional(ATTR_SHOW_ALERT): cv.boolean,
@@ -226,6 +231,7 @@ SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
 
 SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
     {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
@@ -234,7 +240,12 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema({vol.Required(ATTR_CHAT_ID): vol.Coerce(int)})
+SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema(
+    {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+    }
+)
 
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
@@ -360,6 +371,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         elif msgtype == SERVICE_DELETE_MESSAGE:
             await notify_service.delete_message(context=service.context, **kwargs)
+        elif msgtype == SERVICE_LEAVE_CHAT:
+            await notify_service.leave_chat(context=service.context, **kwargs)
         else:
             await notify_service.edit_message(
                 msgtype, context=service.context, **kwargs
