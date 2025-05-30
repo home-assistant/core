@@ -479,7 +479,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     ip_address=attributes["IPAddress"],
                     ssid=None,
                     wan_access=wan_access_result,
-                    speed=speed,
+                    speed=attributes.get("X_AVM-DE_Speed"),
                 )
         else:
             for info in hosts_info:
