@@ -35,9 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> 
     coordinator = JellyfinDataUpdateCoordinator(
         hass, entry, client, server_info, user_id
     )
+    await coordinator.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
-
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         entry_type=dr.DeviceEntryType.SERVICE,
@@ -46,8 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> 
         name=coordinator.server_name,
         sw_version=coordinator.server_version,
     )
-
-    await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
     entry.async_on_unload(client.stop)
