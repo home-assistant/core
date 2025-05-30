@@ -11,6 +11,7 @@ from hole.exceptions import HoleError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_API_VERSION,
     CONF_HOST,
     CONF_LOCATION,
     CONF_NAME,
@@ -61,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
     verify_tls = entry.data[CONF_VERIFY_SSL]
     location = entry.data[CONF_LOCATION]
     api_key = entry.data.get(CONF_API_KEY, "")
+    version = entry.data.get(CONF_API_VERSION, 6)
 
     # remove obsolet CONF_STATISTICS_ONLY from entry.data
     if CONF_STATISTICS_ONLY in entry.data:
@@ -103,19 +105,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
     await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
     session = async_get_clientsession(hass, verify_tls)
-    api = Hole(
-        host,
-        session,
-        location=location,
-        tls=use_tls,
-        api_token=api_key,
-    )
+    hole_kwargs = {
+        "host": host,
+        "session": session,
+        "location": location,
+        "version": version,
+    }
+    if version == 5:
+        hole_kwargs["tls"] = use_tls
+        hole_kwargs["api_token"] = api_key
+    if version == 6:
+        hole_kwargs["protocol"] = "https" if use_tls else "http"
+        hole_kwargs["password"] = api_key
+    api = Hole(**hole_kwargs)
 
     async def async_update_data() -> None:
         """Fetch data from API endpoint."""
         try:
             await api.get_data()
             await api.get_versions()
+            # TODO - determine and re-write version
         except HoleError as err:
             raise UpdateFailed(f"Failed to communicate with API: {err}") from err
         if not isinstance(api.data, dict):
