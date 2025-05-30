@@ -459,3 +459,34 @@ async def test_no_blueprint(hass: HomeAssistant) -> None:
         template.helpers.blueprint_in_template(hass, "binary_sensor.test_entity")
         is None
     )
+
+
+async def test_variables_for_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test event sensor blueprint."""
+    hass.states.async_set("light.test_light", "on")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "use_blueprint": {
+                        "path": "test_switch_with_variables.yaml",
+                        "input": {
+                            "light_input": "light.test_light",
+                        },
+                    },
+                    "name": "Test Switch",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_switch")
+    assert state is not None
+    assert state.state == "on"

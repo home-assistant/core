@@ -37,14 +37,13 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .const import CONF_OBJECT_ID, DOMAIN
 from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
+    make_template_entity_common_modern_schema,
     rewrite_common_legacy_to_modern_conf,
 )
 
@@ -85,12 +84,10 @@ FAN_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_DIRECTION): cv.template,
-            vol.Optional(CONF_NAME): cv.template,
             vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
             vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_OSCILLATING): cv.template,
             vol.Optional(CONF_PERCENTAGE): cv.template,
-            vol.Optional(CONF_PICTURE): cv.template,
             vol.Optional(CONF_PRESET_MODE): cv.template,
             vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
             vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
@@ -99,11 +96,8 @@ FAN_SCHEMA = vol.All(
             vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
             vol.Optional(CONF_STATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
+    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 )
 
 LEGACY_FAN_SCHEMA = vol.All(
@@ -488,9 +482,7 @@ class TemplateFan(TemplateEntity, AbstractTemplateFan):
         unique_id,
     ) -> None:
         """Initialize the fan."""
-        TemplateEntity.__init__(
-            self, hass, config=config, fallback_name=None, unique_id=unique_id
-        )
+        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
         AbstractTemplateFan.__init__(self, config)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
