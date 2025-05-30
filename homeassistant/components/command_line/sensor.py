@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
@@ -37,7 +36,7 @@ from .const import (
     LOGGER,
     TRIGGER_ENTITY_OPTIONS,
 )
-from .utils import async_check_output_or_log
+from .utils import async_check_output_or_log, render_template_args
 
 DEFAULT_NAME = "Command Sensor"
 
@@ -222,32 +221,6 @@ class CommandSensorData:
 
     async def async_update(self) -> None:
         """Get the latest data with a shell command."""
-        command = self.command
-
-        if " " not in command:
-            prog = command
-            args = None
-            args_compiled = None
-        else:
-            prog, args = command.split(" ", 1)
-            args_compiled = Template(args, self.hass)
-
-        if args_compiled:
-            try:
-                args_to_render = {"arguments": args}
-                rendered_args = args_compiled.async_render(args_to_render)
-            except TemplateError as ex:
-                LOGGER.exception("Error rendering command template: %s", ex)
-                return
-        else:
-            rendered_args = None
-
-        if rendered_args == args:
-            # No template used. default behavior
-            pass
-        else:
-            # Template used. Construct the string used in the shell
-            command = f"{prog} {rendered_args}"
-
-        LOGGER.debug("Running command: %s", command)
+        if not (command := render_template_args(self.hass, self.command)):
+            return
         self.value = await async_check_output_or_log(command, self.timeout)
