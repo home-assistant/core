@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import ENTITY_INFO, assert_on_and_off, mock_entity, setup_platform
+from .common import ENTITY_INFO, check_states, check_toggle, mock_entity, setup_platform
 
 
 async def test_light_entity(
@@ -25,14 +25,18 @@ async def test_light_entity(
 
     entity = entity_registry.entities[entity_key]
     assert entity.unique_id == ENTITY_INFO["id"]
+
     assert entity.capabilities == {
         "supported_color_modes": [ColorMode.ONOFF],
     }
-    state = hass.states.get(entity_key)
-    assert state is not None
-    assert state.state == "on"
 
-    await assert_on_and_off(hass, entity_type, entity_key, mock_api.lights[0])
+    await check_states(hass, entity_type, entity_key)
+    await check_toggle(
+        hass,
+        entity_type,
+        entity_key,
+        mock_api.lights[0],
+    )
 
 
 async def test_dimmer_entity(
@@ -50,29 +54,18 @@ async def test_dimmer_entity(
 
     entity = entity_registry.entities[entity_key]
     assert entity.unique_id == ENTITY_INFO["id"]
+
     assert entity.capabilities == {
         "supported_color_modes": [ColorMode.BRIGHTNESS],
     }
-    state = hass.states.get(entity_key)
-    assert state is not None
-    assert state.state == "on"
 
-    services = hass.services.async_services()
-    assert "light" in services
-    assert "turn_on" in services["light"]
-    await hass.services.async_call(
-        "light",
-        "turn_on",
-        {"entity_id": entity_key},
-        blocking=True,
+    await check_states(hass, entity_type, entity_key)
+    await check_toggle(
+        hass,
+        entity_type,
+        entity_key,
+        mock_api.lights[0],
+        entity_type_override="light",
+        turn_on_override=mock_api.lights[0].set_brightness,
+        turn_off_override=mock_api.lights[0].set_brightness,
     )
-    assert mock_api.lights[0].set_brightness.called
-
-    assert "turn_off" in services["light"]
-    await hass.services.async_call(
-        "light",
-        "turn_off",
-        {"entity_id": entity_key},
-        blocking=True,
-    )
-    assert mock_api.lights[0].set_brightness.called

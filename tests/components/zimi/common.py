@@ -29,34 +29,66 @@ INPUT_HOST = "192.168.1.100"
 INPUT_PORT = 5003
 
 
-async def assert_on_and_off(
-    hass: HomeAssistant, entity_type: str, entity_key: str, mock_device: MagicMock
+async def check_states(
+    hass: HomeAssistant,
+    entity_type: str,
+    entity_key: str,
 ) -> None:
-    """Assert that the entity can be turned on and off."""
+    """Check that the entity states exist."""
+
+    state = hass.states.get(entity_key)
+    assert state is not None
+    assert state.entity_id == entity_key
+
+
+async def check_toggle(
+    hass: HomeAssistant,
+    entity_type: str,
+    entity_key: str,
+    mock_device: MagicMock,
+    entity_type_override: str | None = None,
+    turn_on_override: AsyncMock | None = None,
+    turn_off_override: AsyncMock | None = None,
+) -> None:
+    """Check that the entity can be toggled on and off.
+
+    Allows for override of default entity_type and turn_on and turn_off.
+    """
 
     services = hass.services.async_services()
-    assert entity_type in services
-    assert "turn_on" in services[entity_type]
+
+    assert "turn_on" in services[entity_type_override or entity_type]
+
     await hass.services.async_call(
-        entity_type,
+        entity_type_override or entity_type,
         "turn_on",
         {"entity_id": entity_key},
         blocking=True,
     )
-    assert mock_device.turn_on.called
 
-    assert "turn_off" in services[entity_type]
+    if turn_on_override:
+        assert turn_on_override.called
+    else:
+        assert mock_device.turn_on.called
+
+    assert "turn_off" in services[entity_type_override or entity_type]
+
     await hass.services.async_call(
-        entity_type,
+        entity_type_override or entity_type,
         "turn_off",
         {"entity_id": entity_key},
         blocking=True,
     )
-    assert mock_device.turn_off.called
+
+    if turn_off_override:
+        assert turn_off_override.called
+    else:
+        assert mock_device.turn_off.called
 
 
 def mock_entity(
-    device_name: str | None = None, entity_type: str | None = None
+    device_name: str | None = None,
+    entity_type: str | None = None,
 ) -> MagicMock:
     """Mock a Zimi entity with defaults."""
 
@@ -79,6 +111,9 @@ def mock_entity(
 
     mock_entity.subscribe = AsyncMock()
 
+    mock_entity.close_door = AsyncMock()
+    mock_entity.open_door = AsyncMock()
+    mock_entity.open_to_percentage = AsyncMock()
     mock_entity.set_brightness = AsyncMock()
     mock_entity.set_fanspeed = AsyncMock()
     mock_entity.turn_on = AsyncMock()
@@ -87,7 +122,10 @@ def mock_entity(
     return mock_entity
 
 
-async def setup_platform(hass: HomeAssistant, platform: str) -> MockConfigEntry:
+async def setup_platform(
+    hass: HomeAssistant,
+    platform: str,
+) -> MockConfigEntry:
     """Set up the specified Zimi platform."""
 
     if not platform:
