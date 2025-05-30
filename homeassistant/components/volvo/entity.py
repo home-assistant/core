@@ -3,13 +3,13 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 
-from volvocarsapi.models import VolvoCarsApiBaseModel, VolvoCarsValueField
+from volvocarsapi.models import VolvoCarsApiBaseModel
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_API_TIMESTAMP, CONF_VIN
+from .const import CONF_VIN
 from .coordinator import VolvoDataCoordinator
 
 
@@ -59,11 +59,7 @@ class VolvoEntity(CoordinatorEntity[VolvoDataCoordinator]):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         api_field = self.coordinator.get_api_field(self.entity_description.api_field)
-
         self._attr_available = super().available and api_field is not None
-
-        if isinstance(api_field, VolvoCarsValueField):
-            self._attr_extra_state_attributes[ATTR_API_TIMESTAMP] = api_field.timestamp
 
         self._update_state(api_field)
         super()._handle_coordinator_update()
