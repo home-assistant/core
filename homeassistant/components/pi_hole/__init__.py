@@ -11,6 +11,7 @@ from hole.exceptions import HoleError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_API_VERSION,
     CONF_HOST,
     CONF_LOCATION,
     CONF_NAME,
@@ -24,12 +25,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_API_VERSION,
-    CONF_STATISTICS_ONLY,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-)
+from .const import CONF_STATISTICS_ONLY, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
 
