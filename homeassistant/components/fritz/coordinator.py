@@ -471,8 +471,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 else:
                     wan_access_result = None
 
-                speed = attributes.get("X_AVM-DE_Speed")
-
                 hosts[attributes["MACAddress"]] = Device(
                     name=attributes["HostName"],
                     connected=attributes["Active"],
