@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from hole import Hole
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
-from homeassistant.const import CONF_API_VERSION, CONF_NAME, EntityCategory
+from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -21,9 +21,9 @@ from .entity import PiHoleEntity
 class PiHoleUpdateEntityDescription(UpdateEntityDescription):
     """Describes PiHole update entity."""
 
-    installed_version: Callable[[dict], str | None] = lambda api: None
-    latest_version: Callable[[dict], str | None] = lambda api: None
-    has_update: Callable[[dict], bool | None] = lambda api: None
+    installed_version: Callable[[Hole], str | None] = lambda api: None
+    latest_version: Callable[[Hole], str | None] = lambda api: None
+    has_update: Callable[[Hole], bool | None] = lambda api: None
     release_base_url: str | None = None
     title: str | None = None
 
@@ -119,7 +119,6 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
                 return self.entity_description.latest_version(self.api)
             return self.installed_version
         return None
-
 
     @property
     def release_url(self) -> str | None:
