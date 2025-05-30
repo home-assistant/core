@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_NAME, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 from homeassistant.helpers.selector import (
@@ -28,6 +29,14 @@ from .api import ConfigFlowVolvoAuth
 from .const import CONF_VIN, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _create_volvo_cars_api(
+    hass: HomeAssistant, access_token: str, api_key: str
+) -> VolvoCarsApi:
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    auth = ConfigFlowVolvoAuth(web_session, access_token)
+    return VolvoCarsApi(web_session, auth, api_key)
 
 
 class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -83,11 +92,15 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            web_session = aiohttp_client.async_get_clientsession(self.hass)
-            token = self._config_data[CONF_TOKEN][CONF_ACCESS_TOKEN]
-            auth = ConfigFlowVolvoAuth(web_session, token)
-            api = VolvoCarsApi(web_session, auth, user_input[CONF_API_KEY])
+            api = _create_volvo_cars_api(
+                self.hass,
+                self._config_data[CONF_TOKEN][CONF_ACCESS_TOKEN],
+                user_input[CONF_API_KEY],
+            )
 
+            # Try to load all vehicles on the account. If it succeeds
+            # it means that the given API key is correct. The vehicle info
+            # is used in the VIN step.
             try:
                 await self._async_load_vehicles(api)
             except VolvoApiException:
@@ -96,24 +109,25 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
             if not errors:
                 self._config_data |= user_input
-
-                if len(self._vehicles) == 1:
-                    # If there is only one VIN, take that as value and
-                    # immediately create the entry. No need to show
-                    # additional step.
-                    self._config_data[CONF_VIN] = self._vehicles[0].vin
-                    return await self._async_create_or_update()
-
-                if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
-                    # Don't let users change the VIN. The entry should be
-                    # recreated if they want to change the VIN.
-                    return await self._async_create_or_update()
-
                 return await self.async_step_vin()
 
         if user_input is None:
             if self.source == SOURCE_REAUTH:
                 user_input = self._config_data = dict(self._get_reauth_entry().data)
+                api = _create_volvo_cars_api(
+                    self.hass,
+                    self._config_data[CONF_TOKEN][CONF_ACCESS_TOKEN],
+                    self._config_data[CONF_API_KEY],
+                )
+
+                # Test if the configured API key is still valid. If not, show this
+                # form. If it is, skip this step and go directly to the next step.
+                try:
+                    await self._async_load_vehicles(api)
+                    return await self.async_step_vin()
+                except VolvoApiException:
+                    pass
+
             elif self.source == SOURCE_RECONFIGURE:
                 user_input = self._config_data = dict(
                     self._get_reconfigure_entry().data
@@ -140,6 +154,19 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the VIN step."""
+
+        if len(self._vehicles) == 1:
+            # If there is only one VIN, take that as value and
+            # immediately create the entry. No need to show
+            # the VIN step.
+            self._config_data[CONF_VIN] = self._vehicles[0].vin
+            return await self._async_create_or_update()
+
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            # Don't let users change the VIN. The entry should be
+            # recreated if they want to change the VIN.
+            return await self._async_create_or_update()
+
         if user_input is not None:
             self._config_data |= user_input
             return await self._async_create_or_update()

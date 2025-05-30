@@ -59,12 +59,14 @@ async def test_single_vin_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(("api_key_failure"), [pytest.param(True), pytest.param(False)])
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    api_key_failure: bool,
 ) -> None:
     """Test reauthentication flow."""
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -87,7 +89,12 @@ async def test_reauth_flow(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     result = await _async_run_flow_to_completion(
-        hass, result, aioclient_mock, has_vin_step=False
+        hass,
+        result,
+        aioclient_mock,
+        has_vin_step=False,
+        is_reauth=True,
+        api_key_failure=api_key_failure,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -164,13 +171,20 @@ async def _async_run_flow_to_completion(
     aioclient_mock: AiohttpClientMocker,
     *,
     has_vin_step: bool = True,
+    is_reauth: bool = False,
+    api_key_failure: bool = False,
 ) -> ConfigFlowResult:
-    _mock_api_client(aioclient_mock)
+    _mock_api_client(aioclient_mock, api_key_failure=api_key_failure)
 
     config_flow = await hass.config_entries.flow.async_configure(config_flow["flow_id"])
+
+    if is_reauth and not api_key_failure:
+        return config_flow
+
     assert config_flow["type"] is FlowResultType.FORM
     assert config_flow["step_id"] == "api_key"
 
+    _mock_api_client(aioclient_mock, api_key_failure=False)
     config_flow = await hass.config_entries.flow.async_configure(
         config_flow["flow_id"], {CONF_API_KEY: "abcdef0123456879abcdef"}
     )
@@ -187,8 +201,12 @@ async def _async_run_flow_to_completion(
 
 
 def _mock_api_client(
-    aioclient_mock: AiohttpClientMocker, single_vin: bool = False
+    aioclient_mock: AiohttpClientMocker,
+    *,
+    single_vin: bool = False,
+    api_key_failure: bool = False,
 ) -> None:
+    aioclient_mock.clear_requests()
     aioclient_mock.post(
         TOKEN_URL,
         json=SERVER_TOKEN_RESPONSE,
@@ -199,12 +217,18 @@ def _mock_api_client(
     if not single_vin:
         vins.append({"vin": "YV10000000AAAAAAA"})
 
-    aioclient_mock.get(
-        f"{_API_URL}{_API_CONNECTED_ENDPOINT}",
-        json={
-            "data": vins,
-        },
-    )
+    if api_key_failure:
+        aioclient_mock.get(
+            f"{_API_URL}{_API_CONNECTED_ENDPOINT}",
+            exc=VolvoApiException(),
+        )
+    else:
+        aioclient_mock.get(
+            f"{_API_URL}{_API_CONNECTED_ENDPOINT}",
+            json={
+                "data": vins,
+            },
+        )
 
     vehicle_data = load_json_object_fixture("vehicle", DEFAULT_MODEL)
     aioclient_mock.get(
