@@ -12,12 +12,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_API_VERSION, CONF_NAME
 from homeassistant.core import _LOGGER, HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import CONF_API_VERSION, PiHoleConfigEntry
+from . import PiHoleConfigEntry
 from .entity import PiHoleEntity
 
 
