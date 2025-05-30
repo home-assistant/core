@@ -43,7 +43,7 @@ rules:
   parallel-updates:
     status: todo
     comment: |
-      Test of parallel updates will be done before setting.
+      https://github.com/balloob/home-assistant-quality-checker/blob/main/generated/zimi/parallel-updates.md
   test-coverage: todo
   integration-owner: done
   docs-installation-parameters: done
