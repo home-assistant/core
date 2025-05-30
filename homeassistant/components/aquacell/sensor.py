@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
 from aioaquacell import Softener
 
@@ -28,7 +29,7 @@ PARALLEL_UPDATES = 1
 class SoftenerSensorEntityDescription(SensorEntityDescription):
     """Describes Softener sensor entity."""
 
-    value_fn: Callable[[Softener], StateType]
+    value_fn: Callable[[Softener], StateType | datetime]
 
 
 SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
@@ -77,6 +78,12 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
             "low",
         ],
     ),
+    SoftenerSensorEntityDescription(
+        key="last_update",
+        translation_key="last_update",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda softener: softener.lastUpdate,
+    ),
 )
 
 
@@ -111,6 +118,6 @@ class SoftenerSensor(AquacellEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.softener)

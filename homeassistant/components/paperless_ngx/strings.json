@@ -103,7 +103,7 @@
         }
       },
       "celery_status": {
-        "name": "Status celery",
+        "name": "Status Celery",
         "state": {
           "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
           "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]",
@@ -111,7 +111,7 @@
         }
       },
       "redis_status": {
-        "name": "Status redis",
+        "name": "Status Redis",
         "state": {
           "ok": "[%key:component::paperless_ngx::entity::sensor::database_status::state::ok%]",
           "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]",
@@ -125,6 +125,11 @@
           "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]",
           "error": "[%key:common::state::error%]"
         }
+      }
+    },
+    "update": {
+      "paperless_update": {
+        "name": "Software"
       }
     }
   },

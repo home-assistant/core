@@ -12,7 +12,13 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -89,3 +95,34 @@ async def test_switch_dnd(
     assert mock_amazon_devices_client.set_do_not_disturb.call_count == 2
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
+
+
+async def test_offline_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test offline device handling."""
+
+    entity_id = "switch.echo_test_do_not_disturb"
+
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_SERIAL_NUMBER
+    ].online = False
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_SERIAL_NUMBER
+    ].online = True
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state != STATE_UNAVAILABLE
