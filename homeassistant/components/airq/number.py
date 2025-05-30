@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -12,15 +13,16 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import AirQConfigEntry, AirQCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-LED_VALUE_DEFAULT = 6.0
+BRIGHTNESS_DEFAULT = 60.0
 
 
 AIRQ_LED_BRIGHTNESS = NumberEntityDescription(
     key="airq_led_brightness",
     translation_key="airq_led_brightness",
     native_min_value=0.0,
-    native_max_value=10.0,
-    native_step=0.1,
+    native_max_value=100.0,
+    native_step=1.0,
+    native_unit_of_measurement=PERCENTAGE,
 )
 
 
@@ -56,13 +58,13 @@ class AirQLEDBrightness(CoordinatorEntity[AirQCoordinator], NumberEntity):
 
     @property
     def native_value(self) -> float:
-        """Return the state of the number."""
-        return float(self.coordinator.data.get("brightness", LED_VALUE_DEFAULT))
+        """Return the brightness of the LEDs in %."""
+        return float(self.coordinator.data.get("brightness", BRIGHTNESS_DEFAULT))
 
     async def async_set_native_value(self, value: float) -> None:
-        """Set the selected value."""
+        """Set the brightness of the LEDs to the value in %."""
         _LOGGER.debug(
-            "Changing LED brighntess from %.1f to %.1f",
+            "Changing LED brighntess from %.1f%% to %.1f%%",
             self.coordinator.data["brightness"],
             value,
         )
