@@ -34,6 +34,15 @@ ZERO_DATA = {
     "unique_domains": 0,
 }
 
+V6_RESPONSE_TO_V5_ENPOINT = {
+    "error": {
+        "key": "bad_request",
+        "message": "Bad request",
+        "hint": "The API is hosted at pi.hole/api, not pi.hole/admin/api",
+    },
+    "took": 0.0001430511474609375,
+}
+
 SAMPLE_VERSIONS_WITH_UPDATES = {
     "core_current": "v5.5",
     "core_latest": "v5.6",
@@ -120,10 +129,19 @@ SWITCH_ENTITY_ID = "switch.pi_hole"
 
 
 def _create_mocked_hole(
-    raise_exception=False, has_versions=True, has_update=True, has_data=True
+    raise_exception=False,
+    has_versions=True,
+    has_update=True,
+    has_data=True,
+    api_version=6,
+    incorrect_app_password=False,
 ):
     mocked_hole = MagicMock()
-    type(mocked_hole).authenticate = AsyncMock()
+    type(mocked_hole).authenticate = AsyncMock(
+        side_effect=HoleError("")
+        if raise_exception or api_version == 5 or incorrect_app_password
+        else None
+    )
     type(mocked_hole).get_data = AsyncMock(
         side_effect=HoleError("") if raise_exception else None
     )
@@ -132,8 +150,10 @@ def _create_mocked_hole(
     )
     type(mocked_hole).enable = AsyncMock()
     type(mocked_hole).disable = AsyncMock()
-    if has_data:
+    if has_data and api_version == 5:
         mocked_hole.data = ZERO_DATA
+    if has_data and api_version == 6:
+        mocked_hole.data = V6_RESPONSE_TO_V5_ENPOINT
     else:
         mocked_hole.data = []
     if has_versions:

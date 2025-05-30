@@ -104,24 +104,6 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_api_key(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle step to setup API key."""
-        errors = {}
-        if user_input is not None:
-            self._config[CONF_API_KEY] = user_input[CONF_API_KEY]
-            if not (errors := await self._async_try_connect()):
-                return self.async_create_entry(
-                    title=self._config[CONF_NAME],
-                    data=self._config,
-                )
-        return self.async_show_form(
-            step_id="api_key",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
-            errors=errors,
-        )
-
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
