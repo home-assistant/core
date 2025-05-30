@@ -5,14 +5,15 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from airthings import Airthings
+from airthings import Airthings, AirthingsDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SECRET
+from .const import CONF_SECRET, DOMAIN
 from .coordinator import AirthingsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,9 +40,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirthingsConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    _remove_old_devices(hass, entry, coordinator.data)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AirthingsConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+def _remove_old_devices(
+    hass: HomeAssistant,
+    entry: AirthingsConfigEntry,
+    airthings_devices: dict[str, AirthingsDevice],
+) -> None:
+    device_registry = dr.async_get(hass)
+
+    for registered_device in device_registry.devices.get_devices_for_config_entry_id(
+        entry.entry_id
+    ):
+        device_id = next(
+            (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
+        )
+        if device_id and device_id not in airthings_devices:
+            device_registry.async_update_device(
+                registered_device.id, remove_config_entry_id=entry.entry_id
+            )
