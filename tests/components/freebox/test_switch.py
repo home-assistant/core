@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
 from .common import setup_platform
+from .const import DATA_LAN_GET_PORT_FORWARDING_CONFIG_LIST
 
 
 async def test_port_forwarding(
@@ -36,6 +37,9 @@ async def test_port_forwarding(
     ) as mock_service:
         mock_service.edit_port_forwarding_configuration = AsyncMock()
         mock_service.edit_port_forwarding_configuration.assert_not_called()
+        mock_service.get_all_port_forwarding_configuration = AsyncMock(
+            return_value=DATA_LAN_GET_PORT_FORWARDING_CONFIG_LIST
+        )
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TOGGLE,
