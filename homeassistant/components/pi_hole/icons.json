@@ -15,7 +15,7 @@
       "ads_percentage_today": {
         "default": "mdi:close-octagon-outline"
       },
-      "ads_percentage": {
+      "percent_ads_blocked": {
         "default": "mdi:close-octagon-outline"
       },
       "clients_ever_seen": {
