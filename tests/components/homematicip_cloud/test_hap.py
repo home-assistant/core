@@ -7,7 +7,7 @@ from homematicip.connection.connection_context import ConnectionContext
 from homematicip.exceptions.connection_exceptions import HmipConnectionError
 import pytest
 
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.const import (
     HMIPC_AUTHTOKEN,
     HMIPC_HAPID,
@@ -83,7 +83,7 @@ async def test_hap_setup_works(hass: HomeAssistant) -> None:
     """Test a successful setup of a accesspoint."""
     # This test should not be accessing the integration internals
     entry = MockConfigEntry(
-        domain=HMIPC_DOMAIN,
+        domain=DOMAIN,
         data={HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"},
     )
     home = Mock()
@@ -99,7 +99,7 @@ async def test_hap_setup_connection_error() -> None:
     """Test a failed accesspoint setup."""
     hass = Mock()
     entry = MockConfigEntry(
-        domain=HMIPC_DOMAIN,
+        domain=DOMAIN,
         data={HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"},
     )
     hap = HomematicipHAP(hass, entry)
@@ -119,7 +119,7 @@ async def test_hap_reset_unloads_entry_if_setup(
 ) -> None:
     """Test calling reset while the entry has been setup."""
     mock_hap = await default_mock_hap_factory.async_get_mock_hap()
-    config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
+    config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     assert config_entries[0].runtime_data == mock_hap
     # hap_reset is called during unload
@@ -132,7 +132,7 @@ async def test_hap_create(
     hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
 ) -> None:
     """Mock AsyncHome to execute get_hap."""
-    hass.config.components.add(HMIPC_DOMAIN)
+    hass.config.components.add(DOMAIN)
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
     with (
@@ -150,7 +150,7 @@ async def test_hap_create_exception(
     hass: HomeAssistant, hmip_config_entry: MockConfigEntry, mock_connection_init
 ) -> None:
     """Mock AsyncHome to execute get_hap."""
-    hass.config.components.add(HMIPC_DOMAIN)
+    hass.config.components.add(DOMAIN)
 
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
