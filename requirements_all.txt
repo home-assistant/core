@@ -113,7 +113,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.40
+SQLAlchemy==2.0.41
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -280,7 +280,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.6.0
+aioimmich==0.7.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -405,7 +405,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.2
 
 # homeassistant.components.tedee
-aiotedee==0.2.20
+aiotedee==0.2.23
 
 # homeassistant.components.tractive
 aiotractive==0.6.0
@@ -759,7 +759,7 @@ dbus-fast==2.43.0
 debugpy==1.8.14
 
 # homeassistant.components.decora_wifi
-# decora-wifi==1.4
+decora-wifi==1.4
 
 # homeassistant.components.decora
 # decora==0.6
@@ -1164,10 +1164,10 @@ hole==0.8.0
 holidays==0.73
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250527.0
+home-assistant-frontend==20250528.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.5.7
+home-assistant-intents==2025.5.28
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.0.1.1
@@ -1832,7 +1832,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.9.0
+pyaprilaire==0.9.1
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -2096,7 +2096,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.6
+pylamarzocco==2.0.7
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2652,7 +2652,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.3
+reolink-aio==0.13.4
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
