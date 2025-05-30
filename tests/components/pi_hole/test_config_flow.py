@@ -126,7 +126,7 @@ async def test_flow_user_invalid_v6(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_reauth(hass: HomeAssistant) -> None:
