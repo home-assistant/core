@@ -34,39 +34,6 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         translation_key="core_update_available",
         title="Pi-hole Core",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda api: api.versions.get("core_current"),
-        latest_version=lambda api: api.versions.get("core_latest"),
-        has_update=lambda api: api.versions.get("core_update"),
-        release_base_url="https://github.com/pi-hole/pi-hole/releases/tag",
-    ),
-    PiHoleUpdateEntityDescription(
-        key="web_update_available",
-        translation_key="web_update_available",
-        title="Pi-hole Web interface",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda api: api.versions.get("web_current"),
-        latest_version=lambda api: api.versions.get("web_latest"),
-        has_update=lambda api: api.versions.get("web_update"),
-        release_base_url="https://github.com/pi-hole/AdminLTE/releases/tag",
-    ),
-    PiHoleUpdateEntityDescription(
-        key="ftl_update_available",
-        translation_key="ftl_update_available",
-        title="Pi-hole FTL DNS",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda api: api.versions.get("FTL_current"),
-        latest_version=lambda api: api.versions.get("FTL_latest"),
-        has_update=lambda api: api.versions.get("FTL_update"),
-        release_base_url="https://github.com/pi-hole/FTL/releases/tag",
-    ),
-)
-
-UPDATE_ENTITY_TYPES_V6: tuple[PiHoleUpdateEntityDescription, ...] = (
-    PiHoleUpdateEntityDescription(
-        key="core_update_available",
-        translation_key="core_update_available",
-        title="Pi-hole Core",
-        entity_category=EntityCategory.DIAGNOSTIC,
         installed_version=lambda api: api.core_current,
         latest_version=lambda api: api.core_latest,
         has_update=lambda api: api.core_update,
@@ -112,11 +79,7 @@ async def async_setup_entry(
             entry.entry_id,
             description,
         )
-        for description in (
-            UPDATE_ENTITY_TYPES
-            if entry.data[CONF_API_VERSION] == 5
-            else UPDATE_ENTITY_TYPES_V6
-        )
+        for description in UPDATE_ENTITY_TYPES
     )
 
 
