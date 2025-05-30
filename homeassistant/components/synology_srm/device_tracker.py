@@ -289,7 +289,7 @@ class SynologySRMScannerEntity(ScannerEntity):
     @property
     def icon(self) -> str:
         """Return device icon."""
-        if self._device.get("is_online"):
+        if self._connected:
             return "mdi:lan-connect"
         return "mdi:lan-disconnect"
 
