@@ -7,7 +7,13 @@ from dataclasses import dataclass, field
 from logging import getLogger
 
 from aiohttp import web
-from switchbot_api import CannotConnect, Device, InvalidAuth, Remote, SwitchBotAPI
+from switchbot_api import (
+    Device,
+    Remote,
+    SwitchBotAPI,
+    SwitchBotAuthenticationError,
+    SwitchBotConnectionError,
+)
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -175,12 +181,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = SwitchBotAPI(token=token, secret=secret)
     try:
         devices = await api.list_devices()
-    except InvalidAuth as ex:
+    except SwitchBotAuthenticationError as ex:
         _LOGGER.error(
             "Invalid authentication while connecting to SwitchBot API: %s", ex
         )
         return False
-    except CannotConnect as ex:
+    except SwitchBotConnectionError as ex:
         raise ConfigEntryNotReady from ex
     _LOGGER.debug("Devices: %s", devices)
     coordinators_by_id: dict[str, SwitchBotCoordinator] = {}
