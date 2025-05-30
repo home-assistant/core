@@ -119,6 +119,9 @@ def mock_external_calls() -> Generator[None]:
             super().__init__(*args, **kwargs)
             self._bot_user = test_user
 
+        async def delete_webhook(self) -> bool:
+            return True
+
     with (
         patch("homeassistant.components.telegram_bot.bot.Bot", BotMock),
         patch.object(BotMock, "get_chat", return_value=test_chat),

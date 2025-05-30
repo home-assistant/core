@@ -8,8 +8,8 @@ import secrets
 import string
 
 from telegram import Bot, Update
-from telegram.error import TimedOut
-from telegram.ext import Application, TypeHandler
+from telegram.error import NetworkError, TimedOut
+from telegram.ext import ApplicationBuilder, TypeHandler
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_URL
@@ -75,7 +75,7 @@ class PushBot(BaseTelegramBot):
         self.trusted_networks = _get_trusted_networks(config)
         self.secret_token = secret_token
         # Dumb Application that just gets our updates to our handler callback (self.handle_update)
-        self.application = Application.builder().bot(bot).updater(None).build()
+        self.application = ApplicationBuilder().bot(bot).updater(None).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))
         super().__init__(hass, config)
 
@@ -144,7 +144,7 @@ class PushBot(BaseTelegramBot):
         _LOGGER.debug("Deregistering webhook URL")
         try:
             await self.bot.delete_webhook()
-        except:  # noqa: E722
+        except NetworkError:
             _LOGGER.error("Failed to deregister webhook URL")
 
 
