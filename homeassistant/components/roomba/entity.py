@@ -72,6 +72,21 @@ class IRobotEntity(Entity):
         return self.vacuum_state.get("bbchg3", {})
 
     @property
+    def tank_level(self) -> int | None:
+        """Return the tank level."""
+        return self.vacuum_state.get("tankLvl")
+
+    @property
+    def has_dock(self) -> bool:
+        """Return True if the vacuum cleaner has a dock."""
+        return len(self.vacuum_state.get("dock", {})) > 0
+
+    @property
+    def dock_tank_level(self) -> int | None:
+        """Return the dock tank level."""
+        return self.vacuum_state.get("dock", {}).get("tankLvl")
+
+    @property
     def last_mission(self):
         """Return last mission start time."""
         if (
