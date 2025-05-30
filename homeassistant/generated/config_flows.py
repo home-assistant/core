@@ -292,6 +292,7 @@ FLOWS = {
         "immich",
         "improv_ble",
         "incomfort",
+        "inels",
         "inkbird",
         "insteon",
         "intellifire",
