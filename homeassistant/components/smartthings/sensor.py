@@ -151,6 +151,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     exists_fn: Callable[[Status], bool] | None = None
     use_temperature_unit: bool = False
     deprecated: Callable[[ComponentStatus], tuple[str, str] | None] | None = None
+    component_translation_key: dict[str, str] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -432,6 +433,16 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ],
+    },
+    Capability.SAMSUNG_CE_EHS_DIVERTER_VALVE: {
+        Attribute.POSITION: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.POSITION,
+                translation_key="diverter_valve_position",
+                device_class=SensorDeviceClass.ENUM,
+                options=["room", "tank"],
+            )
+        ]
     },
     Capability.ENERGY_METER: {
         Attribute.ENERGY: [
@@ -852,6 +863,11 @@ CAPABILITY_TO_SENSORS: dict[
                     if Capability.CUSTOM_OUTING_MODE in status
                     else None
                 ),
+                component_fn=lambda component: component in {"freezer", "cooler"},
+                component_translation_key={
+                    "freezer": "freezer_temperature",
+                    "cooler": "cooler_temperature",
+                },
             )
         ]
     },
@@ -1196,6 +1212,10 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         if self.entity_description.translation_placeholders_fn:
             self._attr_translation_placeholders = (
                 self.entity_description.translation_placeholders_fn(component)
+            )
+        if self.entity_description.component_translation_key and component != MAIN:
+            self._attr_translation_key = (
+                self.entity_description.component_translation_key[component]
             )
 
     @property

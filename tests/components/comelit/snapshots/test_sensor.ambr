@@ -41,6 +41,7 @@
     'original_name': None,
     'platform': 'comelit',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'zone_status',
     'unique_id': 'vedo_config_entry_id-0',

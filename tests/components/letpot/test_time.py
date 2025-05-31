@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from letpot.exceptions import LetPotConnectionException, LetPotException
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import SERVICE_SET_VALUE
 from homeassistant.const import Platform
