@@ -4,6 +4,8 @@
 set_system_mode:
   fields:
     mode:
+      required: true
+      default: Auto
       example: Away
       selector:
         select:
@@ -38,6 +40,7 @@ set_zone_override:
           domain: climate
     setpoint:
       required: true
+      default: 19.5
       selector:
         number:
           min: 4.0
@@ -52,6 +55,7 @@ clear_zone_override:
   fields:
     entity_id:
       required: true
+      example: climate.bathroom
       selector:
         entity:
           integration: evohome
