@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import httpx
 from pyenphase import Envoy
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +9,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
     DOMAIN,
@@ -26,18 +25,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
 
     host = entry.data[CONF_HOST]
     options = entry.options
-    envoy = (
-        Envoy(
-            host,
-            httpx.AsyncClient(
-                verify=False, limits=httpx.Limits(max_keepalive_connections=0)
-            ),
-        )
-        if options.get(
-            OPTION_DISABLE_KEEP_ALIVE, OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE
-        )
-        else Envoy(host, get_async_client(hass, verify_ssl=False))
+    force_close = options.get(
+        OPTION_DISABLE_KEEP_ALIVE, OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE
     )
+    session = async_create_clientsession(
+        hass, verify_ssl=False, force_close=force_close
+    )
+    envoy = Envoy(host, session)
     coordinator = EnphaseUpdateCoordinator(hass, envoy, entry)
 
     await coordinator.async_config_entry_first_refresh()
