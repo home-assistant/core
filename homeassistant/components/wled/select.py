@@ -180,9 +180,11 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected color palette."""
-        return self.coordinator.data.palettes[
+        if palette := self.coordinator.data.palettes.get(
             int(self.coordinator.data.state.segments[self._segment].palette_id)
-        ].name
+        ):
+            return palette.name
+        return None
 
     @wled_exception_handler
     async def async_select_option(self, option: str) -> None:
