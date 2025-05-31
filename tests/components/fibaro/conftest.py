@@ -137,6 +137,39 @@ def mock_light() -> Mock:
 
 
 @pytest.fixture
+def mock_zigbee_light() -> Mock:
+    """Fixture for a dimmmable zigbee light."""
+    light = Mock()
+    light.fibaro_id = 12
+    light.parent_fibaro_id = 0
+    light.name = "Test light"
+    light.room_id = 1
+    light.dead = False
+    light.visible = True
+    light.enabled = True
+    light.type = "com.fibaro.multilevelSwitch"
+    light.base_type = "com.fibaro.binarySwitch"
+    light.properties = {
+        "manufacturer": "",
+        "isLight": True,
+        "interfaces": ["autoTurnOff", "favoritePosition", "light", "zigbee"],
+    }
+    light.actions = {"setValue": 1, "toggle": 0, "turnOn": 0, "turnOff": 0}
+    light.supported_features = {}
+    light.has_interface.return_value = False
+    light.raw_data = {
+        "fibaro_id": 12,
+        "name": "Test light",
+        "properties": {"value": 20},
+    }
+    value_mock = Mock()
+    value_mock.has_value = True
+    value_mock.int_value.return_value = 20
+    light.value = value_mock
+    return light
+
+
+@pytest.fixture
 def mock_thermostat() -> Mock:
     """Fixture for a thermostat."""
     climate = Mock()
