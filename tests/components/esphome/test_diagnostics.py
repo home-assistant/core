@@ -5,7 +5,7 @@ from unittest.mock import ANY
 
 from aioesphomeapi import APIClient
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components import bluetooth
@@ -52,9 +52,6 @@ async def test_diagnostics_with_dashboard_data(
     )
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
     )
     await MockDashboardRefresh(hass).async_refresh()
     result = await get_diagnostics_for_config_entry(
