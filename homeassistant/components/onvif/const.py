@@ -39,6 +39,7 @@ TILT_FACTOR = {DIR_UP: 1, DIR_DOWN: -1}
 ZOOM_FACTOR = {ZOOM_IN: 1, ZOOM_OUT: -1}
 CONTINUOUS_MOVE = "ContinuousMove"
 RELATIVE_MOVE = "RelativeMove"
+EMULATE_RELATIVE_MOVE = "EmulateRelativeMove"
 ABSOLUTE_MOVE = "AbsoluteMove"
 GOTOPRESET_MOVE = "GotoPreset"
 STOP_MOVE = "Stop"
