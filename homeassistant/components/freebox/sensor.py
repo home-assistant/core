@@ -11,14 +11,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, WIFI_BANDS_TO_CONNECTIVITY, DeviceConnectivityType
 from .entity import FreeboxHomeEntity
 from .router import FreeboxConfigEntry, FreeboxRouter
 
@@ -57,6 +63,38 @@ DISK_PARTITION_SENSORS: tuple[SensorEntityDescription, ...] = (
         name="free space",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:harddisk",
+    ),
+)
+
+DEVICE_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="connectivity",
+        name="Connectivity",
+        device_class=SensorDeviceClass.ENUM,
+        options=[e.value for e in DeviceConnectivityType.__members__.values()],
+        icon="mdi:network",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
+    ),
+)
+
+WIFI_DEVICE_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="wifi_signal_dbm",
+        name="Wifi signal strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        icon="mdi:signal",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
+    ),
+    SensorEntityDescription(
+        key="wifi_signal_percentage",
+        name="Wifi signal level",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:signal",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=True,
     ),
 )
 
@@ -113,6 +151,20 @@ async def async_setup_entry(
             ):
                 entities.append(FreeboxBatterySensor(hass, router, node, endpoint))
 
+    for device in router.devices.values():
+        if not device.get("persistent", False):
+            continue
+        entities.extend(
+            FreeboxDeviceSensor(router, device, description)
+            for description in DEVICE_SENSORS
+        )
+        if (
+            connectivity_type := get_device_connectity_type(device)
+        ) and connectivity_type != DeviceConnectivityType.ETHERNET:
+            entities.extend(
+                FreeboxDeviceSensor(router, device, description)
+                for description in WIFI_DEVICE_SENSORS
+            )
     if entities:
         async_add_entities(entities, True)
 
@@ -241,3 +293,66 @@ class FreeboxBatterySensor(FreeboxHomeEntity, SensorEntity):
     def native_value(self) -> int:
         """Return the current state of the device."""
         return self.get_value("signal", "battery")
+
+
+class FreeboxDeviceSensor(FreeboxSensor):
+    """Representation of a Freebox device sensor."""
+
+    def __init__(
+        self,
+        router: FreeboxRouter,
+        device: dict[str, Any],
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize a Freebox device sensor."""
+        super().__init__(router, description)
+        self._device = device
+        mac_address = device["l2ident"]["id"]
+        self._attr_unique_id = f"{router.mac} {description.key} {mac_address}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, mac_address)},
+            manufacturer=device["vendor_name"],
+            name=device["primary_name"],
+            via_device=(DOMAIN, router.mac),
+            connections={(CONNECTION_NETWORK_MAC, mac_address)},
+        )
+        self._attr_name = f"{device['primary_name']} {description.name}"
+
+    def async_update_state(self) -> None:
+        """Update the Freebox device sensor."""
+        if self.entity_description.key == "connectivity":
+            self._attr_native_value = get_device_connectity_type(self._device)
+        elif self.entity_description.key == "wifi_signal_dbm":
+            self._attr_native_value = get_device_wifi_signal_strength_dbm(self._device)
+        elif self.entity_description.key == "wifi_signal_percentage":
+            self._attr_native_value = get_device_wifi_signal_strength_percentage(
+                self._device
+            )
+
+
+def get_device_connectity_type(device: dict[str, Any]) -> str | None:
+    """Get the connectivity type of a device."""
+    result = None
+    access_point = device.get("access_point", {})
+    if connectivity_type := access_point.get("connectivity_type"):
+        if connectivity_type == "wifi":
+            wifi_information = access_point.get("wifi_information", {})
+            band = wifi_information.get("band", "")
+            result = WIFI_BANDS_TO_CONNECTIVITY.get(band, DeviceConnectivityType.WIFI)
+        if connectivity_type == "ethernet":
+            result = DeviceConnectivityType.ETHERNET
+    return result.value if result else None
+
+
+def get_device_wifi_signal_strength_dbm(device: dict[str, Any]) -> int | None:
+    """Get the wifi signal strength of a device in dBm."""
+    access_point = device.get("access_point", {})
+    wifi_information = access_point.get("wifi_information", {})
+    return wifi_information.get("signal")
+
+
+def get_device_wifi_signal_strength_percentage(device: dict[str, Any]) -> int | None:
+    """Get the wifi signal strength of a device in percentage."""
+    if dbm := get_device_wifi_signal_strength_dbm(device):
+        return min(max(2 * (dbm + 100), 0), 100)
+    return None
