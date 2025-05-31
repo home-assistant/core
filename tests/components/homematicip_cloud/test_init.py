@@ -15,9 +15,11 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_NAME,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -247,18 +249,41 @@ async def test_setup_two_haps_unload_one_by_one(hass: HomeAssistant) -> None:
     assert not hass.services.async_services().get(DOMAIN)
 
 
-async def test_remove_obsolete_entities(hass: HomeAssistant) -> None:
+async def test_remove_obsolete_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test removing obsolete entities."""
     mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
     entry = MockConfigEntry(domain=DOMAIN, data=mock_config)
     entry.add_to_hass(hass)
 
-    # Create mock entities for all three removal conditions
-    mock_entries = [
-        Mock(entity_id="sensor.ap", unique_id="HomematicipAccesspointStatus123"),
-        Mock(entity_id="sensor.battery", unique_id="HomematicipBatterySensor_ABC123"),
-        Mock(entity_id="sensor.keep", unique_id="ShouldRemain123"),
+    test_entities = [
+        {
+            "entity_id": "ap",
+            "unique_id": "HomematicipAccesspointStatus123",
+            "keep": False,
+        },
+        {
+            "entity_id": "battery",
+            "unique_id": "HomematicipBatterySensor_ABC123",
+            "keep": False,
+        },
+        {
+            "entity_id": "keep",
+            "unique_id": "ShouldRemain123",
+            "keep": True,
+        },
     ]
+
+    for entity in test_entities:
+        # Create mock entries in the entity registry
+        entity_registry.async_get_or_create(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            entity["unique_id"],
+            config_entry=entry,
+            suggested_object_id=entity["entity_id"],
+        )
 
     with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
         instance = mock_hap.return_value
@@ -279,27 +304,12 @@ async def test_remove_obsolete_entities(hass: HomeAssistant) -> None:
     assert len(config_entries) == 1
     hap = config_entries[0].runtime_data
 
-    # Create a mock registry
-    mock_registry = Mock()
+    _async_remove_obsolete_entities(hass, config_entries[0], hap)
 
-    # Here's where we patch async_get to return our mock registry
-    with patch(
-        "homeassistant.helpers.entity_registry.async_get",
-        return_value=mock_registry,
-    ):
-        # Configure mock_registry to return our mock entries
-        mock_registry.entities.get_entries_for_config_entry_id.return_value = (
-            mock_entries
-        )
-
-        # Run the function being tested
-        _async_remove_obsolete_entities(hass, config_entries[0], hap)
-
-        # Assert that methods were called as expected
-        assert mock_registry.async_remove.call_count == 2
-        mock_registry.async_remove.assert_any_call("sensor.ap")
-        mock_registry.async_remove.assert_any_call("sensor.battery")
-
-        # Make sure we didn't remove the other entity
-        for call in mock_registry.async_remove.call_args_list:
-            assert "sensor.keep" not in call[0]
+    # Check that the entities were removed or kept
+    for entity in test_entities:
+        registered_entity = entity_registry.async_get(f"sensor.{entity['entity_id']}")
+        if entity["keep"]:
+            assert registered_entity is not None
+        else:
+            assert registered_entity is None
