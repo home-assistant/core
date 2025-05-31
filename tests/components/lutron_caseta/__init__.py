@@ -1,10 +1,14 @@
 """Tests for the Lutron Caseta integration."""
 
+from datetime import timedelta
+import logging
 import asyncio
 from collections.abc import Callable
 from typing import Any
+
 from unittest.mock import patch
 
+from homeassistant.components.light import ColorMode
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
     CONF_CA_CERTS,
@@ -15,6 +19,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 ENTRY_MOCK_DATA = {
     CONF_HOST: "1.1.1.1",
@@ -90,6 +96,8 @@ _LEAP_DEVICE_TYPES = {
 class MockBridge:
     """Mock Lutron bridge that emulates configured connected status."""
 
+    _subscribers = {}
+
     def __init__(self, can_connect=True, timeout_on_connect=False) -> None:
         """Initialize MockBridge instance with configured mock connectivity."""
         self.timeout_on_connect = timeout_on_connect
@@ -110,6 +118,7 @@ class MockBridge:
 
     def add_subscriber(self, device_id: str, callback_):
         """Mock a listener to be notified of state changes."""
+        self._subscribers[device_id] = callback_
 
     def add_button_subscriber(self, button_id: str, callback_):
         """Mock a listener for button presses."""
@@ -130,6 +139,16 @@ class MockBridge:
             "1026": {"id": "1026", "name": "Dining Room", "parent_id": "3"},
             "1205": {"id": "1205", "name": "Hallway", "parent_id": "3"},
         }
+
+    async def set_value(
+        self,
+        device_id: str,
+        value: int | None = None,
+        fade_time: timedelta | None = None,
+        color_value: ColorMode | None = None,
+    ):
+        """Mock changing device state and invoke callback."""
+        self._subscribers[device_id]()
 
     def load_devices(self):
         """Load mock devices into self.devices."""
@@ -203,6 +222,19 @@ class MockBridge:
                 "type": "WallDimmer",
                 "model": None,
                 "serial": 5442321,
+                "tilt": None,
+                "area": "1025",
+            },
+            "902": {
+                "device_id": "902",
+                "current_state": 000,
+                "fan_speed": None,
+                "zone": "901",
+                "name": "Kitchen_Other Lights",
+                "button_groups": None,
+                "type": "WallDimmer",
+                "model": None,
+                "serial": 5442322,
                 "tilt": None,
                 "area": "1025",
             },
