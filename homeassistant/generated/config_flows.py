@@ -46,6 +46,7 @@ FLOWS = {
         "airvisual_pro",
         "airzone",
         "airzone_cloud",
+        "airzone_mqtt",
         "alarmdecoder",
         "amazon_devices",
         "amberelectric",
