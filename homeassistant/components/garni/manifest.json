@@ -1,0 +1,13 @@
+{
+  "domain": "garni",
+  "name": "GARNI technology",
+  "codeowners": ["@fkiscd"],
+  "config_flow": true,
+  "dependencies": ["http", "webhook"],
+  "documentation": "https://www.home-assistant.io/integrations/garni",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["aioccl"],
+  "quality_scale": "silver",
+  "requirements": ["aioccl==2025.4.1"]
+}

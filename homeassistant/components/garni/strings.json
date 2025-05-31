@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Click on 'Submit' to register a weather station."
+      }
+    },
+    "create_entry": {
+      "default": "Please open the WSLink app on your mobile device to finish the configuration.\n\nGo to the Settings panel of your weather station,\n then click on 'Weather server' -> 'Home Assistant'.\n\nFill in all blanks as below, and click on 'Save' afterwards.\nServer IP: {host}\nPort: {port}\n Path: {path}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ch_sensor_type": {
+        "state": {
+          "thermo-hygro": "Thermo-Hygro",
+          "pool": "Pool",
+          "soil": "Soil"
+        }
+      }
+    }
+  }
+}
