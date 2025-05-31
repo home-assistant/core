@@ -21,8 +21,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS: list[Platform] = [Platform.NOTIFY]
-
+PLATFORMS: list[Platform] = [Platform.EVENT, Platform.NOTIFY]
 
 type NtfyConfigEntry = ConfigEntry[Ntfy]
 
