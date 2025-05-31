@@ -59,6 +59,7 @@ from .const import (
 from .default_agent import DefaultAgent, async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
+from .llm_task import LLMTask, LLMTaskResult, LLMTaskType
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
@@ -76,6 +77,9 @@ __all__ = [
     "ConversationResult",
     "ConversationTraceEventType",
     "ConverseError",
+    "LLMTask",
+    "LLMTaskResult",
+    "LLMTaskType",
     "SystemContent",
     "ToolResultContent",
     "UserContent",
