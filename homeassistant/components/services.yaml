@@ -1,0 +1,15 @@
+turn_on:
+  description: Turn on the device
+  fields:
+    entity_id:
+      description: The entity ID of the device to turn on
+      required: true
+      example: light.my_light
+
+turn_off:
+  description: Turn off the device
+  fields:
+    entity_id:
+      description: The entity ID of the device to turn off
+      required: true
+      example: light.my_light
