@@ -8,13 +8,17 @@ from telegram.error import BadRequest, InvalidToken, NetworkError
 
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
+    BOT_NAME,
     CONF_ALLOWED_CHAT_IDS,
     CONF_BOT_COUNT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
     DOMAIN,
+    ERROR_FIELD,
+    ERROR_MESSAGE,
     ISSUE_DEPRECATED_YAML,
+    ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR,
     PARSER_HTML,
     PARSER_MD,
     PLATFORM_BROADCAST,
@@ -456,7 +460,12 @@ async def test_import_failed(
         domain=DOMAIN,
         issue_id=ISSUE_DEPRECATED_YAML,
     )
-    assert issue.translation_key == "deprecated_yaml_import_issue_invalid_api_key"
+    assert issue.translation_key == ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR
+    assert (
+        issue.translation_placeholders[BOT_NAME] == f"{PLATFORM_BROADCAST} Telegram bot"
+    )
+    assert issue.translation_placeholders[ERROR_FIELD] == "API key"
+    assert issue.translation_placeholders[ERROR_MESSAGE] == "mock invalid token error"
 
 
 async def test_import_multiple(

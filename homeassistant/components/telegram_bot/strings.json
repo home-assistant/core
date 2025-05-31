@@ -53,7 +53,7 @@
       "invalid_proxy_url": "{proxy_url_error}",
       "no_url_available": "URL is required since you have not configured an external URL in Home Assistant",
       "invalid_url": "URL must start with https",
-      "invalid_trusted_networks": "Invalid trusted network: {trusted_network_error}"
+      "invalid_trusted_networks": "Invalid trusted network: {error_message}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
@@ -864,13 +864,9 @@
       "title": "The {integration_title} YAML configuration is being removed",
       "description": "Configuring {integration_title} using YAML is being removed.\n\nThe last entry of your existing YAML configuration ({telegram_bot}) has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue. The other Telegram bots will need to be configured manually in the UI."
     },
-    "deprecated_yaml_import_issue_invalid_api_key": {
-      "title": "YAML import failed due to invalid API key",
-      "description": "Configuring {integration_title} using YAML is being removed but there was an invalid API key error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {telegram_bot} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "YAML import failed due to unknown error",
-      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    "deprecated_yaml_import_issue_error": {
+      "title": "YAML import failed due to invalid {error_field}",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an error while importing your existing configuration ({telegram_bot}): {error_message}.\nSetup will not proceed.\n\nVerify that your {telegram_bot} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
     },
     "proxy_params_auth_deprecation": {
       "title": "{telegram_bot}: Proxy authentication should be moved to the URL",

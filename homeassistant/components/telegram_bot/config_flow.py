@@ -38,6 +38,7 @@ from . import initialize_bot
 from .bot import TelegramBotConfigEntry
 from .const import (
     ATTR_PARSER,
+    BOT_NAME,
     CONF_ALLOWED_CHAT_IDS,
     CONF_BOT_COUNT,
     CONF_CHAT_ID,
@@ -45,8 +46,11 @@ from .const import (
     CONF_TRUSTED_NETWORKS,
     DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
+    ERROR_FIELD,
+    ERROR_MESSAGE,
     ISSUE_DEPRECATED_YAML,
     ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS,
+    ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR,
     PARSER_HTML,
     PARSER_MD,
     PARSER_MD2,
@@ -202,7 +206,12 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             errors: dict[str, str] | None = config_flow_result.get("errors")
             if errors:
                 error: str = errors.get("base", "unknown")
-                self._create_issue(error, telegram_bot, bot_count)
+                self._create_issue(
+                    error,
+                    telegram_bot,
+                    bot_count,
+                    config_flow_result["description_placeholders"],
+                )
                 return self.async_abort(reason="import_failed")
 
             subentries: list[ConfigSubentryData] = []
@@ -218,17 +227,44 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 subentries.append(subentry)
             config_flow_result["subentries"] = subentries
 
-            self._create_issue(ISSUE_DEPRECATED_YAML, telegram_bot, bot_count)
+            self._create_issue(
+                ISSUE_DEPRECATED_YAML,
+                telegram_bot,
+                bot_count,
+                config_flow_result["description_placeholders"],
+            )
             return config_flow_result
 
-    def _create_issue(self, issue: str, telegram_bot: str, bot_count: int) -> None:
+    def _create_issue(
+        self,
+        issue: str,
+        telegram_bot_type: str,
+        bot_count: int,
+        description_placeholders: Mapping[str, str] | None = None,
+    ) -> None:
         translation_key: str = (
             ISSUE_DEPRECATED_YAML
             if bot_count == 1
             else ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS
         )
         if issue != ISSUE_DEPRECATED_YAML:
-            translation_key = f"deprecated_yaml_import_issue_{issue}"
+            translation_key = ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR
+
+        telegram_bot = (
+            description_placeholders.get(BOT_NAME, telegram_bot_type)
+            if description_placeholders
+            else telegram_bot_type
+        )
+        error_field = (
+            description_placeholders.get(ERROR_FIELD, "Unknown error")
+            if description_placeholders
+            else "Unknown error"
+        )
+        error_message = (
+            description_placeholders.get(ERROR_MESSAGE, "Unknown error")
+            if description_placeholders
+            else "Unknown error"
+        )
 
         async_create_issue(
             self.hass,
@@ -243,6 +279,8 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 "domain": DOMAIN,
                 "integration_title": "Telegram Bot",
                 "telegram_bot": telegram_bot,
+                ERROR_FIELD: error_field,
+                ERROR_MESSAGE: error_message,
             },
             learn_more_url="https://github.com/home-assistant/core/pull/144617",
         )
@@ -293,6 +331,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     # this value may come from yaml import
                     ATTR_PARSER: user_input.get(ATTR_PARSER, PARSER_MD)
                 },
+                description_placeholders=description_placeholders,
             )
 
         self._bot_name = bot_name
@@ -326,14 +365,18 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             self._bot = bot
 
             user = await bot.get_me()
-        except InvalidToken:
+        except InvalidToken as err:
             _LOGGER.warning("Invalid API token")
             errors["base"] = "invalid_api_key"
+            placeholders[ERROR_FIELD] = "API key"
+            placeholders[ERROR_MESSAGE] = str(err)
             return "Unknown bot"
         except (ValueError, NetworkError) as err:
             _LOGGER.warning("Invalid proxy")
             errors["base"] = "invalid_proxy_url"
             placeholders["proxy_url_error"] = str(err)
+            placeholders[ERROR_FIELD] = "proxy url"
+            placeholders[ERROR_MESSAGE] = str(err)
             return "Unknown bot"
         else:
             return user.full_name
@@ -366,7 +409,8 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         errors: dict[str, str] = {}
-        trusted_network_error: str = self._validate_webhooks(user_input, errors)
+        description_placeholders: dict[str, str] = {BOT_NAME: self._bot_name}
+        self._validate_webhooks(user_input, errors, description_placeholders)
         if errors:
             return self.async_show_form(
                 step_id="webhooks",
@@ -375,9 +419,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input,
                 ),
                 errors=errors,
-                description_placeholders={
-                    "trusted_network_error": trusted_network_error
-                },
+                description_placeholders=description_placeholders,
             )
 
         await self._shutdown_bot()
@@ -400,21 +442,31 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_TRUSTED_NETWORKS: user_input[CONF_TRUSTED_NETWORKS],
             },
             options={ATTR_PARSER: self._step_user_data.get(ATTR_PARSER, PARSER_MD)},
+            description_placeholders=description_placeholders,
         )
 
     def _validate_webhooks(
-        self, user_input: dict[str, Any], errors: dict[str, str]
-    ) -> str:
+        self,
+        user_input: dict[str, Any],
+        errors: dict[str, str],
+        description_placeholders: dict[str, str],
+    ) -> None:
         # validate URL
         if CONF_URL in user_input and not user_input[CONF_URL].startswith("https"):
             errors["base"] = "invalid_url"
-            return ""
+            description_placeholders[ERROR_FIELD] = "URL"
+            description_placeholders[ERROR_MESSAGE] = "URL must start with https"
+            return
         if CONF_URL not in user_input:
             try:
                 get_url(self.hass, require_ssl=True, allow_internal=False)
             except NoURLAvailableError:
                 errors["base"] = "no_url_available"
-                return ""
+                description_placeholders[ERROR_FIELD] = "URL"
+                description_placeholders[ERROR_MESSAGE] = (
+                    "URL is required since you have not configured an external URL in Home Assistant"
+                )
+                return
 
         # validate trusted networks
         csv_trusted_networks: list[str] = []
@@ -427,12 +479,14 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 IPv4Network(formatted_trusted_network)
             except (AddressValueError, ValueError) as err:
                 errors["base"] = "invalid_trusted_networks"
-                return str(err)
+                description_placeholders[ERROR_FIELD] = "trusted networks"
+                description_placeholders[ERROR_MESSAGE] = str(err)
+                return
             else:
                 csv_trusted_networks.append(formatted_trusted_network)
         user_input[CONF_TRUSTED_NETWORKS] = csv_trusted_networks
 
-        return ""
+        return
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None

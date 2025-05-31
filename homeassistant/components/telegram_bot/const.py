@@ -22,10 +22,15 @@ CONF_TRUSTED_NETWORKS = "trusted_networks"
 # subentry
 CONF_CHAT_ID = "chat_id"
 
+BOT_NAME = "telegram_bot"
+ERROR_FIELD = "error_field"
+ERROR_MESSAGE = "error_message"
+
 ISSUE_DEPRECATED_YAML = "deprecated_yaml"
 ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS = (
     "deprecated_yaml_import_issue_has_more_platforms"
 )
+ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR = "deprecated_yaml_import_issue_error"
 
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
