@@ -129,6 +129,16 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    AttributeType.EXTERNAL_TEMPERATURE: HomeeSensorEntityDescription(
+        key="external_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AttributeType.FLOOR_TEMPERATURE: HomeeSensorEntityDescription(
+        key="floor_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     AttributeType.INDOOR_RELATIVE_HUMIDITY: HomeeSensorEntityDescription(
         key="indoor_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
