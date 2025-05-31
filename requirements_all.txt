@@ -1129,6 +1129,7 @@ hass-nabucasa==0.101.0
 # homeassistant.components.splunk
 hass-splunk==0.1.1
 
+# homeassistant.components.assist_conversation
 # homeassistant.components.conversation
 hassil==2.2.3
 
@@ -1166,6 +1167,7 @@ holidays==0.73
 # homeassistant.components.frontend
 home-assistant-frontend==20250531.0
 
+# homeassistant.components.assist_conversation
 # homeassistant.components.conversation
 home-assistant-intents==2025.5.28
 
