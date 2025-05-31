@@ -1164,7 +1164,7 @@ hole==0.8.0
 holidays==0.73
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250528.0
+home-assistant-frontend==20250531.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.5.28
@@ -1617,7 +1617,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.12.2
+opower==0.12.3
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
