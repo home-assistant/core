@@ -6,6 +6,7 @@ import base64
 import binascii
 import logging
 
+from helpers.typing import DiscoveryInfoType
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -73,4 +74,28 @@ class BLEDeviceTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema({CONF_IRK: str})
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_integration_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> ConfigFlowResult:
+        """Create config from ServiceCall."""
+        irk = discovery_info.get("irk")
+
+        if not (irk_bytes := _parse_irk(irk)):
+            _LOGGER.error("Invalid IRK %s passed by service call", irk)
+            return self.async_abort(reason="irk_not_valid")
+        if not (service_info := async_last_service_info(self.hass, irk_bytes)):
+            _LOGGER.error("IRK %s passed by service call not found", irk)
+            return self.async_abort(reason="irk_not_found")
+        if _existing_entry := await self.async_set_unique_id(irk_bytes.hex()):
+            _LOGGER.error(
+                "Service call attempted to create already existing IRK %s", irk
+            )
+            return self.async_abort(reason="irk_already_configured")
+
+        _LOGGER.debug("Creating IRK %s from service call", irk)
+        return self.async_create_entry(
+            title=service_info.name or "BLE Device Tracker",
+            data={CONF_IRK: irk_bytes.hex()},
         )
