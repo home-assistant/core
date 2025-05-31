@@ -18,9 +18,9 @@ async def async_get_config_entry_diagnostics(
 
     has_cloudhooks = CONF_CLOUDHOOK_URL in entry.data
 
-    data = entry.runtime_data
+    data = entry.runtime_data.data
 
     return {
         "has_cloudhooks": has_cloudhooks,
-        "coordinator_data": asdict(data.data),
+        "coordinator_data": asdict(data),
     }

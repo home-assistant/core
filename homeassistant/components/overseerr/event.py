@@ -11,6 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN, EVENT_KEY
+from .const import ISSUE_EVENT_TYPES, MEDIA_EVENT_TYPES
 from .coordinator import OverseerrConfigEntry, OverseerrCoordinator
 from .entity import OverseerrEntity
 
@@ -29,14 +30,25 @@ EVENTS: tuple[OverseerrEventEntityDescription, ...] = (
         key="media",
         translation_key="last_media_event",
         event_types=[
-            "pending",
-            "approved",
-            "available",
-            "failed",
-            "declined",
-            "auto_approved",
+            MEDIA_EVENT_TYPES["pending"],
+            MEDIA_EVENT_TYPES["approved"],
+            MEDIA_EVENT_TYPES["available"],
+            MEDIA_EVENT_TYPES["failed"],
+            MEDIA_EVENT_TYPES["declined"],
+            MEDIA_EVENT_TYPES["auto_approved"],
         ],
         nullable_fields=["comment", "issue"],
+    ),
+    OverseerrEventEntityDescription(
+        key="issue",
+        translation_key="last_issue_event",
+        event_types=[
+            ISSUE_EVENT_TYPES["reported"],
+            ISSUE_EVENT_TYPES["commented"],
+            ISSUE_EVENT_TYPES["resolved"],
+            ISSUE_EVENT_TYPES["reopened"],
+        ],
+        nullable_fields=["comment"],
     ),
 )
 
@@ -108,7 +120,6 @@ class OverseerrEvent(OverseerrEntity, EventEntity):
 
 def parse_event(event: dict[str, Any], nullable_fields: list[str]) -> dict[str, Any]:
     """Parse event."""
-    event.pop("notification_type")
     event.pop("image")
     for field in nullable_fields:
         event.pop(field)
@@ -122,4 +133,6 @@ def parse_event(event: dict[str, Any], nullable_fields: list[str]) -> dict[str, 
                 media[field] = None
     if (request := event.get("request")) is not None:
         request["request_id"] = int(request["request_id"])
+    if (issue := event.get("issue")) is not None:
+        issue["issue_id"] = int(issue["issue_id"])
     return event
