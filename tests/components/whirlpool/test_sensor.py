@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from whirlpool.washerdryer import MachineState
 
 from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL

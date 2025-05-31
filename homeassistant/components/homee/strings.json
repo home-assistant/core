@@ -26,6 +26,11 @@
     }
   },
   "entity": {
+    "alarm_control_panel": {
+      "homee_mode": {
+        "name": "Status"
+      }
+    },
     "binary_sensor": {
       "blackout_alarm": {
         "name": "Blackout"
@@ -137,6 +142,27 @@
           "preset_mode": {
             "state": {
               "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
+    "event": {
+      "up_down_remote": {
+        "name": "Up/down remote",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "release": "Released",
+              "up": "Up",
+              "down": "Down",
+              "stop": "Stop",
+              "up_long": "Up (long press)",
+              "down_long": "Down (long press)",
+              "stop_long": "Stop (long press)",
+              "c_button": "C button",
+              "b_button": "B button",
+              "a_button": "A button"
             }
           }
         }
@@ -369,6 +395,9 @@
   "exceptions": {
     "connection_closed": {
       "message": "Could not connect to homee while setting attribute."
+    },
+    "disarm_not_supported": {
+      "message": "Disarm is not supported by homee."
     },
     "invalid_preset_mode": {
       "message": "Invalid preset mode: {preset_mode}. Turning on is only supported with preset mode 'Manual'."
