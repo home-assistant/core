@@ -5,8 +5,10 @@ from typing import Any
 
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPAuthenticationError,
+    PSNAWPClientError,
     PSNAWPInvalidTokenError,
     PSNAWPNotFoundError,
+    PSNAWPServerError,
 )
 from psnawp_api.models.user import User
 from psnawp_api.utils.misc import parse_npsso_token
@@ -45,6 +47,10 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_auth"
                 except PSNAWPNotFoundError:
                     errors["base"] = "invalid_account"
+                except PSNAWPServerError:
+                    errors["base"] = "cannot_connect"
+                except PSNAWPClientError:
+                    errors["base"] = "cannot_connect"
                 except Exception:
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
