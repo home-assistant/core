@@ -255,6 +255,19 @@ CREATE_EVENT_SCHEMA = vol.All(
     _has_min_duration(EVENT_START_DATETIME, EVENT_END_DATETIME, MIN_NEW_EVENT_DURATION),
 )
 
+DELETE_EVENT_SERVICE = "delete_event"
+DELETE_EVENT_SCHEMA = vol.Schema(
+    cv.make_entity_service_schema(
+        {
+            vol.Required(EVENT_UID): cv.string,
+            vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
+                vol.All(cv.string, _empty_as_none), None
+            ),
+            vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+        }
+    )
+)
+
 WEBSOCKET_EVENT_SCHEMA = vol.Schema(
     vol.All(
         {
@@ -328,6 +341,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         CREATE_EVENT_SCHEMA,
         async_create_event,
         required_features=[CalendarEntityFeature.CREATE_EVENT],
+    )
+    component.async_register_entity_service(
+        DELETE_EVENT_SERVICE,
+        DELETE_EVENT_SCHEMA,
+        async_delete_event,
+        required_features=[CalendarEntityFeature.DELETE_EVENT],
     )
     component.async_register_entity_service(
         SERVICE_GET_EVENTS,
@@ -639,7 +658,7 @@ class CalendarEntity(Entity):
         recurrence_id: str | None = None,
         recurrence_range: str | None = None,
     ) -> None:
-        """Delete an event on the calendar."""
+        """Update an event on the calendar."""
         raise NotImplementedError
 
 
@@ -881,6 +900,15 @@ async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
         EVENT_END: end,
     }
     await entity.async_create_event(**params)
+
+
+async def async_delete_event(entity: CalendarEntity, call: ServiceCall) -> None:
+    """Delete an event on the calendar."""
+    await entity.async_delete_event(
+        call.data[EVENT_UID],
+        recurrence_id=call.data.get(EVENT_RECURRENCE_ID),
+        recurrence_range=call.data.get(EVENT_RECURRENCE_RANGE),
+    )
 
 
 async def async_get_events_service(

@@ -36,6 +36,26 @@ create_event:
       example: "Conference Room - F123, Bldg. 002"
       selector:
         text:
+delete_event:
+  target:
+    entity:
+      domain: calendar
+      supported_features:
+        - calendar.CalendarEntityFeature.DELETE_EVENT
+  fields:
+    uid:
+      required: true
+      example: "de18513a-003c-499e-9b1d-c82b6d3d44ff"
+      selector:
+        text:
+    recurrence_id:
+      example: "20220322T200000Z"
+      selector:
+        text:
+    recurrence_range:
+      example: "20220322T200000Z/20220322T220000Z"
+      selector:
+        text:
 get_events:
   target:
     entity:
