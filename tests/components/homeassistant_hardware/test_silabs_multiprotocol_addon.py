@@ -701,7 +701,10 @@ async def test_option_flow_addon_installed_same_device_uninstall(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_flasher_addon"
     assert result["progress_action"] == "start_flasher_addon"
-    assert result["description_placeholders"] == {"addon_name": "Silicon Labs Flasher"}
+    assert result["description_placeholders"] == {
+        "addon_name": "Silicon Labs Flasher",
+        "message": "",
+    }
 
     await hass.async_block_till_done()
     install_addon.assert_called_once_with("core_silabs_flasher")
@@ -864,7 +867,10 @@ async def test_option_flow_addon_installed_same_device_flasher_already_installed
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_flasher_addon"
     assert result["progress_action"] == "start_flasher_addon"
-    assert result["description_placeholders"] == {"addon_name": "Silicon Labs Flasher"}
+    assert result["description_placeholders"] == {
+        "addon_name": "Silicon Labs Flasher",
+        "message": "",
+    }
 
     addon_store_info.return_value.installed = True
     addon_store_info.return_value.available = True
@@ -995,7 +1001,10 @@ async def test_option_flow_flasher_addon_flash_failure(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_flasher_addon"
     assert result["progress_action"] == "start_flasher_addon"
-    assert result["description_placeholders"] == {"addon_name": "Silicon Labs Flasher"}
+    assert result["description_placeholders"] == {
+        "addon_name": "Silicon Labs Flasher",
+        "message": "",
+    }
 
     await hass.async_block_till_done()
 
@@ -1131,7 +1140,10 @@ async def test_option_flow_uninstall_migration_finish_failure(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_flasher_addon"
     assert result["progress_action"] == "start_flasher_addon"
-    assert result["description_placeholders"] == {"addon_name": "Silicon Labs Flasher"}
+    assert result["description_placeholders"] == {
+        "addon_name": "Silicon Labs Flasher",
+        "message": "",
+    }
 
     await hass.async_block_till_done()
 
