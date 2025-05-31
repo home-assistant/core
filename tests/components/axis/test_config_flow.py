@@ -12,7 +12,7 @@ from homeassistant.components.axis.const import (
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
     DEFAULT_VIDEO_SOURCE,
-    DOMAIN as AXIS_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.config_entries import (
     SOURCE_DHCP,
@@ -47,7 +47,7 @@ DHCP_FORMATTED_MAC = dr.format_mac(MAC).replace(":", "")
 async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
     """Test that config flow works."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -86,7 +86,7 @@ async def test_manual_configuration_duplicate_fails(
     assert config_entry_setup.data[CONF_HOST] == "1.2.3.4"
 
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -122,7 +122,7 @@ async def test_flow_fails_on_api(
 ) -> None:
     """Test that config flow fails on faulty credentials."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -152,18 +152,18 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
 ) -> None:
     """Test that create entry can generate a name with other entries."""
     entry = MockConfigEntry(
-        domain=AXIS_DOMAIN,
+        domain=DOMAIN,
         data={CONF_NAME: "M1065-LW 0", CONF_MODEL: "M1065-LW"},
     )
     entry.add_to_hass(hass)
     entry2 = MockConfigEntry(
-        domain=AXIS_DOMAIN,
+        domain=DOMAIN,
         data={CONF_NAME: "M1065-LW 1", CONF_MODEL: "M1065-LW"},
     )
     entry2.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -337,7 +337,7 @@ async def test_discovery_flow(
 ) -> None:
     """Test the different discovery flows for new devices work."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, data=discovery_info, context={"source": source}
+        DOMAIN, data=discovery_info, context={"source": source}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -420,7 +420,7 @@ async def test_discovered_device_already_configured(
     assert config_entry_setup.data[CONF_HOST] == DEFAULT_HOST
 
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, data=discovery_info, context={"source": source}
+        DOMAIN, data=discovery_info, context={"source": source}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -488,7 +488,7 @@ async def test_discovery_flow_updated_configuration(
 
     mock_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, data=discovery_info, context={"source": source}
+        DOMAIN, data=discovery_info, context={"source": source}
     )
     await hass.async_block_till_done()
 
@@ -546,7 +546,7 @@ async def test_discovery_flow_ignore_non_axis_device(
 ) -> None:
     """Test that discovery flow ignores devices with non Axis OUI."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, data=discovery_info, context={"source": source}
+        DOMAIN, data=discovery_info, context={"source": source}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -595,7 +595,7 @@ async def test_discovery_flow_ignore_link_local_address(
 ) -> None:
     """Test that discovery flow ignores devices with link local addresses."""
     result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, data=discovery_info, context={"source": source}
+        DOMAIN, data=discovery_info, context={"source": source}
     )
 
     assert result["type"] is FlowResultType.ABORT
