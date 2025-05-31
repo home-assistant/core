@@ -113,6 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     "Toggle",
                     "SingleSceneRaiseLower",
                     "MasterRaiseLower",
+                    "AdvancedToggle",
                 ):
                     # Associate an LED with a button if there is one
                     led = next(
