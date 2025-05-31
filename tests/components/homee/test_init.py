@@ -46,6 +46,7 @@ async def test_connection_listener(
 ) -> None:
     """Test if loss of connection is sensed correctly."""
     mock_homee.nodes = [build_mock_node("homee.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
     mock_homee.add_connection_listener.call_args_list[0][0][0](False)
