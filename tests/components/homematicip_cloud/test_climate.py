@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.climate import (
     ATTR_PRESET_END_TIME,
     PERMANENT_END_TIME,
@@ -617,7 +617,7 @@ async def test_hmip_climate_services(
             {"accesspoint_id": not_existing_hap_id},
             blocking=True,
         )
-    assert excinfo.value.translation_domain == HMIPC_DOMAIN
+    assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "access_point_not_found"
     # There is no further call on connection.
     assert len(home._connection.mock_calls) == 10
@@ -665,7 +665,7 @@ async def test_hmip_set_home_cooling_mode(
             {"accesspoint_id": not_existing_hap_id, "cooling": True},
             blocking=True,
         )
-    assert excinfo.value.translation_domain == HMIPC_DOMAIN
+    assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "access_point_not_found"
     # There is no further call on connection.
     assert len(home._connection.mock_calls) == 3
