@@ -30,12 +30,12 @@
         "title": "Telegram bot setup",
         "description": "Reconfigure Telegram bot",
         "data": {
-          "platform": "Platform",
-          "proxy_url": "Proxy URL"
+          "platform": "[%key:component::telegram_bot::config::step::user::data::platform%]",
+          "proxy_url": "[%key:component::telegram_bot::config::step::user::data::proxy_url%]"
         },
         "data_description": {
-          "platform": "Telegram bot implementation",
-          "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
+          "platform": "[%key:component::telegram_bot::config::step::user::data_description::platform%]",
+          "proxy_url": "[%key:component::telegram_bot::config::step::user::data_description::proxy_url%]"
         }
       },
       "reauth_confirm": {
@@ -44,7 +44,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "The API token of your bot."
+          "api_key": "[%key:component::telegram_bot::config::step::user::data_description::api_key%]"
         }
       }
     },
@@ -178,7 +178,7 @@
       "description": "Sends a photo.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to send the photo."
         },
         "url": {
@@ -252,7 +252,7 @@
       "description": "Sends a sticker.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to send the sticker."
         },
         "url": {
@@ -322,7 +322,7 @@
       "description": "Sends an animation.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to send the animation."
         },
         "url": {
@@ -396,7 +396,7 @@
       "description": "Sends a video.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to send the video."
         },
         "url": {
@@ -470,7 +470,7 @@
       "description": "Sends a voice message.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to send the voice message."
         },
         "url": {
@@ -540,7 +540,7 @@
       "description": "Sends a document.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to send the document."
         },
         "url": {
@@ -614,7 +614,7 @@
       "description": "Sends a location.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to send the location."
         },
         "latitude": {
@@ -664,7 +664,7 @@
       "description": "Sends a poll.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to send the poll."
         },
         "target": {
@@ -718,7 +718,7 @@
       "description": "Edits a previously sent message.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to edit the message."
         },
         "message_id": {
@@ -756,7 +756,7 @@
       "description": "Edits the caption of a previously sent message.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to edit the caption."
         },
         "message_id": {
@@ -782,7 +782,7 @@
       "description": "Edits the inline keyboard of a previously sent message.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to edit the reply markup."
         },
         "message_id": {
@@ -804,7 +804,7 @@
       "description": "Responds to a callback query originated by clicking on an online keyboard button. The answer will be displayed to the user as a notification at the top of the chat screen or as an alert.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to answer the callback query."
         },
         "message": {
@@ -830,7 +830,7 @@
       "description": "Deletes a previously sent message.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to delete the message."
         },
         "message_id": {
