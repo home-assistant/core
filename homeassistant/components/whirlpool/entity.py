@@ -1,6 +1,7 @@
 """Base entity for the Whirlpool integration."""
 
 from whirlpool.appliance import Appliance
+from whirlpool.oven import Cavity as OvenCavity, Oven
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -38,3 +39,32 @@ class WhirlpoolEntity(Entity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._appliance.get_online()
+
+
+class WhirlpoolOvenEntity(WhirlpoolEntity):
+    """Base class for Whirlpool oven entities."""
+
+    _appliance: Oven
+
+    def __init__(
+        self,
+        appliance: Oven,
+        cavity: OvenCavity,
+        translation_key_base: str,
+        unique_id_suffix: str = "",
+    ) -> None:
+        """Initialize the entity."""
+        self.cavity = cavity
+        cavity_suffix = ""
+        if (
+            sum(1 for cavity in OvenCavity if appliance.get_oven_cavity_exists(cavity))
+            > 1
+        ):
+            if cavity == OvenCavity.Upper:
+                cavity_suffix = "_upper"
+            elif cavity == OvenCavity.Lower:
+                cavity_suffix = "_lower"
+        super().__init__(
+            appliance, unique_id_suffix=f"{unique_id_suffix}{cavity_suffix}"
+        )
+        self._attr_translation_key = f"{translation_key_base}{cavity_suffix}"
