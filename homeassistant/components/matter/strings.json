@@ -159,6 +159,9 @@
       }
     },
     "number": {
+      "level_control": {
+        "name": "Level control"
+      },
       "on_level": {
         "name": "On level"
       },
