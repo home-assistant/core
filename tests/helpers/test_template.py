@@ -7246,3 +7246,23 @@ def test_sort_naturally(hass: HomeAssistant) -> None:
         {"average": "14,a1", "background_color": "#4EC2EE"},
         {"average": "15,b2", "background_color": "#A2C62B"},
     ]
+
+    assert template.Template(
+        "{{ ['1.5', '0.1', '-2.0', '9.8', '6.0'] | sort_naturally }}",
+        hass,
+    ).async_render() == ["-2.0", "0.1", "1.5", "6.0", "9.8"]
+
+    assert template.Template(
+        "{{ ['1.5', '0.1', '2.0', '9.8', '6.0'] | sort_naturally }}",
+        hass,
+    ).async_render() == ["0.1", "1.5", "2.0", "6.0", "9.8"]
+
+    assert template.Template(
+        "{{ ['-1.5', '100', '2', '-3', '2.56'] | sort_naturally }}",
+        hass,
+    ).async_render() == ["-3", "-1.5", "2", "2.56", "100"]
+
+    assert template.Template(
+        "{{ ['-1,5', '100', '2', '-3', '2,56'] | sort_naturally }}",
+        hass,
+    ).async_render() == ["-3", "-1,5", "2", "2,56", "100"]

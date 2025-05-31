@@ -2901,7 +2901,12 @@ def sort_naturally_filter(
 
     def natural_key(value: Any) -> list[Any]:
         """Return the key to sort on."""
-        return [int(t) if t.isdigit() else t.lower() for t in re.split(r"(\d+)", value)]
+        parts = re.split(r"(-?\d+\.?\d*)", str(value))
+        return [
+            float(part) if re.fullmatch(r"-?\d+\.?\d*", part) else part.lower()
+            for part in parts
+            if part
+        ]
 
     def get_value(item: Any) -> Any:
         """Return the item to sort."""
