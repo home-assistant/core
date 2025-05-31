@@ -1,9 +1,10 @@
 """Tests for Synology DSM USB."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from synology_dsm.api.core.external_usb import SynoCoreExternalUSBDevice
 
 from homeassistant.components.synology_dsm.const import DOMAIN
 from homeassistant.const import (
@@ -13,14 +14,21 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import mock_dsm_information
+from .common import (
+    mock_dsm_external_usb_devices_usb1,
+    mock_dsm_external_usb_devices_usb2,
+    mock_dsm_information,
+    mock_dsm_storage_get_disk,
+    mock_dsm_storage_get_volume,
+)
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -36,63 +44,18 @@ def mock_dsm_with_usb():
             update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
         )
         dsm.information = mock_dsm_information()
+        dsm.storage = Mock(
+            get_disk=mock_dsm_storage_get_disk,
+            disks_ids=["sata1", "sata2", "sata3"],
+            get_volume=mock_dsm_storage_get_volume,
+            volume_size_used=Mock(return_value=12000138625024),
+            volumes_ids=["volume_1"],
+            update=AsyncMock(return_value=True),
+        )
         dsm.file = Mock(get_shared_folders=AsyncMock(return_value=None))
         dsm.external_usb = Mock(
             update=AsyncMock(return_value=True),
-            get_device=Mock(
-                return_value=SynoCoreExternalUSBDevice(
-                    {
-                        "dev_id": "usb1",
-                        "dev_type": "usbDisk",
-                        "dev_title": "USB Disk 1",
-                        "producer": "Western Digital Technologies, Inc.",
-                        "product": "easystore 264D",
-                        "formatable": True,
-                        "progress": "",
-                        "status": "normal",
-                        "total_size_mb": 15259648,
-                        "partitions": [
-                            {
-                                "dev_fstype": "ntfs",
-                                "filesystem": "ntfs",
-                                "name_id": "usb1p1",
-                                "partition_title": "USB Disk 1 Partition 1",
-                                "share_name": "usbshare1",
-                                "status": "normal",
-                                "total_size_mb": 15259646,
-                                "used_size_mb": 5942441,
-                            }
-                        ],
-                    }
-                )
-            ),
-            get_devices={
-                "usb1": SynoCoreExternalUSBDevice(
-                    {
-                        "dev_id": "usb1",
-                        "dev_type": "usbDisk",
-                        "dev_title": "USB Disk 1",
-                        "producer": "Western Digital Technologies, Inc.",
-                        "product": "easystore 264D",
-                        "formatable": True,
-                        "progress": "",
-                        "status": "normal",
-                        "total_size_mb": 15259648,
-                        "partitions": [
-                            {
-                                "dev_fstype": "ntfs",
-                                "filesystem": "ntfs",
-                                "name_id": "usb1p1",
-                                "partition_title": "USB Disk 1 Partition 1",
-                                "share_name": "usbshare1",
-                                "status": "normal",
-                                "total_size_mb": 15259646,
-                                "used_size_mb": 5942441,
-                            }
-                        ],
-                    }
-                )
-            },
+            get_devices=mock_dsm_external_usb_devices_usb1(),
         )
         dsm.logout = AsyncMock(return_value=True)
         yield dsm
@@ -227,6 +190,97 @@ async def test_external_usb(
     assert (
         sensor.attributes["friendly_name"]
         == "nas.meontheinternet.com (USB Disk 1 Partition 1) Partition used"
+    )
+    assert sensor.attributes["state_class"] == "measurement"
+    assert sensor.attributes["unit_of_measurement"] == "%"
+    assert sensor.attributes["attribution"] == "Data provided by Synology"
+
+
+async def test_external_usb_availability(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    setup_dsm_with_usb: MagicMock,
+) -> None:
+    """Test Synology DSM USB sensors availability."""
+
+    # Coordinator refresh
+    # Mock the get_devices method to simulate a USB disk being removed and another being added
+    setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb2()
+    freezer.tick(timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Test USB Disk 1 status sensor is unavailable
+    sensor = hass.states.get("sensor.nas_meontheinternet_com_usb_disk_1_status")
+    assert sensor is not None
+    assert sensor.state == STATE_UNAVAILABLE
+
+    # Test USB Disk 1 Partition 1 size sensor is unavailable
+    sensor = hass.states.get(
+        "sensor.nas_meontheinternet_com_usb_disk_1_partition_1_partition_size"
+    )
+    assert sensor is not None
+    assert sensor.state == STATE_UNAVAILABLE
+
+    # Test USB Disk 1 Partition 1 partition used space sensor is unavailable
+    sensor = hass.states.get(
+        "sensor.nas_meontheinternet_com_usb_disk_1_partition_1_partition_used_space"
+    )
+    assert sensor is not None
+    assert sensor.state == STATE_UNAVAILABLE
+
+    # Test USB Disk 1 Partition 1 partition used sensor is unavailable
+    sensor = hass.states.get(
+        "sensor.nas_meontheinternet_com_usb_disk_1_partition_1_partition_used"
+    )
+    assert sensor is not None
+    assert sensor.state == STATE_UNAVAILABLE
+
+    # Test USB Disk 2 status sensor
+    sensor = hass.states.get("sensor.nas_meontheinternet_com_usb_disk_2_status")
+    assert sensor is not None
+    assert sensor.state == "normal"
+
+    # Test USB Disk 2 Partition 1 partition size sensor
+    sensor = hass.states.get(
+        "sensor.nas_meontheinternet_com_usb_disk_2_partition_1_partition_size"
+    )
+    assert sensor is not None
+    assert sensor.state == "14901.998046875"
+    assert (
+        sensor.attributes["friendly_name"]
+        == "nas.meontheinternet.com (USB Disk 2 Partition 1) Partition size"
+    )
+    assert sensor.attributes["device_class"] == "data_size"
+    assert sensor.attributes["state_class"] == "measurement"
+    assert sensor.attributes["unit_of_measurement"] == "GiB"
+    assert sensor.attributes["attribution"] == "Data provided by Synology"
+
+    # Test USB Disk 2 Partition 1 partition used space sensor
+    sensor = hass.states.get(
+        "sensor.nas_meontheinternet_com_usb_disk_2_partition_1_partition_used_space"
+    )
+    assert sensor is not None
+    assert sensor.state == "5803.1650390625"
+    assert (
+        sensor.attributes["friendly_name"]
+        == "nas.meontheinternet.com (USB Disk 2 Partition 1) Partition used space"
+    )
+    assert sensor.attributes["device_class"] == "data_size"
+    assert sensor.attributes["state_class"] == "measurement"
+    assert sensor.attributes["unit_of_measurement"] == "GiB"
+    assert sensor.attributes["attribution"] == "Data provided by Synology"
+
+    # Test USB Disk 2 Partition 1 partition used sensor
+    sensor = hass.states.get(
+        "sensor.nas_meontheinternet_com_usb_disk_2_partition_1_partition_used"
+    )
+    assert sensor is not None
+    assert sensor.state == "38.9"
+    assert (
+        sensor.attributes["friendly_name"]
+        == "nas.meontheinternet.com (USB Disk 2 Partition 1) Partition used"
     )
     assert sensor.attributes["state_class"] == "measurement"
     assert sensor.attributes["unit_of_measurement"] == "%"
