@@ -307,9 +307,9 @@ async def test_options_flow_preview(
     await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=0, minute=0, second=0, microsecond=0)
-    t1 = utcnow.replace(hour=3, minute=0, second=0, microsecond=0)
-    t2 = utcnow.replace(hour=4, minute=0, second=0, microsecond=0)
-    t3 = utcnow.replace(hour=5, minute=0, second=0, microsecond=0)
+    t1 = start_time.replace(hour=3)
+    t2 = start_time.replace(hour=4)
+    t3 = start_time.replace(hour=5)
 
     monitored_entity = "binary_sensor.state"
 
@@ -442,9 +442,10 @@ async def test_options_flow_preview_errors(
     assert result["preview"] == "history_stats"
 
     for schema in (
-        {CONF_END: "{{ now() }"},
-        {CONF_START: "{{ today_at( }}"},
-        {CONF_DURATION: {"hours": 1}},
+        {CONF_END: "{{ now() }"},  # Missing '}' at end of template
+        {CONF_START: "{{ today_at( }}"},  # Missing ')' in template function
+        {CONF_DURATION: {"hours": 1}},  # Specified 3 period keys (1 too many)
+        {CONF_START: ""},  # Specified 1 period keys (1 too few)
     ):
         await client.send_json_auto_id(
             {
@@ -467,9 +468,9 @@ async def test_options_flow_preview_errors(
         assert msg["error"]["code"] == "invalid_schema"
 
     for schema in (
-        {CONF_END: "{{ nowwww() }}"},
-        {CONF_START: "{{ today_at('abcde') }}"},
-        {CONF_END: '"{{ now() }}"'},
+        {CONF_END: "{{ nowwww() }}"},  # Unknown jinja function
+        {CONF_START: "{{ today_at('abcde') }}"},  # Invalid value passed to today_at
+        {CONF_END: '"{{ now() }}"'},  # Invalid quotes around template
     ):
         await client.send_json_auto_id(
             {

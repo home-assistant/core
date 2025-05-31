@@ -47,12 +47,16 @@ from .data import HistoryStats
 from .sensor import HistoryStatsSensor
 
 
+def _validate_two_period_keys(user_input: dict[str, Any]) -> None:
+    if sum(param in user_input for param in CONF_PERIOD_KEYS) != 2:
+        raise SchemaFlowError("only_two_keys_allowed")
+
+
 async def validate_options(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate options selected."""
-    if sum(param in user_input for param in CONF_PERIOD_KEYS) != 2:
-        raise SchemaFlowError("only_two_keys_allowed")
+    _validate_two_period_keys(user_input)
 
     handler.parent_handler._async_abort_entries_match({**handler.options, **user_input})  # noqa: SLF001
 
@@ -186,6 +190,10 @@ async def ws_start_preview(
                 )
             )
 
+    for param in CONF_PERIOD_KEYS:
+        if param in msg["user_input"] and not bool(msg["user_input"][param]):
+            del msg["user_input"][param]  # Remove falsy values before counting keys
+
     validated_data: Any = None
     try:
         validated_data = DATA_SCHEMA_OPTIONS(msg["user_input"])
@@ -193,7 +201,9 @@ async def ws_start_preview(
         connection.send_error(msg["id"], "invalid_schema", str(ex))
         return
 
-    if sum(bool(validated_data.get(param)) for param in CONF_PERIOD_KEYS) != 2:
+    try:
+        _validate_two_period_keys(validated_data)
+    except SchemaFlowError:
         connection.send_error(
             msg["id"],
             "invalid_schema",
