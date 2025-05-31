@@ -257,6 +257,11 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    SensorEntityDescription(
+        key="base_electricity_price",
+        translation_key="base_electricity_price",
+        device_class=SensorDeviceClass.MONETARY,
+    ),
 )
 
 
@@ -452,7 +457,7 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
         self._attr_unique_id = (
             f"{self._tibber_home.home_id}_{self.entity_description.key}"
         )
-        if entity_description.key == "month_cost":
+        if entity_description.key in ("month_cost", "base_electricity_price"):
             self._attr_native_unit_of_measurement = self._tibber_home.currency
 
         self._device_name = self._home_name
@@ -460,6 +465,9 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
     @property
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
+        if self.entity_description.key == "base_electricity_price":
+            return self._tibber_home.current_price_info()["energy"]
+
         return getattr(self._tibber_home, self.entity_description.key)  # type: ignore[no-any-return]
 
 
