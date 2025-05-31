@@ -47,7 +47,7 @@ async def test_device_diagnostics(
     diagnostic_data = load_json_object_fixture("overkiz/setup_tahoma_switch.json")
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "rts://****-****-6867/16756006")}
+        identifiers={(DOMAIN, "rts://1234-5678-1234/16756006")}
     )
     assert device is not None
 
