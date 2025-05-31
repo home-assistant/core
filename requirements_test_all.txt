@@ -253,7 +253,7 @@ aioharmony==0.5.2
 aiohasupervisor==0.3.1
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.17.0
+aiohomeconnect==0.17.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.14
@@ -268,7 +268,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.6.0
+aioimmich==0.7.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -390,7 +390,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.2
 
 # homeassistant.components.tedee
-aiotedee==0.2.20
+aiotedee==0.2.23
 
 # homeassistant.components.tractive
 aiotractive==0.6.0
@@ -1534,7 +1534,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.9.0
+pyaprilaire==0.9.1
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -1568,6 +1568,9 @@ pybravia==0.3.4
 
 # homeassistant.components.cloudflare
 pycfdns==3.0.0
+
+# homeassistant.components.tensorflow
+# pycocotools==2.0.6
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.5.1
@@ -1699,7 +1702,7 @@ pyipp==0.17.0
 pyiqvia==2022.04.0
 
 # homeassistant.components.iskra
-pyiskra==0.1.15
+pyiskra==0.1.19
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -1869,7 +1872,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.0.0
+pyprobeplus==1.0.1
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2022,7 +2025,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.8
+python-linkplay==0.2.9
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2357,7 +2360,7 @@ subarulink==0.7.13
 surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.3.1
+switchbot-api==2.4.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==4.1.5
@@ -2377,10 +2380,13 @@ temescal==0.5
 # homeassistant.components.temper
 temperusb==1.6.1
 
+# homeassistant.components.tensorflow
+# tensorflow==2.5.0
+
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.0.17
+tesla-fleet-api==1.1.1
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2393,6 +2399,9 @@ teslemetry-stream==0.7.9
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
+
+# homeassistant.components.tensorflow
+# tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.10.0

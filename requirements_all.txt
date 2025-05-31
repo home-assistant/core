@@ -268,7 +268,7 @@ aioharmony==0.5.2
 aiohasupervisor==0.3.1
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.17.0
+aiohomeconnect==0.17.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.14
@@ -283,7 +283,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.6.0
+aioimmich==0.7.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -408,7 +408,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.2
 
 # homeassistant.components.tedee
-aiotedee==0.2.20
+aiotedee==0.2.23
 
 # homeassistant.components.tractive
 aiotractive==0.6.0
@@ -1835,7 +1835,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.9.0
+pyaprilaire==0.9.1
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -2054,7 +2054,7 @@ pyiqvia==2022.04.0
 pyirishrail==0.0.2
 
 # homeassistant.components.iskra
-pyiskra==0.1.15
+pyiskra==0.1.19
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -2254,7 +2254,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.0.0
+pyprobeplus==1.0.1
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2458,7 +2458,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.8
+python-linkplay==0.2.9
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2865,7 +2865,7 @@ surepy==0.9.0
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.3.1
+switchbot-api==2.4.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
@@ -2906,7 +2906,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.0.17
+tesla-fleet-api==1.1.1
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
