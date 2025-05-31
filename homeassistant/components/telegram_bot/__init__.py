@@ -186,7 +186,6 @@ SERVICE_SCHEMA_SEND_POLL = vol.Schema(
 
 SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend(
     {
-        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
