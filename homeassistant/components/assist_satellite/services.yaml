@@ -54,3 +54,29 @@ start_conversation:
       required: false
       selector:
         text:
+get_response:
+  target:
+    entity:
+      domain: assist_satellite
+      supported_features:
+        - assist_satellite.AssistSatelliteEntityFeature.GET_RESPONSE
+  fields:
+    start_message:
+      required: false
+      example: "Please confirm with your PIN code."
+      default: ""
+      selector:
+        text:
+    start_media_id:
+      required: false
+      selector:
+        text:
+    preannounce:
+      required: false
+      default: true
+      selector:
+        boolean:
+    preannounce_media_id:
+      required: false
+      selector:
+        text:
