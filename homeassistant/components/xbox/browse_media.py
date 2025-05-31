@@ -18,6 +18,7 @@ from xbox.webapi.api.provider.smartglass.models import (
 )
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
+from .const import WEB_REQUEST_TIMEOUT_SEC
 
 
 class MediaTypeDetails(NamedTuple):
@@ -47,7 +48,9 @@ async def build_item_response(
     media_content_id: str,
 ) -> BrowseMedia | None:
     """Create response payload for the provided media query."""
-    apps: InstalledPackagesList = await client.smartglass.get_installed_apps(device_id)
+    apps: InstalledPackagesList = await client.smartglass.get_installed_apps(
+        device_id, timeout=WEB_REQUEST_TIMEOUT_SEC
+    )
 
     if media_content_type in (None, "library"):
         children: list[BrowseMedia] = []
@@ -65,7 +68,7 @@ async def build_item_response(
         id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
         home_catalog: CatalogResponse = (
             await client.catalog.get_product_from_alternate_id(
-                HOME_APP_IDS[id_type], id_type
+                HOME_APP_IDS[id_type], id_type, timeout=WEB_REQUEST_TIMEOUT_SEC
             )
         )
         home_thumb = _find_media_image(
@@ -89,6 +92,7 @@ async def build_item_response(
                 await client.catalog.get_product_from_alternate_id(
                     SYSTEM_PFN_ID_MAP["Microsoft.Xbox.LiveTV_8wekyb3d8bbwe"][id_type],
                     id_type,
+                    timeout=WEB_REQUEST_TIMEOUT_SEC,
                 )
             )
             tv_thumb = _find_media_image(
@@ -131,6 +135,7 @@ async def build_item_response(
             if app.content_type == media_content_id and app.one_store_product_id
         ],
         FieldsTemplate.BROWSE,
+        timeout=WEB_REQUEST_TIMEOUT_SEC,
     )
 
     images = {

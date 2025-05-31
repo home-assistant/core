@@ -24,7 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, WEB_REQUEST_TIMEOUT_SEC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +93,9 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
         for console in self.consoles.result:
             current_state: ConsoleData | None = self.data.consoles.get(console.id)
             status: SmartglassConsoleStatus = (
-                await self.client.smartglass.get_console_status(console.id)
+                await self.client.smartglass.get_console_status(
+                    console.id, timeout=WEB_REQUEST_TIMEOUT_SEC
+                )
             )
 
             _LOGGER.debug(
@@ -119,7 +121,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                         app_id = SYSTEM_PFN_ID_MAP[app_id][id_type]
                     catalog_result = (
                         await self.client.catalog.get_product_from_alternate_id(
-                            app_id, id_type
+                            app_id, id_type, timeout=WEB_REQUEST_TIMEOUT_SEC
                         )
                     )
                     if catalog_result and catalog_result.products:
@@ -134,12 +136,14 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
         # Update user presence
         presence_data: dict[str, PresenceData] = {}
         batch: PeopleResponse = await self.client.people.get_friends_own_batch(
-            [self.client.xuid]
+            [self.client.xuid], timeout=WEB_REQUEST_TIMEOUT_SEC
         )
         own_presence: Person = batch.people[0]
         presence_data[own_presence.xuid] = _build_presence_data(own_presence)
 
-        friends: PeopleResponse = await self.client.people.get_friends_own()
+        friends: PeopleResponse = await self.client.people.get_friends_own(
+            timeout=WEB_REQUEST_TIMEOUT_SEC
+        )
         for friend in friends.people:
             if not friend.is_favorite:
                 continue
