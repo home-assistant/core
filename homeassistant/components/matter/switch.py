@@ -116,6 +116,11 @@ class MatterGenericCommandSwitch(MatterSwitch):
 
 
 @dataclass(frozen=True)
+class MatterSwitchEntityDescription(SwitchEntityDescription, MatterEntityDescription):
+    """Describe Matter Switch entities."""
+
+
+@dataclass(frozen=True)
 class MatterGenericCommandSwitchEntityDescription(
     SwitchEntityDescription, MatterEntityDescription
 ):
@@ -168,10 +173,11 @@ class MatterNumericSwitch(MatterSwitch):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterPlug",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
+            name_using_matter_labels=["Label", "orientation"],
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
@@ -179,7 +185,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterPowerToggle",
             device_class=SwitchDeviceClass.SWITCH,
             translation_key="power",
@@ -208,10 +214,11 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterSwitch",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
+            name_using_matter_labels=["Label"],
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
