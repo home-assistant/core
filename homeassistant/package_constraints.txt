@@ -194,6 +194,10 @@ scapy>=2.6.1
 # https://github.com/theupdateframework/python-tuf/releases/tag/v4.0.0
 tuf>=4.0.0
 
+# pyserial-asyncio does blocking I/O in asyncio loop, use pyserial-asyncio-fast
+# instead as pyserial-asyncio is not maintained
+pyserial-asyncio==1000000000.0.0
+
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
 
