@@ -86,7 +86,10 @@ async def test_invalid_auth(
 
 
 async def test_device_exists_abort(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connection: MagicMock
+    hass: HomeAssistant,
+    mock_setup_entry,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
 ) -> None:
     """Test we abort config flow if Smarla device already configured."""
     mock_config_entry.add_to_hass(hass)

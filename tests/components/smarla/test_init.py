@@ -10,8 +10,23 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+async def test_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_federwiege: MagicMock
+) -> None:
+    """Test the smarla integration setup."""
+    assert await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_init_invalid_auth(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connection: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_federwiege: MagicMock,
 ) -> None:
     """Test init invalid authentication behavior."""
     mock_connection.refresh_token.return_value = False
