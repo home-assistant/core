@@ -19,9 +19,7 @@ type JewishCalendarConfigEntry = ConfigEntry[JewishCalendarData]
 class JewishCalendarDataResults:
     """Jewish Calendar results dataclass."""
 
-    daytime_date: HDateInfo
-    after_shkia_date: HDateInfo
-    after_tzais_date: HDateInfo
+    dateinfo: HDateInfo
     zmanim: Zmanim
 
 
