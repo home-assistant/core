@@ -36,7 +36,6 @@ class TiltEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: Final[list[TiltEntityDescription]] = [
     TiltEntityDescription(
         key=ATTR_TEMPERATURE,
-        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -44,7 +43,7 @@ SENSOR_TYPES: Final[list[TiltEntityDescription]] = [
     ),
     TiltEntityDescription(
         key=ATTR_GRAVITY,
-        name="Gravity",
+        translation_key="gravity",
         native_unit_of_measurement="SG",
         icon="mdi:water",
         state_class=SensorStateClass.MEASUREMENT,

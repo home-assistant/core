@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_sensors[sensor.tilt_black_gravity-entry]
+# name: test_all_sensors[sensor.tilt_black_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tilt_black_gravity',
+    'entity_id': 'sensor.tilt_black_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -26,25 +26,25 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:water',
-    'original_name': 'Gravity',
+    'original_name': None,
     'platform': 'tilt_pi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'gravity',
     'unique_id': '00:1A:2B:3C:4D:5E_gravity',
     'unit_of_measurement': 'SG',
   })
 # ---
-# name: test_all_sensors[sensor.tilt_black_gravity-state]
+# name: test_all_sensors[sensor.tilt_black_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Tilt Black Gravity',
+      'friendly_name': 'Tilt Black None',
       'icon': 'mdi:water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'SG',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tilt_black_gravity',
+    'entity_id': 'sensor.tilt_black_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -103,7 +103,7 @@
     'state': '12.8',
   })
 # ---
-# name: test_all_sensors[sensor.tilt_yellow_gravity-entry]
+# name: test_all_sensors[sensor.tilt_yellow_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -118,7 +118,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tilt_yellow_gravity',
+    'entity_id': 'sensor.tilt_yellow_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -130,25 +130,25 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:water',
-    'original_name': 'Gravity',
+    'original_name': None,
     'platform': 'tilt_pi',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'gravity',
     'unique_id': '00:1s:99:f1:d2:4f_gravity',
     'unit_of_measurement': 'SG',
   })
 # ---
-# name: test_all_sensors[sensor.tilt_yellow_gravity-state]
+# name: test_all_sensors[sensor.tilt_yellow_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Tilt Yellow Gravity',
+      'friendly_name': 'Tilt Yellow None',
       'icon': 'mdi:water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'SG',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tilt_yellow_gravity',
+    'entity_id': 'sensor.tilt_yellow_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
