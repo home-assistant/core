@@ -323,22 +323,23 @@ async def test_mode_validation(
     assert state.attributes.get(ATTR_SWING_MODE) == "off"
     assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == "off"
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {
-            "entity_id": "climate.test",
-            "hvac_mode": "auto",
-        },
-        blocking=True,
-    )
-
+    with pytest.raises(
+        ServiceValidationError,
+        match="HVAC mode auto is not valid. Valid HVAC modes are: off, heat",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                "entity_id": "climate.test",
+                "hvac_mode": "auto",
+            },
+            blocking=True,
+        )
     assert (
-        "MockClimateEntity sets the hvac_mode auto which is not valid "
-        "for this entity with modes: off, heat. This will stop working "
-        "in 2025.4 and raise an error instead. "
-        "Please" in caplog.text
+        str(exc.value) == "HVAC mode auto is not valid. Valid HVAC modes are: off, heat"
     )
+    assert exc.value.translation_key == "not_valid_hvac_mode"
 
     with pytest.raises(
         ServiceValidationError,
