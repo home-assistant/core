@@ -774,15 +774,3 @@ delete_message:
       example: 12345
       selector:
         text:
-
-leave_chat:
-  fields:
-    config_entry_id:
-      selector:
-        config_entry:
-          integration: telegram_bot
-    chat_id:
-      required: true
-      example: 12345
-      selector:
-        text:

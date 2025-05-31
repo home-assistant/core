@@ -41,9 +41,6 @@
     },
     "delete_message": {
       "service": "mdi:delete"
-    },
-    "leave_chat": {
-      "service": "mdi:exit-run"
     }
   }
 }

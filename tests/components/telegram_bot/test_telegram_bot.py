@@ -298,8 +298,10 @@ async def test_polling_platform_message_text_update(
         application = (
             application_builder_class.return_value.bot.return_value.build.return_value
         )
+        application.updater.start_polling = AsyncMock()
         application.updater.stop = AsyncMock()
         application.initialize = AsyncMock()
+        application.start = AsyncMock()
         application.stop = AsyncMock()
         application.shutdown = AsyncMock()
 
