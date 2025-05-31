@@ -1699,7 +1699,7 @@ pyipp==0.17.0
 pyiqvia==2022.04.0
 
 # homeassistant.components.iskra
-pyiskra==0.1.15
+pyiskra==0.1.19
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -1869,7 +1869,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.0.0
+pyprobeplus==1.0.1
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2019,7 +2019,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.8
+python-linkplay==0.2.9
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2354,7 +2354,7 @@ subarulink==0.7.13
 surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.3.1
+switchbot-api==2.4.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==4.1.5
@@ -2380,7 +2380,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.0.17
+tesla-fleet-api==1.1.1
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
