@@ -151,6 +151,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="motion_enabled",
         translation_key="detections_motion",
         icon="mdi:run-fast",
+        entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="recording_settings.enable_motion_detection",
         ufp_perm=PermRequired.NO_WRITE,
     ),
