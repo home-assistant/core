@@ -37,7 +37,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTRIBUTION,
-    CONDITION_MAP,
+    CONDITION_MAP_DAILY,
+    CONDITION_MAP_HOURLY,
     COORDINATOR_FORECAST,
     DOMAIN,
     FORECAST_MODE_DAILY,
@@ -49,9 +50,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def format_condition(condition: str):
-    """Return condition from dict CONDITION_MAP."""
-    return CONDITION_MAP.get(condition, condition)
+def format_condition_hourly(condition: str):
+    """Return condition from dict CONDITION_MAP_HOURLY."""
+    return CONDITION_MAP_HOURLY.get(condition, condition)
+
+
+def format_condition_daily(condition: str):
+    """Return condition from dict CONDITION_MAP_DAILY."""
+    return CONDITION_MAP_DAILY.get(condition, condition)
 
 
 async def async_setup_entry(
@@ -137,7 +143,7 @@ class MeteoFranceWeather(
     @property
     def condition(self):
         """Return the current condition."""
-        return format_condition(
+        return format_condition_hourly(
             self.coordinator.data.current_forecast["weather"]["desc"]
         )
 
@@ -189,7 +195,7 @@ class MeteoFranceWeather(
                         ATTR_FORECAST_TIME: dt_util.utc_from_timestamp(
                             forecast["dt"]
                         ).isoformat(),
-                        ATTR_FORECAST_CONDITION: format_condition(
+                        ATTR_FORECAST_CONDITION: format_condition_hourly(
                             forecast["weather"]["desc"]
                         ),
                         ATTR_FORECAST_HUMIDITY: forecast["humidity"],
@@ -211,7 +217,7 @@ class MeteoFranceWeather(
                         ATTR_FORECAST_TIME: dt_util.utc_from_timestamp(
                             forecast["dt"]
                         ).isoformat(),
-                        ATTR_FORECAST_CONDITION: format_condition(
+                        ATTR_FORECAST_CONDITION: format_condition_daily(
                             forecast["weather12H"]["desc"]
                         ),
                         ATTR_FORECAST_HUMIDITY: forecast["humidity"]["max"],
