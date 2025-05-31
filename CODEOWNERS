@@ -55,6 +55,8 @@ build.json @home-assistant/supervisor
 /tests/components/advantage_air/ @Bre77
 /homeassistant/components/aemet/ @Noltari
 /tests/components/aemet/ @Noltari
+/homeassistant/components/aeroflex/ @iddora
+/tests/components/aeroflex/ @iddora
 /homeassistant/components/agent_dvr/ @ispysoftware
 /tests/components/agent_dvr/ @ispysoftware
 /homeassistant/components/air_quality/ @home-assistant/core

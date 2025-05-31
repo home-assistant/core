@@ -88,6 +88,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "aeroflex": {
+      "name": "Aeroflex Adjustable Bed",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "aftership": {
       "name": "AfterShip",
       "integration_type": "hub",
