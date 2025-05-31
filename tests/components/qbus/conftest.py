@@ -1,10 +1,13 @@
 """Test fixtures for qbus."""
 
+from collections.abc import Generator
 import json
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.qbus.const import CONF_SERIAL_NUMBER, DOMAIN
+from homeassistant.components.qbus.entity import QbusEntity
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonObjectType
@@ -16,6 +19,7 @@ from tests.common import (
     async_fire_mqtt_message,
     load_json_object_fixture,
 )
+from tests.typing import MqttMockHAClient
 
 
 @pytest.fixture
@@ -40,8 +44,16 @@ def payload_config() -> JsonObjectType:
 
 
 @pytest.fixture
+def mock_publish_state() -> Generator[AsyncMock]:
+    """Return a mocked publish state call."""
+    with patch.object(QbusEntity, "_async_publish_output_state") as mock:
+        yield mock
+
+
+@pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
     mock_config_entry: MockConfigEntry,
     payload_config: JsonObjectType,
 ) -> None:
