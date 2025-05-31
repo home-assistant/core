@@ -7,15 +7,22 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    UnitOfEnergy,
+)
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 from .const import (
     CONF_AZIMUTH,
@@ -24,6 +31,8 @@ from .const import (
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
+    CONF_SEND_ACTUALS,
+    CONF_TODAY_ENERGY_GENERATION_ENTITY_ID,
     DOMAIN,
 )
 
@@ -97,11 +106,42 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
         """Manage the options."""
         errors = {}
         if user_input is not None:
+            # Validate API key
             if (api_key := user_input.get(CONF_API_KEY)) and RE_API_KEY.match(
                 api_key
             ) is None:
                 errors[CONF_API_KEY] = "invalid_api_key"
-            else:
+
+            # Validate CONF_TODAY_ENERGY_GENERATION_ENTITY_ID
+            entity_id = user_input.get(CONF_TODAY_ENERGY_GENERATION_ENTITY_ID)
+            if entity_id:
+                entity_registry = er.async_get(self.hass)
+                entity_entry = entity_registry.async_get(entity_id)
+                if not entity_entry:
+                    errors[CONF_TODAY_ENERGY_GENERATION_ENTITY_ID] = "entity_not_found"
+                elif entity_entry.original_device_class != SensorDeviceClass.ENERGY:
+                    errors[CONF_TODAY_ENERGY_GENERATION_ENTITY_ID] = (
+                        f"invalid device class. Needs to be Energy, currently: {entity_entry.original_device_class}"
+                    )
+                elif entity_entry.unit_of_measurement != UnitOfEnergy.KILO_WATT_HOUR:
+                    errors[CONF_TODAY_ENERGY_GENERATION_ENTITY_ID] = (
+                        f"invalid unit needs to be kWh, currently: {entity_entry.unit_of_measurement}"
+                    )
+                elif (
+                    not entity_entry.capabilities
+                    or entity_entry.capabilities.get("state_class")
+                    != "total_increasing"
+                ):
+                    state_class = (
+                        entity_entry.capabilities.get("state_class")
+                        if entity_entry.capabilities
+                        else None
+                    )
+                    errors[CONF_TODAY_ENERGY_GENERATION_ENTITY_ID] = (
+                        f"invalid_state_class. Needs to be total_increasing, currently: {state_class}"
+                    )
+            # If no errors, save the options
+            if not errors:
                 return self.async_create_entry(
                     title="", data=user_input | {CONF_API_KEY: api_key or None}
                 )
@@ -150,6 +190,22 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                             )
                         },
                     ): vol.Coerce(int),
+                    vol.Optional(
+                        CONF_SEND_ACTUALS,
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_SEND_ACTUALS, False
+                            )
+                        },
+                    ): vol.Coerce(bool),
+                    vol.Optional(
+                        CONF_TODAY_ENERGY_GENERATION_ENTITY_ID,
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_TODAY_ENERGY_GENERATION_ENTITY_ID, False
+                            )
+                        },
+                    ): str,
                 }
             ),
             errors=errors,

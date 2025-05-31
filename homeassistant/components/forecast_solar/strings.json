@@ -28,7 +28,9 @@
           "damping_evening": "Damping factor: adjusts the results in the evening",
           "inverter_size": "Inverter size (Watt)",
           "declination": "[%key:component::forecast_solar::config::step::user::data::declination%]",
-          "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]"
+          "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]",
+          "send_actuals": "Send actuals to Forecast.Solar",
+          "today_energy_generation_entity_id": "Energy generation today entity ID"
         }
       }
     }
