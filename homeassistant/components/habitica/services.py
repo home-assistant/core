@@ -29,7 +29,7 @@ import voluptuous as vol
 
 from homeassistant.components.todo import ATTR_RENAME
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_DATE, ATTR_NAME, CONF_NAME
+from homeassistant.const import ATTR_DATE, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -38,28 +38,24 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_ADD_CHECKLIST_ITEM,
     ATTR_ALIAS,
-    ATTR_ARGS,
     ATTR_CLEAR_DATE,
     ATTR_CLEAR_REMINDER,
     ATTR_CONFIG_ENTRY,
     ATTR_COST,
     ATTR_COUNTER_DOWN,
     ATTR_COUNTER_UP,
-    ATTR_DATA,
     ATTR_DIRECTION,
     ATTR_FREQUENCY,
     ATTR_INTERVAL,
     ATTR_ITEM,
     ATTR_KEYWORD,
     ATTR_NOTES,
-    ATTR_PATH,
     ATTR_PRIORITY,
     ATTR_REMINDER,
     ATTR_REMOVE_CHECKLIST_ITEM,
@@ -78,10 +74,8 @@ from .const import (
     ATTR_UNSCORE_CHECKLIST_ITEM,
     ATTR_UP_DOWN,
     DOMAIN,
-    EVENT_API_CALL_SUCCESS,
     SERVICE_ABORT_QUEST,
     SERVICE_ACCEPT_QUEST,
-    SERVICE_API_CALL,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
     SERVICE_CREATE_DAILY,
@@ -105,14 +99,6 @@ from .coordinator import HabiticaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-
-SERVICE_API_CALL_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_NAME): str,
-        vol.Required(ATTR_PATH): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_ARGS): dict,
-    }
-)
 
 SERVICE_CAST_SKILL_SCHEMA = vol.Schema(
     {
@@ -265,46 +251,6 @@ def get_config_entry(hass: HomeAssistant, entry_id: str) -> HabiticaConfigEntry:
 
 def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Set up services for Habitica integration."""
-
-    async def handle_api_call(call: ServiceCall) -> None:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_api_call",
-            breaks_in_ha_version="2025.6.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_api_call",
-        )
-        _LOGGER.warning(
-            "Deprecated action called: 'habitica.api_call' is deprecated and will be removed in Home Assistant version 2025.6.0"
-        )
-
-        name = call.data[ATTR_NAME]
-        path = call.data[ATTR_PATH]
-        entries: list[HabiticaConfigEntry] = hass.config_entries.async_entries(DOMAIN)
-
-        api = None
-        for entry in entries:
-            if entry.data[CONF_NAME] == name:
-                api = await entry.runtime_data.habitica.habitipy()
-                break
-        if api is None:
-            _LOGGER.error("API_CALL: User '%s' not configured", name)
-            return
-        try:
-            for element in path:
-                api = api[element]
-        except KeyError:
-            _LOGGER.error(
-                "API_CALL: Path %s is invalid for API on '{%s}' element", path, element
-            )
-            return
-        kwargs = call.data.get(ATTR_ARGS, {})
-        data = await api(**kwargs)
-        hass.bus.async_fire(
-            EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
-        )
 
     async def cast_skill(call: ServiceCall) -> ServiceResponse:
         """Skill action."""
@@ -928,12 +874,6 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             schema=SERVICE_CREATE_TASK_SCHEMA,
             supports_response=SupportsResponse.ONLY,
         )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_API_CALL,
-        handle_api_call,
-        schema=SERVICE_API_CALL_SCHEMA,
-    )
 
     hass.services.async_register(
         DOMAIN,

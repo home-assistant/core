@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.matter.binary_sensor import (
     DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS,
@@ -197,3 +197,63 @@ async def test_evse_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
+async def test_water_heater(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test water heater sensor."""
+    # BoostState
+    state = hass.states.get("binary_sensor.water_heater_boost_state")
+    assert state
+    assert state.state == "off"
+
+    set_node_attribute(matter_node, 2, 148, 5, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.water_heater_boost_state")
+    assert state
+    assert state.state == "on"
+
+
+@pytest.mark.parametrize("node_fixture", ["pump"])
+async def test_pump(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test pump sensors."""
+    # PumpStatus
+    state = hass.states.get("binary_sensor.mock_pump_running")
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(matter_node, 1, 512, 16, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.mock_pump_running")
+    assert state
+    assert state.state == "off"
+
+    # PumpStatus --> DeviceFault bit
+    state = hass.states.get("binary_sensor.mock_pump_problem")
+    assert state
+    assert state.state == "unknown"
+
+    set_node_attribute(matter_node, 1, 512, 16, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.mock_pump_problem")
+    assert state
+    assert state.state == "on"
+
+    # PumpStatus --> SupplyFault bit
+    set_node_attribute(matter_node, 1, 512, 16, 2)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.mock_pump_problem")
+    assert state
+    assert state.state == "on"

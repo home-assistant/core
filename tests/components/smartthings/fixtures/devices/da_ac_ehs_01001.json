@@ -1,0 +1,229 @@
+{
+  "items": [
+    {
+      "deviceId": "4165c51e-bf6b-c5b6-fd53-127d6248754b",
+      "name": "Samsung EHS",
+      "label": "Heat pump",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-AC-EHS-01001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "23dad822-0b66-4821-af2d-79ef502f5231",
+      "ownerId": "9dd8c4fa-c07c-f66d-ccdb-20eca3411b12",
+      "roomId": "a2d70c20-12aa-48bc-958b-3d47c9b6cffc",
+      "deviceTypeName": "oic.d.thermostat",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "airConditionerMode",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "demandResponseLoadControl",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "custom.energyType",
+              "version": 1
+            },
+            {
+              "id": "custom.outingMode",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceReportStateConfiguration",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "samsungce.alwaysOnSensing",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sacDisplayCondition",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sensingOnSuspendMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsFsvSettings",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsCycleData",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsTemperatureReference",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsThermostat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.individualControlLock",
+              "version": 1
+            },
+            {
+              "id": "samsungce.toggleSwitch",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Thermostat",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "INDOOR1",
+          "label": "INDOOR1",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "airConditionerMode",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsTemperatureReference",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsThermostat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sacDisplayCondition",
+              "version": 1
+            },
+            {
+              "id": "samsungce.toggleSwitch",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2025-04-13T13:00:48.941Z",
+      "profile": {
+        "id": "e6f1cf68-e4bf-3e35-9f17-288a4e5ee0cb"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.thermostat",
+        "name": "Samsung EHS",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "1.2.1",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "TP1X_DA_AC_EHS_01001_0000|10250141|60070110001711034A00010000002000",
+        "platformVersion": "DAWIT 2.0",
+        "platformOS": "TizenRT 3.1",
+        "hwVersion": "Realtek",
+        "firmwareVersion": "AEH-WW-TP1-22-AE6000_17240903",
+        "vendorId": "DA-AC-EHS-01001",
+        "vendorResourceClientServerVersion": "Realtek Release 3.1.240221",
+        "lastSignupTime": "2025-04-13T13:00:48.876846635Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "indoorMap": {
+        "coordinates": [0.0, 0.0, 0.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "visible": false,
+        "data": null
+      },
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

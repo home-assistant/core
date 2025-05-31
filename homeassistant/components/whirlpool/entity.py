@@ -12,6 +12,7 @@ class WhirlpoolEntity(Entity):
     """Base class for Whirlpool entities."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, appliance: Appliance, unique_id_suffix: str = "") -> None:
         """Initialize the entity."""
