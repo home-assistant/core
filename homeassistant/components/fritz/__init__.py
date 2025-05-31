@@ -15,6 +15,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_FEATURE_DEVICE_TRACKING,
+    DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
     DEFAULT_SSL,
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
@@ -38,6 +40,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bool:
     """Set up fritzboxtools from config entry."""
     _LOGGER.debug("Setting up FRITZ!Box Tools component")
+
     avm_wrapper = AvmWrapper(
         hass=hass,
         config_entry=entry,
@@ -46,6 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
         use_tls=entry.data.get(CONF_SSL, DEFAULT_SSL),
+        device_discovery_enabled=entry.options.get(
+            CONF_FEATURE_DEVICE_TRACKING, DEFAULT_CONF_FEATURE_DEVICE_TRACKING
+        ),
     )
 
     try:
@@ -62,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
         raise ConfigEntryAuthFailed("Missing UPnP configuration")
 
     await avm_wrapper.async_config_entry_first_refresh()
+    await avm_wrapper.async_trigger_cleanup()
 
     entry.runtime_data = avm_wrapper
 

@@ -23,6 +23,7 @@ class LcnEntity(Entity):
     """Parent class for all entities associated with the LCN component."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
     device_connection: DeviceConnectionType
 
     def __init__(

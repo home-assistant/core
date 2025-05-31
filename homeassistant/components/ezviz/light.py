@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyezviz.constants import DeviceCatagories, DeviceSwitchType, SupportExt
-from pyezviz.exceptions import HTTPError, PyEzvizError
+from pyezvizapi.constants import DeviceCatagories, DeviceSwitchType, SupportExt
+from pyezvizapi.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback

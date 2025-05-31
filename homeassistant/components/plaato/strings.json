@@ -14,7 +14,7 @@
         "description": "To be able to query the API an 'auth token' is required which can be obtained by following [these instructions]({auth_token_url})\n\nSelected device: **{device_type}** \n\nIf you prefer to use the built-in webhook method (Airlock only) please check the box below and leave 'Auth token' blank",
         "data": {
           "use_webhook": "Use webhook",
-          "token": "Paste Auth Token here"
+          "token": "Auth token"
         }
       },
       "webhook": {

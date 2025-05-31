@@ -27,6 +27,7 @@
     'original_name': None,
     'platform': 'slide_local',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
     'unique_id': '1234567890ab',

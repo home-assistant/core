@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 import whirlpool
 
 from homeassistant.components.climate import (

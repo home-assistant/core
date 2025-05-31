@@ -1,6 +1,6 @@
 """Tests for the diagnostics data provided by the Fronius integration."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant

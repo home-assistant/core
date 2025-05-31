@@ -2019,6 +2019,34 @@ def add(value, amount, default=_SENTINEL):
         return default
 
 
+def apply(value, fn, *args, **kwargs):
+    """Call the given callable with the provided arguments and keyword arguments."""
+    return fn(value, *args, **kwargs)
+
+
+def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
+    """Turn a macro with a 'returns' keyword argument into a function that returns what that argument is called with."""
+
+    def wrapper(value, *args, **kwargs):
+        return_value = None
+
+        def returns(value):
+            nonlocal return_value
+            return_value = value
+            return value
+
+        # Call the callable with the value and other args
+        macro(value, *args, **kwargs, returns=returns)
+        return return_value
+
+    # Remove "macro_" from the macro's name to avoid confusion in the wrapper's name
+    trimmed_name = macro.name.removeprefix("macro_")
+
+    wrapper.__name__ = trimmed_name
+    wrapper.__qualname__ = trimmed_name
+    return wrapper
+
+
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
@@ -2572,9 +2600,16 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
         return None
 
 
-def base64_encode(value: str) -> str:
+def from_hex(value: str) -> bytes:
+    """Perform hex string decode."""
+    return bytes.fromhex(value)
+
+
+def base64_encode(value: str | bytes) -> str:
     """Perform base64 encode."""
-    return base64.b64encode(value.encode("utf-8")).decode("utf-8")
+    if isinstance(value, str):
+        value = value.encode("utf-8")
+    return base64.b64encode(value).decode("utf-8")
 
 
 def base64_decode(value: str, encoding: str | None = "utf-8") -> str | bytes:
@@ -3057,9 +3092,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             str | jinja2.nodes.Template, CodeType | None
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
+        self.add_extension("jinja2.ext.do")
 
         self.globals["acos"] = arc_cosine
         self.globals["as_datetime"] = as_datetime
+        self.globals["as_function"] = as_function
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
@@ -3110,7 +3147,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.filters["acos"] = arc_cosine
         self.filters["add"] = add
+        self.filters["apply"] = apply
         self.filters["as_datetime"] = as_datetime
+        self.filters["as_function"] = as_function
         self.filters["as_local"] = dt_util.as_local
         self.filters["as_timedelta"] = as_timedelta
         self.filters["as_timestamp"] = forgiving_as_timestamp
@@ -3131,6 +3170,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["flatten"] = flatten
         self.filters["float"] = forgiving_float_filter
         self.filters["from_json"] = from_json
+        self.filters["from_hex"] = from_hex
         self.filters["iif"] = iif
         self.filters["int"] = forgiving_int_filter
         self.filters["intersect"] = intersect
@@ -3169,6 +3209,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
+        self.tests["apply"] = apply
         self.tests["contains"] = contains
         self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number

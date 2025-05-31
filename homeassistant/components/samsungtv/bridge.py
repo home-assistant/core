@@ -46,6 +46,7 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_component
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -53,6 +54,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_SESSION_ID,
+    DOMAIN,
     ENCRYPTED_WEBSOCKET_PORT,
     LEGACY_PORT,
     LOGGER,
@@ -371,9 +373,13 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 except (ConnectionClosed, BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast
                     self._remote = None
-        except (UnhandledResponse, AccessDenied):
+        except (UnhandledResponse, AccessDenied) as err:
             # We got a response so it's on.
-            LOGGER.debug("Failed sending command %s", key, exc_info=True)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_sending_command",
+                translation_placeholders={"error": repr(err), "host": self.host},
+            ) from err
         except OSError:
             # Different reasons, e.g. hostname not resolveable
             pass

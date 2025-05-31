@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
 
-from .const import DOMAIN as KALEIDESCAPE_DOMAIN
+from .const import DOMAIN
 from .entity import KaleidescapeEntity
 
 if TYPE_CHECKING:
@@ -136,7 +136,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from a config entry."""
-    device: KaleidescapeDevice = hass.data[KALEIDESCAPE_DOMAIN][entry.entry_id]
+    device: KaleidescapeDevice = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         KaleidescapeSensor(device, description) for description in SENSOR_TYPES
     )

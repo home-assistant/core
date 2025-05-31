@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from airgradient import AirGradientError, Measures
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform

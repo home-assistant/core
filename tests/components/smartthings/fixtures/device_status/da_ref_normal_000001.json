@@ -574,7 +574,7 @@
       },
       "samsungce.powerCool": {
         "activated": {
-          "value": false,
+          "value": true,
           "timestamp": "2025-01-19T21:07:55.725Z"
         }
       },

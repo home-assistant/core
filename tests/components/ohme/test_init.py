@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ohme.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState

@@ -61,7 +61,7 @@
         },
         "data_description": {
           "name": "Used to distinguish between notification services in case there are multiple Huawei LTE devices configured. Changes to this option value take effect after Home Assistant restart.",
-          "recipient": "Comma separated list of default recipient SMS phone numbers for the notification service, used in case the notification sender does not specify any.",
+          "recipient": "Comma-separated list of default recipient SMS phone numbers for the notification service, used in case the notification sender does not specify any.",
           "track_wired_clients": "Whether the device tracker entities track also clients attached to the router's wired Ethernet network, in addition to wireless clients.",
           "unauthenticated_mode": "Whether to run in unauthenticated mode. Unauthenticated mode provides a limited set of features, but may help in case there are problems accessing the router's web interface from a browser while the integration is active. Changes to this option value take effect after integration reload."
         }

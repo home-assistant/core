@@ -283,26 +283,6 @@ def get_device_config(
     return None
 
 
-def is_address(value: str) -> tuple[AddressType, str]:
-    """Validate the given address string.
-
-    Examples for S000M005 at myhome:
-        myhome.s000.m005
-        myhome.s0.m5
-        myhome.0.5    ("m" is implicit if missing)
-
-    Examples for s000g011
-        myhome.0.g11
-        myhome.s0.g11
-    """
-    if matcher := PATTERN_ADDRESS.match(value):
-        is_group = matcher.group("type") == "g"
-        addr = (int(matcher.group("seg_id")), int(matcher.group("id")), is_group)
-        conn_id = matcher.group("conn_id")
-        return addr, conn_id
-    raise ValueError(f"{value} is not a valid address string")
-
-
 def is_states_string(states_string: str) -> list[str]:
     """Validate the given states string and return states list."""
     if len(states_string) != 8:

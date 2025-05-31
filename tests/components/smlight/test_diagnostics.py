@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smlight.const import DOMAIN
 from homeassistant.core import HomeAssistant

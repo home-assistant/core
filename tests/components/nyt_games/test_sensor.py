@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from nyt_games import NYTGamesError, WordleStats
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nyt_games.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE

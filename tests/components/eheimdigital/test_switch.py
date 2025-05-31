@@ -11,8 +11,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -77,29 +75,58 @@ async def test_turn_on_off(
         blocking=True,
     )
 
-    classic_vario_mock.set_active.assert_awaited_once_with(active=active)
+    calls = [
+        call for call in classic_vario_mock.hub.mock_calls if call[0] == "send_packet"
+    ]
+    assert len(calls) == 1
+    assert calls[0][1][0].get("filterActive") == int(active)
 
 
+@pytest.mark.usefixtures("classic_vario_mock")
+@pytest.mark.parametrize(
+    ("device_name", "entity_list"),
+    [
+        (
+            "classic_vario_mock",
+            [
+                (
+                    "switch.mock_classicvario",
+                    "classic_vario_data",
+                    "filterActive",
+                    1,
+                    "on",
+                ),
+                (
+                    "switch.mock_classicvario",
+                    "classic_vario_data",
+                    "filterActive",
+                    0,
+                    "off",
+                ),
+            ],
+        ),
+    ],
+)
 async def test_state_update(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
-    classic_vario_mock: MagicMock,
+    device_name: str,
+    entity_list: list[tuple[str, str, str, float, float]],
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test the switch state update."""
+    device: MagicMock = request.getfixturevalue(device_name)
     await init_integration(hass, mock_config_entry)
 
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
-        "00:00:00:00:00:03", EheimDeviceType.VERSION_EHEIM_CLASSIC_VARIO
+        device.mac_address, device.device_type
     )
+
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get("switch.mock_classicvario"))
-    assert state.state == STATE_ON
-
-    classic_vario_mock.is_active = False
-
-    await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
-
-    assert (state := hass.states.get("switch.mock_classicvario"))
-    assert state.state == STATE_OFF
+    for item in entity_list:
+        getattr(device, item[1])[item[2]] = item[3]
+        await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
+        assert (state := hass.states.get(item[0]))
+        assert state.state == str(item[4])

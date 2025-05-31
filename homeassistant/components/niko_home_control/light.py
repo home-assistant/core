@@ -110,11 +110,11 @@ class NikoHomeControlLight(NikoHomeControlEntity, LightEntity):
         if action.is_dimmable:
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-            self._attr_brightness = round(action.state * 2.55)
+            self._attr_brightness = action.state
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        await self._action.turn_on(round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55))
+        await self._action.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
@@ -125,4 +125,4 @@ class NikoHomeControlLight(NikoHomeControlEntity, LightEntity):
         state = self._action.state
         self._attr_is_on = state > 0
         if brightness_supported(self.supported_color_modes):
-            self._attr_brightness = round(state * 2.55)
+            self._attr_brightness = state

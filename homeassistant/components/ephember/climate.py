@@ -11,7 +11,6 @@ from pyephember2.pyephember2 import (
     ZoneMode,
     zone_current_temperature,
     zone_is_active,
-    zone_is_boost_active,
     zone_is_hotwater,
     zone_mode,
     zone_name,
@@ -102,7 +101,6 @@ class EphEmberThermostat(ClimateEntity):
         self._attr_name = self._zone_name
 
         if self._hot_water:
-            self._attr_supported_features = ClimateEntityFeature.AUX_HEAT
             self._attr_target_temperature_step = None
         else:
             self._attr_target_temperature_step = 0.5
@@ -144,22 +142,6 @@ class EphEmberThermostat(ClimateEntity):
         else:
             _LOGGER.error("Invalid operation mode provided %s", hvac_mode)
 
-    @property
-    def is_aux_heat(self) -> bool:
-        """Return true if aux heater."""
-
-        return zone_is_boost_active(self._zone)
-
-    def turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        self._ember.activate_boost_by_name(
-            self._zone_name, zone_target_temperature(self._zone)
-        )
-
-    def turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        self._ember.deactivate_boost_by_name(self._zone_name)
-
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -177,7 +159,7 @@ class EphEmberThermostat(ClimateEntity):
         self._ember.set_zone_target_temperature(self._zone["zoneid"], temperature)
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         # Hot water temp doesn't support being changed
         if self._hot_water:
@@ -186,7 +168,7 @@ class EphEmberThermostat(ClimateEntity):
         return 5.0
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         if self._hot_water:
             return zone_target_temperature(self._zone)
