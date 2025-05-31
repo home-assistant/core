@@ -29,20 +29,34 @@
   },
   "entity": {
     "sensor": {
-      "battery_autonomy": {
-        "name": "Battery autonomy"
-      },
-      "battery_charge_time": {
-        "name": "Battery charge time"
-      },
       "battery_power": {
         "name": "Battery power"
       },
       "battery_soc": {
         "name": "Battery state of charge"
       },
+      "battery_status": {
+        "name": "Battery status",
+        "state": {
+          "charged": "Charged",
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "charged": "[%key:component::imeon_inverter::entity::sensor::battery_status::state::charged%]",
+              "charging": "[%key:common::state::charging%]",
+              "discharging": "[%key:common::state::discharging%]"
+            }
+          }
+        }
+      },
       "battery_stored": {
         "name": "Battery stored"
+      },
+      "battery_consumed": {
+        "name": "Battery consumed"
       },
       "grid_current_l1": {
         "name": "Grid current L1"
@@ -83,11 +97,27 @@
       "inverter_injection_power_limit": {
         "name": "Injection power limit"
       },
+      "manager_inverter_state": {
+        "name": "Inverter state",
+        "state": {
+          "not_connected": "[%key:common::state::disconnected%]",
+          "grid_consumption": "Grid consumption",
+          "grid_injection": "Grid injection",
+          "grid_connected_but_not_used": "Grid disconnected but used"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "not_connected": "[%key:common::state::disconnected%]",
+              "grid_consumption": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_consumption%]",
+              "grid_injection": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_injection%]",
+              "grid_connected_but_not_used": "[%key:component::imeon_inverter::entity::sensor::manager_inverter_state::state::grid_connected_but_not_used%]"
+            }
+          }
+        }
+      },
       "meter_power": {
         "name": "Meter power"
-      },
-      "meter_power_protocol": {
-        "name": "Meter power protocol"
       },
       "output_current_l1": {
         "name": "Output current L1"
@@ -143,44 +173,127 @@
       "temp_component_temperature": {
         "name": "Component temperature"
       },
-      "monitoring_building_consumption": {
-        "name": "Monitoring building consumption"
-      },
-      "monitoring_economy_factor": {
-        "name": "Monitoring economy factor"
-      },
-      "monitoring_grid_consumption": {
-        "name": "Monitoring grid consumption"
-      },
-      "monitoring_grid_injection": {
-        "name": "Monitoring grid injection"
-      },
-      "monitoring_grid_power_flow": {
-        "name": "Monitoring grid power flow"
+      "monitoring_self_produced": {
+        "name": "Self produced"
       },
       "monitoring_self_consumption": {
-        "name": "Monitoring self-consumption"
+        "name": "Self consumption"
       },
       "monitoring_self_sufficiency": {
-        "name": "Monitoring self-sufficiency"
-      },
-      "monitoring_solar_production": {
-        "name": "Monitoring solar production"
+        "name": "Self sufficiency"
       },
       "monitoring_minute_building_consumption": {
-        "name": "Monitoring building consumption (minute)"
+        "name": "Building consumption"
       },
       "monitoring_minute_grid_consumption": {
-        "name": "Monitoring grid consumption (minute)"
+        "name": "Grid consumption"
       },
       "monitoring_minute_grid_injection": {
-        "name": "Monitoring grid injection (minute)"
+        "name": "Grid injection"
       },
       "monitoring_minute_grid_power_flow": {
-        "name": "Monitoring grid power flow (minute)"
+        "name": "Grid power flow"
       },
       "monitoring_minute_solar_production": {
-        "name": "Monitoring solar production (minute)"
+        "name": "Solar production"
+      },
+      "timeline_type_msg": {
+        "name": "Timeline status",
+        "state": {
+          "com_lost": "Communication lost",
+          "com_ok": "Communiation OK",
+          "warning_grid": "Warning grid",
+          "warning_ond": "Warning inverter",
+          "warning_soft": "Warning software",
+          "warning_pv": "Warning PV",
+          "warning_bat": "Warning battery",
+          "warning_cpu": "Warning CPU",
+          "warning_spe": "Warning special",
+          "error_grid": "Error grid",
+          "error_ond": "Error inverter",
+          "error_soft": "Error software",
+          "error_pv": "Error PV",
+          "error_bat": "Error battery",
+          "error_spe": "Error special",
+          "info_grid": "Info grid",
+          "info_ond": "Info inverter",
+          "info_soft": "Info software",
+          "info_pv": "Info PV",
+          "info_bat": "Info battery",
+          "info_cpu": "Info CPU",
+          "info_spe": "Info special",
+          "warning_unknown": "Unknown warning",
+          "warnings": "Warning",
+          "error_unknown": "Unknown error",
+          "errors": "[%key:common::state::error%]",
+          "good_1": "OK",
+          "good_2": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]",
+          "good_3": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]"
+        },
+        "state_attributes": {
+          "options": {
+            "state": {
+              "com_lost": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::com_lost%]",
+              "com_ok": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::com_ok%]",
+              "warning_grid": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_grid%]",
+              "warning_ond": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_ond%]",
+              "warning_soft": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_soft%]",
+              "warning_pv": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_pv%]",
+              "warning_bat": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_bat%]",
+              "warning_cpu": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_cpu%]",
+              "warning_spe": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_spe%]",
+              "error_grid": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_grid%]",
+              "error_ond": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_ond%]",
+              "error_soft": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_soft%]",
+              "error_pv": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_pv%]",
+              "error_bat": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_bat%]",
+              "error_spe": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_spe%]",
+              "info_grid": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_grid%]",
+              "info_ond": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_ond%]",
+              "info_soft": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_soft%]",
+              "info_pv": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_pv%]",
+              "info_bat": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_bat%]",
+              "info_cpu": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_cpu%]",
+              "info_spe": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::info_spe%]",
+              "warning_unknown": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warning_unknown%]",
+              "warnings": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warnings%]",
+              "error_unknown": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_unknown%]",
+              "errors": "[%key:common::state::error%]",
+              "good_1": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]",
+              "good_2": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]",
+              "good_3": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]"
+            }
+          }
+        }
+      },
+      "energy_pv": {
+        "name": "Today PV energy"
+      },
+      "energy_grid_injected": {
+        "name": "Today grid injected energy"
+      },
+      "energy_grid_consumed": {
+        "name": "Today grid consumed energy"
+      },
+      "energy_building_consumption": {
+        "name": "Today building consumption"
+      },
+      "energy_battery_stored": {
+        "name": "Today battery stored energy"
+      },
+      "energy_battery_consumed": {
+        "name": "Today battery consumed energy"
+      }
+    },
+    "select": {
+      "manager_inverter_mode": {
+        "name": "Inverter mode",
+        "state": {
+          "smg": "Smart Grid",
+          "bup": "Backup",
+          "ong": "On-grid",
+          "ofg": "Off-grid"
+        }
       }
     }
   }

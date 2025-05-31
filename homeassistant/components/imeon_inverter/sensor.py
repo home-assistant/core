@@ -18,38 +18,27 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import (
+    ATTR_BATTERY_STATUS,
+    ATTR_INVERTER_STATE,
+    ATTR_TIMELINE_STATUS,
+    TIMELINE_ICONS,
+)
 from .coordinator import InverterCoordinator
+from .entity import InverterEntity
 
 type InverterConfigEntry = ConfigEntry[InverterCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-ENTITY_DESCRIPTIONS = (
+SENSOR_DESCRIPTIONS = (
     # Battery
-    SensorEntityDescription(
-        key="battery_autonomy",
-        translation_key="battery_autonomy",
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="battery_charge_time",
-        translation_key="battery_charge_time",
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL,
-    ),
     SensorEntityDescription(
         key="battery_power",
         translation_key="battery_power",
@@ -65,10 +54,23 @@ ENTITY_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
+        key="battery_status",
+        translation_key="battery_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=ATTR_BATTERY_STATUS,
+    ),
+    SensorEntityDescription(
         key="battery_stored",
         translation_key="battery_stored",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="battery_consumed",
+        translation_key="battery_consumed",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Grid
@@ -165,17 +167,16 @@ ENTITY_DESCRIPTIONS = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    SensorEntityDescription(
+        key="manager_inverter_state",
+        translation_key="manager_inverter_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=ATTR_INVERTER_STATE,
+    ),
     # Meter
     SensorEntityDescription(
         key="meter_power",
         translation_key="meter_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="meter_power_protocol",
-        translation_key="meter_power_protocol",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -262,16 +263,16 @@ ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key="pv_consumed",
         translation_key="pv_consumed",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="pv_injected",
         translation_key="pv_injected",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="pv_power_1",
@@ -311,41 +312,9 @@ ENTITY_DESCRIPTIONS = (
     ),
     # Monitoring (data over the last 24 hours)
     SensorEntityDescription(
-        key="monitoring_building_consumption",
-        translation_key="monitoring_building_consumption",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
-        key="monitoring_economy_factor",
-        translation_key="monitoring_economy_factor",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
-        key="monitoring_grid_consumption",
-        translation_key="monitoring_grid_consumption",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
-        key="monitoring_grid_injection",
-        translation_key="monitoring_grid_injection",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
-        key="monitoring_grid_power_flow",
-        translation_key="monitoring_grid_power_flow",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
+        key="monitoring_self_produced",
+        translation_key="monitoring_self_produced",
+        native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
     ),
@@ -353,21 +322,13 @@ ENTITY_DESCRIPTIONS = (
         key="monitoring_self_consumption",
         translation_key="monitoring_self_consumption",
         native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="monitoring_self_sufficiency",
         translation_key="monitoring_self_sufficiency",
         native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
-        key="monitoring_solar_production",
-        translation_key="monitoring_solar_production",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
     ),
@@ -412,6 +373,62 @@ ENTITY_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
     ),
+    # Timeline
+    SensorEntityDescription(
+        key="timeline_type_msg",
+        translation_key="timeline_type_msg",
+        device_class=SensorDeviceClass.ENUM,
+        options=ATTR_TIMELINE_STATUS,
+    ),
+    # Daily energy counters
+    SensorEntityDescription(
+        key="energy_pv",
+        translation_key="energy_pv",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="energy_grid_injected",
+        translation_key="energy_grid_injected",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="energy_grid_consumed",
+        translation_key="energy_grid_consumed",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="energy_building_consumption",
+        translation_key="energy_building_consumption",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="energy_battery_stored",
+        translation_key="energy_battery_stored",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="energy_battery_consumed",
+        translation_key="energy_battery_consumed",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
 )
 
 
@@ -423,42 +440,31 @@ async def async_setup_entry(
     """Create each sensor for a given config entry."""
 
     coordinator = entry.runtime_data
-
-    # Init sensor entities
     async_add_entities(
         InverterSensor(coordinator, entry, description)
-        for description in ENTITY_DESCRIPTIONS
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
-class InverterSensor(CoordinatorEntity[InverterCoordinator], SensorEntity):
-    """A sensor that returns numerical values with units."""
+class InverterSensor(InverterEntity, SensorEntity):
+    """Representation of an Imeon inverter sensor."""
 
-    _attr_has_entity_name = True
+    entity_description: SensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(
-        self,
-        coordinator: InverterCoordinator,
-        entry: InverterConfigEntry,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._inverter = coordinator.api.inverter
-        self.data_key = description.key
-        assert entry.unique_id
-        self._attr_unique_id = f"{entry.unique_id}_{self.data_key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},
-            name="Imeon inverter",
-            manufacturer="Imeon Energy",
-            model=self._inverter.get("inverter"),
-            sw_version=self._inverter.get("software"),
-        )
 
     @property
     def native_value(self) -> StateType | None:
-        """Value of the sensor."""
-        return self.coordinator.data.get(self.data_key)
+        """Return the state of the entity."""
+        raw_value = self.coordinator.data.get(self.data_key)
+        if not isinstance(raw_value, str):
+            return raw_value
+        return {"???": "unknown"}.get(raw_value, raw_value)
+
+    @property
+    def icon(self) -> str | None:
+        """Update the sensor timeline icon."""
+        if self.data_key == "timeline_type_msg":
+            raw_status = self.coordinator.data.get(self.data_key)
+            status = raw_status if isinstance(raw_status, str) else "warning_unknown"
+            return TIMELINE_ICONS[status]
+        return super().icon
