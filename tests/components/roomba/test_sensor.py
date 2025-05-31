@@ -1,4 +1,4 @@
-"""Tests for IRobotEntity usage in Roomba vacuum platform."""
+"""Tests for IRobotEntity usage in Roomba sensor platform."""
 
 from collections.abc import Iterable
 from typing import Any
@@ -8,13 +8,7 @@ import pytest
 from roombapy import Roomba
 
 from homeassistant.components.roomba.models import RoombaData
-from homeassistant.components.roomba.vacuum import (
-    BraavaJet,
-    IRobotVacuum,
-    RoombaVacuum,
-    RoombaVacuumCarpetBoost,
-    async_setup_entry,
-)
+from homeassistant.components.roomba.sensor import async_setup_entry
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
@@ -50,46 +44,24 @@ def mock_roomba(mock_roomba_state: dict[str, Any]) -> Roomba:
     return roomba
 
 
-class DummyVacuumEntity(IRobotVacuum):
-    """Dummy Roomba vacuum entity for testing purposes."""
-
-    def on_message(self, json_data: dict[str, Any]) -> None:
-        """Handle incoming messages."""
-
-
-def test_ir_robot_vacuum_properties(mock_roomba: Roomba) -> None:
-    """Test properties of IRobotVacuum entity."""
-    entity = DummyVacuumEntity(mock_roomba, "blid123")
-    # Check activity property
-    assert entity.activity is not None
-    # Check extra_state_attributes includes expected keys
-    attrs = entity.extra_state_attributes
-    assert "software_version" in attrs
-    assert "status" in attrs
-    assert "position" in attrs
-
-
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("state", "expected_class", "expected_extra_attrs"),
+    ("state", "expected_sensors"),
     [
         (
-            {"cap": {}, "bin": {"present": True, "full": False}, "detectedPad": True},
-            BraavaJet,
-            8,
+            {},
+            12,
         ),
-        ({"cap": {"carpetBoost": 1}}, RoombaVacuumCarpetBoost, 2),
-        ({"cap": {"carpetBoost": 0}}, RoombaVacuum, 2),
-        ({"cap": {}}, RoombaVacuum, 2),
+        ({"dock": {}}, 12),
+        ({"dock": {"tankLvl": 10}}, 13),
     ],
 )
 async def test_async_setup_entry_selects_correct_class(
     mock_roomba: Roomba,
     state: dict[str, Any],
-    expected_class: type[IRobotVacuum],
-    expected_extra_attrs: int,
+    expected_sensors: int,
 ) -> None:
-    """Test async_setup_entry selects the correct vacuum class based on state."""
+    """Test async_setup_entry selects the correct amount of sensors based on state."""
     # Setup mocks
     hass = MagicMock(spec=HomeAssistant)
     config_entry = MagicMock(spec=ConfigEntry)
@@ -110,7 +82,4 @@ async def test_async_setup_entry_selects_correct_class(
         added_entities.extend(list(new_entities))
 
     await async_setup_entry(hass, config_entry, async_add_entities)
-    assert len(added_entities) == 1
-
-    assert isinstance(added_entities[0], expected_class)
-    assert len(added_entities[0].extra_state_attributes) == expected_extra_attrs
+    assert len(added_entities) == expected_sensors
