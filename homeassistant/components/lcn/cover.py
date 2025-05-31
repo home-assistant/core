@@ -24,7 +24,6 @@ from .const import (
     CONF_MOTOR,
     CONF_POSITIONING_MODE,
     CONF_REVERSE_TIME,
-    DOMAIN,
 )
 from .entity import LcnEntity
 from .helpers import InputType
@@ -60,7 +59,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data[ADD_ENTITIES_CALLBACKS].update(
         {DOMAIN_COVER: add_entities}
     )
 

@@ -19,7 +19,6 @@ from .const import (
     CONF_OUTPUTS,
     CONF_REGISTER,
     CONF_TRANSITION,
-    DOMAIN,
     OUTPUT_PORTS,
 )
 from .entity import LcnEntity
@@ -52,7 +51,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data[ADD_ENTITIES_CALLBACKS].update(
         {DOMAIN_SCENE: add_entities}
     )
 
