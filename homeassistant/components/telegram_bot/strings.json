@@ -86,7 +86,7 @@
             "chat_id": "Chat ID"
           },
           "data_description": {
-            "chat_id": "ID representing the users and group chats to which messages can be sent."
+            "chat_id": "ID representing the user or group chat to which messages can be sent."
           }
         }
       },
