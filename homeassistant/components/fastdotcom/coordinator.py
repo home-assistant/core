@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import partial
 
 from fastdotcom import fast_com
 
@@ -12,14 +13,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_INTERVAL, DOMAIN, LOGGER
 
-type FastdotcomConfigEntry = ConfigEntry[FastdotcomDataUpdateCoordinator]
+type FastdotcomConfigEntry = ConfigEntry["FastdotcomDataUpdateCoordinator"]
 
 
-class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[float]):
-    """Class to manage fetching Fast.com data API."""
+class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
+    """Data update coordinator for Fast.com integration."""
 
     def __init__(self, hass: HomeAssistant, entry: FastdotcomConfigEntry) -> None:
-        """Initialize the coordinator for Fast.com."""
+        """Initialize the Fast.com data update coordinator."""
         super().__init__(
             hass,
             LOGGER,
@@ -28,9 +29,10 @@ class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[float]):
             update_interval=timedelta(hours=DEFAULT_INTERVAL),
         )
 
-    async def _async_update_data(self) -> float:
-        """Run an executor job to retrieve Fast.com data."""
+    async def _async_update_data(self) -> dict[str, float]:
         try:
-            return await self.hass.async_add_executor_job(fast_com)
+            return await self.hass.async_add_executor_job(
+                partial(fast_com, max_time=10)
+            )
         except Exception as exc:
             raise UpdateFailed(f"Error communicating with Fast.com: {exc}") from exc

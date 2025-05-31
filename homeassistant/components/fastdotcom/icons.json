@@ -1,8 +1,17 @@
 {
   "entity": {
     "sensor": {
-      "download": {
+      "download_speed": {
         "default": "mdi:speedometer"
+      },
+      "upload_speed": {
+        "default": "mdi:speedometer"
+      },
+      "loaded_ping": {
+        "default": "mdi:progress-clock"
+      },
+      "unloaded_ping": {
+        "default": "mdi:progress-clock"
       }
     }
   }
