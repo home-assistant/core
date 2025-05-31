@@ -1788,3 +1788,36 @@ async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
         ("platform_int", "sensor"),
         ("platform_int2", "sensor"),
     ]
+
+
+def test_get_environ_bool() -> None:
+    """Test getting boolean from environment variable."""
+
+    assert config_util.get_environ_bool("NOT_DEFINED") is False
+
+    os.environ["DEFINED"] = "y"
+    assert config_util.get_environ_bool("DEFINED") is True
+
+    os.environ["DEFINED"] = "yes"
+    assert config_util.get_environ_bool("DEFINED") is True
+
+    os.environ["DEFINED"] = "true"
+    assert config_util.get_environ_bool("DEFINED") is True
+
+    os.environ["DEFINED"] = "n"
+    assert config_util.get_environ_bool("DEFINED") is False
+
+    os.environ["DEFINED"] = "no"
+    assert config_util.get_environ_bool("DEFINED") is False
+
+    os.environ["DEFINED"] = "false"
+    assert config_util.get_environ_bool("DEFINED") is False
+
+
+def test_get_environ_int() -> None:
+    """Test getting int from environment variable."""
+
+    assert config_util.get_environ_int("NOT_DEFINED") is None
+
+    os.environ["DEFINED"] = "10"
+    assert config_util.get_environ_int("DEFINED") == 10

@@ -1350,3 +1350,25 @@ async def async_enable_safe_mode(hass: HomeAssistant) -> None:
         Path(hass.config.path(SAFE_MODE_FILENAME)).touch()
 
     await hass.async_add_executor_job(_enable_safe_mode)
+
+
+def get_environ_bool(key: str) -> bool:
+    """Get bool from environment variable."""
+
+    value = os.environ.get(key)
+    if value is None:
+        return False
+    if value.lower() in ["t", "true", "y", "yes"]:
+        return True
+    if value.lower() in ["f", "false", "n", "no"]:
+        return False
+    raise ValueError(f"Unable to parse '{value}' to bool")
+
+
+def get_environ_int(key: str) -> int | None:
+    """Get int from environment variable."""
+
+    value = os.environ.get(key)
+    if value is None:
+        return None
+    return int(value)
