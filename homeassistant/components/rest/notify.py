@@ -41,8 +41,10 @@ CONF_DATA_TEMPLATE = "data_template"
 CONF_MESSAGE_PARAMETER_NAME = "message_param_name"
 CONF_TARGET_PARAMETER_NAME = "target_param_name"
 CONF_TITLE_PARAMETER_NAME = "title_param_name"
+CONF_ALLOW_MULTIPLE_TARGETS = "allow_multiple_targets"
 DEFAULT_MESSAGE_PARAM_NAME = "message"
 DEFAULT_METHOD = "GET"
+DEFAULT_ALLOW_MULTIPLE_TARGETS = False
 DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
@@ -59,6 +61,9 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_TARGET_PARAMETER_NAME): cv.string,
         vol.Optional(CONF_TITLE_PARAMETER_NAME): cv.string,
+        vol.Optional(
+            CONF_ALLOW_MULTIPLE_TARGETS, default=DEFAULT_ALLOW_MULTIPLE_TARGETS
+        ): cv.boolean,
         vol.Optional(CONF_DATA): vol.All(dict, cv.template_complex),
         vol.Optional(CONF_DATA_TEMPLATE): vol.All(dict, cv.template_complex),
         vol.Optional(CONF_AUTHENTICATION): vol.In(
@@ -86,6 +91,7 @@ async def async_get_service(
     message_param_name: str = config[CONF_MESSAGE_PARAMETER_NAME]
     title_param_name: str | None = config.get(CONF_TITLE_PARAMETER_NAME)
     target_param_name: str | None = config.get(CONF_TARGET_PARAMETER_NAME)
+    allow_multiple_targets: bool = config[CONF_ALLOW_MULTIPLE_TARGETS]
     data: dict[str, Any] | None = config.get(CONF_DATA)
     data_template: dict[str, Any] | None = config.get(CONF_DATA_TEMPLATE)
     username: str | None = config.get(CONF_USERNAME)
@@ -108,6 +114,7 @@ async def async_get_service(
         message_param_name,
         title_param_name,
         target_param_name,
+        allow_multiple_targets,
         data,
         data_template,
         auth,
@@ -128,6 +135,7 @@ class RestNotificationService(BaseNotificationService):
         message_param_name: str,
         title_param_name: str | None,
         target_param_name: str | None,
+        allow_multiple_targets: bool,
         data: dict[str, Any] | None,
         data_template: dict[str, Any] | None,
         auth: httpx.Auth | None,
@@ -142,6 +150,7 @@ class RestNotificationService(BaseNotificationService):
         self._message_param_name = message_param_name
         self._title_param_name = title_param_name
         self._target_param_name = target_param_name
+        self._allow_multiple_targets = allow_multiple_targets
         self._data = data
         self._data_template = data_template
         self._auth = auth
@@ -155,9 +164,12 @@ class RestNotificationService(BaseNotificationService):
             data[self._title_param_name] = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         if self._target_param_name is not None and ATTR_TARGET in kwargs:
-            # Target is a list as of 0.29 and we don't want to break existing
-            # integrations, so just return the first target in the list.
-            data[self._target_param_name] = kwargs[ATTR_TARGET][0]
+            if not self._allow_multiple_targets:
+                # Target is a list as of 0.29 and we don't want to break existing
+                # integrations, so just return the first target in the list.
+                data[self._target_param_name] = kwargs[ATTR_TARGET][0]
+            else:
+                data[self._target_param_name] = kwargs[ATTR_TARGET]
 
         if self._data_template or self._data:
             kwargs[ATTR_MESSAGE] = message
