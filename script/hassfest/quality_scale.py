@@ -756,7 +756,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "otbr",
     "otp",
     "ourgroceries",
-    "overkiz",
     "ovo_energy",
     "owntracks",
     "p1_monitor",
