@@ -7,8 +7,10 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.playstation_network.config_flow import (
     PSNAWPAuthenticationError,
+    PSNAWPClientError,
     PSNAWPInvalidTokenError,
     PSNAWPNotFoundError,
+    PSNAWPServerError,
 )
 from homeassistant.components.playstation_network.const import CONF_NPSSO, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -72,6 +74,8 @@ async def test_form_already_configured(
     [
         (PSNAWPNotFoundError(), "invalid_account"),
         (PSNAWPAuthenticationError(), "invalid_auth"),
+        (PSNAWPServerError(), "cannot_connect"),
+        (PSNAWPClientError(), "cannot_connect"),
         (Exception(), "unknown"),
     ],
 )
