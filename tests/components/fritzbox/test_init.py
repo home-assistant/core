@@ -9,7 +9,7 @@ import pytest
 from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
+from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -35,7 +35,7 @@ from tests.typing import WebSocketGenerator
 
 async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     """Test setup of integration."""
-    assert await setup_config_entry(hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0])
+    assert await setup_config_entry(hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0])
     entries = hass.config_entries.async_entries()
     assert entries
     assert len(entries) == 1
@@ -54,7 +54,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
         (
             {
                 "domain": SENSOR_DOMAIN,
-                "platform": FB_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": CONF_FAKE_AIN,
                 "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
@@ -64,7 +64,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
         (
             {
                 "domain": BINARY_SENSOR_DOMAIN,
-                "platform": FB_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": CONF_FAKE_AIN,
             },
             CONF_FAKE_AIN,
@@ -83,8 +83,8 @@ async def test_update_unique_id(
     """Test unique_id update of integration."""
     fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
     )
     entry.add_to_hass(hass)
@@ -108,7 +108,7 @@ async def test_update_unique_id(
         (
             {
                 "domain": SENSOR_DOMAIN,
-                "platform": FB_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": f"{CONF_FAKE_AIN}_temperature",
                 "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
@@ -117,7 +117,7 @@ async def test_update_unique_id(
         (
             {
                 "domain": BINARY_SENSOR_DOMAIN,
-                "platform": FB_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": f"{CONF_FAKE_AIN}_alarm",
             },
             f"{CONF_FAKE_AIN}_alarm",
@@ -125,7 +125,7 @@ async def test_update_unique_id(
         (
             {
                 "domain": BINARY_SENSOR_DOMAIN,
-                "platform": FB_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": f"{CONF_FAKE_AIN}_other",
             },
             f"{CONF_FAKE_AIN}_other",
@@ -142,8 +142,8 @@ async def test_update_unique_id_no_change(
     """Test unique_id is not updated of integration."""
     fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
     )
     entry.add_to_hass(hass)
@@ -167,13 +167,13 @@ async def test_unload_remove(hass: HomeAssistant, fritz: Mock) -> None:
     entity_id = f"{SWITCH_DOMAIN}.{CONF_FAKE_NAME}"
 
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id=entity_id,
     )
     entry.add_to_hass(hass)
 
-    config_entries = hass.config_entries.async_entries(FB_DOMAIN)
+    config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     assert entry is config_entries[0]
 
@@ -206,13 +206,13 @@ async def test_logout_on_stop(hass: HomeAssistant, fritz: Mock) -> None:
     entity_id = f"{SWITCH_DOMAIN}.{CONF_FAKE_NAME}"
 
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id=entity_id,
     )
     entry.add_to_hass(hass)
 
-    config_entries = hass.config_entries.async_entries(FB_DOMAIN)
+    config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     assert entry is config_entries[0]
 
@@ -240,8 +240,8 @@ async def test_remove_device(
     assert await async_setup_component(hass, "config", {})
     assert await setup_config_entry(
         hass,
-        MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-        f"{FB_DOMAIN}.{CONF_FAKE_NAME}",
+        MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        f"{DOMAIN}.{CONF_FAKE_NAME}",
         FritzDeviceSwitchMock(),
         fritz,
     )
@@ -258,7 +258,7 @@ async def test_remove_device(
 
     orphan_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(FB_DOMAIN, "0000 000000")},
+        identifiers={(DOMAIN, "0000 000000")},
     )
 
     # try to delete good_device
@@ -278,8 +278,8 @@ async def test_remove_device(
 async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) -> None:
     """Config entry state is SETUP_RETRY when fritzbox is offline."""
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data={CONF_HOST: "any", **MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0]},
+        domain=DOMAIN,
+        data={CONF_HOST: "any", **MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]},
         unique_id="any",
     )
     entry.add_to_hass(hass)
@@ -299,8 +299,8 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) ->
 async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> None:
     """Config entry state is SETUP_ERROR when login to fritzbox fail."""
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data={CONF_HOST: "any", **MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0]},
+        domain=DOMAIN,
+        data={CONF_HOST: "any", **MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]},
         unique_id="any",
     )
     entry.add_to_hass(hass)

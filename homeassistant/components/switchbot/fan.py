@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import switchbot
-from switchbot import FanMode
+from switchbot import AirPurifierMode, FanMode
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity
+from .entity import SwitchbotEntity, exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -27,7 +27,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot fan based on a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities([SwitchBotFanEntity(coordinator)])
+    if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
+        async_add_entities([SwitchBotAirPurifierEntity(coordinator)])
+    else:
+        async_add_entities([SwitchBotFanEntity(coordinator)])
 
 
 class SwitchBotFanEntity(SwitchbotEntity, FanEntity, RestoreEntity):
@@ -118,5 +121,67 @@ class SwitchBotFanEntity(SwitchbotEntity, FanEntity, RestoreEntity):
         """Turn off the fan."""
 
         _LOGGER.debug("Switchbot fan to set turn off %s", self._address)
+        self._last_run_success = bool(await self._device.turn_off())
+        self.async_write_ha_state()
+
+
+class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
+    """Representation of a Switchbot air purifier."""
+
+    _device: switchbot.SwitchbotAirPurifier
+    _attr_supported_features = (
+        FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _attr_preset_modes = AirPurifierMode.get_modes()
+    _attr_translation_key = "air_purifier"
+    _attr_name = None
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if device is on."""
+        return self._device.is_on()
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        return self._device.get_current_mode()
+
+    @exception_handler
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the air purifier."""
+
+        _LOGGER.debug(
+            "Switchbot air purifier to set preset mode %s %s",
+            preset_mode,
+            self._address,
+        )
+        self._last_run_success = bool(await self._device.set_preset_mode(preset_mode))
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Turn on the air purifier."""
+
+        _LOGGER.debug(
+            "Switchbot air purifier to set turn on %s %s %s",
+            percentage,
+            preset_mode,
+            self._address,
+        )
+        self._last_run_success = bool(await self._device.turn_on())
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the air purifier."""
+
+        _LOGGER.debug("Switchbot air purifier to set turn off %s", self._address)
         self._last_run_success = bool(await self._device.turn_off())
         self.async_write_ha_state()

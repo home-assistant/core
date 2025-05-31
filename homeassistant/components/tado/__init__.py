@@ -8,7 +8,13 @@ import PyTado.exceptions
 from PyTado.interface import Tado
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    APPLICATION_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+    __version__ as HA_VERSION,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -74,7 +80,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     def create_tado_instance() -> tuple[Tado, str]:
         """Create a Tado instance, this time with a previously obtained refresh token."""
-        tado = Tado(saved_refresh_token=entry.data[CONF_REFRESH_TOKEN])
+        tado = Tado(
+            saved_refresh_token=entry.data[CONF_REFRESH_TOKEN],
+            user_agent=f"{APPLICATION_NAME}/{HA_VERSION}",
+        )
         return tado, tado.device_activation_status()
 
     try:

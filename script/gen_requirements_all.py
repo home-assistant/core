@@ -27,7 +27,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "decora",
-    "decora-wifi",
     "evdev",
     "face-recognition",
     "pybluez",
@@ -43,7 +42,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
 # building integration wheels for all architectures.
 INCLUDED_REQUIREMENTS_WHEELS = {
-    "decora-wifi",
     "evdev",
     "pycups",
     "python-gammu",
@@ -94,8 +92,6 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     },
 }
 
-IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
-
 URL_PIN = (
     "https://developers.home-assistant.io/docs/"
     "creating_platform_code_review.html#1-requirements"
@@ -140,8 +136,8 @@ uuid==1000000000.0.0
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.9.0
-h11==0.14.0
-httpcore==1.0.7
+h11==0.16.0
+httpcore==1.0.9
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -425,7 +421,7 @@ def process_requirements(
     for req in module_requirements:
         if "://" in req:
             errors.append(f"{package}[Only pypi dependencies are allowed: {req}]")
-        if req.partition("==")[1] == "" and req not in IGNORE_PIN:
+        if req.partition("==")[1] == "":
             errors.append(f"{package}[Please pin requirement {req}, see {URL_PIN}]")
         reqs.setdefault(req, []).append(package)
 

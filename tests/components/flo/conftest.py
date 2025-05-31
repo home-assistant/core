@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
+from homeassistant.components.flo.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONTENT_TYPE_JSON
 
 from .common import TEST_EMAIL_ADDRESS, TEST_PASSWORD, TEST_TOKEN, TEST_USER_ID
@@ -19,7 +19,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 def config_entry() -> MockConfigEntry:
     """Config entry version 1 fixture."""
     return MockConfigEntry(
-        domain=FLO_DOMAIN,
+        domain=DOMAIN,
         data={CONF_USERNAME: TEST_USER_ID, CONF_PASSWORD: TEST_PASSWORD},
         version=1,
     )

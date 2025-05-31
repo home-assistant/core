@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["pypaperless"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["pypaperless==4.1.0"]
 }

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from typing import Any
+from typing import Any, Literal
 
 import aiodns
 from aiodns.error import DNSError
@@ -62,16 +62,16 @@ async def async_validate_hostname(
     """Validate hostname."""
 
     async def async_check(
-        hostname: str, resolver: str, qtype: str, port: int = 53
+        hostname: str, resolver: str, qtype: Literal["A", "AAAA"], port: int = 53
     ) -> bool:
         """Return if able to resolve hostname."""
-        result = False
+        result: bool = False
         with contextlib.suppress(DNSError):
-            result = bool(
-                await aiodns.DNSResolver(  # type: ignore[call-overload]
-                    nameservers=[resolver], udp_port=port, tcp_port=port
-                ).query(hostname, qtype)
+            _resolver = aiodns.DNSResolver(
+                nameservers=[resolver], udp_port=port, tcp_port=port
             )
+            result = bool(await _resolver.query(hostname, qtype))
+
         return result
 
     result: dict[str, bool] = {}

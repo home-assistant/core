@@ -910,6 +910,9 @@
       "auto_focus": {
         "name": "Auto focus"
       },
+      "hardwired_chime_enabled": {
+        "name": "Hardwired chime enabled"
+      },
       "guard_return": {
         "name": "Guard return"
       },

@@ -23,12 +23,16 @@
         "data": {
           "window_size": "Window size",
           "precision": "Precision",
-          "radius": "Radius"
+          "radius": "Radius",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "window_size": "Size of the window of previous states.",
           "precision": "Defines the number of decimal places of the calculated sensor value.",
-          "radius": "Band radius from median of previous states."
+          "radius": "Band radius from median of previous states.",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       },
       "lowpass": {
@@ -36,12 +40,16 @@
         "data": {
           "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]",
           "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
-          "time_constant": "Time constant"
+          "time_constant": "Time constant",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]",
           "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
-          "time_constant": "Loosely relates to the amount of time it takes for a state to influence the output."
+          "time_constant": "Loosely relates to the amount of time it takes for a state to influence the output.",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       },
       "range": {
@@ -49,12 +57,16 @@
         "data": {
           "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
           "lower_bound": "Lower bound",
-          "upper_bound": "Upper bound"
+          "upper_bound": "Upper bound",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
           "lower_bound": "Lower bound for filter range.",
-          "upper_bound": "Upper bound for filter range."
+          "upper_bound": "Upper bound for filter range.",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       },
       "time_simple_moving_average": {
@@ -62,34 +74,46 @@
         "data": {
           "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]",
           "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
-          "type": "Type"
+          "type": "Type",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]",
           "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
-          "type": "Defines the type of Simple Moving Average."
+          "type": "Defines the type of Simple Moving Average.",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       },
       "throttle": {
         "description": "[%key:component::filter::config::step::outlier::description%]",
         "data": {
           "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]",
-          "precision": "[%key:component::filter::config::step::outlier::data::precision%]"
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]",
-          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]"
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       },
       "time_throttle": {
         "description": "[%key:component::filter::config::step::outlier::description%]",
         "data": {
           "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]",
-          "precision": "[%key:component::filter::config::step::outlier::data::precision%]"
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]",
-          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]"
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       }
     }
@@ -104,12 +128,16 @@
         "data": {
           "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]",
           "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
-          "radius": "[%key:component::filter::config::step::outlier::data::radius%]"
+          "radius": "[%key:component::filter::config::step::outlier::data::radius%]",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]",
           "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
-          "radius": "[%key:component::filter::config::step::outlier::data_description::radius%]"
+          "radius": "[%key:component::filter::config::step::outlier::data_description::radius%]",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       },
       "lowpass": {
@@ -117,12 +145,16 @@
         "data": {
           "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]",
           "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
-          "time_constant": "[%key:component::filter::config::step::lowpass::data::time_constant%]"
+          "time_constant": "[%key:component::filter::config::step::lowpass::data::time_constant%]",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]",
           "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
-          "time_constant": "[%key:component::filter::config::step::lowpass::data_description::time_constant%]"
+          "time_constant": "[%key:component::filter::config::step::lowpass::data_description::time_constant%]",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       },
       "range": {
@@ -130,12 +162,16 @@
         "data": {
           "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
           "lower_bound": "[%key:component::filter::config::step::range::data::lower_bound%]",
-          "upper_bound": "[%key:component::filter::config::step::range::data::upper_bound%]"
+          "upper_bound": "[%key:component::filter::config::step::range::data::upper_bound%]",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
           "lower_bound": "[%key:component::filter::config::step::range::data_description::lower_bound%]",
-          "upper_bound": "[%key:component::filter::config::step::range::data_description::upper_bound%]"
+          "upper_bound": "[%key:component::filter::config::step::range::data_description::upper_bound%]",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       },
       "time_simple_moving_average": {
@@ -143,34 +179,46 @@
         "data": {
           "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]",
           "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
-          "type": "[%key:component::filter::config::step::time_simple_moving_average::data::type%]"
+          "type": "[%key:component::filter::config::step::time_simple_moving_average::data::type%]",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]",
           "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
-          "type": "[%key:component::filter::config::step::time_simple_moving_average::data_description::type%]"
+          "type": "[%key:component::filter::config::step::time_simple_moving_average::data_description::type%]",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       },
       "throttle": {
         "description": "[%key:component::filter::config::step::outlier::description%]",
         "data": {
           "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]",
-          "precision": "[%key:component::filter::config::step::outlier::data::precision%]"
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]",
-          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]"
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       },
       "time_throttle": {
         "description": "[%key:component::filter::config::step::outlier::description%]",
         "data": {
           "window_size": "[%key:component::filter::config::step::outlier::data::window_size%]",
-          "precision": "[%key:component::filter::config::step::outlier::data::precision%]"
+          "precision": "[%key:component::filter::config::step::outlier::data::precision%]",
+          "entity_id": "[%key:component::filter::config::step::user::data::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data::filter%]"
         },
         "data_description": {
           "window_size": "[%key:component::filter::config::step::outlier::data_description::window_size%]",
-          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]"
+          "precision": "[%key:component::filter::config::step::outlier::data_description::precision%]",
+          "entity_id": "[%key:component::filter::config::step::user::data_description::entity_id%]",
+          "filter": "[%key:component::filter::config::step::user::data_description::filter%]"
         }
       }
     }

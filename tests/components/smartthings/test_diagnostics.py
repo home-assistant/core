@@ -12,7 +12,7 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -31,7 +31,9 @@ async def test_config_entry_diagnostics(
 ) -> None:
     """Test generating diagnostics for a device entry."""
     mock_smartthings.get_raw_devices.return_value = [
-        load_json_object_fixture("devices/da_ac_rac_000001.json", DOMAIN)
+        await async_load_json_object_fixture(
+            hass, "devices/da_ac_rac_000001.json", DOMAIN
+        )
     ]
     await setup_integration(hass, mock_config_entry)
     assert (
@@ -51,12 +53,15 @@ async def test_device_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test generating diagnostics for a device entry."""
-    mock_smartthings.get_raw_device_status.return_value = load_json_object_fixture(
-        "device_status/da_ac_rac_000001.json", DOMAIN
+    mock_smartthings.get_raw_device_status.return_value = (
+        await async_load_json_object_fixture(
+            hass, "device_status/da_ac_rac_000001.json", DOMAIN
+        )
     )
-    mock_smartthings.get_raw_device.return_value = load_json_object_fixture(
-        "devices/da_ac_rac_000001.json", DOMAIN
-    )["items"][0]
+    device_items = await async_load_json_object_fixture(
+        hass, "devices/da_ac_rac_000001.json", DOMAIN
+    )
+    mock_smartthings.get_raw_device.return_value = device_items["items"][0]
     await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_device(

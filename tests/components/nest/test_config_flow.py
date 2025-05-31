@@ -1002,6 +1002,24 @@ async def test_dhcp_discovery(
     assert result.get("reason") == "missing_credentials"
 
 
+@pytest.mark.parametrize(
+    ("nest_test_config", "sdm_managed_topic", "device_access_project_id"),
+    [(TEST_CONFIG_APP_CREDS, True, "project-id-2")],
+)
+async def test_dhcp_discovery_already_setup(
+    hass: HomeAssistant, oauth: OAuthFixture, setup_platform
+) -> None:
+    """Exercise discovery dhcp with existing config entry."""
+    await setup_platform()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=FAKE_DHCP_DATA,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_dhcp_discovery_with_creds(
     hass: HomeAssistant,

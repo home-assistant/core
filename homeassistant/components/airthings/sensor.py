@@ -27,8 +27,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirthingsConfigEntry, AirthingsDataCoordinatorType
+from . import AirthingsConfigEntry
 from .const import DOMAIN
+from .coordinator import AirthingsDataUpdateCoordinator
 
 SENSORS: dict[str, SensorEntityDescription] = {
     "radonShortTermAvg": SensorEntityDescription(
@@ -140,7 +141,7 @@ async def async_setup_entry(
 
 
 class AirthingsHeaterEnergySensor(
-    CoordinatorEntity[AirthingsDataCoordinatorType], SensorEntity
+    CoordinatorEntity[AirthingsDataUpdateCoordinator], SensorEntity
 ):
     """Representation of a Airthings Sensor device."""
 
@@ -149,7 +150,7 @@ class AirthingsHeaterEnergySensor(
 
     def __init__(
         self,
-        coordinator: AirthingsDataCoordinatorType,
+        coordinator: AirthingsDataUpdateCoordinator,
         airthings_device: AirthingsDevice,
         entity_description: SensorEntityDescription,
     ) -> None:

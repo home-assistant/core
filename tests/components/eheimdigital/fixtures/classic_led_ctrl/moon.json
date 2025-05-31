@@ -1,0 +1,8 @@
+{
+  "title": "MOON",
+  "from": "00:00:00:00:00:01",
+  "maxmoonlight": 18,
+  "minmoonlight": 4,
+  "moonlightActive": 1,
+  "moonlightCycle": 1
+}

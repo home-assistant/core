@@ -6,7 +6,7 @@ from greeclimate.exceptions import DeviceTimeoutError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
+from homeassistant.components.gree.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -31,9 +31,9 @@ ENTITY_ID_XTRA_FAN = f"{SWITCH_DOMAIN}.fake_device_1_xtra_fan"
 
 async def async_setup_gree(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the gree switch platform."""
-    entry = MockConfigEntry(domain=GREE_DOMAIN)
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    await async_setup_component(hass, GREE_DOMAIN, {GREE_DOMAIN: {SWITCH_DOMAIN: {}}})
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {SWITCH_DOMAIN: {}}})
     await hass.async_block_till_done()
     return entry
 
