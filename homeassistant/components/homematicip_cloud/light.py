@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homematicip.base.enums import OpticalSignalBehaviour, RGBColorState
+from homematicip.base.enums import DeviceType, OpticalSignalBehaviour, RGBColorState
 from homematicip.base.functionalChannels import NotificationLightChannel
 from homematicip.device import (
     BrandDimmer,
@@ -31,7 +31,6 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEVICE_TYPE_BRAND_SWITCH_MEASURING
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 
@@ -47,8 +46,7 @@ async def async_setup_entry(
     for device in hap.home.devices:
         if (
             isinstance(device, SwitchMeasuring)
-            and getattr(device, "deviceType", None)
-            == DEVICE_TYPE_BRAND_SWITCH_MEASURING
+            and getattr(device, "deviceType", None) == DeviceType.BRAND_SWITCH_MEASURING
         ):
             entities.append(HomematicipLightMeasuring(hap, device))
         if isinstance(device, BrandSwitchNotificationLight):
