@@ -7200,3 +7200,49 @@ def test_combine(hass: HomeAssistant) -> None:
 
     with pytest.raises(TemplateError, match="combine expected a dict, got str"):
         template.Template("{{ {'a': 1} | combine('not a dict') }}", hass).async_render()
+
+
+def test_sort_naturally(hass: HomeAssistant) -> None:
+    """Test natural sort filter and function."""
+    assert template.Template(
+        "{{ ['Elm11', 'Elm12', 'Elm2', 'elm0', 'elm1', 'elm10', 'elm13', 'elm9'] | sort_naturally }}",
+        hass,
+    ).async_render() == [
+        "elm0",
+        "elm1",
+        "Elm2",
+        "elm9",
+        "elm10",
+        "Elm11",
+        "Elm12",
+        "elm13",
+    ]
+
+    assert template.Template(
+        "{{ ['2 ft 7 in', '1 ft 5 in', '10 ft 2 in', '2 ft 11 in', '7 ft 6 in'] | sort_naturally }}",
+        hass,
+    ).async_render() == [
+        "1 ft 5 in",
+        "2 ft 7 in",
+        "2 ft 11 in",
+        "7 ft 6 in",
+        "10 ft 2 in",
+    ]
+
+    assert template.Template(
+        "{{ ['5','1','31','23','9','22','11'] | sort_naturally }}",
+        hass,
+    ).async_render() == ["1", "5", "9", "11", "22", "23", "31"]
+
+    assert template.Template(
+        "{{ ['5','1','31','23','9','22','11'] | sort_naturally(reverse=True) }}",
+        hass,
+    ).async_render() == ["31", "23", "22", "11", "9", "5", "1"]
+
+    assert template.Template(
+        "{{ [{'average': '15,b2','background_color': '#A2C62B'},{'average': '14,a1','background_color': '#4EC2EE'}] | sort_naturally(attribute='average') }}",
+        hass,
+    ).async_render() == [
+        {"average": "14,a1", "background_color": "#4EC2EE"},
+        {"average": "15,b2", "background_color": "#A2C62B"},
+    ]
