@@ -1,0 +1,24 @@
+blueprint:
+  name: Light to Switch
+  description: Creates a switch from a light entity
+  domain: template
+  input:
+    light_input:
+      name: Light Entity
+      description: The entity for the Light Group
+      selector:
+        entity:
+          domain: light
+variables:
+  light_entity: !input light_input
+switch:
+  availability: "{{ light_entity | has_value }}"
+  state: "{{ is_state(light_entity,'on') }}"
+  turn_on:
+    action: light.turn_on
+    target:
+      entity_id: "{{ light_entity }}"
+  turn_off:
+    action: light.turn_off
+    target:
+      entity_id: "{{ light_entity }}"
