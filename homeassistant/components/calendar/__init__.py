@@ -39,6 +39,7 @@ from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.color import RGBColor, color_rgb_to_hex
 from homeassistant.util.json import JsonValueType
 
 from .const import (
@@ -518,6 +519,13 @@ class CalendarEntity(Entity):
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
 
+    _attr_color: RGBColor | None = None
+
+    @property
+    def color(self) -> RGBColor | None:
+        """Return the color of the calendar entity as RGBColor."""
+        return self._attr_color
+
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
@@ -527,17 +535,27 @@ class CalendarEntity(Entity):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the entity state attributes."""
+        # Defensive: treat None as 0 for supported_features
+        supported_features = self.supported_features or 0
+        color_hex_val = (
+            f"#{color_rgb_to_hex(*self._attr_color)}" if self._attr_color else None
+        )
         if (event := self.event) is None:
-            return None
+            if not (supported_features & CalendarEntityFeature.SUPPORTS_COLOR):
+                return None
+            return {"color": color_hex_val}
 
-        return {
+        attrs = {
             "message": event.summary,
             "all_day": event.all_day,
             "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
             "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
-            "location": event.location if event.location else "",
-            "description": event.description if event.description else "",
+            "location": event.location or "",
+            "description": event.description or "",
         }
+        if supported_features & CalendarEntityFeature.SUPPORTS_COLOR:
+            attrs["color"] = color_hex_val
+        return attrs
 
     @final
     @property
