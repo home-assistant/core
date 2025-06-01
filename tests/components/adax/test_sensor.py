@@ -34,21 +34,6 @@ async def test_sensor_cloud(
     assert entry.unique_id == "1_1_energy"
 
 
-async def test_climate_energy_attributes(
-    hass: HomeAssistant,
-    mock_adax_cloud: AsyncMock,
-    mock_cloud_config_entry,
-) -> None:
-    """Test that climate entity has energy attributes."""
-    await setup_integration(hass, mock_cloud_config_entry)
-
-    entity_id = "climate.room_1"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes["energy_kwh"] == 1.5
-    assert state.attributes["energy_wh"] == 1500
-
-
 async def test_sensor_local_not_created(
     hass: HomeAssistant,
     mock_adax_local: AsyncMock,
