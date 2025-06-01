@@ -47,13 +47,13 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 _LOGGER.debug("fetch_rooms_info returned: %s", rooms)
 
                 if not rooms:
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         "fetch_rooms_info returned empty list, trying get_rooms as fallback"
                     )
                     rooms = await self.adax_data_handler.get_rooms() or []
                     _LOGGER.debug("get_rooms fallback returned: %s", rooms)
             else:
-                _LOGGER.info("fetch_rooms_info method not available, using get_rooms")
+                _LOGGER.debug("fetch_rooms_info method not available, using get_rooms")
                 rooms = await self.adax_data_handler.get_rooms() or []
                 _LOGGER.debug("get_rooms returned: %s", rooms)
 
