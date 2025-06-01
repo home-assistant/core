@@ -336,7 +336,6 @@ class NMBSSensor(SensorEntity):
 
         delay = get_delay_in_minutes(self._attrs.departure.delay)
         departure = get_time_until(self._attrs.departure.time)
-        canceled = self._attrs.departure.canceled
 
         attrs = {
             "destination": self._attrs.departure.station,
@@ -346,14 +345,13 @@ class NMBSSensor(SensorEntity):
             "vehicle_id": self._attrs.departure.vehicle,
         }
 
-        if not canceled:
-            attrs["departure"] = f"In {departure} minutes"
-            attrs["departure_minutes"] = departure
-            attrs["canceled"] = False
-        else:
+        attrs["canceled"] = self._attrs.departure.canceled
+        if attrs["canceled"]:
             attrs["departure"] = None
             attrs["departure_minutes"] = None
-            attrs["canceled"] = True
+        else:
+            attrs["departure"] = f"In {departure} minutes"
+            attrs["departure_minutes"] = departure
 
         if self._show_on_map and self.station_coordinates:
             attrs[ATTR_LATITUDE] = self.station_coordinates[0]
@@ -369,9 +367,8 @@ class NMBSSensor(SensorEntity):
                 via.timebetween
             ) + get_delay_in_minutes(via.departure.delay)
 
-        if delay > 0:
-            attrs["delay"] = f"{delay} minutes"
-            attrs["delay_minutes"] = delay
+        attrs["delay"] = f"{delay} minutes"
+        attrs["delay_minutes"] = delay
 
         return attrs
 
