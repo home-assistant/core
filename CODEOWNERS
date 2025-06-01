@@ -862,6 +862,8 @@ build.json @home-assistant/supervisor
 /tests/components/led_ble/ @bdraco
 /homeassistant/components/lektrico/ @lektrico
 /tests/components/lektrico/ @lektrico
+/homeassistant/components/leneda/ @fedus
+/tests/components/leneda/ @fedus
 /homeassistant/components/letpot/ @jpelgrom
 /tests/components/letpot/ @jpelgrom
 /homeassistant/components/lg_netcast/ @Drafteed @splinter98

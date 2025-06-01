@@ -1,0 +1,57 @@
+{
+  "entity": {
+    "sensor": {
+      "electricity_consumption_active": {
+        "default": "mdi:lightning-bolt"
+      },
+      "electricity_consumption_reactive": {
+        "default": "mdi:lightning-bolt"
+      },
+      "electricity_consumption_covered_layer1": {
+        "default": "mdi:lightning-bolt"
+      },
+      "electricity_consumption_covered_layer2": {
+        "default": "mdi:lightning-bolt"
+      },
+      "electricity_consumption_covered_layer3": {
+        "default": "mdi:lightning-bolt"
+      },
+      "electricity_consumption_covered_layer4": {
+        "default": "mdi:lightning-bolt"
+      },
+      "electricity_consumption_remaining": {
+        "default": "mdi:lightning-bolt"
+      },
+      "electricity_production_active": {
+        "default": "mdi:solar-power"
+      },
+      "electricity_production_reactive": {
+        "default": "mdi:solar-power"
+      },
+      "electricity_production_shared_layer1": {
+        "default": "mdi:solar-power"
+      },
+      "electricity_production_shared_layer2": {
+        "default": "mdi:solar-power"
+      },
+      "electricity_production_shared_layer3": {
+        "default": "mdi:solar-power"
+      },
+      "electricity_production_shared_layer4": {
+        "default": "mdi:solar-power"
+      },
+      "electricity_production_remaining": {
+        "default": "mdi:solar-power"
+      },
+      "gas_consumption_volume": {
+        "default": "mdi:fire"
+      },
+      "gas_consumption_standard_volume": {
+        "default": "mdi:fire"
+      },
+      "gas_consumption_energy": {
+        "default": "mdi:fire"
+      }
+    }
+  }
+}
