@@ -6,18 +6,15 @@ import airthings
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.airthings.const import CONF_SECRET, DOMAIN
+from homeassistant.components.airthings.const import DOMAIN
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from tests.common import MockConfigEntry
+from .const import TEST_DATA
 
-TEST_DATA = {
-    CONF_ID: "client_id",
-    CONF_SECRET: "secret",
-}
+from tests.common import MockConfigEntry
 
 DHCP_SERVICE_INFO = [
     DhcpServiceInfo(
