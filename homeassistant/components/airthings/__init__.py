@@ -64,6 +64,11 @@ def _remove_old_devices(
             (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
         )
         if device_id and device_id not in airthings_devices:
+            _LOGGER.info(
+                "Removing device %s with ID %s because it is no longer exists in your account",
+                registered_device.name,
+                device_id,
+            )
             device_registry.async_update_device(
                 registered_device.id, remove_config_entry_id=entry.entry_id
             )
