@@ -1185,7 +1185,7 @@ huawei-lte-api==1.11.0
 huum==0.7.12
 
 # homeassistant.components.hyperion
-hyperion-py==0.7.5
+hyperion-py==0.7.6
 
 # homeassistant.components.iammeter
 iammeter==0.2.1
