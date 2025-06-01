@@ -4,20 +4,19 @@ from __future__ import annotations
 
 from typing import Any
 
+from homematicip.base.enums import DeviceType
 from homematicip.device import (
     BrandSwitch2,
-    BrandSwitchMeasuring,
     DinRailSwitch,
     DinRailSwitch4,
     FullFlushInputSwitch,
-    FullFlushSwitchMeasuring,
     HeatingSwitch2,
     MultiIOBox,
     OpenCollector8Module,
     PlugableSwitch,
-    PlugableSwitchMeasuring,
     PrintedCircuitBoardSwitch2,
     PrintedCircuitBoardSwitchBattery,
+    SwitchMeasuring,
     WiredSwitch8,
 )
 from homematicip.group import ExtendedLinkedSwitchingGroup, SwitchingGroup
@@ -43,12 +42,10 @@ async def async_setup_entry(
         if isinstance(group, (ExtendedLinkedSwitchingGroup, SwitchingGroup))
     ]
     for device in hap.home.devices:
-        if isinstance(device, BrandSwitchMeasuring):
-            # BrandSwitchMeasuring inherits PlugableSwitchMeasuring
-            # This entity is implemented in the light platform and will
-            # not be added in the switch platform
-            pass
-        elif isinstance(device, (PlugableSwitchMeasuring, FullFlushSwitchMeasuring)):
+        if (
+            isinstance(device, SwitchMeasuring)
+            and getattr(device, "deviceType", None) != DeviceType.BRAND_SWITCH_MEASURING
+        ):
             entities.append(HomematicipSwitchMeasuring(hap, device))
         elif isinstance(device, WiredSwitch8):
             entities.extend(
