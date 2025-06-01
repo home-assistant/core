@@ -1000,7 +1000,7 @@ hko==0.3.2
 hlk-sw16==0.0.9
 
 # homeassistant.components.pi_hole
-hole==0.8.0
+hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday

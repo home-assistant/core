@@ -6,13 +6,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from hole import Hole
+from hole import Hole, HoleV5, HoleV6
 from hole.exceptions import HoleError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_API_VERSION,
     CONF_HOST,
     CONF_LOCATION,
     CONF_NAME,
@@ -55,6 +56,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_LOCATION: user_input[CONF_LOCATION],
                 CONF_SSL: user_input[CONF_SSL],
                 CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                CONF_API_KEY: user_input[CONF_API_KEY],
             }
 
             self._async_abort_entries_match(
@@ -68,9 +70,6 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=self._config
                 )
-
-            if CONF_API_KEY in errors:
-                return await self.async_step_api_key()
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -89,6 +88,10 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                         default=user_input.get(CONF_LOCATION, DEFAULT_LOCATION),
                     ): str,
                     vol.Required(
+                        CONF_API_KEY,
+                        default=user_input.get(CONF_API_KEY),
+                    ): str,
+                    vol.Required(
                         CONF_SSL,
                         default=user_input.get(CONF_SSL, DEFAULT_SSL),
                     ): bool,
@@ -98,25 +101,6 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                     ): bool,
                 }
             ),
-            errors=errors,
-        )
-
-    async def async_step_api_key(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle step to setup API key."""
-        errors = {}
-        if user_input is not None:
-            self._config[CONF_API_KEY] = user_input[CONF_API_KEY]
-            if not (errors := await self._async_try_connect()):
-                return self.async_create_entry(
-                    title=self._config[CONF_NAME],
-                    data=self._config,
-                )
-
-        return self.async_show_form(
-            step_id="api_key",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 
@@ -150,20 +134,50 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_try_connect(self) -> dict[str, str]:
+    def _api_by_version(
+        self,
+        version: int,
+    ) -> HoleV5 | HoleV6:
+        """Create an API object by version number."""
         session = async_get_clientsession(self.hass, self._config[CONF_VERIFY_SSL])
-        pi_hole = Hole(
-            self._config[CONF_HOST],
-            session,
-            location=self._config[CONF_LOCATION],
-            tls=self._config[CONF_SSL],
-            api_token=self._config.get(CONF_API_KEY),
-        )
+        hole_kwargs = {
+            "host": self._config[CONF_HOST],
+            "session": session,
+            "location": self._config[CONF_LOCATION],
+            "verify_tls": self._config[CONF_VERIFY_SSL],
+            "version": version,
+        }
+        if version == 5:
+            hole_kwargs["tls"] = self._config.get(CONF_SSL)
+            hole_kwargs["api_token"] = self._config.get(CONF_API_KEY)
+        if version == 6:
+            hole_kwargs["protocol"] = "https" if self._config.get(CONF_SSL) else "http"
+            hole_kwargs["password"] = self._config.get(CONF_API_KEY)
+
+        return Hole(**hole_kwargs)
+
+    async def _async_try_connect(self) -> dict[str, str]:
+        pi_hole = self._api_by_version(6)
         try:
-            await pi_hole.get_data()
-        except HoleError as ex:
-            _LOGGER.debug("Connection failed: %s", ex)
-            return {"base": "cannot_connect"}
+            await pi_hole.authenticate()
+            _LOGGER.debug("Success connecting to pihole, API version is : %s", 6)
+            self._config[CONF_API_VERSION] = 6
+        except HoleError as ex_v6:
+            _LOGGER.debug("Connection failed: %s, trying API version 5", ex_v6)
+            try:
+                pi_hole = self._api_by_version(5)
+                await pi_hole.get_data()
+                if pi_hole.data is not None and "error" in pi_hole.data:
+                    raise HoleError(pi_hole.data["error"])  # noqa: TRY301
+                _LOGGER.debug("Success connecting to pihole, API version is : %s", 5)
+                self._config[CONF_API_VERSION] = 5
+            except HoleError as ex_v5:
+                _LOGGER.warning(
+                    "Connections to both API versions failed, V5: %s, v6: %s",
+                    ex_v5,
+                    ex_v6,
+                )
+                return {"base": "cannot_connect"}
         if not isinstance(pi_hole.data, dict):
             return {CONF_API_KEY: "invalid_auth"}
         return {}
