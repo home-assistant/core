@@ -7,7 +7,7 @@ import logging
 from aioccl import CCLDevice, CCLSensor
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -33,10 +33,7 @@ class BresserCoordinator(DataUpdateCoordinator[dict[str, dict[str, CCLSensor]]])
 
     async def _async_update_data(self) -> dict[str, dict[str, CCLSensor]]:
         """Fetch data from GARNI device."""
-        try:
-            return self.device.get_data
-        except Exception as err:
-            raise UpdateFailed(f"Error updating from API: {err}") from err
+        return self.device.get_data
 
     def async_push_update(self, data) -> None:
         """Process data and update coordinator."""

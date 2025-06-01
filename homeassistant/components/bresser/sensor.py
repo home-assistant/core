@@ -190,8 +190,7 @@ async def async_setup_entry(
     entry.async_on_unload(lambda: coordinator.device.remove_new_sensor_cb(_new_sensor))
 
     if coordinator.data is not None:
-        if "sensors" in coordinator.data:
-            _new_sensor(list(coordinator.data["sensors"].values()))
+        _new_sensor(list(coordinator.data["sensors"].values()))
 
 
 class BresserSensorEntity(BresserEntity, SensorEntity):

@@ -25,10 +25,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         "homeassistant.components.bresser.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
