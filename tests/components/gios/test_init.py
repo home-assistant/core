@@ -12,7 +12,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import STATIONS, init_integration
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
@@ -71,9 +71,9 @@ async def test_migrate_device_and_config_entry(
         },
     )
 
-    indexes = json.loads(load_fixture("gios/indexes.json"))
-    station = json.loads(load_fixture("gios/station.json"))
-    sensors = json.loads(load_fixture("gios/sensors.json"))
+    indexes = json.loads(await async_load_fixture(hass, "indexes.json", DOMAIN))
+    station = json.loads(await async_load_fixture(hass, "station.json", DOMAIN))
+    sensors = json.loads(await async_load_fixture(hass, "sensors.json", DOMAIN))
 
     with (
         patch(
