@@ -7202,67 +7202,61 @@ def test_combine(hass: HomeAssistant) -> None:
         template.Template("{{ {'a': 1} | combine('not a dict') }}", hass).async_render()
 
 
-def test_sort_naturally(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("value_template", "expected"),
+    [
+        (
+            "{{ ['Elm11', 'Elm12', 'Elm2', 'elm0', 'elm1', 'elm10', 'elm13', 'elm9'] | sort_naturally }}",
+            [
+                "elm0",
+                "elm1",
+                "Elm2",
+                "elm9",
+                "elm10",
+                "Elm11",
+                "Elm12",
+                "elm13",
+            ],
+        ),
+        (
+            "{{ ['2 ft 7 in', '1 ft 5 in', '10 ft 2 in', '2 ft 11 in', '7 ft 6 in'] | sort_naturally }}",
+            ["1 ft 5 in", "2 ft 7 in", "2 ft 11 in", "7 ft 6 in", "10 ft 2 in"],
+        ),
+        (
+            "{{ ['5','1','31','23','9','22','11'] | sort_naturally }}",
+            ["1", "5", "9", "11", "22", "23", "31"],
+        ),
+        (
+            "{{ ['5','1','31','23','9','22','11'] | sort_naturally(reverse=True) }}",
+            ["31", "23", "22", "11", "9", "5", "1"],
+        ),
+        (
+            "{{ [{'average': '15,b2','background_color': '#A2C62B'},{'average': '14,a1','background_color': '#4EC2EE'}] | sort_naturally(attribute='average') }}",
+            [
+                {"average": "14,a1", "background_color": "#4EC2EE"},
+                {"average": "15,b2", "background_color": "#A2C62B"},
+            ],
+        ),
+        (
+            "{{ ['1.5', '0.1', '-2.0', '9.8', '6.0'] | sort_naturally }}",
+            ["-2.0", "0.1", "1.5", "6.0", "9.8"],
+        ),
+        (
+            "{{ ['1.5', '0.1', '2.0', '9.8', '6.0'] | sort_naturally }}",
+            ["0.1", "1.5", "2.0", "6.0", "9.8"],
+        ),
+        (
+            "{{ ['-1.5', '100', '2', '-3', '2.56'] | sort_naturally }}",
+            ["-3", "-1.5", "2", "2.56", "100"],
+        ),
+        (
+            "{{ ['-1,5', '100', '2', '-3', '2,56'] | sort_naturally }}",
+            ["-3", "-1,5", "2", "2,56", "100"],
+        ),
+    ],
+)
+def test_sort_naturally(
+    hass: HomeAssistant, value_template: str, expected: list[Any]
+) -> None:
     """Test natural sort filter and function."""
-    assert template.Template(
-        "{{ ['Elm11', 'Elm12', 'Elm2', 'elm0', 'elm1', 'elm10', 'elm13', 'elm9'] | sort_naturally }}",
-        hass,
-    ).async_render() == [
-        "elm0",
-        "elm1",
-        "Elm2",
-        "elm9",
-        "elm10",
-        "Elm11",
-        "Elm12",
-        "elm13",
-    ]
-
-    assert template.Template(
-        "{{ ['2 ft 7 in', '1 ft 5 in', '10 ft 2 in', '2 ft 11 in', '7 ft 6 in'] | sort_naturally }}",
-        hass,
-    ).async_render() == [
-        "1 ft 5 in",
-        "2 ft 7 in",
-        "2 ft 11 in",
-        "7 ft 6 in",
-        "10 ft 2 in",
-    ]
-
-    assert template.Template(
-        "{{ ['5','1','31','23','9','22','11'] | sort_naturally }}",
-        hass,
-    ).async_render() == ["1", "5", "9", "11", "22", "23", "31"]
-
-    assert template.Template(
-        "{{ ['5','1','31','23','9','22','11'] | sort_naturally(reverse=True) }}",
-        hass,
-    ).async_render() == ["31", "23", "22", "11", "9", "5", "1"]
-
-    assert template.Template(
-        "{{ [{'average': '15,b2','background_color': '#A2C62B'},{'average': '14,a1','background_color': '#4EC2EE'}] | sort_naturally(attribute='average') }}",
-        hass,
-    ).async_render() == [
-        {"average": "14,a1", "background_color": "#4EC2EE"},
-        {"average": "15,b2", "background_color": "#A2C62B"},
-    ]
-
-    assert template.Template(
-        "{{ ['1.5', '0.1', '-2.0', '9.8', '6.0'] | sort_naturally }}",
-        hass,
-    ).async_render() == ["-2.0", "0.1", "1.5", "6.0", "9.8"]
-
-    assert template.Template(
-        "{{ ['1.5', '0.1', '2.0', '9.8', '6.0'] | sort_naturally }}",
-        hass,
-    ).async_render() == ["0.1", "1.5", "2.0", "6.0", "9.8"]
-
-    assert template.Template(
-        "{{ ['-1.5', '100', '2', '-3', '2.56'] | sort_naturally }}",
-        hass,
-    ).async_render() == ["-3", "-1.5", "2", "2.56", "100"]
-
-    assert template.Template(
-        "{{ ['-1,5', '100', '2', '-3', '2,56'] | sort_naturally }}",
-        hass,
-    ).async_render() == ["-3", "-1,5", "2", "2,56", "100"]
+    assert template.Template(value_template, hass).async_render() == expected
