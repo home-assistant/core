@@ -1,27 +1,45 @@
 # serializer version: 1
+# name: test_device_diagnostics
+  dict({
+    'account name': 'Echo Test',
+    'bluetooth state': True,
+    'capabilities': list([
+      'AUDIO_PLAYER',
+      'MICROPHONE',
+    ]),
+    'device cluster members': list([
+      'echo_test_serial_number',
+    ]),
+    'device family': 'mine',
+    'device type': 'echo',
+    'do not disturb': False,
+    'online': True,
+    'response style': None,
+    'serial number': 'echo_test_serial_number',
+    'software version': 'echo_test_software_version',
+  })
+# ---
 # name: test_entry_diagnostics
   dict({
     'device_info': dict({
       'devices': list([
         dict({
-          'echo_test_serial_number': dict({
-            'account name': 'Echo Test',
-            'bluetooth state': True,
-            'capabilities': list([
-              'AUDIO_PLAYER',
-              'MICROPHONE',
-            ]),
-            'device cluster members': list([
-              'echo_test_serial_number',
-            ]),
-            'device family': 'mine',
-            'device type': 'echo',
-            'do not disturb': False,
-            'online': True,
-            'response style': None,
-            'serial number': 'echo_test_serial_number',
-            'software version': 'echo_test_software_version',
-          }),
+          'account name': 'Echo Test',
+          'bluetooth state': True,
+          'capabilities': list([
+            'AUDIO_PLAYER',
+            'MICROPHONE',
+          ]),
+          'device cluster members': list([
+            'echo_test_serial_number',
+          ]),
+          'device family': 'mine',
+          'device type': 'echo',
+          'do not disturb': False,
+          'online': True,
+          'response style': None,
+          'serial number': 'echo_test_serial_number',
+          'software version': 'echo_test_software_version',
         }),
       ]),
       'last_exception': 'None',
