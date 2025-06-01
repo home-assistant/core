@@ -71,6 +71,9 @@ def mock_adax_cloud():
     with patch("homeassistant.components.adax.coordinator.Adax") as mock_adax:
         mock_adax_class = mock_adax.return_value
 
+        mock_adax_class.fetch_rooms_info = AsyncMock()
+        mock_adax_class.fetch_rooms_info.return_value = CLOUD_DEVICE_DATA
+
         mock_adax_class.get_rooms = AsyncMock()
         mock_adax_class.get_rooms.return_value = CLOUD_DEVICE_DATA
 
