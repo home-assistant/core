@@ -79,7 +79,7 @@ dependencies = [
   # onboarding->cloud->alexa->camera->stream->numpy. Onboarding needs
   # to be setup in stage 0, but we don't want to also promote cloud with all its
   # dependencies to stage 0.
-  "numpy==2.2.2",
+  "numpy==2.2.6",
   "PyJWT==2.10.1",
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==45.0.1",
