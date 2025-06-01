@@ -63,7 +63,12 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
             name=self._room["name"],
             manufacturer="Adax",
         )
-        self._update_native_value()
+        # Set initial native value
+        energy_wh = self._room.get("energyWh", 0)
+        if energy_wh > 0:
+            self._attr_native_value = round(energy_wh / 1000, 3)
+        else:
+            self._attr_native_value = 0.0
 
     @property
     def available(self) -> bool:
@@ -74,13 +79,10 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._room = self.coordinator.data[self._device_id]
-        self._update_native_value()
-        super()._handle_coordinator_update()
-
-    def _update_native_value(self) -> None:
-        """Update the native value based on energy data."""
+        # Update native value based on energy data
         energy_wh = self._room.get("energyWh", 0)
         if energy_wh > 0:
             self._attr_native_value = round(energy_wh / 1000, 3)
         else:
             self._attr_native_value = 0.0
+        super()._handle_coordinator_update()
