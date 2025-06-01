@@ -4,34 +4,25 @@ from unittest.mock import AsyncMock
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+
+from tests.common import MockConfigEntry
+from tests.components.sensor import conftest
 
 
 async def test_sensor_cloud(
     hass: HomeAssistant,
     mock_adax_cloud: AsyncMock,
-    mock_cloud_config_entry,
-    entity_registry: er.EntityRegistry,
+    mock_cloud_config_entry: MockConfigEntry,
+    snapshot: conftest.SnapshotAssertion,
 ) -> None:
     """Test sensor setup for cloud connection."""
     await setup_integration(hass, mock_cloud_config_entry)
     # Now we use fetch_rooms_info as primary method
     mock_adax_cloud.fetch_rooms_info.assert_called_once()
 
-    # Test individual energy sensor
-    entity_id = "sensor.room_1_energy_1"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "1500"  # Now in Wh instead of kWh
-    assert state.attributes["unit_of_measurement"] == "Wh"  # Native unit is Wh
-    assert state.attributes["device_class"] == "energy"
-    assert state.attributes["state_class"] == "total_increasing"
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "1_1_energy"
+    await snapshot.assert_platform(hass, mock_cloud_config_entry.entry_id, SENSOR_DOMAIN)
 
 
 async def test_sensor_local_not_created(
@@ -51,7 +42,8 @@ async def test_sensor_local_not_created(
 async def test_multiple_devices_create_individual_sensors(
     hass: HomeAssistant,
     mock_adax_cloud: AsyncMock,
-    mock_cloud_config_entry,
+    mock_cloud_config_entry: MockConfigEntry,
+    snapshot: conftest.SnapshotAssertion,
 ) -> None:
     """Test that multiple devices create individual sensors."""
     # Mock multiple devices for both fetch_rooms_info and get_rooms (fallback)
@@ -81,22 +73,14 @@ async def test_multiple_devices_create_individual_sensors(
 
     await setup_integration(hass, mock_cloud_config_entry)
 
-    # Test that individual sensors are created for each device
-    entity_id_1 = "sensor.room_1_energy_1"
-    state_1 = hass.states.get(entity_id_1)
-    assert state_1
-    assert state_1.state == "1500"  # 1500 Wh
-
-    entity_id_2 = "sensor.room_2_energy_2"
-    state_2 = hass.states.get(entity_id_2)
-    assert state_2
-    assert state_2.state == "2500"  # 2500 Wh
+    await snapshot.assert_platform(hass, mock_cloud_config_entry.entry_id, SENSOR_DOMAIN)
 
 
 async def test_fallback_to_get_rooms(
     hass: HomeAssistant,
     mock_adax_cloud: AsyncMock,
-    mock_cloud_config_entry,
+    mock_cloud_config_entry: MockConfigEntry,
+    snapshot: conftest.SnapshotAssertion,
 ) -> None:
     """Test fallback to get_rooms when fetch_rooms_info returns empty list."""
     # Mock fetch_rooms_info to return empty list, get_rooms to return data
@@ -119,8 +103,4 @@ async def test_fallback_to_get_rooms(
     mock_adax_cloud.fetch_rooms_info.assert_called_once()
     mock_adax_cloud.get_rooms.assert_called_once()
 
-    # Test that sensor is still created with fallback data
-    entity_id = "sensor.room_1_energy_1"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "0"  # No energy data from fallback
+    await snapshot.assert_platform(hass, mock_cloud_config_entry.entry_id, SENSOR_DOMAIN)
