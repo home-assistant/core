@@ -88,6 +88,10 @@
       "name": "Send sound",
       "description": "Sends a sound to a device",
       "fields": {
+        "device_ids": {
+          "name": "Devices",
+          "description": "The IDs of the devices to send the command to."
+        },
         "sound": {
           "name": "Amazon Sound skill file",
           "description": "The suond file to play."
@@ -105,6 +109,10 @@
         "text_command": {
           "name": "Amazon text command",
           "description": "The text command to send."
+        },
+        "device_ids": {
+          "name": "Devices",
+          "description": "The IDs of the devices to send the command to."
         }
       }
     }
