@@ -1,0 +1,17 @@
+{
+  "domain": "grid_connect",
+  "name": "Grid connect",
+  "codeowners": ["@dangerdangerau"],
+  "config_flow": true,
+  "dependencies": ["homeassistant"],
+  "documentation": "https://www.home-assistant.io/integrations/grid_connect",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": [],
+  "ssdp": [
+    {
+      "manufacturer": "Grid Connect",
+      "modelName": "GC-Device"
+    }
+  ]
+}
