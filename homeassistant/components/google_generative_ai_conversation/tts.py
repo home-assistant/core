@@ -1,11 +1,12 @@
-"""Text to speech support for Google Generative AI Conversation."""
+"""Text to speech support for Google Generative AI."""
 
 from __future__ import annotations
 
 from contextlib import suppress
+import io
 import logging
-import struct
 from typing import Any
+import wave
 
 from google.genai import types
 
@@ -31,7 +32,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up conversation entities."""
+    """Set up TTS entity."""
     tts_entity = GoogleGenerativeAITextToSpeechEntity(config_entry)
     async_add_entities([tts_entity])
 
@@ -40,6 +41,7 @@ class GoogleGenerativeAITextToSpeechEntity(TextToSpeechEntity):
     """Google Generative AI text-to-speech entity."""
 
     _attr_supported_options = [ATTR_VOICE, ATTR_MODEL]
+    # See https://ai.google.dev/gemini-api/docs/speech-generation#languages
     _attr_supported_languages = [
         "ar-EG",
         "bn-BD",
@@ -67,6 +69,7 @@ class GoogleGenerativeAITextToSpeechEntity(TextToSpeechEntity):
         "vi-VN",
     ]
     _attr_default_language = "en-US"
+    # See https://ai.google.dev/gemini-api/docs/speech-generation#voices
     _supported_voices = [
         Voice(voice.split(" ", 1)[0].lower(), voice)
         for voice in (
@@ -166,34 +169,15 @@ class GoogleGenerativeAITextToSpeechEntity(TextToSpeechEntity):
 
         """
         parameters = self._parse_audio_mime_type(mime_type)
-        bits_per_sample = parameters["bits_per_sample"]
-        sample_rate = parameters["rate"]
-        num_channels = 1
-        data_size = len(audio_data)
-        bytes_per_sample = bits_per_sample // 8
-        block_align = num_channels * bytes_per_sample
-        byte_rate = sample_rate * block_align
-        chunk_size = 36 + data_size  # 36 bytes for header fields before data chunk size
 
-        # http://soundfile.sapp.org/doc/WaveFormat/
+        wav_buffer = io.BytesIO()
+        with wave.open(wav_buffer, "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(parameters["bits_per_sample"] // 8)
+            wf.setframerate(parameters["rate"])
+            wf.writeframes(audio_data)
 
-        header = struct.pack(
-            "<4sI4s4sIHHIIHH4sI",
-            b"RIFF",  # ChunkID
-            chunk_size,  # ChunkSize (total file size - 8 bytes)
-            b"WAVE",  # Format
-            b"fmt ",  # Subchunk1ID
-            16,  # Subchunk1Size (16 for PCM)
-            1,  # AudioFormat (1 for PCM)
-            num_channels,  # NumChannels
-            sample_rate,  # SampleRate
-            byte_rate,  # ByteRate
-            block_align,  # BlockAlign
-            bits_per_sample,  # BitsPerSample
-            b"data",  # Subchunk2ID
-            data_size,  # Subchunk2Size (size of audio data)
-        )
-        return header + audio_data
+        return wav_buffer.getvalue()
 
     def _parse_audio_mime_type(self, mime_type: str) -> dict[str, int]:
         """Parse bits per sample and rate from an audio MIME type string.
