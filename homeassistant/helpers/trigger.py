@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import abc
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
@@ -49,11 +50,36 @@ DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = Has
 )
 
 
+class Trigger(abc.ABC):
+    """Trigger class."""
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        """Initialize trigger."""
+
+    @classmethod
+    @abc.abstractmethod
+    async def async_validate_trigger_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+
+    @abc.abstractmethod
+    async def async_attach_trigger(
+        self,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
+
+
 class TriggerProtocol(Protocol):
     """Define the format of trigger modules.
 
-    Each module must define either TRIGGER_SCHEMA or async_validate_trigger_config.
+    New implementations should only implement async_get_triggers.
     """
+
+    async def async_get_triggers(self, hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        """Return the triggers provided by this integration."""
 
     TRIGGER_SCHEMA: vol.Schema
 
@@ -219,13 +245,14 @@ class PluggableAction:
 async def _async_get_trigger_platform(
     hass: HomeAssistant, config: ConfigType
 ) -> TriggerProtocol:
-    platform_and_sub_type = config[CONF_PLATFORM].split(".")
+    trigger_key: str = config[CONF_PLATFORM]
+    platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:
-        raise vol.Invalid(f"Invalid trigger '{platform}' specified") from None
+        raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified") from None
     try:
         return await integration.async_get_platform("trigger")
     except ImportError:
@@ -241,7 +268,13 @@ async def async_validate_trigger_config(
     config = []
     for conf in trigger_config:
         platform = await _async_get_trigger_platform(hass, conf)
-        if hasattr(platform, "async_validate_trigger_config"):
+        if hasattr(platform, "async_get_triggers"):
+            trigger_descriptors = await platform.async_get_triggers(hass)
+            trigger_key: str = conf[CONF_PLATFORM]
+            if not (trigger := trigger_descriptors[trigger_key]):
+                raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
+            conf = await trigger.async_validate_trigger_config(hass, conf)
+        elif hasattr(platform, "async_validate_trigger_config"):
             conf = await platform.async_validate_trigger_config(hass, conf)
         else:
             conf = platform.TRIGGER_SCHEMA(conf)
@@ -337,13 +370,15 @@ async def async_initialize_triggers(
             trigger_data=trigger_data,
         )
 
-        triggers.append(
-            create_eager_task(
-                platform.async_attach_trigger(
-                    hass, conf, _trigger_action_wrapper(hass, action, conf), info
-                )
-            )
-        )
+        action_wrapper = _trigger_action_wrapper(hass, action, conf)
+        if hasattr(platform, "async_get_triggers"):
+            trigger_descriptors = await platform.async_get_triggers(hass)
+            trigger = trigger_descriptors[conf[CONF_PLATFORM]](hass, conf)
+            coro = trigger.async_attach_trigger(action_wrapper, info)
+        else:
+            coro = platform.async_attach_trigger(hass, conf, action_wrapper, info)
+
+        triggers.append(create_eager_task(coro))
 
     attach_results = await asyncio.gather(*triggers, return_exceptions=True)
     removes: list[Callable[[], None]] = []
