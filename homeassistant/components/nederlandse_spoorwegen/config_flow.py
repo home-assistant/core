@@ -36,9 +36,6 @@ async def get_stations(nsapi: ns_api.NSAPI):
 class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
     """Nederlandse Spoorwegen config flow."""
 
-    # VERSION = 1
-    # MINOR_VERSION = 1
-
     def __init__(self) -> None:
         """Initialize the config flow."""
 
