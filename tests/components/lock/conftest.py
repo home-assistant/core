@@ -12,6 +12,7 @@ from homeassistant.components.lock import (
     LockEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -99,7 +100,7 @@ async def setup_lock_platform_test_entity(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [LOCK_DOMAIN]
+            config_entry, [Platform.LOCK]
         )
         return True
 

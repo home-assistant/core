@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import aiohttp_client
 
-from tests.common import MockConfigEntry, get_schema_suggested_value, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture, get_schema_suggested_value
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -76,7 +76,7 @@ async def test_config_flow_single_account(
     type(renault_account).account_id = PropertyMock(return_value="account_id_1")
     renault_account.get_vehicles.return_value = (
         schemas.KamereonVehiclesResponseSchema.loads(
-            load_fixture("renault/vehicle_zoe_40.json")
+            await async_load_fixture(hass, "vehicle_zoe_40.json", DOMAIN)
         )
     )
 
@@ -305,7 +305,7 @@ async def test_reconfigure(
     type(renault_account).account_id = PropertyMock(return_value="account_id_1")
     renault_account.get_vehicles.return_value = (
         schemas.KamereonVehiclesResponseSchema.loads(
-            load_fixture("renault/vehicle_zoe_40.json")
+            await async_load_fixture(hass, "vehicle_zoe_40.json", DOMAIN)
         )
     )
 
@@ -360,7 +360,7 @@ async def test_reconfigure_mismatch(
     type(renault_account).account_id = PropertyMock(return_value="account_id_other")
     renault_account.get_vehicles.return_value = (
         schemas.KamereonVehiclesResponseSchema.loads(
-            load_fixture("renault/vehicle_zoe_40.json")
+            await async_load_fixture(hass, "vehicle_zoe_40.json", DOMAIN)
         )
     )
 

@@ -398,6 +398,14 @@ async def test_step_discovery(
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "pick_implementation"
 
 
@@ -416,6 +424,11 @@ async def test_abort_discovered_multiple(
         TEST_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
         data=data_entry_flow.BaseServiceInfo(),
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM

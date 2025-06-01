@@ -3038,7 +3038,15 @@ async def test_migrate_of_incompatible_config_entry(
             {
                 "state_class": "measurement",
             },
-            (),
+            (
+                (
+                    {
+                        "state_class": "measurement_angle",
+                        "unit_of_measurement": "deg",
+                    },
+                    {"unit_of_measurement": "invalid_uom_for_state_class"},
+                ),
+            ),
             {
                 "state_topic": "test-topic",
             },

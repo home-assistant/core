@@ -22,7 +22,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_object_fixture,
+    async_load_json_object_fixture,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
@@ -195,10 +195,10 @@ async def test_setup_all_platforms(
     assert hass.states.get("switch.washing_machine_power").state == "off"
 
     # Add two devices and let the clock tick for 130 seconds
-    freezer.tick(timedelta(seconds=130))
-    mock_miele_client.get_devices.return_value = load_json_object_fixture(
-        "5_devices.json", DOMAIN
+    mock_miele_client.get_devices.return_value = await async_load_json_object_fixture(
+        hass, "5_devices.json", DOMAIN
     )
+    freezer.tick(timedelta(seconds=130))
 
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

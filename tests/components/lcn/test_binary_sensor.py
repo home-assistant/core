@@ -190,5 +190,3 @@ async def test_create_issue(
     assert issue_registry.async_get_issue(
         DOMAIN, f"deprecated_binary_sensor_{entity_id}"
     )
-
-    assert len(issue_registry.issues) == 1

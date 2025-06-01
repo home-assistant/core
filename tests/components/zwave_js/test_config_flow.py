@@ -585,8 +585,8 @@ async def test_abort_hassio_discovery_with_existing_flow(hass: HomeAssistant) ->
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -664,13 +664,8 @@ async def test_usb_discovery(
         context={"source": config_entries.SOURCE_USB},
         data=usb_discovery_info,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
-    assert result["description_placeholders"] == {"name": discovery_name}
+
     assert mock_usb_serial_by_id.call_count == 1
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "installation_type"
     assert result["menu_options"] == ["intent_recommended", "intent_custom"]
@@ -771,12 +766,8 @@ async def test_usb_discovery_addon_not_running(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
+
     assert mock_usb_serial_by_id.call_count == 2
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "installation_type"
 
@@ -932,12 +923,8 @@ async def test_usb_discovery_migration(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
+
     assert mock_usb_serial_by_id.call_count == 2
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
@@ -1063,12 +1050,8 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
+
     assert mock_usb_serial_by_id.call_count == 2
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "intent_migrate"
 
@@ -1366,16 +1349,16 @@ async def test_usb_discovery_with_existing_usb_flow(hass: HomeAssistant) -> None
         data=first_usb_info,
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "usb_confirm"
+    assert result2["type"] is FlowResultType.MENU
+    assert result2["step_id"] == "installation_type"
 
     usb_flows_in_progress = hass.config_entries.flow.async_progress_by_handler(
         DOMAIN, match_context={"source": config_entries.SOURCE_USB}
@@ -1405,53 +1388,6 @@ async def test_abort_usb_discovery_addon_required(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_USB},
         data=USB_DISCOVERY_INFO,
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "addon_required"
-
-
-@pytest.mark.usefixtures(
-    "supervisor",
-    "addon_running",
-)
-async def test_abort_usb_discovery_confirm_addon_required(
-    hass: HomeAssistant,
-    addon_options: dict[str, Any],
-    mock_usb_serial_by_id: MagicMock,
-) -> None:
-    """Test usb discovery confirm aborted when existing entry not using add-on."""
-    addon_options["device"] = "/dev/another_device"
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "url": "ws://localhost:3000",
-            "usb_path": "/dev/another_device",
-            "use_addon": True,
-        },
-        title=TITLE,
-        unique_id="1234",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USB},
-        data=USB_DISCOVERY_INFO,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
-    assert mock_usb_serial_by_id.call_count == 2
-
-    hass.config_entries.async_update_entry(
-        entry,
-        data={
-            **entry.data,
-            "use_addon": False,
-        },
-    )
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_required"
 
@@ -4635,13 +4571,8 @@ async def test_recommended_usb_discovery(
         context={"source": config_entries.SOURCE_USB},
         data=usb_discovery_info,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "usb_confirm"
-    assert result["description_placeholders"] == {"name": discovery_name}
+
     assert mock_usb_serial_by_id.call_count == 1
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "installation_type"
     assert result["menu_options"] == ["intent_recommended", "intent_custom"]

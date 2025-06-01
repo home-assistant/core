@@ -3,7 +3,13 @@
 from unittest.mock import patch
 
 import pytest
-from switchbot_api import CannotConnect, Device, InvalidAuth, PowerState, Remote
+from switchbot_api import (
+    Device,
+    PowerState,
+    Remote,
+    SwitchBotAuthenticationError,
+    SwitchBotConnectionError,
+)
 
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
@@ -127,8 +133,8 @@ async def test_setup_entry_success(
 @pytest.mark.parametrize(
     ("error", "state"),
     [
-        (InvalidAuth, ConfigEntryState.SETUP_ERROR),
-        (CannotConnect, ConfigEntryState.SETUP_RETRY),
+        (SwitchBotAuthenticationError, ConfigEntryState.SETUP_ERROR),
+        (SwitchBotConnectionError, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_setup_entry_fails_when_listing_devices(
@@ -162,7 +168,7 @@ async def test_setup_entry_fails_when_refreshing(
             hubDeviceId="test-hub-id",
         )
     ]
-    mock_get_status.side_effect = CannotConnect
+    mock_get_status.side_effect = SwitchBotConnectionError
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 

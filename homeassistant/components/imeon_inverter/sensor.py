@@ -69,7 +69,7 @@ ENTITY_DESCRIPTIONS = (
         translation_key="battery_stored",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # Grid
     SensorEntityDescription(

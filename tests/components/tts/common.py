@@ -25,6 +25,7 @@ from homeassistant.components.tts import (
     _get_cache_files,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -230,14 +231,16 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [TTS_DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.TTS]
+        )
         return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Unload test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, TTS_DOMAIN)
+        await hass.config_entries.async_forward_entry_unload(config_entry, Platform.TTS)
         return True
 
     mock_integration(
