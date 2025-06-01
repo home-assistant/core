@@ -29,6 +29,16 @@ class RoombaSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[IRobotEntity], StateType]
 
 
+DOCK_SENSORS: list[RoombaSensorEntityDescription] = [
+    RoombaSensorEntityDescription(
+        key="dock_tank_level",
+        translation_key="dock_tank_level",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.dock_tank_level,
+    ),
+]
+
 SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="battery",
@@ -36,6 +46,13 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: self.battery_level,
+    ),
+    RoombaSensorEntityDescription(
+        key="tank_level",
+        translation_key="tank_level",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.tank_level,
     ),
     RoombaSensorEntityDescription(
         key="battery_cycles",
@@ -135,6 +152,15 @@ async def async_setup_entry(
     async_add_entities(
         RoombaSensor(roomba, blid, entity_description) for entity_description in SENSORS
     )
+
+    dock_entities: list[RoombaSensor] = []
+    for entity_description in DOCK_SENSORS:
+        entity = RoombaSensor(roomba, blid, entity_description)
+        if entity.has_dock:
+            dock_entities.append(entity)
+
+    if len(dock_entities) > 0:
+        async_add_entities(dock_entities)
 
 
 class RoombaSensor(IRobotEntity, SensorEntity):
