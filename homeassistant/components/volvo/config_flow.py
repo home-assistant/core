@@ -23,6 +23,9 @@ from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .api import ConfigFlowVolvoAuth
@@ -138,7 +141,11 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         schema = self.add_suggested_values_to_schema(
             vol.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    vol.Required(CONF_API_KEY): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.TEXT, autocomplete="password"
+                        )
+                    ),
                 }
             ),
             {
@@ -171,7 +178,6 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self._config_data |= user_input
             return await self._async_create_or_update()
 
-        self._vehicles[0]
         schema = vol.Schema(
             {
                 vol.Required(CONF_VIN): SelectSelector(

@@ -8,7 +8,6 @@ import pytest
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
 from volvocarsapi.models import (
-    VolvoApiException,
     VolvoCarsAvailableCommand,
     VolvoCarsLocation,
     VolvoCarsValueField,
@@ -141,41 +140,7 @@ async def mock_api(full_model_from_marker: str) -> AsyncGenerator[AsyncMock]:
         api.async_get_warnings = AsyncMock(return_value=warnings)
         api.async_get_window_states = AsyncMock(return_value=windows)
 
-        yield mock_api
-
-
-@pytest.fixture
-async def mock_api_failure(full_model_from_marker: str) -> AsyncGenerator[AsyncMock]:
-    """Mock the Volvo API so that it raises an exception for all calls during coordinator update."""
-    model = full_model_from_marker
-    vehicle_data = load_json_object_fixture("vehicle", model)
-    vehicle = VolvoCarsVehicle.from_dict(vehicle_data)
-
-    with patch(
-        "homeassistant.components.volvo.VolvoCarsApi",
-        spec_set=VolvoCarsApi,
-    ) as mock_api:
-        api: VolvoCarsApi = mock_api.return_value
-
-        api.async_get_vehicle_details = AsyncMock(return_value=vehicle)
-
-        api.async_get_brakes_status = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_command_accessibility = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_commands = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_diagnostics = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_doors_status = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_engine_status = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_engine_warnings = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_fuel_status = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_location = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_odometer = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_recharge_status = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_statistics = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_tyre_states = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_warnings = AsyncMock(side_effect=VolvoApiException())
-        api.async_get_window_states = AsyncMock(side_effect=VolvoApiException())
-
-        yield mock_api
+        yield api
 
 
 @pytest.fixture(autouse=True)

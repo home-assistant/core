@@ -59,10 +59,14 @@ class VolvoEntity(CoordinatorEntity[VolvoDataCoordinator]):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         api_field = self.coordinator.get_api_field(self.entity_description.api_field)
-        self._attr_available = super().available and api_field is not None
-
         self._update_state(api_field)
         super()._handle_coordinator_update()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        api_field = self.coordinator.get_api_field(self.entity_description.api_field)
+        return super().available and api_field is not None
 
     @abstractmethod
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:

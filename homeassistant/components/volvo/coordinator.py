@@ -167,16 +167,10 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
         # Raise an error if not a single API call succeeded
         if valid == 0:
-            if exception:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="update_failed",
-                ) from exception
-
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
-            )
+            ) from exception
 
         # Add static values
         data[DATA_BATTERY_CAPACITY] = VolvoCarsValue.from_dict(

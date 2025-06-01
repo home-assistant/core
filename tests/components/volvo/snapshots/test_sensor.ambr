@@ -1,20 +1,150 @@
 # serializer version: 1
-# name: test_sensor[keys0]
-  tuple(
-    '58.0',
-    ReadOnlyDict({
+# name: test_sensor[0][sensor.volvo_xc40_battery_capacity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.volvo_xc40_battery_capacity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
+    'original_icon': None,
+    'original_name': 'Battery capacity',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_capacity',
+    'unique_id': 'yv1abcdefg1234567_battery_capacity',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_battery_capacity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy_storage',
+      'friendly_name': 'Volvo XC40 Battery capacity',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '81.608',
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_battery_charge_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_battery_charge_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery charge level',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_charge_level',
+    'unique_id': 'yv1abcdefg1234567_battery_charge_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_battery_charge_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Volvo XC40 Battery charge level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
-    'yv1abcdefg1234567_battery_charge_level',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_battery_charge_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '58.0',
+  })
 # ---
-# name: test_sensor[keys0].1
-  tuple(
-    'available',
-    ReadOnlyDict({
+# name: test_sensor[0][sensor.volvo_xc40_car_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'available',
+        'car_in_use',
+        'no_internet',
+        'power_saving_mode',
+        'unspecified',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_car_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Car connection',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'availability',
+    'unique_id': 'yv1abcdefg1234567_availability',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_car_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Volvo XC40 Car connection',
       'options': list([
@@ -25,37 +155,59 @@
         'unspecified',
       ]),
     }),
-    'yv1abcdefg1234567_availability',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_car_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'available',
+  })
 # ---
-# name: test_sensor[keys0].10
-  tuple(
-    '53',
-    ReadOnlyDict({
-      'device_class': 'speed',
-      'friendly_name': 'Volvo XC40 TM avg. speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+# name: test_sensor[0][sensor.volvo_xc40_charging_connection_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
     }),
-    'yv1abcdefg1234567_average_speed',
-  )
-# ---
-# name: test_sensor[keys0].11
-  tuple(
-    '3822.9',
-    ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'Volvo XC40 TM distance',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'connection_status_connected_ac',
+        'connection_status_connected_dc',
+        'connection_status_disconnected',
+        'connection_status_fault',
+        'connection_status_unspecified',
+      ]),
     }),
-    'yv1abcdefg1234567_trip_meter_manual',
-  )
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_charging_connection_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging connection status',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_connection_status',
+    'unique_id': 'yv1abcdefg1234567_charging_connection_status',
+    'unit_of_measurement': None,
+  })
 # ---
-# name: test_sensor[keys0].2
-  tuple(
-    'connection_status_connected_ac',
-    ReadOnlyDict({
+# name: test_sensor[0][sensor.volvo_xc40_charging_connection_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Volvo XC40 Charging connection status',
       'options': list([
@@ -66,92 +218,687 @@
         'connection_status_unspecified',
       ]),
     }),
-    'yv1abcdefg1234567_charging_connection_status',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_charging_connection_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'connection_status_connected_ac',
+  })
 # ---
-# name: test_sensor[keys0].3
-  tuple(
-    '250',
-    ReadOnlyDict({
+# name: test_sensor[0][sensor.volvo_xc40_charging_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'charging_system_charging',
+        'charging_system_done',
+        'charging_system_fault',
+        'charging_system_idle',
+        'charging_system_scheduled',
+        'charging_system_unspecified',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_charging_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging status',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_system_status',
+    'unique_id': 'yv1abcdefg1234567_charging_system_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_charging_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Charging status',
+      'options': list([
+        'charging_system_charging',
+        'charging_system_done',
+        'charging_system_fault',
+        'charging_system_idle',
+        'charging_system_scheduled',
+        'charging_system_unspecified',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charging_system_idle',
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_distance_to_empty_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_distance_to_empty_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance to empty battery',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance_to_empty_battery',
+    'unique_id': 'yv1abcdefg1234567_distance_to_empty_battery',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_distance_to_empty_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Volvo XC40 Distance to empty battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'yv1abcdefg1234567_distance_to_empty_battery',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_distance_to_empty_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '250',
+  })
 # ---
-# name: test_sensor[keys0].4
-  tuple(
-    '29000',
-    ReadOnlyDict({
+# name: test_sensor[0][sensor.volvo_xc40_distance_to_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_distance_to_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance to service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance_to_service',
+    'unique_id': 'yv1abcdefg1234567_distance_to_service',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_distance_to_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Volvo XC40 Distance to service',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'yv1abcdefg1234567_distance_to_service',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_distance_to_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '29000',
+  })
 # ---
-# name: test_sensor[keys0].5
-  tuple(
-    '1266',
-    ReadOnlyDict({
+# name: test_sensor[0][sensor.volvo_xc40_engine_time_to_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_engine_time_to_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Engine time to service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'engine_time_to_service',
+    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_engine_time_to_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC40 Engine time to service',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
-    'yv1abcdefg1234567_engine_time_to_service',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_engine_time_to_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1266',
+  })
 # ---
-# name: test_sensor[keys0].6
-  tuple(
-    '780',
-    ReadOnlyDict({
+# name: test_sensor[0][sensor.volvo_xc40_est_charging_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_est_charging_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Est. charging time',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_charging_time',
+    'unique_id': 'yv1abcdefg1234567_estimated_charging_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_est_charging_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Volvo XC40 Est. charging time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
-    'yv1abcdefg1234567_estimated_charging_time',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_est_charging_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '780',
+  })
 # ---
-# name: test_sensor[keys0].7
-  tuple(
-    '30000',
-    ReadOnlyDict({
+# name: test_sensor[0][sensor.volvo_xc40_odometer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_odometer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Odometer',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'odometer',
+    'unique_id': 'yv1abcdefg1234567_odometer',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_odometer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Volvo XC40 Odometer',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'yv1abcdefg1234567_odometer',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_odometer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30000',
+  })
 # ---
-# name: test_sensor[keys0].8
-  tuple(
-    '690',
-    ReadOnlyDict({
+# name: test_sensor[0][sensor.volvo_xc40_ta_avg_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_ta_avg_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_icon': None,
+    'original_name': 'TA avg. speed',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_speed_automatic',
+    'unique_id': 'yv1abcdefg1234567_average_speed_automatic',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_ta_avg_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speed',
+      'friendly_name': 'Volvo XC40 TA avg. speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_ta_avg_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26',
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_ta_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_ta_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'TA distance',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'trip_meter_automatic',
+    'unique_id': 'yv1abcdefg1234567_trip_meter_automatic',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_ta_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC40 TA distance',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_ta_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18.2',
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_time_to_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_time_to_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Time to service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'time_to_service',
+    'unique_id': 'yv1abcdefg1234567_time_to_service',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_time_to_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC40 Time to service',
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
-    'yv1abcdefg1234567_time_to_service',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_time_to_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '690',
+  })
 # ---
-# name: test_sensor[keys0].9
-  tuple(
-    '22.6',
-    ReadOnlyDict({
+# name: test_sensor[0][sensor.volvo_xc40_tm_avg_energy_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_tm_avg_energy_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TM avg. energy consumption',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_energy_consumption',
+    'unique_id': 'yv1abcdefg1234567_average_energy_consumption',
+    'unit_of_measurement': <UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 'kWh/100km'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_tm_avg_energy_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC40 TM avg. energy consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 'kWh/100km'>,
     }),
-    'yv1abcdefg1234567_average_energy_consumption',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_tm_avg_energy_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.6',
+  })
 # ---
-# name: test_sensor[keys1]
-  tuple(
-    'available',
-    ReadOnlyDict({
+# name: test_sensor[0][sensor.volvo_xc40_tm_avg_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_tm_avg_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_icon': None,
+    'original_name': 'TM avg. speed',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_speed',
+    'unique_id': 'yv1abcdefg1234567_average_speed',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_tm_avg_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speed',
+      'friendly_name': 'Volvo XC40 TM avg. speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_tm_avg_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '53',
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_tm_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_tm_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'TM distance',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'trip_meter_manual',
+    'unique_id': 'yv1abcdefg1234567_trip_meter_manual',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[0][sensor.volvo_xc40_tm_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo XC40 TM distance',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_tm_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3822.9',
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_car_connection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'available',
+        'car_in_use',
+        'no_internet',
+        'power_saving_mode',
+        'unspecified',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_car_connection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Car connection',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'availability',
+    'unique_id': 'yv1abcdefg1234567_availability',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_car_connection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Volvo S90 Car connection',
       'options': list([
@@ -162,109 +909,574 @@
         'unspecified',
       ]),
     }),
-    'yv1abcdefg1234567_availability',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_car_connection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'available',
+  })
 # ---
-# name: test_sensor[keys1].1
-  tuple(
-    '147',
-    ReadOnlyDict({
+# name: test_sensor[1][sensor.volvo_s90_distance_to_empty_tank-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_distance_to_empty_tank',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance to empty tank',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance_to_empty_tank',
+    'unique_id': 'yv1abcdefg1234567_distance_to_empty_tank',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_distance_to_empty_tank-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Volvo S90 Distance to empty tank',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'yv1abcdefg1234567_distance_to_empty_tank',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_distance_to_empty_tank',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '147',
+  })
 # ---
-# name: test_sensor[keys1].2
-  tuple(
-    '29000',
-    ReadOnlyDict({
+# name: test_sensor[1][sensor.volvo_s90_distance_to_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_distance_to_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance to service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'distance_to_service',
+    'unique_id': 'yv1abcdefg1234567_distance_to_service',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_distance_to_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Volvo S90 Distance to service',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'yv1abcdefg1234567_distance_to_service',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_distance_to_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '29000',
+  })
 # ---
-# name: test_sensor[keys1].3
-  tuple(
-    '1266',
-    ReadOnlyDict({
+# name: test_sensor[1][sensor.volvo_s90_engine_time_to_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_engine_time_to_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Engine time to service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'engine_time_to_service',
+    'unique_id': 'yv1abcdefg1234567_engine_time_to_service',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_engine_time_to_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo S90 Engine time to service',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
-    'yv1abcdefg1234567_engine_time_to_service',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_engine_time_to_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1266',
+  })
 # ---
-# name: test_sensor[keys1].4
-  tuple(
-    '47.3',
-    ReadOnlyDict({
+# name: test_sensor[1][sensor.volvo_s90_fuel_amount-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_fuel_amount',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
+    'original_icon': None,
+    'original_name': 'Fuel amount',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fuel_amount',
+    'unique_id': 'yv1abcdefg1234567_fuel_amount',
+    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_fuel_amount-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'volume_storage',
       'friendly_name': 'Volvo S90 Fuel amount',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
-    'yv1abcdefg1234567_fuel_amount',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_fuel_amount',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '47.3',
+  })
 # ---
-# name: test_sensor[keys1].5
-  tuple(
-    '30000',
-    ReadOnlyDict({
+# name: test_sensor[1][sensor.volvo_s90_odometer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_odometer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Odometer',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'odometer',
+    'unique_id': 'yv1abcdefg1234567_odometer',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_odometer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Volvo S90 Odometer',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'yv1abcdefg1234567_odometer',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_odometer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30000',
+  })
 # ---
-# name: test_sensor[keys1].6
-  tuple(
-    '17',
-    ReadOnlyDict({
+# name: test_sensor[1][sensor.volvo_s90_ta_avg_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_ta_avg_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_icon': None,
+    'original_name': 'TA avg. speed',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_speed_automatic',
+    'unique_id': 'yv1abcdefg1234567_average_speed_automatic',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_ta_avg_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speed',
+      'friendly_name': 'Volvo S90 TA avg. speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_ta_avg_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26',
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_ta_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_ta_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'TA distance',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'trip_meter_automatic',
+    'unique_id': 'yv1abcdefg1234567_trip_meter_automatic',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_ta_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Volvo S90 TA distance',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_ta_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18.2',
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_time_to_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_time_to_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Time to service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'time_to_service',
+    'unique_id': 'yv1abcdefg1234567_time_to_service',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_time_to_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo S90 Time to service',
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
-    'yv1abcdefg1234567_time_to_service',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_time_to_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17',
+  })
 # ---
-# name: test_sensor[keys1].7
-  tuple(
-    '7.23',
-    ReadOnlyDict({
+# name: test_sensor[1][sensor.volvo_s90_tm_avg_fuel_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_tm_avg_fuel_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TM avg. fuel consumption',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_fuel_consumption',
+    'unique_id': 'yv1abcdefg1234567_average_fuel_consumption',
+    'unit_of_measurement': 'l/100 km',
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_tm_avg_fuel_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo S90 TM avg. fuel consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'l/100 km',
     }),
-    'yv1abcdefg1234567_average_fuel_consumption',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_tm_avg_fuel_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.23',
+  })
 # ---
-# name: test_sensor[keys1].8
-  tuple(
-    '53',
-    ReadOnlyDict({
+# name: test_sensor[1][sensor.volvo_s90_tm_avg_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_tm_avg_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_icon': None,
+    'original_name': 'TM avg. speed',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'average_speed',
+    'unique_id': 'yv1abcdefg1234567_average_speed',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_tm_avg_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'speed',
       'friendly_name': 'Volvo S90 TM avg. speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
-    'yv1abcdefg1234567_average_speed',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_tm_avg_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '53',
+  })
 # ---
-# name: test_sensor[keys1].9
-  tuple(
-    '3822.9',
-    ReadOnlyDict({
+# name: test_sensor[1][sensor.volvo_s90_tm_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_tm_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'TM distance',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'trip_meter_manual',
+    'unique_id': 'yv1abcdefg1234567_trip_meter_manual',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensor[1][sensor.volvo_s90_tm_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Volvo S90 TM distance',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
-    'yv1abcdefg1234567_trip_meter_manual',
-  )
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_tm_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3822.9',
+  })
 # ---

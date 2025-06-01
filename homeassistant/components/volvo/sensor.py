@@ -51,16 +51,16 @@ _UNKNOWN_VALUES = [
 class VolvoSensorDescription(VolvoEntityDescription, SensorEntityDescription):
     """Describes a Volvo sensor entity."""
 
-    value_fn: Callable[[VolvoCarsValue, VolvoConfigEntry], Any] | None = None
+    value_fn: Callable[[VolvoCarsValue], Any] | None = None
     available_fn: Callable[[VolvoCarsVehicle], bool] = lambda vehicle: True
 
 
-def _availability_status(field: VolvoCarsValue, _: VolvoConfigEntry) -> str:
+def _availability_status(field: VolvoCarsValue) -> str:
     reason = field.get("unavailable_reason")
     return reason if reason else str(field.value)
 
 
-def _calculate_time_to_service(field: VolvoCarsValue, _: VolvoConfigEntry) -> int:
+def _calculate_time_to_service(field: VolvoCarsValue) -> int:
     value = int(field.value)
 
     # Always express value in days
@@ -336,14 +336,16 @@ class VolvoSensor(VolvoEntity, SensorEntity):
     entity_description: VolvoSensorDescription
 
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
+        if api_field is None:
+            self._attr_native_value = None
+            return
+
         assert isinstance(api_field, VolvoCarsValue)
 
         native_value = (
             api_field.value
             if self.entity_description.value_fn is None
-            else self.entity_description.value_fn(
-                api_field, self.coordinator.config_entry
-            )
+            else self.entity_description.value_fn(api_field)
         )
 
         if self.device_class == SensorDeviceClass.ENUM:

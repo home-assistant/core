@@ -6,6 +6,7 @@ from http import HTTPStatus
 import pytest
 from volvocarsapi.auth import TOKEN_URL
 
+from homeassistant.components.volvo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -77,6 +78,7 @@ async def test_token_refresh_fail(
 
 
 async def test_token_refresh_reauth(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     setup_integration: Callable[[], Awaitable[bool]],
@@ -87,3 +89,8 @@ async def test_token_refresh_reauth(
 
     assert not await setup_integration()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert flows
+    assert flows[0]["handler"] == DOMAIN
+    assert flows[0]["step_id"] == "reauth_confirm"

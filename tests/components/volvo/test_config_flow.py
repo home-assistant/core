@@ -57,6 +57,7 @@ async def test_single_vin_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    assert config_flow["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(("api_key_failure"), [pytest.param(True), pytest.param(False)])
@@ -164,19 +165,27 @@ async def test_api_failure_flow(
     assert config_flow["errors"]["base"] == "cannot_load_vehicles"
     assert config_flow["step_id"] == "api_key"
 
+    config_flow = await _async_run_flow_to_completion(
+        hass, config_flow, aioclient_mock, configure=False
+    )
+    assert config_flow["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def _async_run_flow_to_completion(
     hass: HomeAssistant,
     config_flow: ConfigFlowResult,
     aioclient_mock: AiohttpClientMocker,
     *,
+    configure: bool = True,
     has_vin_step: bool = True,
     is_reauth: bool = False,
     api_key_failure: bool = False,
 ) -> ConfigFlowResult:
-    _mock_api_client(aioclient_mock, api_key_failure=api_key_failure)
-
-    config_flow = await hass.config_entries.flow.async_configure(config_flow["flow_id"])
+    if configure:
+        _mock_api_client(aioclient_mock, api_key_failure=api_key_failure)
+        config_flow = await hass.config_entries.flow.async_configure(
+            config_flow["flow_id"]
+        )
 
     if is_reauth and not api_key_failure:
         return config_flow
