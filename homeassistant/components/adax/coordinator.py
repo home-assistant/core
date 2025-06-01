@@ -58,6 +58,7 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 _LOGGER.warning(
                     "No rooms returned from Adax API - check account credentials and room configuration"
                 )
+                raise UpdateFailed("No rooms available from Adax API")
 
             for room in rooms:
                 if "energyWh" not in room:
