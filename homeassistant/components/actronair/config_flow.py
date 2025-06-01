@@ -116,7 +116,8 @@ class ActronAirOAuth2FlowHandler(
             },
         )
 
-    async def async_refresh_token(self, token: dict) -> dict:
+    @staticmethod
+    async def async_refresh_token(token: dict) -> dict:
         """Refresh an expired token."""
         session = aiohttp.ClientSession()
 
