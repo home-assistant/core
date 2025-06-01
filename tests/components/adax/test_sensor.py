@@ -17,7 +17,8 @@ async def test_sensor_cloud(
 ) -> None:
     """Test sensor setup for cloud connection."""
     await setup_integration(hass, mock_cloud_config_entry)
-    mock_adax_cloud.get_rooms.assert_called_once()
+    # Now we use fetch_rooms_info as primary method
+    mock_adax_cloud.fetch_rooms_info.assert_called_once()
 
     # Test individual energy sensor
     entity_id = "sensor.room_1_energy_1"
@@ -81,8 +82,8 @@ async def test_master_sensor_sums_multiple_devices(
     mock_cloud_config_entry,
 ) -> None:
     """Test that master sensor correctly sums multiple devices."""
-    # Mock multiple devices
-    mock_adax_cloud.get_rooms.return_value = [
+    # Mock multiple devices for both fetch_rooms_info and get_rooms (fallback)
+    multiple_devices_data = [
         {
             "id": "1",
             "homeId": "1",
@@ -103,6 +104,9 @@ async def test_master_sensor_sums_multiple_devices(
         },
     ]
 
+    mock_adax_cloud.fetch_rooms_info.return_value = multiple_devices_data
+    mock_adax_cloud.get_rooms.return_value = multiple_devices_data
+
     mock_adax_cloud.fetch_energy_info.return_value = [
         {"deviceId": "1", "energyWh": 1500},
         {"deviceId": "2", "energyWh": 2500},
@@ -115,3 +119,36 @@ async def test_master_sensor_sums_multiple_devices(
     master_state = hass.states.get(master_entity_id)
     assert master_state
     assert master_state.state == "4.0"  # 1.5 + 2.5 = 4.0 kWh
+
+
+async def test_fallback_to_get_rooms(
+    hass: HomeAssistant,
+    mock_adax_cloud: AsyncMock,
+    mock_cloud_config_entry,
+) -> None:
+    """Test fallback to get_rooms when fetch_rooms_info returns empty list."""
+    # Mock fetch_rooms_info to return empty list, get_rooms to return data
+    mock_adax_cloud.fetch_rooms_info.return_value = []
+    mock_adax_cloud.get_rooms.return_value = [
+        {
+            "id": "1",
+            "homeId": "1",
+            "name": "Room 1",
+            "temperature": 15,
+            "targetTemperature": 20,
+            "heatingEnabled": True,
+            "energyWh": 0,  # No energy data from get_rooms
+        }
+    ]
+
+    await setup_integration(hass, mock_cloud_config_entry)
+
+    # Should call both methods
+    mock_adax_cloud.fetch_rooms_info.assert_called_once()
+    mock_adax_cloud.get_rooms.assert_called_once()
+
+    # Test that sensor is still created with fallback data
+    entity_id = "sensor.room_1_energy_1"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.0"  # No energy data from fallback
