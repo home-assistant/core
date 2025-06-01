@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
-from telegram import Update
+from telegram import Update, User
 from telegram.error import (
     InvalidToken,
     NetworkError,
@@ -27,8 +27,11 @@ from homeassistant.components.telegram_bot import (
     ATTR_OPTIONS,
     ATTR_QUESTION,
     ATTR_STICKER_ID,
+    ATTR_TARGET,
     CONF_CONFIG_ENTRY_ID,
+    CONF_PLATFORM,
     DOMAIN,
+    PLATFORM_BROADCAST,
     SERVICE_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE,
     SERVICE_EDIT_MESSAGE,
@@ -44,7 +47,10 @@ from homeassistant.components.telegram_bot import (
     async_setup_entry,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
@@ -536,12 +542,52 @@ async def test_send_message_with_config_entry(
         {
             CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
             ATTR_MESSAGE: "mock message",
+            ATTR_TARGET: 1,
         },
         blocking=True,
         return_response=True,
     )
 
     assert response["chats"][0]["message_id"] == 12345
+
+
+async def test_send_message_no_chat_id_error(
+    hass: HomeAssistant,
+    mock_external_calls: None,
+) -> None:
+    """Test send message using config entry with no whitelisted chat id."""
+    data = {
+        CONF_PLATFORM: PLATFORM_BROADCAST,
+        CONF_API_KEY: "mock api key",
+    }
+
+    with patch(
+        "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
+        return_value=User(123456, "Testbot", True),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=data,
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                CONF_CONFIG_ENTRY_ID: result["result"].entry_id,
+                ATTR_MESSAGE: "mock message",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "missing_allowed_chat_ids"
+    assert err.value.translation_placeholders["bot_name"] == "Testbot"
 
 
 async def test_send_message_config_entry_error(
