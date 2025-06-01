@@ -45,17 +45,14 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             if hasattr(self.adax_data_handler, "fetch_rooms_info"):
                 rooms = await self.adax_data_handler.fetch_rooms_info() or []
                 _LOGGER.debug("fetch_rooms_info returned: %s", rooms)
-
-                if not rooms:
-                    _LOGGER.debug(
-                        "fetch_rooms_info returned empty list, trying get_rooms as fallback"
-                    )
-                    rooms = await self.adax_data_handler.get_rooms() or []
-                    _LOGGER.debug("get_rooms fallback returned: %s", rooms)
             else:
-                _LOGGER.debug("fetch_rooms_info method not available, using get_rooms")
+                _LOGGER.info("fetch_rooms_info method not available, using get_rooms")
+                rooms = []
+
+            if not rooms:
+                _LOGGER.debug("No rooms from fetch_rooms_info, trying get_rooms as fallback")
                 rooms = await self.adax_data_handler.get_rooms() or []
-                _LOGGER.debug("get_rooms returned: %s", rooms)
+                _LOGGER.debug("get_rooms fallback returned: %s", rooms)
 
             if not rooms:
                 _LOGGER.warning(
