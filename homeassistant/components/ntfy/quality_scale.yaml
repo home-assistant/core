@@ -13,7 +13,9 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: integration has only entity actions
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -42,12 +44,12 @@ rules:
     status: exempt
     comment: the integration only integrates state-less entities
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
-  devices: todo
-  diagnostics: todo
+  devices: done
+  diagnostics: done
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
@@ -67,13 +69,13 @@ rules:
     comment: only one entity
   entity-translations:
     status: exempt
-    comment: the notify entity uses the topic as name, no translation required
+    comment: the notify entity uses the device name as entity name, no translation required
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
-    comment: the integration has no repeairs
+    comment: the integration has no repairs
   stale-devices:
     status: exempt
     comment: only one device per entry, is deleted with the entry.

@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from aiowaqi import WAQIAirQuality, WAQIError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.waqi.const import DOMAIN

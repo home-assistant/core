@@ -659,7 +659,15 @@
     },
     "fan": {
       "fan": {
-        "name": "[%key:component::fan::title%]"
+        "name": "[%key:component::fan::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "smart": "Smart"
+            }
+          }
+        }
       },
       "fan_group": {
         "name": "Fan group"
@@ -667,7 +675,14 @@
     },
     "light": {
       "light": {
-        "name": "[%key:component::light::title%]"
+        "name": "[%key:component::light::title%]",
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "colorloop": "Color loop"
+            }
+          }
+        }
       },
       "light_group": {
         "name": "Light group"
@@ -905,7 +920,7 @@
         "name": "Fade time"
       },
       "regulator_set_point": {
-        "name": "Regulator set point"
+        "name": "Regulator setpoint"
       },
       "detection_delay": {
         "name": "Detection delay"
@@ -1128,6 +1143,18 @@
       },
       "water_interval": {
         "name": "Water interval"
+      },
+      "hush_duration": {
+        "name": "Hush duration"
+      },
+      "temperature_control_accuracy": {
+        "name": "Temperature control accuracy"
+      },
+      "external_temperature_sensor_value": {
+        "name": "External temperature sensor value"
+      },
+      "update_frequency": {
+        "name": "Update frequency"
       }
     },
     "select": {
@@ -1198,7 +1225,7 @@
         "name": "Decoupled mode"
       },
       "detection_sensitivity": {
-        "name": "Detection Sensitivity"
+        "name": "Detection sensitivity"
       },
       "keypad_lockout": {
         "name": "Keypad lockout"
@@ -1349,6 +1376,18 @@
       },
       "speed": {
         "name": "Speed"
+      },
+      "led_brightness": {
+        "name": "LED brightness"
+      },
+      "alarm_sound_level": {
+        "name": "Alarm sound level"
+      },
+      "alarm_sound_mode": {
+        "name": "Alarm sound mode"
+      },
+      "external_switch_type": {
+        "name": "External switch type"
       }
     },
     "sensor": {
@@ -1590,7 +1629,7 @@
         "name": "Floor temperature"
       },
       "self_test": {
-        "name": "Self test result"
+        "name": "Self-test result"
       },
       "voc_index": {
         "name": "VOC index"
@@ -1620,7 +1659,7 @@
         "name": "Total power factor"
       },
       "self_test_result": {
-        "name": "Self test result"
+        "name": "Self-test result"
       },
       "lower_explosive_limit": {
         "name": "% Lower explosive limit"
@@ -1699,6 +1738,9 @@
       },
       "device_status": {
         "name": "Device status"
+      },
+      "lifetime": {
+        "name": "Lifetime"
       }
     },
     "switch": {
@@ -1841,7 +1883,7 @@
         "name": "Mute siren"
       },
       "self_test_switch": {
-        "name": "Self test"
+        "name": "Self-test"
       },
       "output_switch": {
         "name": "Output switch"
@@ -1908,6 +1950,12 @@
       },
       "auto_clean": {
         "name": "Auto clean"
+      },
+      "test_mode": {
+        "name": "Test mode"
+      },
+      "external_temperature_sensor": {
+        "name": "External temperature sensor"
       }
     }
   }

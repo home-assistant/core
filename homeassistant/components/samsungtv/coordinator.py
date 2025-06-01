@@ -44,7 +44,7 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch data from SamsungTV bridge."""
-        if self.bridge.auth_failed or self.hass.is_stopping:
+        if self.bridge.auth_failed:
             return
         old_state = self.is_on
         if self.bridge.power_off_in_progress:

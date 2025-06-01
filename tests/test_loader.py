@@ -14,7 +14,7 @@ import pytest
 from homeassistant import loader
 from homeassistant.components import hue
 from homeassistant.components.hue import light as hue_light
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
 
@@ -112,25 +112,6 @@ async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
 
     result = await loader.resolve_integrations_after_dependencies(hass, (mod_2, mod_1))
     assert result == {}
-
-
-async def test_helpers_wrapper(hass: HomeAssistant) -> None:
-    """Test helpers wrapper."""
-    helpers = loader.Helpers(hass)
-
-    result = []
-
-    @callback
-    def discovery_callback(service, discovered):
-        """Handle discovery callback."""
-        result.append(discovered)
-
-    helpers.discovery.async_listen("service_name", discovery_callback)
-
-    await helpers.discovery.async_discover("service_name", "hello", None, {})
-    await hass.async_block_till_done()
-
-    assert result == ["hello"]
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
@@ -1979,42 +1960,6 @@ async def test_has_services(hass: HomeAssistant) -> None:
     assert integration.has_services is False
     integration = await loader.async_get_integration(hass, "test_with_services")
     assert integration.has_services is True
-
-
-@pytest.mark.parametrize(
-    ("integration_frame_path", "expected"),
-    [
-        pytest.param(
-            "custom_components/test_integration_frame", True, id="custom integration"
-        ),
-        pytest.param(
-            "homeassistant/components/test_integration_frame",
-            False,
-            id="core integration",
-        ),
-        pytest.param("homeassistant/test_integration_frame", False, id="core"),
-    ],
-)
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_hass_helpers_use_reported(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    expected: bool,
-) -> None:
-    """Test whether use of hass.helpers is reported."""
-    with (
-        patch(
-            "homeassistant.helpers.aiohttp_client.async_get_clientsession",
-            return_value=None,
-        ),
-    ):
-        hass.helpers.aiohttp_client.async_get_clientsession()
-
-        reported = (
-            "Detected that custom integration 'test_integration_frame' "
-            "accesses hass.helpers.aiohttp_client, which should be updated"
-        ) in caplog.text
-        assert reported == expected
 
 
 async def test_manifest_json_fragment_round_trip(hass: HomeAssistant) -> None:

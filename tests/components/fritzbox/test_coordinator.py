@@ -8,14 +8,14 @@ from unittest.mock import Mock
 from pyfritzhome import LoginError
 from requests.exceptions import ConnectionError, HTTPError
 
-from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
+from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from . import FritzDeviceCoverMock, FritzDeviceSwitchMock
+from . import FritzDeviceCoverMock, FritzDeviceSwitchMock, FritzEntityBaseMock
 from .const import MOCK_CONFIG
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -26,8 +26,8 @@ async def test_coordinator_update_after_reboot(
 ) -> None:
     """Test coordinator after reboot."""
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
     )
     entry.add_to_hass(hass)
@@ -46,8 +46,8 @@ async def test_coordinator_update_after_password_change(
 ) -> None:
     """Test coordinator after password change."""
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
     )
     entry.add_to_hass(hass)
@@ -66,8 +66,8 @@ async def test_coordinator_update_when_unreachable(
 ) -> None:
     """Test coordinator after reboot."""
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
     )
     entry.add_to_hass(hass)
@@ -84,6 +84,8 @@ async def test_coordinator_automatic_registry_cleanup(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test automatic registry cleanup."""
+
+    # init with 2 devices and 1 template
     fritz().get_devices.return_value = [
         FritzDeviceSwitchMock(
             ain="fake ain switch",
@@ -96,18 +98,26 @@ async def test_coordinator_automatic_registry_cleanup(
             name="fake_cover",
         ),
     ]
+    fritz().get_templates.return_value = [
+        FritzEntityBaseMock(
+            ain="fake ain template",
+            device_and_unit_id=("fake ain template", None),
+            name="fake_template",
+        )
+    ]
     entry = MockConfigEntry(
-        domain=FB_DOMAIN,
-        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
         unique_id="any",
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 11
-    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 20
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 3
 
+    # remove one device, keep the template
     fritz().get_devices.return_value = [
         FritzDeviceSwitchMock(
             ain="fake ain switch",
@@ -119,5 +129,14 @@ async def test_coordinator_automatic_registry_cleanup(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 8
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 13
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
+
+    # remove the template, keep the device
+    fritz().get_templates.return_value = []
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=35))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 12
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1

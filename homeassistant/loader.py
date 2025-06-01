@@ -1710,37 +1710,6 @@ class ModuleWrapper:
         return value
 
 
-class Helpers:
-    """Helper to load helpers."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the Helpers class."""
-        self._hass = hass
-
-    def __getattr__(self, helper_name: str) -> ModuleWrapper:
-        """Fetch a helper."""
-        helper = importlib.import_module(f"homeassistant.helpers.{helper_name}")
-
-        # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from .helpers.frame import ReportBehavior, report_usage
-
-        report_usage(
-            (
-                f"accesses hass.helpers.{helper_name}, which"
-                f" should be updated to import functions used from {helper_name} directly"
-            ),
-            core_behavior=ReportBehavior.IGNORE,
-            core_integration_behavior=ReportBehavior.IGNORE,
-            custom_integration_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.5",
-        )
-
-        wrapped = ModuleWrapper(self._hass, helper)
-        setattr(self, helper_name, wrapped)
-        return wrapped
-
-
 def bind_hass[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Decorate function to indicate that first argument is hass.
 

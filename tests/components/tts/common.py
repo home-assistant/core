@@ -25,6 +25,7 @@ from homeassistant.components.tts import (
     _get_cache_files,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -42,6 +43,7 @@ from tests.typing import ClientSessionGenerator
 DEFAULT_LANG = "en_US"
 SUPPORT_LANGUAGES = ["de_CH", "de_DE", "en_GB", "en_US"]
 TEST_DOMAIN = "test"
+MOCK_DATA = b"123"
 
 
 def mock_tts_get_cache_files_fixture_helper() -> Generator[MagicMock]:
@@ -164,7 +166,7 @@ class BaseProvider:
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS dat."""
-        return ("mp3", b"")
+        return ("mp3", MOCK_DATA)
 
 
 class MockTTSProvider(BaseProvider, Provider):
@@ -229,14 +231,16 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [TTS_DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.TTS]
+        )
         return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Unload test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, TTS_DOMAIN)
+        await hass.config_entries.async_forward_entry_unload(config_entry, Platform.TTS)
         return True
 
     mock_integration(
@@ -280,6 +284,7 @@ class MockResultStream(ResultStream):
             content_type=f"audio/mock-{extension}",
             engine="test-engine",
             use_file_cache=True,
+            supports_streaming_input=True,
             language="en",
             options={},
             _manager=hass.data[DATA_TTS_MANAGER],

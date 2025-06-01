@@ -7,6 +7,9 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Withings integration needs to re-authenticate your account"
+      },
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Withings device on your network. Press **Submit** to continue setting up Withings."
       }
     },
     "error": {
