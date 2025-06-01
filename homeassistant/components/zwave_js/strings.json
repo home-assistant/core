@@ -31,8 +31,8 @@
     },
     "flow_title": "{name}",
     "progress": {
-      "install_addon": "Please wait while the Z-Wave add-on installation finishes. This can take several minutes.",
-      "start_addon": "Please wait while the Z-Wave add-on start completes. This may take some seconds.",
+      "install_addon": "Installation can take several minutes.",
+      "start_addon": "Starting add-on.",
       "backup_nvm": "Please wait while the network backup completes.",
       "restore_nvm": "Please wait while the network restore completes."
     },
@@ -69,7 +69,7 @@
         "description": "Do you want to set up the Z-Wave integration with the Z-Wave add-on?"
       },
       "install_addon": {
-        "title": "The Z-Wave add-on installation has started"
+        "title": "Installing add-on"
       },
       "manual": {
         "data": {
@@ -96,10 +96,7 @@
         "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]"
       },
       "start_addon": {
-        "title": "The Z-Wave add-on is starting."
-      },
-      "usb_confirm": {
-        "description": "Do you want to set up {name} with the Z-Wave add-on?"
+        "title": "Configuring add-on"
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
