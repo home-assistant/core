@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from types import MappingProxyType
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from dynalite_devices_lib.dynalite_devices import (
@@ -50,7 +49,7 @@ class DynaliteBridge:
         LOGGER.debug("Setting up bridge - host %s", self.host)
         return await self.dynalite_devices.async_setup()
 
-    def reload_config(self, config: MappingProxyType[str, Any]) -> None:
+    def reload_config(self, config: Mapping[str, Any]) -> None:
         """Reconfigure a bridge when config changes."""
         LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
         self.dynalite_devices.configure(convert_config(config))

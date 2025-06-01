@@ -121,12 +121,15 @@ class RoborockCoordinatedEntityV1(
         listener_request: list[RoborockDataProtocol]
         | RoborockDataProtocol
         | None = None,
+        is_dock_entity: bool = False,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         RoborockEntityV1.__init__(
             self,
             unique_id=unique_id,
-            device_info=coordinator.device_info,
+            device_info=coordinator.device_info
+            if not is_dock_entity
+            else coordinator.dock_device_info,
             api=coordinator.api,
         )
         CoordinatorEntity.__init__(self, coordinator=coordinator)

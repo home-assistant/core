@@ -22,8 +22,8 @@ def platforms() -> list[Platform]:
 @pytest.mark.parametrize(
     ("entity_id"),
     [
-        ("switch.roborock_s7_maxv_child_lock"),
-        ("switch.roborock_s7_maxv_status_indicator_light"),
+        ("switch.roborock_s7_maxv_dock_child_lock"),
+        ("switch.roborock_s7_maxv_dock_status_indicator_light"),
         ("switch.roborock_s7_maxv_do_not_disturb"),
     ],
 )
@@ -59,8 +59,8 @@ async def test_update_success(
 @pytest.mark.parametrize(
     ("entity_id", "service"),
     [
-        ("switch.roborock_s7_maxv_status_indicator_light", SERVICE_TURN_ON),
-        ("switch.roborock_s7_maxv_status_indicator_light", SERVICE_TURN_OFF),
+        ("switch.roborock_s7_maxv_dock_status_indicator_light", SERVICE_TURN_ON),
+        ("switch.roborock_s7_maxv_dock_status_indicator_light", SERVICE_TURN_OFF),
     ],
 )
 @pytest.mark.parametrize(

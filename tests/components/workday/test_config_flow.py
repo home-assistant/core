@@ -55,7 +55,7 @@ async def test_form(hass: HomeAssistant) -> None:
             CONF_WORKDAYS: DEFAULT_WORKDAYS,
             CONF_ADD_HOLIDAYS: [],
             CONF_REMOVE_HOLIDAYS: [],
-            CONF_LANGUAGE: "de",
+            CONF_LANGUAGE: "en_US",
         },
     )
     await hass.async_block_till_done()
@@ -70,7 +70,48 @@ async def test_form(hass: HomeAssistant) -> None:
         "workdays": ["mon", "tue", "wed", "thu", "fri"],
         "add_holidays": [],
         "remove_holidays": [],
-        "language": "de",
+        "language": "en_US",
+    }
+
+
+async def test_form_province_no_alias(hass: HomeAssistant) -> None:
+    """Test we get the forms."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Workday Sensor",
+            CONF_COUNTRY: "US",
+        },
+    )
+    await hass.async_block_till_done()
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_EXCLUDES: DEFAULT_EXCLUDES,
+            CONF_OFFSET: DEFAULT_OFFSET,
+            CONF_WORKDAYS: DEFAULT_WORKDAYS,
+            CONF_ADD_HOLIDAYS: [],
+            CONF_REMOVE_HOLIDAYS: [],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Workday Sensor"
+    assert result3["options"] == {
+        "name": "Workday Sensor",
+        "country": "US",
+        "excludes": ["sat", "sun", "holiday"],
+        "days_offset": 0,
+        "workdays": ["mon", "tue", "wed", "thu", "fri"],
+        "add_holidays": [],
+        "remove_holidays": [],
     }
 
 

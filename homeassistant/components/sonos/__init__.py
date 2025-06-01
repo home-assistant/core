@@ -7,6 +7,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 import datetime
 from functools import partial
+from ipaddress import AddressValueError, IPv4Address
 import logging
 import socket
 from typing import Any, cast
@@ -208,6 +209,14 @@ class SonosDiscoveryManager:
 
     async def async_subscribe_to_zone_updates(self, ip_address: str) -> None:
         """Test subscriptions and create SonosSpeakers based on results."""
+        try:
+            _ = IPv4Address(ip_address)
+        except AddressValueError:
+            _LOGGER.debug(
+                "Sonos integration only supports IPv4 addresses, invalid ip_address received: %s",
+                ip_address,
+            )
+            return
         soco = SoCo(ip_address)
         # Cache now to avoid household ID lookup during first ZoneGroupState processing
         await self.hass.async_add_executor_job(

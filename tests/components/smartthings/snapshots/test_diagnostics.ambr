@@ -1,307 +1,311 @@
 # serializer version: 1
 # name: test_config_entry_diagnostics[da_ac_rac_000001]
   dict({
-    '_links': dict({
-    }),
-    'items': list([
+    'devices': list([
       dict({
-        'allowed': list([
-        ]),
-        'components': list([
-          dict({
-            'capabilities': list([
-              dict({
-                'id': 'ocf',
-                'version': 1,
-              }),
-              dict({
-                'id': 'switch',
-                'version': 1,
-              }),
-              dict({
-                'id': 'airConditionerMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'airConditionerFanMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'fanOscillationMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'airQualitySensor',
-                'version': 1,
-              }),
-              dict({
-                'id': 'temperatureMeasurement',
-                'version': 1,
-              }),
-              dict({
-                'id': 'thermostatCoolingSetpoint',
-                'version': 1,
-              }),
-              dict({
-                'id': 'relativeHumidityMeasurement',
-                'version': 1,
-              }),
-              dict({
-                'id': 'dustSensor',
-                'version': 1,
-              }),
-              dict({
-                'id': 'veryFineDustSensor',
-                'version': 1,
-              }),
-              dict({
-                'id': 'audioVolume',
-                'version': 1,
-              }),
-              dict({
-                'id': 'remoteControlStatus',
-                'version': 1,
-              }),
-              dict({
-                'id': 'powerConsumptionReport',
-                'version': 1,
-              }),
-              dict({
-                'id': 'demandResponseLoadControl',
-                'version': 1,
-              }),
-              dict({
-                'id': 'refresh',
-                'version': 1,
-              }),
-              dict({
-                'id': 'execute',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.spiMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.thermostatSetpointControl',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.airConditionerOptionalMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.airConditionerTropicalNightMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.autoCleaningMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.deviceReportStateConfiguration',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.energyType',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.dustFilter',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.airConditionerOdorController',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.deodorFilter',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.disabledComponents',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.disabledCapabilities',
-                'version': 1,
-              }),
-              dict({
-                'id': 'samsungce.deviceIdentification',
-                'version': 1,
-              }),
-              dict({
-                'id': 'samsungce.dongleSoftwareInstallation',
-                'version': 1,
-              }),
-              dict({
-                'id': 'samsungce.softwareUpdate',
-                'version': 1,
-              }),
-              dict({
-                'id': 'samsungce.selfCheck',
-                'version': 1,
-              }),
-              dict({
-                'id': 'samsungce.driverVersion',
-                'version': 1,
-              }),
-            ]),
-            'categories': list([
-              dict({
-                'categoryType': 'manufacturer',
-                'name': 'AirConditioner',
-              }),
-            ]),
-            'id': 'main',
-            'label': 'main',
-          }),
-          dict({
-            'capabilities': list([
-              dict({
-                'id': 'switch',
-                'version': 1,
-              }),
-              dict({
-                'id': 'airConditionerMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'airConditionerFanMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'fanOscillationMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'temperatureMeasurement',
-                'version': 1,
-              }),
-              dict({
-                'id': 'thermostatCoolingSetpoint',
-                'version': 1,
-              }),
-              dict({
-                'id': 'relativeHumidityMeasurement',
-                'version': 1,
-              }),
-              dict({
-                'id': 'airQualitySensor',
-                'version': 1,
-              }),
-              dict({
-                'id': 'dustSensor',
-                'version': 1,
-              }),
-              dict({
-                'id': 'veryFineDustSensor',
-                'version': 1,
-              }),
-              dict({
-                'id': 'odorSensor',
-                'version': 1,
-              }),
-              dict({
-                'id': 'remoteControlStatus',
-                'version': 1,
-              }),
-              dict({
-                'id': 'audioVolume',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.thermostatSetpointControl',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.autoCleaningMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.airConditionerTropicalNightMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.disabledCapabilities',
-                'version': 1,
-              }),
-              dict({
-                'id': 'ocf',
-                'version': 1,
-              }),
-              dict({
-                'id': 'powerConsumptionReport',
-                'version': 1,
-              }),
-              dict({
-                'id': 'demandResponseLoadControl',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.spiMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.airConditionerOptionalMode',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.deviceReportStateConfiguration',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.energyType',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.dustFilter',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.airConditionerOdorController',
-                'version': 1,
-              }),
-              dict({
-                'id': 'custom.deodorFilter',
-                'version': 1,
-              }),
-            ]),
-            'categories': list([
-              dict({
-                'categoryType': 'manufacturer',
-                'name': 'Other',
-              }),
-            ]),
-            'id': '1',
-            'label': '1',
-          }),
-        ]),
-        'createTime': '2021-04-06T16:43:34.753Z',
-        'deviceId': '96a5ef74-5832-a84b-f1f7-ca799957065d',
-        'deviceManufacturerCode': 'Samsung Electronics',
-        'deviceTypeName': 'Samsung OCF Air Conditioner',
-        'executionContext': 'CLOUD',
-        'label': 'AC Office Granit',
-        'locationId': '58d3fd7c-c512-4da3-b500-ef269382756c',
-        'manufacturerName': 'Samsung Electronics',
-        'name': '[room a/c] Samsung',
-        'ocf': dict({
-          'additionalAuthCodeRequired': False,
-          'lastSignupTime': '2025-01-08T02:32:04.631093137Z',
-          'manufacturerName': 'Samsung Electronics',
-          'ocfDeviceType': 'x.com.st.d.sensor.light',
-          'transferCandidate': False,
-          'vendorId': 'VD-Sensor.Light-2023',
+        '_links': dict({
         }),
-        'ownerId': 'f9a28d7c-1ed5-d9e9-a81c-18971ec081db',
-        'presentationId': 'DA-AC-RAC-000001',
-        'profile': dict({
-          'id': '60fbc713-8da5-315d-b31a-6d6dcde4be7b',
-        }),
-        'restrictionTier': 0,
-        'roomId': '7715151d-0314-457a-a82c-5ce48900e065',
-        'type': 'OCF',
+        'items': list([
+          dict({
+            'allowed': list([
+            ]),
+            'components': list([
+              dict({
+                'capabilities': list([
+                  dict({
+                    'id': 'ocf',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'switch',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airConditionerMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airConditionerFanMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'fanOscillationMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airQualitySensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'temperatureMeasurement',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'thermostatCoolingSetpoint',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'relativeHumidityMeasurement',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'dustSensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'veryFineDustSensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'audioVolume',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'remoteControlStatus',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'powerConsumptionReport',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'demandResponseLoadControl',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'refresh',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'execute',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.spiMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.thermostatSetpointControl',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerOptionalMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerTropicalNightMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.autoCleaningMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.deviceReportStateConfiguration',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.energyType',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.dustFilter',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerOdorController',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.deodorFilter',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.disabledComponents',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.disabledCapabilities',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'samsungce.deviceIdentification',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'samsungce.dongleSoftwareInstallation',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'samsungce.softwareUpdate',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'samsungce.selfCheck',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'samsungce.driverVersion',
+                    'version': 1,
+                  }),
+                ]),
+                'categories': list([
+                  dict({
+                    'categoryType': 'manufacturer',
+                    'name': 'AirConditioner',
+                  }),
+                ]),
+                'id': 'main',
+                'label': 'main',
+              }),
+              dict({
+                'capabilities': list([
+                  dict({
+                    'id': 'switch',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airConditionerMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airConditionerFanMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'fanOscillationMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'temperatureMeasurement',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'thermostatCoolingSetpoint',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'relativeHumidityMeasurement',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airQualitySensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'dustSensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'veryFineDustSensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'odorSensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'remoteControlStatus',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'audioVolume',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.thermostatSetpointControl',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.autoCleaningMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerTropicalNightMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.disabledCapabilities',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'ocf',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'powerConsumptionReport',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'demandResponseLoadControl',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.spiMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerOptionalMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.deviceReportStateConfiguration',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.energyType',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.dustFilter',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerOdorController',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.deodorFilter',
+                    'version': 1,
+                  }),
+                ]),
+                'categories': list([
+                  dict({
+                    'categoryType': 'manufacturer',
+                    'name': 'Other',
+                  }),
+                ]),
+                'id': '1',
+                'label': '1',
+              }),
+            ]),
+            'createTime': '2021-04-06T16:43:34.753Z',
+            'deviceId': '96a5ef74-5832-a84b-f1f7-ca799957065d',
+            'deviceManufacturerCode': 'Samsung Electronics',
+            'deviceTypeName': 'Samsung OCF Air Conditioner',
+            'executionContext': 'CLOUD',
+            'label': 'AC Office Granit',
+            'locationId': '58d3fd7c-c512-4da3-b500-ef269382756c',
+            'manufacturerName': 'Samsung Electronics',
+            'name': '[room a/c] Samsung',
+            'ocf': dict({
+              'additionalAuthCodeRequired': False,
+              'lastSignupTime': '2025-01-08T02:32:04.631093137Z',
+              'manufacturerName': 'Samsung Electronics',
+              'ocfDeviceType': 'x.com.st.d.sensor.light',
+              'transferCandidate': False,
+              'vendorId': 'VD-Sensor.Light-2023',
+            }),
+            'ownerId': 'f9a28d7c-1ed5-d9e9-a81c-18971ec081db',
+            'presentationId': 'DA-AC-RAC-000001',
+            'profile': dict({
+              'id': '60fbc713-8da5-315d-b31a-6d6dcde4be7b',
+            }),
+            'restrictionTier': 0,
+            'roomId': '7715151d-0314-457a-a82c-5ce48900e065',
+            'type': 'OCF',
+          }),
+        ]),
       }),
     ]),
   })
@@ -1061,7 +1065,7 @@
           'custom.airConditionerOptionalMode': dict({
             'acOptionalMode': dict({
               'timestamp': '2025-02-09T09:14:39.642Z',
-              'value': 'off',
+              'value': 'windFree',
             }),
             'supportedAcOptionalMode': dict({
               'timestamp': '2024-09-10T10:26:28.781Z',

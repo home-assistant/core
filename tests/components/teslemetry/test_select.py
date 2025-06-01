@@ -41,7 +41,7 @@ async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
 
     entity_id = "select.test_seat_heater_front_left"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.remote_seat_heater_request",
+        "tesla_fleet_api.teslemetry.Vehicle.remote_seat_heater_request",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -56,7 +56,7 @@ async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
 
     entity_id = "select.test_steering_wheel_heater"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.remote_steering_wheel_heat_level_request",
+        "tesla_fleet_api.teslemetry.Vehicle.remote_steering_wheel_heat_level_request",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -71,7 +71,7 @@ async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
 
     entity_id = "select.energy_site_operation_mode"
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.operation",
+        "tesla_fleet_api.teslemetry.EnergySite.operation",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -89,7 +89,7 @@ async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
 
     entity_id = "select.energy_site_allow_export"
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.grid_import_export",
+        "tesla_fleet_api.teslemetry.EnergySite.grid_import_export",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(

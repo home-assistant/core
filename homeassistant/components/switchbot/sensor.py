@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from switchbot.const.air_purifier import AirQualityLevel
+
 from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
@@ -71,9 +74,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
+    "illuminance": SensorEntityDescription(
+        key="illuminance",
+        native_unit_of_measurement=LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+    ),
     "temperature": SensorEntityDescription(
         key="temperature",
-        name=None,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -95,6 +103,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
+    ),
+    "aqi_level": SensorEntityDescription(
+        key="aqi_level",
+        translation_key="aqi_quality_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=[member.name.lower() for member in AirQualityLevel],
     ),
 }
 
