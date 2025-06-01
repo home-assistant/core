@@ -54,12 +54,13 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         """Initialize the energy sensor."""
         super().__init__(coordinator)
         self._device_id = device_id
+        self._room = coordinator.data[device_id]
 
-        self._attr_name = f"{self.room['name']} Energy ({self._device_id})"
-        self._attr_unique_id = f"{self.room['homeId']}_{self._device_id}_energy"
+        self._attr_name = f"{self._room['name']} Energy ({self._device_id})"
+        self._attr_unique_id = f"{self._room['homeId']}_{self._device_id}_energy"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name=self.room["name"],
+            name=self._room["name"],
             manufacturer="Adax",
         )
         self._update_native_value()
@@ -69,20 +70,16 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         """Whether the entity is available or not."""
         return super().available and self._device_id in self.coordinator.data
 
-    @property
-    def room(self) -> dict[str, Any]:
-        """Gets the data for this particular device."""
-        return self.coordinator.data[self._device_id]
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        self._room = self.coordinator.data[self._device_id]
         self._update_native_value()
         super()._handle_coordinator_update()
 
     def _update_native_value(self) -> None:
         """Update the native value based on energy data."""
-        energy_wh = self.room.get("energyWh", 0)
+        energy_wh = self._room.get("energyWh", 0)
         if energy_wh > 0:
             self._attr_native_value = round(energy_wh / 1000, 3)
         else:
