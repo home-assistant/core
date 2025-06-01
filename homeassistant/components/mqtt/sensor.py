@@ -134,15 +134,14 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
             f"together with state class '{state_class}'"
         )
 
-    if (device_class := config.get(CONF_DEVICE_CLASS)) is None or (
-        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
-    ) in EQUIVALENT_UNITS:
-        unit_of_measurement = EQUIVALENT_UNITS[unit_of_measurement]
-        config[CONF_UNIT_OF_MEASUREMENT] = unit_of_measurement
+    if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None:
+        return config
 
-    if (
-        device_class := config.get(CONF_DEVICE_CLASS)
-    ) is None or unit_of_measurement is None:
+    config[CONF_UNIT_OF_MEASUREMENT] = EQUIVALENT_UNITS.get(
+        unit_of_measurement, unit_of_measurement
+    )
+
+    if (device_class := config.get(CONF_DEVICE_CLASS)) is None:
         return config
 
     if (
