@@ -42,6 +42,23 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch data from the Adax."""
         rooms = await self.adax_data_handler.get_rooms() or []
+
+        try:
+            energy_info = await self.adax_data_handler.fetch_energy_info()
+            if energy_info:
+                for room in rooms:
+                    room_id = room["id"]
+                    for energy_data in energy_info:
+                        if energy_data.get("deviceId") == room_id:
+                            room["energyWh"] = energy_data.get("energyWh", 0)
+                            break
+                    else:
+                        room["energyWh"] = 0
+        except Exception as e:
+            _LOGGER.warning("Could not fetch energy data: %s", e)
+            for room in rooms:
+                room["energyWh"] = 0
+
         return {r["id"]: r for r in rooms}
 
 
