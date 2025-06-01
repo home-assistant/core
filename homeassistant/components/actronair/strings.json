@@ -5,7 +5,7 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "user": {
-        "description": "To connect your ActronAir system to Home Assistant you will need to authorize access.\n\n1. Open the [ActronAir login page]({verification_uri_complete})\nAlternatively, you may scan the QR code below.\n 2.Sign in with your NEO account credentials.\n3. Once completed, click Submit below. \n\n{qr_code_data_url}\n\nImportant: The unique code will expire in 30 minutes",
+        "description": "To connect your ActronAir system to Home Assistant you will need to authorize access.\n\n1. Open the [ActronAir login page]({verification_uri_complete})\nAlternatively, you may scan the QR code below.\n 2.Sign in with your NEO account credentials.\n3. Once completed, select Submit below. \n\n{qr_code_data_url}\n\nImportant: The unique code will expire in 30 minutes",
         "data": {}
       }
     },
