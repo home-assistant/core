@@ -33,19 +33,6 @@ async def test_sensor_cloud(
     assert entry
     assert entry.unique_id == "1_1_energy"
 
-    # Test master energy sensor
-    master_entity_id = "sensor.adax_total_energy"
-    master_state = hass.states.get(master_entity_id)
-    assert master_state
-    assert master_state.state == "1.5"  # Same as individual since only one device
-    assert master_state.attributes["unit_of_measurement"] == "kWh"
-    assert master_state.attributes["device_class"] == "energy"
-    assert master_state.attributes["state_class"] == "total_increasing"
-
-    master_entry = entity_registry.async_get(master_entity_id)
-    assert master_entry
-    assert master_entry.unique_id == "1_adax_total_energy"
-
 
 async def test_climate_energy_attributes(
     hass: HomeAssistant,
@@ -76,12 +63,12 @@ async def test_sensor_local_not_created(
     assert len(adax_sensors) == 0
 
 
-async def test_master_sensor_sums_multiple_devices(
+async def test_multiple_devices_create_individual_sensors(
     hass: HomeAssistant,
     mock_adax_cloud: AsyncMock,
     mock_cloud_config_entry,
 ) -> None:
-    """Test that master sensor correctly sums multiple devices."""
+    """Test that multiple devices create individual sensors."""
     # Mock multiple devices for both fetch_rooms_info and get_rooms (fallback)
     multiple_devices_data = [
         {
@@ -107,18 +94,18 @@ async def test_master_sensor_sums_multiple_devices(
     mock_adax_cloud.fetch_rooms_info.return_value = multiple_devices_data
     mock_adax_cloud.get_rooms.return_value = multiple_devices_data
 
-    mock_adax_cloud.fetch_energy_info.return_value = [
-        {"deviceId": "1", "energyWh": 1500},
-        {"deviceId": "2", "energyWh": 2500},
-    ]
-
     await setup_integration(hass, mock_cloud_config_entry)
 
-    # Test that master sensor sums both devices
-    master_entity_id = "sensor.adax_total_energy"
-    master_state = hass.states.get(master_entity_id)
-    assert master_state
-    assert master_state.state == "4.0"  # 1.5 + 2.5 = 4.0 kWh
+    # Test that individual sensors are created for each device
+    entity_id_1 = "sensor.room_1_energy_1"
+    state_1 = hass.states.get(entity_id_1)
+    assert state_1
+    assert state_1.state == "1.5"  # 1500 Wh = 1.5 kWh
+
+    entity_id_2 = "sensor.room_2_energy_2"
+    state_2 = hass.states.get(entity_id_2)
+    assert state_2
+    assert state_2.state == "2.5"  # 2500 Wh = 2.5 kWh
 
 
 async def test_fallback_to_get_rooms(
