@@ -3769,7 +3769,17 @@ async def test_compile_hourly_statistics_convert_units_1(
             30,
         ),
         (None, "\u00b5g/ft³", "\u03bcg/ft³", None, None, 13.050847, 13.333333, -10, 30),
-        (None, "\u00b5g/m³", "\u03bcg/m³", None, None, 13.050847, 13.333333, -10, 30),
+        (
+            None,
+            "\u00b5g/m³",
+            "\u03bcg/m³",
+            None,
+            "concentration",
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
         (
             None,
             "\u00b5mol/s⋅m²",
