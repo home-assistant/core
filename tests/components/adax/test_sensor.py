@@ -24,8 +24,8 @@ async def test_sensor_cloud(
     entity_id = "sensor.room_1_energy_1"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "1.5"
-    assert state.attributes["unit_of_measurement"] == "kWh"
+    assert state.state == "1500"  # Now in Wh instead of kWh
+    assert state.attributes["unit_of_measurement"] == "Wh"  # Native unit is Wh
     assert state.attributes["device_class"] == "energy"
     assert state.attributes["state_class"] == "total_increasing"
 
@@ -85,12 +85,12 @@ async def test_multiple_devices_create_individual_sensors(
     entity_id_1 = "sensor.room_1_energy_1"
     state_1 = hass.states.get(entity_id_1)
     assert state_1
-    assert state_1.state == "1.5"  # 1500 Wh = 1.5 kWh
+    assert state_1.state == "1500"  # 1500 Wh
 
     entity_id_2 = "sensor.room_2_energy_2"
     state_2 = hass.states.get(entity_id_2)
     assert state_2
-    assert state_2.state == "2.5"  # 2500 Wh = 2.5 kWh
+    assert state_2.state == "2500"  # 2500 Wh
 
 
 async def test_fallback_to_get_rooms(
@@ -123,4 +123,4 @@ async def test_fallback_to_get_rooms(
     entity_id = "sensor.room_1_energy_1"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "0.0"  # No energy data from fallback
+    assert state.state == "0"  # No energy data from fallback

@@ -42,7 +42,8 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
     """Representation of an Adax energy sensor."""
 
     _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
+    _attr_suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_suggested_display_precision = 3
 
@@ -65,10 +66,7 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         )
         # Set initial native value
         energy_wh = self._room.get("energyWh", 0)
-        if energy_wh > 0:
-            self._attr_native_value = round(energy_wh / 1000, 3)
-        else:
-            self._attr_native_value = 0.0
+        self._attr_native_value = energy_wh
 
     @property
     def available(self) -> bool:
@@ -81,8 +79,5 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         self._room = self.coordinator.data[self._device_id]
         # Update native value based on energy data
         energy_wh = self._room.get("energyWh", 0)
-        if energy_wh > 0:
-            self._attr_native_value = round(energy_wh / 1000, 3)
-        else:
-            self._attr_native_value = 0.0
+        self._attr_native_value = energy_wh
         super()._handle_coordinator_update()
