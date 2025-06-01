@@ -8,9 +8,11 @@ from anthropic import RateLimitError
 from anthropic.types import (
     InputJSONDelta,
     Message,
+    MessageDeltaUsage,
     RawContentBlockDeltaEvent,
     RawContentBlockStartEvent,
     RawContentBlockStopEvent,
+    RawMessageDeltaEvent,
     RawMessageStartEvent,
     RawMessageStopEvent,
     RawMessageStreamEvent,
@@ -23,6 +25,7 @@ from anthropic.types import (
     ToolUseBlock,
     Usage,
 )
+from anthropic.types.raw_message_delta_event import Delta
 from freezegun import freeze_time
 from httpx import URL, Request, Response
 import pytest
@@ -49,7 +52,7 @@ async def stream_generator(
 
 
 def create_messages(
-    content_blocks: list[RawMessageStreamEvent],
+    content_blocks: list[RawMessageStreamEvent], stop_reason="end_turn"
 ) -> list[RawMessageStreamEvent]:
     """Create a stream of messages with the specified content blocks."""
     return [
@@ -65,6 +68,11 @@ def create_messages(
             type="message_start",
         ),
         *content_blocks,
+        RawMessageDeltaEvent(
+            type="message_delta",
+            delta=Delta(stop_reason=stop_reason, stop_sequence=""),
+            usage=MessageDeltaUsage(output_tokens=0),
+        ),
         RawMessageStopEvent(type="message_stop"),
     ]
 
@@ -213,7 +221,7 @@ async def test_error_handling(
             hass, "hello", None, Context(), agent_id="conversation.claude"
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
@@ -239,7 +247,7 @@ async def test_template_error(
             hass, "hello", None, Context(), agent_id="conversation.claude"
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
@@ -281,9 +289,7 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id="conversation.claude"
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
-        result
-    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "Okay, let me take care of that for you."
@@ -303,11 +309,27 @@ async def test_conversation_agent(
 
 
 @patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")
+@pytest.mark.parametrize(
+    ("tool_call_json_parts", "expected_call_tool_args"),
+    [
+        (
+            ['{"param1": "test_value"}'],
+            {"param1": "test_value"},
+        ),
+        (
+            ['{"para', 'm1": "test_valu', 'e"}'],
+            {"param1": "test_value"},
+        ),
+        ([""], {}),
+    ],
+)
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
+    tool_call_json_parts: list[str],
+    expected_call_tool_args: dict[str, Any],
 ) -> None:
     """Test function call from the assistant."""
     agent_id = "conversation.claude"
@@ -343,9 +365,10 @@ async def test_function_call(
                         1,
                         "toolu_0123456789AbCdEfGhIjKlM",
                         "test_tool",
-                        ['{"para', 'm1": "test_valu', 'e"}'],
+                        tool_call_json_parts,
                     ),
-                ]
+                ],
+                stop_reason="tool_use",
             )
         )
 
@@ -387,7 +410,7 @@ async def test_function_call(
         llm.ToolInput(
             id="toolu_0123456789AbCdEfGhIjKlM",
             tool_name="test_tool",
-            tool_args={"param1": "test_value"},
+            tool_args=expected_call_tool_args,
         ),
         llm.LLMContext(
             platform="anthropic",
@@ -444,7 +467,8 @@ async def test_function_exception(
                         "test_tool",
                         ['{"param1": "test_value"}'],
                     ),
-                ]
+                ],
+                stop_reason="tool_use",
             )
         )
 
@@ -605,6 +629,44 @@ async def test_conversation_id(
         assert result.conversation_id == "koala"
 
 
+async def test_refusal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test refusal due to potential policy violation."""
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                [
+                    *create_content_block(
+                        0,
+                        ["Certainly! To take over the world you need just a simple "],
+                    ),
+                ],
+                stop_reason="refusal",
+            ),
+        ),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "ANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_1FAEFB6177B4672DEE07F9D3AFC62588CCD"
+            "2631EDCF22E8CCC1FB35B501C9C86",
+            None,
+            Context(),
+            agent_id="conversation.claude",
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == "unknown"
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Potential policy violation detected"
+    )
+
+
 async def test_extended_thinking(
     hass: HomeAssistant,
     mock_config_entry_with_extended_thinking: MockConfigEntry,
@@ -742,7 +804,8 @@ async def test_extended_thinking_tool_call(
                         "test_tool",
                         ['{"para', 'm1": "test_valu', 'e"}'],
                     ),
-                ]
+                ],
+                stop_reason="tool_use",
             )
         )
 
