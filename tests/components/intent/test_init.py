@@ -2,8 +2,10 @@
 
 import pytest
 
-from homeassistant.components.cover import SERVICE_OPEN_COVER
-from homeassistant.components.lock import SERVICE_LOCK
+from homeassistant.components.button import SERVICE_PRESS
+from homeassistant.components.cover import SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER
+from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
+from homeassistant.components.valve import SERVICE_CLOSE_VALVE, SERVICE_OPEN_VALVE
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -121,41 +123,130 @@ async def test_turn_on_intent(hass: HomeAssistant) -> None:
     assert call.data == {"entity_id": ["light.test_light"]}
 
 
-async def test_translated_turn_on_intent(
+@pytest.mark.parametrize("domain", ["button", "input_button"])
+async def test_turn_on_intent_button(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, domain
+) -> None:
+    """Test HassTurnOn intent on button domains."""
+    assert await async_setup_component(hass, "intent", {})
+
+    button = entity_registry.async_get_or_create(domain, "test", "button_uid")
+
+    hass.states.async_set(button.entity_id, "unknown")
+    button_service_calls = async_mock_service(hass, domain, SERVICE_PRESS)
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass, "test", "HassTurnOff", {"name": {"value": button.entity_id}}
+        )
+
+    await intent.async_handle(
+        hass, "test", "HassTurnOn", {"name": {"value": button.entity_id}}
+    )
+
+    assert len(button_service_calls) == 1
+    call = button_service_calls[0]
+    assert call.domain == domain
+    assert call.service == SERVICE_PRESS
+    assert call.data == {"entity_id": button.entity_id}
+
+
+async def test_turn_on_off_intent_valve(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test HassTurnOn intent on domains which don't have the intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    result = await async_setup_component(hass, "intent", {})
-    await hass.async_block_till_done()
-    assert result
+    """Test HassTurnOn/Off intent on valve domains."""
+    assert await async_setup_component(hass, "intent", {})
+
+    valve = entity_registry.async_get_or_create("valve", "test", "valve_uid")
+
+    hass.states.async_set(valve.entity_id, "closed")
+    open_calls = async_mock_service(hass, "valve", SERVICE_OPEN_VALVE)
+    close_calls = async_mock_service(hass, "valve", SERVICE_CLOSE_VALVE)
+
+    await intent.async_handle(
+        hass, "test", "HassTurnOn", {"name": {"value": valve.entity_id}}
+    )
+
+    assert len(open_calls) == 1
+    call = open_calls[0]
+    assert call.domain == "valve"
+    assert call.service == SERVICE_OPEN_VALVE
+    assert call.data == {"entity_id": valve.entity_id}
+
+    await intent.async_handle(
+        hass, "test", "HassTurnOff", {"name": {"value": valve.entity_id}}
+    )
+
+    assert len(close_calls) == 1
+    call = close_calls[0]
+    assert call.domain == "valve"
+    assert call.service == SERVICE_CLOSE_VALVE
+    assert call.data == {"entity_id": valve.entity_id}
+
+
+async def test_turn_on_off_intent_cover(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test HassTurnOn/Off intent on cover domains."""
+    assert await async_setup_component(hass, "intent", {})
 
     cover = entity_registry.async_get_or_create("cover", "test", "cover_uid")
-    lock = entity_registry.async_get_or_create("lock", "test", "lock_uid")
 
     hass.states.async_set(cover.entity_id, "closed")
-    hass.states.async_set(lock.entity_id, "unlocked")
-    cover_service_calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
-    lock_service_calls = async_mock_service(hass, "lock", SERVICE_LOCK)
+    open_calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
+    close_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER)
 
     await intent.async_handle(
         hass, "test", "HassTurnOn", {"name": {"value": cover.entity_id}}
     )
+
+    assert len(open_calls) == 1
+    call = open_calls[0]
+    assert call.domain == "cover"
+    assert call.service == SERVICE_OPEN_COVER
+    assert call.data == {"entity_id": cover.entity_id}
+
+    await intent.async_handle(
+        hass, "test", "HassTurnOff", {"name": {"value": cover.entity_id}}
+    )
+
+    assert len(close_calls) == 1
+    call = close_calls[0]
+    assert call.domain == "cover"
+    assert call.service == SERVICE_CLOSE_COVER
+    assert call.data == {"entity_id": cover.entity_id}
+
+
+async def test_turn_on_off_intent_lock(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test HassTurnOn/Off intent on lock domains."""
+    assert await async_setup_component(hass, "intent", {})
+
+    lock = entity_registry.async_get_or_create("lock", "test", "lock_uid")
+
+    hass.states.async_set(lock.entity_id, "locked")
+    unlock_calls = async_mock_service(hass, "lock", SERVICE_UNLOCK)
+    lock_calls = async_mock_service(hass, "lock", SERVICE_LOCK)
+
     await intent.async_handle(
         hass, "test", "HassTurnOn", {"name": {"value": lock.entity_id}}
     )
-    await hass.async_block_till_done()
 
-    assert len(cover_service_calls) == 1
-    call = cover_service_calls[0]
-    assert call.domain == "cover"
-    assert call.service == "open_cover"
-    assert call.data == {"entity_id": cover.entity_id}
-
-    assert len(lock_service_calls) == 1
-    call = lock_service_calls[0]
+    assert len(lock_calls) == 1
+    call = lock_calls[0]
     assert call.domain == "lock"
-    assert call.service == "lock"
+    assert call.service == SERVICE_LOCK
+    assert call.data == {"entity_id": lock.entity_id}
+
+    await intent.async_handle(
+        hass, "test", "HassTurnOff", {"name": {"value": lock.entity_id}}
+    )
+
+    assert len(unlock_calls) == 1
+    call = unlock_calls[0]
+    assert call.domain == "lock"
+    assert call.service == SERVICE_UNLOCK
     assert call.data == {"entity_id": lock.entity_id}
 
 

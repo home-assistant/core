@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fastdotcom.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER

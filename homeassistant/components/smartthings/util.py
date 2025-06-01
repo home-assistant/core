@@ -19,6 +19,7 @@ def deprecate_entity(
     platform_domain: str,
     entity_unique_id: str,
     issue_string: str,
+    version: str = "2025.10.0",
 ) -> bool:
     """Create an issue for deprecated entities."""
     if entity_id := entity_registry.async_get_entity_id(
@@ -51,7 +52,7 @@ def deprecate_entity(
             hass,
             DOMAIN,
             f"{issue_string}_{entity_id}",
-            breaks_in_ha_version="2025.10.0",
+            breaks_in_ha_version=version,
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key=translation_key,

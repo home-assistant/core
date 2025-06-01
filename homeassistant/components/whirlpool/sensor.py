@@ -25,7 +25,7 @@ from .entity import WhirlpoolEntity
 SCAN_INTERVAL = timedelta(minutes=5)
 
 WASHER_TANK_FILL = {
-    0: "unknown",
+    0: None,
     1: "empty",
     2: "25",
     3: "50",
@@ -55,15 +55,12 @@ WASHER_DRYER_MACHINE_STATE = {
     MachineState.SystemInit: "system_initialize",
 }
 
-WASHER_DRYER_CYCLE_FUNC = [
-    (WasherDryer.get_cycle_status_filling, "cycle_filling"),
-    (WasherDryer.get_cycle_status_rinsing, "cycle_rinsing"),
-    (WasherDryer.get_cycle_status_sensing, "cycle_sensing"),
-    (WasherDryer.get_cycle_status_soaking, "cycle_soaking"),
-    (WasherDryer.get_cycle_status_spinning, "cycle_spinning"),
-    (WasherDryer.get_cycle_status_washing, "cycle_washing"),
-]
-
+STATE_CYCLE_FILLING = "cycle_filling"
+STATE_CYCLE_RINSING = "cycle_rinsing"
+STATE_CYCLE_SENSING = "cycle_sensing"
+STATE_CYCLE_SOAKING = "cycle_soaking"
+STATE_CYCLE_SPINNING = "cycle_spinning"
+STATE_CYCLE_WASHING = "cycle_washing"
 STATE_DOOR_OPEN = "door_open"
 
 
@@ -76,9 +73,18 @@ def washer_dryer_state(washer_dryer: WasherDryer) -> str | None:
     machine_state = washer_dryer.get_machine_state()
 
     if machine_state == MachineState.RunningMainCycle:
-        for func, cycle_name in WASHER_DRYER_CYCLE_FUNC:
-            if func(washer_dryer):
-                return cycle_name
+        if washer_dryer.get_cycle_status_filling():
+            return STATE_CYCLE_FILLING
+        if washer_dryer.get_cycle_status_rinsing():
+            return STATE_CYCLE_RINSING
+        if washer_dryer.get_cycle_status_sensing():
+            return STATE_CYCLE_SENSING
+        if washer_dryer.get_cycle_status_soaking():
+            return STATE_CYCLE_SOAKING
+        if washer_dryer.get_cycle_status_spinning():
+            return STATE_CYCLE_SPINNING
+        if washer_dryer.get_cycle_status_washing():
+            return STATE_CYCLE_WASHING
 
     return WASHER_DRYER_MACHINE_STATE.get(machine_state)
 
@@ -90,11 +96,16 @@ class WhirlpoolSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Appliance], str | None]
 
 
-WASHER_DRYER_STATE_OPTIONS = (
-    list(WASHER_DRYER_MACHINE_STATE.values())
-    + [value for _, value in WASHER_DRYER_CYCLE_FUNC]
-    + [STATE_DOOR_OPEN]
-)
+WASHER_DRYER_STATE_OPTIONS = [
+    *WASHER_DRYER_MACHINE_STATE.values(),
+    STATE_CYCLE_FILLING,
+    STATE_CYCLE_RINSING,
+    STATE_CYCLE_SENSING,
+    STATE_CYCLE_SOAKING,
+    STATE_CYCLE_SPINNING,
+    STATE_CYCLE_WASHING,
+    STATE_DOOR_OPEN,
+]
 
 WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
     WhirlpoolSensorEntityDescription(
@@ -109,7 +120,7 @@ WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         translation_key="whirlpool_tank",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=list(WASHER_TANK_FILL.values()),
+        options=[value for value in WASHER_TANK_FILL.values() if value],
         value_fn=lambda washer: WASHER_TANK_FILL.get(washer.get_dispense_1_level()),
     ),
 )
@@ -162,8 +173,6 @@ async def async_setup_entry(
 
 class WhirlpoolSensor(WhirlpoolEntity, SensorEntity):
     """A class for the Whirlpool sensors."""
-
-    _attr_should_poll = False
 
     def __init__(
         self, appliance: Appliance, description: WhirlpoolSensorEntityDescription
@@ -221,9 +230,7 @@ class WasherDryerTimeSensor(WhirlpoolEntity, RestoreSensor):
 
         if machine_state is MachineState.RunningMainCycle:
             self._running = True
-
             new_timestamp = now + timedelta(seconds=self._wd.get_time_remaining())
-
             if self._value is None or (
                 isinstance(self._value, datetime)
                 and abs(new_timestamp - self._value) > timedelta(seconds=60)
