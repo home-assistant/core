@@ -48,7 +48,6 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_suggested_display_precision = 3
-    _attr_translation_key = "energy"
 
     def __init__(
         self,
@@ -100,7 +99,6 @@ class AdaxMasterEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEnti
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_suggested_display_precision = 3
-    _attr_translation_key = "energy"
     _attr_name = "Adax Total Energy"
 
     def __init__(self, coordinator: AdaxCloudCoordinator) -> None:
