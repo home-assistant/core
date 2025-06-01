@@ -65,7 +65,7 @@ def _remove_old_devices(
         )
         if device_id and device_id not in airthings_devices:
             _LOGGER.info(
-                "Removing device %s with ID %s because it is no longer exists in your account",
+                "Removing device %s with ID %s because it no longer exists in your account",
                 registered_device.name,
                 device_id,
             )
