@@ -97,13 +97,13 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {}
-        
+
         # Add energy data if available
         energy_wh = self.room.get("energyWh", 0)
         if energy_wh > 0:
             attributes["energy_kwh"] = round(energy_wh / 1000, 3)
             attributes["energy_wh"] = energy_wh
-            
+
         return attributes
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
