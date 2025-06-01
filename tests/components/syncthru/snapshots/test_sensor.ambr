@@ -1,0 +1,417 @@
+# serializer version: 1
+# name: test_all_entities[sensor.my_printer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_printer',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:printer',
+    'original_name': 'My Printer',
+    'platform': 'syncthru',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '08HRB8GJ3F019DD_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.my_printer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'display_text': '',
+      'friendly_name': 'My Printer',
+      'icon': 'mdi:printer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_printer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'warning',
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_active_alerts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_printer_active_alerts',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:printer',
+    'original_name': 'My Printer Active Alerts',
+    'platform': 'syncthru',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '08HRB8GJ3F019DD_active_alerts',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_active_alerts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My Printer Active Alerts',
+      'icon': 'mdi:printer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_printer_active_alerts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_output_tray_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_printer_output_tray_1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:printer',
+    'original_name': 'My Printer Output Tray 1',
+    'platform': 'syncthru',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '08HRB8GJ3F019DD_output_tray_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_output_tray_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'capacity': 50,
+      'friendly_name': 'My Printer Output Tray 1',
+      'icon': 'mdi:printer',
+      'name': 1,
+      'status': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_printer_output_tray_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Ready',
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_toner_black-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_printer_toner_black',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:printer',
+    'original_name': 'My Printer Toner black',
+    'platform': 'syncthru',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '08HRB8GJ3F019DD_toner_black',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_toner_black-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'cnt': 1176,
+      'friendly_name': 'My Printer Toner black',
+      'icon': 'mdi:printer',
+      'newError': 'C1-5110',
+      'opt': 1,
+      'remaining': 8,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_printer_toner_black',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_toner_cyan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_printer_toner_cyan',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:printer',
+    'original_name': 'My Printer Toner cyan',
+    'platform': 'syncthru',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '08HRB8GJ3F019DD_toner_cyan',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_toner_cyan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'cnt': 25,
+      'friendly_name': 'My Printer Toner cyan',
+      'icon': 'mdi:printer',
+      'newError': '',
+      'opt': 1,
+      'remaining': 98,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_printer_toner_cyan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '98',
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_toner_magenta-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_printer_toner_magenta',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:printer',
+    'original_name': 'My Printer Toner magenta',
+    'platform': 'syncthru',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '08HRB8GJ3F019DD_toner_magenta',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_toner_magenta-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'cnt': 25,
+      'friendly_name': 'My Printer Toner magenta',
+      'icon': 'mdi:printer',
+      'newError': '',
+      'opt': 1,
+      'remaining': 98,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_printer_toner_magenta',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '98',
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_toner_yellow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_printer_toner_yellow',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:printer',
+    'original_name': 'My Printer Toner yellow',
+    'platform': 'syncthru',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '08HRB8GJ3F019DD_toner_yellow',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_toner_yellow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'cnt': 27,
+      'friendly_name': 'My Printer Toner yellow',
+      'icon': 'mdi:printer',
+      'newError': '',
+      'opt': 1,
+      'remaining': 97,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_printer_toner_yellow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '97',
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_tray_tray_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_printer_tray_tray_1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:printer',
+    'original_name': 'My Printer Tray tray_1',
+    'platform': 'syncthru',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '08HRB8GJ3F019DD_tray_tray_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.my_printer_tray_tray_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'capa': 150,
+      'friendly_name': 'My Printer Tray tray_1',
+      'icon': 'mdi:printer',
+      'newError': '',
+      'opt': 1,
+      'paper_level': 0,
+      'paper_size1': 4,
+      'paper_size2': 0,
+      'paper_type1': 2,
+      'paper_type2': 0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_printer_tray_tray_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Ready',
+  })
+# ---

@@ -141,18 +141,6 @@ def fixture_mock_aircon_api_instances(mock_aircon1_api, mock_aircon2_api):
         yield mock_aircon_api
 
 
-def side_effect_function(*args, **kwargs):
-    """Return correct value for attribute."""
-    if args[0] == "Cavity_TimeStatusEstTimeRemaining":
-        return 3540
-    if args[0] == "Cavity_OpStatusDoorOpen":
-        return "0"
-    if args[0] == "WashCavity_OpStatusBulkDispense1Level":
-        return "3"
-
-    return None
-
-
 def get_sensor_mock(said: str, data_model: str):
     """Get a mock of a sensor."""
     mock_sensor = mock.Mock(said=said)
@@ -165,7 +153,9 @@ def get_sensor_mock(said: str, data_model: str):
     mock_sensor.get_machine_state.return_value = (
         whirlpool.washerdryer.MachineState.Standby
     )
-    mock_sensor.get_attribute.side_effect = side_effect_function
+    mock_sensor.get_door_open.return_value = False
+    mock_sensor.get_dispense_1_level.return_value = 3
+    mock_sensor.get_time_remaining.return_value = 3540
     mock_sensor.get_cycle_status_filling.return_value = False
     mock_sensor.get_cycle_status_rinsing.return_value = False
     mock_sensor.get_cycle_status_sensing.return_value = False

@@ -17,9 +17,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    return MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_DEVICE["name"],
         unique_id=str(MOCK_DEVICE["serial"]),
@@ -27,6 +27,8 @@ def mock_config_entry() -> MockConfigEntry:
         source=config_entries.SOURCE_IMPORT,
         minor_version=2,
     )
+    entry.add_to_hass(hass)
+    return entry
 
 
 @pytest.fixture

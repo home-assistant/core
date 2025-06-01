@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "current_speed": {
+        "default": "mdi:pump"
+      },
+      "service_hours": {
+        "default": "mdi:wrench-clock"
+      },
+      "error_code": {
+        "default": "mdi:alert-octagon",
+        "state": {
+          "no_error": "mdi:check-circle"
+        }
+      }
+    }
+  }
+}

@@ -30,20 +30,6 @@ async def update_sensor_state(
     return hass.states.get(entity_id)
 
 
-def side_effect_function_open_door(*args, **kwargs):
-    """Return correct value for attribute."""
-    if args[0] == "Cavity_TimeStatusEstTimeRemaining":
-        return 3540
-
-    if args[0] == "Cavity_OpStatusDoorOpen":
-        return "1"
-
-    if args[0] == "WashCavity_OpStatusBulkDispense1Level":
-        return "3"
-
-    return None
-
-
 async def test_dryer_sensor_values(
     hass: HomeAssistant, mock_sensor2_api: MagicMock, entity_registry: er.EntityRegistry
 ) -> None:
@@ -258,7 +244,7 @@ async def test_washer_sensor_values(
 
     mock_instance.get_machine_state.return_value = MachineState.Complete
     mock_instance.attr_value_to_bool.side_effect = None
-    mock_instance.get_attribute.side_effect = side_effect_function_open_door
+    mock_instance.get_door_open.return_value = True
     state = await update_sensor_state(hass, entity_id, mock_instance)
     assert state is not None
     assert state.state == "door_open"
@@ -338,8 +324,7 @@ async def test_callback(hass: HomeAssistant, mock_sensor1_api: MagicMock) -> Non
     state = hass.states.get(f"sensor.washerdryer_{MOCK_SAID3}_end_time")
     assert state.state == thetimestamp.isoformat()
     mock_sensor1_api.get_machine_state.return_value = MachineState.RunningMainCycle
-    mock_sensor1_api.get_attribute.side_effect = None
-    mock_sensor1_api.get_attribute.return_value = "60"
+    mock_sensor1_api.get_time_remaining.return_value = 60
     callback()
 
     # Test new timestamp when machine starts a cycle.
@@ -348,13 +333,13 @@ async def test_callback(hass: HomeAssistant, mock_sensor1_api: MagicMock) -> Non
     assert state.state != thetimestamp.isoformat()
 
     # Test no timestamp change for < 60 seconds time change.
-    mock_sensor1_api.get_attribute.return_value = "65"
+    mock_sensor1_api.get_time_remaining.return_value = 65
     callback()
     state = hass.states.get(f"sensor.washerdryer_{MOCK_SAID3}_end_time")
     assert state.state == time
 
     # Test timestamp change for > 60 seconds.
-    mock_sensor1_api.get_attribute.return_value = "125"
+    mock_sensor1_api.get_time_remaining.return_value = 125
     callback()
     state = hass.states.get(f"sensor.washerdryer_{MOCK_SAID3}_end_time")
     newtime = utc_from_timestamp(as_timestamp(time) + 65)

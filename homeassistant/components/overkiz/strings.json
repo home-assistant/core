@@ -120,10 +120,10 @@
       "battery": {
         "state": {
           "full": "Full",
-          "low": "Low",
-          "normal": "Normal",
-          "medium": "Medium",
-          "verylow": "Very low",
+          "low": "[%key:common::state::low%]",
+          "normal": "[%key:common::state::normal%]",
+          "medium": "[%key:common::state::medium%]",
+          "verylow": "[%key:common::state::very_low%]",
           "good": "Good",
           "critical": "Critical"
         }
@@ -131,9 +131,9 @@
       "discrete_rssi_level": {
         "state": {
           "good": "Good",
-          "low": "Low",
-          "normal": "Normal",
-          "verylow": "Very low"
+          "low": "[%key:common::state::low%]",
+          "normal": "[%key:common::state::normal%]",
+          "verylow": "[%key:common::state::very_low%]"
         }
       },
       "priority_lock_originator": {

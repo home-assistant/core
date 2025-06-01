@@ -24,7 +24,7 @@ bleak-retry-connector==3.9.0
 bleak==0.22.3
 bluetooth-adapters==0.21.4
 bluetooth-auto-recovery==1.4.5
-bluetooth-data-tools==1.26.5
+bluetooth-data-tools==1.27.0
 cached-ipaddress==0.10.0
 certifi>=2021.5.30
 ciso8601==2.3.2
@@ -38,7 +38,7 @@ habluetooth==3.37.0
 hass-nabucasa==0.94.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250401.0
+home-assistant-frontend==20250404.0
 home-assistant-intents==2025.3.28
 httpx==0.28.1
 ifaddr==0.2.0
@@ -74,7 +74,7 @@ voluptuous-openapi==0.0.6
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
-yarl==1.18.3
+yarl==1.19.0
 zeroconf==0.146.0
 
 # Constrain pycryptodome to avoid vulnerability
@@ -130,7 +130,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.1
+pydantic==2.11.2
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1

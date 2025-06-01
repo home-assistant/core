@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.components.conversation import UserContent, async_get_chat_log, trace
 from homeassistant.components.google_generative_ai_conversation.conversation import (
+    ERROR_GETTING_RESPONSE,
     _escape_decode,
     _format_schema,
 )
@@ -492,7 +493,33 @@ async def test_empty_response(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        "Sorry, I had a problem getting a response from Google Generative AI."
+        ERROR_GETTING_RESPONSE
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_none_response(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test empty response."""
+    with patch("google.genai.chats.AsyncChats.create") as mock_create:
+        mock_chat = AsyncMock()
+        mock_create.return_value.send_message = mock_chat
+        chat_response = Mock(prompt_feedback=None)
+        mock_chat.return_value = chat_response
+        chat_response.candidates = None
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.google_generative_ai_conversation",
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.error_code == "unknown", result
+    assert result.response.as_dict()["speech"]["plain"]["speech"] == (
+        ERROR_GETTING_RESPONSE
     )
 
 

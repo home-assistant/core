@@ -849,9 +849,7 @@ async def test_update_core_with_backup_and_error(
             side_effect=BackupManagerError,
         ),
     ):
-        await client.send_json_auto_id(
-            {"type": "hassio/update/addon", "addon": "test", "backup": True}
-        )
+        await client.send_json_auto_id({"type": "hassio/update/core", "backup": True})
         result = await client.receive_json()
     assert not result["success"]
     assert result["error"] == {

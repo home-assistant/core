@@ -1367,11 +1367,42 @@ async def test_async_forward_entry_setup_deprecated(
     ) in caplog.text
 
 
-async def test_reauth_issue(
+async def test_reauth_issue_flow_returns_abort(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     issue_registry: ir.IssueRegistry,
 ) -> None:
+    """Test that we create/delete an issue when source is reauth.
+
+    In this test, the reauth flow returns abort.
+    """
+    issue = await _test_reauth_issue(hass, manager, issue_registry)
+
+    result = await manager.flow.async_configure(issue.data["flow_id"], {})
+    assert result["type"] == FlowResultType.ABORT
+    assert len(issue_registry.issues) == 0
+
+
+async def test_reauth_issue_flow_aborted(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that we create/delete an issue when source is reauth.
+
+    In this test, the reauth flow is aborted.
+    """
+    issue = await _test_reauth_issue(hass, manager, issue_registry)
+
+    manager.flow.async_abort(issue.data["flow_id"])
+    assert len(issue_registry.issues) == 0
+
+
+async def _test_reauth_issue(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> ir.IssueEntry:
     """Test that we create/delete an issue when source is reauth."""
     assert len(issue_registry.issues) == 0
 
@@ -1407,10 +1438,7 @@ async def test_reauth_issue(
         translation_key="config_entry_reauth",
         translation_placeholders={"name": "test_title"},
     )
-
-    result = await hass.config_entries.flow.async_configure(issue.data["flow_id"], {})
-    assert result["type"] == FlowResultType.ABORT
-    assert len(issue_registry.issues) == 0
+    return issue
 
 
 async def test_loading_default_config(hass: HomeAssistant) -> None:

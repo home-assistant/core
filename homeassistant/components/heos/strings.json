@@ -100,6 +100,20 @@
         }
       }
     },
+    "move_queue_item": {
+      "name": "Move queue item",
+      "description": "Move one or more items within the play queue.",
+      "fields": {
+        "queue_ids": {
+          "name": "Queue IDs",
+          "description": "The IDs (indexes) of the items in the queue to move."
+        },
+        "destination_position": {
+          "name": "Destination position",
+          "description": "The position index in the queue to move the items to."
+        }
+      }
+    },
     "group_volume_down": {
       "name": "Turn down group volume",
       "description": "Turns down the group volume."

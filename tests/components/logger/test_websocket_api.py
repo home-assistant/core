@@ -31,7 +31,6 @@ async def test_integration_log_info(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert {"domain": "http", "level": logging.DEBUG} in msg["result"]
-    assert {"domain": "websocket_api", "level": logging.DEBUG} in msg["result"]
 
 
 async def test_integration_log_level_logger_not_loaded(

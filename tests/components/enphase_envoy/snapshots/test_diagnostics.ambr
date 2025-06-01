@@ -1373,7 +1373,66 @@
       ]),
     }),
     'fixtures': dict({
-      'Error': "EnvoyError('Test')",
+      '/admin/lib/tariff_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/api/v1/production/inverters_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/api/v1/production_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/info_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/dry_contacts_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/generator_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/inventory_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/power_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/secctrl_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ensemble/status_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/meters/readings_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/meters_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/sc/pvlimit_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ss/dry_contact_settings_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ss/gen_config_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ss/gen_schedule_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/ivp/ss/pel_settings_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/production.json?details=1_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/production.json_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
+      '/production_log': dict({
+        'Error': "EnvoyError('Test')",
+      }),
     }),
     'raw_data': dict({
       'varies_by': 'firmware_version',

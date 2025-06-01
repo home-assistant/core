@@ -154,18 +154,14 @@ def get_origin_support_url(discovery_payload: MQTTDiscoveryPayload) -> str | Non
 
 @callback
 def async_log_discovery_origin_info(
-    message: str, discovery_payload: MQTTDiscoveryPayload, level: int = logging.INFO
+    message: str, discovery_payload: MQTTDiscoveryPayload
 ) -> None:
     """Log information about the discovery and origin."""
-    # We only log origin info once per device discovery
-    if not _LOGGER.isEnabledFor(level):
-        # bail out early if logging is disabled
+    if not _LOGGER.isEnabledFor(logging.DEBUG):
+        # bail out early if debug logging is disabled
         return
-    _LOGGER.log(
-        level,
-        "%s%s",
-        message,
-        get_origin_log_string(discovery_payload, include_url=True),
+    _LOGGER.debug(
+        "%s%s", message, get_origin_log_string(discovery_payload, include_url=True)
     )
 
 
@@ -562,7 +558,7 @@ async def async_start(  # noqa: C901
         elif already_discovered:
             # Dispatch update
             message = f"Component has already been discovered: {component} {discovery_id}, sending update"
-            async_log_discovery_origin_info(message, payload, logging.DEBUG)
+            async_log_discovery_origin_info(message, payload)
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_UPDATED.format(*discovery_hash), payload
             )

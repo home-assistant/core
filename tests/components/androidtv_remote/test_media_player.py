@@ -391,7 +391,9 @@ async def test_media_player_connection_closed(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     mock_api.send_key_command.side_effect = ConnectionClosed()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match="Connection to the Android TV device is closed"
+    ):
         await hass.services.async_call(
             "media_player",
             "media_pause",
@@ -400,7 +402,9 @@ async def test_media_player_connection_closed(
         )
 
     mock_api.send_launch_app_command.side_effect = ConnectionClosed()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match="Connection to the Android TV device is closed"
+    ):
         await hass.services.async_call(
             "media_player",
             "play_media",

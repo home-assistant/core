@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "faulting_points": {
+        "default": "mdi:alert-circle-outline"
+      }
+    }
+  }
+}

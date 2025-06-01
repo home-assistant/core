@@ -557,6 +557,42 @@ async def setup_single_action_light(
 
 
 @pytest.fixture
+async def setup_empty_action_light(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    action: str,
+    extra_config: dict,
+) -> None:
+    """Do setup of light integration."""
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_format(
+            hass,
+            count,
+            {
+                "test_template_light": {
+                    "turn_on": [],
+                    "turn_off": [],
+                    action: [],
+                    **extra_config,
+                }
+            },
+        )
+    elif style == ConfigurationStyle.MODERN:
+        await async_setup_new_format(
+            hass,
+            count,
+            {
+                "name": "test_template_light",
+                "turn_on": [],
+                "turn_off": [],
+                action: [],
+                **extra_config,
+            },
+        )
+
+
+@pytest.fixture
 async def setup_light_with_effects(
     hass: HomeAssistant,
     count: int,
@@ -2404,3 +2440,82 @@ async def test_nested_unique_id(
     entry = entity_registry.async_get("light.test_b")
     assert entry
     assert entry.unique_id == "x-b"
+
+
+@pytest.mark.parametrize(("count", "extra_config"), [(1, {})])
+@pytest.mark.parametrize(
+    "style",
+    [
+        ConfigurationStyle.LEGACY,
+        ConfigurationStyle.MODERN,
+    ],
+)
+@pytest.mark.parametrize(
+    ("action", "color_mode"),
+    [
+        ("set_level", ColorMode.BRIGHTNESS),
+        ("set_temperature", ColorMode.COLOR_TEMP),
+        ("set_hs", ColorMode.HS),
+        ("set_rgb", ColorMode.RGB),
+        ("set_rgbw", ColorMode.RGBW),
+        ("set_rgbww", ColorMode.RGBWW),
+    ],
+)
+async def test_empty_color_mode_action_config(
+    hass: HomeAssistant,
+    color_mode: ColorMode,
+    setup_empty_action_light,
+) -> None:
+    """Test empty actions for color mode actions."""
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["supported_color_modes"] == [color_mode]
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_template_light"},
+        blocking=True,
+    )
+
+    state = hass.states.get("light.test_template_light")
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.test_template_light"},
+        blocking=True,
+    )
+
+    state = hass.states.get("light.test_template_light")
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(("count"), [1])
+@pytest.mark.parametrize(
+    ("style", "extra_config"),
+    [
+        (
+            ConfigurationStyle.LEGACY,
+            {
+                "effect_list_template": "{{ ['a'] }}",
+                "effect_template": "{{ 'a' }}",
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "effect_list": "{{ ['a'] }}",
+                "effect": "{{ 'a' }}",
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize("action", ["set_effect"])
+async def test_effect_with_empty_action(
+    hass: HomeAssistant,
+    setup_empty_action_light,
+) -> None:
+    """Test empty set_effect action."""
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["supported_features"] == LightEntityFeature.EFFECT

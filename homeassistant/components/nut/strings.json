@@ -28,6 +28,27 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reconfigure": {
+        "description": "[%key:component::nut::config::step::user::description%]",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "[%key:component::nut::config::step::user::data_description::host%]",
+          "port": "[%key:component::nut::config::step::user::data_description::port%]",
+          "username": "[%key:component::nut::config::step::user::data_description::username%]",
+          "password": "[%key:component::nut::config::step::user::data_description::password%]"
+        }
+      },
+      "reconfigure_ups": {
+        "title": "[%key:component::nut::config::step::ups::title%]",
+        "data": {
+          "alias": "[%key:component::nut::config::step::ups::data::alias%]"
+        }
       }
     },
     "error": {
@@ -38,7 +59,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_ups_found": "There are no UPS devices available on the NUT server.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The device's manufacturer, model and serial number identifier does not match the previous identifier."
     }
   },
   "device_automation": {
@@ -104,7 +127,18 @@
       "battery_charge_low": { "name": "Low battery setpoint" },
       "battery_charge_restart": { "name": "Minimum battery to start" },
       "battery_charge_warning": { "name": "Warning battery setpoint" },
-      "battery_charger_status": { "name": "Charging status" },
+      "battery_charger_status": {
+        "name": "Charging status",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "floating": "Floating",
+          "resting": "Resting",
+          "unknown": "Unknown",
+          "disabled": "[%key:common::state::disabled%]",
+          "off": "Off"
+        }
+      },
       "battery_current": { "name": "Battery current" },
       "battery_current_total": { "name": "Total battery current" },
       "battery_date": { "name": "Battery date" },
@@ -135,10 +169,25 @@
       "input_bypass_realpower": { "name": "Input bypass real power" },
       "input_bypass_voltage": { "name": "Input bypass voltage" },
       "input_current": { "name": "Input current" },
-      "input_current_status": { "name": "Input current status" },
+      "input_current_status": {
+        "name": "Input current status",
+        "state": {
+          "good": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::good%]",
+          "warning-low": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::warning-low%]",
+          "critical-low": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::critical-low%]",
+          "warning-high": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::warning-high%]",
+          "critical-high": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::critical-high%]"
+        }
+      },
       "input_frequency": { "name": "Input frequency" },
       "input_frequency_nominal": { "name": "Input nominal frequency" },
-      "input_frequency_status": { "name": "Input frequency status" },
+      "input_frequency_status": {
+        "name": "Input frequency status",
+        "state": {
+          "good": "Good",
+          "out-of-range": "Out of range"
+        }
+      },
       "input_l1_current": { "name": "Input L1 current" },
       "input_l1_frequency": { "name": "Input L1 line frequency" },
       "input_l1_n_voltage": { "name": "Input L1 voltage" },
@@ -194,7 +243,14 @@
       "output_voltage": { "name": "Output voltage" },
       "output_voltage_nominal": { "name": "Nominal output voltage" },
       "ups_alarm": { "name": "Alarms" },
-      "ups_beeper_status": { "name": "Beeper status" },
+      "ups_beeper_status": {
+        "name": "Beeper status",
+        "state": {
+          "enabled": "[%key:common::state::enabled%]",
+          "disabled": "[%key:common::state::disabled%]",
+          "muted": "Muted"
+        }
+      },
       "ups_contacts": { "name": "External contacts" },
       "ups_delay_reboot": { "name": "UPS reboot delay" },
       "ups_delay_shutdown": { "name": "UPS shutdown delay" },

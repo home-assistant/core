@@ -226,9 +226,10 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
             assert name is not None
         self._template = config.get(CONF_STATE)
 
-        if on_action := config.get(CONF_TURN_ON):
+        # Scripts can be an empty list, therefore we need to check for None
+        if (on_action := config.get(CONF_TURN_ON)) is not None:
             self.add_script(CONF_TURN_ON, on_action, name, DOMAIN)
-        if off_action := config.get(CONF_TURN_OFF):
+        if (off_action := config.get(CONF_TURN_OFF)) is not None:
             self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
 
         self._state: bool | None = False

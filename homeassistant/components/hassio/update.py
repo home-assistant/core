@@ -39,7 +39,7 @@ from .entity import (
 from .update_helper import update_addon, update_core
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
-    name="Update",
+    translation_key="update",
     key=ATTR_VERSION_LATEST,
 )
 
