@@ -1735,7 +1735,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.7
+pylamarzocco==2.0.8
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1950,7 +1950,7 @@ pysmhi==1.0.2
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.2.4
+pysmlight==0.2.5
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
