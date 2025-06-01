@@ -60,15 +60,16 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 )
                 raise UpdateFailed("No rooms available from Adax API")
 
-            for room in rooms:
-                if "energyWh" not in room:
-                    room["energyWh"] = 0
-
-            return {r["id"]: r for r in rooms}
-
         except Exception as e:
             _LOGGER.error("Error fetching room data: %s", e)
             raise UpdateFailed(f"Error communicating with API: {e}") from e
+
+        # Process room data - this cannot fail so it's outside try block
+        for room in rooms:
+            if "energyWh" not in room:
+                room["energyWh"] = 0
+
+        return {r["id"]: r for r in rooms}
 
 
 class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
