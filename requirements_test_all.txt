@@ -1007,7 +1007,7 @@ hole==0.8.0
 holidays==0.73
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250528.0
+home-assistant-frontend==20250531.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.5.28
@@ -1367,7 +1367,7 @@ openhomedevice==2.2.0
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.12.2
+opower==0.12.3
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1735,7 +1735,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.8
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.7
+pylamarzocco==2.0.8
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1950,7 +1950,7 @@ pysmhi==1.0.2
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.2.4
+pysmlight==0.2.5
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
