@@ -41,10 +41,6 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
-    "go2rtc": {
-        # https://github.com/home-assistant-libs/python-go2rtc-client/pull/123
-        "go2rtc-client": {"awesomeversion"}
-    },
     "homewizard": {
         # https://github.com/homewizard/python-homewizard-energy/pull/545
         "python-homewizard-energy": {"awesomeversion"}
