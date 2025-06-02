@@ -25,6 +25,13 @@ add_item:
       example: "Submit income tax return"
       selector:
         text:
+    icon:
+      example: "mdi:calculator"
+      selector:
+        icon:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_ICON_ON_ITEM
     due_date:
       filter:
         supported_features:
@@ -62,6 +69,13 @@ update_item:
       example: "Something else"
       selector:
         text:
+    icon:
+      example: "mdi:calculator"
+      selector:
+        icon:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_ICON_ON_ITEM
     status:
       example: "needs_action"
       selector:

@@ -35,6 +35,7 @@ from .const import (
     ATTR_DUE,
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
+    ATTR_ICON,
     ATTR_ITEM,
     ATTR_RENAME,
     ATTR_STATUS,
@@ -88,6 +89,12 @@ TODO_ITEM_FIELDS = [
         validation=vol.Any(cv.string, None),
         todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
+    ),
+    TodoItemFieldDescription(
+        service_field=ATTR_ICON,
+        validation=vol.Any(cv.icon, None),
+        todo_item_field=ATTR_ICON,
+        required_feature=TodoListEntityFeature.SET_ICON_ON_ITEM,
     ),
 ]
 
@@ -217,6 +224,9 @@ class TodoItem:
 
     uid: str | None = None
     """A unique identifier for the To-do item."""
+
+    icon: str | None = None
+    """An icon that represents the To-do item."""
 
     status: TodoItemStatus | None = None
     """A status or confirmation of the To-do item."""

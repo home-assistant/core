@@ -24,6 +24,10 @@
           "name": "Item name",
           "description": "The name that represents the to-do item."
         },
+        "icon": {
+          "name": "Icon",
+          "description": "An icon to represent the to-do item. If not specified, no icon will be used."
+        },
         "due_date": {
           "name": "Due date",
           "description": "The date the to-do item is expected to be completed."
@@ -49,6 +53,10 @@
         "rename": {
           "name": "Rename item",
           "description": "The new name for the to-do item"
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "An icon to represent the to-do item. If not specified, no icon will be used."
         },
         "status": {
           "name": "Set status",

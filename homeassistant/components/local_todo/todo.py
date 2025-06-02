@@ -118,6 +118,7 @@ class LocalTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+        | TodoListEntityFeature.SET_ICON_ON_ITEM
     )
     _attr_should_poll = False
 

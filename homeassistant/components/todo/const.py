@@ -19,6 +19,7 @@ ATTR_DUE = "due"
 ATTR_DUE_DATE = "due_date"
 ATTR_DUE_DATETIME = "due_datetime"
 ATTR_DESCRIPTION = "description"
+ATTR_ICON = "icon"
 ATTR_ITEM = "item"
 ATTR_RENAME = "rename"
 ATTR_STATUS = "status"
@@ -44,6 +45,7 @@ class TodoListEntityFeature(IntFlag):
     SET_DUE_DATE_ON_ITEM = 16
     SET_DUE_DATETIME_ON_ITEM = 32
     SET_DESCRIPTION_ON_ITEM = 64
+    SET_ICON_ON_ITEM = 128
 
 
 class TodoItemStatus(StrEnum):
