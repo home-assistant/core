@@ -2,44 +2,37 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.airthings import DOMAIN
-from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import TEST_DATA
+from . import MockAirthings, setup_integration
+from .const import TEST_DATA, THREE_DEVICES, TWO_DEVICES
 
-from tests.common import MockConfigEntry
 
-
-async def test_remove_old_devices(hass: HomeAssistant) -> None:
+async def test_remove_old_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test that old devices are removed when new data is fetched."""
 
-    first_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_DATA,
-        unique_id=TEST_DATA[CONF_ID],
-    )
-    first_entry.add_to_hass(hass)
-
-    device_registry = dr.async_get(hass)
-
-    device_registry.async_get_or_create(
-        config_entry_id=first_entry.entry_id,
-        identifiers={(DOMAIN, "device_1")},
-        name="Device 1",
-    )
-    assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "device_1")}) is not None
-    )
-
-    # Fetch new data with no devices
+    # Use MockAirthings instead of real Airthings for testing
     with patch(
-        "homeassistant.components.airthings.coordinator.AirthingsDataUpdateCoordinator._update_method",
-        return_value={},
+        "homeassistant.components.airthings.Airthings",
+        return_value=MockAirthings(THREE_DEVICES),
     ):
-        await hass.config_entries.async_setup(first_entry.entry_id)
+        entry = await setup_integration(hass)
+
+    assert entry is not None
+    assert entry.domain == "airthings"
+    assert entry.data == TEST_DATA
+
+    assert len(device_registry.devices) == len(THREE_DEVICES)
+
+    with patch(
+        "homeassistant.components.airthings.Airthings",
+        return_value=MockAirthings(TWO_DEVICES),
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Check that the old device is removed
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "device_1")})
+    assert len(device_registry.devices) == len(TWO_DEVICES)
