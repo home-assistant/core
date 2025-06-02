@@ -30,12 +30,5 @@
       "heater_not_found": "Heater not found. Try to move the heater closer to Home Assistant computer.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
-  },
-  "entity": {
-    "sensor": {
-      "energy": {
-        "name": "Energy"
-      }
-    }
   }
 }
