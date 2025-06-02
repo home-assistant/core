@@ -30,12 +30,10 @@ async def async_setup_entry(
         cloud_coordinator = cast(AdaxCloudCoordinator, entry.runtime_data)
 
         # Create individual energy sensors for each device
-        individual_sensors = [
+        async_add_entities(
             AdaxEnergySensor(cloud_coordinator, device_id)
             for device_id in cloud_coordinator.data
-        ]
-
-        async_add_entities(individual_sensors)
+        )
 
 
 class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
