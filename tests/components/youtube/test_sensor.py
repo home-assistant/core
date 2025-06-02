@@ -1,5 +1,6 @@
 """Sensor tests for the YouTube integration."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -48,6 +49,7 @@ async def test_sensor_without_uploaded_video(
         future = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
+        await asyncio.sleep(0.1)
 
     state = hass.states.get("sensor.google_for_developers_latest_upload")
     assert state == snapshot
@@ -78,6 +80,7 @@ async def test_sensor_updating(
         future = dt_util.utcnow() + timedelta(minutes=15)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
+        await asyncio.sleep(0.1)
     state = hass.states.get("sensor.google_for_developers_latest_upload")
     assert state
     assert state.name == "Google for Developers Latest upload"
