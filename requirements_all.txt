@@ -94,7 +94,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.7.5
+PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
 PyViCare==2.44.0
@@ -182,7 +182,7 @@ aioairzone-cloud==0.6.12
 aioairzone==1.0.0
 
 # homeassistant.components.amazon_devices
-aioamazondevices==2.1.1
+aioamazondevices==3.0.4
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -265,7 +265,7 @@ aioharmony==0.5.2
 aiohasupervisor==0.3.1
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.17.0
+aiohomeconnect==0.17.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.14
@@ -280,7 +280,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.6.0
+aioimmich==0.8.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -405,7 +405,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.2
 
 # homeassistant.components.tedee
-aiotedee==0.2.20
+aiotedee==0.2.23
 
 # homeassistant.components.tractive
 aiotractive==0.6.0
@@ -759,7 +759,7 @@ dbus-fast==2.43.0
 debugpy==1.8.14
 
 # homeassistant.components.decora_wifi
-# decora-wifi==1.4
+decora-wifi==1.4
 
 # homeassistant.components.decora
 # decora==0.6
@@ -1164,10 +1164,10 @@ hole==0.8.0
 holidays==0.73
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250527.0
+home-assistant-frontend==20250531.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.5.7
+home-assistant-intents==2025.5.28
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.0.1.1
@@ -1548,7 +1548,7 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==2.2.2
+numpy==2.2.6
 
 # homeassistant.components.nyt_games
 nyt_games==0.4.4
@@ -1617,7 +1617,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.12.2
+opower==0.12.3
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1832,7 +1832,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.9.0
+pyaprilaire==0.9.1
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -2051,7 +2051,7 @@ pyiqvia==2022.04.0
 pyirishrail==0.0.2
 
 # homeassistant.components.iskra
-pyiskra==0.1.15
+pyiskra==0.1.19
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -2096,7 +2096,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.7
+pylamarzocco==2.0.8
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2251,7 +2251,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.probe_plus
-pyprobeplus==1.0.0
+pyprobeplus==1.0.1
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2353,7 +2353,7 @@ pysmhi==1.0.2
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.2.4
+pysmlight==0.2.5
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2452,7 +2452,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.8
+python-linkplay==0.2.9
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2859,7 +2859,7 @@ surepy==0.9.0
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.3.1
+switchbot-api==2.4.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
@@ -2900,7 +2900,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.0.17
+tesla-fleet-api==1.1.1
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
