@@ -35,7 +35,7 @@ from .coordinator import (
     SynologyDSMData,
     SynologyDSMSwitchUpdateCoordinator,
 )
-from .service import async_setup_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -268,7 +268,7 @@ aiohasupervisor==0.3.1
 aiohomeconnect==0.17.1
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.14
+aiohomekit==3.2.15
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -1026,7 +1026,7 @@ gitterpy==0.1.7
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.1.3b0
+go2rtc-client==0.2.1
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1572,7 +1572,7 @@ oemthermostat==1.1.1
 ohme==1.5.1
 
 # homeassistant.components.ollama
-ollama==0.4.7
+ollama==0.5.1
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
@@ -2221,7 +2221,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.17.1
+pyoverkiz==1.17.2
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
