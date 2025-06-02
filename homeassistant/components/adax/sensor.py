@@ -57,7 +57,6 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         self._device_id = device_id
         self._room = coordinator.data[device_id]
 
-        self._attr_name = f"{self._room['name']} Energy ({self._device_id})"
         self._attr_unique_id = f"{self._room['homeId']}_{self._device_id}_energy"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
