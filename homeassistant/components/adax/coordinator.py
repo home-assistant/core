@@ -46,7 +46,7 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 rooms = await self.adax_data_handler.fetch_rooms_info() or []
                 _LOGGER.debug("fetch_rooms_info returned: %s", rooms)
             else:
-                _LOGGER.info("fetch_rooms_info method not available, using get_rooms")
+                _LOGGER.debug("fetch_rooms_info method not available, using get_rooms")
                 rooms = []
 
             if not rooms:
