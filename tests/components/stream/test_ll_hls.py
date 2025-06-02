@@ -202,7 +202,7 @@ async def test_ll_hls_stream(
     datetime_re = re.compile(r"#EXT-X-PROGRAM-DATE-TIME:(?P<datetime>.+)")
     inf_re = re.compile(r"#EXTINF:(?P<segment_duration>[0-9]{1,}.[0-9]{3,}),")
     # keep track of which tests were done (indexed by re)
-    tested = {regex: False for regex in (part_re, datetime_re, inf_re)}
+    tested = dict.fromkeys((part_re, datetime_re, inf_re), False)
     # keep track of times and durations along playlist for checking consistency
     part_durations = []
     segment_duration = 0

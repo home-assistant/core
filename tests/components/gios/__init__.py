@@ -6,7 +6,7 @@ from unittest.mock import patch
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 STATIONS = [
     {"id": 123, "stationName": "Test Name 1", "gegrLat": "99.99", "gegrLon": "88.88"},
@@ -26,9 +26,9 @@ async def init_integration(
         entry_id="86129426118ae32020417a53712d6eef",
     )
 
-    indexes = json.loads(load_fixture("gios/indexes.json"))
-    station = json.loads(load_fixture("gios/station.json"))
-    sensors = json.loads(load_fixture("gios/sensors.json"))
+    indexes = json.loads(await async_load_fixture(hass, "indexes.json", DOMAIN))
+    station = json.loads(await async_load_fixture(hass, "station.json", DOMAIN))
+    sensors = json.loads(await async_load_fixture(hass, "sensors.json", DOMAIN))
     if incomplete_data:
         indexes["stIndexLevel"]["indexLevelName"] = "foo"
         sensors["pm10"]["values"][0]["value"] = None

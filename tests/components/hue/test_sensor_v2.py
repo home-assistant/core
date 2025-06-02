@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 from homeassistant.components import hue
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -23,7 +24,7 @@ async def test_sensors(
     """Test if all v2 sensors get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "sensor")
+    await setup_platform(hass, mock_bridge_v2, Platform.SENSOR)
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
     # 6 entities should be created from test data
@@ -81,7 +82,7 @@ async def test_enable_sensor(
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
     await hass.async_block_till_done()
     await hass.config_entries.async_forward_entry_setups(
-        mock_config_entry_v2, ["sensor"]
+        mock_config_entry_v2, [Platform.SENSOR]
     )
 
     entity_id = "sensor.wall_switch_with_2_controls_zigbee_connectivity"
@@ -99,9 +100,11 @@ async def test_enable_sensor(
     assert updated_entry.disabled is False
 
     # reload platform and check if entity is correctly there
-    await hass.config_entries.async_forward_entry_unload(mock_config_entry_v2, "sensor")
+    await hass.config_entries.async_forward_entry_unload(
+        mock_config_entry_v2, Platform.SENSOR
+    )
     await hass.config_entries.async_forward_entry_setups(
-        mock_config_entry_v2, ["sensor"]
+        mock_config_entry_v2, [Platform.SENSOR]
     )
     await hass.async_block_till_done()
 
@@ -113,7 +116,7 @@ async def test_enable_sensor(
 async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     """Test if sensors get added/updated from events."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
-    await setup_platform(hass, mock_bridge_v2, "sensor")
+    await setup_platform(hass, mock_bridge_v2, Platform.SENSOR)
 
     test_entity_id = "sensor.hue_mocked_device_temperature"
 

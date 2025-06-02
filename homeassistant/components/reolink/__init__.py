@@ -23,12 +23,12 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
+from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
@@ -67,9 +67,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry
 ) -> bool:
     """Set up Reolink from a config entry."""
-    host = ReolinkHost(
-        hass, config_entry.data, config_entry.options, config_entry.entry_id
-    )
+    host = ReolinkHost(hass, config_entry.data, config_entry.options, config_entry)
 
     try:
         await host.async_init()
@@ -100,6 +98,7 @@ async def async_setup_entry(
         or host.api.use_https != config_entry.data[CONF_USE_HTTPS]
         or host.api.supported(None, "privacy_mode")
         != config_entry.data.get(CONF_SUPPORTS_PRIVACY_MODE)
+        or host.api.baichuan.port != config_entry.data.get(CONF_BC_PORT)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
             _LOGGER.warning(
@@ -108,10 +107,21 @@ async def async_setup_entry(
                 config_entry.data[CONF_PORT],
                 host.api.port,
             )
+        if (
+            config_entry.data.get(CONF_BC_PORT, host.api.baichuan.port)
+            != host.api.baichuan.port
+        ):
+            _LOGGER.warning(
+                "Baichuan port of Reolink %s, changed from %s to %s",
+                host.api.nvr_name,
+                config_entry.data.get(CONF_BC_PORT),
+                host.api.baichuan.port,
+            )
         data = {
             **config_entry.data,
             CONF_PORT: host.api.port,
             CONF_USE_HTTPS: host.api.use_https,
+            CONF_BC_PORT: host.api.baichuan.port,
             CONF_SUPPORTS_PRIVACY_MODE: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
@@ -140,6 +150,10 @@ async def async_setup_entry(
 
         if host.api.new_devices and config_entry.state == ConfigEntryState.LOADED:
             # Their are new cameras/chimes connected, reload to add them.
+            _LOGGER.debug(
+                "Reloading Reolink %s to add new device (capabilities)",
+                host.api.nvr_name,
+            )
             hass.async_create_task(
                 hass.config_entries.async_reload(config_entry.entry_id)
             )
@@ -221,6 +235,14 @@ async def async_setup_entry(
 
     host.api.baichuan.register_callback(
         "privacy_mode_change", async_privacy_mode_change, 623
+    )
+
+    # ensure host device is setup before connected camera devices that use via_device
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, host.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -361,11 +383,55 @@ def migrate_entity_ids(
                 new_device_id = f"{host.unique_id}"
             else:
                 new_device_id = f"{host.unique_id}_{device_uid[1]}"
+            _LOGGER.debug(
+                "Updating Reolink device UID from %s to %s",
+                device_uid,
+                new_device_id,
+            )
             new_identifiers = {(DOMAIN, new_device_id)}
             device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
 
+        # Check for wrongfully combined entities in one device
+        # Can be removed in HA 2025.12
+        new_identifiers = device.identifiers.copy()
+        remove_ids = False
+        if (DOMAIN, host.unique_id) in device.identifiers:
+            remove_ids = True  # NVR/Hub in identifiers, keep that one, remove others
+        for old_id in device.identifiers:
+            (old_device_uid, old_ch, old_is_chime) = get_device_uid_and_ch(old_id, host)
+            if (
+                not old_device_uid
+                or old_device_uid[0] != host.unique_id
+                or old_id[1] == host.unique_id
+            ):
+                continue
+            if remove_ids:
+                new_identifiers.remove(old_id)
+            remove_ids = True  # after the first identifier, remove the others
+        if new_identifiers != device.identifiers:
+            _LOGGER.debug(
+                "Updating Reolink device identifiers from %s to %s",
+                device.identifiers,
+                new_identifiers,
+            )
+            device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+            break
+
         if ch is None or is_chime:
             continue  # Do not consider the NVR itself or chimes
+
+        # Check for wrongfully added MAC of the NVR/Hub to the camera
+        # Can be removed in HA 2025.12
+        host_connnection = (CONNECTION_NETWORK_MAC, host.api.mac_address)
+        if host_connnection in device.connections:
+            new_connections = device.connections.copy()
+            new_connections.remove(host_connnection)
+            _LOGGER.debug(
+                "Updating Reolink device connections from %s to %s",
+                device.connections,
+                new_connections,
+            )
+            device_reg.async_update_device(device.id, new_connections=new_connections)
 
         ch_device_ids[device.id] = ch
         if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(ch):
@@ -373,6 +439,11 @@ def migrate_entity_ids(
                 new_device_id = f"{host.unique_id}_{host.api.camera_uid(ch)}"
             else:
                 new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
+            _LOGGER.debug(
+                "Updating Reolink device UID from %s to %s",
+                device_uid,
+                new_device_id,
+            )
             new_identifiers = {(DOMAIN, new_device_id)}
             existing_device = device_reg.async_get_device(identifiers=new_identifiers)
             if existing_device is None:
@@ -405,13 +476,31 @@ def migrate_entity_ids(
             host.unique_id
         ):
             new_id = f"{host.unique_id}_{entity.unique_id.split('_', 1)[1]}"
+            _LOGGER.debug(
+                "Updating Reolink entity unique_id from %s to %s",
+                entity.unique_id,
+                new_id,
+            )
             entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
 
         if entity.device_id in ch_device_ids:
             ch = ch_device_ids[entity.device_id]
             id_parts = entity.unique_id.split("_", 2)
+            if len(id_parts) < 3:
+                _LOGGER.warning(
+                    "Reolink channel %s entity has unexpected unique_id format %s, with device id %s",
+                    ch,
+                    entity.unique_id,
+                    entity.device_id,
+                )
+                continue
             if host.api.supported(ch, "UID") and id_parts[1] != host.api.camera_uid(ch):
                 new_id = f"{host.unique_id}_{host.api.camera_uid(ch)}_{id_parts[2]}"
+                _LOGGER.debug(
+                    "Updating Reolink entity unique_id from %s to %s",
+                    entity.unique_id,
+                    new_id,
+                )
                 existing_entity = entity_reg.async_get_entity_id(
                     entity.domain, entity.platform, new_id
                 )

@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache
+from math import floor, log10
 
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -23,6 +26,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -143,6 +147,15 @@ class BaseUnitConverter:
         """Get unit ratio between units of measurement."""
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         return from_ratio / to_ratio
+
+    @classmethod
+    @lru_cache
+    def get_unit_floored_log_ratio(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> float:
+        """Get floored base10 log ratio between units of measurement."""
+        ratio = cls.get_unit_ratio(from_unit, to_unit)
+        return floor(max(0, log10(ratio)))
 
     @classmethod
     @lru_cache
@@ -302,6 +315,7 @@ class EnergyDistanceConverter(BaseUnitConverter):
     UNIT_CLASS = "energy_distance"
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 1,
+        UnitOfEnergyDistance.WATT_HOUR_PER_KM: 10,
         UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR: 100 * _KM_TO_M / _MILE_TO_M,
         UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR: 100,
     }
@@ -417,6 +431,17 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
     }
+
+
+class ReactiveEnergyConverter(BaseUnitConverter):
+    """Utility to convert reactive energy values."""
+
+    UNIT_CLASS = "reactive_energy"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR: 1,
+        UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 1 / 1e3,
+    }
+    VALID_UNITS = set(UnitOfReactiveEnergy)
 
 
 class SpeedConverter(BaseUnitConverter):
@@ -663,6 +688,20 @@ class UnitlessRatioConverter(BaseUnitConverter):
     }
 
 
+class MassVolumeConcentrationConverter(BaseUnitConverter):
+    """Utility to convert mass volume concentration values."""
+
+    UNIT_CLASS = "concentration"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 µg/m³ = 1 mg/m³
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1.0,
+    }
+    VALID_UNITS = {
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    }
+
+
 class VolumeConverter(BaseUnitConverter):
     """Utility to convert volume values."""
 
@@ -695,10 +734,13 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     # Units in terms of m³/h
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 1,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND: 1 / _HRS_TO_SECS,
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _CUBIC_FOOT_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.LITERS_PER_HOUR: 1 / _L_TO_CUBIC_METER,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _L_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.LITERS_PER_SECOND: 1 / (_HRS_TO_SECS * _L_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
@@ -707,7 +749,10 @@ class VolumeFlowRateConverter(BaseUnitConverter):
     VALID_UNITS = {
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
+        UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     }

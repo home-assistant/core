@@ -1,0 +1,6 @@
+{
+  "domain": "google_gemini",
+  "name": "Google Gemini",
+  "integration_type": "virtual",
+  "supported_by": "google_generative_ai_conversation"
+}

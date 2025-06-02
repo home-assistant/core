@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from PyTado.interface import Tado
 import pytest
 
-from homeassistant.components.tado import TadoDataUpdateCoordinator
+from homeassistant.components.tado import CONF_REFRESH_TOKEN, TadoDataUpdateCoordinator
 from homeassistant.components.tado.const import (
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_DEFAULT,
@@ -28,13 +28,13 @@ def entry(request: pytest.FixtureRequest) -> MockConfigEntry:
         request.param if hasattr(request, "param") else CONST_OVERLAY_TADO_DEFAULT
     )
     return MockConfigEntry(
-        version=1,
-        minor_version=1,
+        version=2,
         domain=DOMAIN,
         title="Tado",
         data={
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
+            CONF_REFRESH_TOKEN: "test-refresh",
         },
         options={
             "fallback": fallback,

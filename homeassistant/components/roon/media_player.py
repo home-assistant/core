@@ -330,6 +330,11 @@ class RoonDevice(MediaPlayerEntity):
         return self.media_artist
 
     @property
+    def media_content_type(self) -> str:
+        """Return the media type."""
+        return MediaType.MUSIC
+
+    @property
     def supports_standby(self):
         """Return power state of source controls."""
         return self._supports_standby

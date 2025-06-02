@@ -10,6 +10,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.improv_ble.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
@@ -20,6 +21,8 @@ from . import (
     NOT_IMPROV_BLE_DISCOVERY_INFO,
     PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
 )
+
+from tests.common import MockConfigEntry
 
 IMPROV_BLE = "homeassistant.components.improv_ble"
 
@@ -116,6 +119,32 @@ async def test_async_step_user_takes_precedence_over_discovery(
 
     # Verify the discovery flow was aborted
     assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+
+async def test_user_setup_removes_ignored_entry(hass: HomeAssistant) -> None:
+    """Test the user initiated form can replace an ignored device."""
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=IMPROV_BLE_DISCOVERY_INFO.address,
+        source=SOURCE_IGNORE,
+    )
+    ignored_entry.add_to_hass(hass)
+    with patch(
+        f"{IMPROV_BLE}.config_flow.bluetooth.async_discovered_service_info",
+        return_value=[NOT_IMPROV_BLE_DISCOVERY_INFO, IMPROV_BLE_DISCOVERY_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    await _test_common_success_wo_identify(
+        hass, result, IMPROV_BLE_DISCOVERY_INFO.address
+    )
+    # Check the ignored entry is removed
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
 async def test_bluetooth_step_provisioned_device(hass: HomeAssistant) -> None:

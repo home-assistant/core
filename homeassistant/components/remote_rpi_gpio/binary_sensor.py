@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from gpiozero import DigitalInputDevice
 import requests
 import voluptuous as vol
 
@@ -48,10 +49,10 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Raspberry PI GPIO devices."""
-    address = config["host"]
+    address = config[CONF_HOST]
     invert_logic = config[CONF_INVERT_LOGIC]
     pull_mode = config[CONF_PULL_MODE]
-    ports = config["ports"]
+    ports = config[CONF_PORTS]
     bouncetime = config[CONF_BOUNCETIME] / 1000
 
     devices = []
@@ -71,9 +72,11 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, name, sensor, invert_logic):
+    def __init__(
+        self, name: str | None, sensor: DigitalInputDevice, invert_logic: bool
+    ) -> None:
         """Initialize the RPi binary sensor."""
-        self._name = name
+        self._attr_name = name
         self._invert_logic = invert_logic
         self._state = False
         self._sensor = sensor
@@ -90,19 +93,9 @@ class RemoteRPiGPIOBinarySensor(BinarySensorEntity):
         self._sensor.when_activated = read_gpio
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the entity."""
         return self._state != self._invert_logic
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return
 
     def update(self) -> None:
         """Update the GPIO state."""

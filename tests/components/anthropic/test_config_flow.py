@@ -21,9 +21,11 @@ from homeassistant.components.anthropic.const import (
     CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_THINKING_BUDGET,
 )
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
@@ -92,6 +94,28 @@ async def test_options(
     assert options["data"]["prompt"] == "Speak like a pirate"
     assert options["data"]["max_tokens"] == 200
     assert options["data"][CONF_CHAT_MODEL] == RECOMMENDED_CHAT_MODEL
+
+
+async def test_options_thinking_budget_more_than_max(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test error about thinking budget being more than max tokens."""
+    options_flow = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
+    options = await hass.config_entries.options.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "Speak like a pirate",
+            "max_tokens": 8192,
+            "chat_model": "claude-3-7-sonnet-latest",
+            "temperature": 1,
+            "thinking_budget": 16384,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] is FlowResultType.FORM
+    assert options["errors"] == {"thinking_budget": "thinking_budget_too_large"}
 
 
 @pytest.mark.parametrize(
@@ -172,13 +196,13 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
         (
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "none",
                 CONF_PROMPT: "bla",
             },
             {
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.3,
+                CONF_LLM_HASS_API: [],
             },
             {
                 CONF_RECOMMENDED: False,
@@ -186,6 +210,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
             },
         ),
         (
@@ -195,16 +220,34 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
             },
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
+                CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
             },
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
+                CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
+            },
+        ),
+        (
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: "assist",
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: ["assist"],
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: ["assist"],
             },
         ),
     ],
