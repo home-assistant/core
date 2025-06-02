@@ -162,7 +162,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         assert level_control is not None
 
-        level = round(  # type: ignore[unreachable]
+        level = round(
             renormalize(
                 brightness,
                 (0, 255),
@@ -249,7 +249,7 @@ class MatterLight(MatterEntity, LightEntity):
         # We should not get here if brightness is not supported.
         assert level_control is not None
 
-        LOGGER.debug(  # type: ignore[unreachable]
+        LOGGER.debug(
             "Got brightness %s for %s",
             level_control.currentLevel,
             self.entity_id,

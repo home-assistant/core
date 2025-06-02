@@ -20,7 +20,7 @@ from homeassistant.components.unifi.const import (
     CONF_SITE_ID,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
-    DOMAIN as UNIFI_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
@@ -1743,14 +1743,14 @@ async def test_updating_unique_id(
     """Verify outlet control and poe control unique ID update works."""
     entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
-        UNIFI_DOMAIN,
+        DOMAIN,
         f"{device_payload[0]['mac']}-outlet-1",
         suggested_object_id="plug_outlet_1",
         config_entry=config_entry,
     )
     entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
-        UNIFI_DOMAIN,
+        DOMAIN,
         f"{device_payload[1]['mac']}-poe-1",
         suggested_object_id="switch_port_1_poe",
         config_entry=config_entry,

@@ -175,7 +175,7 @@ async def test_reauth_wrong_account(
     """Check reauth flow."""
     await setup_integration(hass, config_entry)
     twitch_mock.return_value.get_users = lambda *args, **kwargs: get_generator(
-        "get_users_2.json", TwitchUser
+        hass, "get_users_2.json", TwitchUser
     )
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
