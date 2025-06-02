@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -15,7 +17,7 @@ async def test_sensor_cloud(
     hass: HomeAssistant,
     mock_adax_cloud: AsyncMock,
     mock_cloud_config_entry: MockConfigEntry,
-    snapshot,
+    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor setup for cloud connection."""
@@ -48,7 +50,7 @@ async def test_multiple_devices_create_individual_sensors(
     hass: HomeAssistant,
     mock_adax_cloud: AsyncMock,
     mock_cloud_config_entry: MockConfigEntry,
-    snapshot,
+    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that multiple devices create individual sensors."""
@@ -89,7 +91,7 @@ async def test_fallback_to_get_rooms(
     hass: HomeAssistant,
     mock_adax_cloud: AsyncMock,
     mock_cloud_config_entry: MockConfigEntry,
-    snapshot,
+    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test fallback to get_rooms when fetch_rooms_info returns empty list."""
