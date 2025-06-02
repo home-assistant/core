@@ -73,11 +73,7 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         """Whether the entity is available or not."""
         return super().available and self._device_id in self.coordinator.data
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._room = self.coordinator.data[self._device_id]
-        # Update native value based on energy data
-        energy_wh = self._room.get("energyWh", 0)
-        self._attr_native_value = energy_wh
-        super()._handle_coordinator_update()
+    @property
+    def native_value(self) -> float:
+        """Return value of the sensor"""
+        return self._room.get("energyWh", 0)
