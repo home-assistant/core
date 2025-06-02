@@ -15,13 +15,14 @@ from multidict import istr
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import frame
 from homeassistant.util import slugify
 
 from . import util
 from .agent import BackupAgent
 from .const import DATA_MANAGER
 from .manager import BackupManager
-from .models import BackupNotFound
+from .models import AgentBackup, BackupNotFound
 
 
 @callback
@@ -66,7 +67,12 @@ class DownloadBackupView(HomeAssistantView):
 
         # Check for None to be backwards compatible with the old BackupAgent API,
         # this can be removed in HA Core 2025.10
-        if backup is None:
+        if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             return Response(status=HTTPStatus.NOT_FOUND)
 
         headers = {
@@ -79,7 +85,15 @@ class DownloadBackupView(HomeAssistantView):
                     request, headers, backup_id, agent_id, agent, manager
                 )
             return await self._send_backup_with_password(
-                hass, request, headers, backup_id, agent_id, password, agent, manager
+                hass,
+                backup,
+                request,
+                headers,
+                backup_id,
+                agent_id,
+                password,
+                agent,
+                manager,
             )
         except BackupNotFound:
             return Response(status=HTTPStatus.NOT_FOUND)
@@ -110,6 +124,7 @@ class DownloadBackupView(HomeAssistantView):
     async def _send_backup_with_password(
         self,
         hass: HomeAssistant,
+        backup: AgentBackup,
         request: Request,
         headers: dict[istr, str],
         backup_id: str,
@@ -138,7 +153,8 @@ class DownloadBackupView(HomeAssistantView):
 
         stream = util.AsyncIteratorWriter(hass)
         worker = threading.Thread(
-            target=util.decrypt_backup, args=[reader, stream, password, on_done, 0, []]
+            target=util.decrypt_backup,
+            args=[backup, reader, stream, password, on_done, 0, []],
         )
         try:
             worker.start()

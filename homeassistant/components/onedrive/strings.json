@@ -90,6 +90,24 @@
     },
     "update_failed": {
       "message": "Failed to update drive state"
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "no_access_to_path": {
+      "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+    },
+    "filename_does_not_exist": {
+      "message": "`{filename}` does not exist"
+    },
+    "file_too_large": {
+      "message": "`{filename}` is too large ({size} > {limit})"
+    },
+    "upload_error": {
+      "message": "Failed to upload content: {message}"
+    },
+    "create_folder_error": {
+      "message": "Failed to create folder: {message}"
     }
   },
   "entity": {
@@ -106,10 +124,32 @@
       "drive_state": {
         "name": "Drive state",
         "state": {
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "nearing": "Nearing limit",
           "critical": "Critical",
           "exceeded": "Exceeded"
+        }
+      }
+    }
+  },
+  "services": {
+    "upload": {
+      "name": "Upload file",
+      "description": "Uploads files to OneDrive.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry ID",
+          "description": "The config entry representing the OneDrive you want to upload to."
+        },
+        "filename": {
+          "name": "Filename",
+          "description": "Path to the file to upload.",
+          "example": "/config/www/image.jpg"
+        },
+        "destination_folder": {
+          "name": "Destination folder",
+          "description": "Folder inside the Home Assistant app folder (Apps/Home Assistant) you want to upload the file to. Will be created if it does not exist.",
+          "example": "photos/snapshots"
         }
       }
     }

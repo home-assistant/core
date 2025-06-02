@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_diagnostics
+# name: test_diagnostics[mock_hub_configuration_prod_awning_dimmer]
   dict({
     'config': dict({
       'command': 'getConfiguration',
@@ -239,6 +239,543 @@
           '19239': 'Terrasse',
         }),
       }),
+    }),
+  })
+# ---
+# name: test_diagnostics[mock_hub_configuration_prod_roller_shutter]
+  dict({
+    'config': dict({
+      'command': 'getConfiguration',
+      'destinations': list([
+        dict({
+          'actions': list([
+            dict({
+              'actionDescription': 4,
+              'actionType': 0,
+              'id': 0,
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            dict({
+              'actionDescription': 12,
+              'actionType': 6,
+              'id': 16,
+            }),
+            dict({
+              'actionDescription': 13,
+              'actionType': 8,
+              'id': 22,
+            }),
+          ]),
+          'animationType': 2,
+          'id': 18894,
+          'names': list([
+            'Wohnebene alle',
+            '',
+            '',
+            '',
+          ]),
+        }),
+        dict({
+          'actions': list([
+            dict({
+              'actionDescription': 4,
+              'actionType': 0,
+              'id': 0,
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            dict({
+              'actionDescription': 12,
+              'actionType': 6,
+              'id': 16,
+            }),
+            dict({
+              'actionDescription': 13,
+              'actionType': 8,
+              'id': 22,
+            }),
+          ]),
+          'animationType': 2,
+          'id': 116682,
+          'names': list([
+            'Wohnzimmer',
+            '',
+            '',
+            '',
+          ]),
+        }),
+        dict({
+          'actions': list([
+            dict({
+              'actionDescription': 4,
+              'actionType': 0,
+              'id': 0,
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            dict({
+              'actionDescription': 12,
+              'actionType': 6,
+              'id': 16,
+            }),
+            dict({
+              'actionDescription': 13,
+              'actionType': 8,
+              'id': 22,
+            }),
+          ]),
+          'animationType': 2,
+          'id': 172555,
+          'names': list([
+            'Badezimmer',
+            '',
+            '',
+            '',
+          ]),
+        }),
+        dict({
+          'actions': list([
+            dict({
+              'actionDescription': 4,
+              'actionType': 0,
+              'id': 0,
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            dict({
+              'actionDescription': 12,
+              'actionType': 6,
+              'id': 16,
+            }),
+            dict({
+              'actionDescription': 13,
+              'actionType': 8,
+              'id': 22,
+            }),
+          ]),
+          'animationType': 2,
+          'id': 230952,
+          'names': list([
+            'Sportzimmer',
+            '',
+            '',
+            '',
+          ]),
+        }),
+        dict({
+          'actions': list([
+            dict({
+              'actionDescription': 4,
+              'actionType': 0,
+              'id': 0,
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            dict({
+              'actionDescription': 12,
+              'actionType': 6,
+              'id': 16,
+            }),
+            dict({
+              'actionDescription': 13,
+              'actionType': 8,
+              'id': 22,
+            }),
+          ]),
+          'animationType': 2,
+          'id': 284942,
+          'names': list([
+            'Terrasse',
+            '',
+            '',
+            '',
+          ]),
+        }),
+        dict({
+          'actions': list([
+            dict({
+              'actionDescription': 4,
+              'actionType': 0,
+              'id': 0,
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            dict({
+              'actionDescription': 12,
+              'actionType': 6,
+              'id': 16,
+            }),
+            dict({
+              'actionDescription': 13,
+              'actionType': 8,
+              'id': 22,
+            }),
+          ]),
+          'animationType': 2,
+          'id': 328518,
+          'names': list([
+            'alle Rollläden',
+            '',
+            '',
+            '',
+          ]),
+        }),
+      ]),
+      'protocolVersion': '1.0.0',
+      'rooms': list([
+        dict({
+          'destinations': list([
+            18894,
+            116682,
+            172555,
+            230952,
+          ]),
+          'id': 15175,
+          'name': 'Wohnbereich',
+          'scenes': list([
+          ]),
+        }),
+        dict({
+          'destinations': list([
+            284942,
+          ]),
+          'id': 92218,
+          'name': 'Terrasse',
+          'scenes': list([
+          ]),
+        }),
+        dict({
+          'destinations': list([
+            328518,
+          ]),
+          'id': 193582,
+          'name': 'Alle',
+          'scenes': list([
+          ]),
+        }),
+      ]),
+      'scenes': list([
+      ]),
+    }),
+    'dests': dict({
+      '116682': dict({
+        'actions': dict({
+          '0': dict({
+            'actionDescription': 'RollerShutterBlindDrive',
+            'actionType': 'Percentage',
+            'attrs': dict({
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            'id': 0,
+            'params': dict({
+            }),
+          }),
+          '16': dict({
+            'actionDescription': 'ManualCommand',
+            'actionType': 'Stop',
+            'attrs': dict({
+            }),
+            'id': 16,
+            'params': dict({
+            }),
+          }),
+          '22': dict({
+            'actionDescription': 'Identify',
+            'actionType': 'Identify',
+            'attrs': dict({
+            }),
+            'id': 22,
+            'params': dict({
+            }),
+          }),
+        }),
+        'animationType': 'RollerShutterBlind',
+        'available': True,
+        'blocking': None,
+        'drivingCause': 'Unknown',
+        'heartbeatError': None,
+        'id': 116682,
+        'name': 'Wohnzimmer',
+        'room': dict({
+          '15175': 'Wohnbereich',
+        }),
+        'status': dict({
+        }),
+        'unknownProducts': dict({
+        }),
+      }),
+      '172555': dict({
+        'actions': dict({
+          '0': dict({
+            'actionDescription': 'RollerShutterBlindDrive',
+            'actionType': 'Percentage',
+            'attrs': dict({
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            'id': 0,
+            'params': dict({
+            }),
+          }),
+          '16': dict({
+            'actionDescription': 'ManualCommand',
+            'actionType': 'Stop',
+            'attrs': dict({
+            }),
+            'id': 16,
+            'params': dict({
+            }),
+          }),
+          '22': dict({
+            'actionDescription': 'Identify',
+            'actionType': 'Identify',
+            'attrs': dict({
+            }),
+            'id': 22,
+            'params': dict({
+            }),
+          }),
+        }),
+        'animationType': 'RollerShutterBlind',
+        'available': True,
+        'blocking': None,
+        'drivingCause': 'Unknown',
+        'heartbeatError': None,
+        'id': 172555,
+        'name': 'Badezimmer',
+        'room': dict({
+          '15175': 'Wohnbereich',
+        }),
+        'status': dict({
+        }),
+        'unknownProducts': dict({
+        }),
+      }),
+      '18894': dict({
+        'actions': dict({
+          '0': dict({
+            'actionDescription': 'RollerShutterBlindDrive',
+            'actionType': 'Percentage',
+            'attrs': dict({
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            'id': 0,
+            'params': dict({
+            }),
+          }),
+          '16': dict({
+            'actionDescription': 'ManualCommand',
+            'actionType': 'Stop',
+            'attrs': dict({
+            }),
+            'id': 16,
+            'params': dict({
+            }),
+          }),
+          '22': dict({
+            'actionDescription': 'Identify',
+            'actionType': 'Identify',
+            'attrs': dict({
+            }),
+            'id': 22,
+            'params': dict({
+            }),
+          }),
+        }),
+        'animationType': 'RollerShutterBlind',
+        'available': True,
+        'blocking': None,
+        'drivingCause': 'Unknown',
+        'heartbeatError': None,
+        'id': 18894,
+        'name': 'Wohnebene alle',
+        'room': dict({
+          '15175': 'Wohnbereich',
+        }),
+        'status': dict({
+        }),
+        'unknownProducts': dict({
+        }),
+      }),
+      '230952': dict({
+        'actions': dict({
+          '0': dict({
+            'actionDescription': 'RollerShutterBlindDrive',
+            'actionType': 'Percentage',
+            'attrs': dict({
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            'id': 0,
+            'params': dict({
+            }),
+          }),
+          '16': dict({
+            'actionDescription': 'ManualCommand',
+            'actionType': 'Stop',
+            'attrs': dict({
+            }),
+            'id': 16,
+            'params': dict({
+            }),
+          }),
+          '22': dict({
+            'actionDescription': 'Identify',
+            'actionType': 'Identify',
+            'attrs': dict({
+            }),
+            'id': 22,
+            'params': dict({
+            }),
+          }),
+        }),
+        'animationType': 'RollerShutterBlind',
+        'available': True,
+        'blocking': None,
+        'drivingCause': 'Unknown',
+        'heartbeatError': None,
+        'id': 230952,
+        'name': 'Sportzimmer',
+        'room': dict({
+          '15175': 'Wohnbereich',
+        }),
+        'status': dict({
+        }),
+        'unknownProducts': dict({
+        }),
+      }),
+      '284942': dict({
+        'actions': dict({
+          '0': dict({
+            'actionDescription': 'RollerShutterBlindDrive',
+            'actionType': 'Percentage',
+            'attrs': dict({
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            'id': 0,
+            'params': dict({
+            }),
+          }),
+          '16': dict({
+            'actionDescription': 'ManualCommand',
+            'actionType': 'Stop',
+            'attrs': dict({
+            }),
+            'id': 16,
+            'params': dict({
+            }),
+          }),
+          '22': dict({
+            'actionDescription': 'Identify',
+            'actionType': 'Identify',
+            'attrs': dict({
+            }),
+            'id': 22,
+            'params': dict({
+            }),
+          }),
+        }),
+        'animationType': 'RollerShutterBlind',
+        'available': True,
+        'blocking': None,
+        'drivingCause': 'Unknown',
+        'heartbeatError': None,
+        'id': 284942,
+        'name': 'Terrasse',
+        'room': dict({
+          '92218': 'Terrasse',
+        }),
+        'status': dict({
+        }),
+        'unknownProducts': dict({
+        }),
+      }),
+      '328518': dict({
+        'actions': dict({
+          '0': dict({
+            'actionDescription': 'RollerShutterBlindDrive',
+            'actionType': 'Percentage',
+            'attrs': dict({
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            'id': 0,
+            'params': dict({
+            }),
+          }),
+          '16': dict({
+            'actionDescription': 'ManualCommand',
+            'actionType': 'Stop',
+            'attrs': dict({
+            }),
+            'id': 16,
+            'params': dict({
+            }),
+          }),
+          '22': dict({
+            'actionDescription': 'Identify',
+            'actionType': 'Identify',
+            'attrs': dict({
+            }),
+            'id': 22,
+            'params': dict({
+            }),
+          }),
+        }),
+        'animationType': 'RollerShutterBlind',
+        'available': True,
+        'blocking': None,
+        'drivingCause': 'Unknown',
+        'heartbeatError': None,
+        'id': 328518,
+        'name': 'alle Rollläden',
+        'room': dict({
+          '193582': 'Alle',
+        }),
+        'status': dict({
+        }),
+        'unknownProducts': dict({
+        }),
+      }),
+    }),
+    'host': 'webcontrol',
+    'rooms': dict({
+      '15175': dict({
+        'destinations': dict({
+          '116682': 'Wohnzimmer',
+          '172555': 'Badezimmer',
+          '18894': 'Wohnebene alle',
+          '230952': 'Sportzimmer',
+        }),
+        'id': 15175,
+        'name': 'Wohnbereich',
+        'scenes': dict({
+        }),
+      }),
+      '193582': dict({
+        'destinations': dict({
+          '328518': 'alle Rollläden',
+        }),
+        'id': 193582,
+        'name': 'Alle',
+        'scenes': dict({
+        }),
+      }),
+      '92218': dict({
+        'destinations': dict({
+          '284942': 'Terrasse',
+        }),
+        'id': 92218,
+        'name': 'Terrasse',
+        'scenes': dict({
+        }),
+      }),
+    }),
+    'scenes': dict({
     }),
   })
 # ---

@@ -72,7 +72,7 @@ class TimeEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Time entity."""
 
     entity_description: TimeEntityDescription
-    _attr_native_value: time | None
+    _attr_native_value: time | None = None
     _attr_device_class: None = None
     _attr_state: None = None
 

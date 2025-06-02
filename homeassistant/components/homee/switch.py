@@ -20,6 +20,8 @@ from . import HomeeConfigEntry
 from .const import CLIMATE_PROFILES, LIGHT_PROFILES
 from .entity import HomeeEntity
 
+PARALLEL_UPDATES = 0
+
 
 def get_device_class(
     attribute: HomeeAttribute, config_entry: HomeeConfigEntry

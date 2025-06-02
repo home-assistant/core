@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "event": {
+      "auto_shut_off_volume": {
+        "default": "mdi:water"
+      },
+      "auto_shut_off_duration": {
+        "default": "mdi:timelapse"
+      }
+    }
+  }
+}

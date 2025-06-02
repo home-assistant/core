@@ -71,9 +71,7 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CHARGER_MAX_ICP_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CHARGER_MAX_ICP_CURRENT_KEY,
         translation_key="maximum_icp_current",
-        max_value_fn=lambda coordinator: cast(
-            float, coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY]
-        ),
+        max_value_fn=lambda _: 255,
         min_value_fn=lambda _: 6,
         set_value_fn=lambda coordinator: coordinator.async_set_icp_current,
         native_step=1,

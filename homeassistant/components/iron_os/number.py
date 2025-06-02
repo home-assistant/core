@@ -65,6 +65,7 @@ class PinecilNumber(StrEnum):
     VOLTAGE_DIV = "voltage_div"
     TEMP_INCREMENT_SHORT = "temp_increment_short"
     TEMP_INCREMENT_LONG = "temp_increment_long"
+    HALL_EFFECT_SLEEP_TIME = "hall_effect_sleep_time"
 
 
 def multiply(value: float | None, multiplier: float) -> float | None:
@@ -323,6 +324,23 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
     ),
 )
 
+PINECIL_NUMBER_DESCRIPTIONS_V223: tuple[IronOSNumberEntityDescription, ...] = (
+    IronOSNumberEntityDescription(
+        key=PinecilNumber.HALL_EFFECT_SLEEP_TIME,
+        translation_key=PinecilNumber.HALL_EFFECT_SLEEP_TIME,
+        value_fn=(lambda _, settings: settings.get("hall_sleep_time")),
+        characteristic=CharSetting.HALL_SLEEP_TIME,
+        raw_value_fn=lambda value: value,
+        mode=NumberMode.BOX,
+        native_min_value=0,
+        native_max_value=60,
+        native_step=5,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_registry_enabled_default=False,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -331,10 +349,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities from a config entry."""
     coordinators = entry.runtime_data
+    descriptions = PINECIL_NUMBER_DESCRIPTIONS
+
+    if coordinators.live_data.v223_features:
+        descriptions += PINECIL_NUMBER_DESCRIPTIONS_V223
 
     async_add_entities(
-        IronOSNumberEntity(coordinators, description)
-        for description in PINECIL_NUMBER_DESCRIPTIONS
+        IronOSNumberEntity(coordinators, description) for description in descriptions
     )
 
 

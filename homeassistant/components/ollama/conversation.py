@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, intent, llm
+from homeassistant.helpers import intent, llm
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -89,9 +89,11 @@ def _parse_tool_args(arguments: dict[str, Any]) -> dict[str, Any]:
 
 
 def _convert_content(
-    chat_content: conversation.Content
-    | conversation.ToolResultContent
-    | conversation.AssistantContent,
+    chat_content: (
+        conversation.Content
+        | conversation.ToolResultContent
+        | conversation.AssistantContent
+    ),
 ) -> ollama.Message:
     """Create tool response content."""
     if isinstance(chat_content, conversation.ToolResultContent):
@@ -172,6 +174,7 @@ class OllamaConversationEntity(
     """Ollama conversation agent."""
 
     _attr_has_entity_name = True
+    _attr_supports_streaming = True
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the agent."""
@@ -205,18 +208,6 @@ class OllamaConversationEntity(
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         return MATCH_ALL
-
-    async def async_process(
-        self, user_input: conversation.ConversationInput
-    ) -> conversation.ConversationResult:
-        """Process a sentence."""
-        with (
-            chat_session.async_get_chat_session(
-                self.hass, user_input.conversation_id
-            ) as session,
-            conversation.async_get_chat_log(self.hass, session, user_input) as chat_log,
-        ):
-            return await self._async_handle_message(user_input, chat_log)
 
     async def _async_handle_message(
         self,
@@ -292,7 +283,9 @@ class OllamaConversationEntity(
             )
         intent_response.async_set_speech(chat_log.content[-1].content or "")
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=chat_log.conversation_id
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
         )
 
     def _trim_history(self, message_history: MessageHistory, max_messages: int) -> None:

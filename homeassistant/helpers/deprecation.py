@@ -369,7 +369,7 @@ class EnumWithDeprecatedMembers(EnumType):
     """Enum with deprecated members."""
 
     def __new__(
-        mcs,  # noqa: N804  ruff bug, ruff does not understand this is a metaclass
+        mcs,
         cls: str,
         bases: tuple[type, ...],
         classdict: _EnumDict,
