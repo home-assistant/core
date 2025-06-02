@@ -59,8 +59,7 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             if not rooms:
                 raise UpdateFailed("No rooms available from Adax API")
 
-        except (OSError, TimeoutError) as e:
-            _LOGGER.error("Error fetching room data: %s", e)
+        except OSError as e:
             raise UpdateFailed(f"Error communicating with API: {e}") from e
 
         # Process room data - this cannot fail so it's outside try block
