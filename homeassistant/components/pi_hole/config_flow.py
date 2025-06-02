@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import determine_api_version
 from .const import (
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -157,27 +158,44 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         return Hole(**hole_kwargs)
 
     async def _async_try_connect(self) -> dict[str, str]:
-        pi_hole = self._api_by_version(6)
+        """Try to connect to the Pi-hole API and determine the version."""
         try:
-            await pi_hole.authenticate()
-            _LOGGER.debug("Success connecting to pihole, API version is : %s", 6)
-            self._config[CONF_API_VERSION] = 6
-        except HoleError as ex_v6:
-            _LOGGER.debug("Connection failed: %s, trying API version 5", ex_v6)
+            version = await determine_api_version(hass=self.hass, entry=self._config)
+        except HoleError:
+            return {"base": "cannot_connect"}
+        pi_hole = self._api_by_version(version)
+
+        if version == 6:
             try:
-                pi_hole = self._api_by_version(5)
+                await pi_hole.authenticate()
+                _LOGGER.debug("Success authenticating with pihole API version: %s", 6)
+                self._config[CONF_API_VERSION] = 6
+            except HoleError:
+                _LOGGER.debug("Failed authenticating with pihole API version: %s", 6)
+                return {CONF_API_KEY: "invalid_auth"}
+
+        if version == 5:
+            try:
                 await pi_hole.get_data()
                 if pi_hole.data is not None and "error" in pi_hole.data:
+                    _LOGGER.debug(
+                        "API version %s returned an unexpected error: %s",
+                        5,
+                        str(pi_hole.data),
+                    )
                     raise HoleError(pi_hole.data["error"])  # noqa: TRY301
-                _LOGGER.debug("Success connecting to pihole, API version is : %s", 5)
+                _LOGGER.debug(
+                    "Success connecting to, but necessarily authenticating with, pihole, API version is: %s",
+                    5,
+                )
                 self._config[CONF_API_VERSION] = 5
             except HoleError as ex_v5:
                 _LOGGER.warning(
-                    "Connections to both API versions failed, V5: %s, v6: %s",
+                    "Connection to API version 5 failed: %s",
                     ex_v5,
-                    ex_v6,
                 )
                 return {"base": "cannot_connect"}
-        if not isinstance(pi_hole.data, dict):
-            return {CONF_API_KEY: "invalid_auth"}
+            # the v5 API returns an empty list to unauthenticated requests.
+            if not isinstance(pi_hole.data, dict):
+                return {CONF_API_KEY: "invalid_auth"}
         return {}

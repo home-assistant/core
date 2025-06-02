@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from typing import Any, Literal
 
 from hole import Hole
 from hole.exceptions import HoleError
@@ -56,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
     verify_tls = entry.data[CONF_VERIFY_SSL]
     location = entry.data[CONF_LOCATION]
     api_key = entry.data.get(CONF_API_KEY, "")
-    version = entry.data.get(CONF_API_VERSION, 5)
+    version = entry.data.get(CONF_API_VERSION)
 
     # remove obsolet CONF_STATISTICS_ONLY from entry.data
     if CONF_STATISTICS_ONLY in entry.data:
@@ -97,7 +98,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
         return None
 
     await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
-
+    if version is None:
+        _LOGGER.debug(
+            "No API version specified, determining Pi-hole API version for %s", host
+        )
+        version = await determine_api_version(hass, dict(entry.data))
+        _LOGGER.debug("Pi-hole API version determined: %s", version)
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_API_VERSION: version}
+        )
     session = async_get_clientsession(hass, verify_tls)
     hole_kwargs = {
         "host": host,
@@ -144,3 +153,75 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Pi-hole entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def determine_api_version(
+    hass: HomeAssistant, entry: dict[str, Any]
+) -> Literal[5, 6]:
+    """Determine the API version of the Pi-hole instance without requiring authentication.
+
+    Neither API v5 or v6 provides an endpoint to check the version without authentication.
+    Version 6 provides other enddpoints that do not require authentication, so we can use those to determine the version
+    version 5 returns an empty list in response to unauthenticated requests.
+    Because we are using endpoints that are not designed for this purpose, we should log liberally to help with debugging.
+    """
+    session = async_get_clientsession(hass, entry[CONF_VERIFY_SSL])
+    holeV6 = Hole(
+        host=entry[CONF_HOST],
+        session=session,
+        location=entry[CONF_LOCATION],
+        protocol="https" if entry[CONF_SSL] else "http",
+        password="wrong_password",
+        version=6,
+    )
+    try:
+        await holeV6.authenticate()
+    except HoleError as ex_v6:
+        if str(ex_v6) == "Authentication failed: Invalid password":
+            _LOGGER.debug(
+                "Success connecting to Pi-hole at %s without auth, API version is : %s",
+                holeV6.base_url,
+                6,
+            )
+            return 6
+        _LOGGER.debug(
+            "Connection to %s failed: %s, trying API version 5", holeV6.base_url, ex_v6
+        )
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.error(
+            "Unexpected error connecting to Pi-hole v6 API at %s: %s. Trying version 5 API",
+            holeV6.base_url,
+            err,
+        )
+
+    holeV5 = Hole(
+        host=entry[CONF_HOST],
+        session=session,
+        location=entry[CONF_LOCATION],
+        tls=entry[CONF_SSL],
+        verify_tls=entry[CONF_VERIFY_SSL],
+        api_token="wrong_token",
+        version=5,
+    )
+    try:
+        await holeV5.get_data()
+        if holeV5.data == []:
+            _LOGGER.debug(
+                "Response '[]' from API without auth, pihole API version 5 probably detected at %s",
+                holeV5.base_url,
+            )
+            return 5
+        _LOGGER.debug(
+            "Unexpected response from Pi-hole API at %s: %s",
+            holeV5.base_url,
+            str(holeV5.data),
+        )
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.error(
+            "Failed to connect to Pi-hole v5 API at %s: %s", holeV5.base_url, err
+        )
+    _LOGGER.debug(
+        "Could not determine pi-hole API version at: %s",
+        holeV6.base_url,
+    )
+    raise HoleError("Could not determine Pi-hole API version")
