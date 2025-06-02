@@ -88,7 +88,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.7.5
+PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
 PyViCare==2.44.0
@@ -170,7 +170,7 @@ aioairzone-cloud==0.6.12
 aioairzone==1.0.0
 
 # homeassistant.components.amazon_devices
-aioamazondevices==2.1.1
+aioamazondevices==3.0.4
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -265,7 +265,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.7.0
+aioimmich==0.8.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -1037,7 +1037,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.2.5
+ical==10.0.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1316,7 +1316,7 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==2.2.2
+numpy==2.2.6
 
 # homeassistant.components.nyt_games
 nyt_games==0.4.4

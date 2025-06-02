@@ -144,7 +144,7 @@ httpcore==1.0.9
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.2.2
+numpy==2.2.6
 pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues
@@ -155,7 +155,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.3
+pydantic==2.11.5
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
