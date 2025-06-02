@@ -1,0 +1,11 @@
+{
+  "code": 0,
+  "requestId": "2957.1554.16503597884492437",
+  "message": "Success",
+  "msgDetails": null,
+  "result": {
+    "redirectURI": "https://developer.aqara.com/",
+    "code": "78d5dadac2777ccf17b018a72d3f0f7d",
+    "state": "0"
+  }
+}
