@@ -2,7 +2,6 @@
 
 from unittest.mock import Mock, patch
 
-from homeassistant.components.lirc import DOMAIN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -14,6 +13,10 @@ async def test_repair_issue_is_created(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issue is created."""
+    from homeassistant.components.lirc import (  # pylint: disable=import-outside-toplevel
+        DOMAIN,
+    )
+
     assert await async_setup_component(
         hass,
         DOMAIN,
