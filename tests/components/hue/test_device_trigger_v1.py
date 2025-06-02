@@ -7,6 +7,7 @@ from pytest_unordered import unordered
 from homeassistant.components import automation, hue
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.hue.v1 import device_trigger
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -27,7 +28,9 @@ async def test_get_triggers(
 ) -> None:
     """Test we get the expected triggers from a hue remote."""
     mock_bridge_v1.mock_sensor_responses.append(REMOTES_RESPONSE)
-    await setup_platform(hass, mock_bridge_v1, ["sensor", "binary_sensor"])
+    await setup_platform(
+        hass, mock_bridge_v1, [Platform.SENSOR, Platform.BINARY_SENSOR]
+    )
 
     assert len(mock_bridge_v1.mock_requests) == 1
     # 2 remotes, just 1 battery sensor
@@ -98,7 +101,9 @@ async def test_if_fires_on_state_change(
 ) -> None:
     """Test for button press trigger firing."""
     mock_bridge_v1.mock_sensor_responses.append(REMOTES_RESPONSE)
-    await setup_platform(hass, mock_bridge_v1, ["sensor", "binary_sensor"])
+    await setup_platform(
+        hass, mock_bridge_v1, [Platform.SENSOR, Platform.BINARY_SENSOR]
+    )
     assert len(mock_bridge_v1.mock_requests) == 1
     assert len(hass.states.async_all()) == 1
 
