@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfEnergy
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -55,17 +55,18 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         """Initialize the energy sensor."""
         super().__init__(coordinator)
         self._device_id = device_id
-        self._room = coordinator.data[device_id]
+        room = coordinator.data[device_id]
 
-        self._attr_unique_id = f"{self._room['homeId']}_{self._device_id}_energy"
+        self._attr_unique_id = f"{room['homeId']}_{device_id}_energy"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name=self._room["name"],
+            name=room["name"],
             manufacturer="Adax",
         )
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> int | None:
         """Return the native value of the sensor."""
-        return float(self._room.get("energyWh", 0))
-
+        if self._device_id in self.coordinator.data:
+            return self.coordinator.data[self._device_id].get("energyWh")
+        return None
