@@ -47,7 +47,7 @@ from .const import (
 )
 from .helpers import _categorize_nodes, _categorize_programs
 from .models import IsyConfigEntry, IsyData
-from .services import async_setup_services
+from .services import async_setup_services, async_unload_services
 from .util import _async_cleanup_registry_entries
 
 CONFIG_SCHEMA = vol.Schema(
@@ -226,6 +226,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool
 
     _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
     entry.runtime_data.root.websocket.stop()
+
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        async_unload_services(hass)
 
     return unload_ok
 
