@@ -24,7 +24,9 @@ async def test_sensor_cloud(
         # Now we use fetch_rooms_info as primary method
         mock_adax_cloud.fetch_rooms_info.assert_called_once()
 
-        await snapshot_platform(hass, entity_registry, snapshot, mock_cloud_config_entry.entry_id)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_cloud_config_entry.entry_id
+        )
 
 
 async def test_sensor_local_not_created(
@@ -78,7 +80,9 @@ async def test_multiple_devices_create_individual_sensors(
     with patch("homeassistant.components.adax.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_cloud_config_entry)
 
-        await snapshot_platform(hass, entity_registry, snapshot, mock_cloud_config_entry.entry_id)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_cloud_config_entry.entry_id
+        )
 
 
 async def test_fallback_to_get_rooms(
@@ -110,4 +114,6 @@ async def test_fallback_to_get_rooms(
         mock_adax_cloud.fetch_rooms_info.assert_called_once()
         mock_adax_cloud.get_rooms.assert_called_once()
 
-        await snapshot_platform(hass, entity_registry, snapshot, mock_cloud_config_entry.entry_id)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_cloud_config_entry.entry_id
+        )

@@ -50,7 +50,9 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 rooms = []
 
             if not rooms:
-                _LOGGER.debug("No rooms from fetch_rooms_info, trying get_rooms as fallback")
+                _LOGGER.debug(
+                    "No rooms from fetch_rooms_info, trying get_rooms as fallback"
+                )
                 rooms = await self.adax_data_handler.get_rooms() or []
                 _LOGGER.debug("get_rooms fallback returned: %s", rooms)
 

@@ -64,12 +64,6 @@ _attr_has_entity_name = True
             manufacturer="Adax",
         )
 
-    @property
-    def available(self) -> bool:
-        """Whether the entity is available or not."""
-        return super().available and self._device_id in self.coordinator.data
-
-    @property
     def native_value(self) -> float:
         """Return value of the sensor"""
         return self._room.get("energyWh", 0)
