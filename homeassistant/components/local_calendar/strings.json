@@ -12,9 +12,9 @@
       },
       "user": {
         "data": {
-          "calendar_name": "Calendar Name",
-          "calendar_color": "Calendar Color",
-          "import": "Starting Data"
+          "calendar_name": "Calendar name",
+          "calendar_color": "Calendar color",
+          "import": "Starting data"
         },
         "description": "Please choose a name for your new calendar"
       }
@@ -32,7 +32,7 @@
     "step": {
       "init": {
         "data": {
-          "calendar_color": "Calendar Color"
+          "calendar_color": "Calendar color"
         }
       }
     }
