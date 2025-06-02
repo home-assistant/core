@@ -13,6 +13,7 @@ from homeassistant.const import CONF_MAC, CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
@@ -37,6 +38,14 @@ from .coordinator import (
 from .service import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Synology DSM component."""
+
+    await async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) -> bool:
@@ -88,9 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
         else:
             details = EXCEPTION_UNKNOWN
         raise ConfigEntryNotReady(details) from err
-
-    # Services
-    await async_setup_services(hass)
 
     # For SSDP compat
     if not entry.data.get(CONF_MAC):
