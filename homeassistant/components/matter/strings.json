@@ -176,6 +176,12 @@
       },
       "temperature_offset": {
         "name": "Temperature offset"
+      },
+      "pir_occupied_to_unoccupied_delay": {
+        "name": "Occupied to unoccupied delay"
+      },
+      "auto_relock_timer": {
+        "name": "Automatic relock timer"
       }
     },
     "light": {
@@ -233,8 +239,26 @@
       "laundry_washer_spin_speed": {
         "name": "Spin speed"
       },
+      "pump_operation_mode": {
+        "name": "mode",
+        "state": {
+          "local": "Local",
+          "maximum": "Maximum",
+          "minimum": "Minimum",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
       "water_heater_mode": {
         "name": "Water heater mode"
+      },
+      "door_lock_sound_volume": {
+        "name": "Sound volume",
+        "state": {
+          "silent": "Silent",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
       }
     },
     "sensor": {
@@ -306,6 +330,16 @@
       "energy_exported": {
         "name": "Energy exported"
       },
+      "esa_state": {
+        "name": "Appliance energy state",
+        "state": {
+          "offline": "Offline",
+          "online": "Online",
+          "fault": "[%key:common::state::fault%]",
+          "power_adjust_active": "Power adjust",
+          "paused": "[%key:common::state::paused%]"
+        }
+      },
       "evse_fault_state": {
         "name": "Fault state",
         "state": {
@@ -327,6 +361,20 @@
           "other": "Other fault"
         }
       },
+      "pump_control_mode": {
+        "name": "Control mode",
+        "state": {
+          "constant_flow": "Constant flow",
+          "constant_pressure": "Constant pressure",
+          "constant_speed": "Constant speed",
+          "constant_temperature": "Constant temp",
+          "proportional_pressure": "Proportional pressure",
+          "automatic": "Automatic"
+        }
+      },
+      "pump_speed": {
+        "name": "Rotation speed"
+      },
       "evse_circuit_capacity": {
         "name": "Circuit capacity"
       },
@@ -341,6 +389,9 @@
       },
       "evse_user_max_charge_current": {
         "name": "User max charge current"
+      },
+      "window_covering_target_position": {
+        "name": "Target opening position"
       }
     },
     "switch": {

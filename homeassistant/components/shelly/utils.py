@@ -11,6 +11,8 @@ from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
+    BLU_TRV_IDENTIFIER,
+    BLU_TRV_MODEL_NAME,
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
     MODEL_1L,
@@ -40,7 +42,11 @@ from homeassistant.helpers import (
     issue_registry as ir,
     singleton,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.dt import utcnow
 
@@ -65,7 +71,9 @@ from .const import (
     SHELLY_EMIT_EVENT_PATTERN,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
+    VIRTUAL_COMPONENTS,
     VIRTUAL_COMPONENTS_MAP,
+    All_LIGHT_TYPES,
 )
 
 
@@ -109,26 +117,24 @@ def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
     description: str | None = None,
-) -> str:
+) -> str | None:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
     if description:
-        return f"{channel_name} {description.lower()}"
+        return f"{channel_name} {description.lower()}" if channel_name else description
 
     return channel_name
 
 
-def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
+def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | None:
     """Get name based on device and channel name."""
-    entity_name = device.name
-
     if (
         not block
-        or block.type == "device"
+        or block.type in ("device", "light", "relay", "emeter")
         or get_number_of_channels(device, block) == 1
     ):
-        return entity_name
+        return None
 
     assert block.channel
 
@@ -140,12 +146,28 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     if channel_name:
         return channel_name
 
+    base = ord("1")
+
+    return f"Channel {chr(int(block.channel) + base)}"
+
+
+def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
+    """Get name of block sub-device."""
+    if TYPE_CHECKING:
+        assert block.channel
+
+    mode = cast(str, block.type) + "s"
+    if mode in device.settings:
+        if channel_name := device.settings[mode][int(block.channel)].get("name"):
+            return cast(str, channel_name)
+
     if device.settings["device"]["type"] == MODEL_EM3:
         base = ord("A")
-    else:
-        base = ord("1")
+        return f"{device.name} Phase {chr(int(block.channel) + base)}"
 
-    return f"{entity_name} channel {chr(int(block.channel) + base)}"
+    base = ord("1")
+
+    return f"{device.name} Channel {chr(int(block.channel) + base)}"
 
 
 def is_block_momentary_input(
@@ -364,39 +386,64 @@ def get_shelly_model_name(
     return cast(str, MODEL_NAMES.get(model))
 
 
-def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
+def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     """Get name based on device and channel name."""
+    if BLU_TRV_IDENTIFIER in key:
+        return None
+
+    instances = len(
+        get_rpc_key_instances(device.status, key.split(":")[0], all_lights=True)
+    )
+    component = key.split(":")[0]
+    component_id = key.split(":")[-1]
+
+    if key in device.config and key != "em:0":
+        # workaround for Pro 3EM, we don't want to get name for em:0
+        if component_name := device.config[key].get("name"):
+            if component in (*VIRTUAL_COMPONENTS, "script"):
+                return cast(str, component_name)
+
+            return cast(str, component_name) if instances == 1 else None
+
+    if component in VIRTUAL_COMPONENTS:
+        return f"{component.title()} {component_id}"
+
+    return None
+
+
+def get_rpc_sub_device_name(
+    device: RpcDevice, key: str, emeter_phase: str | None = None
+) -> str:
+    """Get name based on device and channel name."""
+    if key in device.config and key != "em:0":
+        # workaround for Pro 3EM, we don't want to get name for em:0
+        if entity_name := device.config[key].get("name"):
+            return cast(str, entity_name)
+
     key = key.replace("emdata", "em")
     key = key.replace("em1data", "em1")
-    device_name = device.name
-    entity_name: str | None = None
-    if key in device.config:
-        entity_name = device.config[key].get("name")
 
-    if entity_name is None:
-        channel = key.split(":")[0]
-        channel_id = key.split(":")[-1]
-        if key.startswith(("cover:", "input:", "light:", "switch:", "thermostat:")):
-            return f"{device_name} {channel.title()} {channel_id}"
-        if key.startswith(("cct", "rgb:", "rgbw:")):
-            return f"{device_name} {channel.upper()} light {channel_id}"
-        if key.startswith("em1"):
-            return f"{device_name} EM{channel_id}"
-        if key.startswith(("boolean:", "enum:", "number:", "text:")):
-            return f"{channel.title()} {channel_id}"
-        return device_name
+    component = key.split(":")[0]
+    component_id = key.split(":")[-1]
 
-    return entity_name
+    if component in ("cct", "rgb", "rgbw"):
+        return f"{device.name} {component.upper()} light {component_id}"
+    if component == "em1":
+        return f"{device.name} Energy Meter {component_id}"
+    if component == "em" and emeter_phase is not None:
+        return f"{device.name} Phase {emeter_phase}"
+
+    return f"{device.name} {component.title()} {component_id}"
 
 
 def get_rpc_entity_name(
     device: RpcDevice, key: str, description: str | None = None
-) -> str:
+) -> str | None:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
     if description:
-        return f"{channel_name} {description.lower()}"
+        return f"{channel_name} {description.lower()}" if channel_name else description
 
     return channel_name
 
@@ -406,13 +453,18 @@ def get_device_entry_gen(entry: ConfigEntry) -> int:
     return entry.data.get(CONF_GEN, 1)
 
 
-def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
+def get_rpc_key_instances(
+    keys_dict: dict[str, Any], key: str, all_lights: bool = False
+) -> list[str]:
     """Return list of key instances for RPC device from a dict."""
     if key in keys_dict:
         return [key]
 
     if key == "switch" and "cover:0" in keys_dict:
         key = "cover"
+
+    if key in All_LIGHT_TYPES and all_lights:
+        return [k for k in keys_dict if k.startswith(All_LIGHT_TYPES)]
 
     return [k for k in keys_dict if k.startswith(f"{key}:")]
 
@@ -691,3 +743,81 @@ async def get_rpc_scripts_event_types(
         script_events[script_id] = await get_rpc_script_event_types(device, script_id)
 
     return script_events
+
+
+def get_rpc_device_info(
+    device: RpcDevice,
+    mac: str,
+    key: str | None = None,
+    emeter_phase: str | None = None,
+) -> DeviceInfo:
+    """Return device info for RPC device."""
+    if key is None:
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    # workaround for Pro EM50
+    key = key.replace("em1data", "em1")
+    # workaround for Pro 3EM
+    key = key.replace("emdata", "em")
+
+    key_parts = key.split(":")
+    component = key_parts[0]
+    idx = key_parts[1] if len(key_parts) > 1 else None
+
+    if emeter_phase is not None:
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{mac}-{key}-{emeter_phase.lower()}")},
+            name=get_rpc_sub_device_name(device, key, emeter_phase),
+            manufacturer="Shelly",
+            via_device=(DOMAIN, mac),
+        )
+
+    if (
+        component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
+        or idx is None
+        or len(get_rpc_key_instances(device.status, component, all_lights=True)) < 2
+    ):
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{key}")},
+        name=get_rpc_sub_device_name(device, key),
+        manufacturer="Shelly",
+        via_device=(DOMAIN, mac),
+    )
+
+
+def get_blu_trv_device_info(
+    config: dict[str, Any], ble_addr: str, parent_mac: str
+) -> DeviceInfo:
+    """Return device info for RPC device."""
+    model_id = config.get("local_name")
+    return DeviceInfo(
+        connections={(CONNECTION_BLUETOOTH, ble_addr)},
+        identifiers={(DOMAIN, ble_addr)},
+        via_device=(DOMAIN, parent_mac),
+        manufacturer="Shelly",
+        model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
+        model_id=config.get("local_name"),
+        name=config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}",
+    )
+
+
+def get_block_device_info(
+    device: BlockDevice, mac: str, block: Block | None = None
+) -> DeviceInfo:
+    """Return device info for Block device."""
+    if (
+        block is None
+        or block.type not in ("light", "relay", "emeter")
+        or device.settings.get("mode") == "roller"
+        or get_number_of_channels(device, block) < 2
+    ):
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{block.description}")},
+        name=get_block_sub_device_name(device, block),
+        manufacturer="Shelly",
+        via_device=(DOMAIN, mac),
+    )

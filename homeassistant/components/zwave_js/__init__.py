@@ -94,6 +94,7 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INSTALLER_MODE,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
     CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_NETWORK_KEY,
@@ -105,6 +106,7 @@ from .const import (
     CONF_USE_ADDON,
     DATA_CLIENT,
     DOMAIN,
+    DRIVER_READY_TIMEOUT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
@@ -135,7 +137,6 @@ from .services import ZWaveServices
 
 CONNECT_TIMEOUT = 10
 DATA_DRIVER_EVENTS = "driver_events"
-DRIVER_READY_TIMEOUT = 60
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -405,9 +406,10 @@ class DriverEvents:
 
         # Devices that are in the device registry that are not known by the controller
         # can be removed
-        for device in stored_devices:
-            if device not in known_devices and device not in provisioned_devices:
-                self.dev_reg.async_remove_device(device.id)
+        if not self.config_entry.data.get(CONF_KEEP_OLD_DEVICES):
+            for device in stored_devices:
+                if device not in known_devices and device not in provisioned_devices:
+                    self.dev_reg.async_remove_device(device.id)
 
         # run discovery on controller node
         if controller.own_node:
