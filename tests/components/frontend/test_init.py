@@ -1,6 +1,5 @@
 """The tests for Home Assistant frontend."""
 
-from asyncio import AbstractEventLoop
 from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
@@ -95,7 +94,6 @@ async def frontend_themes(hass: HomeAssistant) -> None:
 
 @pytest.fixture
 def aiohttp_client(
-    event_loop: AbstractEventLoop,
     aiohttp_client: ClientSessionGenerator,
     socket_enabled: None,
 ) -> ClientSessionGenerator:
