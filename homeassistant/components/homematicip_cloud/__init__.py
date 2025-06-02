@@ -63,6 +63,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
             )
 
+    await async_setup_services(hass)
+
     return True
 
 
@@ -83,7 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) 
     if not await hap.async_setup():
         return False
 
-    await async_setup_services(hass)
     _async_remove_obsolete_entities(hass, entry, hap)
 
     # Register on HA stop event to gracefully shutdown HomematicIP Cloud connection
