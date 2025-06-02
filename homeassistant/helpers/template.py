@@ -16,7 +16,7 @@ import hashlib
 import json
 import logging
 import math
-from operator import contains
+from operator import contains, itemgetter
 import pathlib
 import random
 import re
@@ -2912,7 +2912,7 @@ def sort_naturally_filter(
         """Return the item to sort."""
         if attribute is None:
             return item
-        return item.get(attribute)
+        return itemgetter(item)
 
     lst.sort(key=lambda x: natural_key(get_value(x)), reverse=reverse)
 
