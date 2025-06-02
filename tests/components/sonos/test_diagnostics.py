@@ -1,4 +1,4 @@
-"""Tests for the diagnostics data provided by the miele integration."""
+"""Tests for the diagnostics data provided by the Sonos integration."""
 
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
