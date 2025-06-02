@@ -26,6 +26,7 @@ from .model import Config, Integration
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
     "attrs": "CalVer",
+    "awesomeversion": "CalVer",
     "grpcio": "SemVer",
     "httpx": "SemVer",
     "mashumaro": "SemVer",
@@ -40,13 +41,17 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
+    "homewizard": {
+        # https://github.com/homewizard/python-homewizard-energy/pull/545
+        "python-homewizard-energy": {"awesomeversion"}
+    },
+    "mealie": {
+        # https://github.com/joostlek/python-mealie/pull/490
+        "aiomealie": {"awesomeversion"}
+    },
     "ollama": {
         # https://github.com/ollama/ollama-python/pull/445 (not yet released)
         "ollama": {"httpx"}
-    },
-    "overkiz": {
-        # https://github.com/iMicknl/python-overkiz-api/issues/1644 (not yet released)
-        "pyoverkiz": {"attrs"},
     },
 }
 
@@ -332,10 +337,6 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "eq3btsmart": {
         # https://github.com/EuleMitKeule/eq3btsmart/releases/tag/2.0.0
         "homeassistant": {"eq3btsmart"}
-    },
-    "homekit_controller": {
-        # https://github.com/Jc2k/aiohomekit/issues/456
-        "homeassistant": {"aiohomekit"}
     },
     "netatmo": {
         # https://github.com/jabesq-org/pyatmo/pull/533 (not yet released)

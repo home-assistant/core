@@ -6578,7 +6578,7 @@
         },
         "telegram_bot": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Telegram bot"
         }
