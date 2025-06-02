@@ -40,7 +40,7 @@ async def async_setup_entry(
 
 class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
     """Representation of an Adax energy sensor."""
-_attr_has_entity_name = True
+    _attr_has_entity_name = True
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
