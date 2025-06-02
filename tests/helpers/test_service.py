@@ -1678,6 +1678,7 @@ async def test_register_admin_service_return_response(
 
 async def test_domain_control_not_async(hass: HomeAssistant, mock_entities) -> None:
     """Test domain verification in a service call with an unknown user."""
+    # Note: deprecated - replaced by test_domain_entity_control_not_async
     calls = []
 
     def mock_service_log(call):
@@ -1690,6 +1691,7 @@ async def test_domain_control_not_async(hass: HomeAssistant, mock_entities) -> N
 
 async def test_domain_control_unknown(hass: HomeAssistant, mock_entities) -> None:
     """Test domain verification in a service call with an unknown user."""
+    # Note: deprecated - replaced by test_domain_entity_control_unknown
     calls = []
 
     async def mock_service_log(call):
@@ -1723,6 +1725,7 @@ async def test_domain_control_unauthorized(
     hass: HomeAssistant, hass_read_only_user: MockUser
 ) -> None:
     """Test domain verification in a service call with an unauthorized user."""
+    # Note: deprecated - replaced by test_domain_entity_control_unauthorized
     mock_registry(
         hass,
         {
@@ -1764,6 +1767,7 @@ async def test_domain_control_admin(
     hass: HomeAssistant, hass_admin_user: MockUser
 ) -> None:
     """Test domain verification in a service call with an admin user."""
+    # Note: deprecated - replaced by test_domain_entity_control_admin
     mock_registry(
         hass,
         {
@@ -1802,6 +1806,7 @@ async def test_domain_control_admin(
 
 async def test_domain_control_no_user(hass: HomeAssistant) -> None:
     """Test domain verification in a service call with no user."""
+    # Note: deprecated - replaced by test_domain_entity_control_no_user
     mock_registry(
         hass,
         {
@@ -1820,6 +1825,172 @@ async def test_domain_control_no_user(hass: HomeAssistant) -> None:
         calls.append(call)
 
     protected_mock_service = service.verify_domain_control(hass, "test_domain")(
+        mock_service_log
+    )
+
+    hass.services.async_register(
+        "test_domain", "test_service", protected_mock_service, schema=None
+    )
+
+    await hass.services.async_call(
+        "test_domain",
+        "test_service",
+        {},
+        blocking=True,
+        context=Context(user_id=None),
+    )
+
+    assert len(calls) == 1
+
+
+async def test_domain_entity_control_not_async(
+    hass: HomeAssistant, mock_entities
+) -> None:
+    """Test domain verification in a service call with an unknown user."""
+    calls = []
+
+    def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    with pytest.raises(exceptions.HomeAssistantError):
+        service.verify_domain_entity_control(hass, "test_domain")(mock_service_log)
+
+
+async def test_domain_entity_control_unknown(
+    hass: HomeAssistant, mock_entities
+) -> None:
+    """Test domain verification in a service call with an unknown user."""
+    calls = []
+
+    async def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    with patch(
+        "homeassistant.helpers.entity_registry.async_get",
+        return_value=Mock(entities=mock_entities),
+    ):
+        protected_mock_service = service.verify_domain_entity_control(
+            hass, "test_domain"
+        )(mock_service_log)
+
+        hass.services.async_register(
+            "test_domain", "test_service", protected_mock_service, schema=None
+        )
+
+        with pytest.raises(exceptions.UnknownUser):
+            await hass.services.async_call(
+                "test_domain",
+                "test_service",
+                {},
+                blocking=True,
+                context=Context(user_id="fake_user_id"),
+            )
+        assert len(calls) == 0
+
+
+async def test_domain_entity_control_unauthorized(
+    hass: HomeAssistant, hass_read_only_user: MockUser
+) -> None:
+    """Test domain verification in a service call with an unauthorized user."""
+    mock_registry(
+        hass,
+        {
+            "light.kitchen": RegistryEntryWithDefaults(
+                entity_id="light.kitchen",
+                unique_id="kitchen",
+                platform="test_domain",
+            )
+        },
+    )
+
+    calls = []
+
+    async def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    protected_mock_service = service.verify_domain_entity_control(hass, "test_domain")(
+        mock_service_log
+    )
+
+    hass.services.async_register(
+        "test_domain", "test_service", protected_mock_service, schema=None
+    )
+
+    with pytest.raises(exceptions.Unauthorized):
+        await hass.services.async_call(
+            "test_domain",
+            "test_service",
+            {},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+    assert len(calls) == 0
+
+
+async def test_domain_entity_control_admin(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
+    """Test domain verification in a service call with an admin user."""
+    mock_registry(
+        hass,
+        {
+            "light.kitchen": RegistryEntryWithDefaults(
+                entity_id="light.kitchen",
+                unique_id="kitchen",
+                platform="test_domain",
+            )
+        },
+    )
+
+    calls = []
+
+    async def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    protected_mock_service = service.verify_domain_entity_control(hass, "test_domain")(
+        mock_service_log
+    )
+
+    hass.services.async_register(
+        "test_domain", "test_service", protected_mock_service, schema=None
+    )
+
+    await hass.services.async_call(
+        "test_domain",
+        "test_service",
+        {},
+        blocking=True,
+        context=Context(user_id=hass_admin_user.id),
+    )
+
+    assert len(calls) == 1
+
+
+async def test_domain_entity_control_no_user(hass: HomeAssistant) -> None:
+    """Test domain verification in a service call with no user."""
+    mock_registry(
+        hass,
+        {
+            "light.kitchen": RegistryEntryWithDefaults(
+                entity_id="light.kitchen",
+                unique_id="kitchen",
+                platform="test_domain",
+            )
+        },
+    )
+
+    calls = []
+
+    async def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    protected_mock_service = service.verify_domain_entity_control(hass, "test_domain")(
         mock_service_log
     )
 

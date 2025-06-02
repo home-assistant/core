@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.service import (
     async_register_admin_service,
-    verify_domain_control,
+    verify_domain_entity_control,
 )
 
 from .const import DOMAIN
@@ -126,7 +126,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     if hass.services.async_services_for_domain(DOMAIN):
         return
 
-    @verify_domain_control(hass, DOMAIN)
+    @verify_domain_entity_control(DOMAIN)
     async def async_call_hmipc_service(service: ServiceCall) -> None:
         """Call correct HomematicIP Cloud service."""
         service_name = service.service
