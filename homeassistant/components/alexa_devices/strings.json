@@ -94,7 +94,7 @@
         },
         "sound": {
           "name": "Amazon Sound skill file",
-          "description": "The suond file to play."
+          "description": "The sound file to play."
         },
         "sound_variant": {
           "name": "Sound variant",
