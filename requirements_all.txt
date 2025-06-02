@@ -2221,7 +2221,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.17.1
+pyoverkiz==1.17.2
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
