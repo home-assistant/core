@@ -62,10 +62,8 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         except OSError as e:
             raise UpdateFailed(f"Error communicating with API: {e}") from e
 
-        # Process room data - this cannot fail so it's outside try block
         for room in rooms:
-            if "energyWh" not in room:
-                room["energyWh"] = 0
+            room["energyWh"] = int(room.get("energyWh", 0))
 
         return {r["id"]: r for r in rooms}
 
