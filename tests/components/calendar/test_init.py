@@ -626,4 +626,4 @@ async def test_calendar_color_attribute(
     await hass.async_block_till_done()
     state = hass.states.get(entity.entity_id)
     assert state is not None
-    assert state.attributes["color"] is None
+    assert "color" not in state.attributes

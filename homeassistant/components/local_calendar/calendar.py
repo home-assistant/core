@@ -69,7 +69,6 @@ class LocalCalendarEntity(CalendarEntity):
         CalendarEntityFeature.CREATE_EVENT
         | CalendarEntityFeature.DELETE_EVENT
         | CalendarEntityFeature.UPDATE_EVENT
-        | CalendarEntityFeature.SUPPORTS_COLOR
     )
 
     def __init__(
