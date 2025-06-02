@@ -123,9 +123,6 @@ SCHEMA_SET_HOME_COOLING_MODE = vol.Schema(
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the HomematicIP Cloud services."""
 
-    if hass.services.async_services_for_domain(DOMAIN):
-        return
-
     @verify_domain_control(hass, DOMAIN)
     async def async_call_hmipc_service(service: ServiceCall) -> None:
         """Call correct HomematicIP Cloud service."""
