@@ -36,6 +36,7 @@ from .common import (
     MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE,
     MOCK_BUTTON_SUBENTRY_DATA_SINGLE,
     MOCK_COVER_SUBENTRY_DATA_SINGLE,
+    MOCK_FAN_SUBENTRY_DATA_SINGLE,
     MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
@@ -2786,6 +2787,157 @@ async def test_migrate_of_incompatible_config_entry(
             "Milk notifier Blind",
         ),
         (
+            MOCK_FAN_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Breezer"},
+            {
+                "fan_feature_speed": True,
+                "fan_feature_preset_modes": True,
+                "fan_feature_oscillation": True,
+                "fan_feature_direction": True,
+            },
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "fan_speed_settings": {
+                    "percentage_command_template": "{{ value }}",
+                    "percentage_command_topic": "test-topic/pct",
+                    "percentage_state_topic": "test-topic/pct",
+                    "percentage_value_template": "{{ value_json.percentage }}",
+                    "speed_range_min": 1,
+                    "speed_range_max": 100,
+                    "payload_reset_percentage": "None",
+                },
+                "fan_preset_mode_settings": {
+                    "preset_modes": ["eco", "auto"],
+                    "preset_mode_command_template": "{{ value }}",
+                    "preset_mode_command_topic": "test-topic/prm",
+                    "preset_mode_state_topic": "test-topic/prm",
+                    "preset_mode_value_template": "{{ value_json.preset_mode }}",
+                    "payload_reset_preset_mode": "None",
+                },
+                "fan_oscillation_settings": {
+                    "oscillation_command_template": "{{ value }}",
+                    "oscillation_command_topic": "test-topic/osc",
+                    "oscillation_state_topic": "test-topic/osc",
+                    "oscillation_value_template": "{{ value_json.oscillation }}",
+                },
+                "fan_direction_settings": {
+                    "direction_command_template": "{{ value }}",
+                    "direction_command_topic": "test-topic/dir",
+                    "direction_state_topic": "test-topic/dir",
+                    "direction_value_template": "{{ value_json.direction }}",
+                },
+                "retain": False,
+                "optimistic": False,
+            },
+            (
+                (
+                    {
+                        "command_topic": "test-topic#invalid",
+                        "fan_speed_settings": {
+                            "percentage_command_topic": "test-topic#invalid",
+                        },
+                        "fan_preset_mode_settings": {
+                            "preset_modes": ["eco", "auto"],
+                            "preset_mode_command_topic": "test-topic#invalid",
+                        },
+                        "fan_oscillation_settings": {
+                            "oscillation_command_topic": "test-topic#invalid",
+                        },
+                        "fan_direction_settings": {
+                            "direction_command_topic": "test-topic#invalid",
+                        },
+                    },
+                    {
+                        "command_topic": "invalid_publish_topic",
+                        "fan_preset_mode_settings": "invalid_publish_topic",
+                        "fan_speed_settings": "invalid_publish_topic",
+                        "fan_oscillation_settings": "invalid_publish_topic",
+                        "fan_direction_settings": "invalid_publish_topic",
+                    },
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                        "fan_speed_settings": {
+                            "percentage_command_topic": "test-topic",
+                            "percentage_state_topic": "test-topic#invalid",
+                        },
+                        "fan_preset_mode_settings": {
+                            "preset_modes": ["eco", "auto"],
+                            "preset_mode_command_topic": "test-topic",
+                            "preset_mode_state_topic": "test-topic#invalid",
+                        },
+                        "fan_oscillation_settings": {
+                            "oscillation_command_topic": "test-topic",
+                            "oscillation_state_topic": "test-topic#invalid",
+                        },
+                        "fan_direction_settings": {
+                            "direction_command_topic": "test-topic",
+                            "direction_state_topic": "test-topic#invalid",
+                        },
+                    },
+                    {
+                        "state_topic": "invalid_subscribe_topic",
+                        "fan_preset_mode_settings": "invalid_subscribe_topic",
+                        "fan_speed_settings": "invalid_subscribe_topic",
+                        "fan_oscillation_settings": "invalid_subscribe_topic",
+                        "fan_direction_settings": "invalid_subscribe_topic",
+                    },
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "fan_speed_settings": {
+                            "percentage_command_topic": "test-topic",
+                        },
+                        "fan_preset_mode_settings": {
+                            "preset_modes": ["None", "auto"],
+                            "preset_mode_command_topic": "test-topic",
+                        },
+                        "fan_oscillation_settings": {
+                            "oscillation_command_topic": "test-topic",
+                        },
+                        "fan_direction_settings": {
+                            "direction_command_topic": "test-topic",
+                        },
+                    },
+                    {
+                        "fan_preset_mode_settings": "fan_preset_mode_reset_in_preset_modes_list",
+                    },
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "fan_speed_settings": {
+                            "percentage_command_topic": "test-topic",
+                            "speed_range_min": 100,
+                            "speed_range_max": 10,
+                        },
+                        "fan_preset_mode_settings": {
+                            "preset_modes": ["eco", "auto"],
+                            "preset_mode_command_topic": "test-topic",
+                        },
+                        "fan_oscillation_settings": {
+                            "oscillation_command_topic": "test-topic",
+                        },
+                        "fan_direction_settings": {
+                            "direction_command_topic": "test-topic",
+                        },
+                    },
+                    {
+                        "fan_speed_settings": "fan_speed_range_max_must_be_greater_than_speed_range_min",
+                    },
+                ),
+            ),
+            "Milk notifier Breezer",
+        ),
+        (
             MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
             {"name": "Milkman alert"},
@@ -2886,7 +3038,15 @@ async def test_migrate_of_incompatible_config_entry(
             {
                 "state_class": "measurement",
             },
-            (),
+            (
+                (
+                    {
+                        "state_class": "measurement_angle",
+                        "unit_of_measurement": "deg",
+                    },
+                    {"unit_of_measurement": "invalid_uom_for_state_class"},
+                ),
+            ),
             {
                 "state_topic": "test-topic",
             },
@@ -2971,6 +3131,7 @@ async def test_migrate_of_incompatible_config_entry(
         "binary_sensor",
         "button",
         "cover",
+        "fan",
         "notify_with_entity_name",
         "notify_no_entity_name",
         "sensor_options",

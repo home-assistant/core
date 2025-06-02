@@ -132,11 +132,11 @@ async def async_generate_speaker_info(
         value = getattr(speaker, attrib)
         payload[attrib] = get_contents(value)
 
-    payload["enabled_entities"] = {
+    payload["enabled_entities"] = sorted(
         entity_id
         for entity_id, s in config_entry.runtime_data.entity_id_mappings.items()
         if s is speaker
-    }
+    )
     payload["media"] = await async_generate_media_info(hass, speaker)
     payload["activity_stats"] = speaker.activity_stats.report()
     payload["event_stats"] = speaker.event_stats.report()
