@@ -1,6 +1,7 @@
 """Tests for miele sensor module."""
 
-from unittest.mock import MagicMock
+from datetime import UTC, datetime
+from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy import SnapshotAssertion
@@ -113,15 +114,17 @@ async def test_laundry_scenario(
     expected_sensor_states: dict[str, list[str]],
 ) -> None:
     """Parametrized test for verifying sensor state transitions for laundry devices."""
+    fixed_now = datetime(2025, 5, 31, 12, 30, tzinfo=UTC)
 
-    await mock_sensor_transitions(
-        hass,
-        mock_miele_client,
-        mock_config_entry,
-        device_name,
-        json_sequence,
-        expected_sensor_states,
-    )
+    with patch("homeassistant.util.dt.now", return_value=fixed_now):
+        await mock_sensor_transitions(
+            hass,
+            mock_miele_client,
+            mock_config_entry,
+            device_name,
+            json_sequence,
+            expected_sensor_states,
+        )
 
 
 @pytest.mark.parametrize("load_device_file", ["laundry_scenario/003_rinse_hold.json"])
