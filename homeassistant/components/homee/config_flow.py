@@ -10,7 +10,7 @@ from pyHomee import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
@@ -24,6 +24,8 @@ AUTH_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
+
+type HomeeConfigEntry = ConfigEntry[Homee]
 
 
 class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -81,5 +83,56 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=AUTH_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reconfigure flow."""
+        errors = {}
+        reconfigure_entry: HomeeConfigEntry = self._get_reconfigure_entry()
+
+        if user_input:
+            self.homee = Homee(
+                user_input[CONF_HOST],
+                reconfigure_entry.data[CONF_USERNAME],
+                reconfigure_entry.data[CONF_PASSWORD],
+            )
+
+            try:
+                await self.homee.get_access_token()
+            except HomeeConnectionFailedException:
+                errors["base"] = "cannot_connect"
+            except HomeeAuthenticationFailedException:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self.hass.loop.create_task(self.homee.run())
+                await self.homee.wait_until_connected()
+                self.homee.disconnect()
+                await self.homee.wait_until_disconnected()
+
+                await self.async_set_unique_id(self.homee.settings.uid)
+                self._abort_if_unique_id_mismatch(reason="wrong_hub")
+
+                _LOGGER.info("Updated homee entry with ID %s", self.homee.settings.uid)
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(), data_updates=user_input
+                )
+
+        return self.async_show_form(
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
+                    ): str
+                }
+            ),
+            description_placeholders={
+                "name": reconfigure_entry.runtime_data.settings.uid
+            },
             errors=errors,
         )
