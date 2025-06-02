@@ -52,6 +52,21 @@ async def test_flow(hass: HomeAssistant, b2_fixture: BackblazeFixture) -> None:
     assert result.get("data") == USER_INPUT
 
 
+async def test_flow_adds_prefix(
+    hass: HomeAssistant, b2_fixture: BackblazeFixture
+) -> None:
+    """Test config flow with prefix."""
+    user_input = {
+        **USER_INPUT,
+        "prefix": "test-prefix/foo",
+    }
+    result = await _async_start_flow(
+        hass, b2_fixture.key_id, b2_fixture.application_key, user_input
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["data"]["prefix"] == "test-prefix/foo/"
+
+
 async def test_abort_if_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

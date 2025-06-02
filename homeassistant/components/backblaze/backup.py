@@ -20,7 +20,7 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 
 from . import BackblazeConfigEntry
-from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_PREFIX, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 METADATA_VERSION = "1"
@@ -86,8 +86,8 @@ class BackblazeBackupAgent(BackupAgent):
         super().__init__()
         self._hass = hass
         self.async_create_task = entry.async_create_task
-        self._bucket = entry.runtime_data.bucket
-        self._prefix = entry.runtime_data.prefix
+        self._bucket = entry.runtime_data
+        self._prefix = entry.data[CONF_PREFIX]
 
         self.name = entry.title
         self.unique_id = entry.entry_id

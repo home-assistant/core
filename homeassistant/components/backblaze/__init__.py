@@ -14,7 +14,6 @@ from .const import (
     CONF_APPLICATION_KEY,
     CONF_BUCKET,
     CONF_KEY_ID,
-    CONF_PREFIX,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
@@ -29,7 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
     b2_api = B2Api(info)
 
     data = cast(dict, entry.data)
-    prefix = data[CONF_PREFIX]
 
     try:
 
@@ -72,10 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             translation_key="invalid_auth",
         ) from err
 
-    if prefix and not prefix.endswith("/"):
-        prefix += "/"
-
-    entry.runtime_data = BackblazeConfig(bucket, prefix)
+    entry.runtime_data = bucket
 
     def _async_notify_backup_listeners() -> None:
         for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
@@ -89,11 +84,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> bool:
     """Unload a config entry."""
     return True
-
-
-class BackblazeConfig:
-    """Small wrapper for Backblaze configuration."""
-
-    def __init__(self, bucket: Bucket, prefix: str) -> None:  # noqa: D107
-        self.bucket = bucket
-        self.prefix = prefix
