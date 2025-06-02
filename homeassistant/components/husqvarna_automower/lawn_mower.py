@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, ERROR_STATES
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerAvailableEntity, handle_sending_exception
 
@@ -108,16 +108,18 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
     def activity(self) -> LawnMowerActivity:
         """Return the state of the mower."""
         mower_attributes = self.mower_attributes
-        if mower_attributes.mower.state in PAUSED_STATES:
-            return LawnMowerActivity.PAUSED
-        if (mower_attributes.mower.state == "RESTRICTED") or (
-            mower_attributes.mower.activity in DOCKED_ACTIVITIES
-        ):
-            return LawnMowerActivity.DOCKED
-        if mower_attributes.mower.state in MowerStates.IN_OPERATION:
+        if mower_attributes.mower.state not in ERROR_STATES:
+            if mower_attributes.mower.state in PAUSED_STATES:
+                return LawnMowerActivity.PAUSED
             if mower_attributes.mower.activity == MowerActivities.GOING_HOME:
                 return LawnMowerActivity.RETURNING
-            return LawnMowerActivity.MOWING
+            if (
+                mower_attributes.mower.state == MowerStates.RESTRICTED
+                or mower_attributes.mower.activity in DOCKED_ACTIVITIES
+            ):
+                return LawnMowerActivity.DOCKED
+            if mower_attributes.mower.state in MowerStates.IN_OPERATION:
+                return LawnMowerActivity.MOWING
         return LawnMowerActivity.ERROR
 
     @property
