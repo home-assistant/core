@@ -7,7 +7,7 @@ from homeassistant.components.backup import AgentBackup
 
 USER_INPUT = {
     CONF_BUCKET: "testBucket",
-    CONF_PREFIX: "testprefix",
+    CONF_PREFIX: "testprefix/",
 }
 
 

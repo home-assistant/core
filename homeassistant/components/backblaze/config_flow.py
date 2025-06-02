@@ -90,6 +90,9 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors[CONF_PREFIX] = "invalid_prefix"
                         placeholders["allowed_prefix"] = allowed_prefix
 
+                    if prefix and not prefix.endswith("/"):
+                        user_input[CONF_PREFIX] = f"{prefix}/"
+
             except exception.Unauthorized:
                 errors["base"] = "invalid_credentials"
             except exception.RestrictedBucket as err:
