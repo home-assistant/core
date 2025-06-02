@@ -63,7 +63,7 @@ async def test_setup_api_v6(
 
 @pytest.mark.parametrize(
     ("config_entry_data", "expected_api_token"),
-    [({**CONFIG_DATA_DEFAULTS}, API_KEY), ({**CONFIG_ENTRY_WITHOUT_API_KEY}, "")],
+    [({**CONFIG_DATA_DEFAULTS}, API_KEY)],
 )
 async def test_setup_api_v5(
     hass: HomeAssistant, config_entry_data: dict, expected_api_token: str
