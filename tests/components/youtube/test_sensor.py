@@ -42,7 +42,7 @@ async def test_sensor_without_uploaded_video(
     with patch(
         "homeassistant.components.youtube.api.AsyncConfigEntryAuth.get_resource",
         return_value=MockYouTube(
-            playlist_items_fixture="youtube/get_no_playlist_items.json"
+            hass, playlist_items_fixture="get_no_playlist_items.json"
         ),
     ):
         future = dt_util.utcnow() + timedelta(minutes=15)
@@ -72,7 +72,7 @@ async def test_sensor_updating(
     with patch(
         "homeassistant.components.youtube.api.AsyncConfigEntryAuth.get_resource",
         return_value=MockYouTube(
-            playlist_items_fixture="youtube/get_playlist_items_2.json"
+            hass, playlist_items_fixture="get_playlist_items_2.json"
         ),
     ):
         future = dt_util.utcnow() + timedelta(minutes=15)
