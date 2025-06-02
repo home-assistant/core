@@ -1825,7 +1825,7 @@ pynetgear==0.10.10
 pynina==0.3.6
 
 # homeassistant.components.nintendo_parental
-pynintendoparental==0.7.2
+pynintendoparental==1.0.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
