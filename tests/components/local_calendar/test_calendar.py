@@ -34,8 +34,7 @@ async def test_empty_calendar(
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
         "friendly_name": FRIENDLY_NAME,
-        "supported_features": 15,
-        "color": None,
+        "supported_features": 7,
     }
 
 
@@ -179,8 +178,7 @@ async def test_active_event(
         "location": "",
         "start_time": start.strftime(DATE_STR_FORMAT),
         "end_time": end.strftime(DATE_STR_FORMAT),
-        "supported_features": 15,
-        "color": None,
+        "supported_features": 7,
     }
 
 
@@ -217,8 +215,7 @@ async def test_upcoming_event(
         "location": "",
         "start_time": start.strftime(DATE_STR_FORMAT),
         "end_time": end.strftime(DATE_STR_FORMAT),
-        "supported_features": 15,
-        "color": None,
+        "supported_features": 7,
     }
 
 
