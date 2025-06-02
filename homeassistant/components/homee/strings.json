@@ -4,7 +4,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reconfigure_successful": "New homee Address has been saved successfully.",
-      "wrong_hub": "Address does not belong to the configured homee."
+      "wrong_hub": "Address belongs to a different homee."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
