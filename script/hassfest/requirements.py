@@ -26,6 +26,7 @@ from .model import Config, Integration
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
     "attrs": "CalVer",
+    "awesomeversion": "CalVer",
     "grpcio": "SemVer",
     "httpx": "SemVer",
     "mashumaro": "SemVer",
@@ -40,6 +41,18 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
+    "go2rtc": {
+        # https://github.com/home-assistant-libs/python-go2rtc-client/pull/123
+        "go2rtc-client": {"awesomeversion"}
+    },
+    "homewizard": {
+        # https://github.com/homewizard/python-homewizard-energy/pull/545
+        "python-homewizard-energy": {"awesomeversion"}
+    },
+    "mealie": {
+        # https://github.com/joostlek/python-mealie/pull/490
+        "aiomealie": {"awesomeversion"}
+    },
     "ollama": {
         # https://github.com/ollama/ollama-python/pull/445 (not yet released)
         "ollama": {"httpx"}
@@ -164,7 +177,10 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "zigpy": {"pyserial-asyncio"},
     },
     "homekit": {"hap-python": {"async-timeout"}},
-    "homewizard": {"python-homewizard-energy": {"async-timeout"}},
+    "homewizard": {
+        # https://github.com/home-assistant-libs/python-go2rtc-client/pull/123
+        "python-homewizard-energy": {"async-timeout"},
+    },
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "influxdb": {
         # https://github.com/influxdata/influxdb-client-python/issues/695
