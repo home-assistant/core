@@ -55,9 +55,6 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
                 _LOGGER.debug("get_rooms fallback returned: %s", rooms)
 
             if not rooms:
-                _LOGGER.warning(
-                    "No rooms returned from Adax API - check account credentials and room configuration"
-                )
                 raise UpdateFailed("No rooms available from Adax API")
 
         except (OSError, TimeoutError) as e:
