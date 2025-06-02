@@ -32,7 +32,7 @@
     "step": {
       "init": {
         "data": {
-          "calendar_color": "Calendar color"
+          "calendar_color": "[%key:component::local_calendar::config::step::user::data::calendar_color%]"
         }
       }
     }
