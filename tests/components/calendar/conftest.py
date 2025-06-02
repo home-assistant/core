@@ -8,12 +8,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.calendar import (
-    DOMAIN,
-    CalendarEntity,
-    CalendarEntityFeature,
-    CalendarEvent,
-)
+from homeassistant.components.calendar import DOMAIN, CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -48,7 +43,6 @@ class MockCalendarEntity(CalendarEntity):
     """Test Calendar entity."""
 
     _attr_has_entity_name = True
-    _attr_supported_features = CalendarEntityFeature.SUPPORTS_COLOR
 
     def __init__(self, name: str, events: list[CalendarEvent] | None = None) -> None:
         """Initialize entity."""
