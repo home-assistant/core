@@ -14,6 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
+from tests.common import load_json_object_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -410,3 +411,16 @@ async def test_validate_entity(
     assert res["result"]["errors"][0]["path"] == ["data", "knx", "ga_switch", "write"]
     assert res["result"]["errors"][0]["error_message"] == "required key not provided"
     assert res["result"]["error_base"].startswith("required key not provided")
+
+
+async def test_migration_1_to_2(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test migration from schema 1 to schema 2."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_light_v1.json", state_updater=False
+    )
+    new_data = load_json_object_fixture("config_store_light.json", "knx")
+    assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
