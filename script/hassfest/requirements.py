@@ -53,10 +53,6 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/joostlek/python-mealie/pull/490
         "aiomealie": {"awesomeversion"}
     },
-    "ollama": {
-        # https://github.com/ollama/ollama-python/pull/445 (not yet released)
-        "ollama": {"httpx"}
-    },
     "overkiz": {
         # https://github.com/iMicknl/python-overkiz-api/issues/1644 (not yet released)
         "pyoverkiz": {"attrs"},
