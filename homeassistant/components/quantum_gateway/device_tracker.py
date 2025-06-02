@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from quantum_gateway import QuantumGatewayScanner
 from requests.exceptions import RequestException
 import voluptuous as vol
 
@@ -17,6 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_HOST, LOGGER
+from .coordinator import QuantumGatewayCoordinator
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -27,47 +27,39 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(
+async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> QuantumGatewayDeviceScanner | None:
     """Validate the configuration and return a Quantum Gateway scanner."""
-    scanner = QuantumGatewayDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
+    try:
+        scanner = QuantumGatewayDeviceScanner(hass, config[DEVICE_TRACKER_DOMAIN])
+        await scanner.coordinator._async_setup()  # noqa: SLF001
+        success_init = True
+    except RequestException:
+        success_init = False
+        LOGGER.error("Unable to connect to gateway. Check host")
 
-    return scanner if scanner.success_init else None
+    if not success_init:
+        LOGGER.error("Unable to login to gateway. Check password and host")
+
+    return scanner if success_init else None
 
 
 class QuantumGatewayDeviceScanner(DeviceScanner):
     """Class which queries a Quantum Gateway."""
 
-    def __init__(self, config) -> None:
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize the scanner."""
 
-        self.host = config[CONF_HOST]
-        self.password = config[CONF_PASSWORD]
-        self.use_https = config[CONF_SSL]
         LOGGER.debug("Initializing")
 
-        try:
-            self.quantum = QuantumGatewayScanner(
-                self.host, self.password, self.use_https
-            )
-            self.success_init = self.quantum.success_init
-        except RequestException:
-            self.success_init = False
-            LOGGER.error("Unable to connect to gateway. Check host")
+        self.coordinator = QuantumGatewayCoordinator(hass, config)
 
-        if not self.success_init:
-            LOGGER.error("Unable to login to gateway. Check password and host")
-
-    def scan_devices(self):
+    async def async_scan_devices(self) -> list[str]:
         """Scan for new devices and return a list of found MACs."""
-        connected_devices = []
-        try:
-            connected_devices = self.quantum.scan_devices()
-        except RequestException:
-            LOGGER.error("Unable to scan devices. Check connection to router")
-        return connected_devices
+        await self.coordinator.async_refresh()
+        return list(self.coordinator.data)
 
-    def get_device_name(self, device):
+    def get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
-        return self.quantum.get_device_name(device)
+        return self.coordinator.data.get(device)
