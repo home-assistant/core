@@ -149,6 +149,7 @@ class LocalTodoListEntity(TodoListEntity):
                 TodoItem(
                     uid=item.uid,
                     summary=item.summary or "",
+                    icon=self._store.get_icon(item.uid),
                     status=ICS_TODO_STATUS_MAP.get(
                         item.status or TodoStatus.NEEDS_ACTION,
                         TodoItemStatus.NEEDS_ACTION,
@@ -165,6 +166,7 @@ class LocalTodoListEntity(TodoListEntity):
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
             await self.hass.async_add_executor_job(todo_store.add, todo)
+            self._store.set_icon(todo.uid, item.icon)
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -174,6 +176,7 @@ class LocalTodoListEntity(TodoListEntity):
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
             await self.hass.async_add_executor_job(todo_store.edit, todo.uid, todo)
+            self._store.set_icon(todo.uid, item.icon)
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -183,6 +186,7 @@ class LocalTodoListEntity(TodoListEntity):
         async with self._calendar_lock:
             for uid in uids:
                 store.delete(uid)
+                self._store.set_icon(uid, None)
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
