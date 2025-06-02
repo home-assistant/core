@@ -24,7 +24,7 @@
         "title": "Leneda Authentication",
         "description": "Set up your Leneda integration by providing your Energy ID and API key.",
         "data": {
-          "api_token": "API Key",
+          "api_token": "[%key:common::config_flow::data::api_key%]",
           "energy_id": "Energy ID"
         },
         "data_description": {
@@ -96,7 +96,7 @@
       "entry_type": "Metering point",
       "step": {
         "init": {
-          "title": "Add Metering Point",
+          "title": "[%key:component::leneda::config_subentries::metering_point::initiate_flow::user%]",
           "description": "Enter the metering point ID to monitor.",
           "data": {
             "metering_point": "Metering point ID"
