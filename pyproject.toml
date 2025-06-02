@@ -104,7 +104,7 @@ dependencies = [
   # onboarding->cloud->camera->pyturbojpeg. Onboarding needs
   # to be setup in stage 0, but we don't want to also promote cloud with all its
   # dependencies to stage 0.
-  "PyTurboJPEG==1.7.5",
+  "PyTurboJPEG==1.8.0",
   "PyYAML==6.0.2",
   "requests==2.32.3",
   "securetar==2025.2.1",
