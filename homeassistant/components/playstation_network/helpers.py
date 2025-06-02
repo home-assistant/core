@@ -53,7 +53,7 @@ class PlaystationNetwork:
         self.psn = PSNAWP(npsso, rate_limit=rate)
         self.client: Client | None = None
         self.hass = hass
-        self.user: User | None = None
+        self.user: User
         self.legacy_profile: dict[str, Any] | None = None
 
     async def get_user(self) -> User:
@@ -66,9 +66,6 @@ class PlaystationNetwork:
     async def get_data(self) -> PlaystationNetworkData:
         """Get title data from the PlayStation Network."""
         data = PlaystationNetworkData()
-
-        if not self.user:
-            self.user = await self.get_user()
 
         if not self.client:
             self.client = await self.hass.async_add_executor_job(self.psn.me)
