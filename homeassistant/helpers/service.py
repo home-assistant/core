@@ -63,6 +63,7 @@ from . import (
     template,
     translation,
 )
+from .deprecation import deprecated_function
 from .group import expand_entity_ids
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
@@ -1149,6 +1150,7 @@ def async_register_admin_service(
 
 @bind_hass
 @callback
+@deprecated_function("verify_domain_entity_control", breaks_in_ha_version="2026.7")
 def verify_domain_control(
     hass: HomeAssistant, domain: str
 ) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]:

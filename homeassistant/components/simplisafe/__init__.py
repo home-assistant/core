@@ -290,7 +290,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
-    _verify_domain_control = verify_domain_entity_control(DOMAIN)
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -334,19 +333,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return wrapper
 
-    @_verify_domain_control
+    @verify_domain_entity_control(DOMAIN)
     @extract_system
     async def async_remove_pin(call: ServiceCall, system: SystemType) -> None:
         """Remove a PIN."""
         await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
 
-    @_verify_domain_control
+    @verify_domain_entity_control(DOMAIN)
     @extract_system
     async def async_set_pin(call: ServiceCall, system: SystemType) -> None:
         """Set a PIN."""
         await system.async_set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
 
-    @_verify_domain_control
+    @verify_domain_entity_control(DOMAIN)
     @extract_system
     async def async_set_system_properties(
         call: ServiceCall, system: SystemType

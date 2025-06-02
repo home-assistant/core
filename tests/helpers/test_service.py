@@ -1676,7 +1676,9 @@ async def test_register_admin_service_return_response(
     assert result == {"test-reply": "test-value1"}
 
 
-async def test_domain_control_not_async(hass: HomeAssistant, mock_entities) -> None:
+async def test_domain_control_not_async(
+    hass: HomeAssistant, mock_entities, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test domain verification in a service call with an unknown user."""
     # Note: deprecated - replaced by test_domain_entity_control_not_async
     calls = []
@@ -1687,6 +1689,11 @@ async def test_domain_control_not_async(hass: HomeAssistant, mock_entities) -> N
 
     with pytest.raises(exceptions.HomeAssistantError):
         service.verify_domain_control(hass, "test_domain")(mock_service_log)
+
+    assert (
+        "verify_domain_control is a deprecated function which will be removed in "
+        "HA Core 2026.7. Use verify_domain_entity_control instead"
+    ) in caplog.text
 
 
 async def test_domain_control_unknown(hass: HomeAssistant, mock_entities) -> None:
@@ -1854,7 +1861,7 @@ async def test_domain_entity_control_not_async(
         calls.append(call)
 
     with pytest.raises(exceptions.HomeAssistantError):
-        service.verify_domain_entity_control(hass, "test_domain")(mock_service_log)
+        service.verify_domain_entity_control("test_domain")(mock_service_log)
 
 
 async def test_domain_entity_control_unknown(
@@ -1871,9 +1878,9 @@ async def test_domain_entity_control_unknown(
         "homeassistant.helpers.entity_registry.async_get",
         return_value=Mock(entities=mock_entities),
     ):
-        protected_mock_service = service.verify_domain_entity_control(
-            hass, "test_domain"
-        )(mock_service_log)
+        protected_mock_service = service.verify_domain_entity_control("test_domain")(
+            mock_service_log
+        )
 
         hass.services.async_register(
             "test_domain", "test_service", protected_mock_service, schema=None
@@ -1911,7 +1918,7 @@ async def test_domain_entity_control_unauthorized(
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = service.verify_domain_entity_control(hass, "test_domain")(
+    protected_mock_service = service.verify_domain_entity_control("test_domain")(
         mock_service_log
     )
 
@@ -1952,7 +1959,7 @@ async def test_domain_entity_control_admin(
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = service.verify_domain_entity_control(hass, "test_domain")(
+    protected_mock_service = service.verify_domain_entity_control("test_domain")(
         mock_service_log
     )
 
@@ -1990,7 +1997,7 @@ async def test_domain_entity_control_no_user(hass: HomeAssistant) -> None:
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = service.verify_domain_entity_control(hass, "test_domain")(
+    protected_mock_service = service.verify_domain_entity_control("test_domain")(
         mock_service_log
     )
 
