@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import cast
 
 from b2sdk.v2 import B2Api, Bucket, InMemoryAccountInfo, exception
@@ -20,9 +19,7 @@ from .const import (
     DOMAIN,
 )
 
-type BackblazeConfigEntry = ConfigEntry[BackblazeConfig]
-
-_LOGGER = logging.getLogger(__name__)
+type BackblazeConfigEntry = ConfigEntry[Bucket]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> bool:
@@ -35,10 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
     prefix = data[CONF_PREFIX]
 
     try:
-        _LOGGER.info(
-            "Connecting to Backblaze with application key id %s",
-            data[CONF_KEY_ID],
-        )
 
         def _authorize_and_get_bucket() -> Bucket:
             b2_api.authorize_account(

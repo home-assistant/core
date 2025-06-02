@@ -56,10 +56,6 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             b2_api = B2Api(info)
 
             try:
-                _LOGGER.info(
-                    "Connecting to Backblaze with application key id %s",
-                    user_input[CONF_KEY_ID],
-                )
 
                 def authorize_and_get_bucket() -> None:
                     """Authorize account and get bucket by name."""
