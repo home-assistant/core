@@ -137,10 +137,6 @@ def async_get_entities(hass: HomeAssistant) -> dict[str, Entity]:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Create and register services for the ISY integration."""
-    existing_services = hass.services.async_services_for_domain(DOMAIN)
-    if existing_services and SERVICE_SEND_PROGRAM_COMMAND in existing_services:
-        # Integration-level services have already been added. Return.
-        return
 
     async def async_send_program_command_service_handler(service: ServiceCall) -> None:
         """Handle a send program command service call."""
