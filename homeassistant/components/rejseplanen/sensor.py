@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime, timedelta
 import logging
+from operator import itemgetter
 from typing import Any
 
 from py_rejseplan.api.departures import departuresAPIClient
@@ -49,8 +50,8 @@ ATTR_NEXT_UP = "next_departures"
 
 CONF_AUTHENTICATION = "authentication"
 CONF_STOP_ID = "stop_id"
-CONF_ROUTE = "route"
-CONF_DIRECTION = "direction"
+# CONF_ROUTE = "route"
+# CONF_DIRECTION = "direction"
 CONF_DEPARTURE_TYPE = "departure_type"
 
 DEFAULT_NAME = "Next departure"
@@ -80,7 +81,7 @@ def due_in_minutes(timestamp):
 
     The timestamp should be in the format day.month.year hour:minute
     """
-    diff = datetime.strptime(timestamp, "%d.%m.%y %H:%M") - dt_util.now().replace(
+    diff = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S") - dt_util.now().replace(
         tzinfo=None
     )
 
@@ -98,7 +99,7 @@ def setup_platform(
     stop_id = config[CONF_STOP_ID]
     # route = config.get(CONF_ROUTE)
     # direction = config[CONF_DIRECTION]
-    # departure_type = config[CONF_DEPARTURE_TYPE]
+    departure_type = config[CONF_DEPARTURE_TYPE]
     auth = config[CONF_AUTHENTICATION]
 
     _LOGGER.debug(
@@ -109,7 +110,9 @@ def setup_platform(
     )
 
     backend = departuresAPIClient(auth_key=auth)
-    add_devices([RejseplanenTransportSensor(backend, stop_id, name)], True)
+    add_devices(
+        [RejseplanenTransportSensor(backend, stop_id, name, departure_type)], True
+    )
 
 
 class RejseplanenTransportSensor(SensorEntity):
@@ -123,6 +126,7 @@ class RejseplanenTransportSensor(SensorEntity):
         backend: departuresAPIClient,
         stop_id,
         name,
+        departure_type: list[str] | None = None,
     ) -> None:
         """Initialize the sensor."""
         _LOGGER.debug("Initializing sensor")
@@ -131,6 +135,8 @@ class RejseplanenTransportSensor(SensorEntity):
         self._stop_id = stop_id
         self._departure_board: DepartureBoard = None
         self._state = None
+        self.departure_type = departure_type
+        self._departures: list[dict] = []
         _LOGGER.debug("Sensor initialized")
 
     @property
@@ -152,16 +158,16 @@ class RejseplanenTransportSensor(SensorEntity):
             return {ATTR_STOP_ID: self._stop_id}
 
         next_up = []
-        if len(self._departure_board) > 1:
-            next_up = self._departure_board[1:]
+        if len(self._departures) > 1:
+            next_up = self._departures[1:]
 
         attributes = {
             ATTR_NEXT_UP: next_up,
             ATTR_STOP_ID: self._stop_id,
         }
 
-        if self._departure_board[0] is not None:
-            attributes.update(self._departure_board[0])
+        if self._departures[0] is not None:
+            attributes.update(self._departures[0])
 
         return attributes
 
@@ -170,13 +176,91 @@ class RejseplanenTransportSensor(SensorEntity):
         """Return the unit this state is expressed in."""
         return UnitOfTime.MINUTES
 
+    def process_departures(self, departure_board: DepartureBoard) -> None:
+        """Process the departures and update the state."""
+
+        for departure in departure_board.departures:
+            route = departure.name
+
+            due_at_time = departure.rtTime
+            due_at_date = departure.rtDate
+            if due_at_time is None:
+                due_at_time = departure.time
+            if due_at_date is None:
+                due_at_date = departure.date
+
+            if (
+                due_at_date is not None
+                and due_at_time is not None
+                and route is not None
+            ):
+                due_at = f"{due_at_date} {due_at_time}"
+                scheduled_at = f"{departure.date} {departure.time}"
+
+                departure_data = {
+                    ATTR_DIRECTION: departure.direction,
+                    ATTR_DUE_IN: due_in_minutes(due_at),
+                    ATTR_DUE_AT: due_at,
+                    ATTR_FINAL_STOP: departure.direction,
+                    ATTR_ROUTE: route,
+                    ATTR_SCHEDULED_AT: scheduled_at,
+                    ATTR_STOP_NAME: departure.stop,
+                    ATTR_TYPE: departure.type,
+                }
+
+                if departure.rtTime is not None and departure.rtDate is not None:
+                    departure_data[ATTR_REAL_TIME_AT] = (
+                        f"{departure.rtDate} {departure.rtTime}"
+                    )
+                if departure.rtTrack is not None:
+                    departure_data[ATTR_TRACK] = departure.rtTrack
+                else:
+                    departure_data[ATTR_TRACK] = departure.track
+
+                self._departures.append(departure_data)
+
+        if not self._departures:
+            _LOGGER.debug("No departures with given parameters")
+
+        # Sort the data by time
+        self._departures = sorted(self._departures, key=itemgetter(ATTR_DUE_IN))
+
     def update(self) -> None:
         """Get the latest data from rejseplanen.dk and update the states."""
         _LOGGER.debug("polling data from Rejseplanen API")
-        self._departure_board, _ = self._backend.get_departures(self._stop_id)
+        self._departures = []
+
+        def intersection(lst1, lst2):
+            """Return items contained in both lists."""
+            return list(set(lst1) & set(lst2))
+
+        all_types = not bool(self.departure_type)
+        use_train = all_types or bool(intersection(TRAIN_TYPES, self.departure_type))
+        use_bus = all_types or bool(intersection(BUS_TYPES, self.departure_type))
+        use_metro = all_types or bool(intersection(METRO_TYPES, self.departure_type))
+        _LOGGER.debug(
+            "Using types - Train: %s, Bus: %s, Metro: %s",
+            use_train,
+            use_bus,
+            use_metro,
+        )
+        self._departure_board, _ = self._backend.get_departures(
+            self._stop_id,
+            use_bus=use_bus,
+            use_train=use_train,
+            use_metro=use_metro,
+        )
 
         if not self._departure_board or not self._departure_board.departures:
             _LOGGER.debug("No departures found for stop_id: %s", self._stop_id)
             self._state = None
         else:
-            _LOGGER.debug("Backend info: %s", self._departure_board)
+            _LOGGER.debug(
+                "Backend: Number of departures found: %d",
+                len(self._departure_board.departures),
+            )
+            self.process_departures(self._departure_board)
+            if self._departures:
+                self._state = self._departures[0][ATTR_DUE_IN]
+            else:
+                self._state = None
