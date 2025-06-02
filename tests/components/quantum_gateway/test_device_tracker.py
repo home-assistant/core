@@ -36,6 +36,30 @@ async def test_get_scanner_error(hass: HomeAssistant, mock_scanner: AsyncMock) -
     assert "quantum_gateway.device_tracker" not in hass.config.components
 
 
+@pytest.mark.parametrize(
+    "scanner",
+    [
+        {"return_value": None},
+        {"return_value": AsyncMock(success_init=False)},
+    ],
+)
+@pytest.mark.usefixtures("yaml_devices")
+async def test_scan_devices_missing_init(
+    hass: HomeAssistant, mock_scanner: AsyncMock, scanner
+) -> None:
+    """Test failure when initializing scanner."""
+    mock_scanner.configure_mock(**scanner)
+    await setup_platform(hass)
+
+    assert "quantum_gateway.device_tracker" in hass.config.components
+
+    device_1 = hass.states.get("device_tracker.desktop")
+    assert device_1 is None
+
+    device_2 = hass.states.get("device_tracker.ff_ff_ff_ff_ff_ff")
+    assert device_2 is None
+
+
 @pytest.mark.usefixtures("yaml_devices")
 async def test_scan_devices_error(hass: HomeAssistant, mock_scanner: AsyncMock) -> None:
     """Test failure when scanning devices."""
