@@ -330,10 +330,6 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/EuleMitKeule/eq3btsmart/releases/tag/2.0.0
         "homeassistant": {"eq3btsmart"}
     },
-    "netatmo": {
-        # https://github.com/jabesq-org/pyatmo/pull/533 (not yet released)
-        "homeassistant": {"pyatmo"}
-    },
     "python_script": {
         # Security audits are needed for each Python version
         "homeassistant": {"restrictedpython"}
