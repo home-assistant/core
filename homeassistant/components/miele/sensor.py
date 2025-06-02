@@ -108,7 +108,7 @@ class MieleSensorDescription(SensorEntityDescription):
 
     value_fn: Callable[[MieleDevice], StateType]
     zone: int = 1
-    default_value: StateType = None
+    end_value_fn: Callable[[StateType], StateType] | None = None
 
 
 @dataclass
@@ -312,6 +312,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_remaining_time",
             translation_key="remaining_time",
             value_fn=lambda value: _convert_duration(value.state_remaining_time),
+            end_value_fn=lambda last_value: 0,
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -337,7 +338,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_elapsed_time",
             translation_key="elapsed_time",
             value_fn=lambda value: _convert_duration(value.state_elapsed_time),
-            default_value=0,
+            end_value_fn=lambda last_value: last_value,
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -365,6 +366,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_start_time",
             translation_key="start_time",
             value_fn=lambda value: _convert_duration(value.state_start_time),
+            end_value_fn=lambda last_value: last_value,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             device_class=SensorDeviceClass.DURATION,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -563,8 +565,12 @@ async def async_setup_entry(
                             entity_class = MielePhaseSensor
                         case "state_plate_step":
                             entity_class = MielePlateSensor
-                        case "state_elapsed_time":
-                            entity_class = MieleElapsedTimeSensor
+                        case (
+                            "state_elapsed_time"
+                            | "state_remaining_time"
+                            | "state_start_time"
+                        ):
+                            entity_class = MieleTimeSensor
                         case _:
                             entity_class = MieleSensor
                     if (
@@ -626,8 +632,7 @@ class MieleSensor(MieleEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        value = self.entity_description.value_fn(self.device)
-        return self.entity_description.default_value if value is None else value
+        return self.entity_description.value_fn(self.device)
 
 
 class MieleRestorableSensor(MieleSensor, RestoreSensor):
@@ -757,23 +762,26 @@ class MieleProgramIdSensor(MieleSensor):
         return sorted(set(STATE_PROGRAM_ID.get(self.device.device_type, {}).values()))
 
 
-class MieleElapsedTimeSensor(MieleRestorableSensor):
-    """Representation of the elapsed time sensor."""
+class MieleTimeSensor(MieleRestorableSensor):
+    """Representation of time sensors keeping state from cache."""
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
 
-        # keep value when program ends (some devices are immediately reporting 0...)
+        # report end-specific value when program ends (some devices are immediately reporting 0...)
         if current_status == StateStatus.PROGRAM_ENDED:
-            return self._last_value
+            return (
+                self.entity_description.end_value_fn(self._last_value)
+                if self.entity_description.end_value_fn is not None
+                else None
+            )
 
-        # force default value when appliance is off (some devices are keeping last value until a new cycle starts)
-        if current_status == StateStatus.OFF:
-            return self.entity_description.default_value
+        # force None when appliance is not working (some devices are keeping last value until a new cycle starts)
+        if current_status in (StateStatus.OFF, StateStatus.ON, StateStatus.IDLE):
+            return None
 
         # otherwise, cache value and return it
         self._last_value = current_value

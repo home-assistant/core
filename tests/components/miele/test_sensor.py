@@ -75,12 +75,12 @@ async def test_hob_sensor_states(
                 ],
                 # "target_temperature": ["unknown", "30", "30", "30", "40"],
                 "spin_speed": ["unknown", "1200", "1200", "1200", "1200"],
-                "remaining_time": ["0", "105", "8", "0", "119"],
+                "remaining_time": ["unknown", "105", "8", "0", "119"],
                 # OFF -> elapsed forced to 0 (some devices continue reporting last value of last cycle)
                 # IN_USE -> elapsed time from API (normal case)
                 # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
                 # PROGRAMMED -> elapsed time from API (normal case)
-                "elapsed_time": ["0", "12", "109", "109", "0"],
+                "elapsed_time": ["unknown", "12", "109", "109", "0"],
             },
         ),
         (
@@ -94,11 +94,11 @@ async def test_hob_sensor_states(
                 "program": ["no_program", "minimum_iron", "minimum_iron"],
                 "program_phase": ["not_running", "drying", "finished"],
                 "drying_step": ["unknown", "normal", "normal"],
-                "remaining_time": ["0", "49", "0"],
+                "remaining_time": ["unknown", "49", "0"],
                 # OFF -> elapsed forced to 0 (some devices continue reporting last value of last cycle)
                 # IN_USE -> elapsed time from API (normal case)
                 # PROGRAM_ENDED -> elapsed time kept from last program (some devices immediately go to 0)
-                "elapsed_time": ["0", "20", "20"],
+                "elapsed_time": ["unknown", "20", "20"],
             },
         ),
     ],
