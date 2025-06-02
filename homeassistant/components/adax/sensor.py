@@ -65,8 +65,14 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         )
 
     @property
-    def native_value(self) -> int | None:
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and "energyWh" in self.coordinator.data[self._device_id]
+        )
+
+    @property
+    def native_value(self) -> int:
         """Return the native value of the sensor."""
-        if self._device_id in self.coordinator.data:
-            return self.coordinator.data[self._device_id].get("energyWh")
-        return None
+        return self.coordinator.data[self._device_id]["energyWh"]
