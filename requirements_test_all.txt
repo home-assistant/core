@@ -253,7 +253,7 @@ aiohasupervisor==0.3.1
 aiohomeconnect==0.17.1
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.14
+aiohomekit==3.2.15
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -1037,7 +1037,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==9.2.5
+ical==10.0.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1842,7 +1842,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.17.1
+pyoverkiz==1.17.2
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1950,7 +1950,7 @@ pysmhi==1.0.2
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.2.5
+pysmlight==0.2.6
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2192,7 +2192,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.4
+reolink-aio==0.13.5
 
 # homeassistant.components.rflink
 rflink==0.0.66
