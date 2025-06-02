@@ -12,6 +12,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -144,15 +145,11 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        valid_fuel_types = []
-        for station_code, fuel_type in self.data.prices:
-            if station_code == self.selected_station.code:
-                valid_fuel_types.append(
-                    SelectOptionDict(
-                        label=self.data.fuel_types.get(fuel_type, fuel_type),
-                        value=fuel_type,
-                    )
-                )
+        valid_fuel_types = {
+            fuel_type: self.data.fuel_types.get(fuel_type, fuel_type)
+            for station_code, fuel_type in self.data.prices
+            if station_code == self.selected_station.code
+        }
 
         if len(valid_fuel_types) < 1:
             return self.async_abort(reason="no_fuel_types")
@@ -162,13 +159,7 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Optional(INPUT_FUEL_TYPES): SelectSelector(
-                        SelectSelectorConfig(
-                            options=valid_fuel_types,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            multiple=True,
-                        )
-                    ),
+                    vol.Optional(INPUT_FUEL_TYPES): cv.multi_select(valid_fuel_types),
                 }
             ),
         )
