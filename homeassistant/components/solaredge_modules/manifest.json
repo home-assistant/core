@@ -1,0 +1,18 @@
+{
+  "domain": "solaredge_modules",
+  "name": "SolarEdge Modules",
+  "codeowners": ["@tronikos"],
+  "config_flow": true,
+  "dependencies": ["recorder"],
+  "dhcp": [
+    {
+      "hostname": "target",
+      "macaddress": "002702*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/solaredge_modules",
+  "iot_class": "cloud_polling",
+  "loggers": ["solaredge_web"],
+  "quality_scale": "bronze",
+  "requirements": ["solaredge-web==0.0.1"]
+}

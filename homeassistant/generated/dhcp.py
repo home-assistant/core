@@ -730,6 +730,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "002702*",
     },
     {
+        "domain": "solaredge_modules",
+        "hostname": "target",
+        "macaddress": "002702*",
+    },
+    {
         "domain": "somfy_mylink",
         "hostname": "somfy_*",
         "macaddress": "B8B7F1*",

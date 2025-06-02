@@ -468,6 +468,7 @@ homeassistant.components.smhi.*
 homeassistant.components.smlight.*
 homeassistant.components.smtp.*
 homeassistant.components.snooz.*
+homeassistant.components.solaredge_modules.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*

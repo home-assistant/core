@@ -2793,6 +2793,9 @@ soco==0.30.9
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
 
+# homeassistant.components.solaredge_modules
+solaredge-web==0.0.1
+
 # homeassistant.components.solarlog
 solarlog_cli==0.4.0
 
