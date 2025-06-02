@@ -2,4 +2,4 @@
 
 codespell==2.4.1
 ruff==0.11.12
-yamllint==1.35.1
+yamllint==1.37.1
