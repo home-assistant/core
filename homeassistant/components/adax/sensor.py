@@ -69,8 +69,3 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         """Return the native value of the sensor."""
         return self._room.get("energyWh", 0)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._room = self.coordinator.data[self._device_id]
-        super()._handle_coordinator_update()
