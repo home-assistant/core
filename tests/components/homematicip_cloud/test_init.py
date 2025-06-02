@@ -176,8 +176,8 @@ async def test_hmip_dump_hap_config_services(
         assert write_mock.mock_calls
 
 
-async def test_setup_services_and_unload_services(hass: HomeAssistant) -> None:
-    """Test setup services and unload services."""
+async def test_setup_services(hass: HomeAssistant) -> None:
+    """Test setup services."""
     mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
     MockConfigEntry(domain=DOMAIN, data=mock_config).add_to_hass(hass)
 
@@ -201,12 +201,10 @@ async def test_setup_services_and_unload_services(hass: HomeAssistant) -> None:
     assert len(config_entries) == 1
 
     await hass.config_entries.async_unload(config_entries[0].entry_id)
-    # Check services are removed
-    assert not hass.services.async_services().get(DOMAIN)
 
 
 async def test_setup_two_haps_unload_one_by_one(hass: HomeAssistant) -> None:
-    """Test setup two access points and unload one by one and check services."""
+    """Test setup two access points and unload one by one."""
 
     # Setup AP1
     mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
@@ -241,6 +239,3 @@ async def test_setup_two_haps_unload_one_by_one(hass: HomeAssistant) -> None:
 
     # unload the second AP
     await hass.config_entries.async_unload(config_entries[1].entry_id)
-
-    # Check services are removed
-    assert not hass.services.async_services().get(DOMAIN)
