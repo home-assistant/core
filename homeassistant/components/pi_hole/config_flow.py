@@ -197,5 +197,10 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 return {"base": "cannot_connect"}
             # the v5 API returns an empty list to unauthenticated requests.
             if not isinstance(pi_hole.data, dict):
+                _LOGGER.debug(
+                    "API version %s returned %s, '[]' is expected for unauthenticated requests",
+                    5,
+                    pi_hole.data,
+                )
                 return {CONF_API_KEY: "invalid_auth"}
         return {}
