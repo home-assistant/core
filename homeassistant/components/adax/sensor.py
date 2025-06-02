@@ -68,4 +68,3 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
     def native_value(self) -> float:
         """Return the native value of the sensor."""
         return self._room.get("energyWh", 0)
-
