@@ -217,15 +217,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     )
 
 
-async def async_unload_services(hass: HomeAssistant):
-    """Unload HomematicIP Cloud services."""
-    if hass.config_entries.async_loaded_entries(DOMAIN):
-        return
-
-    for hmipc_service in HMIPC_SERVICES:
-        hass.services.async_remove(domain=DOMAIN, service=hmipc_service)
-
-
 async def _async_activate_eco_mode_with_duration(
     hass: HomeAssistant, service: ServiceCall
 ) -> None:
