@@ -1,13 +1,13 @@
 """Fixtures for Quantum Gateway tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 
 @pytest.fixture
-async def mock_scanner() -> Generator[AsyncMock]:
+async def mock_scanner() -> AsyncGenerator[AsyncMock]:
     """Mock QuantumGatewayScanner instance."""
     with patch(
         "homeassistant.components.quantum_gateway.device_tracker.QuantumGatewayScanner",
