@@ -82,6 +82,7 @@ class KNXTestKit:
         yaml_config: ConfigType | None = None,
         config_store_fixture: str | None = None,
         add_entry_to_hass: bool = True,
+        state_updater: bool = True,
     ) -> None:
         """Create the KNX integration."""
 
@@ -113,6 +114,12 @@ class KNXTestKit:
             self.xknx = args[0]
             return DEFAULT
 
+        def state_update_register_mock(*args, **kwargs):
+            """Mock the state updater registration."""
+            if state_updater:
+                return DEFAULT
+            return DEFAULT
+
         if config_store_fixture:
             self.hass_storage[
                 KNX_CONFIG_STORAGE_KEY
@@ -124,13 +131,23 @@ class KNXTestKit:
             self.mock_config_entry.add_to_hass(self.hass)
 
         knx_config = {DOMAIN: yaml_config or {}}
-        with patch(
-            "xknx.xknx.knx_interface_factory",
-            return_value=knx_ip_interface_mock(),
-            side_effect=fish_xknx,
+        with (
+            patch(
+                "xknx.xknx.knx_interface_factory",
+                return_value=knx_ip_interface_mock(),
+                side_effect=fish_xknx,
+            ),
         ):
+            state_updater_patcher = patch(
+                "xknx.xknx.StateUpdater.register_remote_value"
+            )
+            if not state_updater:
+                state_updater_patcher.start()
+
             await async_setup_component(self.hass, DOMAIN, knx_config)
             await self.hass.async_block_till_done()
+
+            state_updater_patcher.stop()
 
     ########################
     # Telegram counter tests
