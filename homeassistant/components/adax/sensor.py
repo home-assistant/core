@@ -64,9 +64,6 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
             name=self._room["name"],
             manufacturer="Adax",
         )
-        # Set initial native value
-        energy_wh = self._room.get("energyWh", 0)
-        self._attr_native_value = energy_wh
 
     @property
     def available(self) -> bool:
