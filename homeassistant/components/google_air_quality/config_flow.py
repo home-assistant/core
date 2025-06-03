@@ -29,7 +29,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector
 
 from . import api
-from .const import DOMAIN, OAUTH2_SCOPE, OAUTH2_SCOPES
+from .const import CLOUD_PLATFORM_SCOPE, DOMAIN, OAUTH2_SCOPES
 
 CONF_MAP = "map"
 
@@ -72,10 +72,10 @@ class OAuth2FlowHandler(
         token_info = data[CONF_TOKEN]
         scopes = token_info.get("scope", "")
 
-        if OAUTH2_SCOPE not in scopes:
+        if CLOUD_PLATFORM_SCOPE not in scopes:
             return self.async_abort(
                 reason="missing_scope",
-                description_placeholders={"scope": OAUTH2_SCOPE},
+                description_placeholders={"scope": CLOUD_PLATFORM_SCOPE},
             )
 
         session = aiohttp_client.async_get_clientsession(self.hass)

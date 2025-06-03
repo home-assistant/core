@@ -47,13 +47,13 @@
       "initiate_flow": {
         "user": "Add location"
       },
-      "entry_type": "Location",
+      "entry_type": "Air quality location",
       "error": {
         "unknown": "[%key:common::config_flow::error::unknown%]",
         "no_data_for_location": "Information is unavailable for this location. Please try a different location."
       },
       "abort": {
-        "already_configured": "Location is already configured"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
       }
     }
   },
