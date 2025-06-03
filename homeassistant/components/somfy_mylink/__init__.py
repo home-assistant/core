@@ -1,64 +1,74 @@
 """Component for the Somfy MyLink device supporting the Synergy API."""
+
 import logging
 
 from somfy_mylink_synergy import SomfyMyLinkSynergy
-import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+
+from .const import CONF_SYSTEM_ID, DATA_SOMFY_MYLINK, DOMAIN, MYLINK_STATUS, PLATFORMS
+
+UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 _LOGGER = logging.getLogger(__name__)
-CONF_ENTITY_CONFIG = "entity_config"
-CONF_SYSTEM_ID = "system_id"
-CONF_REVERSE = "reverse"
-CONF_DEFAULT_REVERSE = "default_reverse"
-DATA_SOMFY_MYLINK = "somfy_mylink_data"
-DOMAIN = "somfy_mylink"
-SOMFY_MYLINK_COMPONENTS = ["cover"]
 
 
-def validate_entity_config(values):
-    """Validate config entry for CONF_ENTITY."""
-    entity_config_schema = vol.Schema({vol.Optional(CONF_REVERSE): cv.boolean})
-    if not isinstance(values, dict):
-        raise vol.Invalid("expected a dictionary")
-    entities = {}
-    for entity_id, config in values.items():
-        entity = cv.entity_id(entity_id)
-        config = entity_config_schema(config)
-        entities[entity] = config
-    return entities
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Somfy MyLink from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
 
+    config = entry.data
+    somfy_mylink = SomfyMyLinkSynergy(
+        config[CONF_SYSTEM_ID], config[CONF_HOST], config[CONF_PORT]
+    )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_SYSTEM_ID): cv.string,
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=44100): cv.port,
-                vol.Optional(CONF_DEFAULT_REVERSE, default=False): cv.boolean,
-                vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
-            }
+    try:
+        mylink_status = await somfy_mylink.status_info()
+    except TimeoutError as ex:
+        raise ConfigEntryNotReady(
+            "Unable to connect to the Somfy MyLink device, please check your settings"
+        ) from ex
+
+    if not mylink_status or "error" in mylink_status:
+        _LOGGER.error(
+            "Somfy Mylink failed to setup because of an error: %s",
+            mylink_status.get("error", {}).get(
+                "message", "Empty response from mylink device"
+            ),
         )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+        return False
 
+    if "result" not in mylink_status:
+        raise ConfigEntryNotReady("The Somfy MyLink device returned an empty result")
 
-async def async_setup(hass, config):
-    """Set up the MyLink platform."""
+    undo_listener = entry.add_update_listener(_async_update_listener)
 
-    host = config[DOMAIN][CONF_HOST]
-    port = config[DOMAIN][CONF_PORT]
-    system_id = config[DOMAIN][CONF_SYSTEM_ID]
-    entity_config = config[DOMAIN][CONF_ENTITY_CONFIG]
-    entity_config[CONF_DEFAULT_REVERSE] = config[DOMAIN][CONF_DEFAULT_REVERSE]
-    somfy_mylink = SomfyMyLinkSynergy(system_id, host, port)
-    hass.data[DATA_SOMFY_MYLINK] = somfy_mylink
-    for component in SOMFY_MYLINK_COMPONENTS:
-        hass.async_create_task(
-            async_load_platform(hass, component, DOMAIN, entity_config, config)
-        )
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_SOMFY_MYLINK: somfy_mylink,
+        MYLINK_STATUS: mylink_status,
+        UNDO_UPDATE_LISTENER: undo_listener,
+    }
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok

@@ -1,0 +1,62 @@
+start:
+  fields:
+    seconds:
+      default: 60.0
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+memory:
+  fields:
+    seconds:
+      default: 60.0
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+start_log_objects:
+  fields:
+    scan_interval:
+      default: 30.0
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+stop_log_objects:
+dump_log_objects:
+  fields:
+    type:
+      required: true
+      example: State
+      selector:
+        text:
+start_log_object_sources:
+  fields:
+    scan_interval:
+      default: 30.0
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+    max_objects:
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 30
+          unit_of_measurement: objects
+stop_log_object_sources:
+lru_stats:
+log_thread_frames:
+log_event_loop_scheduled:
+set_asyncio_debug:
+  fields:
+    enabled:
+      default: true
+      selector:
+        boolean:
+log_current_tasks:

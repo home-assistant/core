@@ -1,91 +1,98 @@
 """Support for tracking for iCloud devices."""
-import logging
-from typing import Dict
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from homeassistant.components.device_tracker import TrackerEntity
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IcloudDevice
+from .account import IcloudAccount, IcloudConfigEntry, IcloudDevice
 from .const import (
     DEVICE_LOCATION_HORIZONTAL_ACCURACY,
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
     DOMAIN,
-    SERVICE_UPDATE,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_scanner(
-    hass: HomeAssistantType, config, see, discovery_info=None
-):
-    """Old way of setting up the iCloud tracker."""
-    pass
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
-):
-    """Configure a dispatcher connection based on a config entry."""
-    username = entry.data[CONF_USERNAME]
+    hass: HomeAssistant,
+    entry: IcloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up device tracker for iCloud component."""
+    account = entry.runtime_data
+    tracked = set[str]()
 
-    for device in hass.data[DOMAIN][username].devices.values():
-        if device.location is None:
-            _LOGGER.debug("No position found for %s", device.name)
+    @callback
+    def update_account():
+        """Update the values of the account."""
+        add_entities(account, async_add_entities, tracked)
+
+    account.listeners.append(
+        async_dispatcher_connect(hass, account.signal_device_new, update_account)
+    )
+
+    update_account()
+
+
+@callback
+def add_entities(account: IcloudAccount, async_add_entities, tracked):
+    """Add new tracker entities from the account."""
+    new_tracked = []
+
+    for dev_id, device in account.devices.items():
+        if dev_id in tracked or device.location is None:
             continue
 
-        _LOGGER.debug("Adding device_tracker for %s", device.name)
+        new_tracked.append(IcloudTrackerEntity(account, device))
+        tracked.add(dev_id)
 
-        async_add_entities([IcloudTrackerEntity(device)])
+    async_add_entities(new_tracked, True)
 
 
 class IcloudTrackerEntity(TrackerEntity):
     """Represent a tracked device."""
 
-    def __init__(self, device: IcloudDevice):
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Set up the iCloud tracker entity."""
+        self._account = account
         self._device = device
-        self._unsub_dispatcher = None
+        self._unsub_dispatcher: CALLBACK_TYPE | None = None
+        self._attr_unique_id = device.unique_id
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._device.unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._device.name
-
-    @property
-    def location_accuracy(self):
+    def location_accuracy(self) -> float:
         """Return the location accuracy of the device."""
+        if TYPE_CHECKING:
+            assert self._device.location is not None
         return self._device.location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
 
     @property
-    def latitude(self):
+    def latitude(self) -> float:
         """Return latitude value of the device."""
+        if TYPE_CHECKING:
+            assert self._device.location is not None
         return self._device.location[DEVICE_LOCATION_LATITUDE]
 
     @property
-    def longitude(self):
+    def longitude(self) -> float:
         """Return longitude value of the device."""
+        if TYPE_CHECKING:
+            assert self._device.location is not None
         return self._device.location[DEVICE_LOCATION_LONGITUDE]
 
     @property
-    def battery_level(self) -> int:
+    def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._device.battery_level
-
-    @property
-    def source_type(self) -> str:
-        """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
 
     @property
     def icon(self) -> str:
@@ -93,44 +100,41 @@ class IcloudTrackerEntity(TrackerEntity):
         return icon_for_icloud_device(self._device)
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        return self._device.state_attributes
+        return self._device.extra_state_attributes
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "name": self._device.name,
-            "manufacturer": "Apple",
-            "model": self._device.device_model,
-        }
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    async def async_added_to_hass(self):
-        """Register state update callback."""
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, SERVICE_UPDATE, self.async_write_ha_state
+        return DeviceInfo(
+            configuration_url="https://icloud.com/",
+            identifiers={(DOMAIN, self._device.unique_id)},
+            manufacturer="Apple",
+            model=self._device.device_model,
+            name=self._device.name,
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_added_to_hass(self) -> None:
+        """Register state update callback."""
+        self._unsub_dispatcher = async_dispatcher_connect(
+            self.hass, self._account.signal_device_update, self.async_write_ha_state
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
-        self._unsub_dispatcher()
+        if self._unsub_dispatcher:
+            self._unsub_dispatcher()
 
 
 def icon_for_icloud_device(icloud_device: IcloudDevice) -> str:
-    """Return a battery icon valid identifier."""
+    """Return an icon for the device."""
     switcher = {
-        "iPad": "mdi:tablet-ipad",
-        "iPhone": "mdi:cellphone-iphone",
+        "iPad": "mdi:tablet",
+        "iPhone": "mdi:cellphone",
         "iPod": "mdi:ipod",
-        "iMac": "mdi:desktop-mac",
-        "MacBookPro": "mdi:laptop-mac",
+        "iMac": "mdi:monitor",
+        "MacBookPro": "mdi:laptop",
     }
 
     return switcher.get(icloud_device.device_class, "mdi:cellphone-link")

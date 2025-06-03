@@ -1,236 +1,134 @@
 """Support for Nanoleaf Lights."""
-import logging
 
-from pynanoleaf import Nanoleaf, Unavailable
-import voluptuous as vol
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
-    Light,
+    ColorMode,
+    LightEntity,
+    LightEntityFeature,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import color as color_util
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin as mired_to_kelvin,
-)
-from homeassistant.util.json import load_json, save_json
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import NanoleafConfigEntry, NanoleafCoordinator
+from .entity import NanoleafEntity
 
+RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
 DEFAULT_NAME = "Nanoleaf"
 
-DATA_NANOLEAF = "nanoleaf"
 
-CONFIG_FILE = ".nanoleaf.conf"
-
-ICON = "mdi:triangle-outline"
-
-SUPPORT_NANOLEAF = (
-    SUPPORT_BRIGHTNESS
-    | SUPPORT_COLOR_TEMP
-    | SUPPORT_EFFECT
-    | SUPPORT_COLOR
-    | SUPPORT_TRANSITION
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: NanoleafConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the Nanoleaf light."""
-
-    if DATA_NANOLEAF not in hass.data:
-        hass.data[DATA_NANOLEAF] = dict()
-
-    token = ""
-    if discovery_info is not None:
-        host = discovery_info["host"]
-        name = discovery_info["hostname"]
-        # if device already exists via config, skip discovery setup
-        if host in hass.data[DATA_NANOLEAF]:
-            return
-        _LOGGER.info("Discovered a new Nanoleaf: %s", discovery_info)
-        conf = load_json(hass.config.path(CONFIG_FILE))
-        if conf.get(host, {}).get("token"):
-            token = conf[host]["token"]
-    else:
-        host = config[CONF_HOST]
-        name = config[CONF_NAME]
-        token = config[CONF_TOKEN]
-
-    nanoleaf_light = Nanoleaf(host)
-
-    if not token:
-        token = nanoleaf_light.request_token()
-        if not token:
-            _LOGGER.error(
-                "Could not generate the auth token, did you press "
-                "and hold the power button on %s"
-                "for 5-7 seconds?",
-                name,
-            )
-            return
-        conf = load_json(hass.config.path(CONFIG_FILE))
-        conf[host] = {"token": token}
-        save_json(hass.config.path(CONFIG_FILE), conf)
-
-    nanoleaf_light.token = token
-
-    try:
-        nanoleaf_light.available
-    except Unavailable:
-        _LOGGER.error("Could not connect to Nanoleaf Light: %s on %s", name, host)
-        return
-
-    hass.data[DATA_NANOLEAF][host] = nanoleaf_light
-    add_entities([NanoleafLight(nanoleaf_light, name)], True)
+    async_add_entities([NanoleafLight(entry.runtime_data)])
 
 
-class NanoleafLight(Light):
+class NanoleafLight(NanoleafEntity, LightEntity):
     """Representation of a Nanoleaf Light."""
 
-    def __init__(self, light, name):
-        """Initialize an Nanoleaf light."""
-        self._available = True
-        self._brightness = None
-        self._color_temp = None
-        self._effect = None
-        self._effects_list = None
-        self._light = light
-        self._name = name
-        self._hs_color = None
-        self._state = None
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
+    _attr_name = None
+    _attr_translation_key = "light"
+
+    def __init__(self, coordinator: NanoleafCoordinator) -> None:
+        """Initialize the Nanoleaf light."""
+        super().__init__(coordinator)
+        self._attr_unique_id = self._nanoleaf.serial_no
+        self._attr_max_color_temp_kelvin = self._nanoleaf.color_temperature_max
+        self._attr_min_color_temp_kelvin = self._nanoleaf.color_temperature_min
 
     @property
-    def available(self):
-        """Return availability."""
-        return self._available
-
-    @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of the light."""
-        if self._brightness is not None:
-            return int(self._brightness * 2.55)
-        return None
+        return int(self._nanoleaf.brightness * 2.55)
 
     @property
-    def color_temp(self):
-        """Return the current color temperature."""
-        if self._color_temp is not None:
-            return color_util.color_temperature_kelvin_to_mired(self._color_temp)
-        return None
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        return self._nanoleaf.color_temperature
 
     @property
-    def effect(self):
+    def effect(self) -> str | None:
         """Return the current effect."""
-        return self._effect
+        # The API returns the *Solid* effect if the Nanoleaf is in HS or CT mode.
+        # The effects *Static* and *Dynamic* are not supported by Home Assistant.
+        # These reserved effects are implicitly set and are not in the effect_list.
+        # https://forum.nanoleaf.me/docs/openapi#_byoot0bams8f
+        return (
+            None if self._nanoleaf.effect in RESERVED_EFFECTS else self._nanoleaf.effect
+        )
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
-        return self._effects_list
+        return self._nanoleaf.effects_list
 
     @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        return 154
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return 833
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
-        return self._state
+        return self._nanoleaf.is_on
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[int, int]:
         """Return the color in HS."""
-        return self._hs_color
+        return self._nanoleaf.hue, self._nanoleaf.saturation
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_NANOLEAF
+    def color_mode(self) -> ColorMode | None:
+        """Return the color mode of the light."""
+        # According to API docs, color mode is "ct", "effect" or "hs"
+        # https://forum.nanoleaf.me/docs/openapi#_4qgqrz96f44d
+        if self._nanoleaf.color_mode == "ct":
+            return ColorMode.COLOR_TEMP
+        # Home Assistant does not have an "effect" color mode, just report hs
+        return ColorMode.HS
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         hs_color = kwargs.get(ATTR_HS_COLOR)
-        color_temp_mired = kwargs.get(ATTR_COLOR_TEMP)
+        color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
         effect = kwargs.get(ATTR_EFFECT)
         transition = kwargs.get(ATTR_TRANSITION)
 
-        if hs_color:
+        if effect:
+            if effect not in self.effect_list:
+                raise ValueError(
+                    f"Attempting to apply effect not in the effect list: '{effect}'"
+                )
+            await self._nanoleaf.set_effect(effect)
+        elif hs_color:
             hue, saturation = hs_color
-            self._light.hue = int(hue)
-            self._light.saturation = int(saturation)
-        if color_temp_mired:
-            self._light.color_temperature = mired_to_kelvin(color_temp_mired)
-
+            await self._nanoleaf.set_hue(int(hue))
+            await self._nanoleaf.set_saturation(int(saturation))
+        elif color_temp_kelvin:
+            await self._nanoleaf.set_color_temperature(color_temp_kelvin)
         if transition:
             if brightness:  # tune to the required brightness in n seconds
-                self._light.brightness_transition(
-                    int(brightness / 2.55), int(transition)
+                await self._nanoleaf.set_brightness(
+                    int(brightness / 2.55), transition=int(kwargs[ATTR_TRANSITION])
                 )
             else:  # If brightness is not specified, assume full brightness
-                self._light.brightness_transition(100, int(transition))
+                await self._nanoleaf.set_brightness(100, transition=int(transition))
         else:  # If no transition is occurring, turn on the light
-            self._light.on = True
+            await self._nanoleaf.turn_on()
             if brightness:
-                self._light.brightness = int(brightness / 2.55)
+                await self._nanoleaf.set_brightness(int(brightness / 2.55))
+        await self.coordinator.async_refresh()
 
-        if effect:
-            self._light.effect = effect
-
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        transition = kwargs.get(ATTR_TRANSITION)
-        if transition:
-            self._light.brightness_transition(0, int(transition))
-        else:
-            self._light.on = False
-
-    def update(self):
-        """Fetch new state data for this light."""
-
-        try:
-            self._available = self._light.available
-            self._brightness = self._light.brightness
-            self._color_temp = self._light.color_temperature
-            self._effect = self._light.effect
-            self._effects_list = self._light.effects
-            self._hs_color = self._light.hue, self._light.saturation
-            self._state = self._light.on
-        except Unavailable as err:
-            _LOGGER.error("Could not update status for %s (%s)", self.name, err)
-            self._available = False
+        transition: float | None = kwargs.get(ATTR_TRANSITION)
+        await self._nanoleaf.turn_off(None if transition is None else int(transition))
+        await self.coordinator.async_refresh()

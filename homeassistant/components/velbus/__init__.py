@@ -1,157 +1,173 @@
 """Support for Velbus devices."""
+
+from __future__ import annotations
+
 import asyncio
+from dataclasses import dataclass
 import logging
+import os
+import shutil
 
-import velbus
-import voluptuous as vol
+from velbusaio.controller import Velbus
+from velbusaio.exceptions import VelbusConnectionFailed
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_PORT
-from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PORT, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-VELBUS_MESSAGE = "velbus.message"
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_PORT): cv.string})}, extra=vol.ALLOW_EXTRA
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-COMPONENT_TYPES = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
-
-
-async def async_setup(hass, config):
-    """Set up the Velbus platform."""
-    # Import from the configuration file if needed
-    if DOMAIN not in config:
-        return True
-
-    port = config[DOMAIN].get(CONF_PORT)
-    data = {}
-
-    if port:
-        data = {CONF_PORT: port, CONF_NAME: "Velbus import"}
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-    )
-
-    return True
+type VelbusConfigEntry = ConfigEntry[VelbusData]
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
-    """Establish connection with velbus."""
-    hass.data.setdefault(DOMAIN, {})
+@dataclass
+class VelbusData:
+    """Runtime data for the Velbus config entry."""
 
-    def callback():
-        modules = controller.get_modules()
-        discovery_info = {"cntrl": controller}
-        for category in COMPONENT_TYPES:
-            discovery_info[category] = []
+    controller: Velbus
+    scan_task: asyncio.Task
 
-        for module in modules:
-            for channel in range(1, module.number_of_channels() + 1):
-                for category in COMPONENT_TYPES:
-                    if category in module.get_categories(channel):
-                        discovery_info[category].append(
-                            (module.get_module_address(), channel)
-                        )
 
-        hass.data[DOMAIN][entry.entry_id] = discovery_info
-
-        for category in COMPONENT_TYPES:
-            hass.add_job(hass.config_entries.async_forward_entry_setup(entry, category))
-
+async def velbus_scan_task(
+    controller: Velbus, hass: HomeAssistant, entry_id: str
+) -> None:
+    """Task to offload the long running scan."""
     try:
-        controller = velbus.Controller(entry.data[CONF_PORT])
-        controller.scan(callback)
-    except velbus.util.VelbusException as err:
-        _LOGGER.error("An error occurred: %s", err)
-        raise ConfigEntryNotReady
-
-    def syn_clock(self, service=None):
-        try:
-            controller.sync_clock()
-        except velbus.util.VelbusException as err:
-            _LOGGER.error("An error occurred: %s", err)
-
-    hass.services.async_register(DOMAIN, "sync_clock", syn_clock, schema=vol.Schema({}))
-
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
-    """Remove the velbus connection."""
-    await asyncio.wait(
-        [
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in COMPONENT_TYPES
-        ]
-    )
-    hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
-    hass.data[DOMAIN].pop(entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-    return True
-
-
-class VelbusEntity(Entity):
-    """Representation of a Velbus entity."""
-
-    def __init__(self, module, channel):
-        """Initialize a Velbus entity."""
-        self._module = module
-        self._channel = channel
-
-    @property
-    def unique_id(self):
-        """Get unique ID."""
-        serial = 0
-        if self._module.serial == 0:
-            serial = self._module.get_module_address()
-        else:
-            serial = self._module.serial
-        return f"{serial}-{self._channel}"
-
-    @property
-    def name(self):
-        """Return the display name of this entity."""
-        return self._module.get_name(self._channel)
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
-    async def async_added_to_hass(self):
-        """Add listener for state changes."""
-        self._module.on_status_update(self._channel, self._on_update)
-
-    def _on_update(self, state):
-        self.schedule_update_ha_state()
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {
-                (DOMAIN, self._module.get_module_address(), self._module.serial)
+        await controller.start()
+    except ConnectionError as ex:
+        raise PlatformNotReady(
+            f"Connection error while connecting to Velbus {entry_id}: {ex}"
+        ) from ex
+    # create all modules
+    dev_reg = dr.async_get(hass)
+    for module in controller.get_modules().values():
+        dev_reg.async_get_or_create(
+            config_entry_id=entry_id,
+            identifiers={
+                (DOMAIN, str(module.get_addresses()[0])),
             },
-            "name": "{} {}".format(
-                self._module.get_module_address(), self._module.get_module_name()
-            ),
-            "manufacturer": "Velleman",
-            "model": self._module.get_module_name(),
-            "sw_version": "{}.{}-{}".format(
-                self._module.memory_map_version,
-                self._module.build_year,
-                self._module.build_week,
-            ),
-        }
+            manufacturer="Velleman",
+            model=module.get_type_name(),
+            model_id=str(module.get_type()),
+            name=f"{module.get_name()} ({module.get_type_name()})",
+            sw_version=module.get_sw_version(),
+            serial_number=module.get_serial(),
+        )
+
+
+def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
+    """Migrate old device identifiers."""
+    dev_reg = dr.async_get(hass)
+    devices: list[dr.DeviceEntry] = dr.async_entries_for_config_entry(dev_reg, entry_id)
+    for device in devices:
+        old_identifier = list(next(iter(device.identifiers)))
+        if len(old_identifier) > 2:
+            new_identifier = {(old_identifier.pop(0), old_identifier.pop(0))}
+            _LOGGER.debug(
+                "migrate identifier '%s' to '%s'", device.identifiers, new_identifier
+            )
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the actions for the Velbus component."""
+    setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
+    """Establish connection with velbus."""
+    controller = Velbus(
+        entry.data[CONF_PORT],
+        cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
+    )
+    try:
+        await controller.connect()
+    except VelbusConnectionFailed as error:
+        raise ConfigEntryNotReady("Cannot connect to Velbus") from error
+
+    task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
+    entry.runtime_data = VelbusData(controller=controller, scan_task=task)
+
+    _migrate_device_identifiers(hass, entry.entry_id)
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
+    """Unload (close) the velbus connection."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await entry.runtime_data.controller.stop()
+    return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
+    """Remove the velbus entry, so we also have to cleanup the cache dir."""
+    await hass.async_add_executor_job(
+        shutil.rmtree,
+        hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
+    )
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: VelbusConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    _LOGGER.error(
+        "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
+    )
+
+    # This is the config entry migration for adding the new program selection
+    # migrate from 1.x to 2.1
+    if config_entry.version < 2:
+        # clean the velbusCache
+        cache_path = hass.config.path(
+            STORAGE_DIR, f"velbuscache-{config_entry.entry_id}/"
+        )
+        if os.path.isdir(cache_path):
+            await hass.async_add_executor_job(shutil.rmtree, cache_path)
+
+    # This is the config entry migration for swapping the usb unique id to the serial number
+    # migrate from 2.1 to 2.2
+    if (
+        config_entry.version < 3
+        and config_entry.minor_version == 1
+        and config_entry.unique_id is not None
+    ):
+        # not all velbus devices have a unique id, so handle this correctly
+        parts = config_entry.unique_id.split("_")
+        # old one should have 4 item
+        if len(parts) == 4:
+            hass.config_entries.async_update_entry(config_entry, unique_id=parts[1])
+
+    # update the config entry
+    hass.config_entries.async_update_entry(config_entry, version=2, minor_version=2)
+
+    _LOGGER.error(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+    return True

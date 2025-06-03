@@ -1,8 +1,10 @@
 {
   "domain": "meteo_france",
-  "name": "Météo-France",
+  "name": "M\u00e9t\u00e9o-France",
+  "codeowners": ["@hacf-fr", "@oncleben31", "@Quentame"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/meteo_france",
-  "requirements": ["meteofrance==0.3.7", "vigilancemeteo==3.0.0"],
-  "dependencies": [],
-  "codeowners": ["@victorcerutti", "@oncleben31"]
+  "iot_class": "cloud_polling",
+  "loggers": ["meteofrance_api"],
+  "requirements": ["meteofrance-api==1.4.0"]
 }

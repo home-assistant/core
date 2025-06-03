@@ -1,0 +1,10 @@
+{
+  "domain": "atag",
+  "name": "Atag",
+  "codeowners": ["@MatsNL"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/atag",
+  "iot_class": "local_polling",
+  "loggers": ["pyatag"],
+  "requirements": ["pyatag==0.3.5.3"]
+}

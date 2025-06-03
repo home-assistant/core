@@ -1,84 +1,66 @@
 """Support for displaying the current CPU speed."""
-import logging
+
+from __future__ import annotations
 
 from cpuinfo import cpuinfo
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfFrequency
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-ATTR_BRAND = "Brand"
-ATTR_HZ = "GHz Advertised"
+ATTR_BRAND = "brand"
+ATTR_HZ = "ghz_advertised"
 ATTR_ARCH = "arch"
 
-HZ_ACTUAL_RAW = "hz_actual_raw"
-HZ_ADVERTISED_RAW = "hz_advertised_raw"
-
-DEFAULT_NAME = "CPU speed"
-
-ICON = "mdi:pulse"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
-)
+HZ_ACTUAL = "hz_actual"
+HZ_ADVERTISED = "hz_advertised"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the CPU speed sensor."""
-    name = config.get(CONF_NAME)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the platform from config_entry."""
+    async_add_entities([CPUSpeedSensor(entry)], True)
 
-    add_entities([CpuSpeedSensor(name)], True)
 
-
-class CpuSpeedSensor(Entity):
+class CPUSpeedSensor(SensorEntity):
     """Representation of a CPU sensor."""
 
-    def __init__(self, name):
-        """Initialize the sensor."""
-        self._name = name
-        self._state = None
-        self.info = None
-        self._unit_of_measurement = "GHz"
+    _attr_device_class = SensorDeviceClass.FREQUENCY
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_native_unit_of_measurement = UnitOfFrequency.GIGAHERTZ
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+    def __init__(self, entry: ConfigEntry) -> None:
+        """Initialize the CPU sensor."""
+        self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            name="CPU Speed",
+            identifiers={(DOMAIN, entry.entry_id)},
+        )
 
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        if self.info is not None:
-            attrs = {ATTR_ARCH: self.info["arch"], ATTR_BRAND: self.info["brand"]}
-
-            if HZ_ADVERTISED_RAW in self.info:
-                attrs[ATTR_HZ] = round(self.info[HZ_ADVERTISED_RAW][0] / 10 ** 9, 2)
-            return attrs
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
+        info = cpuinfo.get_cpu_info()
 
-        self.info = cpuinfo.get_cpu_info()
-        if HZ_ACTUAL_RAW in self.info:
-            self._state = round(float(self.info[HZ_ACTUAL_RAW][0]) / 10 ** 9, 2)
+        if info and HZ_ACTUAL in info:
+            self._attr_native_value = round(float(info[HZ_ACTUAL][0]) / 10**9, 2)
         else:
-            self._state = None
+            self._attr_native_value = None
+
+        if info:
+            self._attr_extra_state_attributes = {
+                ATTR_ARCH: info.get("arch_string_raw"),
+                ATTR_BRAND: info.get("brand_raw"),
+            }
+            if HZ_ADVERTISED in info:
+                self._attr_extra_state_attributes[ATTR_HZ] = round(
+                    info[HZ_ADVERTISED][0] / 10**9, 2
+                )

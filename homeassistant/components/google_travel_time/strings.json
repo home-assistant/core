@@ -1,0 +1,111 @@
+{
+  "title": "Google Maps Travel Time",
+  "config": {
+    "step": {
+      "user": {
+        "description": "You can specify the origin and destination in the form of an address, latitude/longitude coordinates or an entity ID that provides this information in its state, an entity ID with latitude and longitude attributes, or zone friendly name (case sensitive)",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "origin": "Origin",
+          "destination": "Destination"
+        }
+      },
+      "reconfigure": {
+        "description": "[%key:component::google_travel_time::config::step::user::description%]",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "origin": "[%key:component::google_travel_time::config::step::user::data::origin%]",
+          "destination": "[%key:component::google_travel_time::config::step::user::data::destination%]"
+        }
+      }
+    },
+    "error": {
+      "permission_denied": "The Routes API is not enabled for this API key. Please see the setup instructions for detailed information.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "You can optionally specify either a departure time or arrival time in the form of a 24 hour time string like `08:00:00`",
+        "data": {
+          "mode": "Travel mode",
+          "language": "[%key:common::config_flow::data::language%]",
+          "time_type": "Time type",
+          "time": "Time",
+          "avoid": "Avoid",
+          "traffic_model": "Traffic model",
+          "transit_mode": "Transit mode",
+          "transit_routing_preference": "Transit routing preference",
+          "units": "Units"
+        }
+      }
+    }
+  },
+  "selector": {
+    "mode": {
+      "options": {
+        "driving": "Driving",
+        "walking": "Walking",
+        "bicycling": "Bicycling",
+        "transit": "Transit"
+      }
+    },
+    "avoid": {
+      "options": {
+        "none": "Avoid nothing",
+        "tolls": "Tolls",
+        "highways": "Highways",
+        "ferries": "Ferries",
+        "indoor": "Indoor"
+      }
+    },
+    "units": {
+      "options": {
+        "metric": "Metric system",
+        "imperial": "Imperial system"
+      }
+    },
+    "time_type": {
+      "options": {
+        "arrival_time": "Arrival time",
+        "departure_time": "Departure time"
+      }
+    },
+    "traffic_model": {
+      "options": {
+        "best_guess": "Best guess",
+        "pessimistic": "Pessimistic",
+        "optimistic": "Optimistic"
+      }
+    },
+    "transit_mode": {
+      "options": {
+        "bus": "Bus",
+        "subway": "Subway",
+        "train": "Train",
+        "tram": "Tram",
+        "rail": "Rail"
+      }
+    },
+    "transit_routing_preference": {
+      "options": {
+        "less_walking": "Less walking",
+        "fewer_transfers": "Fewer transfers"
+      }
+    }
+  },
+  "issues": {
+    "routes_api_disabled": {
+      "title": "The Routes API must be enabled",
+      "description": "Your Google Travel Time integration `{entry_title}` uses an API key which does not have the Routes API enabled.\n\n Please follow the instructions to [enable the API for your project]({enable_api_url}) and make sure your [API key restrictions]({api_key_restrictions_url}) allow access to the Routes API.\n\n After enabling the API this issue will be resolved automatically."
+    }
+  }
+}

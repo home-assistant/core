@@ -1,0 +1,79 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "connection_type": "Select connection type"
+        },
+        "description": "Select connection type. Local requires generation 3 heaters"
+      },
+      "cloud": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "local": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "description": "Local IP address of the device."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "year_consumption": {
+        "name": "Year consumption"
+      },
+      "day_consumption": {
+        "name": "Day consumption"
+      },
+      "estimated_co2": {
+        "name": "Estimated CO2"
+      },
+      "tvoc": {
+        "name": "TVOC"
+      },
+      "control_signal": {
+        "name": "Control signal"
+      },
+      "current_power": {
+        "name": "Current power"
+      },
+      "uncalibrated_temperature": {
+        "name": "Uncalibrated temperature"
+      }
+    }
+  },
+  "services": {
+    "set_room_temperature": {
+      "name": "Set room temperature",
+      "description": "Sets Mill room temperatures.",
+      "fields": {
+        "room_name": {
+          "name": "Room name",
+          "description": "Name of room to change."
+        },
+        "away_temp": {
+          "name": "Away temperature",
+          "description": "Room temperature in away mode"
+        },
+        "comfort_temp": {
+          "name": "Comfort temperature",
+          "description": "Room temperature in comfort mode"
+        },
+        "sleep_temp": {
+          "name": "Sleep temperature",
+          "description": "Room temperature in sleep mode"
+        }
+      }
+    }
+  }
+}

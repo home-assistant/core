@@ -1,60 +1,56 @@
 """Support for tracking MySensors devices."""
-from homeassistant.components import mysensors
-from homeassistant.components.device_tracker import DOMAIN
+
+from __future__ import annotations
+
+from homeassistant.components.device_tracker import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util import slugify
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import setup_mysensors_platform
+from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
+from .entity import MySensorsChildEntity
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
-    """Set up the MySensors device scanner."""
-    new_devices = mysensors.setup_mysensors_platform(
-        hass,
-        DOMAIN,
-        discovery_info,
-        MySensorsDeviceScanner,
-        device_args=(hass, async_see),
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up this platform for a specific ConfigEntry(==Gateway)."""
+
+    @callback
+    def async_discover(discovery_info: DiscoveryInfo) -> None:
+        """Discover and add a MySensors device tracker."""
+        setup_mysensors_platform(
+            hass,
+            Platform.DEVICE_TRACKER,
+            discovery_info,
+            MySensorsDeviceTracker,
+            async_add_entities=async_add_entities,
+        )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, Platform.DEVICE_TRACKER),
+            async_discover,
+        ),
     )
-    if not new_devices:
-        return False
-
-    for device in new_devices:
-        gateway_id = id(device.gateway)
-        dev_id = (gateway_id, device.node_id, device.child_id, device.value_type)
-        async_dispatcher_connect(
-            hass,
-            mysensors.const.CHILD_CALLBACK.format(*dev_id),
-            device.async_update_callback,
-        )
-        async_dispatcher_connect(
-            hass,
-            mysensors.const.NODE_CALLBACK.format(gateway_id, device.node_id),
-            device.async_update_callback,
-        )
-
-    return True
 
 
-class MySensorsDeviceScanner(mysensors.device.MySensorsDevice):
-    """Represent a MySensors scanner."""
+class MySensorsDeviceTracker(MySensorsChildEntity, TrackerEntity):
+    """Represent a MySensors device tracker."""
 
-    def __init__(self, hass, async_see, *args):
-        """Set up instance."""
-        super().__init__(*args)
-        self.async_see = async_see
-        self.hass = hass
-
-    async def _async_update_callback(self):
-        """Update the device."""
-        await self.async_update()
+    @callback
+    def _async_update(self) -> None:
+        """Update the controller with the latest value from a device."""
+        super()._async_update()
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
-        position = child.values[self.value_type]
+        position: str = child.values[self.value_type]
         latitude, longitude, _ = position.split(",")
-
-        await self.async_see(
-            dev_id=slugify(self.name),
-            host_name=self.name,
-            gps=(latitude, longitude),
-            battery=node.battery_level,
-            attributes=self.device_state_attributes,
-        )
+        self._attr_latitude = float(latitude)
+        self._attr_longitude = float(longitude)

@@ -1,4 +1,11 @@
 # Describes the format for available HomeKit services
 
-start:
-  description: Starts the HomeKit component driver.
+reload:
+reset_accessory:
+  target:
+    entity: {}
+
+unpair:
+  target:
+    device:
+      integration: homekit

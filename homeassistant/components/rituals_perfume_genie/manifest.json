@@ -1,0 +1,10 @@
+{
+  "domain": "rituals_perfume_genie",
+  "name": "Rituals Perfume Genie",
+  "codeowners": ["@milanmeu", "@frenck"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rituals_perfume_genie",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyrituals"],
+  "requirements": ["pyrituals==0.0.6"]
+}

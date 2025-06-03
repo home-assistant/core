@@ -1,0 +1,34 @@
+{
+  "domain": "zwave_js",
+  "name": "Z-Wave",
+  "after_dependencies": ["hassio"],
+  "codeowners": ["@home-assistant/z-wave"],
+  "config_flow": true,
+  "dependencies": ["http", "repairs", "usb", "websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/zwave_js",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["zwave_js_server"],
+  "requirements": ["pyserial==3.5", "zwave-js-server-python==0.63.0"],
+  "usb": [
+    {
+      "vid": "0658",
+      "pid": "0200",
+      "known_devices": ["Aeotec Z-Stick Gen5+", "Z-WaveMe UZB"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "8A2A",
+      "description": "*z-wave*",
+      "known_devices": ["Nortek HUSBZB-1"]
+    },
+    {
+      "vid": "303A",
+      "pid": "4001",
+      "description": "*nabu casa zwa-2*",
+      "manufacturer": "nabu casa",
+      "known_devices": ["Nabu Casa Connect ZWA-2"]
+    }
+  ],
+  "zeroconf": ["_zwave-js-server._tcp.local."]
+}

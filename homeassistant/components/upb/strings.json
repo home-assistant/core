@@ -1,0 +1,111 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to UPB PIM",
+        "description": "Connect a Universal Powerline Bus Powerline Interface Module (UPB PIM). The address string must be in the form 'address[:port]' for 'tcp'. The port is optional and defaults to 2101. Example: '192.168.1.42'. For the serial protocol, the address must be in the form 'tty[:baud]'. The baud is optional and defaults to 4800. Example: '/dev/ttyS1'.",
+        "data": {
+          "protocol": "Protocol",
+          "address": "Address (see description above)",
+          "file_path": "Path and name of the UPStart UPB export file."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_upb_file": "Missing or invalid UPB UPStart export file, check the name and path of the file.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "services": {
+    "light_fade_start": {
+      "name": "Start light fade",
+      "description": "Starts fading a light either up or down from current brightness.",
+      "fields": {
+        "brightness": {
+          "name": "Brightness",
+          "description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness."
+        },
+        "brightness_pct": {
+          "name": "Brightness percentage",
+          "description": "Number indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness."
+        },
+        "rate": {
+          "name": "Rate",
+          "description": "Rate for light to transition to new brightness."
+        }
+      }
+    },
+    "light_fade_stop": {
+      "name": "Stop light fade",
+      "description": "Stops a light fade."
+    },
+    "light_blink": {
+      "name": "Blink light",
+      "description": "Blinks a light.",
+      "fields": {
+        "rate": {
+          "name": "[%key:component::upb::services::light_fade_start::fields::rate::name%]",
+          "description": "Amount of time that the link flashes on."
+        }
+      }
+    },
+    "link_deactivate": {
+      "name": "Deactivate link",
+      "description": "Deactivates a UPB scene."
+    },
+    "link_goto": {
+      "name": "Go to link",
+      "description": "Set scene to brightness.",
+      "fields": {
+        "brightness": {
+          "name": "Brightness",
+          "description": "Number indicating brightness, where 0 turns the scene off, 1 is the minimum brightness and 255 is the maximum brightness."
+        },
+        "brightness_pct": {
+          "name": "[%key:component::upb::services::light_fade_start::fields::brightness_pct::name%]",
+          "description": "Number indicating percentage of full brightness, where 0 turns the scene off, 1 is the minimum brightness and 100 is the maximum brightness."
+        },
+        "rate": {
+          "name": "[%key:component::upb::services::light_fade_start::fields::rate::name%]",
+          "description": "Amount of time for scene to transition to new brightness."
+        }
+      }
+    },
+    "link_fade_start": {
+      "name": "Start link fade",
+      "description": "Starts fading a link either up or down from current brightness.",
+      "fields": {
+        "brightness": {
+          "name": "Brightness",
+          "description": "[%key:component::upb::services::link_goto::fields::brightness::description%]"
+        },
+        "brightness_pct": {
+          "name": "[%key:component::upb::services::light_fade_start::fields::brightness_pct::name%]",
+          "description": "[%key:component::upb::services::link_goto::fields::brightness_pct::description%]"
+        },
+        "rate": {
+          "name": "[%key:component::upb::services::light_fade_start::fields::rate::name%]",
+          "description": "[%key:component::upb::services::link_goto::fields::rate::description%]"
+        }
+      }
+    },
+    "link_fade_stop": {
+      "name": "Stop link fade",
+      "description": "Stops a link fade."
+    },
+    "link_blink": {
+      "name": "Blink link",
+      "description": "Blinks a link.",
+      "fields": {
+        "blink_rate": {
+          "name": "Blink rate",
+          "description": "[%key:component::upb::services::light_blink::fields::rate::description%]"
+        }
+      }
+    }
+  }
+}

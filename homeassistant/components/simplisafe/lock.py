@@ -1,72 +1,116 @@
 """Support for SimpliSafe locks."""
-import logging
 
-from simplipy.lock import LockStates
+from __future__ import annotations
 
-from homeassistant.components.lock import LockDevice
-from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
+from typing import Any
 
-from . import SimpliSafeEntity
-from .const import DATA_CLIENT, DOMAIN
+from simplipy.device.lock import Lock, LockStates
+from simplipy.errors import SimplipyError
+from simplipy.system.v3 import SystemV3
+from simplipy.websocket import EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED, WebsocketEvent
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.components.lock import LockEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import SimpliSafe
+from .const import DOMAIN, LOGGER
+from .entity import SimpliSafeEntity
 
 ATTR_LOCK_LOW_BATTERY = "lock_low_battery"
-ATTR_JAMMED = "jammed"
 ATTR_PIN_PAD_LOW_BATTERY = "pin_pad_low_battery"
 
-STATE_MAP = {
-    LockStates.locked: STATE_LOCKED,
-    LockStates.unknown: STATE_UNKNOWN,
-    LockStates.unlocked: STATE_UNLOCKED,
+STATE_MAP_FROM_WEBSOCKET_EVENT = {
+    EVENT_LOCK_LOCKED: True,
+    EVENT_LOCK_UNLOCKED: False,
 }
 
+WEBSOCKET_EVENTS_TO_LISTEN_FOR = (EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED)
 
-async def async_setup_entry(hass, entry, async_add_entities):
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up SimpliSafe locks based on a config entry."""
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-    async_add_entities(
-        [
-            SimpliSafeLock(system, lock)
-            for system in simplisafe.systems.values()
-            for lock in system.locks.values()
-        ]
-    )
+    simplisafe = hass.data[DOMAIN][entry.entry_id]
+    locks: list[SimpliSafeLock] = []
+
+    for system in simplisafe.systems.values():
+        if system.version == 2:
+            LOGGER.warning("Skipping lock setup for V2 system: %s", system.system_id)
+            continue
+
+        locks.extend(
+            SimpliSafeLock(simplisafe, system, lock) for lock in system.locks.values()
+        )
+
+    async_add_entities(locks)
 
 
-class SimpliSafeLock(SimpliSafeEntity, LockDevice):
+class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     """Define a SimpliSafe lock."""
 
-    def __init__(self, system, lock):
+    _attr_name = None
+    _device: Lock
+
+    def __init__(self, simplisafe: SimpliSafe, system: SystemV3, lock: Lock) -> None:
         """Initialize."""
-        super().__init__(system, lock.name, serial=lock.serial)
-        self._lock = lock
+        super().__init__(
+            simplisafe,
+            system,
+            device=lock,
+            additional_websocket_events=WEBSOCKET_EVENTS_TO_LISTEN_FOR,
+        )
 
-    @property
-    def is_locked(self):
-        """Return true if the lock is locked."""
-        return STATE_MAP.get(self._lock.state) == STATE_LOCKED
-
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        await self._lock.lock()
+        try:
+            await self._device.async_lock()
+        except SimplipyError as err:
+            raise HomeAssistantError(
+                f'Error while locking "{self._device.name}": {err}'
+            ) from err
 
-    async def async_unlock(self, **kwargs):
+        self._attr_is_locked = True
+        self.async_write_ha_state()
+
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        await self._lock.unlock()
+        try:
+            await self._device.async_unlock()
+        except SimplipyError as err:
+            raise HomeAssistantError(
+                f'Error while unlocking "{self._device.name}": {err}'
+            ) from err
 
-    async def async_update(self):
-        """Update lock status."""
-        if self._lock.offline or self._lock.disabled:
-            self._online = False
-            return
+        self._attr_is_locked = False
+        self.async_write_ha_state()
 
-        self._online = True
+    @callback
+    def async_update_from_rest_api(self) -> None:
+        """Update the entity with the provided REST API data."""
+        self._attr_is_jammed = self._device.state == LockStates.JAMMED
+        self._attr_is_locked = self._device.state == LockStates.LOCKED
 
-        self._attrs.update(
+        self._attr_extra_state_attributes.update(
             {
-                ATTR_LOCK_LOW_BATTERY: self._lock.lock_low_battery,
-                ATTR_JAMMED: self._lock.state == LockStates.jammed,
-                ATTR_PIN_PAD_LOW_BATTERY: self._lock.pin_pad_low_battery,
+                ATTR_LOCK_LOW_BATTERY: self._device.lock_low_battery,
+                ATTR_PIN_PAD_LOW_BATTERY: self._device.pin_pad_low_battery,
             }
         )
+
+    @callback
+    def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
+        """Update the entity when new data comes from the websocket."""
+        assert event.event_type
+
+        if state := STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type) is not None:
+            self._attr_is_locked = state
+            self.async_reset_error_count()
+        else:
+            LOGGER.error("Unknown lock websocket event: %s", event.event_type)
+            self.async_increment_error_count()

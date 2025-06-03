@@ -1,34 +1,36 @@
 """Support for Velbus Binary Sensors."""
-import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from velbusaio.channels import Button as VelbusButton
 
-from . import VelbusEntity
-from .const import DOMAIN
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
+from . import VelbusConfigEntry
+from .entity import VelbusEntity
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way."""
-    pass
+PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up Velbus binary sensor based on config_entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    modules_data = hass.data[DOMAIN][entry.entry_id]["binary_sensor"]
-    entities = []
-    for address, channel in modules_data:
-        module = cntrl.get_module(address)
-        entities.append(VelbusBinarySensor(module, channel))
-    async_add_entities(entities)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: VelbusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Velbus switch based on config_entry."""
+    await entry.runtime_data.scan_task
+    async_add_entities(
+        VelbusBinarySensor(channel)
+        for channel in entry.runtime_data.controller.get_all_binary_sensor()
+    )
 
 
-class VelbusBinarySensor(VelbusEntity, BinarySensorDevice):
+class VelbusBinarySensor(VelbusEntity, BinarySensorEntity):
     """Representation of a Velbus Binary Sensor."""
 
+    _channel: VelbusButton
+
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the sensor is on."""
-        return self._module.is_closed(self._channel)
+        return self._channel.is_closed()

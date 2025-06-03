@@ -1,0 +1,25 @@
+{
+  "Body": {
+    "Data": {
+      "1": {
+        "CustomName": "Gen24 Storage",
+        "DT": 1,
+        "ErrorCode": 0,
+        "InverterState": "Running",
+        "PVPower": 13930,
+        "Show": 1,
+        "StatusCode": 7,
+        "UniqueID": "12345678"
+      }
+    }
+  },
+  "Head": {
+    "RequestArguments": {},
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-11-28T13:12:59+00:00"
+  }
+}

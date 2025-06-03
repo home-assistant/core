@@ -1,97 +1,104 @@
-"""Support for ISY994 covers."""
-import logging
-from typing import Callable
+"""Support for ISY covers."""
 
-from homeassistant.components.cover import DOMAIN, CoverDevice
-from homeassistant.const import (
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_UNKNOWN,
+from __future__ import annotations
+
+from typing import Any, cast
+
+from pyisy.constants import ISY_VALUE_UNKNOWN
+
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    CoverEntity,
+    CoverEntityFeature,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
-
-_LOGGER = logging.getLogger(__name__)
-
-VALUE_TO_STATE = {
-    0: STATE_CLOSED,
-    101: STATE_UNKNOWN,
-    102: "stopped",
-    103: STATE_CLOSING,
-    104: STATE_OPENING,
-}
+from .const import _LOGGER, UOM_8_BIT_RANGE
+from .entity import ISYNodeEntity, ISYProgramEntity
+from .models import IsyConfigEntry
 
 
-def setup_platform(
-    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
-):
-    """Set up the ISY994 cover platform."""
-    devices = []
-    for node in hass.data[ISY994_NODES][DOMAIN]:
-        devices.append(ISYCoverDevice(node))
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: IsyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the ISY cover platform."""
+    isy_data = entry.runtime_data
+    devices = isy_data.devices
+    entities: list[ISYCoverEntity | ISYCoverProgramEntity] = [
+        ISYCoverEntity(node, devices.get(node.primary_node))
+        for node in isy_data.nodes[Platform.COVER]
+    ]
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
-        devices.append(ISYCoverProgram(name, status, actions))
+    entities.extend(
+        ISYCoverProgramEntity(name, status, actions)
+        for name, status, actions in isy_data.programs[Platform.COVER]
+    )
 
-    add_entities(devices)
+    async_add_entities(entities)
 
 
-class ISYCoverDevice(ISYDevice, CoverDevice):
-    """Representation of an ISY994 cover device."""
+class ISYCoverEntity(ISYNodeEntity, CoverEntity):
+    """Representation of an ISY cover device."""
+
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Return the current cover position."""
-        if self.is_unknown() or self.value is None:
+        if self._node.status == ISY_VALUE_UNKNOWN:
             return None
-        return sorted((0, self.value, 100))[1]
+        if self._node.uom == UOM_8_BIT_RANGE:
+            return round(cast(float, self._node.status) * 100.0 / 255.0)
+        return int(sorted((0, self._node.status, 100))[1])
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Get whether the ISY cover device is closed."""
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return bool(self._node.status == 0)
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Send the open cover command to the ISY cover device."""
+        if not await self._node.turn_on():
+            _LOGGER.error("Unable to open the cover")
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Send the close cover command to the ISY cover device."""
+        if not await self._node.turn_off():
+            _LOGGER.error("Unable to close the cover")
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position."""
+        position = kwargs[ATTR_POSITION]
+        if self._node.uom == UOM_8_BIT_RANGE:
+            position = round(position * 255.0 / 100.0)
+        if not await self._node.turn_on(val=position):
+            _LOGGER.error("Unable to set cover position")
+
+
+class ISYCoverProgramEntity(ISYProgramEntity, CoverEntity):
+    """Representation of an ISY cover program."""
 
     @property
     def is_closed(self) -> bool:
-        """Get whether the ISY994 cover device is closed."""
-        return self.state == STATE_CLOSED
+        """Get whether the ISY cover program is closed."""
+        return bool(self._node.status)
 
-    @property
-    def state(self) -> str:
-        """Get the state of the ISY994 cover device."""
-        if self.is_unknown():
-            return None
-        return VALUE_TO_STATE.get(self.value, STATE_OPEN)
-
-    def open_cover(self, **kwargs) -> None:
-        """Send the open cover command to the ISY994 cover device."""
-        if not self._node.on(val=100):
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Send the open cover command to the ISY cover program."""
+        if not await self._actions.run_then():
             _LOGGER.error("Unable to open the cover")
 
-    def close_cover(self, **kwargs) -> None:
-        """Send the close cover command to the ISY994 cover device."""
-        if not self._node.off():
-            _LOGGER.error("Unable to close the cover")
-
-
-class ISYCoverProgram(ISYCoverDevice):
-    """Representation of an ISY994 cover program."""
-
-    def __init__(self, name: str, node: object, actions: object) -> None:
-        """Initialize the ISY994 cover program."""
-        super().__init__(node)
-        self._name = name
-        self._actions = actions
-
-    @property
-    def state(self) -> str:
-        """Get the state of the ISY994 cover program."""
-        return STATE_CLOSED if bool(self.value) else STATE_OPEN
-
-    def open_cover(self, **kwargs) -> None:
-        """Send the open cover command to the ISY994 cover program."""
-        if not self._actions.runThen():
-            _LOGGER.error("Unable to open the cover")
-
-    def close_cover(self, **kwargs) -> None:
-        """Send the close cover command to the ISY994 cover program."""
-        if not self._actions.runElse():
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Send the close cover command to the ISY cover program."""
+        if not await self._actions.run_else():
             _LOGGER.error("Unable to close the cover")

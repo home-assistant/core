@@ -1,0 +1,39 @@
+{
+  "domain": "led_ble",
+  "name": "LED BLE",
+  "bluetooth": [
+    {
+      "local_name": "LEDnet*"
+    },
+    {
+      "local_name": "BLE-LED*"
+    },
+    {
+      "local_name": "LEDBLE*"
+    },
+    {
+      "local_name": "Triones*"
+    },
+    {
+      "local_name": "LEDBlue*"
+    },
+    {
+      "local_name": "Dream~*"
+    },
+    {
+      "local_name": "QHM-*"
+    },
+    {
+      "local_name": "AP-*"
+    },
+    {
+      "local_name": "LD-0003"
+    }
+  ],
+  "codeowners": ["@bdraco"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/led_ble",
+  "iot_class": "local_polling",
+  "requirements": ["bluetooth-data-tools==1.28.1", "led-ble==1.1.7"]
+}

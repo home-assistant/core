@@ -1,0 +1,98 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Enter your AVM FRITZ!Box information.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your FRITZ!Box router."
+        }
+      },
+      "confirm": {
+        "description": "Do you want to set up {name}?",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Update your login information for {name}.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reconfigure": {
+        "description": "Update your configuration information for {name}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your FRITZ!Box router."
+        }
+      }
+    },
+    "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "ignore_ip6_link_local": "IPv6 link local address is not supported.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_supported": "Connected to AVM FRITZ!Box but it's unable to control Smart Home devices.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "alarm": { "name": "Alarm" },
+      "device_lock": { "name": "Button lock via UI" },
+      "holiday_active": { "name": "Holiday mode" },
+      "lock": { "name": "Button lock on device" },
+      "summer_active": { "name": "Summer mode" },
+      "window_open": { "name": "Open window detected" }
+    },
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
+            "state": {
+              "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+              "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+              "holiday": "Holiday",
+              "summer": "Summer"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "comfort_temperature": { "name": "Comfort temperature" },
+      "eco_temperature": { "name": "Eco temperature" },
+      "nextchange_preset": { "name": "Next scheduled preset" },
+      "nextchange_temperature": { "name": "Next scheduled temperature" },
+      "nextchange_time": { "name": "Next scheduled change time" },
+      "scheduled_preset": { "name": "Current scheduled preset" }
+    }
+  },
+  "exceptions": {
+    "manual_switching_disabled": {
+      "message": "Can't toggle switch while manual switching is disabled for the device."
+    },
+    "change_settings_while_lock_enabled": {
+      "message": "Can't change settings while manual access for telephone, app, or user interface is disabled on the device"
+    },
+    "change_settings_while_active_mode": {
+      "message": "Can't change settings while holiday or summer mode is active on the device."
+    }
+  }
+}

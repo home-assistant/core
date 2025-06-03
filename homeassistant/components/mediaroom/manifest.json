@@ -1,8 +1,10 @@
 {
   "domain": "mediaroom",
   "name": "Mediaroom",
+  "codeowners": ["@dgomes"],
   "documentation": "https://www.home-assistant.io/integrations/mediaroom",
-  "requirements": ["pymediaroom==0.6.4"],
-  "dependencies": [],
-  "codeowners": ["@dgomes"]
+  "iot_class": "local_polling",
+  "loggers": ["pymediaroom"],
+  "quality_scale": "legacy",
+  "requirements": ["pymediaroom==0.6.5.4"]
 }

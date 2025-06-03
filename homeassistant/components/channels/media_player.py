@@ -1,55 +1,32 @@
 """Support for interfacing with an instance of getchannels.com."""
-import logging
+
+from __future__ import annotations
+
+from typing import Any
 
 from pychannels import Channels
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_TVSHOW,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_SECONDS, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, SERVICE_SEEK_BACKWARD, SERVICE_SEEK_BY, SERVICE_SEEK_FORWARD
-
-_LOGGER = logging.getLogger(__name__)
+from .const import SERVICE_SEEK_BACKWARD, SERVICE_SEEK_BY, SERVICE_SEEK_FORWARD
 
 DATA_CHANNELS = "channels"
 DEFAULT_NAME = "Channels"
 DEFAULT_PORT = 57000
 
-FEATURE_SUPPORT = (
-    SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_SELECT_SOURCE
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -58,68 +35,49 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-# Service call validation schemas
-ATTR_SECONDS = "seconds"
-
-CHANNELS_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
-
-CHANNELS_SEEK_BY_SCHEMA = CHANNELS_SCHEMA.extend(
-    {vol.Required(ATTR_SECONDS): vol.Coerce(int)}
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Channels platform."""
-    device = ChannelsPlayer(
-        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT)
+    device = ChannelsPlayer(config[CONF_NAME], config[CONF_HOST], config[CONF_PORT])
+    async_add_entities([device], True)
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_SEEK_FORWARD,
+        None,
+        "seek_forward",
     )
-
-    if DATA_CHANNELS not in hass.data:
-        hass.data[DATA_CHANNELS] = []
-
-    add_entities([device], True)
-    hass.data[DATA_CHANNELS].append(device)
-
-    def service_handler(service):
-        """Handle service."""
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-
-        device = next(
-            (
-                device
-                for device in hass.data[DATA_CHANNELS]
-                if device.entity_id == entity_id
-            ),
-            None,
-        )
-
-        if device is None:
-            _LOGGER.warning("Unable to find Channels with entity_id: %s", entity_id)
-            return
-
-        if service.service == SERVICE_SEEK_FORWARD:
-            device.seek_forward()
-        elif service.service == SERVICE_SEEK_BACKWARD:
-            device.seek_backward()
-        elif service.service == SERVICE_SEEK_BY:
-            seconds = service.data.get("seconds")
-            device.seek_by(seconds)
-
-    hass.services.register(
-        DOMAIN, SERVICE_SEEK_FORWARD, service_handler, schema=CHANNELS_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_SEEK_BACKWARD,
+        None,
+        "seek_backward",
     )
-
-    hass.services.register(
-        DOMAIN, SERVICE_SEEK_BACKWARD, service_handler, schema=CHANNELS_SCHEMA
-    )
-
-    hass.services.register(
-        DOMAIN, SERVICE_SEEK_BY, service_handler, schema=CHANNELS_SEEK_BY_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_SEEK_BY,
+        {vol.Required(ATTR_SECONDS): vol.Coerce(int)},
+        "seek_by",
     )
 
 
-class ChannelsPlayer(MediaPlayerDevice):
+class ChannelsPlayer(MediaPlayerEntity):
     """Representation of a Channels instance."""
+
+    _attr_media_content_type = MediaType.CHANNEL
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, name, host, port):
         """Initialize the Channels app."""
@@ -188,20 +146,20 @@ class ChannelsPlayer(MediaPlayerDevice):
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self.status == "stopped":
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
 
         if self.status == "paused":
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
 
         if self.status == "playing":
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
 
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         self.update_favorite_channels()
         self.update_state(self.client.status())
@@ -209,8 +167,7 @@ class ChannelsPlayer(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of favorite channels."""
-        sources = [channel["name"] for channel in self.favorite_channels]
-        return sources
+        return [channel["name"] for channel in self.favorite_channels]
 
     @property
     def is_volume_muted(self):
@@ -221,11 +178,6 @@ class ChannelsPlayer(MediaPlayerDevice):
     def media_content_id(self):
         """Content ID of current playing channel."""
         return self.channel_number
-
-    @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_CHANNEL
 
     @property
     def media_image_url(self):
@@ -245,44 +197,39 @@ class ChannelsPlayer(MediaPlayerDevice):
 
         return None
 
-    @property
-    def supported_features(self):
-        """Flag of media commands that are supported."""
-        return FEATURE_SUPPORT
-
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) player."""
         if mute != self.muted:
             response = self.client.toggle_muted()
             self.update_state(response)
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send media_stop command to player."""
         self.status = "stopped"
         response = self.client.stop()
         self.update_state(response)
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send media_play command to player."""
         response = self.client.resume()
         self.update_state(response)
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send media_pause command to player."""
         response = self.client.pause()
         self.update_state(response)
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Seek ahead."""
         response = self.client.skip_forward()
         self.update_state(response)
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Seek back."""
         response = self.client.skip_backward()
         self.update_state(response)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select a channel to tune to."""
         for channel in self.favorite_channels:
             if channel["name"] == source:
@@ -290,12 +237,14 @@ class ChannelsPlayer(MediaPlayerDevice):
                 self.update_state(response)
                 break
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the player."""
-        if media_type == MEDIA_TYPE_CHANNEL:
+        if media_type == MediaType.CHANNEL:
             response = self.client.play_channel(media_id)
             self.update_state(response)
-        elif media_type in [MEDIA_TYPE_MOVIE, MEDIA_TYPE_EPISODE, MEDIA_TYPE_TVSHOW]:
+        elif media_type in {MediaType.MOVIE, MediaType.EPISODE, MediaType.TVSHOW}:
             response = self.client.play_recording(media_id)
             self.update_state(response)
 

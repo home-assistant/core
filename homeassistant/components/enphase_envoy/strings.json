@@ -1,0 +1,408 @@
+{
+  "config": {
+    "flow_title": "{serial} ({host})",
+    "step": {
+      "user": {
+        "description": "For firmware version 7.0 and later, enter the Enphase cloud credentials, for older models, enter username `installer` without a password.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Enphase Envoy gateway.",
+          "username": "Installer or Enphase Cloud username",
+          "password": "Blank or Enphase Cloud password"
+        }
+      },
+      "reconfigure": {
+        "description": "[%key:component::enphase_envoy::config::step::user::description%]",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "[%key:component::enphase_envoy::config::step::user::data_description::host%]",
+          "username": "[%key:component::enphase_envoy::config::step::user::data_description::username%]",
+          "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "[%key:component::enphase_envoy::config::step::user::description%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::enphase_envoy::config::step::user::data_description::username%]",
+          "password": "[%key:component::enphase_envoy::config::step::user::data_description::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect: {reason}",
+      "invalid_auth": "Invalid authentication: {reason}",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The serial number of the device does not match the previous serial number"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Envoy {serial} {host} options",
+        "data": {
+          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activities. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
+          "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares."
+        },
+        "data_description": {
+          "diagnostics_include_fixtures": "Include fixtures in diagnostics report",
+          "disable_keep_alive": "May resolve communication issues with some Envoy firmwares."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "communicating": {
+        "name": "Communicating"
+      },
+      "dc_switch": {
+        "name": "DC switch"
+      },
+      "grid_status": {
+        "name": "Grid status"
+      }
+    },
+    "number": {
+      "cutoff_battery_level": {
+        "name": "Cutoff battery level"
+      },
+      "restore_battery_level": {
+        "name": "Restore battery level"
+      },
+      "reserve_soc": {
+        "name": "Reserve battery level"
+      }
+    },
+    "select": {
+      "relay_mode": {
+        "name": "Mode",
+        "state": {
+          "standard": "Standard",
+          "battery": "Battery level"
+        }
+      },
+      "relay_grid_action": {
+        "name": "Grid action",
+        "state": {
+          "powered": "Powered",
+          "not_powered": "Not powered",
+          "schedule": "Follow schedule",
+          "none": "None"
+        }
+      },
+      "relay_microgrid_action": {
+        "name": "Microgrid action",
+        "state": {
+          "powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::powered%]",
+          "not_powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::not_powered%]",
+          "schedule": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::schedule%]",
+          "none": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::none%]"
+        }
+      },
+      "relay_generator_action": {
+        "name": "Generator action",
+        "state": {
+          "powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::powered%]",
+          "not_powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::not_powered%]",
+          "schedule": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::schedule%]",
+          "none": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::none%]"
+        }
+      },
+      "storage_mode": {
+        "name": "Storage mode",
+        "state": {
+          "self_consumption": "Self-consumption",
+          "backup": "Full backup",
+          "savings": "Savings mode"
+        }
+      }
+    },
+    "sensor": {
+      "last_reported": {
+        "name": "Last reported"
+      },
+      "current_power_production": {
+        "name": "Current power production"
+      },
+      "daily_production": {
+        "name": "Energy production today"
+      },
+      "seven_days_production": {
+        "name": "Energy production last seven days"
+      },
+      "lifetime_production": {
+        "name": "Lifetime energy production"
+      },
+      "current_power_consumption": {
+        "name": "Current power consumption"
+      },
+      "daily_consumption": {
+        "name": "Energy consumption today"
+      },
+      "seven_days_consumption": {
+        "name": "Energy consumption last seven days"
+      },
+      "lifetime_consumption": {
+        "name": "Lifetime energy consumption"
+      },
+      "current_power_production_phase": {
+        "name": "Current power production {phase_name}"
+      },
+      "daily_production_phase": {
+        "name": "Energy production today {phase_name}"
+      },
+      "seven_days_production_phase": {
+        "name": "Energy production last seven days {phase_name}"
+      },
+      "lifetime_production_phase": {
+        "name": "Lifetime energy production {phase_name}"
+      },
+      "current_power_consumption_phase": {
+        "name": "Current power consumption {phase_name}"
+      },
+      "daily_consumption_phase": {
+        "name": "Energy consumption today {phase_name}"
+      },
+      "seven_days_consumption_phase": {
+        "name": "Energy consumption last seven days {phase_name}"
+      },
+      "lifetime_consumption_phase": {
+        "name": "Lifetime energy consumption {phase_name}"
+      },
+      "balanced_net_consumption": {
+        "name": "Balanced net power consumption"
+      },
+      "lifetime_balanced_net_consumption": {
+        "name": "Lifetime balanced net energy consumption"
+      },
+      "balanced_net_consumption_phase": {
+        "name": "Balanced net power consumption {phase_name}"
+      },
+      "lifetime_balanced_net_consumption_phase": {
+        "name": "Lifetime balanced net energy consumption {phase_name}"
+      },
+      "lifetime_net_consumption": {
+        "name": "Lifetime net energy consumption"
+      },
+      "lifetime_net_production": {
+        "name": "Lifetime net energy production"
+      },
+      "net_consumption": {
+        "name": "Current net power consumption"
+      },
+      "net_ct_frequency": {
+        "name": "Frequency net consumption CT"
+      },
+      "net_ct_voltage": {
+        "name": "Voltage net consumption CT"
+      },
+      "net_ct_current": {
+        "name": "Net consumption CT current"
+      },
+      "net_ct_powerfactor": {
+        "name": "Power factor net consumption CT"
+      },
+      "net_ct_metering_status": {
+        "name": "Metering status net consumption CT"
+      },
+      "net_ct_status_flags": {
+        "name": "Meter status flags active net consumption CT"
+      },
+      "production_ct_frequency": {
+        "name": "Frequency production CT"
+      },
+      "production_ct_voltage": {
+        "name": "Voltage production CT"
+      },
+      "production_ct_current": {
+        "name": "Production CT current"
+      },
+      "production_ct_powerfactor": {
+        "name": "Power factor production CT"
+      },
+      "production_ct_metering_status": {
+        "name": "Metering status production CT"
+      },
+      "production_ct_status_flags": {
+        "name": "Meter status flags active production CT"
+      },
+      "lifetime_battery_discharged": {
+        "name": "Lifetime battery energy discharged"
+      },
+      "lifetime_battery_charged": {
+        "name": "Lifetime battery energy charged"
+      },
+      "battery_discharge": {
+        "name": "Current battery discharge"
+      },
+      "storage_ct_frequency": {
+        "name": "Frequency storage CT"
+      },
+      "storage_ct_voltage": {
+        "name": "Voltage storage CT"
+      },
+      "storage_ct_current": {
+        "name": "Storage CT current"
+      },
+      "storage_ct_powerfactor": {
+        "name": "Power factor storage CT"
+      },
+      "storage_ct_metering_status": {
+        "name": "Metering status storage CT"
+      },
+      "storage_ct_status_flags": {
+        "name": "Meter status flags active storage CT"
+      },
+      "lifetime_net_consumption_phase": {
+        "name": "Lifetime net energy consumption {phase_name}"
+      },
+      "lifetime_net_production_phase": {
+        "name": "Lifetime net energy production {phase_name}"
+      },
+      "net_consumption_phase": {
+        "name": "Current net power consumption {phase_name}"
+      },
+      "net_ct_frequency_phase": {
+        "name": "Frequency net consumption CT {phase_name}"
+      },
+      "net_ct_voltage_phase": {
+        "name": "Voltage net consumption CT {phase_name}"
+      },
+      "net_ct_current_phase": {
+        "name": "Net consumption CT current {phase_name}"
+      },
+      "net_ct_powerfactor_phase": {
+        "name": "Power factor net consumption CT {phase_name}"
+      },
+      "net_ct_metering_status_phase": {
+        "name": "Metering status net consumption CT {phase_name}"
+      },
+      "net_ct_status_flags_phase": {
+        "name": "Meter status flags active net consumption CT {phase_name}"
+      },
+      "production_ct_frequency_phase": {
+        "name": "Frequency production CT {phase_name}"
+      },
+      "production_ct_voltage_phase": {
+        "name": "Voltage production CT {phase_name}"
+      },
+      "production_ct_current_phase": {
+        "name": "Production CT current {phase_name}"
+      },
+      "production_ct_powerfactor_phase": {
+        "name": "Power factor production CT {phase_name}"
+      },
+      "production_ct_metering_status_phase": {
+        "name": "Metering status production CT {phase_name}"
+      },
+      "production_ct_status_flags_phase": {
+        "name": "Meter status flags active production CT {phase_name}"
+      },
+      "lifetime_battery_discharged_phase": {
+        "name": "Lifetime battery energy discharged {phase_name}"
+      },
+      "lifetime_battery_charged_phase": {
+        "name": "Lifetime battery energy charged {phase_name}"
+      },
+      "battery_discharge_phase": {
+        "name": "Current battery discharge {phase_name}"
+      },
+      "storage_ct_frequency_phase": {
+        "name": "Frequency storage CT {phase_name}"
+      },
+      "storage_ct_voltage_phase": {
+        "name": "Voltage storage CT {phase_name}"
+      },
+      "storage_ct_current_phase": {
+        "name": "Storage CT current {phase_name}"
+      },
+      "storage_ct_powerfactor_phase": {
+        "name": "Power factor storage CT {phase_name}"
+      },
+      "storage_ct_metering_status_phase": {
+        "name": "Metering status storage CT {phase_name}"
+      },
+      "storage_ct_status_flags_phase": {
+        "name": "Meter status flags active storage CT {phase_name}"
+      },
+      "reserve_soc": {
+        "name": "Reserve battery level"
+      },
+      "available_energy": {
+        "name": "Available battery energy"
+      },
+      "reserve_energy": {
+        "name": "Reserve battery energy"
+      },
+      "max_capacity": {
+        "name": "Battery capacity"
+      },
+      "configured_reserve_soc": {
+        "name": "Configured reserve battery level"
+      },
+      "acb_battery_state": {
+        "name": "Battery state",
+        "state": {
+          "discharging": "[%key:common::state::discharging%]",
+          "idle": "[%key:common::state::idle%]",
+          "charging": "[%key:common::state::charging%]",
+          "full": "Full"
+        }
+      },
+      "acb_available_energy": {
+        "name": "Available ACB battery energy"
+      },
+      "acb_max_capacity": {
+        "name": "ACB Battery capacity"
+      },
+      "aggregated_available_energy": {
+        "name": "Aggregated available battery energy"
+      },
+      "aggregated_max_capacity": {
+        "name": "Aggregated Battery capacity"
+      },
+      "aggregated_soc": {
+        "name": "Aggregated battery soc"
+      }
+    },
+    "switch": {
+      "charge_from_grid": {
+        "name": "Charge from grid"
+      },
+      "grid_enabled": {
+        "name": "Grid enabled"
+      }
+    }
+  },
+  "exceptions": {
+    "unexpected_device": {
+      "message": "Unexpected Envoy serial number found at {host}; expected {expected_serial}, found {actual_serial}"
+    },
+    "authentication_error": {
+      "message": "Envoy authentication failure on {host}: {args}"
+    },
+    "envoy_error": {
+      "message": "Error communicating with Envoy API on {host}: {args}"
+    },
+    "action_error": {
+      "message": "Failed to execute {action} for {entity}, host: {host}: {args}"
+    }
+  }
+}

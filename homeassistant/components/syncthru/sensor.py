@@ -1,248 +1,167 @@
 """Support for Samsung Printers with SyncThru web interface."""
 
-import logging
+from __future__ import annotations
 
-from pysyncthru import SyncThru
-import voluptuous as vol
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, cast
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_RESOURCE
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from pysyncthru import SyncThru, SyncthruState
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-DEFAULT_NAME = "Samsung Printer"
-COLORS = ["black", "cyan", "magenta", "yellow"]
-DRUM_COLORS = COLORS
-TONER_COLORS = COLORS
-TRAYS = range(1, 6)
-OUTPUT_TRAYS = range(0, 6)
-DEFAULT_MONITORED_CONDITIONS = []
-DEFAULT_MONITORED_CONDITIONS.extend([f"toner_{key}" for key in TONER_COLORS])
-DEFAULT_MONITORED_CONDITIONS.extend([f"drum_{key}" for key in DRUM_COLORS])
-DEFAULT_MONITORED_CONDITIONS.extend([f"tray_{key}" for key in TRAYS])
-DEFAULT_MONITORED_CONDITIONS.extend([f"output_tray_{key}" for key in OUTPUT_TRAYS])
+from .coordinator import SyncThruConfigEntry
+from .entity import SyncthruEntity
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
+SYNCTHRU_STATE_HUMAN = {
+    SyncthruState.INVALID: "invalid",
+    SyncthruState.OFFLINE: "unreachable",
+    SyncthruState.NORMAL: "normal",
+    SyncthruState.UNKNOWN: "unknown",
+    SyncthruState.WARNING: "warning",
+    SyncthruState.TESTING: "testing",
+    SyncthruState.ERROR: "error",
+}
+
+
+@dataclass(frozen=True, kw_only=True)
+class SyncThruSensorDescription(SensorEntityDescription):
+    """Describes a SyncThru sensor entity."""
+
+    value_fn: Callable[[SyncThru], str | None]
+    extra_state_attributes_fn: Callable[[SyncThru], dict[str, str | int]] | None = None
+
+
+def get_toner_entity_description(color: str) -> SyncThruSensorDescription:
+    """Get toner entity description for a specific color."""
+    return SyncThruSensorDescription(
+        key=f"toner_{color}",
+        translation_key=f"toner_{color}",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda printer: printer.toner_status().get(color, {}).get("remaining"),
+        extra_state_attributes_fn=lambda printer: printer.toner_status().get(color, {}),
+    )
+
+
+def get_drum_entity_description(color: str) -> SyncThruSensorDescription:
+    """Get drum entity description for a specific color."""
+    return SyncThruSensorDescription(
+        key=f"drum_{color}",
+        translation_key=f"drum_{color}",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda printer: printer.drum_status().get(color, {}).get("remaining"),
+        extra_state_attributes_fn=lambda printer: printer.drum_status().get(color, {}),
+    )
+
+
+def get_input_tray_entity_description(tray: str) -> SyncThruSensorDescription:
+    """Get input tray entity description for a specific tray."""
+    placeholders = {}
+    translation_key = f"tray_{tray}"
+    if "_" in tray:
+        _, identifier = tray.split("_")
+        placeholders["tray_number"] = identifier
+        translation_key = "tray"
+    return SyncThruSensorDescription(
+        key=f"tray_{tray}",
+        translation_key=translation_key,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_placeholders=placeholders,
+        value_fn=(
+            lambda printer: printer.input_tray_status().get(tray, {}).get("newError")
+            or "Ready"
+        ),
+        extra_state_attributes_fn=(
+            lambda printer: printer.input_tray_status().get(tray, {})
+        ),
+    )
+
+
+def get_output_tray_entity_description(tray: int) -> SyncThruSensorDescription:
+    """Get output tray entity description for a specific tray."""
+    return SyncThruSensorDescription(
+        key=f"output_tray_{tray}",
+        translation_key="output_tray",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_placeholders={"tray_number": str(tray)},
+        value_fn=(
+            lambda printer: printer.output_tray_status().get(tray, {}).get("status")
+            or "Ready"
+        ),
+        extra_state_attributes_fn=(
+            lambda printer: cast(
+                dict[str, str | int], printer.output_tray_status().get(tray, {})
+            )
+        ),
+    )
+
+
+SENSOR_TYPES: tuple[SyncThruSensorDescription, ...] = (
+    SyncThruSensorDescription(
+        key="active_alerts",
+        translation_key="active_alerts",
+        value_fn=lambda printer: printer.raw().get("GXI_ACTIVE_ALERT_TOTAL"),
+    ),
+    SyncThruSensorDescription(
+        key="main",
+        name=None,
+        value_fn=lambda printer: SYNCTHRU_STATE_HUMAN[printer.device_status()],
+        extra_state_attributes_fn=lambda printer: {
+            "display_text": printer.device_status_details(),
+        },
+    ),
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the SyncThru component."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: SyncThruConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up from config entry."""
 
-    if discovery_info is not None:
-        _LOGGER.info(
-            "Discovered a new Samsung Printer at %s", discovery_info.get(CONF_HOST)
-        )
-        host = discovery_info.get(CONF_HOST)
-        name = discovery_info.get(CONF_NAME, DEFAULT_NAME)
-        # Main device, always added
-    else:
-        host = config.get(CONF_RESOURCE)
-        name = config.get(CONF_NAME)
-    # always pass through all of the obtained information
-    monitored = DEFAULT_MONITORED_CONDITIONS
+    coordinator = config_entry.runtime_data
+    printer = coordinator.data
 
-    session = aiohttp_client.async_get_clientsession(hass)
+    supp_toner = printer.toner_status(filter_supported=True)
+    supp_drum = printer.drum_status(filter_supported=True)
+    supp_tray = printer.input_tray_status(filter_supported=True)
+    supp_output_tray = printer.output_tray_status()
 
-    printer = SyncThru(host, session)
-    # Test if the discovered device actually is a syncthru printer
-    # and fetch the available toner/drum/etc
-    try:
-        # No error is thrown when the device is off
-        # (only after user added it manually)
-        # therefore additional catches are inside the Sensor below
-        await printer.update()
-        supp_toner = printer.toner_status(filter_supported=True)
-        supp_drum = printer.drum_status(filter_supported=True)
-        supp_tray = printer.input_tray_status(filter_supported=True)
-        supp_output_tray = printer.output_tray_status()
-    except ValueError:
-        # if an exception is thrown, printer does not support syncthru
-        # and should not be set up
-        # If the printer was discovered automatically, no warning or error
-        # should be issued and printer should not be set up
-        if discovery_info is not None:
-            _LOGGER.info("Samsung printer at %s does not support SyncThru", host)
-            return
-        # Otherwise, emulate printer that supports everything
-        supp_toner = TONER_COLORS
-        supp_drum = DRUM_COLORS
-        supp_tray = TRAYS
-        supp_output_tray = OUTPUT_TRAYS
+    entities: list[SyncThruSensorDescription] = [
+        get_toner_entity_description(color) for color in supp_toner
+    ]
+    entities.extend(get_drum_entity_description(color) for color in supp_drum)
+    entities.extend(get_input_tray_entity_description(key) for key in supp_tray)
+    entities.extend(get_output_tray_entity_description(key) for key in supp_output_tray)
 
-    devices = [SyncThruMainSensor(printer, name)]
-
-    for key in supp_toner:
-        if f"toner_{key}" in monitored:
-            devices.append(SyncThruTonerSensor(printer, name, key))
-    for key in supp_drum:
-        if f"drum_{key}" in monitored:
-            devices.append(SyncThruDrumSensor(printer, name, key))
-    for key in supp_tray:
-        if f"tray_{key}" in monitored:
-            devices.append(SyncThruInputTraySensor(printer, name, key))
-    for key in supp_output_tray:
-        if f"output_tray_{key}" in monitored:
-            devices.append(SyncThruOutputTraySensor(printer, name, key))
-
-    async_add_entities(devices, True)
+    async_add_entities(
+        SyncThruSensor(coordinator, description)
+        for description in SENSOR_TYPES + tuple(entities)
+    )
 
 
-class SyncThruSensor(Entity):
+class SyncThruSensor(SyncthruEntity, SensorEntity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
-    def __init__(self, syncthru, name):
-        """Initialize the sensor."""
-        self.syncthru = syncthru
-        self._attributes = {}
-        self._state = None
-        self._name = name
-        self._icon = "mdi:printer"
-        self._unit_of_measurement = None
-        self._id_suffix = ""
+    _attr_icon = "mdi:printer"
+    entity_description: SyncThruSensorDescription
 
     @property
-    def unique_id(self):
-        """Return unique ID for the sensor."""
-        serial = self.syncthru.serial_number()
-        return serial + self._id_suffix if serial else super().unique_id
+    def native_value(self) -> str | int | None:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon of the device."""
-        return self._icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measuremnt."""
-        return self._unit_of_measurement
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._attributes
-
-
-class SyncThruMainSensor(SyncThruSensor):
-    """Implementation of the main sensor, conducting the actual polling."""
-
-    def __init__(self, syncthru, name):
-        """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._id_suffix = "_main"
-        self._active = True
-
-    async def async_update(self):
-        """Get the latest data from SyncThru and update the state."""
-        if not self._active:
-            return
-        try:
-            await self.syncthru.update()
-        except ValueError:
-            # if an exception is thrown, printer does not support syncthru
-            _LOGGER.warning(
-                "Configured printer at %s does not support SyncThru. "
-                "Consider changing your configuration",
-                self.syncthru.url,
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        if self.entity_description.extra_state_attributes_fn:
+            return self.entity_description.extra_state_attributes_fn(
+                self.coordinator.data
             )
-            self._active = False
-        self._state = self.syncthru.device_status()
-
-
-class SyncThruTonerSensor(SyncThruSensor):
-    """Implementation of a Samsung Printer toner sensor platform."""
-
-    def __init__(self, syncthru, name, color):
-        """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._name = f"{name} Toner {color}"
-        self._color = color
-        self._unit_of_measurement = "%"
-        self._id_suffix = f"_toner_{color}"
-
-    def update(self):
-        """Get the latest data from SyncThru and update the state."""
-        # Data fetching is taken care of through the Main sensor
-
-        if self.syncthru.is_online():
-            self._attributes = self.syncthru.toner_status().get(self._color, {})
-            self._state = self._attributes.get("remaining")
-
-
-class SyncThruDrumSensor(SyncThruSensor):
-    """Implementation of a Samsung Printer toner sensor platform."""
-
-    def __init__(self, syncthru, name, color):
-        """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._name = f"{name} Drum {color}"
-        self._color = color
-        self._unit_of_measurement = "%"
-        self._id_suffix = f"_drum_{color}"
-
-    def update(self):
-        """Get the latest data from SyncThru and update the state."""
-        # Data fetching is taken care of through the Main sensor
-
-        if self.syncthru.is_online():
-            self._attributes = self.syncthru.drum_status().get(self._color, {})
-            self._state = self._attributes.get("remaining")
-
-
-class SyncThruInputTraySensor(SyncThruSensor):
-    """Implementation of a Samsung Printer input tray sensor platform."""
-
-    def __init__(self, syncthru, name, number):
-        """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._name = f"{name} Tray {number}"
-        self._number = number
-        self._id_suffix = f"_tray_{number}"
-
-    def update(self):
-        """Get the latest data from SyncThru and update the state."""
-        # Data fetching is taken care of through the Main sensor
-
-        if self.syncthru.is_online():
-            self._attributes = self.syncthru.input_tray_status().get(self._number, {})
-            self._state = self._attributes.get("newError")
-            if self._state == "":
-                self._state = "Ready"
-
-
-class SyncThruOutputTraySensor(SyncThruSensor):
-    """Implementation of a Samsung Printer input tray sensor platform."""
-
-    def __init__(self, syncthru, name, number):
-        """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._name = f"{name} Output Tray {number}"
-        self._number = number
-        self._id_suffix = f"_output_tray_{number}"
-
-    def update(self):
-        """Get the latest data from SyncThru and update the state."""
-        # Data fetching is taken care of through the Main sensor
-
-        if self.syncthru.is_online():
-            self._attributes = self.syncthru.output_tray_status().get(self._number, {})
-            self._state = self._attributes.get("status")
-            if self._state == "":
-                self._state = "Ready"
+        return None

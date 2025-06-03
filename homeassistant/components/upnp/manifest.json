@@ -1,9 +1,26 @@
 {
   "domain": "upnp",
-  "name": "UPnP",
+  "name": "UPnP/IGD",
+  "codeowners": ["@StevenLooman"],
   "config_flow": true,
+  "dependencies": ["network", "ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/upnp",
-  "requirements": ["async-upnp-client==0.14.12"],
-  "dependencies": [],
-  "codeowners": ["@robbiet480"]
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["async_upnp_client"],
+  "requirements": ["async-upnp-client==0.44.0", "getmac==0.9.5"],
+  "ssdp": [
+    {
+      "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+    },
+    {
+      "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
+    },
+    {
+      "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+    },
+    {
+      "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
+    }
+  ]
 }

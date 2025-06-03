@@ -1,0 +1,60 @@
+generate_image:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: openai_conversation
+    prompt:
+      required: true
+      selector:
+        text:
+          multiline: true
+    size:
+      required: false
+      example: "1024x1024"
+      default: "1024x1024"
+      selector:
+        select:
+          options:
+            - "1024x1024"
+            - "1024x1792"
+            - "1792x1024"
+    quality:
+      required: false
+      example: "standard"
+      default: "standard"
+      selector:
+        select:
+          options:
+            - "standard"
+            - "hd"
+    style:
+      required: false
+      example: "vivid"
+      default: "vivid"
+      selector:
+        select:
+          options:
+            - "vivid"
+            - "natural"
+generate_content:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: openai_conversation
+    prompt:
+      required: true
+      selector:
+        text:
+          multiline: true
+      example: "Hello, how can I help you?"
+    filenames:
+      selector:
+        text:
+          multiline: true
+      example: |
+        - /path/to/file1.txt
+        - /path/to/file2.txt

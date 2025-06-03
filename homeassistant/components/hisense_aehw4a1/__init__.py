@@ -1,4 +1,5 @@
 """The Hisense AEH-W4A1 integration."""
+
 import ipaddress
 import logging
 
@@ -8,12 +9,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_IP_ADDRESS, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = [Platform.CLIMATE]
 
 
 def coerce_ip(value):
@@ -22,8 +28,8 @@ def coerce_ip(value):
         raise vol.Invalid("Must define an IP address")
     try:
         ipaddress.IPv4Network(value)
-    except ValueError:
-        raise vol.Invalid("Not a valid IP address")
+    except ValueError as err:
+        raise vol.Invalid("Not a valid IP address") from err
     return value
 
 
@@ -43,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hisense AEH-W4A1 integration."""
     conf = config.get(DOMAIN)
     hass.data[DOMAIN] = {}
@@ -60,22 +66,20 @@ async def async_setup(hass, config):
             hass.data[DOMAIN] = conf
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": config_entries.SOURCE_IMPORT},
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
                 )
             )
 
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for Hisense AEH-W4A1."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, CLIMATE_DOMAIN)
-    )
-
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_forward_entry_unload(entry, CLIMATE_DOMAIN)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -1,35 +1,29 @@
 """Support for HLK-SW16 relay switches."""
+
 import logging
 
 from hlk_sw16 import create_hlk_sw16_connection
+from hlk_sw16.protocol import SW16Client
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SWITCHES,
-    EVENT_HOMEASSISTANT_STOP,
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SWITCHES, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
+
+from .const import (
+    CONNECTION_TIMEOUT,
+    DEFAULT_KEEP_ALIVE_INTERVAL,
+    DEFAULT_PORT,
+    DEFAULT_RECONNECT_INTERVAL,
+    DOMAIN,
 )
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_DEVICE_REGISTER = "hlk_sw16_device_register"
-DEFAULT_RECONNECT_INTERVAL = 10
-CONNECTION_TIMEOUT = 10
-DEFAULT_PORT = 8080
-
-DOMAIN = "hlk_sw16"
-
-SIGNAL_AVAILABILITY = "hlk_sw16_device_available_{}"
+PLATFORMS = [Platform.SWITCH]
 
 SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string})
 
@@ -56,116 +50,70 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+type HlkConfigEntry = ConfigEntry[SW16Client]
 
-async def async_setup(hass, config):
-    """Set up the HLK-SW16 switch."""
-    # Allow platform to specify function to register new unknown devices
 
-    hass.data[DATA_DEVICE_REGISTER] = {}
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Component setup, do nothing."""
+    if DOMAIN not in config:
+        return True
 
-    def add_device(device):
-        switches = config[DOMAIN][device][CONF_SWITCHES]
-
-        host = config[DOMAIN][device][CONF_HOST]
-        port = config[DOMAIN][device][CONF_PORT]
-
-        @callback
-        def disconnected():
-            """Schedule reconnect after connection has been lost."""
-            _LOGGER.warning("HLK-SW16 %s disconnected", device)
-            async_dispatcher_send(hass, SIGNAL_AVAILABILITY.format(device), False)
-
-        @callback
-        def reconnected():
-            """Schedule reconnect after connection has been lost."""
-            _LOGGER.warning("HLK-SW16 %s connected", device)
-            async_dispatcher_send(hass, SIGNAL_AVAILABILITY.format(device), True)
-
-        async def connect():
-            """Set up connection and hook it into HA for reconnect/shutdown."""
-            _LOGGER.info("Initiating HLK-SW16 connection to %s", device)
-
-            client = await create_hlk_sw16_connection(
-                host=host,
-                port=port,
-                disconnect_callback=disconnected,
-                reconnect_callback=reconnected,
-                loop=hass.loop,
-                timeout=CONNECTION_TIMEOUT,
-                reconnect_interval=DEFAULT_RECONNECT_INTERVAL,
+    for device_id in config[DOMAIN]:
+        conf = config[DOMAIN][device_id]
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={CONF_HOST: conf[CONF_HOST], CONF_PORT: conf[CONF_PORT]},
             )
-
-            hass.data[DATA_DEVICE_REGISTER][device] = client
-
-            # Load platforms
-            hass.async_create_task(
-                async_load_platform(hass, "switch", DOMAIN, (switches, device), config)
-            )
-
-            # handle shutdown of HLK-SW16 asyncio transport
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, lambda x: client.stop()
-            )
-
-            _LOGGER.info("Connected to HLK-SW16 device: %s", device)
-
-        hass.loop.create_task(connect())
-
-    for device in config[DOMAIN]:
-        add_device(device)
+        )
     return True
 
 
-class SW16Device(Entity):
-    """Representation of a HLK-SW16 device.
-
-    Contains the common logic for HLK-SW16 entities.
-    """
-
-    def __init__(self, relay_name, device_port, device_id, client):
-        """Initialize the device."""
-        # HLK-SW16 specific attributes for every component type
-        self._device_id = device_id
-        self._device_port = device_port
-        self._is_on = None
-        self._client = client
-        self._name = relay_name
+async def async_setup_entry(hass: HomeAssistant, entry: HlkConfigEntry) -> bool:
+    """Set up the HLK-SW16 switch."""
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
+    address = f"{host}:{port}"
 
     @callback
-    def handle_event_callback(self, event):
-        """Propagate changes through ha."""
-        _LOGGER.debug("Relay %s new state callback: %r", self._device_port, event)
-        self._is_on = event
-        self.async_schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return a name for the device."""
-        return self._name
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return bool(self._client.is_connected)
+    def disconnected():
+        """Schedule reconnect after connection has been lost."""
+        _LOGGER.warning("HLK-SW16 %s disconnected", address)
+        async_dispatcher_send(
+            hass, f"hlk_sw16_device_available_{entry.entry_id}", False
+        )
 
     @callback
-    def _availability_callback(self, availability):
-        """Update availability state."""
-        self.async_schedule_update_ha_state()
+    def reconnected():
+        """Schedule reconnect after connection has been lost."""
+        _LOGGER.warning("HLK-SW16 %s connected", address)
+        async_dispatcher_send(hass, f"hlk_sw16_device_available_{entry.entry_id}", True)
 
-    async def async_added_to_hass(self):
-        """Register update callback."""
-        self._client.register_status_callback(
-            self.handle_event_callback, self._device_port
-        )
-        self._is_on = await self._client.status(self._device_port)
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_AVAILABILITY.format(self._device_id),
-            self._availability_callback,
-        )
+    _LOGGER.debug("Initiating HLK-SW16 connection to %s", address)
+
+    client = await create_hlk_sw16_connection(
+        host=host,
+        port=port,
+        disconnect_callback=disconnected,
+        reconnect_callback=reconnected,
+        loop=hass.loop,
+        timeout=CONNECTION_TIMEOUT,
+        reconnect_interval=DEFAULT_RECONNECT_INTERVAL,
+        keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
+    )
+
+    entry.runtime_data = client
+
+    # Load entities
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    _LOGGER.debug("Connected to HLK-SW16 device: %s", address)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: HlkConfigEntry) -> bool:
+    """Unload a config entry."""
+    entry.runtime_data.stop()
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

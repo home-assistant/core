@@ -1,0 +1,42 @@
+{
+  "title": "Change device type of a switch",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Pick a switch that you want to show up in Home Assistant as a light, cover or anything else. The original switch will be hidden.",
+        "data": {
+          "entity_id": "Switch",
+          "invert": "Invert state",
+          "target_domain": "New Type"
+        },
+        "data_description": {
+          "invert": "Invert state, only supported for cover, lock and valve."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "invert": "[%key:component::switch_as_x::config::step::user::data::invert%]"
+        },
+        "data_description": {
+          "invert": "[%key:component::switch_as_x::config::step::user::data_description::invert%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "target_domain": {
+      "options": {
+        "cover": "[%key:component::cover::title%]",
+        "fan": "[%key:component::fan::title%]",
+        "light": "[%key:component::light::title%]",
+        "lock": "[%key:component::lock::title%]",
+        "siren": "[%key:component::siren::title%]",
+        "valve": "[%key:component::valve::title%]"
+      }
+    }
+  }
+}

@@ -1,9 +1,10 @@
 {
   "domain": "conversation",
   "name": "Conversation",
+  "codeowners": ["@home-assistant/core", "@synesthesiam"],
+  "dependencies": ["http", "intent"],
   "documentation": "https://www.home-assistant.io/integrations/conversation",
-  "requirements": [],
-  "dependencies": ["http"],
-  "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
+  "integration_type": "system",
+  "quality_scale": "internal",
+  "requirements": ["hassil==2.2.3", "home-assistant-intents==2025.5.28"]
 }

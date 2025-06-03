@@ -1,181 +1,141 @@
 """Support for Verisure sensors."""
-import logging
 
-from homeassistant.const import TEMP_CELSIUS
+from __future__ import annotations
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CONF_HYDROMETERS, CONF_MOUSE, CONF_THERMOMETERS, HUB as hub
-
-_LOGGER = logging.getLogger(__name__)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Verisure platform."""
-    sensors = []
-    hub.update_overview()
-
-    if int(hub.config.get(CONF_THERMOMETERS, 1)):
-        sensors.extend(
-            [
-                VerisureThermometer(device_label)
-                for device_label in hub.get(
-                    "$.climateValues[?(@.temperature)].deviceLabel"
-                )
-            ]
-        )
-
-    if int(hub.config.get(CONF_HYDROMETERS, 1)):
-        sensors.extend(
-            [
-                VerisureHygrometer(device_label)
-                for device_label in hub.get(
-                    "$.climateValues[?(@.humidity)].deviceLabel"
-                )
-            ]
-        )
-
-    if int(hub.config.get(CONF_MOUSE, 1)):
-        sensors.extend(
-            [
-                VerisureMouseDetection(device_label)
-                for device_label in hub.get(
-                    "$.eventCounts[?(@.deviceType=='MOUSE1')].deviceLabel"
-                )
-            ]
-        )
-
-    add_entities(sensors)
+from .const import CONF_GIID, DEVICE_TYPE_NAME, DOMAIN
+from .coordinator import VerisureDataUpdateCoordinator
 
 
-class VerisureThermometer(Entity):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Verisure sensors based on a config entry."""
+    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    sensors: list[Entity] = [
+        VerisureThermometer(coordinator, serial_number)
+        for serial_number, values in coordinator.data["climate"].items()
+        if "temperatureValue" in values
+    ]
+
+    sensors.extend(
+        VerisureHygrometer(coordinator, serial_number)
+        for serial_number, values in coordinator.data["climate"].items()
+        if values.get("humidityEnabled")
+    )
+
+    async_add_entities(sensors)
+
+
+class VerisureThermometer(
+    CoordinatorEntity[VerisureDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Verisure thermometer."""
 
-    def __init__(self, device_label):
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_has_entity_name = True
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
+    ) -> None:
         """Initialize the sensor."""
-        self._device_label = device_label
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{serial_number}_temperature"
+        self.serial_number = serial_number
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return (
-            hub.get_first(
-                "$.climateValues[?(@.deviceLabel=='%s')].deviceArea", self._device_label
-            )
-            + " temperature"
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this entity."""
+        device_type = self.coordinator.data["climate"][self.serial_number]["device"][
+            "gui"
+        ]["label"]
+        area = self.coordinator.data["climate"][self.serial_number]["device"]["area"]
+        return DeviceInfo(
+            name=area,
+            manufacturer="Verisure",
+            model=DEVICE_TYPE_NAME.get(device_type, device_type),
+            identifiers={(DOMAIN, self.serial_number)},
+            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
+            configuration_url="https://mypages.verisure.com",
         )
 
     @property
-    def state(self):
-        """Return the state of the device."""
-        return hub.get_first(
-            "$.climateValues[?(@.deviceLabel=='%s')].temperature", self._device_label
-        )
+    def native_value(self) -> str | None:
+        """Return the state of the entity."""
+        return self.coordinator.data["climate"][self.serial_number]["temperatureValue"]
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            hub.get_first(
-                "$.climateValues[?(@.deviceLabel=='%s')].temperature",
-                self._device_label,
-            )
-            is not None
+            super().available
+            and self.serial_number in self.coordinator.data["climate"]
+            and "temperatureValue"
+            in self.coordinator.data["climate"][self.serial_number]
         )
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return TEMP_CELSIUS
 
-    # pylint: disable=no-self-use
-    def update(self):
-        """Update the sensor."""
-        hub.update_overview()
-
-
-class VerisureHygrometer(Entity):
+class VerisureHygrometer(
+    CoordinatorEntity[VerisureDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Verisure hygrometer."""
 
-    def __init__(self, device_label):
+    _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_has_entity_name = True
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(
+        self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
+    ) -> None:
         """Initialize the sensor."""
-        self._device_label = device_label
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{serial_number}_humidity"
+        self.serial_number = serial_number
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return (
-            hub.get_first(
-                "$.climateValues[?(@.deviceLabel=='%s')].deviceArea", self._device_label
-            )
-            + " humidity"
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this entity."""
+        device_type = self.coordinator.data["climate"][self.serial_number]["device"][
+            "gui"
+        ]["label"]
+        area = self.coordinator.data["climate"][self.serial_number]["device"]["area"]
+        return DeviceInfo(
+            name=area,
+            manufacturer="Verisure",
+            model=DEVICE_TYPE_NAME.get(device_type, device_type),
+            identifiers={(DOMAIN, self.serial_number)},
+            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
+            configuration_url="https://mypages.verisure.com",
         )
 
     @property
-    def state(self):
-        """Return the state of the device."""
-        return hub.get_first(
-            "$.climateValues[?(@.deviceLabel=='%s')].humidity", self._device_label
-        )
+    def native_value(self) -> str | None:
+        """Return the state of the entity."""
+        return self.coordinator.data["climate"][self.serial_number]["humidityValue"]
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            hub.get_first(
-                "$.climateValues[?(@.deviceLabel=='%s')].humidity", self._device_label
-            )
-            is not None
+            super().available
+            and self.serial_number in self.coordinator.data["climate"]
+            and "humidityValue" in self.coordinator.data["climate"][self.serial_number]
         )
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return "%"
-
-    # pylint: disable=no-self-use
-    def update(self):
-        """Update the sensor."""
-        hub.update_overview()
-
-
-class VerisureMouseDetection(Entity):
-    """Representation of a Verisure mouse detector."""
-
-    def __init__(self, device_label):
-        """Initialize the sensor."""
-        self._device_label = device_label
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return (
-            hub.get_first(
-                "$.eventCounts[?(@.deviceLabel=='%s')].area", self._device_label
-            )
-            + " mouse"
-        )
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return hub.get_first(
-            "$.eventCounts[?(@.deviceLabel=='%s')].detections", self._device_label
-        )
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return (
-            hub.get_first("$.eventCounts[?(@.deviceLabel=='%s')]", self._device_label)
-            is not None
-        )
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return "Mice"
-
-    # pylint: disable=no-self-use
-    def update(self):
-        """Update the sensor."""
-        hub.update_overview()

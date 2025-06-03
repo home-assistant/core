@@ -1,104 +1,97 @@
 """Support for Hydrawise cloud switches."""
-import logging
 
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import CONF_MONITORED_CONDITIONS
-import homeassistant.helpers.config_validation as cv
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+from datetime import timedelta
+from typing import Any
 
-from . import (
-    ALLOWED_WATERING_TIME,
-    CONF_WATERING_TIME,
-    DATA_HYDRAWISE,
-    DEFAULT_WATERING_TIME,
-    DEVICE_MAP,
-    DEVICE_MAP_INDEX,
-    SWITCHES,
-    HydrawiseEntity,
+from pydrawise import HydrawiseBase, Zone
+
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
+
+from .const import DEFAULT_WATERING_TIME
+from .coordinator import HydrawiseConfigEntry
+from .entity import HydrawiseEntity
+
+
+@dataclass(frozen=True, kw_only=True)
+class HydrawiseSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Hydrawise binary sensor."""
+
+    turn_on_fn: Callable[[HydrawiseBase, Zone], Coroutine[Any, Any, None]]
+    turn_off_fn: Callable[[HydrawiseBase, Zone], Coroutine[Any, Any, None]]
+    value_fn: Callable[[Zone], bool]
+
+
+SWITCH_TYPES: tuple[HydrawiseSwitchEntityDescription, ...] = (
+    HydrawiseSwitchEntityDescription(
+        key="auto_watering",
+        translation_key="auto_watering",
+        device_class=SwitchDeviceClass.SWITCH,
+        value_fn=lambda zone: zone.status.suspended_until is None,
+        turn_on_fn=lambda api, zone: api.resume_zone(zone),
+        turn_off_fn=lambda api, zone: api.suspend_zone(
+            zone, dt_util.now() + timedelta(days=365)
+        ),
+    ),
+    HydrawiseSwitchEntityDescription(
+        key="manual_watering",
+        translation_key="manual_watering",
+        device_class=SwitchDeviceClass.SWITCH,
+        value_fn=lambda zone: zone.scheduled_runs.current_run is not None,
+        turn_on_fn=lambda api, zone: api.start_zone(
+            zone,
+            custom_run_duration=int(DEFAULT_WATERING_TIME.total_seconds()),
+        ),
+        turn_off_fn=lambda api, zone: api.stop_zone(zone),
+    ),
 )
 
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=SWITCHES): vol.All(
-            cv.ensure_list, [vol.In(SWITCHES)]
-        ),
-        vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME): vol.All(
-            vol.In(ALLOWED_WATERING_TIME)
-        ),
-    }
-)
+SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a sensor for a Hydrawise device."""
-    hydrawise = hass.data[DATA_HYDRAWISE].data
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: HydrawiseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Hydrawise switch platform."""
+    coordinators = config_entry.runtime_data
+    async_add_entities(
+        HydrawiseSwitch(coordinators.main, description, controller, zone_id=zone.id)
+        for controller in coordinators.main.data.controllers.values()
+        for zone in controller.zones
+        for description in SWITCH_TYPES
+    )
 
-    default_watering_timer = config.get(CONF_WATERING_TIME)
 
-    sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        # Create a switch for each zone
-        for zone in hydrawise.relays:
-            sensors.append(HydrawiseSwitch(default_watering_timer, zone, sensor_type))
-
-    add_entities(sensors, True)
-
-
-class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
+class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     """A switch implementation for Hydrawise device."""
 
-    def __init__(self, default_watering_timer, *args):
-        """Initialize a switch for Hydrawise device."""
-        super().__init__(*args)
-        self._default_watering_timer = default_watering_timer
+    entity_description: HydrawiseSwitchEntityDescription
+    zone: Zone
 
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        if self._sensor_type == "manual_watering":
-            self.hass.data[DATA_HYDRAWISE].data.run_zone(
-                self._default_watering_timer, (self.data["relay"] - 1)
-            )
-        elif self._sensor_type == "auto_watering":
-            self.hass.data[DATA_HYDRAWISE].data.suspend_zone(
-                0, (self.data["relay"] - 1)
-            )
+        await self.entity_description.turn_on_fn(self.coordinator.api, self.zone)
+        self._attr_is_on = True
+        self.async_write_ha_state()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self._sensor_type == "manual_watering":
-            self.hass.data[DATA_HYDRAWISE].data.run_zone(0, (self.data["relay"] - 1))
-        elif self._sensor_type == "auto_watering":
-            self.hass.data[DATA_HYDRAWISE].data.suspend_zone(
-                365, (self.data["relay"] - 1)
-            )
+        await self.entity_description.turn_off_fn(self.coordinator.api, self.zone)
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
-    def update(self):
-        """Update device state."""
-        mydata = self.hass.data[DATA_HYDRAWISE].data
-        _LOGGER.debug("Updating Hydrawise switch: %s", self._name)
-        if self._sensor_type == "manual_watering":
-            if not mydata.running:
-                self._state = False
-            else:
-                self._state = int(mydata.running[0]["relay"]) == self.data["relay"]
-        elif self._sensor_type == "auto_watering":
-            for relay in mydata.relays:
-                if relay["relay"] == self.data["relay"]:
-                    if relay.get("suspended") is not None:
-                        self._state = False
-                    else:
-                        self._state = True
-                    break
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return DEVICE_MAP[self._sensor_type][DEVICE_MAP_INDEX.index("ICON_INDEX")]
+    def _update_attrs(self) -> None:
+        """Update state attributes."""
+        self._attr_is_on = self.entity_description.value_fn(self.zone)

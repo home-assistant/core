@@ -1,0 +1,229 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "type": "Connection type"
+        },
+        "title": "Select connection type"
+      },
+      "setup_network": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "dsmr_version": "Select DSMR version"
+        },
+        "title": "Select connection address"
+      },
+      "setup_serial": {
+        "data": {
+          "port": "Select device",
+          "dsmr_version": "[%key:component::dsmr::config::step::setup_network::data::dsmr_version%]"
+        },
+        "title": "[%key:common::config_flow::data::device%]"
+      },
+      "setup_serial_manual_path": {
+        "data": {
+          "port": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "title": "[%key:common::config_flow::data::path%]"
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_communicate": "Failed to communicate"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_communicate": "[%key:component::dsmr::config::error::cannot_communicate%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_electricity_delivery": {
+        "name": "Power production"
+      },
+      "current_electricity_usage": {
+        "name": "Power consumption"
+      },
+      "electricity_active_tariff": {
+        "name": "Active tariff",
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
+      "electricity_delivered_tariff_1": {
+        "name": "Energy production (tarif 1)"
+      },
+      "electricity_delivered_tariff_2": {
+        "name": "Energy production (tarif 2)"
+      },
+      "electricity_delivered_tariff_3": {
+        "name": "Energy production (tarif 3)"
+      },
+      "electricity_delivered_tariff_4": {
+        "name": "Energy production (tarif 4)"
+      },
+      "electricity_exported_total": {
+        "name": "Energy production (total)"
+      },
+      "electricity_imported_total": {
+        "name": "Energy consumption (total)"
+      },
+      "electricity_used_tariff_1": {
+        "name": "Energy consumption (tarif 1)"
+      },
+      "electricity_used_tariff_2": {
+        "name": "Energy consumption (tarif 2)"
+      },
+      "electricity_used_tariff_3": {
+        "name": "Energy consumption (tarif 3)"
+      },
+      "electricity_used_tariff_4": {
+        "name": "Energy consumption (tarif 4)"
+      },
+      "gas_meter_reading": {
+        "name": "Gas consumption"
+      },
+      "current_average_demand": {
+        "name": "Current average demand"
+      },
+      "maximum_demand_current_month": {
+        "name": "Maximum demand current month"
+      },
+      "instantaneous_active_power_l1_negative": {
+        "name": "Power production phase L1"
+      },
+      "instantaneous_active_power_l1_positive": {
+        "name": "Power consumption phase L1"
+      },
+      "instantaneous_active_power_l2_negative": {
+        "name": "Power production phase L2"
+      },
+      "instantaneous_active_power_l2_positive": {
+        "name": "Power consumption phase L2"
+      },
+      "instantaneous_active_power_l3_negative": {
+        "name": "Power production phase L3"
+      },
+      "instantaneous_active_power_l3_positive": {
+        "name": "Power consumption phase L3"
+      },
+      "instantaneous_current_l1": {
+        "name": "Current phase L1"
+      },
+      "instantaneous_current_l2": {
+        "name": "Current phase L2"
+      },
+      "instantaneous_current_l3": {
+        "name": "Current phase L3"
+      },
+      "instantaneous_voltage_l1": {
+        "name": "Voltage phase L1"
+      },
+      "instantaneous_voltage_l2": {
+        "name": "Voltage phase L2"
+      },
+      "instantaneous_voltage_l3": {
+        "name": "Voltage phase L3"
+      },
+      "long_power_failure_count": {
+        "name": "Long power failure count"
+      },
+      "max_current_per_phase": {
+        "name": "Max current per phase"
+      },
+      "max_power_per_phase": {
+        "name": "Max power per phase"
+      },
+      "short_power_failure_count": {
+        "name": "Short power failure count"
+      },
+      "voltage_sag_l1_count": {
+        "name": "Voltage sags phase L1"
+      },
+      "voltage_sag_l2_count": {
+        "name": "Voltage sags phase L2"
+      },
+      "voltage_sag_l3_count": {
+        "name": "Voltage sags phase L3"
+      },
+      "voltage_swell_l1_count": {
+        "name": "Voltage swells phase L1"
+      },
+      "voltage_swell_l2_count": {
+        "name": "Voltage swells phase L2"
+      },
+      "voltage_swell_l3_count": {
+        "name": "Voltage swells phase L3"
+      },
+      "water_meter_reading": {
+        "name": "Water consumption"
+      },
+      "actual_threshold_electricity": {
+        "name": "Actual threshold electricity"
+      },
+      "electricity_reactive_imported_total": {
+        "name": "Imported reactive electricity (total)"
+      },
+      "electricity_reactive_exported_total": {
+        "name": "Exported reactive electricity (total)"
+      },
+      "electricity_reactive_total_q1": {
+        "name": "Reactive electricity (Q1)"
+      },
+      "electricity_reactive_total_q2": {
+        "name": "Reactive electricity (Q2)"
+      },
+      "electricity_reactive_total_q3": {
+        "name": "Reactive electricity (Q3)"
+      },
+      "electricity_reactive_total_q4": {
+        "name": "Reactive electricity (Q4)"
+      },
+      "electricity_combined": {
+        "name": "Energy combined"
+      },
+      "instantaneous_power_factor_total": {
+        "name": "Instantaneous power factor (total)"
+      },
+      "instantaneous_power_factor_l1": {
+        "name": "Instantaneous power factor L1"
+      },
+      "instantaneous_power_factor_l2": {
+        "name": "Instantaneous power factor L2"
+      },
+      "instantaneous_power_factor_l3": {
+        "name": "Instantaneous power factor L3"
+      },
+      "frequency": {
+        "name": "Frequency"
+      },
+      "fuse_threshold_l1": {
+        "name": "Fuse threshold on L1"
+      },
+      "fuse_threshold_l2": {
+        "name": "Fuse threshold on L2"
+      },
+      "fuse_threshold_l3": {
+        "name": "Fuse threshold on L3"
+      },
+      "text_message": {
+        "name": "Text message"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "time_between_update": "Minimum time between entity updates [s]"
+        },
+        "title": "DSMR Options"
+      }
+    }
+  }
+}

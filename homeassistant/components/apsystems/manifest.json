@@ -1,0 +1,11 @@
+{
+  "domain": "apsystems",
+  "name": "APsystems",
+  "codeowners": ["@mawoka-myblock", "@SonnenladenGmbH"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/apsystems",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["APsystemsEZ1"],
+  "requirements": ["apsystems-ez1==2.6.0"]
+}

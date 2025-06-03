@@ -1,153 +1,180 @@
 """Platform for the Daikin AC."""
+
+from __future__ import annotations
+
 import asyncio
-from datetime import timedelta
 import logging
 
 from aiohttp import ClientConnectionError
-from async_timeout import timeout
-from pydaikin.appliance import Appliance
-import voluptuous as vol
+from pydaikin.daikin_base import Appliance
+from pydaikin.factory import DaikinFactory
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_HOSTS
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_UUID,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import Throttle
+from homeassistant.util.ssl import client_context_no_verify
 
-from . import config_flow  # noqa: F401
+from .const import KEY_MAC, TIMEOUT
+from .coordinator import DaikinConfigEntry, DaikinCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "daikin"
 
-PARALLEL_UPDATES = 0
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
-COMPONENT_TYPES = ["climate", "sensor", "switch"]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Optional(CONF_HOSTS, default=[]): vol.All(cv.ensure_list, [cv.string])}
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 
-async def async_setup(hass, config):
-    """Establish connection with Daikin."""
-    if DOMAIN not in config:
-        return True
-
-    hosts = config[DOMAIN].get(CONF_HOSTS)
-    if not hosts:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}
-            )
-        )
-    for host in hosts:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: host}
-            )
-        )
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bool:
     """Establish connection with Daikin."""
     conf = entry.data
-    daikin_api = await daikin_api_setup(hass, conf[CONF_HOST])
-    if not daikin_api:
-        return False
-    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
-    for component in COMPONENT_TYPES:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
-    return True
+    # For backwards compat, set unique ID
+    if entry.unique_id is None or ".local" in entry.unique_id:
+        hass.config_entries.async_update_entry(entry, unique_id=conf[KEY_MAC])
 
-
-async def async_unload_entry(hass, config_entry):
-    """Unload a config entry."""
-    await asyncio.wait(
-        [
-            hass.config_entries.async_forward_entry_unload(config_entry, component)
-            for component in COMPONENT_TYPES
-        ]
-    )
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-    return True
-
-
-async def daikin_api_setup(hass, host):
-    """Create a Daikin instance only once."""
-
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
+    host = conf[CONF_HOST]
     try:
-        with timeout(10):
-            device = Appliance(host, session)
-            await device.init()
-    except asyncio.TimeoutError:
-        _LOGGER.debug("Connection to %s timed out", host)
-        raise ConfigEntryNotReady
-    except ClientConnectionError:
+        async with asyncio.timeout(TIMEOUT):
+            device: Appliance = await DaikinFactory(
+                host,
+                session,
+                key=entry.data.get(CONF_API_KEY),
+                uuid=entry.data.get(CONF_UUID),
+                password=entry.data.get(CONF_PASSWORD),
+                ssl_context=client_context_no_verify(),
+            )
+        _LOGGER.debug("Connection to %s successful", host)
+    except TimeoutError as err:
+        _LOGGER.debug("Connection to %s timed out in 60 seconds", host)
+        raise ConfigEntryNotReady from err
+    except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
-        raise ConfigEntryNotReady
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unexpected error creating device %s", host)
+        raise ConfigEntryNotReady from err
+
+    coordinator = DaikinCoordinator(hass, entry, device)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    await async_migrate_unique_id(hass, entry, device)
+
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_unique_id(
+    hass: HomeAssistant, config_entry: DaikinConfigEntry, device: Appliance
+) -> None:
+    """Migrate old entry."""
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    old_unique_id = config_entry.unique_id
+    new_unique_id = device.mac
+    new_mac = dr.format_mac(new_unique_id)
+    new_name = device.values.get("name", "Daikin AC")
+
+    @callback
+    def _update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        return update_unique_id(entity_entry, new_unique_id)
+
+    if new_unique_id == old_unique_id:
+        return
+
+    duplicate = dev_reg.async_get_device(
+        connections={(CONNECTION_NETWORK_MAC, new_mac)}, identifiers=None
+    )
+
+    # Remove duplicated device
+    if duplicate is not None:
+        if config_entry.entry_id in duplicate.config_entries:
+            _LOGGER.debug(
+                "Removing duplicated device %s",
+                duplicate.name,
+            )
+
+            # The automatic cleanup in entity registry is scheduled as a task, remove
+            # the entities manually to avoid unique_id collision when the entities
+            # are migrated.
+            duplicate_entities = er.async_entries_for_device(
+                ent_reg, duplicate.id, True
+            )
+            for entity in duplicate_entities:
+                if entity.config_entry_id == config_entry.entry_id:
+                    ent_reg.async_remove(entity.entity_id)
+
+            dev_reg.async_update_device(
+                duplicate.id, remove_config_entry_id=config_entry.entry_id
+            )
+
+    # Migrate devices
+    for device_entry in dr.async_entries_for_config_entry(
+        dev_reg, config_entry.entry_id
+    ):
+        for connection in device_entry.connections:
+            if connection[1] == old_unique_id:
+                new_connections = {(CONNECTION_NETWORK_MAC, new_mac)}
+
+                _LOGGER.debug(
+                    "Migrating device %s connections to %s",
+                    device_entry.name,
+                    new_connections,
+                )
+                dev_reg.async_update_device(
+                    device_entry.id,
+                    merge_connections=new_connections,
+                )
+
+        if device_entry.name is None:
+            _LOGGER.debug(
+                "Migrating device name to %s",
+                new_name,
+            )
+            dev_reg.async_update_device(
+                device_entry.id,
+                name=new_name,
+            )
+
+        # Migrate entities
+        await er.async_migrate_entries(hass, config_entry.entry_id, _update_unique_id)
+
+        new_data = {**config_entry.data, KEY_MAC: dr.format_mac(new_unique_id)}
+
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=new_unique_id, data=new_data
+        )
+
+
+@callback
+def update_unique_id(
+    entity_entry: er.RegistryEntry, unique_id: str
+) -> dict[str, str] | None:
+    """Update unique ID of entity entry."""
+    if entity_entry.unique_id.startswith(unique_id):
+        # Already correct, nothing to do
         return None
 
-    api = DaikinApi(device)
+    unique_id_parts = entity_entry.unique_id.split("-")
+    unique_id_parts[0] = unique_id
+    entity_new_unique_id = "-".join(unique_id_parts)
 
-    return api
-
-
-class DaikinApi:
-    """Keep the Daikin instance in one place and centralize the update."""
-
-    def __init__(self, device):
-        """Initialize the Daikin Handle."""
-        self.device = device
-        self.name = device.values["name"]
-        self.ip_address = device.ip
-        self._available = True
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self, **kwargs):
-        """Pull the latest data from Daikin."""
-        try:
-            await self.device.update_status()
-            self._available = True
-        except ClientConnectionError:
-            _LOGGER.warning("Connection failed for %s", self.ip_address)
-            self._available = False
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def mac(self):
-        """Return mac-address of device."""
-        return self.device.values.get(CONNECTION_NETWORK_MAC)
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        info = self.device.values
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
-            "identifieres": self.mac,
-            "manufacturer": "Daikin",
-            "model": info.get("model"),
-            "name": info.get("name"),
-            "sw_version": info.get("ver").replace("_", "."),
-        }
+    _LOGGER.debug(
+        "Migrating entity %s from %s to new id %s",
+        entity_entry.entity_id,
+        entity_entry.unique_id,
+        entity_new_unique_id,
+    )
+    return {"new_unique_id": entity_new_unique_id}

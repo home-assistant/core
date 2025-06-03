@@ -1,37 +1,43 @@
 add_url:
-  description: Add a new filter subscription to AdGuard Home.
   fields:
     name:
-      description: The name of the filter subscription.
+      required: true
       example: Example
+      selector:
+        text:
     url:
-      description: The filter URL to subscribe to, containing the filter rules.
+      required: true
       example: https://www.example.com/filter/1.txt
+      selector:
+        text:
 
 remove_url:
-  description: Removes a filter subscription from AdGuard Home.
   fields:
     url:
-      description: The filter subscription URL to remove.
+      required: true
       example: https://www.example.com/filter/1.txt
+      selector:
+        text:
 
 enable_url:
-  description: Enables a filter subscription in AdGuard Home.
   fields:
     url:
-      description: The filter subscription URL to enable.
+      required: true
       example: https://www.example.com/filter/1.txt
+      selector:
+        text:
 
 disable_url:
-  description: Disables a filter subscription in AdGuard Home.
   fields:
     url:
-      description: The filter subscription URL to disable.
+      required: true
       example: https://www.example.com/filter/1.txt
+      selector:
+        text:
 
 refresh:
-  description: Refresh all filter subscriptions in AdGuard Home.
   fields:
     force:
-      description: Force update (by passes AdGuard Home throttling).
-      example: '"true" to force, "false" or omit for a regular refresh.'
+      default: false
+      selector:
+        boolean:

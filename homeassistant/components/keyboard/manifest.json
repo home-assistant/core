@@ -1,8 +1,10 @@
 {
   "domain": "keyboard",
   "name": "Keyboard",
+  "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/keyboard",
-  "requirements": ["pyuserinput==0.1.11"],
-  "dependencies": [],
-  "codeowners": []
+  "iot_class": "local_push",
+  "loggers": ["pykeyboard"],
+  "quality_scale": "legacy",
+  "requirements": ["pyuserinput==0.1.11"]
 }

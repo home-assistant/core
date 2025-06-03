@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "event": {
+      "touch": {
+        "default": "mdi:gesture"
+      }
+    },
+    "light": {
+      "light": {
+        "default": "mdi:triangle-outline"
+      }
+    }
+  }
+}

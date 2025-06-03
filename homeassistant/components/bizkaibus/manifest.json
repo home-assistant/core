@@ -1,8 +1,10 @@
 {
   "domain": "bizkaibus",
   "name": "Bizkaibus",
-  "documentation": "https://www.home-assistant.io/integrations/bizkaibus",
-  "dependencies": [],
   "codeowners": ["@UgaitzEtxebarria"],
+  "documentation": "https://www.home-assistant.io/integrations/bizkaibus",
+  "iot_class": "cloud_polling",
+  "loggers": ["bizkaibus"],
+  "quality_scale": "legacy",
   "requirements": ["bizkaibus==0.1.1"]
 }

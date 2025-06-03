@@ -1,0 +1,32 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "Could not connect to controller with URL {base_url}"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "vera_controller_url": "Controller URL",
+          "lights": "Vera switch device IDs to treat as lights in Home Assistant.",
+          "exclude": "Vera device IDs to exclude from Home Assistant."
+        },
+        "data_description": {
+          "vera_controller_url": "It should look like this: http://192.168.1.161:3480"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Vera controller options",
+        "description": "See the Vera documentation for details on optional parameters: https://www.home-assistant.io/integrations/vera/. Note: Any changes here require a restart of the Home Assistant server. To clear values, provide a space.",
+        "data": {
+          "lights": "[%key:component::vera::config::step::user::data::lights%]",
+          "exclude": "[%key:component::vera::config::step::user::data::exclude%]"
+        }
+      }
+    }
+  }
+}

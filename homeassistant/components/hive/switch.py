@@ -1,65 +1,89 @@
 """Support for the Hive switches."""
-from homeassistant.components.switch import SwitchDevice
 
-from . import DATA_HIVE, DOMAIN, HiveEntity, refresh_system
+from __future__ import annotations
+
+from datetime import timedelta
+from typing import Any
+
+from apyhiveapi import Hive
+
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import HiveConfigEntry, refresh_system
+from .const import ATTR_MODE
+from .entity import HiveEntity
+
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Hive switches."""
-    if discovery_info is None:
+SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
+        key="activeplug",
+    ),
+    SwitchEntityDescription(
+        key="Heating_Heat_On_Demand",
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: HiveConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Hive thermostat based on a config entry."""
+
+    hive = entry.runtime_data
+    devices = hive.session.deviceList.get("switch")
+    if not devices:
         return
+    async_add_entities(
+        (
+            HiveSwitch(hive, dev, description)
+            for dev in devices
+            for description in SWITCH_TYPES
+            if dev["hiveType"] == description.key
+        ),
+        True,
+    )
 
-    session = hass.data.get(DATA_HIVE)
-    devs = []
-    for dev in discovery_info:
-        devs.append(HiveDevicePlug(session, dev))
-    add_entities(devs)
 
-
-class HiveDevicePlug(HiveEntity, SwitchDevice):
+class HiveSwitch(HiveEntity, SwitchEntity):
     """Hive Active Plug."""
 
-    @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
-
-    @property
-    def name(self):
-        """Return the name of this Switch device if any."""
-        return self.node_name
-
-    @property
-    def device_state_attributes(self):
-        """Show Device Attributes."""
-        return self.attributes
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return self.session.switch.get_power_usage(self.node_id)
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self.session.switch.get_state(self.node_id)
+    def __init__(
+        self,
+        hive: Hive,
+        hive_device: dict[str, Any],
+        entity_description: SwitchEntityDescription,
+    ) -> None:
+        """Initialise hive switch."""
+        super().__init__(hive, hive_device)
+        self.entity_description = entity_description
 
     @refresh_system
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self.session.switch.turn_on(self.node_id)
+        await self.hive.switch.turnOn(self.device)
 
     @refresh_system
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.session.switch.turn_off(self.node_id)
+        await self.hive.switch.turnOff(self.device)
 
-    def update(self):
+    async def async_update(self) -> None:
         """Update all Node data from Hive."""
-        self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(self.node_id)
+        await self.hive.session.updateData(self.device)
+        self.device = await self.hive.switch.getSwitch(self.device)
+        self.attributes.update(self.device.get("attributes", {}))
+        self._attr_extra_state_attributes = {
+            ATTR_MODE: self.attributes.get(ATTR_MODE),
+        }
+        self._attr_available = self.device["deviceData"].get("online")
+        if self._attr_available:
+            self._attr_is_on = self.device["status"]["state"]

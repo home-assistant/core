@@ -1,134 +1,198 @@
 """Support for Verisure locks."""
-import logging
-from time import sleep, time
 
-from homeassistant.components.lock import LockDevice
-from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
+from __future__ import annotations
 
-from . import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, HUB as hub
+import asyncio
+from typing import Any
 
-_LOGGER = logging.getLogger(__name__)
+from verisure import Error as VerisureError
+
+from homeassistant.components.lock import LockEntity, LockState
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_CODE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
+)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import (
+    CONF_GIID,
+    CONF_LOCK_CODE_DIGITS,
+    DEFAULT_LOCK_CODE_DIGITS,
+    DOMAIN,
+    LOGGER,
+    SERVICE_DISABLE_AUTOLOCK,
+    SERVICE_ENABLE_AUTOLOCK,
+)
+from .coordinator import VerisureDataUpdateCoordinator
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Verisure lock platform."""
-    locks = []
-    if int(hub.config.get(CONF_LOCKS, 1)):
-        hub.update_overview()
-        locks.extend(
-            [
-                VerisureDoorlock(device_label)
-                for device_label in hub.get("$.doorLockStatusList[*].deviceLabel")
-            ]
-        )
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Verisure alarm control panel from a config entry."""
+    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    add_entities(locks)
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_DISABLE_AUTOLOCK,
+        None,
+        VerisureDoorlock.disable_autolock.__name__,
+    )
+    platform.async_register_entity_service(
+        SERVICE_ENABLE_AUTOLOCK,
+        None,
+        VerisureDoorlock.enable_autolock.__name__,
+    )
+
+    async_add_entities(
+        VerisureDoorlock(coordinator, serial_number)
+        for serial_number in coordinator.data["locks"]
+    )
 
 
-class VerisureDoorlock(LockDevice):
+class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEntity):
     """Representation of a Verisure doorlock."""
 
-    def __init__(self, device_label):
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(
+        self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
+    ) -> None:
         """Initialize the Verisure lock."""
-        self._device_label = device_label
-        self._state = None
-        self._digits = hub.config.get(CONF_CODE_DIGITS)
-        self._changed_by = None
-        self._change_timestamp = 0
-        self._default_lock_code = hub.config.get(CONF_DEFAULT_LOCK_CODE)
+        super().__init__(coordinator)
+        self._attr_unique_id = serial_number
+
+        self.serial_number = serial_number
+        self._state: str | None = None
 
     @property
-    def name(self):
-        """Return the name of the lock."""
-        return hub.get_first(
-            "$.doorLockStatusList[?(@.deviceLabel=='%s')].area", self._device_label
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this entity."""
+        area = self.coordinator.data["locks"][self.serial_number]["device"]["area"]
+        return DeviceInfo(
+            name=area,
+            manufacturer="Verisure",
+            model="Lockguard Smartlock",
+            identifiers={(DOMAIN, self.serial_number)},
+            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
+            configuration_url="https://mypages.verisure.com",
         )
 
     @property
-    def state(self):
-        """Return the state of the lock."""
-        return self._state
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            hub.get_first(
-                "$.doorLockStatusList[?(@.deviceLabel=='%s')]", self._device_label
-            )
-            is not None
+            super().available and self.serial_number in self.coordinator.data["locks"]
         )
 
     @property
-    def changed_by(self):
+    def changed_by(self) -> str | None:
         """Last change triggered by."""
-        return self._changed_by
-
-    @property
-    def code_format(self):
-        """Return the required six digit code."""
-        return "^\\d{%s}$" % self._digits
-
-    def update(self):
-        """Update lock status."""
-        if time() - self._change_timestamp < 10:
-            return
-        hub.update_overview()
-        status = hub.get_first(
-            "$.doorLockStatusList[?(@.deviceLabel=='%s')].lockedState",
-            self._device_label,
-        )
-        if status == "UNLOCKED":
-            self._state = STATE_UNLOCKED
-        elif status == "LOCKED":
-            self._state = STATE_LOCKED
-        elif status != "PENDING":
-            _LOGGER.error("Unknown lock state %s", status)
-        self._changed_by = hub.get_first(
-            "$.doorLockStatusList[?(@.deviceLabel=='%s')].userString",
-            self._device_label,
+        return (
+            self.coordinator.data["locks"][self.serial_number]
+            .get("user", {})
+            .get("name")
         )
 
     @property
-    def is_locked(self):
+    def changed_method(self) -> str:
+        """Last change method."""
+        return self.coordinator.data["locks"][self.serial_number]["lockMethod"]
+
+    @property
+    def code_format(self) -> str:
+        """Return the configured code format."""
+        digits = self.coordinator.config_entry.options.get(
+            CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
+        )
+        return f"^\\d{{{digits}}}$"
+
+    @property
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
-        return self._state == STATE_LOCKED
+        return (
+            self.coordinator.data["locks"][self.serial_number]["lockStatus"] == "LOCKED"
+        )
 
-    def unlock(self, **kwargs):
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Return the state attributes."""
+        return {"method": self.changed_method}
+
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""
-        if self._state is None:
-            return
+        code = kwargs.get(ATTR_CODE)
+        if code:
+            await self.async_set_lock_state(code, LockState.UNLOCKED)
 
-        code = kwargs.get(ATTR_CODE, self._default_lock_code)
-        if code is None:
-            _LOGGER.error("Code required but none provided")
-            return
-
-        self.set_lock_state(code, STATE_UNLOCKED)
-
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Send lock command."""
-        if self._state == STATE_LOCKED:
-            return
+        code = kwargs.get(ATTR_CODE)
+        if code:
+            await self.async_set_lock_state(code, LockState.LOCKED)
 
-        code = kwargs.get(ATTR_CODE, self._default_lock_code)
-        if code is None:
-            _LOGGER.error("Code required but none provided")
-            return
-
-        self.set_lock_state(code, STATE_LOCKED)
-
-    def set_lock_state(self, code, state):
+    async def async_set_lock_state(self, code: str, state: LockState) -> None:
         """Send set lock state command."""
-        lock_state = "lock" if state == STATE_LOCKED else "unlock"
-        transaction_id = hub.session.set_lock_state(
-            code, self._device_label, lock_state
-        )["doorLockStateChangeTransactionId"]
-        _LOGGER.debug("Verisure doorlock %s", state)
-        transaction = {}
-        while "result" not in transaction:
-            sleep(0.5)
-            transaction = hub.session.get_lock_state_transaction(transaction_id)
-        if transaction["result"] == "OK":
+        command = (
+            self.coordinator.verisure.door_lock(self.serial_number, code)
+            if state == LockState.LOCKED
+            else self.coordinator.verisure.door_unlock(self.serial_number, code)
+        )
+        lock_request = await self.hass.async_add_executor_job(
+            self.coordinator.verisure.request,
+            command,
+        )
+        LOGGER.debug("Verisure doorlock %s", state)
+        transaction_id = lock_request.get("data", {}).get(command["operationName"])
+        target_state = "LOCKED" if state == LockState.LOCKED else "UNLOCKED"
+        lock_status = None
+        attempts = 0
+        while lock_status != "OK":
+            if attempts == 30:
+                break
+            if attempts > 1:
+                await asyncio.sleep(0.5)
+            attempts += 1
+            poll_data = await self.hass.async_add_executor_job(
+                self.coordinator.verisure.request,
+                self.coordinator.verisure.poll_lock_state(
+                    transaction_id, self.serial_number, target_state
+                ),
+            )
+            lock_status = (
+                poll_data.get("data", {})
+                .get("installation", {})
+                .get("doorLockStateChangePollResult", {})
+                .get("result")
+            )
+        if lock_status == "OK":
             self._state = state
-            self._change_timestamp = time()
+
+    def disable_autolock(self) -> None:
+        """Disable autolock on a doorlock."""
+        try:
+            command = self.coordinator.verisure.set_autolock_enabled(
+                self.serial_number, auto_lock_enabled=False
+            )
+            self.coordinator.verisure.request(command)
+            LOGGER.debug("Disabling autolock on %s", self.serial_number)
+        except VerisureError as ex:
+            LOGGER.error("Could not disable autolock, %s", ex)
+
+    def enable_autolock(self) -> None:
+        """Enable autolock on a doorlock."""
+        try:
+            command = self.coordinator.verisure.set_autolock_enabled(
+                self.serial_number, auto_lock_enabled=True
+            )
+            self.coordinator.verisure.request(command)
+            LOGGER.debug("Enabling autolock on %s", self.serial_number)
+        except VerisureError as ex:
+            LOGGER.error("Could not enable autolock, %s", ex)

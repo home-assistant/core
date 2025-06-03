@@ -1,74 +1,129 @@
 """Update the IP addresses of your Cloudflare DNS records."""
+
+from __future__ import annotations
+
+import asyncio
 from datetime import timedelta
 import logging
+import socket
 
-from pycfdns import CloudflareUpdater
-import voluptuous as vol
+import pycfdns
 
-from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_ZONE
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.location import async_detect_location_info
+from homeassistant.util.network import is_ipv4_address
+
+from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_RECORDS = "records"
 
-DOMAIN = "cloudflare"
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Cloudflare from a config entry."""
+    session = async_get_clientsession(hass)
+    client = pycfdns.Client(
+        api_token=entry.data[CONF_API_TOKEN],
+        client_session=session,
+    )
 
-INTERVAL = timedelta(minutes=60)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_EMAIL): cv.string,
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_ZONE): cv.string,
-                vol.Required(CONF_RECORDS): vol.All(cv.ensure_list, [cv.string]),
-            }
+    try:
+        dns_zones = await client.list_zones()
+        dns_zone = next(
+            zone for zone in dns_zones if zone["name"] == entry.data[CONF_ZONE]
         )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+    except pycfdns.AuthenticationException as error:
+        raise ConfigEntryAuthFailed from error
+    except pycfdns.ComunicationException as error:
+        raise ConfigEntryNotReady from error
 
-
-def setup(hass, config):
-    """Set up the Cloudflare component."""
-
-    cfupdate = CloudflareUpdater()
-    email = config[DOMAIN][CONF_EMAIL]
-    key = config[DOMAIN][CONF_API_KEY]
-    zone = config[DOMAIN][CONF_ZONE]
-    records = config[DOMAIN][CONF_RECORDS]
-
-    def update_records_interval(now):
+    async def update_records(now):
         """Set up recurring update."""
-        _update_cloudflare(cfupdate, email, key, zone, records)
+        try:
+            await _async_update_cloudflare(
+                hass, client, dns_zone, entry.data[CONF_RECORDS]
+            )
+        except (
+            pycfdns.AuthenticationException,
+            pycfdns.ComunicationException,
+        ) as error:
+            _LOGGER.error("Error updating zone %s: %s", entry.data[CONF_ZONE], error)
 
-    def update_records_service(now):
+    async def update_records_service(call: ServiceCall) -> None:
         """Set up service for manual trigger."""
-        _update_cloudflare(cfupdate, email, key, zone, records)
+        try:
+            await _async_update_cloudflare(
+                hass, client, dns_zone, entry.data[CONF_RECORDS]
+            )
+        except (
+            pycfdns.AuthenticationException,
+            pycfdns.ComunicationException,
+        ) as error:
+            _LOGGER.error("Error updating zone %s: %s", entry.data[CONF_ZONE], error)
 
-    track_time_interval(hass, update_records_interval, INTERVAL)
-    hass.services.register(DOMAIN, "update_records", update_records_service)
+    update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
+    entry.async_on_unload(
+        async_track_time_interval(hass, update_records, update_interval)
+    )
+
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE_RECORDS, update_records_service)
+
     return True
 
 
-def _update_cloudflare(cfupdate, email, key, zone, records):
-    """Update DNS records for a given zone."""
-    _LOGGER.debug("Starting update for zone %s", zone)
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Cloudflare config entry."""
 
-    headers = cfupdate.set_header(email, key)
-    _LOGGER.debug("Header data defined as: %s", headers)
+    return True
 
-    zoneid = cfupdate.get_zoneID(headers, zone)
-    _LOGGER.debug("Zone ID is set to: %s", zoneid)
 
-    update_records = cfupdate.get_recordInfo(headers, zoneid, zone, records)
-    _LOGGER.debug("Records: %s", update_records)
+async def _async_update_cloudflare(
+    hass: HomeAssistant,
+    client: pycfdns.Client,
+    dns_zone: pycfdns.ZoneModel,
+    target_records: list[str],
+) -> None:
+    _LOGGER.debug("Starting update for zone %s", dns_zone["name"])
 
-    result = cfupdate.update_records(headers, zoneid, update_records)
-    _LOGGER.debug("Update for zone %s is complete", zone)
+    records = await client.list_dns_records(zone_id=dns_zone["id"], type="A")
+    _LOGGER.debug("Records: %s", records)
 
-    if result is not True:
-        _LOGGER.warning(result)
+    session = async_get_clientsession(hass, family=socket.AF_INET)
+    location_info = await async_detect_location_info(session)
+
+    if not location_info or not is_ipv4_address(location_info.ip):
+        raise HomeAssistantError("Could not get external IPv4 address")
+
+    filtered_records = [
+        record
+        for record in records
+        if record["name"] in target_records and record["content"] != location_info.ip
+    ]
+
+    if len(filtered_records) == 0:
+        _LOGGER.debug("All target records are up to date")
+        return
+
+    await asyncio.gather(
+        *[
+            client.update_dns_record(
+                zone_id=dns_zone["id"],
+                record_id=record["id"],
+                record_content=location_info.ip,
+                record_name=record["name"],
+                record_type=record["type"],
+                record_proxied=record["proxied"],
+            )
+            for record in filtered_records
+        ]
+    )
+
+    _LOGGER.debug("Update for zone %s is complete", dns_zone["name"])

@@ -1,60 +1,69 @@
 """The tests for the litejet component."""
-import logging
-import unittest
-from unittest import mock
 
-from homeassistant import setup
-from homeassistant.components import litejet
+from homeassistant.components import scene
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import get_test_home_assistant
-from tests.components.scene import common
+from . import async_init_integration
 
-_LOGGER = logging.getLogger(__name__)
-
-ENTITY_SCENE = "scene.mock_scene_1"
+ENTITY_SCENE = "scene.litejet_mock_scene_1"
 ENTITY_SCENE_NUMBER = 1
-ENTITY_OTHER_SCENE = "scene.mock_scene_2"
+ENTITY_OTHER_SCENE = "scene.litejet_mock_scene_2"
 ENTITY_OTHER_SCENE_NUMBER = 2
 
 
-class TestLiteJetScene(unittest.TestCase):
-    """Test the litejet component."""
+async def test_disabled_by_default(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_litejet
+) -> None:
+    """Test the scene is disabled by default."""
+    await async_init_integration(hass)
 
-    @mock.patch("homeassistant.components.litejet.LiteJet")
-    def setup_method(self, method, mock_pylitejet):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.hass.start()
+    state = hass.states.get(ENTITY_SCENE)
+    assert state is None
 
-        def get_scene_name(number):
-            return "Mock Scene #" + str(number)
+    entry = entity_registry.async_get(ENTITY_SCENE)
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
-        self.mock_lj = mock_pylitejet.return_value
-        self.mock_lj.loads.return_value = range(0)
-        self.mock_lj.button_switches.return_value = range(0)
-        self.mock_lj.all_switches.return_value = range(0)
-        self.mock_lj.scenes.return_value = range(1, 3)
-        self.mock_lj.get_scene_name.side_effect = get_scene_name
 
-        assert setup.setup_component(
-            self.hass, litejet.DOMAIN, {"litejet": {"port": "/tmp/this_will_be_mocked"}}
-        )
-        self.hass.block_till_done()
+async def test_activate(hass: HomeAssistant, mock_litejet) -> None:
+    """Test activating the scene."""
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
+    await async_init_integration(hass, use_scene=True)
 
-    def scene(self):
-        """Get the current scene."""
-        return self.hass.states.get(ENTITY_SCENE)
+    state = hass.states.get(ENTITY_SCENE)
+    assert state is not None
 
-    def other_scene(self):
-        """Get the other scene."""
-        return self.hass.states.get(ENTITY_OTHER_SCENE)
+    await hass.services.async_call(
+        scene.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SCENE}, blocking=True
+    )
 
-    def test_activate(self):
-        """Test activating the scene."""
-        common.activate(self.hass, ENTITY_SCENE)
-        self.hass.block_till_done()
-        self.mock_lj.activate_scene.assert_called_once_with(ENTITY_SCENE_NUMBER)
+    mock_litejet.activate_scene.assert_called_once_with(ENTITY_SCENE_NUMBER)
+
+
+async def test_connected_event(hass: HomeAssistant, mock_litejet) -> None:
+    """Test handling an event from LiteJet."""
+
+    await async_init_integration(hass, use_scene=True)
+
+    # Initial state is available.
+    assert hass.states.get(ENTITY_SCENE).state == STATE_UNKNOWN
+
+    # Event indicates it is disconnected now.
+    mock_litejet.connected_changed(False, "test")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_SCENE).state == STATE_UNAVAILABLE
+
+    # Event indicates it is connected now.
+    mock_litejet.connected_changed(True, None)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_SCENE).state == STATE_UNKNOWN

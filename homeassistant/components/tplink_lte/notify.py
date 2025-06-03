@@ -1,21 +1,31 @@
 """Support for TP-Link LTE notifications."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import attr
 import tp_connected
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import CONF_RECIPIENT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_KEY
+from . import DATA_KEY, LTEData
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> TplinkNotifyService | None:
     """Get the notification service."""
     if discovery_info is None:
-        return
+        return None
     return TplinkNotifyService(hass, discovery_info)
 
 
@@ -23,13 +33,14 @@ async def async_get_service(hass, config, discovery_info=None):
 class TplinkNotifyService(BaseNotificationService):
     """Implementation of a notification service."""
 
-    hass = attr.ib()
-    config = attr.ib()
+    hass: HomeAssistant = attr.ib()
+    config: dict[str, Any] = attr.ib()
 
-    async def async_send_message(self, message="", **kwargs):
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
-        modem_data = self.hass.data[DATA_KEY].get_modem_data(self.config)
+        lte_data: LTEData = self.hass.data[DATA_KEY]
+        modem_data = lte_data.get_modem_data(self.config)
         if not modem_data:
             _LOGGER.error("No modem available")
             return

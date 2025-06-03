@@ -1,0 +1,10 @@
+{
+  "domain": "kraken",
+  "name": "Kraken",
+  "codeowners": ["@eifinger"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/kraken",
+  "iot_class": "cloud_polling",
+  "loggers": ["krakenex", "pykrakenapi"],
+  "requirements": ["krakenex==2.2.2", "pykrakenapi==0.1.8"]
+}

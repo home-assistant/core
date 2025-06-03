@@ -1,53 +1,56 @@
 """Support for the LiteJet lighting system."""
+
 import logging
 
-from pylitejet import LiteJet
-import voluptuous as vol
+import pylitejet
 
-from homeassistant.const import CONF_PORT
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+
+from .const import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXCLUDE_NAMES = "exclude_names"
-CONF_INCLUDE_SWITCHES = "include_switches"
 
-DOMAIN = "litejet"
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up LiteJet via a config entry."""
+    port = entry.data[CONF_PORT]
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PORT): cv.string,
-                vol.Optional(CONF_EXCLUDE_NAMES): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional(CONF_INCLUDE_SWITCHES, default=False): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+    try:
+        system = await pylitejet.open(port)
+    except pylitejet.LiteJetError as exc:
+        raise ConfigEntryNotReady from exc
 
+    def handle_connected_changed(connected: bool, reason: str) -> None:
+        if connected:
+            _LOGGER.debug("Connected")
+        else:
+            _LOGGER.warning("Disconnected %s", reason)
 
-def setup(hass, config):
-    """Set up the LiteJet component."""
+    system.on_connected_changed(handle_connected_changed)
 
-    url = config[DOMAIN].get(CONF_PORT)
+    async def handle_stop(event: Event) -> None:
+        await system.close()
 
-    hass.data["litejet_system"] = LiteJet(url)
-    hass.data["litejet_config"] = config[DOMAIN]
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
+    )
 
-    discovery.load_platform(hass, "light", DOMAIN, {}, config)
-    if config[DOMAIN].get(CONF_INCLUDE_SWITCHES):
-        discovery.load_platform(hass, "switch", DOMAIN, {}, config)
-    discovery.load_platform(hass, "scene", DOMAIN, {}, config)
+    hass.data[DOMAIN] = system
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-def is_ignored(hass, name):
-    """Determine if a load, switch, or scene should be ignored."""
-    for prefix in hass.data["litejet_config"].get(CONF_EXCLUDE_NAMES, []):
-        if name.startswith(prefix):
-            return True
-    return False
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a LiteJet config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok:
+        await hass.data[DOMAIN].close()
+        hass.data.pop(DOMAIN)
+
+    return unload_ok

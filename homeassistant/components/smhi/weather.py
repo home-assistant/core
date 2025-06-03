@@ -1,241 +1,190 @@
 """Support for the Swedish weather institute weather service."""
-import asyncio
-from datetime import timedelta
-import logging
-from typing import Dict, List
 
-import aiohttp
-import async_timeout
-from smhi import Smhi
-from smhi.smhi_lib import SmhiForecastException
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, Final
+
+from pysmhi import SMHIForecast
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
+    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRESSURE,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
-    WeatherEntity,
+    ATTR_FORECAST_WIND_BEARING,
+    Forecast,
+    SingleCoordinatorWeatherEntity,
+    WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
-from homeassistant.util import Throttle, slugify
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import sun
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_SMHI_CLOUDINESS, ENTITY_ID_SENSOR_FORMAT
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_SMHI_THUNDER_PROBABILITY, ENTITY_ID_SENSOR_FORMAT
+from .coordinator import SMHIConfigEntry
+from .entity import SmhiWeatherBaseEntity
 
 # Used to map condition from API results
-CONDITION_CLASSES = {
-    "cloudy": [5, 6],
-    "fog": [7],
-    "hail": [],
-    "lightning": [21],
-    "lightning-rainy": [11],
-    "partlycloudy": [3, 4],
-    "pouring": [10, 20],
-    "rainy": [8, 9, 18, 19],
-    "snowy": [15, 16, 17, 25, 26, 27],
-    "snowy-rainy": [12, 13, 14, 22, 23, 24],
-    "sunny": [1, 2],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
+CONDITION_CLASSES: Final[dict[str, list[int]]] = {
+    ATTR_CONDITION_CLOUDY: [5, 6],
+    ATTR_CONDITION_FOG: [7],
+    ATTR_CONDITION_HAIL: [],
+    ATTR_CONDITION_LIGHTNING: [21],
+    ATTR_CONDITION_LIGHTNING_RAINY: [11],
+    ATTR_CONDITION_PARTLYCLOUDY: [3, 4],
+    ATTR_CONDITION_POURING: [10, 20],
+    ATTR_CONDITION_RAINY: [8, 9, 18, 19],
+    ATTR_CONDITION_SNOWY: [15, 16, 17, 25, 26, 27],
+    ATTR_CONDITION_SNOWY_RAINY: [12, 13, 14, 22, 23, 24],
+    ATTR_CONDITION_SUNNY: [1, 2],
+    ATTR_CONDITION_WINDY: [],
+    ATTR_CONDITION_WINDY_VARIANT: [],
+    ATTR_CONDITION_EXCEPTIONAL: [],
 }
-
-# 5 minutes between retrying connect to API again
-RETRY_TIMEOUT = 5 * 60
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=31)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up components.
-
-    Can only be called when a user accidentally mentions smhi in the
-    config. In that case it will be ignored.
-    """
-    pass
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
+}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, config_entries
-) -> bool:
+    hass: HomeAssistant,
+    config_entry: SMHIConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Add a weather entity from map location."""
     location = config_entry.data
-    name = slugify(location[CONF_NAME])
 
-    session = aiohttp_client.async_get_clientsession(hass)
+    coordinator = config_entry.runtime_data
 
     entity = SmhiWeather(
-        location[CONF_NAME],
-        location[CONF_LATITUDE],
-        location[CONF_LONGITUDE],
-        session=session,
+        location[CONF_LOCATION][CONF_LATITUDE],
+        location[CONF_LOCATION][CONF_LONGITUDE],
+        coordinator=coordinator,
     )
-    entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
+    entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(config_entry.title)
 
-    config_entries([entity], True)
-    return True
+    async_add_entities([entity])
 
 
-class SmhiWeather(WeatherEntity):
+class SmhiWeather(SmhiWeatherBaseEntity, SingleCoordinatorWeatherEntity):
     """Representation of a weather entity."""
 
-    def __init__(
-        self,
-        name: str,
-        latitude: str,
-        longitude: str,
-        session: aiohttp.ClientSession = None,
-    ) -> None:
-        """Initialize the SMHI weather entity."""
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_visibility_unit = UnitOfLength.KILOMETERS
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+    )
 
-        self._name = name
-        self._latitude = latitude
-        self._longitude = longitude
-        self._forecasts = None
-        self._fail_count = 0
-        self._smhi_api = Smhi(self._longitude, self._latitude, session=session)
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id."""
-        return f"{self._latitude}, {self._longitude}"
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self) -> None:
-        """Refresh the forecast data from SMHI weather API."""
-
-        def fail():
-            """Postpone updates."""
-            self._fail_count += 1
-            if self._fail_count < 3:
-                self.hass.helpers.event.async_call_later(
-                    RETRY_TIMEOUT, self.retry_update()
-                )
-
-        try:
-            with async_timeout.timeout(10):
-                self._forecasts = await self.get_weather_forecast()
-                self._fail_count = 0
-
-        except (asyncio.TimeoutError, SmhiForecastException):
-            _LOGGER.error("Failed to connect to SMHI API, retry in 5 minutes")
-            fail()
-
-    async def retry_update(self):
-        """Retry refresh weather forecast."""
-        self.async_update()
-
-    async def get_weather_forecast(self) -> []:
-        """Return the current forecasts from SMHI API."""
-        return await self._smhi_api.async_get_forecast()
+    def update_entity_data(self) -> None:
+        """Refresh the entity data."""
+        if daily_data := self.coordinator.data.daily:
+            self._attr_native_temperature = daily_data[0]["temperature"]
+            self._attr_humidity = daily_data[0]["humidity"]
+            self._attr_native_wind_speed = daily_data[0]["wind_speed"]
+            self._attr_wind_bearing = daily_data[0]["wind_direction"]
+            self._attr_native_visibility = daily_data[0]["visibility"]
+            self._attr_native_pressure = daily_data[0]["pressure"]
+            self._attr_native_wind_gust_speed = daily_data[0]["wind_gust"]
+            self._attr_cloud_coverage = daily_data[0]["total_cloud"]
+            self._attr_condition = CONDITION_MAP.get(daily_data[0]["symbol"])
+            if self._attr_condition == ATTR_CONDITION_SUNNY and not sun.is_up(
+                self.coordinator.hass
+            ):
+                self._attr_condition = ATTR_CONDITION_CLEAR_NIGHT
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def temperature(self) -> int:
-        """Return the temperature."""
-        if self._forecasts is not None:
-            return self._forecasts[0].temperature
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional attributes."""
+        if daily_data := self.coordinator.data.daily:
+            return {
+                ATTR_SMHI_THUNDER_PROBABILITY: daily_data[0]["thunder"],
+            }
         return None
 
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.update_entity_data()
+        super()._handle_coordinator_update()
 
-    @property
-    def humidity(self) -> int:
-        """Return the humidity."""
-        if self._forecasts is not None:
-            return self._forecasts[0].humidity
-        return None
-
-    @property
-    def wind_speed(self) -> float:
-        """Return the wind speed."""
-        if self._forecasts is not None:
-            # Convert from m/s to km/h
-            return round(self._forecasts[0].wind_speed * 18 / 5)
-        return None
-
-    @property
-    def wind_bearing(self) -> int:
-        """Return the wind bearing."""
-        if self._forecasts is not None:
-            return self._forecasts[0].wind_direction
-        return None
-
-    @property
-    def visibility(self) -> float:
-        """Return the visibility."""
-        if self._forecasts is not None:
-            return self._forecasts[0].horizontal_visibility
-        return None
-
-    @property
-    def pressure(self) -> int:
-        """Return the pressure."""
-        if self._forecasts is not None:
-            return self._forecasts[0].pressure
-        return None
-
-    @property
-    def cloudiness(self) -> int:
-        """Return the cloudiness."""
-        if self._forecasts is not None:
-            return self._forecasts[0].cloudiness
-        return None
-
-    @property
-    def condition(self) -> str:
-        """Return the weather condition."""
-        if self._forecasts is None:
-            return None
-        return next(
-            (k for k, v in CONDITION_CLASSES.items() if self._forecasts[0].symbol in v),
-            None,
-        )
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return "Swedish weather institute (SMHI)"
-
-    @property
-    def forecast(self) -> List:
-        """Return the forecast."""
-        if self._forecasts is None or len(self._forecasts) < 2:
+    def _get_forecast_data(
+        self, forecast_data: list[SMHIForecast] | None
+    ) -> list[Forecast] | None:
+        """Get forecast data."""
+        if forecast_data is None or len(forecast_data) < 3:
             return None
 
-        data = []
+        data: list[Forecast] = []
 
-        for forecast in self._forecasts[1:]:
-            condition = next(
-                (k for k, v in CONDITION_CLASSES.items() if forecast.symbol in v), None
-            )
+        for forecast in forecast_data[1:]:
+            condition = CONDITION_MAP.get(forecast["symbol"])
+            if condition == ATTR_CONDITION_SUNNY and not sun.is_up(
+                self.hass, forecast["valid_time"]
+            ):
+                condition = ATTR_CONDITION_CLEAR_NIGHT
 
             data.append(
                 {
-                    ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
-                    ATTR_FORECAST_TEMP: forecast.temperature_max,
-                    ATTR_FORECAST_TEMP_LOW: forecast.temperature_min,
-                    ATTR_FORECAST_PRECIPITATION: round(forecast.total_precipitation, 1),
+                    ATTR_FORECAST_TIME: forecast["valid_time"].isoformat(),
+                    ATTR_FORECAST_NATIVE_TEMP: forecast["temperature_max"],
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: forecast["temperature_min"],
+                    ATTR_FORECAST_NATIVE_PRECIPITATION: forecast.get(
+                        "total_precipitation"
+                    )
+                    or forecast["mean_precipitation"],
                     ATTR_FORECAST_CONDITION: condition,
+                    ATTR_FORECAST_NATIVE_PRESSURE: forecast["pressure"],
+                    ATTR_FORECAST_WIND_BEARING: forecast["wind_direction"],
+                    ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind_speed"],
+                    ATTR_FORECAST_HUMIDITY: forecast["humidity"],
+                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast["wind_gust"],
+                    ATTR_FORECAST_CLOUD_COVERAGE: forecast["total_cloud"],
                 }
             )
 
         return data
 
-    @property
-    def device_state_attributes(self) -> Dict:
-        """Return SMHI specific attributes."""
-        if self.cloudiness:
-            return {ATTR_SMHI_CLOUDINESS: self.cloudiness}
+    def _async_forecast_daily(self) -> list[Forecast] | None:
+        """Service to retrieve the daily forecast."""
+        return self._get_forecast_data(self.coordinator.data.daily)
+
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
+        """Service to retrieve the hourly forecast."""
+        return self._get_forecast_data(self.coordinator.data.hourly)

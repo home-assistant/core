@@ -1,10 +1,14 @@
 """Support for Dialogflow webhook."""
+
 import logging
 
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.components import webhook
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_flow, intent, template
 
@@ -24,12 +28,9 @@ class DialogFlowError(HomeAssistantError):
     """Raised when a DialogFlow error happens."""
 
 
-async def async_setup(hass, config):
-    """Set up the Dialogflow component."""
-    return True
-
-
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response | None:
     """Handle incoming webhook with Dialogflow requests."""
     message = await request.json()
 
@@ -37,7 +38,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     try:
         response = await async_handle_message(hass, message)
-        return b"" if response is None else web.json_response(response)
+        return None if response is None else web.json_response(response)
 
     except DialogFlowError as err:
         _LOGGER.warning(str(err))
@@ -66,21 +67,20 @@ async def handle_webhook(hass, webhook_id, request):
         )
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
-    hass.components.webhook.async_register(
-        DOMAIN, "DialogFlow", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    webhook.async_register(
+        hass, DOMAIN, "DialogFlow", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     return True
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry
 
 
@@ -103,23 +103,25 @@ def get_api_version(message):
     if message.get("responseId") is not None:
         return V2
 
+    raise ValueError(f"Unable to extract API version from message: {message}")
+
 
 async def async_handle_message(hass, message):
     """Handle a DialogFlow message."""
     _api_version = get_api_version(message)
     if _api_version is V1:
         _LOGGER.warning(
-            "Dialogflow V1 API will be removed on October 23, 2019. Please change your DialogFlow settings to use the V2 api"
+            "Dialogflow V1 API will be removed on October 23, 2019. Please change your"
+            " DialogFlow settings to use the V2 api"
         )
         req = message.get("result")
-        action_incomplete = req.get("actionIncomplete", True)
-        if action_incomplete:
-            return
+        if req.get("actionIncomplete", True):
+            return None
 
     elif _api_version is V2:
         req = message.get("queryResult")
         if req.get("allRequiredParamsPresent", False) is False:
-            return
+            return None
 
     action = req.get("action", "")
     parameters = req.get("parameters").copy()
@@ -162,7 +164,7 @@ class DialogflowResponse:
         assert self.speech is None
 
         if isinstance(text, template.Template):
-            text = text.async_render(self.parameters)
+            text = text.async_render(self.parameters, parse_result=False)
 
         self.speech = text
 
@@ -173,3 +175,5 @@ class DialogflowResponse:
 
         if self.api_version is V2:
             return {"fulfillmentText": self.speech, "source": SOURCE}
+
+        raise ValueError(f"Invalid API version: {self.api_version}")

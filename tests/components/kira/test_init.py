@@ -1,15 +1,16 @@
-"""The tests for Home Assistant ffmpeg."""
+"""The tests for Kira."""
 
 import os
+from pathlib import Path
 import shutil
 import tempfile
-import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import homeassistant.components.kira as kira
-from homeassistant.setup import setup_component
+import pytest
 
-from tests.common import get_test_home_assistant
+from homeassistant.components import kira
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 TEST_CONFIG = {
     kira.DOMAIN: {
@@ -31,56 +32,54 @@ KIRA_CODES = """
 """
 
 
-class TestKiraSetup(unittest.TestCase):
-    """Test class for kira."""
+@pytest.fixture(autouse=True)
+def setup_comp():
+    """Set up things to be run when tests are started."""
+    with patch("homeassistant.components.kira.pykira.KiraReceiver"):
+        yield
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        _base_mock = MagicMock()
-        pykira = _base_mock.pykira
-        pykira.__file__ = "test"
-        self._module_patcher = patch.dict("sys.modules", {"pykira": pykira})
-        self._module_patcher.start()
 
-        self.work_dir = tempfile.mkdtemp()
+@pytest.fixture(scope="module")
+def work_dir():
+    """Set up temporary workdir."""
+    work_dir = tempfile.mkdtemp()
+    yield work_dir
+    shutil.rmtree(work_dir, ignore_errors=True)
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-        self._module_patcher.stop()
-        shutil.rmtree(self.work_dir, ignore_errors=True)
 
-    def test_kira_empty_config(self):
-        """Kira component should load a default sensor."""
-        setup_component(self.hass, kira.DOMAIN, {})
-        assert len(self.hass.data[kira.DOMAIN]["sensor"]) == 1
+async def test_kira_empty_config(hass: HomeAssistant) -> None:
+    """Kira component should load a default sensor."""
+    await async_setup_component(hass, kira.DOMAIN, {kira.DOMAIN: {}})
+    assert len(hass.data[kira.DOMAIN]["sensor"]) == 1
 
-    def test_kira_setup(self):
-        """Ensure platforms are loaded correctly."""
-        setup_component(self.hass, kira.DOMAIN, TEST_CONFIG)
-        assert len(self.hass.data[kira.DOMAIN]["sensor"]) == 2
-        assert sorted(self.hass.data[kira.DOMAIN]["sensor"].keys()) == [
-            "kira",
-            "kira_1",
-        ]
-        assert len(self.hass.data[kira.DOMAIN]["remote"]) == 2
-        assert sorted(self.hass.data[kira.DOMAIN]["remote"].keys()) == [
-            "kira",
-            "kira_1",
-        ]
 
-    def test_kira_creates_codes(self):
-        """Kira module should create codes file if missing."""
-        code_path = os.path.join(self.work_dir, "codes.yaml")
-        kira.load_codes(code_path)
-        assert os.path.exists(code_path), "Kira component didn't create codes file"
+async def test_kira_setup(hass: HomeAssistant) -> None:
+    """Ensure platforms are loaded correctly."""
+    await async_setup_component(hass, kira.DOMAIN, TEST_CONFIG)
+    await hass.async_block_till_done()
 
-    def test_load_codes(self):
-        """Kira should ignore invalid codes."""
-        code_path = os.path.join(self.work_dir, "codes.yaml")
-        with open(code_path, "w") as code_file:
-            code_file.write(KIRA_CODES)
-        res = kira.load_codes(code_path)
-        assert len(res) == 1, "Expected exactly 1 valid Kira code"
+    assert len(hass.data[kira.DOMAIN]["sensor"]) == 2
+    assert sorted(hass.data[kira.DOMAIN]["sensor"].keys()) == [
+        "kira",
+        "kira_1",
+    ]
+    assert len(hass.data[kira.DOMAIN]["remote"]) == 2
+    assert sorted(hass.data[kira.DOMAIN]["remote"].keys()) == [
+        "kira",
+        "kira_1",
+    ]
+
+
+async def test_kira_creates_codes(work_dir) -> None:
+    """Kira module should create codes file if missing."""
+    code_path = os.path.join(work_dir, "codes.yaml")
+    kira.load_codes(code_path)
+    assert os.path.exists(code_path), "Kira component didn't create codes file"
+
+
+async def test_load_codes(hass: HomeAssistant, work_dir) -> None:
+    """Kira should ignore invalid codes."""
+    code_path = os.path.join(work_dir, "codes.yaml")
+    await hass.async_add_executor_job(Path(code_path).write_text, KIRA_CODES)
+    res = kira.load_codes(code_path)
+    assert len(res) == 1, "Expected exactly 1 valid Kira code"

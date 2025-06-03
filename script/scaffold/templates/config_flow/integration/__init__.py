@@ -1,49 +1,35 @@
 """The NEW_NAME integration."""
-import asyncio
 
-import voluptuous as vol
+from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from .const import DOMAIN
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 # TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+_PLATFORMS: list[Platform] = [Platform.LIGHT]
+
+# TODO Create ConfigEntry type alias with API object
+# TODO Rename type alias and update all entry annotations
+type New_NameConfigEntry = ConfigEntry[MyApi]  # noqa: F821
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the NEW_NAME component."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+# TODO Update entry annotation
+async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> bool:
     """Set up NEW_NAME from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    # TODO 1. Create API instance
+    # TODO 2. Validate the API connection (and authentication)
+    # TODO 3. Store an API object for your platforms to access
+    # entry.runtime_data = MyAPI(...)
+
+    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+# TODO Update entry annotation
+async def async_unload_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)

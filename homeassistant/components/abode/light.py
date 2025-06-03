@@ -1,103 +1,120 @@
 """Support for Abode Security System lights."""
-import logging
-from math import ceil
 
-import abodepy.helpers.constants as CONST
+from __future__ import annotations
+
+from math import ceil
+from typing import Any
+
+from jaraco.abode.devices.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    Light,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
+    ColorMode,
+    LightEntity,
 )
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AbodeDevice
+from . import AbodeSystem
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
+from .entity import AbodeDevice
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up Abode light devices."""
-    data = hass.data[DOMAIN]
+    data: AbodeSystem = hass.data[DOMAIN]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT):
-        entities.append(AbodeLight(data, device))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeLight(data, device)
+        for device in data.abode.get_devices(generic_type="light")
+    )
 
 
-class AbodeLight(AbodeDevice, Light):
+class AbodeLight(AbodeDevice, LightEntity):
     """Representation of an Abode light."""
 
-    def turn_on(self, **kwargs):
+    _device: Light
+    _attr_name = None
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        if ATTR_COLOR_TEMP in kwargs and self._device.is_color_capable:
-            self._device.set_color_temp(
-                int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
-            )
+        if ATTR_COLOR_TEMP_KELVIN in kwargs and self._device.is_color_capable:
+            self._device.set_color_temp(kwargs[ATTR_COLOR_TEMP_KELVIN])
+            return
 
         if ATTR_HS_COLOR in kwargs and self._device.is_color_capable:
             self._device.set_color(kwargs[ATTR_HS_COLOR])
+            return
 
         if ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
             # Convert Home Assistant brightness (0-255) to Abode brightness (0-99)
             # If 100 is sent to Abode, response is 99 causing an error
             self._device.set_level(ceil(kwargs[ATTR_BRIGHTNESS] * 99 / 255.0))
-        else:
-            self._device.switch_on()
+            return
 
-    def turn_off(self, **kwargs):
+        self._device.switch_on()
+
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self._device.switch_off()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._device.is_on
+        return bool(self._device.is_on)
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of the light."""
         if self._device.is_dimmable and self._device.has_brightness:
             brightness = int(self._device.brightness)
             # Abode returns 100 during device initialization and device refresh
-            if brightness == 100:
-                return 255
             # Convert Abode brightness (0-99) to Home Assistant brightness (0-255)
-            return ceil(brightness * 255 / 99.0)
+            return 255 if brightness == 100 else ceil(brightness * 255 / 99.0)
+        return None
 
     @property
-    def color_temp(self):
+    def color_temp_kelvin(self) -> int | None:
         """Return the color temp of the light."""
         if self._device.has_color:
-            return color_temperature_kelvin_to_mired(self._device.color_temp)
+            return int(self._device.color_temp)
+        return None
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the color of the light."""
+        _hs = None
         if self._device.has_color:
-            return self._device.color
+            _hs = self._device.color
+        return _hs
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
         if self._device.is_dimmable and self._device.is_color_capable:
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
+            if self.hs_color is not None:
+                return ColorMode.HS
+            return ColorMode.COLOR_TEMP
         if self._device.is_dimmable:
-            return SUPPORT_BRIGHTNESS
-        return 0
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
+        if self._device.is_dimmable and self._device.is_color_capable:
+            return {ColorMode.COLOR_TEMP, ColorMode.HS}
+        if self._device.is_dimmable:
+            return {ColorMode.BRIGHTNESS}
+        return {ColorMode.ONOFF}

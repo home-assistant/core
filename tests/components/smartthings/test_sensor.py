@@ -1,124 +1,393 @@
-"""
-Test for the SmartThings sensors platform.
+"""Test for the SmartThings sensors platform."""
 
-The only mocking required is of the underlying SmartThings API object so
-real HTTP calls are not initiated during testing.
-"""
-from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
+from unittest.mock import AsyncMock
 
-from homeassistant.components.sensor import DEVICE_CLASSES, DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.smartthings import sensor
-from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNKNOWN,
+from pysmartthings import Attribute, Capability
+from pysmartthings.models import HealthStatus
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components import automation, script
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.smartthings.const import DOMAIN, MAIN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
+
+from . import (
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_health_update,
+    trigger_update,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .conftest import setup_platform
-
-
-async def test_mapping_integrity():
-    """Test ensures the map dicts have proper integrity."""
-    for capability, maps in sensor.CAPABILITY_TO_SENSORS.items():
-        assert capability in CAPABILITIES, capability
-        for sensor_map in maps:
-            assert sensor_map.attribute in ATTRIBUTES, sensor_map.attribute
-            if sensor_map.device_class:
-                assert (
-                    sensor_map.device_class in DEVICE_CLASSES
-                ), sensor_map.device_class
+from tests.common import MockConfigEntry
 
 
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await sensor.async_setup_platform(None, None, None)
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.SENSOR)
 
 
-async def test_entity_state(hass, device_factory):
-    """Tests the state attributes properly match the sensor types."""
-    device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    state = hass.states.get("sensor.sensor_1_battery")
-    assert state.state == "100"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == device.label + " Battery"
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_state_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
 
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
 
-async def test_entity_three_axis_state(hass, device_factory):
-    """Tests the state attributes properly match the three axis types."""
-    device = device_factory(
-        "Three Axis", [Capability.three_axis], {Attribute.three_axis: [100, 75, 25]}
+    await trigger_update(
+        hass,
+        devices,
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.TEMPERATURE_MEASUREMENT,
+        Attribute.TEMPERATURE,
+        20,
     )
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    state = hass.states.get("sensor.three_axis_x_coordinate")
-    assert state.state == "100"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == device.label + " X Coordinate"
-    state = hass.states.get("sensor.three_axis_y_coordinate")
-    assert state.state == "75"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == device.label + " Y Coordinate"
-    state = hass.states.get("sensor.three_axis_z_coordinate")
-    assert state.state == "25"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == device.label + " Z Coordinate"
+
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "20"
 
 
-async def test_entity_three_axis_invalid_state(hass, device_factory):
-    """Tests the state attributes properly match the three axis types."""
-    device = device_factory(
-        "Three Axis", [Capability.three_axis], {Attribute.three_axis: []}
+@pytest.mark.parametrize(
+    (
+        "device_fixture",
+        "unique_id",
+        "suggested_object_id",
+        "issue_string",
+        "entity_id",
+        "expected_state",
+        "version",
+    ),
+    [
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.MEDIA_PLAYBACK}_{Attribute.PLAYBACK_STATUS}_{Attribute.PLAYBACK_STATUS}",
+            "tv_samsung_8_series_49_media_playback_status",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_media_playback_status",
+            STATE_UNKNOWN,
+            "2025.10.0",
+        ),
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.AUDIO_VOLUME}_{Attribute.VOLUME}_{Attribute.VOLUME}",
+            "tv_samsung_8_series_49_volume",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_volume",
+            "13",
+            "2025.10.0",
+        ),
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.MEDIA_INPUT_SOURCE}_{Attribute.INPUT_SOURCE}_{Attribute.INPUT_SOURCE}",
+            "tv_samsung_8_series_49_media_input_source",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_media_input_source",
+            "hdmi1",
+            "2025.10.0",
+        ),
+        (
+            "im_speaker_ai_0001",
+            f"c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_{MAIN}_{Capability.MEDIA_PLAYBACK_REPEAT}_{Attribute.PLAYBACK_REPEAT_MODE}_{Attribute.PLAYBACK_REPEAT_MODE}",
+            "galaxy_home_mini_media_playback_repeat",
+            "media_player",
+            "sensor.galaxy_home_mini_media_playback_repeat",
+            "off",
+            "2025.10.0",
+        ),
+        (
+            "im_speaker_ai_0001",
+            f"c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_{MAIN}_{Capability.MEDIA_PLAYBACK_SHUFFLE}_{Attribute.PLAYBACK_SHUFFLE}_{Attribute.PLAYBACK_SHUFFLE}",
+            "galaxy_home_mini_media_playback_shuffle",
+            "media_player",
+            "sensor.galaxy_home_mini_media_playback_shuffle",
+            "disabled",
+            "2025.10.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.TEMPERATURE_MEASUREMENT}_{Attribute.TEMPERATURE}_{Attribute.TEMPERATURE}",
+            "temperature",
+            "dhw",
+            "sensor.temperature",
+            "57",
+            "2025.12.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.THERMOSTAT_COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}",
+            "cooling_setpoint",
+            "dhw",
+            "sensor.cooling_setpoint",
+            "56",
+            "2025.12.0",
+        ),
+    ],
+)
+async def test_create_issue_with_items(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    unique_id: str,
+    suggested_object_id: str,
+    issue_string: str,
+    entity_id: str,
+    expected_state: str,
+    version: str,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    issue_id = f"deprecated_{issue_string}_{entity_id}"
+
+    entity_entry = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        unique_id,
+        suggested_object_id=suggested_object_id,
+        original_name=suggested_object_id,
     )
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    state = hass.states.get("sensor.three_axis_x_coordinate")
-    assert state.state == STATE_UNKNOWN
-    state = hass.states.get("sensor.three_axis_y_coordinate")
-    assert state.state == STATE_UNKNOWN
-    state = hass.states.get("sensor.three_axis_z_coordinate")
-    assert state.state == STATE_UNKNOWN
 
-
-async def test_entity_and_device_attributes(hass, device_factory):
-    """Test the attributes of the entity are correct."""
-    # Arrange
-    device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    # Act
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    # Assert
-    entry = entity_registry.async_get("sensor.sensor_1_battery")
-    assert entry
-    assert entry.unique_id == device.device_id + "." + Attribute.battery
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)}, [])
-    assert entry
-    assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
-
-
-async def test_update_from_signal(hass, device_factory):
-    """Test the binary_sensor updates when receiving a signal."""
-    # Arrange
-    device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
-    await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    device.status.apply_attribute_update(
-        "main", Capability.battery, Attribute.battery, 75
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test",
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {
+                        "entity_id": "automation.test",
+                    },
+                },
+            }
+        },
     )
-    # Act
-    async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE, [device.device_id])
-    # Assert
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": entity_id,
+                            "state": "on",
+                        },
+                    ],
+                }
+            }
+        },
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id).state == expected_state
+
+    assert automations_with_entity(hass, entity_id)[0] == "automation.test"
+    assert scripts_with_entity(hass, entity_id)[0] == "script.test"
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == f"deprecated_{issue_string}_scripts"
+    assert issue.translation_placeholders == {
+        "entity_id": entity_id,
+        "entity_name": suggested_object_id,
+        "items": "- [test](/config/automation/edit/test)\n- [test](/config/script/edit/test)",
+    }
+    assert issue.breaks_in_ha_version == version
+
+    entity_registry.async_update_entity(
+        entity_entry.entity_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.sensor_1_battery")
-    assert state is not None
-    assert state.state == "75"
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
-async def test_unload_config_entry(hass, device_factory):
-    """Test the binary_sensor is removed when the config entry is unloaded."""
-    # Arrange
-    device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})
-    config_entry = await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
-    # Act
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-    # Assert
-    assert not hass.states.get("sensor.sensor_1_battery")
+@pytest.mark.parametrize(
+    (
+        "device_fixture",
+        "unique_id",
+        "suggested_object_id",
+        "issue_string",
+        "entity_id",
+        "expected_state",
+        "version",
+    ),
+    [
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.MEDIA_PLAYBACK}_{Attribute.PLAYBACK_STATUS}_{Attribute.PLAYBACK_STATUS}",
+            "tv_samsung_8_series_49_media_playback_status",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_media_playback_status",
+            STATE_UNKNOWN,
+            "2025.10.0",
+        ),
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.AUDIO_VOLUME}_{Attribute.VOLUME}_{Attribute.VOLUME}",
+            "tv_samsung_8_series_49_volume",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_volume",
+            "13",
+            "2025.10.0",
+        ),
+        (
+            "vd_stv_2017_k",
+            f"4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_{MAIN}_{Capability.MEDIA_INPUT_SOURCE}_{Attribute.INPUT_SOURCE}_{Attribute.INPUT_SOURCE}",
+            "tv_samsung_8_series_49_media_input_source",
+            "media_player",
+            "sensor.tv_samsung_8_series_49_media_input_source",
+            "hdmi1",
+            "2025.10.0",
+        ),
+        (
+            "im_speaker_ai_0001",
+            f"c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_{MAIN}_{Capability.MEDIA_PLAYBACK_REPEAT}_{Attribute.PLAYBACK_REPEAT_MODE}_{Attribute.PLAYBACK_REPEAT_MODE}",
+            "galaxy_home_mini_media_playback_repeat",
+            "media_player",
+            "sensor.galaxy_home_mini_media_playback_repeat",
+            "off",
+            "2025.10.0",
+        ),
+        (
+            "im_speaker_ai_0001",
+            f"c9276e43-fe3c-88c3-1dcc-2eb79e292b8c_{MAIN}_{Capability.MEDIA_PLAYBACK_SHUFFLE}_{Attribute.PLAYBACK_SHUFFLE}_{Attribute.PLAYBACK_SHUFFLE}",
+            "galaxy_home_mini_media_playback_shuffle",
+            "media_player",
+            "sensor.galaxy_home_mini_media_playback_shuffle",
+            "disabled",
+            "2025.10.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.TEMPERATURE_MEASUREMENT}_{Attribute.TEMPERATURE}_{Attribute.TEMPERATURE}",
+            "temperature",
+            "dhw",
+            "sensor.temperature",
+            "57",
+            "2025.12.0",
+        ),
+        (
+            "da_ac_ehs_01001",
+            f"4165c51e-bf6b-c5b6-fd53-127d6248754b_{MAIN}_{Capability.THERMOSTAT_COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}",
+            "cooling_setpoint",
+            "dhw",
+            "sensor.cooling_setpoint",
+            "56",
+            "2025.12.0",
+        ),
+    ],
+)
+async def test_create_issue(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    unique_id: str,
+    suggested_object_id: str,
+    issue_string: str,
+    entity_id: str,
+    expected_state: str,
+    version: str,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    issue_id = f"deprecated_{issue_string}_{entity_id}"
+
+    entity_entry = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        unique_id,
+        suggested_object_id=suggested_object_id,
+        original_name=suggested_object_id,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id).state == expected_state
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == f"deprecated_{issue_string}"
+    assert issue.translation_placeholders == {
+        "entity_id": entity_id,
+        "entity_name": suggested_object_id,
+    }
+    assert issue.breaks_in_ha_version == version
+
+    entity_registry.async_update_entity(
+        entity_entry.entity_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
+
+    await trigger_health_update(
+        hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.OFFLINE
+    )
+
+    assert (
+        hass.states.get("sensor.ac_office_granit_temperature").state
+        == STATE_UNAVAILABLE
+    )
+
+    await trigger_health_update(
+        hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("sensor.ac_office_granit_temperature").state == "25"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        hass.states.get("sensor.ac_office_granit_temperature").state
+        == STATE_UNAVAILABLE
+    )

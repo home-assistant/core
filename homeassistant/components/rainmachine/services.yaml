@@ -1,64 +1,189 @@
 # Describes the format for available RainMachine services
-
----
-disable_program:
-  description: Disable a program.
-  fields:
-    program_id:
-      description: The program to disable.
-      example: 3
-disable_zone:
-  description: Disable a zone.
-  fields:
-    zone_id:
-      description: The zone to disable.
-      example: 3
-enable_program:
-  description: Enable a program.
-  fields:
-    program_id:
-      description: The program to enable.
-      example: 3
-enable_zone:
-  description: Enable a zone.
-  fields:
-    zone_id:
-      description: The zone to enable.
-      example: 3
 pause_watering:
-  description: Pause all watering for a number of seconds.
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
     seconds:
-      description: The number of seconds to pause.
-      example: 30
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 43200
+          unit_of_measurement: seconds
+restrict_watering:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    duration:
+      required: true
+      default: "01:00:00"
+      selector:
+        text:
 start_program:
-  description: Start a program.
-  fields:
-    program_id:
-      description: The program to start.
-      example: 3
+  target:
+    entity:
+      integration: rainmachine
+      domain: switch
 start_zone:
-  description: Start a zone for a set number of seconds.
+  target:
+    entity:
+      integration: rainmachine
+      domain: switch
   fields:
-    zone_id:
-      description: The zone to start.
-      example: 3
     zone_run_time:
-      description: The number of seconds to run the zone.
-      example: 120
+      default: 600
+      selector:
+        number:
+          min: 1
+          max: 86400
+          mode: box
 stop_all:
-  description: Stop all watering activities.
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
 stop_program:
-  description: Stop a program.
-  fields:
-    program_id:
-      description: The program to stop.
-      example: 3
+  target:
+    entity:
+      integration: rainmachine
+      domain: switch
 stop_zone:
-  description: Stop a zone.
-  fields:
-    zone_id:
-      description: The zone to stop.
-      example: 3
+  target:
+    entity:
+      integration: rainmachine
+      domain: switch
 unpause_watering:
-  description: Unpause all watering.
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+push_flow_meter_data:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    value:
+      required: true
+      selector:
+        number:
+          min: 0.0
+          max: 1000000000.0
+          step: 0.1
+          mode: box
+    unit_of_measurement:
+      selector:
+        select:
+          options:
+            - "clicks"
+            - "gal"
+            - "litre"
+            - "m3"
+push_weather_data:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine
+    timestamp:
+      selector:
+        text:
+    mintemp:
+      selector:
+        number:
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: "°C"
+    maxtemp:
+      selector:
+        number:
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: "°C"
+    temperature:
+      selector:
+        number:
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: "°C"
+    wind:
+      selector:
+        number:
+          min: 0
+          max: 65
+          unit_of_measurement: "m/s"
+    solarrad:
+      selector:
+        number:
+          min: 0
+          max: 5
+          step: 0.1
+          unit_of_measurement: "MJ/m²/h"
+    et:
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: "mm"
+    qpf:
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: "mm"
+    rain:
+      selector:
+        number:
+          min: 0
+          max: 1000
+          unit_of_measurement: "mm"
+    minrh:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    maxrh:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    condition:
+      selector:
+        text:
+    pressure:
+      selector:
+        number:
+          min: 60
+          max: 110
+          unit_of_measurement: "kPa"
+    dewpoint:
+      selector:
+        number:
+          min: -40
+          max: 40
+          step: 0.1
+          unit_of_measurement: "°C"
+unrestrict_watering:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: rainmachine

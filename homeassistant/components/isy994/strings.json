@@ -1,0 +1,176 @@
+{
+  "config": {
+    "flow_title": "{name} ({host})",
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "host": "[%key:common::config_flow::data::url%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "tls": "The TLS version of the ISY controller."
+        },
+        "description": "The host entry must be in full URL format, e.g., http://192.168.10.100:80",
+        "title": "Connect to your ISY"
+      },
+      "reauth_confirm": {
+        "description": "The credentials for {host} are no longer valid.",
+        "title": "Reauthenticate your ISY",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "The host entry was not in full URL format, e.g., http://192.168.10.100:80"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ISY options",
+        "description": "Set the options for the ISY integration: \n • Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n • Ignore String: Any device with 'Ignore String' in the name will be ignored. \n • Variable Sensor String: Any variable that contains 'Variable Sensor String' will be added as a sensor. \n • Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
+        "data": {
+          "sensor_string": "Node Sensor String",
+          "ignore_string": "Ignore String",
+          "variable_sensor_string": "Variable Sensor String",
+          "restore_light_state": "Restore Light Brightness"
+        }
+      }
+    }
+  },
+  "system_health": {
+    "info": {
+      "host_reachable": "Host reachable",
+      "device_connected": "ISY connected",
+      "last_heartbeat": "Last heartbeat time",
+      "websocket_status": "Event socket status"
+    }
+  },
+  "services": {
+    "send_raw_node_command": {
+      "name": "Send raw node command",
+      "description": "Sends a “raw” (e.g., DON, DOF) ISY REST device command to a node using its Home Assistant entity ID. This is useful for devices that aren’t fully supported in Home Assistant yet, such as controls for many NodeServer nodes.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "The ISY REST command to be sent to the device."
+        },
+        "value": {
+          "name": "Value",
+          "description": "The integer value to be sent with the command."
+        },
+        "parameters": {
+          "name": "Parameters",
+          "description": "A dict of parameters to be sent in the query string (e.g. for controlling colored bulbs)."
+        },
+        "unit_of_measurement": {
+          "name": "Unit of measurement",
+          "description": "The ISY unit of measurement (UOM) to send with the command, if required."
+        }
+      }
+    },
+    "send_node_command": {
+      "name": "Send node command",
+      "description": "Sends a command to an ISY device using its Home Assistant entity ID. Valid commands are: beep, brighten, dim, disable, enable, fade_down, fade_stop, fade_up, fast_off, fast_on, and query.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "The command to be sent to the device."
+        }
+      }
+    },
+    "get_zwave_parameter": {
+      "name": "Get Z-Wave parameter",
+      "description": "Requests a Z-Wave device parameter via the ISY. The parameter value will be returned as an entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
+      "fields": {
+        "parameter": {
+          "name": "Parameter",
+          "description": "The parameter number to retrieve from the device."
+        }
+      }
+    },
+    "set_zwave_parameter": {
+      "name": "Set Z-Wave parameter",
+      "description": "Updates a Z-Wave device parameter via the ISY. The parameter value will also be returned as an entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
+      "fields": {
+        "parameter": {
+          "name": "[%key:component::isy994::services::get_zwave_parameter::fields::parameter::name%]",
+          "description": "The parameter number to set on the end device."
+        },
+        "value": {
+          "name": "Value",
+          "description": "The value to set for the parameter. May be an integer or byte string (e.g. \"0xFFFF\")."
+        },
+        "size": {
+          "name": "Size",
+          "description": "The size of the parameter, either 1, 2, or 4 bytes."
+        }
+      }
+    },
+    "set_zwave_lock_user_code": {
+      "name": "Set Z-Wave lock user code",
+      "description": "Sets a user code for a Z-Wave lock via the ISY.",
+      "fields": {
+        "user_num": {
+          "name": "User Number",
+          "description": "The user slot number on the lock."
+        },
+        "code": {
+          "name": "Code",
+          "description": "The code to set for the user."
+        }
+      }
+    },
+    "delete_zwave_lock_user_code": {
+      "name": "Delete Z-Wave lock user code",
+      "description": "Deletes a user code for a Z-Wave lock via the ISY.",
+      "fields": {
+        "user_num": {
+          "name": "[%key:component::isy994::services::set_zwave_lock_user_code::fields::user_num::name%]",
+          "description": "[%key:component::isy994::services::set_zwave_lock_user_code::fields::user_num::description%]"
+        }
+      }
+    },
+    "rename_node": {
+      "name": "Rename node on ISY",
+      "description": "Renames a node or group (scene) on the ISY. Note: this will not automatically change the Home Assistant entity name or entity ID to match. The entity name and ID will only be updated after reloading the integration or restarting Home Assistant, and ONLY IF you have not already customized the name within Home Assistant.",
+      "fields": {
+        "name": {
+          "name": "New Name",
+          "description": "The new name to use within the ISY."
+        }
+      }
+    },
+    "send_program_command": {
+      "name": "Send program command",
+      "description": "Sends a command to control an ISY program or folder. Valid commands are run, run_then, run_else, stop, enable, disable, enable_run_at_startup, and disable_run_at_startup.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "The address of the program to control (use either address or name)."
+        },
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "The name of the program to control (use either address or name)."
+        },
+        "command": {
+          "name": "Command",
+          "description": "The ISY program command to be sent."
+        },
+        "isy": {
+          "name": "ISY",
+          "description": "If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same program name or address on multiple ISYs, omitting this will run the command on them all."
+        }
+      }
+    }
+  }
+}

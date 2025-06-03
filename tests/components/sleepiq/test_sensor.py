@@ -1,66 +1,96 @@
 """The tests for SleepIQ sensor platform."""
-import unittest
-from unittest.mock import MagicMock
 
-import requests_mock
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-import homeassistant.components.sleepiq.sensor as sleepiq
-from homeassistant.setup import setup_component
+from .conftest import (
+    BED_NAME,
+    BED_NAME_LOWER,
+    SLEEPER_L_ID,
+    SLEEPER_L_NAME,
+    SLEEPER_L_NAME_LOWER,
+    SLEEPER_R_ID,
+    SLEEPER_R_NAME,
+    SLEEPER_R_NAME_LOWER,
+    setup_platform,
+)
 
-from tests.common import get_test_home_assistant
-from tests.components.sleepiq.test_init import mock_responses
+
+async def test_sleepnumber_sensors(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
+) -> None:
+    """Test the SleepIQ sleepnumber for a bed with two sides."""
+    entry = await setup_platform(hass, SENSOR_DOMAIN)
+
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_sleepnumber"
+    )
+    assert state.state == "40"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_L_NAME} SleepNumber"
+    )
+
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_sleepnumber"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_L_ID}_sleep_number"
+
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_sleepnumber"
+    )
+    assert state.state == "80"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_R_NAME} SleepNumber"
+    )
+
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_sleepnumber"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_R_ID}_sleep_number"
 
 
-class TestSleepIQSensorSetup(unittest.TestCase):
-    """Tests the SleepIQ Sensor platform."""
+async def test_pressure_sensors(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_asyncsleepiq
+) -> None:
+    """Test the SleepIQ pressure for a bed with two sides."""
+    entry = await setup_platform(hass, SENSOR_DOMAIN)
 
-    DEVICES = []
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_pressure"
+    )
+    assert state.state == "1000"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_L_NAME} Pressure"
+    )
 
-    def add_entities(self, devices):
-        """Mock add devices."""
-        for device in devices:
-            self.DEVICES.append(device)
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_pressure"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_L_ID}_pressure"
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
-        self.username = "foo"
-        self.password = "bar"
-        self.config = {"username": self.username, "password": self.password}
-        self.DEVICES = []
+    state = hass.states.get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_pressure"
+    )
+    assert state.state == "1400"
+    assert state.attributes.get(ATTR_ICON) == "mdi:bed"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == f"SleepNumber {BED_NAME} {SLEEPER_R_NAME} Pressure"
+    )
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    @requests_mock.Mocker()
-    def test_setup(self, mock):
-        """Test for successfully setting up the SleepIQ platform."""
-        mock_responses(mock)
-
-        assert setup_component(self.hass, "sleepiq", {"sleepiq": self.config})
-
-        sleepiq.setup_platform(self.hass, self.config, self.add_entities, MagicMock())
-        assert 2 == len(self.DEVICES)
-
-        left_side = self.DEVICES[1]
-        assert "SleepNumber ILE Test1 SleepNumber" == left_side.name
-        assert 40 == left_side.state
-
-        right_side = self.DEVICES[0]
-        assert "SleepNumber ILE Test2 SleepNumber" == right_side.name
-        assert 80 == right_side.state
-
-    @requests_mock.Mocker()
-    def test_setup_sigle(self, mock):
-        """Test for successfully setting up the SleepIQ platform."""
-        mock_responses(mock, single=True)
-
-        assert setup_component(self.hass, "sleepiq", {"sleepiq": self.config})
-
-        sleepiq.setup_platform(self.hass, self.config, self.add_entities, MagicMock())
-        assert 1 == len(self.DEVICES)
-
-        right_side = self.DEVICES[0]
-        assert "SleepNumber ILE Test1 SleepNumber" == right_side.name
-        assert 40 == right_side.state
+    entry = entity_registry.async_get(
+        f"sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_pressure"
+    )
+    assert entry
+    assert entry.unique_id == f"{SLEEPER_R_ID}_pressure"

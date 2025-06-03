@@ -1,244 +1,595 @@
 """Support for Generic Modbus Thermostats."""
+
+from __future__ import annotations
+
 import logging
 import struct
+from typing import Any, cast
 
-import voluptuous as vol
-
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
-from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_DIFFUSE,
+    FAN_FOCUS,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_MIDDLE,
+    FAN_OFF,
+    FAN_ON,
+    FAN_TOP,
+    SWING_BOTH,
+    SWING_HORIZONTAL,
+    SWING_OFF,
+    SWING_ON,
+    SWING_VERTICAL,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_ADDRESS,
     CONF_NAME,
-    CONF_SLAVE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    CONF_TEMPERATURE_UNIT,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    STATE_UNKNOWN,
+    UnitOfTemperature,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
+from . import get_hub
+from .const import (
+    CALL_TYPE_COIL,
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_WRITE_COIL,
+    CALL_TYPE_WRITE_REGISTER,
+    CALL_TYPE_WRITE_REGISTERS,
+    CONF_CLIMATES,
+    CONF_FAN_MODE_AUTO,
+    CONF_FAN_MODE_DIFFUSE,
+    CONF_FAN_MODE_FOCUS,
+    CONF_FAN_MODE_HIGH,
+    CONF_FAN_MODE_LOW,
+    CONF_FAN_MODE_MEDIUM,
+    CONF_FAN_MODE_MIDDLE,
+    CONF_FAN_MODE_OFF,
+    CONF_FAN_MODE_ON,
+    CONF_FAN_MODE_REGISTER,
+    CONF_FAN_MODE_TOP,
+    CONF_FAN_MODE_VALUES,
+    CONF_HVAC_ACTION_COOLING,
+    CONF_HVAC_ACTION_DEFROSTING,
+    CONF_HVAC_ACTION_DRYING,
+    CONF_HVAC_ACTION_FAN,
+    CONF_HVAC_ACTION_HEATING,
+    CONF_HVAC_ACTION_IDLE,
+    CONF_HVAC_ACTION_OFF,
+    CONF_HVAC_ACTION_PREHEATING,
+    CONF_HVAC_ACTION_REGISTER,
+    CONF_HVAC_ACTION_VALUES,
+    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_FAN_ONLY,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_OFF,
+    CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_OFF_VALUE,
+    CONF_HVAC_ON_VALUE,
+    CONF_HVAC_ONOFF_COIL,
+    CONF_HVAC_ONOFF_REGISTER,
+    CONF_INPUT_TYPE,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
+    CONF_STEP,
+    CONF_SWING_MODE_REGISTER,
+    CONF_SWING_MODE_SWING_BOTH,
+    CONF_SWING_MODE_SWING_HORIZ,
+    CONF_SWING_MODE_SWING_OFF,
+    CONF_SWING_MODE_SWING_ON,
+    CONF_SWING_MODE_SWING_VERT,
+    CONF_SWING_MODE_VALUES,
+    CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_WRITE_REGISTERS,
+    CONF_WRITE_REGISTERS,
+    DataType,
+)
+from .entity import BaseStructPlatform
+from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TARGET_TEMP = "target_temp_register"
-CONF_CURRENT_TEMP = "current_temp_register"
-CONF_DATA_TYPE = "data_type"
-CONF_COUNT = "data_count"
-CONF_PRECISION = "precision"
-CONF_SCALE = "scale"
-CONF_OFFSET = "offset"
-CONF_UNIT = "temperature_unit"
-DATA_TYPE_INT = "int"
-DATA_TYPE_UINT = "uint"
-DATA_TYPE_FLOAT = "float"
-CONF_MAX_TEMP = "max_temp"
-CONF_MIN_TEMP = "min_temp"
-CONF_STEP = "temp_step"
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
-HVAC_MODES = [HVAC_MODE_AUTO]
+PARALLEL_UPDATES = 1
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_SLAVE): cv.positive_int,
-        vol.Required(CONF_TARGET_TEMP): cv.positive_int,
-        vol.Optional(CONF_COUNT, default=2): cv.positive_int,
-        vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT): vol.In(
-            [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]
-        ),
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
-        vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
-        vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
-        vol.Optional(CONF_MAX_TEMP, default=5): cv.positive_int,
-        vol.Optional(CONF_MIN_TEMP, default=35): cv.positive_int,
-        vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
-        vol.Optional(CONF_UNIT, default="C"): cv.string,
-    }
-)
+HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY = {
+    HVACMode.AUTO: 0,
+    HVACMode.COOL: 1,
+    HVACMode.DRY: 2,
+    HVACMode.FAN_ONLY: 3,
+    HVACMode.HEAT: 4,
+    HVACMode.HEAT_COOL: 5,
+    HVACMode.OFF: 6,
+    None: 0,
+}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Modbus Thermostat Platform."""
-    name = config.get(CONF_NAME)
-    modbus_slave = config.get(CONF_SLAVE)
-    target_temp_register = config.get(CONF_TARGET_TEMP)
-    current_temp_register = config.get(CONF_CURRENT_TEMP)
-    data_type = config.get(CONF_DATA_TYPE)
-    count = config.get(CONF_COUNT)
-    precision = config.get(CONF_PRECISION)
-    scale = config.get(CONF_SCALE)
-    offset = config.get(CONF_OFFSET)
-    unit = config.get(CONF_UNIT)
-    max_temp = config.get(CONF_MAX_TEMP)
-    min_temp = config.get(CONF_MIN_TEMP)
-    temp_step = config.get(CONF_STEP)
-    hub_name = config.get(CONF_HUB)
-    hub = hass.data[MODBUS_DOMAIN][hub_name]
-
-    add_entities(
-        [
-            ModbusThermostat(
-                hub,
-                name,
-                modbus_slave,
-                target_temp_register,
-                current_temp_register,
-                data_type,
-                count,
-                precision,
-                scale,
-                offset,
-                unit,
-                max_temp,
-                min_temp,
-                temp_step,
-            )
-        ],
-        True,
-    )
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Read configuration and create Modbus climate."""
+    if discovery_info is None or not (climates := discovery_info[CONF_CLIMATES]):
+        return
+    hub = get_hub(hass, discovery_info[CONF_NAME])
+    async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
 
 
-class ModbusThermostat(ClimateDevice):
+class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
 
     def __init__(
         self,
-        hub,
-        name,
-        modbus_slave,
-        target_temp_register,
-        current_temp_register,
-        data_type,
-        count,
-        precision,
-        scale,
-        offset,
-        unit,
-        max_temp,
-        min_temp,
-        temp_step,
-    ):
-        """Initialize the unit."""
-        self._hub = hub
-        self._name = name
-        self._slave = modbus_slave
-        self._target_temperature_register = target_temp_register
-        self._current_temperature_register = current_temp_register
-        self._target_temperature = None
-        self._current_temperature = None
-        self._data_type = data_type
-        self._count = int(count)
-        self._precision = precision
-        self._scale = scale
-        self._offset = offset
-        self._unit = unit
-        self._max_temp = max_temp
-        self._min_temp = min_temp
-        self._temp_step = temp_step
-        self._structure = ">f"
-
-        data_types = {
-            DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
-            DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
-            DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
-        }
-
-        self._structure = ">{}".format(data_types[self._data_type][self._count])
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    def update(self):
-        """Update Target & Current Temperature."""
-        self._target_temperature = self.read_register(self._target_temperature_register)
-        self._current_temperature = self.read_register(
-            self._current_temperature_register
+        hass: HomeAssistant,
+        hub: ModbusHub,
+        config: dict[str, Any],
+    ) -> None:
+        """Initialize the modbus thermostat."""
+        super().__init__(hass, hub, config)
+        self._target_temperature_register = config[CONF_TARGET_TEMP]
+        self._target_temperature_write_registers = config[
+            CONF_TARGET_TEMP_WRITE_REGISTERS
+        ]
+        self._unit = config[CONF_TEMPERATURE_UNIT]
+        self._attr_current_temperature = None
+        self._attr_target_temperature = None
+        self._attr_temperature_unit = (
+            UnitOfTemperature.FAHRENHEIT
+            if self._unit == "F"
+            else UnitOfTemperature.CELSIUS
         )
-
-    @property
-    def hvac_mode(self):
-        """Return the current HVAC mode."""
-        return HVAC_MODE_AUTO
-
-    @property
-    def hvac_modes(self):
-        """Return the possible HVAC modes."""
-        return HVAC_MODES
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._name
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the target temperature."""
-        return self._target_temperature
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_FAHRENHEIT if self._unit == "F" else TEMP_CELSIUS
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return self._min_temp
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return self._max_temp
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return self._temp_step
-
-    def set_temperature(self, **kwargs):
-        """Set new target temperature."""
-        target_temperature = int(
-            (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
+        self._attr_precision = (
+            PRECISION_TENTHS if self._precision >= 1 else PRECISION_WHOLE
         )
-        if target_temperature is None:
-            return
-        byte_string = struct.pack(self._structure, target_temperature)
-        register_value = struct.unpack(">h", byte_string[0:2])[0]
+        self._attr_min_temp = config[CONF_MIN_TEMP]
+        self._attr_max_temp = config[CONF_MAX_TEMP]
+        self._attr_target_temperature_step = config[CONF_STEP]
 
-        try:
-            self.write_register(self._target_temperature_register, register_value)
-        except AttributeError as ex:
-            _LOGGER.error(ex)
+        if CONF_HVAC_MODE_REGISTER in config:
+            mode_config = config[CONF_HVAC_MODE_REGISTER]
+            self._hvac_mode_register = mode_config[CONF_ADDRESS]
+            self._attr_hvac_modes = cast(list[HVACMode], [])
+            self._attr_hvac_mode = None
+            self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
+            self._hvac_mode_write_registers = mode_config[CONF_WRITE_REGISTERS]
+            mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
 
-    def read_register(self, register):
-        """Read holding register using the Modbus hub slave."""
-        try:
-            result = self._hub.read_holding_registers(
-                self._slave, register, self._count
+            for hvac_mode_kw, hvac_mode in (
+                (CONF_HVAC_MODE_OFF, HVACMode.OFF),
+                (CONF_HVAC_MODE_HEAT, HVACMode.HEAT),
+                (CONF_HVAC_MODE_COOL, HVACMode.COOL),
+                (CONF_HVAC_MODE_HEAT_COOL, HVACMode.HEAT_COOL),
+                (CONF_HVAC_MODE_AUTO, HVACMode.AUTO),
+                (CONF_HVAC_MODE_DRY, HVACMode.DRY),
+                (CONF_HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY),
+            ):
+                if hvac_mode_kw in mode_value_config:
+                    values = mode_value_config[hvac_mode_kw]
+                    if not isinstance(values, list):
+                        values = [values]
+                    for value in values:
+                        self._hvac_mode_mapping.append((value, hvac_mode))
+                    self._attr_hvac_modes.append(hvac_mode)
+        else:
+            # No HVAC modes defined
+            self._hvac_mode_register = None
+            self._attr_hvac_mode = HVACMode.AUTO
+            self._attr_hvac_modes = [HVACMode.AUTO]
+
+        if CONF_HVAC_ACTION_REGISTER in config:
+            action_config = config[CONF_HVAC_ACTION_REGISTER]
+            self._hvac_action_register = action_config[CONF_ADDRESS]
+            self._hvac_action_type = action_config[CONF_INPUT_TYPE]
+
+            self._attr_hvac_action = None
+            self._hvac_action_mapping: list[tuple[int, HVACAction]] = []
+            action_value_config = action_config[CONF_HVAC_ACTION_VALUES]
+
+            for hvac_action_kw, hvac_action in (
+                (CONF_HVAC_ACTION_COOLING, HVACAction.COOLING),
+                (CONF_HVAC_ACTION_DEFROSTING, HVACAction.DEFROSTING),
+                (CONF_HVAC_ACTION_DRYING, HVACAction.DRYING),
+                (CONF_HVAC_ACTION_FAN, HVACAction.FAN),
+                (CONF_HVAC_ACTION_HEATING, HVACAction.HEATING),
+                (CONF_HVAC_ACTION_IDLE, HVACAction.IDLE),
+                (CONF_HVAC_ACTION_OFF, HVACAction.OFF),
+                (CONF_HVAC_ACTION_PREHEATING, HVACAction.PREHEATING),
+            ):
+                if hvac_action_kw in action_value_config:
+                    values = action_value_config[hvac_action_kw]
+                    if not isinstance(values, list):
+                        values = [values]
+                    for value in values:
+                        self._hvac_action_mapping.append((value, hvac_action))
+        else:
+            self._hvac_action_register = None
+
+        if CONF_FAN_MODE_REGISTER in config:
+            self._attr_supported_features = (
+                self._attr_supported_features | ClimateEntityFeature.FAN_MODE
             )
-        except AttributeError as ex:
-            _LOGGER.error(ex)
-        byte_string = b"".join(
-            [x.to_bytes(2, byteorder="big") for x in result.registers]
-        )
-        val = struct.unpack(self._structure, byte_string)[0]
-        register_value = format(
-            (self._scale * val) + self._offset, f".{self._precision}f"
-        )
-        register_value = float(register_value)
-        return register_value
+            mode_config = config[CONF_FAN_MODE_REGISTER]
+            self._fan_mode_register = mode_config[CONF_ADDRESS]
+            self._attr_fan_modes = cast(list[str], [])
+            self._attr_fan_mode = None
+            self._fan_mode_mapping_to_modbus: dict[str, int] = {}
+            self._fan_mode_mapping_from_modbus: dict[int, str] = {}
+            mode_value_config = mode_config[CONF_FAN_MODE_VALUES]
+            for fan_mode_kw, fan_mode in (
+                (CONF_FAN_MODE_ON, FAN_ON),
+                (CONF_FAN_MODE_OFF, FAN_OFF),
+                (CONF_FAN_MODE_AUTO, FAN_AUTO),
+                (CONF_FAN_MODE_LOW, FAN_LOW),
+                (CONF_FAN_MODE_MEDIUM, FAN_MEDIUM),
+                (CONF_FAN_MODE_HIGH, FAN_HIGH),
+                (CONF_FAN_MODE_TOP, FAN_TOP),
+                (CONF_FAN_MODE_MIDDLE, FAN_MIDDLE),
+                (CONF_FAN_MODE_FOCUS, FAN_FOCUS),
+                (CONF_FAN_MODE_DIFFUSE, FAN_DIFFUSE),
+            ):
+                if fan_mode_kw in mode_value_config:
+                    value = mode_value_config[fan_mode_kw]
+                    self._fan_mode_mapping_from_modbus[value] = fan_mode
+                    self._fan_mode_mapping_to_modbus[fan_mode] = value
+                    self._attr_fan_modes.append(fan_mode)
+        else:
+            # No FAN modes defined
+            self._fan_mode_register = None
+            self._attr_fan_mode = FAN_AUTO
+            self._attr_fan_modes = [FAN_AUTO]
 
-    def write_register(self, register, value):
-        """Write register using the Modbus hub slave."""
-        self._hub.write_registers(self._slave, register, [value, 0])
+        # No SWING modes defined
+        self._swing_mode_register = None
+        if CONF_SWING_MODE_REGISTER in config:
+            self._attr_supported_features = (
+                self._attr_supported_features | ClimateEntityFeature.SWING_MODE
+            )
+            mode_config = config[CONF_SWING_MODE_REGISTER]
+            self._swing_mode_register = mode_config[CONF_ADDRESS]
+            self._attr_swing_modes = cast(list[str], [])
+            self._attr_swing_mode = None
+            self._swing_mode_modbus_mapping: list[tuple[int, str]] = []
+            mode_value_config = mode_config[CONF_SWING_MODE_VALUES]
+            for swing_mode_kw, swing_mode in (
+                (CONF_SWING_MODE_SWING_ON, SWING_ON),
+                (CONF_SWING_MODE_SWING_OFF, SWING_OFF),
+                (CONF_SWING_MODE_SWING_HORIZ, SWING_HORIZONTAL),
+                (CONF_SWING_MODE_SWING_VERT, SWING_VERTICAL),
+                (CONF_SWING_MODE_SWING_BOTH, SWING_BOTH),
+            ):
+                if swing_mode_kw in mode_value_config:
+                    value = mode_value_config[swing_mode_kw]
+                    self._swing_mode_modbus_mapping.append((value, swing_mode))
+                    self._attr_swing_modes.append(swing_mode)
+
+        if CONF_HVAC_ONOFF_REGISTER in config:
+            self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
+            self._hvac_onoff_write_registers = config[CONF_WRITE_REGISTERS]
+            self._hvac_on_value = config[CONF_HVAC_ON_VALUE]
+            self._hvac_off_value = config[CONF_HVAC_OFF_VALUE]
+            if HVACMode.OFF not in self._attr_hvac_modes:
+                self._attr_hvac_modes.append(HVACMode.OFF)
+        else:
+            self._hvac_onoff_register = None
+
+        if CONF_HVAC_ONOFF_COIL in config:
+            self._hvac_onoff_coil = config[CONF_HVAC_ONOFF_COIL]
+            if HVACMode.OFF not in self._attr_hvac_modes:
+                self._attr_hvac_modes.append(HVACMode.OFF)
+        else:
+            self._hvac_onoff_coil = None
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await self.async_base_added_to_hass()
+        state = await self.async_get_last_state()
+        if state and state.attributes.get(ATTR_TEMPERATURE):
+            self._attr_target_temperature = float(state.attributes[ATTR_TEMPERATURE])
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        if self._hvac_onoff_register is not None:
+            # Turn HVAC Off by writing self._hvac_off_value to the On/Off
+            # register, or self._hvac_on_value otherwise.
+            if self._hvac_onoff_write_registers:
+                await self._hub.async_pb_call(
+                    self._slave,
+                    self._hvac_onoff_register,
+                    [
+                        self._hvac_off_value
+                        if hvac_mode == HVACMode.OFF
+                        else self._hvac_on_value
+                    ],
+                    CALL_TYPE_WRITE_REGISTERS,
+                )
+            else:
+                await self._hub.async_pb_call(
+                    self._slave,
+                    self._hvac_onoff_register,
+                    self._hvac_off_value
+                    if hvac_mode == HVACMode.OFF
+                    else self._hvac_on_value,
+                    CALL_TYPE_WRITE_REGISTER,
+                )
+
+        if self._hvac_onoff_coil is not None:
+            # Turn HVAC Off by writing 0 to the On/Off coil, or 1 otherwise.
+            await self._hub.async_pb_call(
+                self._slave,
+                self._hvac_onoff_coil,
+                0 if hvac_mode == HVACMode.OFF else 1,
+                CALL_TYPE_WRITE_COIL,
+            )
+
+        if self._hvac_mode_register is not None:
+            # Write a value to the mode register for the desired mode.
+            for value, mode in self._hvac_mode_mapping:
+                if mode == hvac_mode:
+                    if self._hvac_mode_write_registers:
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._hvac_mode_register,
+                            [value],
+                            CALL_TYPE_WRITE_REGISTERS,
+                        )
+                    else:
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._hvac_mode_register,
+                            value,
+                            CALL_TYPE_WRITE_REGISTER,
+                        )
+                    break
+
+        await self._async_update_write_state()
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        if self._fan_mode_register is not None:
+            # Write a value to the mode register for the desired mode.
+            value = self._fan_mode_mapping_to_modbus[fan_mode]
+            if isinstance(self._fan_mode_register, list):
+                await self._hub.async_pb_call(
+                    self._slave,
+                    self._fan_mode_register[0],
+                    [value],
+                    CALL_TYPE_WRITE_REGISTERS,
+                )
+            else:
+                await self._hub.async_pb_call(
+                    self._slave,
+                    self._fan_mode_register,
+                    value,
+                    CALL_TYPE_WRITE_REGISTER,
+                )
+
+        await self._async_update_write_state()
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set new target swing mode."""
+        if self._swing_mode_register:
+            # Write a value to the mode register for the desired mode.
+            for value, smode in self._swing_mode_modbus_mapping:
+                if swing_mode == smode:
+                    if isinstance(self._swing_mode_register, list):
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._swing_mode_register[0],
+                            [value],
+                            CALL_TYPE_WRITE_REGISTERS,
+                        )
+                    else:
+                        await self._hub.async_pb_call(
+                            self._slave,
+                            self._swing_mode_register,
+                            value,
+                            CALL_TYPE_WRITE_REGISTER,
+                        )
+                    break
+        await self._async_update_write_state()
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        target_temperature = (
+            float(kwargs[ATTR_TEMPERATURE]) - self._offset
+        ) / self._scale
+        if self._data_type in (
+            DataType.INT16,
+            DataType.INT32,
+            DataType.INT64,
+            DataType.UINT16,
+            DataType.UINT32,
+            DataType.UINT64,
+        ):
+            target_temperature = int(target_temperature)
+        as_bytes = struct.pack(self._structure, target_temperature)
+        raw_regs = [
+            int.from_bytes(as_bytes[i : i + 2], "big")
+            for i in range(0, len(as_bytes), 2)
+        ]
+        registers = self._swap_registers(raw_regs, 0)
+
+        if self._data_type in (
+            DataType.INT16,
+            DataType.UINT16,
+        ):
+            if self._target_temperature_write_registers:
+                result = await self._hub.async_pb_call(
+                    self._slave,
+                    self._target_temperature_register[
+                        HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+                    ],
+                    [int(float(registers[0]))],
+                    CALL_TYPE_WRITE_REGISTERS,
+                )
+            else:
+                result = await self._hub.async_pb_call(
+                    self._slave,
+                    self._target_temperature_register[
+                        HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+                    ],
+                    int(float(registers[0])),
+                    CALL_TYPE_WRITE_REGISTER,
+                )
+        else:
+            result = await self._hub.async_pb_call(
+                self._slave,
+                self._target_temperature_register[
+                    HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+                ],
+                [int(float(i)) for i in registers],
+                CALL_TYPE_WRITE_REGISTERS,
+            )
+        self._attr_available = result is not None
+        await self._async_update_write_state()
+
+    async def _async_update(self) -> None:
+        """Update Target & Current Temperature."""
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
+
+        self._attr_target_temperature = await self._async_read_register(
+            CALL_TYPE_REGISTER_HOLDING,
+            self._target_temperature_register[
+                HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
+            ],
+        )
+
+        self._attr_current_temperature = await self._async_read_register(
+            self._input_type, self._address
+        )
+        # Read the HVAC mode register if defined
+        if self._hvac_mode_register is not None:
+            hvac_mode = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING, self._hvac_mode_register, raw=True
+            )
+
+            # Translate the value received
+            if hvac_mode is not None:
+                self._attr_hvac_mode = None
+                for value, mode in self._hvac_mode_mapping:
+                    if hvac_mode == value:
+                        self._attr_hvac_mode = mode
+                        break
+
+        # Read the HVAC action register if defined
+        if self._hvac_action_register is not None:
+            hvac_action = await self._async_read_register(
+                self._hvac_action_type, self._hvac_action_register, raw=True
+            )
+
+            # Translate the value received
+            if hvac_action is not None:
+                self._attr_hvac_action = None
+                for value, action in self._hvac_action_mapping:
+                    if hvac_action == value:
+                        self._attr_hvac_action = action
+                        break
+
+        # Read the Fan mode register if defined
+        if self._fan_mode_register is not None:
+            fan_mode = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING,
+                self._fan_mode_register
+                if isinstance(self._fan_mode_register, int)
+                else self._fan_mode_register[0],
+                raw=True,
+            )
+
+            # Translate the value received
+            if fan_mode is not None:
+                self._attr_fan_mode = self._fan_mode_mapping_from_modbus.get(
+                    int(fan_mode), self._attr_fan_mode
+                )
+
+        # Read the Swing mode register if defined
+        if self._swing_mode_register:
+            swing_mode = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING,
+                self._swing_mode_register
+                if isinstance(self._swing_mode_register, int)
+                else self._swing_mode_register[0],
+                raw=True,
+            )
+
+            self._attr_swing_mode = STATE_UNKNOWN
+            for value, smode in self._swing_mode_modbus_mapping:
+                if swing_mode == value:
+                    self._attr_swing_mode = smode
+                    break
+
+            if self._attr_swing_mode is STATE_UNKNOWN:
+                _err = f"{self.name}: No answer received from Swing mode register. State is Unknown"
+                _LOGGER.error(_err)
+
+        # Read the on/off register if defined. If the value in this
+        # register is "OFF", it will take precedence over the value
+        # in the mode register.
+        if self._hvac_onoff_register is not None:
+            onoff = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, raw=True
+            )
+            if onoff == self._hvac_off_value:
+                self._attr_hvac_mode = HVACMode.OFF
+
+        if self._hvac_onoff_coil is not None:
+            onoff = await self._async_read_coil(self._hvac_onoff_coil)
+            if onoff == 0:
+                self._attr_hvac_mode = HVACMode.OFF
+
+    async def _async_read_register(
+        self, register_type: str, register: int, raw: bool | None = False
+    ) -> float | None:
+        """Read register using the Modbus hub slave."""
+        result = await self._hub.async_pb_call(
+            self._slave, register, self._count, register_type
+        )
+        if result is None:
+            self._attr_available = False
+            return -1
+
+        if raw:
+            # Return the raw value read from the register, do not change
+            # the object's state
+            self._attr_available = True
+            return int(result.registers[0])
+
+        # The regular handling of the value
+        self._value = self.unpack_structure_result(result.registers)
+        if not self._value:
+            self._attr_available = False
+            return None
+        self._attr_available = True
+        return float(self._value)
+
+    async def _async_read_coil(self, address: int) -> int | None:
+        result = await self._hub.async_pb_call(self._slave, address, 1, CALL_TYPE_COIL)
+        if result is not None and result.bits is not None:
+            self._attr_available = True
+            return int(result.bits[0])
+        self._attr_available = False
+        return None

@@ -1,4 +1,7 @@
 """Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
+
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,17 +9,18 @@ from requests import HTTPError
 from tmb import IBus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME, UnitOfTime
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by Transport Metropolitans de Barcelona"
-
-ICON = "mdi:bus-clock"
 
 CONF_APP_ID = "app_id"
 CONF_APP_KEY = "app_key"
@@ -36,7 +40,7 @@ LINE_STOP_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_APP_ID): cv.string,
         vol.Required(CONF_APP_KEY): cv.string,
@@ -45,13 +49,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensors."""
     ibus_client = IBus(config[CONF_APP_ID], config[CONF_APP_KEY])
 
     sensors = []
 
-    for line_stop in config.get(CONF_BUS_STOPS):
+    for line_stop in config[CONF_BUS_STOPS]:
         line = line_stop[CONF_LINE]
         stop = line_stop[CONF_BUS_STOP]
         if line_stop.get(CONF_NAME):
@@ -63,8 +72,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class TMBSensor(Entity):
+class TMBSensor(SensorEntity):
     """Implementation of a TMB line/stop Sensor."""
+
+    _attr_attribution = "Data provided by Transport Metropolitans de Barcelona"
+    _attr_icon = "mdi:bus-clock"
 
     def __init__(self, ibus_client, stop, line, name):
         """Initialize the sensor."""
@@ -72,7 +84,7 @@ class TMBSensor(Entity):
         self._stop = stop
         self._line = line.upper()
         self._name = name
-        self._unit = "minutes"
+        self._unit = UnitOfTime.MINUTES
         self._state = None
 
     @property
@@ -81,12 +93,7 @@ class TMBSensor(Entity):
         return self._name
 
     @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return ICON
-
-    @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
 
@@ -96,25 +103,25 @@ class TMBSensor(Entity):
         return f"{self._stop}_{self._line}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the next departure time."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the last update."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_BUS_STOP: self._stop,
             ATTR_LINE: self._line,
         }
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Get the next bus information."""
         try:
             self._state = self._ibus_client.get_stop_forecast(self._stop, self._line)
         except HTTPError:
             _LOGGER.error(
-                "Unable to fetch data from TMB API. Please check your API keys are valid."
+                "Unable to fetch data from TMB API. Please check your API keys are"
+                " valid"
             )

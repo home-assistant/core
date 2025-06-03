@@ -1,365 +1,328 @@
 """Support for the Transmission BitTorrent client API."""
-from datetime import timedelta
-import logging
 
-import transmissionrpc
-from transmissionrpc.error import TransmissionError
+from __future__ import annotations
+
+from functools import partial
+import logging
+import re
+from typing import Any, Final
+
+import transmission_rpc
+from transmission_rpc.error import (
+    TransmissionAuthError,
+    TransmissionConnectError,
+    TransmissionError,
+)
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
+    CONF_ID,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
+    CONF_SSL,
     CONF_USERNAME,
+    Platform,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    selector,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_DELETE_DATA,
+    ATTR_DOWNLOAD_PATH,
     ATTR_TORRENT,
-    DATA_UPDATED,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
+    CONF_ENTRY_ID,
+    DEFAULT_DELETE_DATA,
+    DEFAULT_PATH,
+    DEFAULT_SSL,
     DOMAIN,
     SERVICE_ADD_TORRENT,
+    SERVICE_REMOVE_TORRENT,
+    SERVICE_START_TORRENT,
+    SERVICE_STOP_TORRENT,
 )
+from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
-SERVICE_ADD_TORRENT_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_TORRENT): cv.string, vol.Required(CONF_NAME): cv.string}
+MIGRATION_NAME_TO_KEY = {
+    # Sensors
+    "Down Speed": "download",
+    "Up Speed": "upload",
+    "Status": "status",
+    "Active Torrents": "active_torrents",
+    "Paused Torrents": "paused_torrents",
+    "Total Torrents": "total_torrents",
+    "Completed Torrents": "completed_torrents",
+    "Started Torrents": "started_torrents",
+    # Switches
+    "Switch": "on_off",
+    "Turtle Mode": "turtle_mode",
+}
+
+SERVICE_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+    }
 )
 
-TRANS_SCHEMA = vol.All(
-    vol.Schema(
+SERVICE_ADD_TORRENT_SCHEMA = vol.All(
+    SERVICE_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_USERNAME): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(
-                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-            ): cv.time_period,
+            vol.Required(ATTR_TORRENT): cv.string,
+            vol.Optional(ATTR_DOWNLOAD_PATH, default=None): cv.string,
+        }
+    ),
+)
+
+
+SERVICE_REMOVE_TORRENT_SCHEMA = vol.All(
+    SERVICE_BASE_SCHEMA.extend(
+        {
+            vol.Required(CONF_ID): cv.positive_int,
+            vol.Optional(ATTR_DELETE_DATA, default=DEFAULT_DELETE_DATA): cv.boolean,
         }
     )
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [TRANS_SCHEMA])}, extra=vol.ALLOW_EXTRA
+SERVICE_START_TORRENT_SCHEMA = vol.All(
+    SERVICE_BASE_SCHEMA.extend({vol.Required(CONF_ID): cv.positive_int}),
 )
 
-PLATFORMS = ["sensor", "switch"]
+SERVICE_STOP_TORRENT_SCHEMA = vol.All(
+    SERVICE_BASE_SCHEMA.extend(
+        {
+            vol.Required(CONF_ID): cv.positive_int,
+        }
+    )
+)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup(hass, config):
-    """Import the Transmission Component from config."""
-    if DOMAIN in config:
-        for entry in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                )
-            )
-
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Transmission component."""
+    setup_hass_services(hass)
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
     """Set up the Transmission Component."""
-    client = TransmissionClient(hass, config_entry)
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
 
-    if not await client.async_setup():
-        return False
+    @callback
+    def update_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, Any] | None:
+        """Update unique ID of entity entry."""
+        if CONF_NAME not in config_entry.data:
+            return None
+        match = re.search(
+            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.+)",
+            entity_entry.unique_id,
+        )
+
+        if match and (key := MIGRATION_NAME_TO_KEY.get(match.group("name"))):
+            return {"new_unique_id": f"{config_entry.entry_id}-{key}"}
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
+    try:
+        api = await get_api(hass, dict(config_entry.data))
+    except CannotConnect as error:
+        raise ConfigEntryNotReady from error
+    except (AuthenticationError, UnknownError) as error:
+        raise ConfigEntryAuthFailed from error
+
+    coordinator = TransmissionDataUpdateCoordinator(hass, config_entry, api)
+    await hass.async_add_executor_job(coordinator.init_torrent_list)
+
+    await coordinator.async_config_entry_first_refresh()
+    config_entry.runtime_data = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
     """Unload Transmission Entry from config_entry."""
-    client = hass.data[DOMAIN].pop(config_entry.entry_id)
-    if client.unsub_timer:
-        client.unsub_timer()
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
 
-    if not hass.data[DOMAIN]:
-        hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
+    """Migrate an old config entry."""
+    _LOGGER.debug(
+        "Migrating from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version == 1:
+        # Version 1.2 adds ssl and path
+        if config_entry.minor_version < 2:
+            new = {**config_entry.data}
+
+            new[CONF_PATH] = DEFAULT_PATH
+            new[CONF_SSL] = DEFAULT_SSL
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new, version=1, minor_version=2
+        )
+
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
 
     return True
 
 
-async def get_api(hass, entry):
+def _get_coordinator_from_service_data(
+    hass: HomeAssistant, entry_id: str
+) -> TransmissionDataUpdateCoordinator:
+    """Return coordinator for entry id."""
+    entry: TransmissionConfigEntry | None = hass.config_entries.async_get_entry(
+        entry_id
+    )
+    if entry is None or entry.state is not ConfigEntryState.LOADED:
+        raise HomeAssistantError(f"Config entry {entry_id} is not found or not loaded")
+    return entry.runtime_data
+
+
+def setup_hass_services(hass: HomeAssistant) -> None:
+    """Home Assistant services."""
+
+    async def add_torrent(service: ServiceCall) -> None:
+        """Add new torrent to download."""
+        entry_id: str = service.data[CONF_ENTRY_ID]
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
+        torrent: str = service.data[ATTR_TORRENT]
+        download_path: str | None = service.data.get(ATTR_DOWNLOAD_PATH)
+        if torrent.startswith(
+            ("http", "ftp:", "magnet:")
+        ) or hass.config.is_allowed_path(torrent):
+            if download_path:
+                await hass.async_add_executor_job(
+                    partial(
+                        coordinator.api.add_torrent, torrent, download_dir=download_path
+                    )
+                )
+            else:
+                await hass.async_add_executor_job(coordinator.api.add_torrent, torrent)
+            await coordinator.async_request_refresh()
+        else:
+            _LOGGER.warning("Could not add torrent: unsupported type or no permission")
+
+    async def start_torrent(service: ServiceCall) -> None:
+        """Start torrent."""
+        entry_id: str = service.data[CONF_ENTRY_ID]
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
+        torrent_id = service.data[CONF_ID]
+        await hass.async_add_executor_job(coordinator.api.start_torrent, torrent_id)
+        await coordinator.async_request_refresh()
+
+    async def stop_torrent(service: ServiceCall) -> None:
+        """Stop torrent."""
+        entry_id: str = service.data[CONF_ENTRY_ID]
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
+        torrent_id = service.data[CONF_ID]
+        await hass.async_add_executor_job(coordinator.api.stop_torrent, torrent_id)
+        await coordinator.async_request_refresh()
+
+    async def remove_torrent(service: ServiceCall) -> None:
+        """Remove torrent."""
+        entry_id: str = service.data[CONF_ENTRY_ID]
+        coordinator = _get_coordinator_from_service_data(hass, entry_id)
+        torrent_id = service.data[CONF_ID]
+        delete_data = service.data[ATTR_DELETE_DATA]
+        await hass.async_add_executor_job(
+            partial(coordinator.api.remove_torrent, torrent_id, delete_data=delete_data)
+        )
+        await coordinator.async_request_refresh()
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REMOVE_TORRENT,
+        remove_torrent,
+        schema=SERVICE_REMOVE_TORRENT_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_START_TORRENT,
+        start_torrent,
+        schema=SERVICE_START_TORRENT_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_STOP_TORRENT,
+        stop_torrent,
+        schema=SERVICE_STOP_TORRENT_SCHEMA,
+    )
+
+
+async def get_api(
+    hass: HomeAssistant, entry: dict[str, Any]
+) -> transmission_rpc.Client:
     """Get Transmission client."""
+    protocol: Final = "https" if entry[CONF_SSL] else "http"
     host = entry[CONF_HOST]
     port = entry[CONF_PORT]
+    path = entry[CONF_PATH]
     username = entry.get(CONF_USERNAME)
     password = entry.get(CONF_PASSWORD)
 
     try:
         api = await hass.async_add_executor_job(
-            transmissionrpc.Client, host, port, username, password
+            partial(
+                transmission_rpc.Client,
+                username=username,
+                password=password,
+                protocol=protocol,
+                host=host,
+                port=port,
+                path=path,
+            )
         )
-        _LOGGER.debug("Successfully connected to %s", host)
-        return api
-
+    except TransmissionAuthError as error:
+        _LOGGER.error("Credentials for Transmission client are not valid")
+        raise AuthenticationError from error
+    except TransmissionConnectError as error:
+        _LOGGER.error("Connecting to the Transmission client %s failed", host)
+        raise CannotConnect from error
     except TransmissionError as error:
-        if "401: Unauthorized" in str(error):
-            _LOGGER.error("Credentials for Transmission client are not valid")
-            raise AuthenticationError
-        if "111: Connection refused" in str(error):
-            _LOGGER.error("Connecting to the Transmission client %s failed", host)
-            raise CannotConnect
-
         _LOGGER.error(error)
-        raise UnknownError
-
-
-class TransmissionClient:
-    """Transmission Client Object."""
-
-    def __init__(self, hass, config_entry):
-        """Initialize the Transmission RPC API."""
-        self.hass = hass
-        self.config_entry = config_entry
-        self.tm_api = None
-        self._tm_data = None
-        self.unsub_timer = None
-
-    @property
-    def api(self):
-        """Return the tm_data object."""
-        return self._tm_data
-
-    async def async_setup(self):
-        """Set up the Transmission client."""
-
-        try:
-            self.tm_api = await get_api(self.hass, self.config_entry.data)
-        except CannotConnect:
-            raise ConfigEntryNotReady
-        except (AuthenticationError, UnknownError):
-            return False
-
-        self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
-
-        await self.hass.async_add_executor_job(self._tm_data.init_torrent_list)
-        await self.hass.async_add_executor_job(self._tm_data.update)
-        self.add_options()
-        self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
-
-        for platform in PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
-            )
-
-        def add_torrent(service):
-            """Add new torrent to download."""
-            tm_client = None
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data[CONF_NAME] == service.data[CONF_NAME]:
-                    tm_client = self.hass.data[DOMAIN][entry.entry_id]
-                    break
-            if tm_client is None:
-                _LOGGER.error("Transmission instance is not found")
-                return
-            torrent = service.data[ATTR_TORRENT]
-            if torrent.startswith(
-                ("http", "ftp:", "magnet:")
-            ) or self.hass.config.is_allowed_path(torrent):
-                tm_client.tm_api.add_torrent(torrent)
-            else:
-                _LOGGER.warning(
-                    "Could not add torrent: unsupported type or no permission"
-                )
-
-        self.hass.services.async_register(
-            DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
-        )
-
-        self.config_entry.add_update_listener(self.async_options_updated)
-
-        return True
-
-    def add_options(self):
-        """Add options for entry."""
-        if not self.config_entry.options:
-            scan_interval = self.config_entry.data.pop(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-            )
-            options = {CONF_SCAN_INTERVAL: scan_interval}
-
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, options=options
-            )
-
-    def set_scan_interval(self, scan_interval):
-        """Update scan interval."""
-
-        def refresh(event_time):
-            """Get the latest data from Transmission."""
-            self._tm_data.update()
-
-        if self.unsub_timer is not None:
-            self.unsub_timer()
-        self.unsub_timer = async_track_time_interval(
-            self.hass, refresh, timedelta(seconds=scan_interval)
-        )
-
-    @staticmethod
-    async def async_options_updated(hass, entry):
-        """Triggered by config entry options updates."""
-        hass.data[DOMAIN][entry.entry_id].set_scan_interval(
-            entry.options[CONF_SCAN_INTERVAL]
-        )
-
-
-class TransmissionData:
-    """Get the latest data and update the states."""
-
-    def __init__(self, hass, config, api):
-        """Initialize the Transmission RPC API."""
-        self.hass = hass
-        self.config = config
-        self.data = None
-        self.torrents = None
-        self.session = None
-        self.available = True
-        self._api = api
-        self.completed_torrents = []
-        self.started_torrents = []
-        self.started_torrent_dict = {}
-
-    @property
-    def host(self):
-        """Return the host name."""
-        return self.config.data[CONF_HOST]
-
-    @property
-    def signal_update(self):
-        """Update signal per transmission entry."""
-        return f"{DATA_UPDATED}-{self.host}"
-
-    def update(self):
-        """Get the latest data from Transmission instance."""
-        try:
-            self.data = self._api.session_stats()
-            self.torrents = self._api.get_torrents()
-            self.session = self._api.get_session()
-
-            self.check_started_torrent_info()
-            self.check_completed_torrent()
-            self.check_started_torrent()
-            _LOGGER.debug("Torrent Data for %s Updated", self.host)
-
-            self.available = True
-        except TransmissionError:
-            self.available = False
-            _LOGGER.error("Unable to connect to Transmission client %s", self.host)
-        dispatcher_send(self.hass, self.signal_update)
-
-    def init_torrent_list(self):
-        """Initialize torrent lists."""
-        self.torrents = self._api.get_torrents()
-        self.completed_torrents = [
-            x.name for x in self.torrents if x.status == "seeding"
-        ]
-        self.started_torrents = [
-            x.name for x in self.torrents if x.status == "downloading"
-        ]
-
-    def check_completed_torrent(self):
-        """Get completed torrent functionality."""
-        actual_torrents = self.torrents
-        actual_completed_torrents = [
-            var.name for var in actual_torrents if var.status == "seeding"
-        ]
-
-        tmp_completed_torrents = list(
-            set(actual_completed_torrents).difference(self.completed_torrents)
-        )
-
-        for var in tmp_completed_torrents:
-            self.hass.bus.fire("transmission_downloaded_torrent", {"name": var})
-
-        self.completed_torrents = actual_completed_torrents
-
-    def check_started_torrent(self):
-        """Get started torrent functionality."""
-        actual_torrents = self.torrents
-        actual_started_torrents = [
-            var.name for var in actual_torrents if var.status == "downloading"
-        ]
-
-        tmp_started_torrents = list(
-            set(actual_started_torrents).difference(self.started_torrents)
-        )
-
-        for var in tmp_started_torrents:
-            self.hass.bus.fire("transmission_started_torrent", {"name": var})
-        self.started_torrents = actual_started_torrents
-
-    def check_started_torrent_info(self):
-        """Get started torrent info functionality."""
-        all_torrents = self._api.get_torrents()
-        current_down = {}
-
-        for torrent in all_torrents:
-            if torrent.status == "downloading":
-                info = self.started_torrent_dict[torrent.name] = {
-                    "added_date": torrent.addedDate,
-                    "percent_done": f"{torrent.percentDone * 100:.2f}",
-                }
-                try:
-                    info["eta"] = str(torrent.eta)
-                except ValueError:
-                    info["eta"] = "unknown"
-
-                current_down[torrent.name] = True
-
-            elif torrent.name in self.started_torrent_dict:
-                self.started_torrent_dict.pop(torrent.name)
-
-        for torrent in list(self.started_torrent_dict):
-            if torrent not in current_down:
-                self.started_torrent_dict.pop(torrent)
-
-    def get_started_torrent_count(self):
-        """Get the number of started torrents."""
-        return len(self.started_torrents)
-
-    def get_completed_torrent_count(self):
-        """Get the number of completed torrents."""
-        return len(self.completed_torrents)
-
-    def start_torrents(self):
-        """Start all torrents."""
-        self._api.start_all()
-
-    def stop_torrents(self):
-        """Stop all active torrents."""
-        torrent_ids = [torrent.id for torrent in self.torrents]
-        self._api.stop_torrent(torrent_ids)
-
-    def set_alt_speed_enabled(self, is_enabled):
-        """Set the alternative speed flag."""
-        self._api.set_session(alt_speed_enabled=is_enabled)
-
-    def get_alt_speed_enabled(self):
-        """Get the alternative speed flag."""
-        if self.session is None:
-            return None
-
-        return self.session.alt_speed_enabled
+        raise UnknownError from error
+    _LOGGER.debug("Successfully connected to %s", host)
+    return api

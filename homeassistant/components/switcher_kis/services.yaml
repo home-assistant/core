@@ -1,9 +1,27 @@
 set_auto_off:
-  description: 'Update Switcher device auto off setting.'
+  target:
+    entity:
+      integration: switcher_kis
+      domain: switch
+      device_class: switch
   fields:
-    entity_id:
-      description: "Name of the entity id associated with the integration, used for permission validation."
-      example: "switch.switcher_kis_boiler"
     auto_off:
-      description: 'Time period string containing hours and minutes.'
+      required: true
       example: '"02:30"'
+      selector:
+        text:
+
+turn_on_with_timer:
+  target:
+    entity:
+      integration: switcher_kis
+      domain: switch
+      device_class: switch
+  fields:
+    timer_minutes:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 150
+          unit_of_measurement: minutes

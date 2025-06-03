@@ -1,18 +1,17 @@
 """Support for tracking the moon phases."""
-import logging
 
-from astral import Astral
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
+from astral import moon
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-DEFAULT_NAME = "Moon"
+from .const import DOMAIN
 
 STATE_FIRST_QUARTER = "first_quarter"
 STATE_FULL_MOON = "full_moon"
@@ -20,70 +19,63 @@ STATE_LAST_QUARTER = "last_quarter"
 STATE_NEW_MOON = "new_moon"
 STATE_WANING_CRESCENT = "waning_crescent"
 STATE_WANING_GIBBOUS = "waning_gibbous"
-STATE_WAXING_GIBBOUS = "waxing_gibbous"
 STATE_WAXING_CRESCENT = "waxing_crescent"
-
-MOON_ICONS = {
-    STATE_FIRST_QUARTER: "mdi:moon-first-quarter",
-    STATE_FULL_MOON: "mdi:moon-full",
-    STATE_LAST_QUARTER: "mdi:moon-last-quarter",
-    STATE_NEW_MOON: "mdi:moon-new",
-    STATE_WANING_CRESCENT: "mdi:moon-waning-crescent",
-    STATE_WANING_GIBBOUS: "mdi:moon-waning-gibbous",
-    STATE_WAXING_CRESCENT: "mdi:moon-waxing-crescent",
-    STATE_WAXING_GIBBOUS: "mdi:moon-waxing-gibbous",
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
-)
+STATE_WAXING_GIBBOUS = "waxing_gibbous"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Moon sensor."""
-    name = config.get(CONF_NAME)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the platform from config_entry."""
+    async_add_entities([MoonSensorEntity(entry)], True)
 
-    async_add_entities([MoonSensor(name)], True)
 
-
-class MoonSensor(Entity):
+class MoonSensorEntity(SensorEntity):
     """Representation of a Moon sensor."""
 
-    def __init__(self, name):
+    _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = [
+        STATE_NEW_MOON,
+        STATE_WAXING_CRESCENT,
+        STATE_FIRST_QUARTER,
+        STATE_WAXING_GIBBOUS,
+        STATE_FULL_MOON,
+        STATE_WANING_GIBBOUS,
+        STATE_LAST_QUARTER,
+        STATE_WANING_CRESCENT,
+    ]
+    _attr_translation_key = "phase"
+
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the moon sensor."""
-        self._name = name
-        self._state = None
+        self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            name="Moon",
+            identifiers={(DOMAIN, entry.entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        if self._state == 0:
-            return STATE_NEW_MOON
-        if self._state < 7:
-            return STATE_WAXING_CRESCENT
-        if self._state == 7:
-            return STATE_FIRST_QUARTER
-        if self._state < 14:
-            return STATE_WAXING_GIBBOUS
-        if self._state == 14:
-            return STATE_FULL_MOON
-        if self._state < 21:
-            return STATE_WANING_GIBBOUS
-        if self._state == 21:
-            return STATE_LAST_QUARTER
-        return STATE_WANING_CRESCENT
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return MOON_ICONS.get(self.state)
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the time and updates the states."""
-        today = dt_util.as_local(dt_util.utcnow()).date()
-        self._state = Astral().moon_phase(today)
+        today = dt_util.now().date()
+        state = moon.phase(today)
+
+        if state < 0.5 or state > 27.5:
+            self._attr_native_value = STATE_NEW_MOON
+        elif state < 6.5:
+            self._attr_native_value = STATE_WAXING_CRESCENT
+        elif state < 7.5:
+            self._attr_native_value = STATE_FIRST_QUARTER
+        elif state < 13.5:
+            self._attr_native_value = STATE_WAXING_GIBBOUS
+        elif state < 14.5:
+            self._attr_native_value = STATE_FULL_MOON
+        elif state < 20.5:
+            self._attr_native_value = STATE_WANING_GIBBOUS
+        elif state < 21.5:
+            self._attr_native_value = STATE_LAST_QUARTER
+        else:
+            self._attr_native_value = STATE_WANING_CRESCENT

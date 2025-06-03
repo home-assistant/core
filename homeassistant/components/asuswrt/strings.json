@@ -1,0 +1,125 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set required parameter to connect to your router",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssh_key": "Path to your SSH key file (instead of password)",
+          "protocol": "Communication protocol to use",
+          "port": "Port (leave empty for protocol default)"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your ASUSWRT router."
+        }
+      },
+      "legacy": {
+        "description": "Set required parameters to connect to your router",
+        "data": {
+          "mode": "Router operating mode"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "pwd_or_ssh": "Please provide password or SSH key file",
+      "pwd_required": "Password is required for selected protocol",
+      "ssh_not_file": "SSH key file not found",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "invalid_unique_id": "Impossible to determine a valid unique ID for the device",
+      "no_unique_id": "A device without a valid unique ID is already configured. Configuration of multiple instances is not possible"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "consider_home": "Seconds to wait before considering a device away",
+          "track_unknown": "Track unknown / unnamed devices",
+          "interface": "The interface that you want statistics from (e.g. eth0, eth1 etc)",
+          "dnsmasq": "The location of the dnsmasq.leases file in the router",
+          "require_ip": "Devices must have IP (for access point mode)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "devices_connected": {
+        "name": "Devices connected"
+      },
+      "download_speed": {
+        "name": "Download speed"
+      },
+      "upload_speed": {
+        "name": "Upload speed"
+      },
+      "download": {
+        "name": "Download"
+      },
+      "upload": {
+        "name": "Upload"
+      },
+      "load_avg_1m": {
+        "name": "Average load (1 min)"
+      },
+      "load_avg_5m": {
+        "name": "Average load (5 min)"
+      },
+      "load_avg_15m": {
+        "name": "Average load (15 min)"
+      },
+      "24ghz_temperature": {
+        "name": "2.4GHz temperature"
+      },
+      "5ghz_temperature": {
+        "name": "5GHz temperature"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      },
+      "5ghz_2_temperature": {
+        "name": "5GHz temperature (Radio 2)"
+      },
+      "6ghz_temperature": {
+        "name": "6GHz temperature"
+      },
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "cpu_core_usage": {
+        "name": "CPU core {core_id} usage"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "memory_free": {
+        "name": "Memory free"
+      },
+      "memory_used": {
+        "name": "Memory used"
+      },
+      "last_boot": {
+        "name": "Last boot"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
+    }
+  },
+  "selector": {
+    "protocols": {
+      "options": {
+        "https": "HTTPS",
+        "http": "HTTP",
+        "ssh": "SSH",
+        "telnet": "Telnet"
+      }
+    }
+  }
+}

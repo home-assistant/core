@@ -1,11 +1,110 @@
 # Describes the format for available recorder services
 
 purge:
-  description: Start purge task - delete events and states older than x days, according to keep_days service data.
   fields:
     keep_days:
-      description: Number of history days to keep in database after purge. Value >= 0.
-      example: 2
+      selector:
+        number:
+          min: 0
+          max: 365
+          unit_of_measurement: days
+
     repack:
-      description: Attempt to save disk space by rewriting the entire database file.
-      example: true
+      default: false
+      selector:
+        boolean:
+
+    apply_filter:
+      default: false
+      selector:
+        boolean:
+
+purge_entities:
+  fields:
+    entity_id:
+      required: false
+      selector:
+        entity:
+          multiple: true
+    domains:
+      example: "sun"
+      required: false
+      selector:
+        object:
+
+    entity_globs:
+      example: "domain*.object_id*"
+      required: false
+      selector:
+        object:
+
+    keep_days:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 365
+          unit_of_measurement: days
+
+disable:
+enable:
+
+get_statistics:
+  fields:
+    start_time:
+      required: true
+      example: "2025-01-01 00:00:00"
+      selector:
+        datetime:
+
+    end_time:
+      required: false
+      example: "2025-01-02 00:00:00"
+      selector:
+        datetime:
+
+    statistic_ids:
+      required: true
+      example:
+        - sensor.energy_consumption
+        - sensor.temperature
+      selector:
+        entity:
+          multiple: true
+
+    period:
+      required: true
+      example: "hour"
+      selector:
+        select:
+          options:
+            - "5minute"
+            - "hour"
+            - "day"
+            - "week"
+            - "month"
+
+    types:
+      required: true
+      example:
+        - "mean"
+        - "sum"
+      selector:
+        select:
+          options:
+            - "change"
+            - "last_reset"
+            - "max"
+            - "mean"
+            - "min"
+            - "state"
+            - "sum"
+          multiple: true
+
+    units:
+      required: false
+      example:
+        energy: "kWh"
+        temperature: "°C"
+      selector:
+        object:

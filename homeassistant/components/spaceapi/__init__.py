@@ -1,27 +1,31 @@
 """Support for the SpaceAPI."""
-import logging
+
+from contextlib import suppress
+import math
 
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant import core as ha
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_LOCATION,
+    ATTR_NAME,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ADDRESS,
     CONF_EMAIL,
     CONF_ENTITY_ID,
+    CONF_LOCATION,
     CONF_SENSORS,
     CONF_STATE,
     CONF_URL,
 )
-import homeassistant.core as ha
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 ATTR_ADDRESS = "address"
 ATTR_SPACEFED = "spacefed"
@@ -34,12 +38,11 @@ ATTR_RADIO_SHOW = "radio_show"
 ATTR_LAT = "lat"
 ATTR_LON = "lon"
 ATTR_API = "api"
-ATTR_CLOSE = "close"
+ATTR_CLOSED = "closed"
 ATTR_CONTACT = "contact"
 ATTR_ISSUE_REPORT_CHANNELS = "issue_report_channels"
 ATTR_LASTCHANGE = "lastchange"
 ATTR_LOGO = "logo"
-ATTR_NAME = "name"
 ATTR_OPEN = "open"
 ATTR_SENSORS = "sensors"
 ATTR_SPACE = "space"
@@ -55,7 +58,6 @@ CONF_ICON_OPEN = "icon_open"
 CONF_ICONS = "icons"
 CONF_IRC = "irc"
 CONF_ISSUE_REPORT_CHANNELS = "issue_report_channels"
-CONF_LOCATION = "location"
 CONF_SPACEFED = "spacefed"
 CONF_SPACENET = "spacenet"
 CONF_SPACESAML = "spacesaml"
@@ -234,7 +236,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the SpaceAPI with the HTTP interface."""
     hass.data[DATA_SPACEAPI] = config[DOMAIN]
     hass.http.register_view(APISpaceApiView)
@@ -251,10 +253,19 @@ class APISpaceApiView(HomeAssistantView):
     @staticmethod
     def get_sensor_data(hass, spaceapi, sensor):
         """Get data from a sensor."""
-        sensor_state = hass.states.get(sensor)
-        if not sensor_state:
+        if not (sensor_state := hass.states.get(sensor)):
             return None
-        sensor_data = {ATTR_NAME: sensor_state.name, ATTR_VALUE: sensor_state.state}
+
+        # SpaceAPI sensor values must be numbers
+        try:
+            state = float(sensor_state.state)
+        except ValueError:
+            state = math.nan
+        sensor_data = {
+            ATTR_NAME: sensor_state.name,
+            ATTR_VALUE: state,
+        }
+
         if ATTR_SENSOR_LOCATION in sensor_state.attributes:
             sensor_data[ATTR_LOCATION] = sensor_state.attributes[ATTR_SENSOR_LOCATION]
         else:
@@ -267,7 +278,7 @@ class APISpaceApiView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Get SpaceAPI data."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         spaceapi = dict(hass.data[DATA_SPACEAPI])
         is_sensors = spaceapi.get("sensors")
 
@@ -281,9 +292,8 @@ class APISpaceApiView(HomeAssistantView):
             pass
 
         state_entity = spaceapi["state"][ATTR_ENTITY_ID]
-        space_state = hass.states.get(state_entity)
 
-        if space_state is not None:
+        if (space_state := hass.states.get(state_entity)) is not None:
             state = {
                 ATTR_OPEN: space_state.state != "off",
                 ATTR_LASTCHANGE: dt_util.as_timestamp(space_state.last_updated),
@@ -291,13 +301,11 @@ class APISpaceApiView(HomeAssistantView):
         else:
             state = {ATTR_OPEN: "null", ATTR_LASTCHANGE: 0}
 
-        try:
+        with suppress(KeyError):
             state[ATTR_ICON] = {
                 ATTR_OPEN: spaceapi["state"][CONF_ICON_OPEN],
-                ATTR_CLOSE: spaceapi["state"][CONF_ICON_CLOSED],
+                ATTR_CLOSED: spaceapi["state"][CONF_ICON_CLOSED],
             }
-        except KeyError:
-            pass
 
         data = {
             ATTR_API: SPACEAPI_VERSION,
@@ -310,40 +318,26 @@ class APISpaceApiView(HomeAssistantView):
             ATTR_URL: spaceapi[CONF_URL],
         }
 
-        try:
+        with suppress(KeyError):
             data[ATTR_CAM] = spaceapi[CONF_CAM]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_SPACEFED] = spaceapi[CONF_SPACEFED]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_STREAM] = spaceapi[CONF_STREAM]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_FEEDS] = spaceapi[CONF_FEEDS]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_CACHE] = spaceapi[CONF_CACHE]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_PROJECTS] = spaceapi[CONF_PROJECTS]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_RADIO_SHOW] = spaceapi[CONF_RADIO_SHOW]
-        except KeyError:
-            pass
 
         if is_sensors is not None:
             sensors = {}

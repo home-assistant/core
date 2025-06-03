@@ -1,8 +1,10 @@
 {
   "domain": "xs1",
   "name": "EZcontrol XS1",
+  "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/xs1",
-  "requirements": ["xs1-api-client==2.3.5"],
-  "dependencies": [],
-  "codeowners": []
+  "iot_class": "local_polling",
+  "loggers": ["xs1_api_client"],
+  "quality_scale": "legacy",
+  "requirements": ["xs1-api-client==3.0.0"]
 }

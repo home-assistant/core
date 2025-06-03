@@ -1,0 +1,10 @@
+{
+  "domain": "dexcom",
+  "name": "Dexcom",
+  "codeowners": ["@gagebenne"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/dexcom",
+  "iot_class": "cloud_polling",
+  "loggers": ["pydexcom"],
+  "requirements": ["pydexcom==0.2.3"]
+}

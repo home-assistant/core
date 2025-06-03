@@ -1,8 +1,10 @@
 {
   "domain": "yale_smart_alarm",
   "name": "Yale Smart Living",
+  "codeowners": ["@gjohansson-ST"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yale_smart_alarm",
-  "requirements": ["yalesmartalarmclient==0.1.6"],
-  "dependencies": [],
-  "codeowners": []
+  "iot_class": "cloud_polling",
+  "loggers": ["yalesmartalarmclient"],
+  "requirements": ["yalesmartalarmclient==0.4.3"]
 }

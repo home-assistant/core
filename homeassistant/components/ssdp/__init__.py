@@ -1,167 +1,227 @@
 """The SSDP integration."""
-import asyncio
-from datetime import timedelta
-import logging
 
-import aiohttp
-from defusedxml import ElementTree
-from netdisco import ssdp, util
+from __future__ import annotations
 
-from homeassistant.generated.ssdp import SSDP
-from homeassistant.helpers.event import async_track_time_interval
+from collections.abc import Callable, Coroutine
+from functools import partial
+from typing import Any
 
-DOMAIN = "ssdp"
-SCAN_INTERVAL = timedelta(seconds=60)
+from homeassistant.core import HassJob, HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_NT as _ATTR_NT,
+    ATTR_ST as _ATTR_ST,
+    ATTR_UPNP_DEVICE_TYPE as _ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME as _ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER as _ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MANUFACTURER_URL as _ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_MODEL_DESCRIPTION as _ATTR_UPNP_MODEL_DESCRIPTION,
+    ATTR_UPNP_MODEL_NAME as _ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER as _ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_MODEL_URL as _ATTR_UPNP_MODEL_URL,
+    ATTR_UPNP_PRESENTATION_URL as _ATTR_UPNP_PRESENTATION_URL,
+    ATTR_UPNP_SERIAL as _ATTR_UPNP_SERIAL,
+    ATTR_UPNP_SERVICE_LIST as _ATTR_UPNP_SERVICE_LIST,
+    ATTR_UPNP_UDN as _ATTR_UPNP_UDN,
+    ATTR_UPNP_UPC as _ATTR_UPNP_UPC,
+    SsdpServiceInfo as _SsdpServiceInfo,
+)
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_ssdp, bind_hass
+from homeassistant.util.logging import catch_log_exception
+
+from . import websocket_api
+from .const import DOMAIN, SSDP_SCANNER, UPNP_SERVER
+from .scanner import (
+    IntegrationMatchers,
+    Scanner,
+    SsdpChange,
+    SsdpHassJobCallback,  # noqa: F401
+)
+from .server import Server
 
 # Attributes for accessing info from SSDP response
 ATTR_SSDP_LOCATION = "ssdp_location"
 ATTR_SSDP_ST = "ssdp_st"
+ATTR_SSDP_NT = "ssdp_nt"
+ATTR_SSDP_UDN = "ssdp_udn"
+ATTR_SSDP_USN = "ssdp_usn"
+ATTR_SSDP_EXT = "ssdp_ext"
+ATTR_SSDP_SERVER = "ssdp_server"
+ATTR_SSDP_BOOTID = "BOOTID.UPNP.ORG"
+ATTR_SSDP_NEXTBOOTID = "NEXTBOOTID.UPNP.ORG"
 # Attributes for accessing info from retrieved UPnP device description
-ATTR_UPNP_DEVICE_TYPE = "deviceType"
-ATTR_UPNP_FRIENDLY_NAME = "friendlyName"
-ATTR_UPNP_MANUFACTURER = "manufacturer"
-ATTR_UPNP_MANUFACTURER_URL = "manufacturerURL"
-ATTR_UPNP_MODEL_NAME = "modelName"
-ATTR_UPNP_MODEL_NUMBER = "modelNumber"
-ATTR_UPNP_PRESENTATION_URL = "presentationURL"
-ATTR_UPNP_SERIAL = "serialNumber"
-ATTR_UPNP_UDN = "UDN"
+_DEPRECATED_ATTR_ST = DeprecatedConstant(
+    _ATTR_ST,
+    "homeassistant.helpers.service_info.ssdp.ATTR_ST",
+    "2026.2",
+)
+_DEPRECATED_ATTR_NT = DeprecatedConstant(
+    _ATTR_NT,
+    "homeassistant.helpers.service_info.ssdp.ATTR_NT",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_DEVICE_TYPE = DeprecatedConstant(
+    _ATTR_UPNP_DEVICE_TYPE,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_DEVICE_TYPE",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_FRIENDLY_NAME = DeprecatedConstant(
+    _ATTR_UPNP_FRIENDLY_NAME,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_FRIENDLY_NAME",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MANUFACTURER = DeprecatedConstant(
+    _ATTR_UPNP_MANUFACTURER,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MANUFACTURER",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MANUFACTURER_URL = DeprecatedConstant(
+    _ATTR_UPNP_MANUFACTURER_URL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MANUFACTURER_URL",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_DESCRIPTION = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_DESCRIPTION,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_DESCRIPTION",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_NAME = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_NAME,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_NAME",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_NUMBER = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_NUMBER,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_NUMBER",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_URL = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_URL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_URL",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_SERIAL = DeprecatedConstant(
+    _ATTR_UPNP_SERIAL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_SERIAL",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_SERVICE_LIST = DeprecatedConstant(
+    _ATTR_UPNP_SERVICE_LIST,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_SERVICE_LIST",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_UDN = DeprecatedConstant(
+    _ATTR_UPNP_UDN,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_UDN",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_UPC = DeprecatedConstant(
+    _ATTR_UPNP_UPC,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_UPC",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_PRESENTATION_URL = DeprecatedConstant(
+    _ATTR_UPNP_PRESENTATION_URL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_PRESENTATION_URL",
+    "2026.2",
+)
+# Attributes for accessing info added by Home Assistant
+ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
-_LOGGER = logging.getLogger(__name__)
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+_DEPRECATED_SsdpServiceInfo = DeprecatedConstant(
+    _SsdpServiceInfo,
+    "homeassistant.helpers.service_info.ssdp.SsdpServiceInfo",
+    "2026.2",
+)
 
 
-async def async_setup(hass, config):
+def _format_err(name: str, *args: Any) -> str:
+    """Format error message."""
+    return f"Exception in SSDP callback {name}: {args}"
+
+
+@bind_hass
+async def async_register_callback(
+    hass: HomeAssistant,
+    callback: Callable[
+        [_SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None
+    ],
+    match_dict: dict[str, str] | None = None,
+) -> Callable[[], None]:
+    """Register to receive a callback on ssdp broadcast.
+
+    Returns a callback that can be used to cancel the registration.
+    """
+    scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
+    job = HassJob(
+        catch_log_exception(
+            callback,
+            partial(_format_err, str(callback)),
+        ),
+        f"ssdp callback {match_dict}",
+    )
+    return await scanner.async_register_callback(job, match_dict)
+
+
+@bind_hass
+async def async_get_discovery_info_by_udn_st(
+    hass: HomeAssistant, udn: str, st: str
+) -> _SsdpServiceInfo | None:
+    """Fetch the discovery info cache."""
+    scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
+    return await scanner.async_get_discovery_info_by_udn_st(udn, st)
+
+
+@bind_hass
+async def async_get_discovery_info_by_st(
+    hass: HomeAssistant, st: str
+) -> list[_SsdpServiceInfo]:
+    """Fetch all the entries matching the st."""
+    scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
+    return await scanner.async_get_discovery_info_by_st(st)
+
+
+@bind_hass
+async def async_get_discovery_info_by_udn(
+    hass: HomeAssistant, udn: str
+) -> list[_SsdpServiceInfo]:
+    """Fetch all the entries matching the udn."""
+    scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
+    return await scanner.async_get_discovery_info_by_udn(udn)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SSDP integration."""
 
-    async def initialize():
-        scanner = Scanner(hass)
-        await scanner.async_scan(None)
-        async_track_time_interval(hass, scanner.async_scan, SCAN_INTERVAL)
+    integration_matchers = IntegrationMatchers()
+    integration_matchers.async_setup(await async_get_ssdp(hass))
 
-    hass.loop.create_task(initialize())
+    scanner = Scanner(hass, integration_matchers)
+    server = Server(hass)
+    hass.data[DOMAIN] = {
+        SSDP_SCANNER: scanner,
+        UPNP_SERVER: server,
+    }
+
+    await scanner.async_start()
+    await server.async_start()
+    websocket_api.async_setup(hass)
 
     return True
 
 
-class Scanner:
-    """Class to manage SSDP scanning."""
-
-    def __init__(self, hass):
-        """Initialize class."""
-        self.hass = hass
-        self.seen = set()
-        self._description_cache = {}
-
-    async def async_scan(self, _):
-        """Scan for new entries."""
-        _LOGGER.debug("Scanning")
-        # Run 3 times as packets can get lost
-        for _ in range(3):
-            entries = await self.hass.async_add_executor_job(ssdp.scan)
-            await self._process_entries(entries)
-
-        # We clear the cache after each run. We track discovered entries
-        # so will never need a description twice.
-        self._description_cache.clear()
-
-    async def _process_entries(self, entries):
-        """Process SSDP entries."""
-        tasks = []
-
-        for entry in entries:
-            key = (entry.st, entry.location)
-
-            if key in self.seen:
-                continue
-
-            self.seen.add(key)
-
-            tasks.append(self._process_entry(entry))
-
-        if not tasks:
-            return
-
-        to_load = [
-            result for result in await asyncio.gather(*tasks) if result is not None
-        ]
-
-        if not to_load:
-            return
-
-        tasks = []
-
-        for entry, info, domains in to_load:
-            for domain in domains:
-                _LOGGER.debug("Discovered %s at %s", domain, entry.location)
-                tasks.append(
-                    self.hass.config_entries.flow.async_init(
-                        domain, context={"source": DOMAIN}, data=info
-                    )
-                )
-
-        await asyncio.wait(tasks)
-
-    async def _process_entry(self, entry):
-        """Process a single entry."""
-
-        info = {"st": entry.st}
-
-        if entry.location:
-
-            # Multiple entries usually share same location. Make sure
-            # we fetch it only once.
-            info_req = self._description_cache.get(entry.location)
-
-            if info_req is None:
-                info_req = self._description_cache[
-                    entry.location
-                ] = self.hass.async_create_task(self._fetch_description(entry.location))
-
-            info.update(await info_req)
-
-        domains = set()
-        for domain, matchers in SSDP.items():
-            for matcher in matchers:
-                if all(info.get(k) == v for (k, v) in matcher.items()):
-                    domains.add(domain)
-
-        if domains:
-            return (entry, info_from_entry(entry, info), domains)
-
-        return None
-
-    async def _fetch_description(self, xml_location):
-        """Fetch an XML description."""
-        session = self.hass.helpers.aiohttp_client.async_get_clientsession()
-        try:
-            resp = await session.get(xml_location, timeout=5)
-            xml = await resp.text()
-
-            # Samsung Smart TV sometimes returns an empty document the
-            # first time. Retry once.
-            if not xml:
-                resp = await session.get(xml_location, timeout=5)
-                xml = await resp.text()
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            _LOGGER.debug("Error fetching %s: %s", xml_location, err)
-            return {}
-
-        try:
-            tree = ElementTree.fromstring(xml)
-        except ElementTree.ParseError as err:
-            _LOGGER.debug("Error parsing %s: %s", xml_location, err)
-            return {}
-
-        return util.etree_to_dict(tree).get("root", {}).get("device", {})
-
-
-def info_from_entry(entry, device_info):
-    """Get info from an entry."""
-    info = {
-        ATTR_SSDP_LOCATION: entry.location,
-        ATTR_SSDP_ST: entry.st,
-    }
-    if device_info:
-        info.update(device_info)
-
-    return info
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

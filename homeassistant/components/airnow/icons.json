@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "aqi": {
+        "default": "mdi:blur"
+      },
+      "pm10": {
+        "default": "mdi:blur"
+      },
+      "pm25": {
+        "default": "mdi:blur"
+      },
+      "o3": {
+        "default": "mdi:blur"
+      },
+      "station": {
+        "default": "mdi:blur"
+      }
+    }
+  }
+}

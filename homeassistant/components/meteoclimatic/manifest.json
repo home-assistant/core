@@ -1,0 +1,10 @@
+{
+  "domain": "meteoclimatic",
+  "name": "Meteoclimatic",
+  "codeowners": ["@adrianmo"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/meteoclimatic",
+  "iot_class": "cloud_polling",
+  "loggers": ["meteoclimatic"],
+  "requirements": ["pymeteoclimatic==0.1.0"]
+}

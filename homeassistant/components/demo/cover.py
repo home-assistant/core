@@ -1,18 +1,32 @@
 """Demo platform for the cover component."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    CoverDevice,
+    CoverDeviceClass,
+    CoverEntity,
+    CoverEntityFeature,
 )
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_utc_time_change
 
 from . import DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Demo covers."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the demo cover platform."""
     async_add_entities(
         [
             DemoCover(hass, "cover_1", "Kitchen Window"),
@@ -22,130 +36,115 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 hass,
                 "cover_4",
                 "Garage Door",
-                device_class="garage",
-                supported_features=(SUPPORT_OPEN | SUPPORT_CLOSE),
+                device_class=CoverDeviceClass.GARAGE,
+                supported_features=(CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE),
+            ),
+            DemoCover(
+                hass,
+                "cover_5",
+                "Pergola Roof",
+                tilt_position=60,
+                supported_features=(
+                    CoverEntityFeature.OPEN_TILT
+                    | CoverEntityFeature.STOP_TILT
+                    | CoverEntityFeature.CLOSE_TILT
+                    | CoverEntityFeature.SET_TILT_POSITION
+                ),
             ),
         ]
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
-
-
-class DemoCover(CoverDevice):
+class DemoCover(CoverEntity):
     """Representation of a demo cover."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_should_poll = False
 
     def __init__(
         self,
-        hass,
-        unique_id,
-        name,
-        position=None,
-        tilt_position=None,
-        device_class=None,
-        supported_features=None,
-    ):
+        hass: HomeAssistant,
+        unique_id: str,
+        device_name: str,
+        position: int | None = None,
+        tilt_position: int | None = None,
+        device_class: CoverDeviceClass | None = None,
+        supported_features: CoverEntityFeature | None = None,
+    ) -> None:
         """Initialize the cover."""
         self.hass = hass
         self._unique_id = unique_id
-        self._name = name
         self._position = position
-        self._device_class = device_class
-        self._supported_features = supported_features
-        self._set_position = None
-        self._set_tilt_position = None
+        self._attr_device_class = device_class
+        self._attr_supported_features = supported_features
+        self._set_position: int | None = None
+        self._set_tilt_position: int | None = None
         self._tilt_position = tilt_position
         self._requested_closing = True
         self._requested_closing_tilt = True
-        self._unsub_listener_cover = None
-        self._unsub_listener_cover_tilt = None
+        self._unsub_listener_cover: CALLBACK_TYPE | None = None
+        self._unsub_listener_cover_tilt: CALLBACK_TYPE | None = None
         self._is_opening = False
         self._is_closing = False
         if position is None:
             self._closed = True
         else:
-            self._closed = self.current_cover_position <= 0
+            self._closed = position <= 0
 
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {
+        self._attr_device_info = DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            "name": self.name,
-        }
+            name=device_name,
+        )
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for cover."""
         return self._unique_id
 
     @property
-    def name(self):
-        """Return the name of the cover."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo cover."""
-        return False
-
-    @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return the current position of the cover."""
         return self._position
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt position of the cover."""
         return self._tilt_position
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self._closed
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing."""
         return self._is_closing
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening."""
         return self._is_opening
 
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._supported_features is not None:
-            return self._supported_features
-        return super().supported_features
-
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._position == 0:
             return
         if self._position is None:
             self._closed = True
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         self._is_closing = True
         self._listen_cover()
         self._requested_closing = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if self._tilt_position in (0, None):
             return
@@ -153,21 +152,21 @@ class DemoCover(CoverDevice):
         self._listen_cover_tilt()
         self._requested_closing_tilt = True
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._position == 100:
             return
         if self._position is None:
             self._closed = False
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         self._is_opening = True
         self._listen_cover()
         self._requested_closing = False
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if self._tilt_position in (100, None):
             return
@@ -175,27 +174,31 @@ class DemoCover(CoverDevice):
         self._listen_cover_tilt()
         self._requested_closing_tilt = False
 
-    def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
+        position: int = kwargs[ATTR_POSITION]
         self._set_position = round(position, -1)
         if self._position == position:
             return
 
         self._listen_cover()
-        self._requested_closing = position < self._position
+        self._requested_closing = (
+            self._position is not None and position < self._position
+        )
 
-    def set_cover_tilt_position(self, **kwargs):
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover til to a specific position."""
-        tilt_position = kwargs.get(ATTR_TILT_POSITION)
+        tilt_position: int = kwargs[ATTR_TILT_POSITION]
         self._set_tilt_position = round(tilt_position, -1)
         if self._tilt_position == tilt_position:
             return
 
         self._listen_cover_tilt()
-        self._requested_closing_tilt = tilt_position < self._tilt_position
+        self._requested_closing_tilt = (
+            self._tilt_position is not None and tilt_position < self._tilt_position
+        )
 
-    def stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._is_closing = False
         self._is_opening = False
@@ -206,7 +209,7 @@ class DemoCover(CoverDevice):
             self._unsub_listener_cover = None
             self._set_position = None
 
-    def stop_cover_tilt(self, **kwargs):
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         if self._tilt_position is None:
             return
@@ -216,42 +219,49 @@ class DemoCover(CoverDevice):
             self._unsub_listener_cover_tilt = None
             self._set_tilt_position = None
 
-    def _listen_cover(self):
+    @callback
+    def _listen_cover(self) -> None:
         """Listen for changes in cover."""
         if self._unsub_listener_cover is None:
-            self._unsub_listener_cover = track_utc_time_change(
+            self._unsub_listener_cover = async_track_utc_time_change(
                 self.hass, self._time_changed_cover
             )
 
-    def _time_changed_cover(self, now):
+    async def _time_changed_cover(self, now: datetime) -> None:
         """Track time changes."""
+        if self._position is None:
+            return
         if self._requested_closing:
             self._position -= 10
         else:
             self._position += 10
 
         if self._position in (100, 0, self._set_position):
-            self.stop_cover()
+            await self.async_stop_cover()
 
-        self._closed = self.current_cover_position <= 0
+        self._closed = (
+            self.current_cover_position is not None and self.current_cover_position <= 0
+        )
+        self.async_write_ha_state()
 
-        self.schedule_update_ha_state()
-
-    def _listen_cover_tilt(self):
+    @callback
+    def _listen_cover_tilt(self) -> None:
         """Listen for changes in cover tilt."""
         if self._unsub_listener_cover_tilt is None:
-            self._unsub_listener_cover_tilt = track_utc_time_change(
+            self._unsub_listener_cover_tilt = async_track_utc_time_change(
                 self.hass, self._time_changed_cover_tilt
             )
 
-    def _time_changed_cover_tilt(self, now):
+    async def _time_changed_cover_tilt(self, now: datetime) -> None:
         """Track time changes."""
+        if self._tilt_position is None:
+            return
         if self._requested_closing_tilt:
             self._tilt_position -= 10
         else:
             self._tilt_position += 10
 
         if self._tilt_position in (100, 0, self._set_tilt_position):
-            self.stop_cover_tilt()
+            await self.async_stop_cover_tilt()
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

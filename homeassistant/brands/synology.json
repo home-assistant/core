@@ -1,0 +1,5 @@
+{
+  "domain": "synology",
+  "name": "Synology",
+  "integrations": ["synology_chat", "synology_dsm", "synology_srm"]
+}

@@ -1,0 +1,77 @@
+{
+  "config": {
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "description": "In order to access the Flume Personal API, you will need to request a 'Client ID' and 'Client Secret' at https://portal.flumetech.com/settings#token",
+        "title": "Connect to your Flume account",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "client_secret": "Client Secret",
+          "client_id": "Client ID",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "The password for {username} is no longer valid.",
+        "title": "Reauthenticate your Flume account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "leak": {
+        "name": "Leak detected"
+      },
+      "flow": {
+        "name": "High flow"
+      }
+    },
+    "sensor": {
+      "current_interval": {
+        "name": "Current"
+      },
+      "month_to_date": {
+        "name": "Current month"
+      },
+      "week_to_date": {
+        "name": "Current week"
+      },
+      "today": {
+        "name": "Current day"
+      },
+      "last_60_min": {
+        "name": "60 minutes"
+      },
+      "last_24_hrs": {
+        "name": "24 hours"
+      },
+      "last_30_days": {
+        "name": "30 days"
+      }
+    }
+  },
+  "services": {
+    "list_notifications": {
+      "name": "List notifications",
+      "description": "Returns a list of fetched user notifications.",
+      "fields": {
+        "config_entry": {
+          "name": "Flume",
+          "description": "The Flume config entry for which to return notifications."
+        }
+      }
+    }
+  }
+}

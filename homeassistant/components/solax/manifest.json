@@ -1,8 +1,10 @@
 {
   "domain": "solax",
   "name": "SolaX Power",
+  "codeowners": ["@squishykid", "@Darsstar"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/solax",
-  "requirements": ["solax==0.2.2"],
-  "dependencies": [],
-  "codeowners": ["@squishykid"]
+  "iot_class": "local_polling",
+  "loggers": ["solax"],
+  "requirements": ["solax==3.2.3"]
 }

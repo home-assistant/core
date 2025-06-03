@@ -1,200 +1,97 @@
 """Config flow to configure SmartThings."""
+
+from collections.abc import Mapping
 import logging
+from typing import Any
 
-from aiohttp import ClientResponseError
-from pysmartthings import APIResponseError, AppOAuth, SmartThings
-import voluptuous as vol
+from pysmartthings import SmartThings
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import (
-    APP_OAUTH_CLIENT_NAME,
-    APP_OAUTH_SCOPES,
-    CONF_APP_ID,
-    CONF_INSTALLED_APPS,
-    CONF_LOCATION_ID,
-    CONF_OAUTH_CLIENT_ID,
-    CONF_OAUTH_CLIENT_SECRET,
-    DOMAIN,
-    VAL_UID_MATCHER,
-)
-from .smartapp import (
-    create_app,
-    find_app,
-    setup_smartapp,
-    setup_smartapp_endpoint,
-    update_app,
-    validate_webhook_requirements,
-)
+from .const import CONF_LOCATION_ID, DOMAIN, OLD_DATA, REQUESTED_SCOPES, SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class SmartThingsFlowHandler(config_entries.ConfigFlow):
-    """
-    Handle configuration of SmartThings integrations.
+class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
+    """Handle configuration of SmartThings integrations."""
 
-    Any number of integrations are supported.  The high level flow follows:
-    1) Flow initiated
-        a) User initiates through the UI
-        b) Re-configuration of a failed entry setup
-    2) Enter access token
-        a) Check not already setup
-        b) Validate format
-        c) Setup SmartApp
-    3) Wait for Installation
-        a) Check user installed into one or more locations
-        b) Config entries setup for all installations
-    """
+    VERSION = 3
+    MINOR_VERSION = 2
+    DOMAIN = DOMAIN
 
-    VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
-    def __init__(self):
-        """Create a new instance of the flow handler."""
-        self.access_token = None
-        self.app_id = None
-        self.api = None
-        self.oauth_client_secret = None
-        self.oauth_client_id = None
+    @property
+    def extra_authorize_data(self) -> dict[str, Any]:
+        """Extra data that needs to be appended to the authorize url."""
+        return {"scope": " ".join(REQUESTED_SCOPES)}
 
-    async def async_step_import(self, user_input=None):
-        """Occurs when a previously entry setup fails and is re-initiated."""
-        return await self.async_step_user(user_input)
-
-    async def async_step_user(self, user_input=None):
-        """Get access token and validate it."""
-        errors = {}
-        if user_input is None or CONF_ACCESS_TOKEN not in user_input:
-            return self._show_step_user(errors)
-
-        self.access_token = user_input.get(CONF_ACCESS_TOKEN, "")
-        self.api = SmartThings(async_get_clientsession(self.hass), self.access_token)
-
-        # Ensure token is a UUID
-        if not VAL_UID_MATCHER.match(self.access_token):
-            errors[CONF_ACCESS_TOKEN] = "token_invalid_format"
-            return self._show_step_user(errors)
-        # Check not already setup in another entry
-        if any(
-            entry.data.get(CONF_ACCESS_TOKEN) == self.access_token
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-        ):
-            errors[CONF_ACCESS_TOKEN] = "token_already_setup"
-            return self._show_step_user(errors)
-
-        # Setup end-point
-        await setup_smartapp_endpoint(self.hass)
-
-        if not validate_webhook_requirements(self.hass):
-            errors["base"] = "base_url_not_https"
-            return self._show_step_user(errors)
-
-        try:
-            app = await find_app(self.hass, self.api)
-            if app:
-                await app.refresh()  # load all attributes
-                await update_app(self.hass, app)
-                # Get oauth client id/secret by regenerating it
-                app_oauth = AppOAuth(app.app_id)
-                app_oauth.client_name = APP_OAUTH_CLIENT_NAME
-                app_oauth.scope.extend(APP_OAUTH_SCOPES)
-                client = await self.api.generate_app_oauth(app_oauth)
-            else:
-                app, client = await create_app(self.hass, self.api)
-            setup_smartapp(self.hass, app)
-            self.app_id = app.app_id
-            self.oauth_client_secret = client.client_secret
-            self.oauth_client_id = client.client_id
-
-        except APIResponseError as ex:
-            if ex.is_target_error():
-                errors["base"] = "webhook_error"
-            else:
-                errors["base"] = "app_setup_error"
-            _LOGGER.exception(
-                "API error setting up the SmartApp: %s", ex.raw_error_response
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Check we have the cloud integration set up."""
+        if "cloud" not in self.hass.config.components:
+            return self.async_abort(
+                reason="cloud_not_enabled",
+                description_placeholders={"default_config": "default_config"},
             )
-            return self._show_step_user(errors)
-        except ClientResponseError as ex:
-            if ex.status == 401:
-                errors[CONF_ACCESS_TOKEN] = "token_unauthorized"
-            elif ex.status == 403:
-                errors[CONF_ACCESS_TOKEN] = "token_forbidden"
-            else:
-                errors["base"] = "app_setup_error"
-                _LOGGER.exception("Unexpected error setting up the SmartApp")
-            return self._show_step_user(errors)
-        except Exception:  # pylint:disable=broad-except
-            errors["base"] = "app_setup_error"
-            _LOGGER.exception("Unexpected error setting up the SmartApp")
-            return self._show_step_user(errors)
+        return await super().async_step_user(user_input)
 
-        return await self.async_step_wait_install()
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
+        """Create an entry for SmartThings."""
+        if not set(data[CONF_TOKEN]["scope"].split()) >= set(SCOPES):
+            return self.async_abort(reason="missing_scopes")
+        client = SmartThings(session=async_get_clientsession(self.hass))
+        client.authenticate(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+        locations = await client.get_locations()
+        location = locations[0]
+        # We pick to use the location id as unique id rather than the installed app id
+        # as the installed app id could change with the right settings in the SmartApp
+        # or the app used to sign in changed for any reason.
+        await self.async_set_unique_id(location.location_id)
+        if self.source != SOURCE_REAUTH:
+            self._abort_if_unique_id_configured()
 
-    async def async_step_wait_install(self, user_input=None):
-        """Wait for SmartApp installation."""
-        errors = {}
-        if user_input is None:
-            return self._show_step_wait_install(errors)
-
-        # Find installed apps that were authorized
-        installed_apps = self.hass.data[DOMAIN][CONF_INSTALLED_APPS].copy()
-        if not installed_apps:
-            errors["base"] = "app_not_installed"
-            return self._show_step_wait_install(errors)
-        self.hass.data[DOMAIN][CONF_INSTALLED_APPS].clear()
-
-        # Enrich the data
-        for installed_app in installed_apps:
-            installed_app[CONF_APP_ID] = self.app_id
-            installed_app[CONF_ACCESS_TOKEN] = self.access_token
-            installed_app[CONF_OAUTH_CLIENT_ID] = self.oauth_client_id
-            installed_app[CONF_OAUTH_CLIENT_SECRET] = self.oauth_client_secret
-
-        # User may have installed the SmartApp in more than one SmartThings
-        # location. Config flows are created for the additional installations
-        for installed_app in installed_apps[1:]:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": "install"}, data=installed_app
-                )
+            return self.async_create_entry(
+                title=location.name,
+                data={**data, CONF_LOCATION_ID: location.location_id},
             )
 
-        # Create config entity for the first one.
-        return await self.async_step_install(installed_apps[0])
-
-    def _show_step_user(self, errors):
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_ACCESS_TOKEN, default=self.access_token): str}
-            ),
-            errors=errors,
-            description_placeholders={
-                "token_url": "https://account.smartthings.com/tokens",
-                "component_url": "https://www.home-assistant.io/integrations/smartthings/",
-            },
+        if (entry := self._get_reauth_entry()) and CONF_TOKEN not in entry.data:
+            if entry.data[OLD_DATA][CONF_LOCATION_ID] != location.location_id:
+                return self.async_abort(reason="reauth_location_mismatch")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data_updates={
+                    **data,
+                    CONF_LOCATION_ID: location.location_id,
+                },
+                unique_id=location.location_id,
+            )
+        self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
+        return self.async_update_reload_and_abort(
+            self._get_reauth_entry(), data_updates=data
         )
 
-    def _show_step_wait_install(self, errors):
-        return self.async_show_form(step_id="wait_install", errors=errors)
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon migration of old entries."""
+        return await self.async_step_reauth_confirm()
 
-    async def async_step_install(self, data=None):
-        """
-        Create a config entry at completion of a flow.
-
-        Launched when the user completes the flow or when the SmartApp
-        is installed into an additional location.
-        """
-        if not self.api:
-            # Launched from the SmartApp install event handler
-            self.api = SmartThings(
-                async_get_clientsession(self.hass), data[CONF_ACCESS_TOKEN]
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
             )
-
-        location = await self.api.location(data[CONF_LOCATION_ID])
-        return self.async_create_entry(title=location.name, data=data)
+        return await self.async_step_user()

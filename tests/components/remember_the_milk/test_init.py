@@ -1,88 +1,65 @@
-"""Tests for the Remember The Milk component."""
+"""Test the Remember The Milk integration."""
 
-import json
-import logging
-import unittest
-from unittest.mock import Mock, mock_open, patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
-import homeassistant.components.remember_the_milk as rtm
+import pytest
 
-from tests.common import get_test_home_assistant
+from homeassistant.components.remember_the_milk import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONFIG, PROFILE, TOKEN
 
 
-class TestConfiguration(unittest.TestCase):
-    """Basic tests for the class RememberTheMilkConfiguration."""
+@pytest.fixture(autouse=True)
+def configure_id() -> Generator[str]:
+    """Fixture to return a configure_id."""
+    mock_id = "1-1"
+    with patch(
+        "homeassistant.components.configurator.Configurator._generate_unique_id"
+    ) as generate_id:
+        generate_id.return_value = mock_id
+        yield mock_id
 
-    def setUp(self):
-        """Set up test Home Assistant main loop."""
-        self.hass = get_test_home_assistant()
-        self.profile = "myprofile"
-        self.token = "mytoken"
-        self.json_string = json.dumps(
-            {
-                "myprofile": {
-                    "token": "mytoken",
-                    "id_map": {
-                        "1234": {"list_id": "0", "timeseries_id": "1", "task_id": "2"}
-                    },
-                }
-            }
-        )
 
-    def tearDown(self):
-        """Exit Home Assistant."""
-        self.hass.stop()
+@pytest.mark.parametrize(
+    ("token", "rtm_entity_exists", "configurator_end_state"),
+    [(TOKEN, True, "configured"), (None, False, "configure")],
+)
+async def test_configurator(
+    hass: HomeAssistant,
+    client: MagicMock,
+    storage: MagicMock,
+    configure_id: str,
+    token: str | None,
+    rtm_entity_exists: bool,
+    configurator_end_state: str,
+) -> None:
+    """Test configurator."""
+    storage.get_token.return_value = None
+    client.authenticate_desktop.return_value = ("test-url", "test-frob")
+    client.token = token
+    rtm_entity_id = f"{DOMAIN}.{PROFILE}"
+    configure_entity_id = f"configurator.{DOMAIN}_{PROFILE}"
 
-    def test_create_new(self):
-        """Test creating a new config file."""
-        with patch("builtins.open", mock_open()), patch(
-            "os.path.isfile", Mock(return_value=False)
-        ), patch.object(rtm.RememberTheMilkConfiguration, "save_config"):
-            config = rtm.RememberTheMilkConfiguration(self.hass)
-            config.set_token(self.profile, self.token)
-        assert config.get_token(self.profile) == self.token
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: CONFIG})
+    await hass.async_block_till_done()
 
-    def test_load_config(self):
-        """Test loading an existing token from the file."""
-        with patch("builtins.open", mock_open(read_data=self.json_string)), patch(
-            "os.path.isfile", Mock(return_value=True)
-        ):
-            config = rtm.RememberTheMilkConfiguration(self.hass)
-        assert config.get_token(self.profile) == self.token
+    assert hass.states.get(rtm_entity_id) is None
+    state = hass.states.get(configure_entity_id)
+    assert state
+    assert state.state == "configure"
 
-    def test_invalid_data(self):
-        """Test starts with invalid data and should not raise an exception."""
-        with patch("builtins.open", mock_open(read_data="random characters")), patch(
-            "os.path.isfile", Mock(return_value=True)
-        ):
-            config = rtm.RememberTheMilkConfiguration(self.hass)
-        assert config is not None
+    await hass.services.async_call(
+        "configurator",
+        "configure",
+        {"configure_id": configure_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
-    def test_id_map(self):
-        """Test the hass to rtm task is mapping."""
-        hass_id = "hass-id-1234"
-        list_id = "mylist"
-        timeseries_id = "my_timeseries"
-        rtm_id = "rtm-id-4567"
-        with patch("builtins.open", mock_open()), patch(
-            "os.path.isfile", Mock(return_value=False)
-        ), patch.object(rtm.RememberTheMilkConfiguration, "save_config"):
-            config = rtm.RememberTheMilkConfiguration(self.hass)
-
-            assert config.get_rtm_id(self.profile, hass_id) is None
-            config.set_rtm_id(self.profile, hass_id, list_id, timeseries_id, rtm_id)
-            assert (list_id, timeseries_id, rtm_id) == config.get_rtm_id(
-                self.profile, hass_id
-            )
-            config.delete_rtm_id(self.profile, hass_id)
-            assert config.get_rtm_id(self.profile, hass_id) is None
-
-    def test_load_key_map(self):
-        """Test loading an existing key map from the file."""
-        with patch("builtins.open", mock_open(read_data=self.json_string)), patch(
-            "os.path.isfile", Mock(return_value=True)
-        ):
-            config = rtm.RememberTheMilkConfiguration(self.hass)
-        assert ("0", "1", "2") == config.get_rtm_id(self.profile, "1234")
+    assert bool(hass.states.get(rtm_entity_id)) == rtm_entity_exists
+    state = hass.states.get(configure_entity_id)
+    assert state
+    assert state.state == configurator_end_state

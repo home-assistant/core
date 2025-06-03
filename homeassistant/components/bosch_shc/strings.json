@@ -1,0 +1,76 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your Bosch Smart Home Controller to allow monitoring and control with Home Assistant.",
+        "title": "SHC authentication parameters",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Bosch Smart Home Controller."
+        }
+      },
+      "credentials": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Password of the Smart Home Controller"
+        }
+      },
+      "confirm_discovery": {
+        "description": "Smart Home Controller I: Please press the front-side button until LED starts flashing.\nSmart Home Controller II: Press the function button shortly. Cloud and network lights start blinking orange.\nDevice is now ready to be paired.\n\nReady to continue to set up {model} @ {host} with Home Assistant?"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Bosch SHC integration needs to re-authenticate your account",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "pairing_failed": "Pairing failed; please check the Bosch Smart Home Controller is in pairing mode (LED flashing) as well as your password is correct.",
+      "session_error": "Session error: API returned Non-OK result.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "flow_title": "Bosch SHC: {name}"
+  },
+  "entity": {
+    "sensor": {
+      "purity_rating": {
+        "name": "Purity rating"
+      },
+      "purity": {
+        "name": "Purity"
+      },
+      "valvetappet": {
+        "name": "Valvetappet"
+      },
+      "air_quality": {
+        "name": "Air quality"
+      },
+      "temperature_rating": {
+        "name": "Temperature rating"
+      },
+      "humidity_rating": {
+        "name": "Humidity rating"
+      },
+      "communication_quality": {
+        "name": "Communication quality"
+      }
+    },
+    "switch": {
+      "routing": {
+        "name": "Routing"
+      }
+    }
+  }
+}

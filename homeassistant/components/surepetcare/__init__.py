@@ -1,163 +1,100 @@
-"""Support for Sure Petcare cat/pet flaps."""
+"""The surepetcare integration."""
+
+from __future__ import annotations
+
+from datetime import timedelta
 import logging
 
-from surepy import (
-    SurePetcare,
-    SurePetcareAuthenticationError,
-    SurePetcareError,
-    SureThingID,
-)
+from surepy.enums import Location
+from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_ID,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_TYPE,
-    CONF_USERNAME,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
-    CONF_FLAPS,
-    CONF_HOUSEHOLD_ID,
-    CONF_PETS,
-    DATA_SURE_PETCARE,
-    DEFAULT_SCAN_INTERVAL,
+    ATTR_FLAP_ID,
+    ATTR_LOCATION,
+    ATTR_LOCK_STATE,
+    ATTR_PET_NAME,
     DOMAIN,
-    SPC,
-    TOPIC_UPDATE,
+    SERVICE_SET_LOCK_STATE,
+    SERVICE_SET_PET_LOCATION,
 )
+from .coordinator import SurePetcareDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-
-FLAP_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string}
-)
-
-PET_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string}
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_HOUSEHOLD_ID): cv.positive_int,
-                vol.Required(CONF_FLAPS): vol.All(cv.ensure_list, [FLAP_SCHEMA]),
-                vol.Required(CONF_PETS): vol.All(cv.ensure_list, [PET_SCHEMA]),
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
+SCAN_INTERVAL = timedelta(minutes=3)
 
 
-async def async_setup(hass, config):
-    """Initialize the Sure Petcare component."""
-    conf = config[DOMAIN]
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Sure Petcare from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
 
-    # update interval
-    scan_interval = conf[CONF_SCAN_INTERVAL]
-
-    # shared data
-    hass.data[DOMAIN] = hass.data[DATA_SURE_PETCARE] = {}
-
-    # sure petcare api connection
     try:
-        surepy = SurePetcare(
-            conf[CONF_USERNAME],
-            conf[CONF_PASSWORD],
-            conf[CONF_HOUSEHOLD_ID],
-            hass.loop,
-            async_get_clientsession(hass),
+        hass.data[DOMAIN][entry.entry_id] = coordinator = SurePetcareDataCoordinator(
+            hass,
+            entry,
         )
-        await surepy.refresh_token()
-    except SurePetcareAuthenticationError:
+    except SurePetcareAuthenticationError as error:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
-        return False
+        raise ConfigEntryAuthFailed from error
     except SurePetcareError as error:
-        _LOGGER.error("Unable to connect to surepetcare.io: Wrong %s!", error)
-        return False
+        raise ConfigEntryNotReady from error
 
-    # add flaps
-    things = [
+    await coordinator.async_config_entry_first_refresh()
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    lock_state_service_schema = vol.Schema(
         {
-            CONF_NAME: flap[CONF_NAME],
-            CONF_ID: flap[CONF_ID],
-            CONF_TYPE: SureThingID.FLAP.name,
+            vol.Required(ATTR_FLAP_ID): vol.All(
+                cv.positive_int, vol.In(coordinator.data.keys())
+            ),
+            vol.Required(ATTR_LOCK_STATE): vol.All(
+                cv.string,
+                vol.Lower,
+                vol.In(coordinator.lock_states_callbacks.keys()),
+            ),
         }
-        for flap in conf[CONF_FLAPS]
-    ]
-
-    # add pets
-    things.extend(
-        [
-            {
-                CONF_NAME: pet[CONF_NAME],
-                CONF_ID: pet[CONF_ID],
-                CONF_TYPE: SureThingID.PET.name,
-            }
-            for pet in conf[CONF_PETS]
-        ]
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_LOCK_STATE,
+        coordinator.handle_set_lock_state,
+        schema=lock_state_service_schema,
     )
 
-    spc = hass.data[DATA_SURE_PETCARE][SPC] = SurePetcareAPI(
-        hass, surepy, things, conf[CONF_HOUSEHOLD_ID]
+    set_pet_location_schema = vol.Schema(
+        {
+            vol.Required(ATTR_PET_NAME): vol.In(coordinator.get_pets().keys()),
+            vol.Required(ATTR_LOCATION): vol.In(
+                [
+                    Location.INSIDE.name.title(),
+                    Location.OUTSIDE.name.title(),
+                ]
+            ),
+        }
     )
-
-    # initial update
-    await spc.async_update()
-
-    async_track_time_interval(hass, spc.async_update, scan_interval)
-
-    # load platforms
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("binary_sensor", DOMAIN, {}, config)
-    )
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("sensor", DOMAIN, {}, config)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_PET_LOCATION,
+        coordinator.handle_set_pet_location,
+        schema=set_pet_location_schema,
     )
 
     return True
 
 
-class SurePetcareAPI:
-    """Define a generic Sure Petcare object."""
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    def __init__(self, hass, surepy, ids, household_id):
-        """Initialize the Sure Petcare object."""
-        self.hass = hass
-        self.surepy = surepy
-        self.household_id = household_id
-        self.ids = ids
-        self.states = {}
-
-    async def async_update(self, args=None):
-        """Refresh Sure Petcare data."""
-        for thing in self.ids:
-            sure_id = thing[CONF_ID]
-            sure_type = thing[CONF_TYPE]
-
-            try:
-                type_state = self.states.setdefault(sure_type, {})
-
-                if sure_type == SureThingID.FLAP.name:
-                    type_state[sure_id] = await self.surepy.get_flap_data(sure_id)
-                elif sure_type == SureThingID.PET.name:
-                    type_state[sure_id] = await self.surepy.get_pet_data(sure_id)
-
-            except SurePetcareError as error:
-                _LOGGER.error("Unable to retrieve data from surepetcare.io: %s", error)
-
-        async_dispatcher_send(self.hass, TOPIC_UPDATE)
+    return unload_ok

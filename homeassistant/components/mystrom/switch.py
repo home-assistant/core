@@ -1,92 +1,75 @@
-"""Support for myStrom switches."""
+"""Support for myStrom switches/plugs."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
-import voluptuous as vol
+from pymystrom.exceptions import MyStromConnectionError
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import CONF_HOST, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import DOMAIN, MANUFACTURER
 
 DEFAULT_NAME = "myStrom Switch"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the myStrom entities."""
+    device = hass.data[DOMAIN][entry.entry_id].device
+    async_add_entities([MyStromSwitch(device, entry.title)])
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Find and return myStrom switch."""
-    from pymystrom.switch import MyStromPlug, exceptions
+class MyStromSwitch(SwitchEntity):
+    """Representation of a myStrom switch/plug."""
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
+    _attr_has_entity_name = True
+    _attr_name = None
 
-    try:
-        MyStromPlug(host).get_status()
-    except exceptions.MyStromConnectionError:
-        _LOGGER.error("No route to device: %s", host)
-        return
+    def __init__(self, plug, name):
+        """Initialize the myStrom switch/plug."""
+        self.plug = plug
+        self._attr_unique_id = self.plug.mac
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.plug.mac)},
+            name=name,
+            manufacturer=MANUFACTURER,
+            sw_version=self.plug.firmware,
+            connections={("mac", format_mac(self.plug.mac))},
+            configuration_url=self.plug.uri,
+        )
 
-    add_entities([MyStromSwitch(name, host)])
-
-
-class MyStromSwitch(SwitchDevice):
-    """Representation of a myStrom switch."""
-
-    def __init__(self, name, resource):
-        """Initialize the myStrom switch."""
-        from pymystrom.switch import MyStromPlug
-
-        self._name = name
-        self._resource = resource
-        self.data = {}
-        self.plug = MyStromPlug(self._resource)
-        self.update()
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return bool(self.data["relay"])
-
-    @property
-    def current_power_w(self):
-        """Return the current power consumption in W."""
-        return round(self.data["power"], 2)
-
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        from pymystrom import exceptions
-
         try:
-            self.plug.set_relay_on()
-        except exceptions.MyStromConnectionError:
-            _LOGGER.error("No route to device: %s", self._resource)
+            await self.plug.turn_on()
+        except MyStromConnectionError:
+            _LOGGER.error("No route to myStrom plug")
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        from pymystrom import exceptions
-
         try:
-            self.plug.set_relay_off()
-        except exceptions.MyStromConnectionError:
-            _LOGGER.error("No route to device: %s", self._resource)
+            await self.plug.turn_off()
+        except MyStromConnectionError:
+            _LOGGER.error("No route to myStrom plug")
 
-    def update(self):
+    async def async_update(self) -> None:
         """Get the latest data from the device and update the data."""
-        from pymystrom import exceptions
-
         try:
-            self.data = self.plug.get_status()
-        except exceptions.MyStromConnectionError:
-            self.data = {"power": 0, "relay": False}
-            _LOGGER.error("No route to device: %s", self._resource)
+            await self.plug.get_state()
+            self._attr_is_on = self.plug.relay
+            self._attr_available = True
+        except MyStromConnectionError:
+            if self.available:
+                self._attr_available = False
+                _LOGGER.error("No route to myStrom plug")

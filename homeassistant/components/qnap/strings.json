@@ -1,0 +1,90 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the QNAP device",
+        "description": "This qnap sensor allows getting various statistics from your QNAP NAS.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your QNAP device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status"
+      },
+      "system_temp": {
+        "name": "System temperature"
+      },
+      "cpu_temp": {
+        "name": "CPU temperature"
+      },
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "memory_free": {
+        "name": "Memory available"
+      },
+      "memory_used": {
+        "name": "Memory used"
+      },
+      "memory_percent_used": {
+        "name": "Memory usage"
+      },
+      "network_link_status": {
+        "name": "{monitor_device} link"
+      },
+      "network_tx": {
+        "name": "{monitor_device} upload"
+      },
+      "network_rx": {
+        "name": "{monitor_device} download"
+      },
+      "drive_smart_status": {
+        "name": "Drive {monitor_device} status"
+      },
+      "drive_temp": {
+        "name": "Drive {monitor_device} temperature"
+      },
+      "volume_size_used": {
+        "name": "Used space ({monitor_device})"
+      },
+      "volume_size_free": {
+        "name": "Free space ({monitor_device})"
+      },
+      "volume_percentage_used": {
+        "name": "Volume used ({monitor_device})"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "memory_size": {
+        "name": "Memory size"
+      },
+      "network_err": {
+        "name": "{monitor_device} packet errors"
+      },
+      "network_max_speed": {
+        "name": "{monitor_device} maximum speed"
+      },
+      "volume_size_total": {
+        "name": "Volume size"
+      }
+    }
+  }
+}

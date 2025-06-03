@@ -1,9 +1,13 @@
 """Component to create an interface to a Pilight daemon."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
 from datetime import timedelta
 import functools
 import logging
-import socket
 import threading
+from typing import Any
 
 from pilight import pilight
 import voluptuous as vol
@@ -16,8 +20,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Pilight component."""
 
     host = config[DOMAIN][CONF_HOST]
@@ -67,7 +73,7 @@ def setup(hass, config):
 
     try:
         pilight_client = pilight.Client(host=host, port=port)
-    except (socket.error, socket.timeout) as err:
+    except (OSError, TimeoutError) as err:
         _LOGGER.error("Unable to connect to %s on port %s: %s", host, port, err)
         return False
 
@@ -84,7 +90,7 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_pilight_client)
 
     @send_throttler.limited
-    def send_code(call):
+    def send_code(call: ServiceCall) -> None:
         """Send RF code to the pilight-daemon."""
         # Change type to dict from mappingproxy since data has to be JSON
         # serializable
@@ -109,11 +115,8 @@ def setup(hass, config):
             {"protocol": data["protocol"], "uuid": data["uuid"]}, **data["message"]
         )
 
-        # No whitelist defined, put data on event bus
-        if not whitelist:
-            hass.bus.fire(EVENT, data)
-        # Check if data matches the defined whitelist
-        elif all(str(data[key]) in whitelist[key] for key in whitelist):
+        # No whitelist defined or data matches whitelist, put data on event bus
+        if not whitelist or all(str(data[key]) in whitelist[key] for key in whitelist):
             hass.bus.fire(EVENT, data)
 
     pilight_client.set_callback(handle_received_code)
@@ -133,26 +136,26 @@ class CallRateDelayThrottle:
     it should not block the mainloop.
     """
 
-    def __init__(self, hass, delay_seconds: float) -> None:
+    def __init__(self, hass: HomeAssistant, delay_seconds: float) -> None:
         """Initialize the delay handler."""
         self._delay = timedelta(seconds=max(0.0, delay_seconds))
-        self._queue = []
+        self._queue: list[Callable[[Any], None]] = []
         self._active = False
         self._lock = threading.Lock()
         self._next_ts = dt_util.utcnow()
         self._schedule = functools.partial(track_point_in_utc_time, hass)
 
-    def limited(self, method):
+    def limited[**_P](self, method: Callable[_P, Any]) -> Callable[_P, None]:
         """Decorate to delay calls on a certain method."""
 
         @functools.wraps(method)
-        def decorated(*args, **kwargs):
+        def decorated(*args: _P.args, **kwargs: _P.kwargs) -> None:
             """Delay a call."""
             if self._delay.total_seconds() == 0.0:
                 method(*args, **kwargs)
                 return
 
-            def action(event):
+            def action(event: Any) -> None:
                 """Wrap an action that gets scheduled."""
                 method(*args, **kwargs)
 

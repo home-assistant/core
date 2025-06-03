@@ -1,34 +1,35 @@
 """Sensor platform for local_ip."""
 
+from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import get_local_ip
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import SENSOR
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the platform from config_entry."""
-    name = config_entry.data["name"]
+    name = entry.data.get(CONF_NAME) or "Local IP"
     async_add_entities([IPSensor(name)], True)
 
 
-class IPSensor(Entity):
+class IPSensor(SensorEntity):
     """A simple sensor."""
 
-    def __init__(self, name: str):
+    _attr_unique_id = SENSOR
+    _attr_translation_key = "local_ip"
+
+    def __init__(self, name: str) -> None:
         """Initialize the sensor."""
-        self._state = None
-        self._name = name
+        self._attr_name = name
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    def update(self):
+    async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
-        self._state = get_local_ip()
+        self._attr_native_value = await async_get_source_ip(self.hass)

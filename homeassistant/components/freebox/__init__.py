@@ -1,90 +1,52 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
-import logging
-import socket
 
-from aiofreepybox import Freepybox
-from aiofreepybox.exceptions import HttpRequestError
-import voluptuous as vol
+from datetime import timedelta
 
-from homeassistant.components.discovery import SERVICE_FREEBOX
+from freebox_api.exceptions import HttpRequestError
+
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.event import async_track_time_interval
 
-_LOGGER = logging.getLogger(__name__)
+from .const import PLATFORMS
+from .router import FreeboxConfigEntry, FreeboxRouter, get_api
 
-DOMAIN = "freebox"
-DATA_FREEBOX = DOMAIN
-
-FREEBOX_CONFIG_FILE = "freebox.conf"
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.port}
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def async_setup(hass, config):
-    """Set up the Freebox component."""
-    conf = config.get(DOMAIN)
+async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
+    """Set up Freebox entry."""
+    api = await get_api(hass, entry.data[CONF_HOST])
+    try:
+        await api.open(entry.data[CONF_HOST], entry.data[CONF_PORT])
+    except HttpRequestError as err:
+        raise ConfigEntryNotReady from err
 
-    async def discovery_dispatch(service, discovery_info):
-        if conf is None:
-            host = discovery_info.get("properties", {}).get("api_domain")
-            port = discovery_info.get("properties", {}).get("https_port")
-            _LOGGER.info("Discovered Freebox server: %s:%s", host, port)
-            await async_setup_freebox(hass, config, host, port)
+    freebox_config = await api.system.get_config()
 
-    discovery.async_listen(hass, SERVICE_FREEBOX, discovery_dispatch)
+    router = FreeboxRouter(hass, entry, api, freebox_config)
+    await router.update_all()
+    entry.async_on_unload(
+        async_track_time_interval(hass, router.update_all, SCAN_INTERVAL)
+    )
 
-    if conf is not None:
-        host = conf.get(CONF_HOST)
-        port = conf.get(CONF_PORT)
-        await async_setup_freebox(hass, config, host, port)
+    entry.runtime_data = router
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    async def async_close_connection(event: Event) -> None:
+        """Close Freebox connection on HA Stop."""
+        await router.close()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
+    )
+    entry.async_on_unload(router.close)
 
     return True
 
 
-async def async_setup_freebox(hass, config, host, port):
-    """Start up the Freebox component platforms."""
-
-    app_desc = {
-        "app_id": "hass",
-        "app_name": "Home Assistant",
-        "app_version": "0.65",
-        "device_name": socket.gethostname(),
-    }
-
-    token_file = hass.config.path(FREEBOX_CONFIG_FILE)
-    api_version = "v6"
-
-    fbx = Freepybox(app_desc=app_desc, token_file=token_file, api_version=api_version)
-
-    try:
-        await fbx.open(host, port)
-    except HttpRequestError:
-        _LOGGER.exception("Failed to connect to Freebox")
-    else:
-        hass.data[DATA_FREEBOX] = fbx
-
-        async def async_freebox_reboot(call):
-            """Handle reboot service call."""
-            await fbx.system.reboot()
-
-        hass.services.async_register(DOMAIN, "reboot", async_freebox_reboot)
-
-        hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
-        hass.async_create_task(
-            async_load_platform(hass, "device_tracker", DOMAIN, {}, config)
-        )
-        hass.async_create_task(async_load_platform(hass, "switch", DOMAIN, {}, config))
-
-        async def close_fbx(event):
-            """Close Freebox connection on HA Stop."""
-            await fbx.close()
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_fbx)
+async def async_unload_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

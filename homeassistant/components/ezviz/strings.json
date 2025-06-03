@@ -1,0 +1,206 @@
+{
+  "config": {
+    "flow_title": "{serial}",
+    "step": {
+      "user": {
+        "title": "Connect to EZVIZ Cloud",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "user_custom_url": {
+        "title": "Connect to custom EZVIZ URL",
+        "description": "Manually specify your region URL",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "confirm": {
+        "title": "Discovered EZVIZ Camera",
+        "description": "Enter RTSP credentials for EZVIZ camera {serial} with IP {ip_address}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Enter credentials to reauthenticate to EZVIZ cloud account",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "mfa_required": "2FA enabled on account, please disable and retry"
+    },
+    "abort": {
+      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "ezviz_cloud_account_missing": "EZVIZ cloud account missing. Please reconfigure EZVIZ cloud account",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "timeout": "Request timeout (seconds)",
+          "ffmpeg_arguments": "Arguments passed to FFmpeg for cameras"
+        }
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "alarm_sound_mode": {
+        "name": "Warning sound",
+        "state": {
+          "soft": "Soft",
+          "intensive": "Intensive",
+          "silent": "Silent"
+        }
+      }
+    },
+    "image": {
+      "last_motion_image": {
+        "name": "Last motion image"
+      }
+    },
+    "button": {
+      "ptz_up": {
+        "name": "PTZ up"
+      },
+      "ptz_down": {
+        "name": "PTZ down"
+      },
+      "ptz_left": {
+        "name": "PTZ left"
+      },
+      "ptz_right": {
+        "name": "PTZ right"
+      }
+    },
+    "binary_sensor": {
+      "alarm_schedules_enabled": {
+        "name": "Alarm schedules enabled"
+      },
+      "encrypted": {
+        "name": "Encryption"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "number": {
+      "detection_sensibility": {
+        "name": "Detection sensitivity"
+      }
+    },
+    "sensor": {
+      "alarm_sound_mod": {
+        "name": "Alarm sound level"
+      },
+      "last_alarm_time": {
+        "name": "Last alarm time"
+      },
+      "seconds_last_trigger": {
+        "name": "Seconds since last trigger"
+      },
+      "last_alarm_pic": {
+        "name": "Last alarm picture URL"
+      },
+      "supported_channels": {
+        "name": "Supported channels"
+      },
+      "local_ip": {
+        "name": "Local IP"
+      },
+      "wan_ip": {
+        "name": "WAN IP"
+      },
+      "pir_status": {
+        "name": "PIR status"
+      },
+      "last_alarm_type_code": {
+        "name": "Last alarm type code"
+      },
+      "last_alarm_type_name": {
+        "name": "Last alarm type name"
+      }
+    },
+    "switch": {
+      "status_light": {
+        "name": "Status light"
+      },
+      "privacy": {
+        "name": "Privacy"
+      },
+      "infrared_light": {
+        "name": "Infrared light"
+      },
+      "sleep": {
+        "name": "Sleep"
+      },
+      "audio": {
+        "name": "Audio"
+      },
+      "motion_tracking": {
+        "name": "Motion tracking"
+      },
+      "all_day_video_recording": {
+        "name": "All day video recording"
+      },
+      "auto_sleep": {
+        "name": "Auto sleep"
+      },
+      "flicker_light_on_movement": {
+        "name": "Flicker light on movement"
+      },
+      "pir_motion_activated_light": {
+        "name": "PIR motion activated light"
+      },
+      "tamper_alarm": {
+        "name": "Tamper alarm"
+      },
+      "follow_movement": {
+        "name": "Follow movement"
+      }
+    },
+    "siren": {
+      "siren": {
+        "name": "[%key:component::siren::title%]"
+      }
+    }
+  },
+  "services": {
+    "set_alarm_detection_sensibility": {
+      "name": "Set detection sensibility",
+      "description": "Changes the sensibility level of the motion detection.",
+      "fields": {
+        "level": {
+          "name": "Level",
+          "description": "Sensibility level. 1-6 for type 0 (normal camera), or 1-100 for type 3 (PIR sensor camera)."
+        },
+        "type_value": {
+          "name": "Type",
+          "description": "Detection type. 0 for normal camera, or 3 for PIR sensor camera."
+        }
+      }
+    },
+    "wake_device": {
+      "name": "Wake camera",
+      "description": "Wakes a camera from sleep mode. Especially useful for battery cameras."
+    }
+  }
+}

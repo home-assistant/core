@@ -1,0 +1,26 @@
+{
+  "domain": "rainforest_raven",
+  "name": "Rainforest RAVEn",
+  "codeowners": ["@cottsay"],
+  "config_flow": true,
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/rainforest_raven",
+  "iot_class": "local_polling",
+  "requirements": ["aioraven==0.7.1"],
+  "usb": [
+    {
+      "vid": "0403",
+      "pid": "8A28",
+      "manufacturer": "*rainforest*",
+      "description": "*raven*",
+      "known_devices": ["Rainforest RAVEn"]
+    },
+    {
+      "vid": "04B4",
+      "pid": "0003",
+      "manufacturer": "*rainforest*",
+      "description": "*emu-2*",
+      "known_devices": ["Rainforest EMU-2"]
+    }
+  ]
+}

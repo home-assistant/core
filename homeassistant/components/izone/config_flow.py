@@ -1,11 +1,10 @@
 """Config flow for izone."""
 
 import asyncio
+from contextlib import suppress
 import logging
 
-from async_timeout import timeout
-
-from homeassistant import config_entries
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -15,20 +14,20 @@ from .discovery import async_start_discovery_service, async_stop_discovery_servi
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _async_has_devices(hass):
-
+async def _async_has_devices(hass: HomeAssistant) -> bool:
     controller_ready = asyncio.Event()
-    async_dispatcher_connect(
-        hass, DISPATCH_CONTROLLER_DISCOVERED, lambda x: controller_ready.set()
-    )
+
+    @callback
+    def dispatch_discovered(_):
+        controller_ready.set()
+
+    async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, dispatch_discovered)
 
     disco = await async_start_discovery_service(hass)
 
-    try:
-        async with timeout(TIMEOUT_DISCOVERY):
+    with suppress(TimeoutError):
+        async with asyncio.timeout(TIMEOUT_DISCOVERY):
             await controller_ready.wait()
-    except asyncio.TimeoutError:
-        pass
 
     if not disco.pi_disco.controllers:
         await async_stop_discovery_service(hass)
@@ -39,6 +38,4 @@ async def _async_has_devices(hass):
     return True
 
 
-config_entry_flow.register_discovery_flow(
-    IZONE, "iZone Aircon", _async_has_devices, config_entries.CONN_CLASS_LOCAL_POLL
-)
+config_entry_flow.register_discovery_flow(IZONE, "iZone Aircon", _async_has_devices)

@@ -1,9 +1,0 @@
-{
-  "domain": "history_graph",
-  "name": "History Graph",
-  "documentation": "https://www.home-assistant.io/integrations/history_graph",
-  "requirements": [],
-  "dependencies": ["history"],
-  "codeowners": ["@andrey-git"],
-  "quality_scale": "internal"
-}

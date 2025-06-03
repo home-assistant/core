@@ -1,15 +1,17 @@
 """Support for Satel Integra devices."""
+
 import collections
 import logging
 
 from satel_integra.satel_integra import AsyncSatel
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 DEFAULT_ALARM_NAME = "satel_integra"
 DEFAULT_PORT = 7094
@@ -90,9 +92,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Satel Integra component."""
-    conf = config.get(DOMAIN)
+    conf = config[DOMAIN]
 
     zones = conf.get(CONF_ZONES)
     outputs = conf.get(CONF_OUTPUTS)
@@ -114,21 +116,22 @@ async def async_setup(hass, config):
     if not result:
         return False
 
-    async def _close():
+    @callback
+    def _close(*_):
         controller.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close())
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
     _LOGGER.debug("Arm home config: %s, mode: %s ", conf, conf.get(CONF_ARM_HOME_MODE))
 
     hass.async_create_task(
-        async_load_platform(hass, "alarm_control_panel", DOMAIN, conf, config)
+        async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, conf, config)
     )
 
     hass.async_create_task(
         async_load_platform(
             hass,
-            "binary_sensor",
+            Platform.BINARY_SENSOR,
             DOMAIN,
             {CONF_ZONES: zones, CONF_OUTPUTS: outputs},
             config,
@@ -138,7 +141,7 @@ async def async_setup(hass, config):
     hass.async_create_task(
         async_load_platform(
             hass,
-            "switch",
+            Platform.SWITCH,
             DOMAIN,
             {
                 CONF_SWITCHABLE_OUTPUTS: switchable_outputs,

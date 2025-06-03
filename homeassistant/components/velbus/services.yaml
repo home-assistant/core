@@ -1,2 +1,64 @@
 sync_clock:
-  description: Sync the velbus modules clock to the Home Assistant clock, this is the same as the 'sync clock' from VelbusLink
+  fields:
+    interface:
+      example: "192.168.1.5:27015"
+      default: ""
+      selector:
+        text:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
+
+scan:
+  fields:
+    interface:
+      example: "192.168.1.5:27015"
+      default: ""
+      selector:
+        text:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
+
+clear_cache:
+  fields:
+    interface:
+      example: "192.168.1.5:27015"
+      default: ""
+      selector:
+        text:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
+    address:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 254
+
+set_memo_text:
+  fields:
+    interface:
+      example: "192.168.1.5:27015"
+      default: ""
+      selector:
+        text:
+    config_entry:
+      selector:
+        config_entry:
+          integration: velbus
+    address:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 254
+    memo_text:
+      example: "Do not forget trash"
+      default: ""
+      selector:
+        text:

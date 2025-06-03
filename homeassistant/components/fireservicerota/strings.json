@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "url": "Website"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Authentication tokens became invalid, log in to recreate them.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "duty": {
+        "name": "Duty"
+      }
+    },
+    "sensor": {
+      "incidents": {
+        "name": "Incidents"
+      }
+    },
+    "switch": {
+      "incident_response": {
+        "name": "Incident response"
+      }
+    }
+  }
+}

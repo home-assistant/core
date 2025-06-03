@@ -1,0 +1,20 @@
+{
+  "status": "ok",
+  "time_server": 1642952130,
+  "body": {
+    "home": {
+      "persons": [
+        {
+          "id": "abcdef12-1111-0000-0000-000111222333",
+          "last_seen": 1489050910,
+          "out_of_sight": true
+        },
+        {
+          "id": "abcdef12-2222-0000-0000-000111222333",
+          "last_seen": 1489078776,
+          "out_of_sight": true
+        }
+      ]
+    }
+  }
+}

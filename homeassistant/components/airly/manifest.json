@@ -1,9 +1,11 @@
 {
   "domain": "airly",
   "name": "Airly",
-  "documentation": "https://www.home-assistant.io/integrations/airly",
-  "dependencies": [],
   "codeowners": ["@bieniu"],
-  "requirements": ["airly==0.0.2"],
-  "config_flow": true
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/airly",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["airly"],
+  "requirements": ["airly==1.1.0"]
 }

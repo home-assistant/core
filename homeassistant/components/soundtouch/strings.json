@@ -1,0 +1,78 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Bose SoundTouch device."
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Confirm adding Bose SoundTouch device",
+        "description": "You are about to add the SoundTouch device named `{name}` to Home Assistant."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "services": {
+    "play_everywhere": {
+      "name": "Play everywhere",
+      "description": "Plays on all Bose SoundTouch devices.",
+      "fields": {
+        "master": {
+          "name": "Leader",
+          "description": "The media player entity that will coordinate the grouping. Platform dependent. It is a shortcut for creating a multi-room zone with all devices."
+        }
+      }
+    },
+    "create_zone": {
+      "name": "Create zone",
+      "description": "Creates a SoundTouch multi-room zone.",
+      "fields": {
+        "master": {
+          "name": "Leader",
+          "description": "The media player entity that will coordinate the multi-room zone. Platform dependent."
+        },
+        "slaves": {
+          "name": "Follower",
+          "description": "The media player entities to add to the new zone."
+        }
+      }
+    },
+    "add_zone_slave": {
+      "name": "Add zone follower",
+      "description": "Adds media players to a SoundTouch multi-room zone.",
+      "fields": {
+        "master": {
+          "name": "[%key:component::soundtouch::services::create_zone::fields::master::name%]",
+          "description": "The media player entity that is coordinating the multi-room zone. Platform dependent."
+        },
+        "slaves": {
+          "name": "[%key:component::soundtouch::services::create_zone::fields::slaves::name%]",
+          "description": "The media player entities to add to the existing zone."
+        }
+      }
+    },
+    "remove_zone_slave": {
+      "name": "Remove zone follower",
+      "description": "Removes media players from a SoundTouch multi-room zone.",
+      "fields": {
+        "master": {
+          "name": "[%key:component::soundtouch::services::create_zone::fields::master::name%]",
+          "description": "[%key:component::soundtouch::services::add_zone_slave::fields::master::description%]"
+        },
+        "slaves": {
+          "name": "[%key:component::soundtouch::services::create_zone::fields::slaves::name%]",
+          "description": "The media player entities to remove from the existing zone."
+        }
+      }
+    }
+  }
+}

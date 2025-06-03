@@ -1,96 +1,147 @@
 """Support for August lock."""
-from datetime import timedelta
+
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 import logging
+from typing import Any
 
-from august.activity import ActivityType
-from august.lock import LockStatus
+from aiohttp import ClientResponseError
+from yalexs.activity import ActivityType, ActivityTypes
+from yalexs.lock import Lock, LockStatus
+from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity, LockEntityFeature
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
-from . import DATA_AUGUST
+from . import AugustConfigEntry, AugustData
+from .entity import AugustEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=5)
+LOCK_JAMMED_ERR = 531
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: AugustConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up August locks."""
-    data = hass.data[DATA_AUGUST]
-    devices = []
-
-    for lock in data.locks:
-        _LOGGER.debug("Adding lock for %s", lock.device_name)
-        devices.append(AugustLock(data, lock))
-
-    add_entities(devices, True)
+    data = config_entry.runtime_data
+    async_add_entities(AugustLock(data, lock) for lock in data.locks)
 
 
-class AugustLock(LockDevice):
+class AugustLock(AugustEntity, RestoreEntity, LockEntity):
     """Representation of an August lock."""
 
-    def __init__(self, data, lock):
+    _attr_name = None
+    _lock_status: LockStatus | None = None
+
+    def __init__(self, data: AugustData, device: Lock) -> None:
         """Initialize the lock."""
-        self._data = data
-        self._lock = lock
-        self._lock_status = None
-        self._lock_detail = None
-        self._changed_by = None
-        self._available = False
+        super().__init__(data, device, "lock")
+        if self._detail.unlatch_supported:
+            self._attr_supported_features = LockEntityFeature.OPEN
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        self._data.lock(self._lock.device_id)
+        if self._data.push_updates_connected:
+            await self._data.async_lock_async(self._device_id, self._hyper_bridge)
+            return
+        await self._call_lock_operation(self._data.async_lock)
 
-    def unlock(self, **kwargs):
+    async def async_open(self, **kwargs: Any) -> None:
+        """Open/unlatch the device."""
+        if self._data.push_updates_connected:
+            await self._data.async_unlatch_async(self._device_id, self._hyper_bridge)
+            return
+        await self._call_lock_operation(self._data.async_unlatch)
+
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        self._data.unlock(self._lock.device_id)
+        if self._data.push_updates_connected:
+            await self._data.async_unlock_async(self._device_id, self._hyper_bridge)
+            return
+        await self._call_lock_operation(self._data.async_unlock)
 
-    def update(self):
-        """Get the latest state of the sensor."""
-        self._lock_status = self._data.get_lock_status(self._lock.device_id)
-        self._available = self._lock_status is not None
+    async def _call_lock_operation(
+        self, lock_operation: Callable[[str], Coroutine[Any, Any, list[ActivityTypes]]]
+    ) -> None:
+        try:
+            activities = await lock_operation(self._device_id)
+        except ClientResponseError as err:
+            if err.status == LOCK_JAMMED_ERR:
+                self._detail.lock_status = LockStatus.JAMMED
+                self._detail.lock_status_datetime = dt_util.utcnow()
+            else:
+                raise
+        else:
+            for lock_activity in activities:
+                update_lock_detail_from_activity(self._detail, lock_activity)
 
-        self._lock_detail = self._data.get_lock_detail(self._lock.device_id)
+        if self._update_lock_status_from_detail():
+            _LOGGER.debug(
+                "async_signal_device_id_update (from lock operation): %s",
+                self._device_id,
+            )
+            self._data.async_signal_device_id_update(self._device_id)
 
-        activity = self._data.get_latest_device_activity(
-            self._lock.device_id, ActivityType.LOCK_OPERATION
+    def _update_lock_status_from_detail(self) -> bool:
+        self._attr_available = self._detail.bridge_is_online
+
+        if self._lock_status != self._detail.lock_status:
+            self._lock_status = self._detail.lock_status
+            return True
+        return False
+
+    @callback
+    def _update_from_data(self) -> None:
+        """Get the latest state of the sensor and update activity."""
+        detail = self._detail
+        if lock_activity := self._get_latest({ActivityType.LOCK_OPERATION}):
+            self._attr_changed_by = lock_activity.operated_by
+        lock_activity_without_operator = self._get_latest(
+            {ActivityType.LOCK_OPERATION_WITHOUT_OPERATOR}
         )
+        if latest_activity := get_latest_activity(
+            lock_activity_without_operator, lock_activity
+        ):
+            if latest_activity.was_pushed:
+                self._detail.set_online(True)
+            update_lock_detail_from_activity(detail, latest_activity)
 
-        if activity is not None:
-            self._changed_by = activity.operated_by
+        if bridge_activity := self._get_latest({ActivityType.BRIDGE_OPERATION}):
+            update_lock_detail_from_activity(detail, bridge_activity)
 
-    @property
-    def name(self):
-        """Return the name of this device."""
-        return self._lock.device_name
+        self._update_lock_status_from_detail()
+        lock_status = self._lock_status
+        if lock_status is None or lock_status is LockStatus.UNKNOWN:
+            self._attr_is_locked = None
+        else:
+            self._attr_is_locked = lock_status is LockStatus.LOCKED
+        self._attr_is_jammed = lock_status is LockStatus.JAMMED
+        self._attr_is_locking = lock_status is LockStatus.LOCKING
+        self._attr_is_unlocking = lock_status in (
+            LockStatus.UNLOCKING,
+            LockStatus.UNLATCHING,
+        )
+        self._attr_extra_state_attributes = {ATTR_BATTERY_LEVEL: detail.battery_level}
+        if keypad := detail.keypad:
+            self._attr_extra_state_attributes["keypad_battery_level"] = (
+                keypad.battery_level
+            )
 
-    @property
-    def available(self):
-        """Return the availability of this sensor."""
-        return self._available
+    async def async_added_to_hass(self) -> None:
+        """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
+        await super().async_added_to_hass()
 
-    @property
-    def is_locked(self):
-        """Return true if device is on."""
+        if not (last_state := await self.async_get_last_state()):
+            return
 
-        return self._lock_status is LockStatus.LOCKED
-
-    @property
-    def changed_by(self):
-        """Last change triggered by."""
-        return self._changed_by
-
-    @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        if self._lock_detail is None:
-            return None
-
-        return {ATTR_BATTERY_LEVEL: self._lock_detail.battery_level}
-
-    @property
-    def unique_id(self) -> str:
-        """Get the unique id of the lock."""
-        return f"{self._lock.device_id:s}_lock"
+        if ATTR_CHANGED_BY in last_state.attributes:
+            self._attr_changed_by = last_state.attributes[ATTR_CHANGED_BY]

@@ -1,102 +1,153 @@
 """Tests for Glances config flow."""
-from unittest.mock import patch
 
-from glances_api import Glances
+from unittest.mock import MagicMock, patch
 
-from homeassistant.components.glances import config_flow
+from glances_api.exceptions import (
+    GlancesApiAuthorizationError,
+    GlancesApiConnectionError,
+    GlancesApiNoDataAvailable,
+)
+import pytest
+
+from homeassistant import config_entries
 from homeassistant.components.glances.const import DOMAIN
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_NAME, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, mock_coro
+from . import HA_SENSOR_DATA, MOCK_USER_INPUT
 
-NAME = "Glances"
-HOST = "0.0.0.0"
-USERNAME = "username"
-PASSWORD = "password"
-PORT = 61208
-VERSION = 3
-SCAN_INTERVAL = 10
-
-DEMO_USER_INPUT = {
-    "name": NAME,
-    "host": HOST,
-    "username": USERNAME,
-    "password": PASSWORD,
-    "version": VERSION,
-    "port": PORT,
-    "ssl": False,
-    "verify_ssl": True,
-}
+from tests.common import MockConfigEntry
 
 
-def init_config_flow(hass):
-    """Init a configuration flow."""
-    flow = config_flow.GlancesFlowHandler()
-    flow.hass = hass
-    return flow
+@pytest.fixture(autouse=True)
+def glances_setup_fixture():
+    """Mock glances entry setup."""
+    with patch("homeassistant.components.glances.async_setup_entry", return_value=True):
+        yield
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test config entry configured successfully."""
-    flow = init_config_flow(hass)
 
-    with patch("glances_api.Glances"), patch.object(
-        Glances, "get_data", return_value=mock_coro()
-    ):
-
-        result = await flow.async_step_user(DEMO_USER_INPUT)
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == NAME
-    assert result["data"] == DEMO_USER_INPUT
-
-
-async def test_form_cannot_connect(hass):
-    """Test to return error if we cannot connect."""
-    flow = init_config_flow(hass)
-
-    with patch("glances_api.Glances"):
-        result = await flow.async_step_user(DEMO_USER_INPUT)
-
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_wrong_version(hass):
-    """Test to check if wrong version is entered."""
-    flow = init_config_flow(hass)
-
-    user_input = DEMO_USER_INPUT.copy()
-    user_input.update(version=1)
-    result = await flow.async_step_user(user_input)
-
-    assert result["type"] == "form"
-    assert result["errors"] == {"version": "wrong_version"}
-
-
-async def test_form_already_configured(hass):
-    """Test host is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=DEMO_USER_INPUT, options={CONF_SCAN_INTERVAL: 60}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "0.0.0.0:61208"
+    assert result["data"] == MOCK_USER_INPUT
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (GlancesApiAuthorizationError, "invalid_auth"),
+        (GlancesApiConnectionError, "cannot_connect"),
+        (GlancesApiNoDataAvailable, "cannot_connect"),
+    ],
+)
+async def test_form_fails(
+    hass: HomeAssistant, error: Exception, message: str, mock_api: MagicMock
+) -> None:
+    """Test flow fails when api exception is raised."""
+
+    mock_api.return_value.get_ha_sensor_data.side_effect = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": message}
+
+
+async def test_form_already_configured(hass: HomeAssistant) -> None:
+    """Test host is already configured."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
 
-    flow = init_config_flow(hass)
-    result = await flow.async_step_user(DEMO_USER_INPUT)
-
-    assert result["type"] == "abort"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_options(hass):
-    """Test options for Glances."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=DEMO_USER_INPUT, options={CONF_SCAN_INTERVAL: 60}
-    )
+async def test_reauth_success(hass: HomeAssistant) -> None:
+    """Test we can reauth."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
-    flow = init_config_flow(hass)
-    options_flow = flow.async_get_options_flow(entry)
 
-    result = await options_flow.async_step_init({CONF_SCAN_INTERVAL: 10})
-    assert result["type"] == "create_entry"
-    assert result["data"][CONF_SCAN_INTERVAL] == 10
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        CONF_NAME: "Mock Title",
+        CONF_USERNAME: "username",
+    }
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "password": "new-password",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    ("error", "message"),
+    [
+        (GlancesApiAuthorizationError, "invalid_auth"),
+        (GlancesApiConnectionError, "cannot_connect"),
+    ],
+)
+async def test_reauth_fails(
+    hass: HomeAssistant, error: Exception, message: str, mock_api: MagicMock
+) -> None:
+    """Test we can reauth."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
+    entry.add_to_hass(hass)
+
+    mock_api.return_value.get_ha_sensor_data.side_effect = [error, HA_SENSOR_DATA]
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {
+        CONF_NAME: "Mock Title",
+        CONF_USERNAME: "username",
+    }
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "password": "new-password",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": message}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "password": "new-password",
+        },
+    )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"

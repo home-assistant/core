@@ -1,229 +1,249 @@
 """Support for Met.no weather service."""
-import logging
-from random import randrange
 
-import metno
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any
+
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_TIME,
+    ATTR_WEATHER_CLOUD_COVERAGE,
+    ATTR_WEATHER_DEW_POINT,
+    ATTR_WEATHER_HUMIDITY,
+    ATTR_WEATHER_PRESSURE,
+    ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_UV_INDEX,
+    ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_GUST_SPEED,
+    ATTR_WEATHER_WIND_SPEED,
+    DOMAIN as WEATHER_DOMAIN,
+    Forecast,
+    SingleCoordinatorWeatherEntity,
+    WeatherEntityFeature,
+)
 from homeassistant.const import (
-    CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    EVENT_CORE_CONFIG_UPDATE,
-    TEMP_CELSIUS,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
-from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_call_later
-import homeassistant.util.dt as dt_util
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er, sun
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import CONF_TRACK_HOME
-
-_LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = (
-    "Weather forecast from met.no, delivered by the Norwegian "
-    "Meteorological Institute."
+from .const import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
+    ATTR_MAP,
+    CONDITIONS_MAP,
+    CONF_TRACK_HOME,
+    DOMAIN,
+    FORECAST_MAP,
 )
+from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
+
 DEFAULT_NAME = "Met.no"
 
-URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-        vol.Optional(CONF_ELEVATION): int,
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Met.no weather platform."""
-    _LOGGER.warning("Loading Met.no via platform config is deprecated")
-
-    # Add defaults.
-    config = {CONF_ELEVATION: hass.config.elevation, **config}
-
-    if config.get(CONF_LATITUDE) is None:
-        config[CONF_TRACK_HOME] = True
-
-    async_add_entities([MetWeather(config)])
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: MetWeatherConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Add a weather entity from a config_entry."""
-    async_add_entities([MetWeather(config_entry.data)])
+    coordinator = config_entry.runtime_data
+    entity_registry = er.async_get(hass)
+
+    name: str | None
+    is_metric = hass.config.units is METRIC_SYSTEM
+    if config_entry.data.get(CONF_TRACK_HOME, False):
+        name = hass.config.location_name
+    else:
+        name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+        if TYPE_CHECKING:
+            assert isinstance(name, str)
+
+    entities = [MetWeather(coordinator, config_entry, name, is_metric)]
+
+    # Remove hourly entity from legacy config entries
+    if hourly_entity_id := entity_registry.async_get_entity_id(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        _calculate_unique_id(config_entry.data, True),
+    ):
+        entity_registry.async_remove(hourly_entity_id)
+
+    async_add_entities(entities)
 
 
-class MetWeather(WeatherEntity):
+def _calculate_unique_id(config: Mapping[str, Any], hourly: bool) -> str:
+    """Calculate unique ID."""
+    name_appendix = ""
+    if hourly:
+        name_appendix = "-hourly"
+    if config.get(CONF_TRACK_HOME):
+        return f"home{name_appendix}"
+
+    return f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}{name_appendix}"
+
+
+def format_condition(condition: str) -> str:
+    """Return condition from dict CONDITIONS_MAP."""
+    for key, value in CONDITIONS_MAP.items():
+        if condition in value:
+            return key
+    return condition
+
+
+class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     """Implementation of a Met.no weather condition."""
 
-    def __init__(self, config):
-        """Initialise the platform with a data instance and site."""
-        self._config = config
-        self._unsub_track_home = None
-        self._unsub_fetch_data = None
-        self._weather_data = None
-        self._current_weather_data = {}
-        self._forecast_data = None
+    _attr_attribution = (
+        "Weather forecast from met.no, delivered by the Norwegian "
+        "Meteorological Institute."
+    )
+    _attr_has_entity_name = True
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+    )
 
-    async def async_added_to_hass(self):
-        """Start fetching data."""
-        self._init_data()
-        await self._fetch_data()
-        if self._config.get(CONF_TRACK_HOME):
-            self._unsub_track_home = self.hass.bus.async_listen(
-                EVENT_CORE_CONFIG_UPDATE, self._core_config_updated
-            )
+    def __init__(
+        self,
+        coordinator: MetDataUpdateCoordinator,
+        config_entry: MetWeatherConfigEntry,
+        name: str,
+        is_metric: bool,
+    ) -> None:
+        """Initialise the platform with a data instance and site."""
+        super().__init__(coordinator)
+        self._attr_unique_id = _calculate_unique_id(config_entry.data, False)
+        self._config = config_entry.data
+        self._is_metric = is_metric
+        self._attr_device_info = DeviceInfo(
+            name="Forecast",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            manufacturer="Met.no",
+            model="Forecast",
+            configuration_url="https://www.met.no/en",
+        )
+        self._attr_track_home = self._config.get(CONF_TRACK_HOME, False)
+        self._attr_name = name
+
+    @property
+    def condition(self) -> str | None:
+        """Return the current condition."""
+        condition = self.coordinator.data.current_weather_data.get("condition")
+        if condition is None:
+            return None
+
+        if condition == ATTR_CONDITION_SUNNY and not sun.is_up(self.hass):
+            condition = ATTR_CONDITION_CLEAR_NIGHT
+
+        return format_condition(condition)
+
+    @property
+    def native_temperature(self) -> float | None:
+        """Return the temperature."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_TEMPERATURE]
+        )
+
+    @property
+    def native_pressure(self) -> float | None:
+        """Return the pressure."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_PRESSURE]
+        )
+
+    @property
+    def humidity(self) -> float | None:
+        """Return the humidity."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_HUMIDITY]
+        )
+
+    @property
+    def native_wind_speed(self) -> float | None:
+        """Return the wind speed."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_WIND_SPEED]
+        )
+
+    @property
+    def wind_bearing(self) -> float | str | None:
+        """Return the wind direction."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_WIND_BEARING]
+        )
+
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed in native units."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_WIND_GUST_SPEED]
+        )
+
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_CLOUD_COVERAGE]
+        )
+
+    @property
+    def native_dew_point(self) -> float | None:
+        """Return the dew point."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_DEW_POINT]
+        )
+
+    @property
+    def uv_index(self) -> float | None:
+        """Return the uv index."""
+        return self.coordinator.data.current_weather_data.get(
+            ATTR_MAP[ATTR_WEATHER_UV_INDEX]
+        )
+
+    def _forecast(self, hourly: bool) -> list[Forecast] | None:
+        """Return the forecast array."""
+        if hourly:
+            met_forecast = self.coordinator.data.hourly_forecast
+        else:
+            met_forecast = self.coordinator.data.daily_forecast
+        required_keys = {"temperature", ATTR_FORECAST_TIME}
+        ha_forecast: list[Forecast] = []
+        for met_item in met_forecast:
+            if not set(met_item).issuperset(required_keys):
+                continue
+            ha_item = {
+                k: met_item[v]
+                for k, v in FORECAST_MAP.items()
+                if met_item.get(v) is not None
+            }
+            if ha_item.get(ATTR_FORECAST_CONDITION):
+                ha_item[ATTR_FORECAST_CONDITION] = format_condition(
+                    ha_item[ATTR_FORECAST_CONDITION]
+                )
+            ha_forecast.append(ha_item)  # type: ignore[arg-type]
+        return ha_forecast
 
     @callback
-    def _init_data(self):
-        """Initialize a data object."""
-        conf = self._config
+    def _async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self._forecast(False)
 
-        if self.track_home:
-            latitude = self.hass.config.latitude
-            longitude = self.hass.config.longitude
-            elevation = self.hass.config.elevation
-        else:
-            latitude = conf[CONF_LATITUDE]
-            longitude = conf[CONF_LONGITUDE]
-            elevation = conf[CONF_ELEVATION]
-
-        coordinates = {
-            "lat": str(latitude),
-            "lon": str(longitude),
-            "msl": str(elevation),
-        }
-        self._weather_data = metno.MetWeatherData(
-            coordinates, async_get_clientsession(self.hass), URL
-        )
-
-    async def _core_config_updated(self, _event):
-        """Handle core config updated."""
-        self._init_data()
-        if self._unsub_fetch_data:
-            self._unsub_fetch_data()
-            self._unsub_fetch_data = None
-        await self._fetch_data()
-
-    async def will_remove_from_hass(self):
-        """Handle entity will be removed from hass."""
-        if self._unsub_track_home:
-            self._unsub_track_home()
-            self._unsub_track_home = None
-
-        if self._unsub_fetch_data:
-            self._unsub_fetch_data()
-            self._unsub_fetch_data = None
-
-    async def _fetch_data(self, *_):
-        """Get the latest data from met.no."""
-        if not await self._weather_data.fetching_data():
-            # Retry in 15 to 20 minutes.
-            minutes = 15 + randrange(6)
-            _LOGGER.error("Retrying in %i minutes", minutes)
-            self._unsub_fetch_data = async_call_later(
-                self.hass, minutes * 60, self._fetch_data
-            )
-            return
-
-        # Wait between 55-65 minutes. If people update HA on the hour, this
-        # will make sure it will spread it out.
-
-        self._unsub_fetch_data = async_call_later(
-            self.hass, randrange(55, 65) * 60, self._fetch_data
-        )
-        self._update()
-
-    def _update(self, *_):
-        """Get the latest data from Met.no."""
-        self._current_weather_data = self._weather_data.get_current_weather()
-        time_zone = dt_util.DEFAULT_TIME_ZONE
-        self._forecast_data = self._weather_data.get_forecast(time_zone)
-        self.async_write_ha_state()
-
-    @property
-    def track_home(self):
-        """Return if we are tracking home."""
-        return self._config.get(CONF_TRACK_HOME, False)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return unique ID."""
-        if self.track_home:
-            return "home"
-
-        return "{}-{}".format(self._config[CONF_LATITUDE], self._config[CONF_LONGITUDE])
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        name = self._config.get(CONF_NAME)
-
-        if name is not None:
-            return name
-
-        if self.track_home:
-            return self.hass.config.location_name
-
-        return DEFAULT_NAME
-
-    @property
-    def condition(self):
-        """Return the current condition."""
-        return self._current_weather_data.get("condition")
-
-    @property
-    def temperature(self):
-        """Return the temperature."""
-        return self._current_weather_data.get("temperature")
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def pressure(self):
-        """Return the pressure."""
-        return self._current_weather_data.get("pressure")
-
-    @property
-    def humidity(self):
-        """Return the humidity."""
-        return self._current_weather_data.get("humidity")
-
-    @property
-    def wind_speed(self):
-        """Return the wind speed."""
-        return self._current_weather_data.get("wind_speed")
-
-    @property
-    def wind_bearing(self):
-        """Return the wind direction."""
-        return self._current_weather_data.get("wind_bearing")
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
-
-    @property
-    def forecast(self):
-        """Return the forecast array."""
-        return self._forecast_data
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
+        """Return the hourly forecast in native units."""
+        return self._forecast(True)

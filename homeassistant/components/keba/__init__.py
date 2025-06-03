@@ -1,18 +1,20 @@
 """Support for KEBA charging stations."""
+
 import asyncio
 import logging
 
 from keba_kecontact.connection import KebaKeContact
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_HOST, Platform
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "keba"
-SUPPORTED_COMPONENTS = ["binary_sensor", "sensor", "lock"]
+PLATFORMS = (Platform.BINARY_SENSOR, Platform.SENSOR, Platform.LOCK, Platform.NOTIFY)
 
 CONF_RFID = "rfid"
 CONF_FS = "failsafe"
@@ -42,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 _SERVICE_MAP = {
-    "request_data": "request_data",
+    "request_data": "async_request_data",
     "set_energy": "async_set_energy",
     "set_current": "async_set_current",
     "authorize": "async_start",
@@ -53,7 +55,7 @@ _SERVICE_MAP = {
 }
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Check connectivity and version of KEBA charging station."""
     host = config[DOMAIN][CONF_HOST]
     rfid = config[DOMAIN][CONF_RFID]
@@ -77,7 +79,7 @@ async def async_setup(hass, config):
         _LOGGER.warning("Could not set failsafe mode %s", ex)
 
     # Register services to hass
-    async def execute_service(call):
+    async def execute_service(call: ServiceCall) -> None:
         """Execute a service to KEBA charging station.
 
         This must be a member function as we need access to the keba
@@ -91,9 +93,9 @@ async def async_setup(hass, config):
         hass.services.async_register(DOMAIN, service, execute_service)
 
     # Load components
-    for domain in SUPPORTED_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            discovery.async_load_platform(hass, domain, DOMAIN, {}, config)
+            discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
         )
 
     # Start periodic polling of charging station data
@@ -180,6 +182,11 @@ class KebaHandler(KebaKeContact):
         # initial data is already loaded, thus update the component
         listener()
 
+    async def async_request_data(self, param):
+        """Request new data in async way."""
+        await self.request_data()
+        _LOGGER.debug("New data from KEBA wallbox requested")
+
     async def async_set_energy(self, param):
         """Set energy target in async way."""
         try:
@@ -228,7 +235,9 @@ class KebaHandler(KebaKeContact):
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
             _LOGGER.warning(
-                "failsafe_timeout, failsafe_fallback and/or "
-                "failsafe_persist value are not correct. %s",
+                (
+                    "Values are not correct for: failsafe_timeout, failsafe_fallback"
+                    " and/or failsafe_persist: %s"
+                ),
                 ex,
             )

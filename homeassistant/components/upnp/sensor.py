@@ -1,267 +1,194 @@
 """Support for UPnP/IGD Sensors."""
-import logging
 
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
-import homeassistant.util.dt as dt_util
+from __future__ import annotations
 
-from .const import DOMAIN as DOMAIN_UPNP, SIGNAL_REMOVE_SENSOR
+from dataclasses import dataclass
+from datetime import datetime
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfInformation,
+    UnitOfTime,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-BYTES_RECEIVED = "bytes_received"
-BYTES_SENT = "bytes_sent"
-PACKETS_RECEIVED = "packets_received"
-PACKETS_SENT = "packets_sent"
-
-SENSOR_TYPES = {
-    BYTES_RECEIVED: {"name": "bytes received", "unit": "bytes"},
-    BYTES_SENT: {"name": "bytes sent", "unit": "bytes"},
-    PACKETS_RECEIVED: {"name": "packets received", "unit": "packets"},
-    PACKETS_SENT: {"name": "packets sent", "unit": "packets"},
-}
-
-IN = "received"
-OUT = "sent"
-KBYTE = 1024
-
-
-async def async_setup_platform(
-    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
-):
-    """Old way of setting up UPnP/IGD sensors."""
-    _LOGGER.debug(
-        "async_setup_platform: config: %s, discovery: %s", config, discovery_info
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the UPnP/IGD sensor."""
-
-    @callback
-    def async_add_sensor(device):
-        """Add sensors from UPnP/IGD device."""
-        # raw sensors + per-second sensors
-        sensors = [
-            RawUPnPIGDSensor(device, name, sensor_type)
-            for name, sensor_type in SENSOR_TYPES.items()
-        ]
-        sensors += [
-            KBytePerSecondUPnPIGDSensor(device, IN),
-            KBytePerSecondUPnPIGDSensor(device, OUT),
-            PacketsPerSecondUPnPIGDSensor(device, IN),
-            PacketsPerSecondUPnPIGDSensor(device, OUT),
-        ]
-        async_add_entities(sensors, True)
-
-    data = config_entry.data
-    if "udn" in data:
-        udn = data["udn"]
-    else:
-        # any device will do
-        udn = list(hass.data[DOMAIN_UPNP]["devices"].keys())[0]
-
-    device = hass.data[DOMAIN_UPNP]["devices"][udn]
-    async_add_sensor(device)
+from .const import (
+    BYTES_RECEIVED,
+    BYTES_SENT,
+    DATA_PACKETS,
+    DATA_RATE_PACKETS_PER_SECOND,
+    KIBIBYTES_PER_SEC_RECEIVED,
+    KIBIBYTES_PER_SEC_SENT,
+    LOGGER,
+    PACKETS_PER_SEC_RECEIVED,
+    PACKETS_PER_SEC_SENT,
+    PACKETS_RECEIVED,
+    PACKETS_SENT,
+    PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4,
+    ROUTER_IP,
+    ROUTER_UPTIME,
+    WAN_STATUS,
+)
+from .coordinator import UpnpConfigEntry
+from .entity import UpnpEntity, UpnpEntityDescription
 
 
-class UpnpSensor(Entity):
+@dataclass(frozen=True)
+class UpnpSensorEntityDescription(UpnpEntityDescription, SensorEntityDescription):
+    """A class that describes a sensor UPnP entities."""
+
+
+SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
+    UpnpSensorEntityDescription(
+        key=BYTES_RECEIVED,
+        translation_key="data_received",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+    ),
+    UpnpSensorEntityDescription(
+        key=BYTES_SENT,
+        translation_key="data_sent",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+    ),
+    UpnpSensorEntityDescription(
+        key=PACKETS_RECEIVED,
+        translation_key="packets_received",
+        native_unit_of_measurement=DATA_PACKETS,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+    ),
+    UpnpSensorEntityDescription(
+        key=PACKETS_SENT,
+        translation_key="packets_sent",
+        native_unit_of_measurement=DATA_PACKETS,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
+    ),
+    UpnpSensorEntityDescription(
+        key=ROUTER_IP,
+        translation_key="external_ip",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    UpnpSensorEntityDescription(
+        key=ROUTER_UPTIME,
+        translation_key="uptime",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
+    ),
+    UpnpSensorEntityDescription(
+        key=WAN_STATUS,
+        translation_key="wan_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    UpnpSensorEntityDescription(
+        key=PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4,
+        translation_key="port_mapping_number_of_entries_ipv4",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    UpnpSensorEntityDescription(
+        key=BYTES_RECEIVED,
+        translation_key="download_speed",
+        value_key=KIBIBYTES_PER_SEC_RECEIVED,
+        unique_id="KiB/sec_received",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    UpnpSensorEntityDescription(
+        key=BYTES_SENT,
+        translation_key="upload_speed",
+        value_key=KIBIBYTES_PER_SEC_SENT,
+        unique_id="KiB/sec_sent",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    UpnpSensorEntityDescription(
+        key=PACKETS_RECEIVED,
+        translation_key="packet_download_speed",
+        value_key=PACKETS_PER_SEC_RECEIVED,
+        unique_id="packets/sec_received",
+        native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    UpnpSensorEntityDescription(
+        key=PACKETS_SENT,
+        translation_key="packet_upload_speed",
+        value_key=PACKETS_PER_SEC_SENT,
+        unique_id="packets/sec_sent",
+        native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: UpnpConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the UPnP/IGD sensors."""
+    coordinator = config_entry.runtime_data
+
+    entities: list[UpnpSensor] = [
+        UpnpSensor(
+            coordinator=coordinator,
+            entity_description=entity_description,
+        )
+        for entity_description in SENSOR_DESCRIPTIONS
+        if coordinator.data.get(entity_description.key) is not None
+    ]
+
+    async_add_entities(entities)
+    LOGGER.debug("Added sensor entities: %s", entities)
+
+
+class UpnpSensor(UpnpEntity, SensorEntity):
     """Base class for UPnP/IGD sensors."""
 
-    def __init__(self, device):
-        """Initialize the base sensor."""
-        self._device = device
-
-    async def async_added_to_hass(self):
-        """Subscribe to sensors events."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_REMOVE_SENSOR, self._upnp_remove_sensor
-        )
-
-    @callback
-    def _upnp_remove_sensor(self, device):
-        """Remove sensor."""
-        if self._device != device:
-            # not for us
-            return
-
-        self.hass.async_create_task(self.async_remove())
+    entity_description: UpnpSensorEntityDescription
 
     @property
-    def device_info(self):
-        """Get device info."""
-        return {
-            "connections": {(dr.CONNECTION_UPNP, self._device.udn)},
-            "identifiers": {(DOMAIN_UPNP, self._device.udn)},
-            "name": self._device.name,
-            "manufacturer": self._device.manufacturer,
-            "model": self._device.model_name,
-        }
-
-
-class RawUPnPIGDSensor(UpnpSensor):
-    """Representation of a UPnP/IGD sensor."""
-
-    def __init__(self, device, sensor_type_name, sensor_type):
-        """Initialize the UPnP/IGD sensor."""
-        super().__init__(device)
-        self._type_name = sensor_type_name
-        self._type = sensor_type
-        self._name = "{} {}".format(device.name, sensor_type["name"])
-        self._state = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._device.udn}_{self._type_name}"
-
-    @property
-    def state(self) -> str:
+    def native_value(self) -> str | datetime | int | float | None:
         """Return the state of the device."""
-        if self._state is None:
+        if (key := self.entity_description.value_key) is None:
             return None
+        return self.coordinator.data[key]
 
-        return format(self._state, "d")
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        await super().async_added_to_hass()
 
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return "mdi:server-network"
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._type["unit"]
-
-    async def async_update(self):
-        """Get the latest information from the IGD."""
-        if self._type_name == BYTES_RECEIVED:
-            self._state = await self._device.async_get_total_bytes_received()
-        elif self._type_name == BYTES_SENT:
-            self._state = await self._device.async_get_total_bytes_sent()
-        elif self._type_name == PACKETS_RECEIVED:
-            self._state = await self._device.async_get_total_packets_received()
-        elif self._type_name == PACKETS_SENT:
-            self._state = await self._device.async_get_total_packets_sent()
-
-
-class PerSecondUPnPIGDSensor(UpnpSensor):
-    """Abstract representation of a X Sent/Received per second sensor."""
-
-    def __init__(self, device, direction):
-        """Initialize sensor."""
-        super().__init__(device)
-        self._direction = direction
-
-        self._state = None
-        self._last_value = None
-        self._last_update_time = None
-
-    @property
-    def unit(self) -> str:
-        """Get unit we are measuring in."""
-        raise NotImplementedError()
-
-    def _async_fetch_value(self):
-        """Fetch a value from the IGD."""
-        raise NotImplementedError()
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._device.udn}_{self.unit}/sec_{self._direction}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.name} {self.unit}/sec {self._direction}"
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return "mdi:server-network"
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return f"{self.unit}/s"
-
-    def _is_overflowed(self, new_value) -> bool:
-        """Check if value has overflowed."""
-        return new_value < self._last_value
-
-    async def async_update(self):
-        """Get the latest information from the UPnP/IGD."""
-        new_value = await self._async_fetch_value()
-
-        if self._last_value is None:
-            self._last_value = new_value
-            self._last_update_time = dt_util.utcnow()
-            return
-
-        now = dt_util.utcnow()
-        if self._is_overflowed(new_value):
-            self._state = None  # temporarily report nothing
-        else:
-            delta_time = (now - self._last_update_time).seconds
-            delta_value = new_value - self._last_value
-            self._state = delta_value / delta_time
-
-        self._last_value = new_value
-        self._last_update_time = now
-
-
-class KBytePerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
-    """Representation of a KBytes Sent/Received per second sensor."""
-
-    @property
-    def unit(self) -> str:
-        """Get unit we are measuring in."""
-        return "kB"
-
-    async def _async_fetch_value(self) -> float:
-        """Fetch value from device."""
-        if self._direction == IN:
-            return await self._device.async_get_total_bytes_received()
-
-        return await self._device.async_get_total_bytes_sent()
-
-    @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        if self._state is None:
-            return None
-
-        return format(float(self._state / KBYTE), ".1f")
-
-
-class PacketsPerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
-    """Representation of a Packets Sent/Received per second sensor."""
-
-    @property
-    def unit(self) -> str:
-        """Get unit we are measuring in."""
-        return "packets"
-
-    async def _async_fetch_value(self) -> float:
-        """Fetch value from device."""
-        if self._direction == IN:
-            return await self._device.async_get_total_packets_received()
-
-        return await self._device.async_get_total_packets_sent()
-
-    @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        if self._state is None:
-            return None
-
-        return format(float(self._state), ".1f")
+        # Register self at coordinator.
+        key = self.entity_description.key
+        entity_id = self.entity_id
+        unregister = self.coordinator.register_entity(key, entity_id)
+        self.async_on_remove(unregister)

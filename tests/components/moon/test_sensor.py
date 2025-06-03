@@ -1,44 +1,82 @@
 """The test for the moon sensor platform."""
-from datetime import datetime
-import unittest
+
+from __future__ import annotations
+
 from unittest.mock import patch
 
-from homeassistant.setup import setup_component
-import homeassistant.util.dt as dt_util
+import pytest
 
-from tests.common import get_test_home_assistant
+from homeassistant.components.moon.sensor import (
+    STATE_FIRST_QUARTER,
+    STATE_FULL_MOON,
+    STATE_LAST_QUARTER,
+    STATE_NEW_MOON,
+    STATE_WANING_CRESCENT,
+    STATE_WANING_GIBBOUS,
+    STATE_WAXING_CRESCENT,
+    STATE_WAXING_GIBBOUS,
+)
+from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-DAY1 = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
-DAY2 = datetime(2017, 1, 18, 1, tzinfo=dt_util.UTC)
+from tests.common import MockConfigEntry
 
 
-class TestMoonSensor(unittest.TestCase):
+@pytest.mark.parametrize(
+    ("moon_value", "native_value"),
+    [
+        (0, STATE_NEW_MOON),
+        (5, STATE_WAXING_CRESCENT),
+        (7, STATE_FIRST_QUARTER),
+        (12, STATE_WAXING_GIBBOUS),
+        (14.3, STATE_FULL_MOON),
+        (20.1, STATE_WANING_GIBBOUS),
+        (20.8, STATE_LAST_QUARTER),
+        (23, STATE_WANING_CRESCENT),
+    ],
+)
+async def test_moon_day(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    moon_value: float,
+    native_value: str,
+) -> None:
     """Test the Moon sensor."""
+    mock_config_entry.add_to_hass(hass)
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    with patch(
+        "homeassistant.components.moon.sensor.moon.phase", return_value=moon_value
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
+    state = hass.states.get("sensor.moon_phase")
+    assert state
+    assert state.state == native_value
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Moon Phase"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == [
+        STATE_NEW_MOON,
+        STATE_WAXING_CRESCENT,
+        STATE_FIRST_QUARTER,
+        STATE_WAXING_GIBBOUS,
+        STATE_FULL_MOON,
+        STATE_WANING_GIBBOUS,
+        STATE_LAST_QUARTER,
+        STATE_WANING_CRESCENT,
+    ]
 
-    @patch("homeassistant.components.moon.sensor.dt_util.utcnow", return_value=DAY1)
-    def test_moon_day1(self, mock_request):
-        """Test the Moon sensor."""
-        config = {"sensor": {"platform": "moon", "name": "moon_day1"}}
+    entry = entity_registry.async_get("sensor.moon_phase")
+    assert entry
+    assert entry.unique_id == mock_config_entry.entry_id
+    assert entry.translation_key == "phase"
 
-        assert setup_component(self.hass, "sensor", config)
-
-        state = self.hass.states.get("sensor.moon_day1")
-        assert state.state == "waxing_crescent"
-
-    @patch("homeassistant.components.moon.sensor.dt_util.utcnow", return_value=DAY2)
-    def test_moon_day2(self, mock_request):
-        """Test the Moon sensor."""
-        config = {"sensor": {"platform": "moon", "name": "moon_day2"}}
-
-        assert setup_component(self.hass, "sensor", config)
-
-        state = self.hass.states.get("sensor.moon_day2")
-        assert state.state == "waning_gibbous"
+    assert entry.device_id
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.name == "Moon"
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE

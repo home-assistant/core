@@ -1,11 +1,17 @@
 """Support for information from HP iLO sensors."""
+
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 import hpilo
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -17,8 +23,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +50,7 @@ SENSOR_TYPES = {
     "network_settings": ["Network Settings", "get_network_settings"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -68,13 +76,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the HP iLO sensors."""
-    hostname = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    login = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    monitored_variables = config.get(CONF_MONITORED_VARIABLES)
+    hostname = config[CONF_HOST]
+    port = config[CONF_PORT]
+    login = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    monitored_variables = config[CONF_MONITORED_VARIABLES]
 
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data and confirm we can connect.
@@ -90,9 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HpIloSensor(
             hass=hass,
             hp_ilo_data=hp_ilo_data,
-            sensor_name="{} {}".format(
-                config.get(CONF_NAME), monitored_variable[CONF_NAME]
-            ),
+            sensor_name=f"{config[CONF_NAME]} {monitored_variable[CONF_NAME]}",
             sensor_type=monitored_variable[CONF_SENSOR_TYPE],
             sensor_value_template=monitored_variable.get(CONF_VALUE_TEMPLATE),
             unit_of_measurement=monitored_variable.get(CONF_UNIT_OF_MEASUREMENT),
@@ -102,7 +113,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HpIloSensor(Entity):
+class HpIloSensor(SensorEntity):
     """Representation of a HP iLO sensor."""
 
     def __init__(
@@ -120,9 +131,6 @@ class HpIloSensor(Entity):
         self._unit_of_measurement = unit_of_measurement
         self._ilo_function = SENSOR_TYPES[sensor_type][1]
         self.hp_ilo_data = hp_ilo_data
-
-        if sensor_value_template is not None:
-            sensor_value_template.hass = hass
         self._sensor_value_template = sensor_value_template
 
         self._state = None
@@ -136,21 +144,21 @@ class HpIloSensor(Entity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._state_attributes
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from HP iLO and updates the states."""
         # Call the API for new data. Each sensor will re-trigger this
         # same exact call, but that's fine. Results should be cached for
@@ -159,7 +167,9 @@ class HpIloSensor(Entity):
         ilo_data = getattr(self.hp_ilo_data.data, self._ilo_function)()
 
         if self._sensor_value_template is not None:
-            ilo_data = self._sensor_value_template.render(ilo_data=ilo_data)
+            ilo_data = self._sensor_value_template.render(
+                ilo_data=ilo_data, parse_result=False
+            )
 
         self._state = ilo_data
 
@@ -193,4 +203,4 @@ class HpIloData:
             hpilo.IloCommunicationError,
             hpilo.IloLoginFailed,
         ) as error:
-            raise ValueError(f"Unable to init HP ILO, {error}")
+            raise ValueError(f"Unable to init HP ILO, {error}") from error

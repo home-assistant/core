@@ -1,0 +1,40 @@
+select_first:
+  target:
+    entity:
+      domain: select
+
+select_last:
+  target:
+    entity:
+      domain: select
+
+select_next:
+  target:
+    entity:
+      domain: select
+  fields:
+    cycle:
+      default: true
+      selector:
+        boolean:
+
+select_option:
+  target:
+    entity:
+      domain: select
+  fields:
+    option:
+      required: true
+      example: '"Item A"'
+      selector:
+        text:
+
+select_previous:
+  target:
+    entity:
+      domain: select
+  fields:
+    cycle:
+      default: true
+      selector:
+        boolean:

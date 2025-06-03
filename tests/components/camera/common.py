@@ -3,63 +3,73 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
+
+from unittest.mock import Mock
+
+from webrtc_models import RTCIceCandidateInit
+
 from homeassistant.components.camera import (
-    ATTR_FILENAME,
-    SERVICE_ENABLE_MOTION,
-    SERVICE_SNAPSHOT,
-)
-from homeassistant.components.camera.const import (
-    DATA_CAMERA_PREFS,
-    DOMAIN,
-    PREF_PRELOAD_STREAM,
-)
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ENTITY_MATCH_ALL,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    Camera,
+    CameraWebRTCProvider,
+    WebRTCAnswer,
+    WebRTCSendMessage,
 )
 from homeassistant.core import callback
-from homeassistant.loader import bind_hass
+
+EMPTY_8_6_JPEG = b"empty_8_6"
+WEBRTC_ANSWER = "a=sendonly"
+STREAM_SOURCE = "rtsp://127.0.0.1/stream"
 
 
-@bind_hass
-async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL):
-    """Turn off camera."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data)
+def mock_turbo_jpeg(
+    first_width=None, second_width=None, first_height=None, second_height=None
+):
+    """Mock a TurboJPEG instance."""
+    mocked_turbo_jpeg = Mock()
+    mocked_turbo_jpeg.decode_header.side_effect = [
+        (first_width, first_height, 0, 0),
+        (second_width, second_height, 0, 0),
+    ]
+    mocked_turbo_jpeg.scale_with_quality.return_value = EMPTY_8_6_JPEG
+    mocked_turbo_jpeg.encode.return_value = EMPTY_8_6_JPEG
+    return mocked_turbo_jpeg
 
 
-@bind_hass
-async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL):
-    """Turn on camera, and set operation mode."""
-    data = {}
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
+class SomeTestProvider(CameraWebRTCProvider):
+    """Test provider."""
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data)
+    def __init__(self) -> None:
+        """Initialize the provider."""
+        self._is_supported = True
 
+    @property
+    def domain(self) -> str:
+        """Return the integration domain of the provider."""
+        return "some_test"
 
-@bind_hass
-def enable_motion_detection(hass, entity_id=ENTITY_MATCH_ALL):
-    """Enable Motion Detection."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_ENABLE_MOTION, data))
+    @callback
+    def async_is_supported(self, stream_source: str) -> bool:
+        """Determine if the provider supports the stream source."""
+        return self._is_supported
 
+    async def async_handle_async_webrtc_offer(
+        self,
+        camera: Camera,
+        offer_sdp: str,
+        session_id: str,
+        send_message: WebRTCSendMessage,
+    ) -> None:
+        """Handle the WebRTC offer and return the answer via the provided callback.
 
-@bind_hass
-@callback
-def async_snapshot(hass, filename, entity_id=ENTITY_MATCH_ALL):
-    """Make a snapshot from a camera."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_FILENAME] = filename
+        Return value determines if the offer was handled successfully.
+        """
+        send_message(WebRTCAnswer(answer="answer"))
 
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_SNAPSHOT, data))
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidateInit
+    ) -> None:
+        """Handle the WebRTC candidate."""
 
-
-def mock_camera_prefs(hass, entity_id, prefs={}):
-    """Fixture for cloud component."""
-    prefs_to_set = {PREF_PRELOAD_STREAM: True}
-    prefs_to_set.update(prefs)
-    hass.data[DATA_CAMERA_PREFS]._prefs[entity_id] = prefs_to_set
-    return prefs_to_set
+    @callback
+    def async_close_session(self, session_id: str) -> None:
+        """Close the session."""

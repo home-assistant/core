@@ -2,21 +2,21 @@
 
 Can only be used by integrations that have pillow in their requirements.
 """
-from typing import Tuple
 
-from PIL import ImageDraw
+from __future__ import annotations
+
+from PIL.ImageDraw import ImageDraw
 
 
 def draw_box(
     draw: ImageDraw,
-    box: Tuple[float, float, float, float],
+    box: tuple[float, float, float, float],
     img_width: int,
     img_height: int,
     text: str = "",
-    color: Tuple[int, int, int] = (255, 255, 0),
+    color: tuple[int, int, int] = (255, 255, 0),
 ) -> None:
-    """
-    Draw a bounding box on and image.
+    """Draw a bounding box on and image.
 
     The bounding box is defined by the tuple (y_min, x_min, y_max, x_max)
     where the coordinates are floats in the range [0.0, 1.0] and
@@ -28,7 +28,7 @@ def draw_box(
     """
 
     line_width = 3
-    font_height = 8
+    font_height = 20
     y_min, x_min, y_max, x_max = box
     (left, right, top, bottom) = (
         x_min * img_width,
@@ -43,5 +43,8 @@ def draw_box(
     )
     if text:
         draw.text(
-            (left + line_width, abs(top - line_width - font_height)), text, fill=color
+            (left + line_width, abs(top - line_width - font_height)),
+            text,
+            fill=color,
+            font_size=font_height,
         )

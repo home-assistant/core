@@ -1,0 +1,102 @@
+{
+  "common": {
+    "incorrect_pin": "PIN is not correct"
+  },
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Link your MotionMount",
+        "description": "Set up your MotionMount to integrate with Home Assistant.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the MotionMount.",
+          "port": "The port of the MotionMount."
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up {name}?",
+        "title": "Discovered MotionMount"
+      },
+      "auth": {
+        "title": "Authenticate to your MotionMount",
+        "description": "Your MotionMount requires a PIN to operate.",
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "data_description": {
+          "pin": "The user level PIN configured on the MotionMount."
+        }
+      },
+      "backoff": {
+        "title": "Authenticate to your MotionMount",
+        "description": "Too many incorrect PIN attempts."
+      }
+    },
+    "error": {
+      "pin": "[%key:component::motionmount::common::incorrect_pin%]"
+    },
+    "progress": {
+      "progress_action": "Too many incorrect PIN attempts. Please wait {timeout} s..."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "time_out": "[%key:common::config_flow::error::timeout_connect%]",
+      "not_connected": "Failed to connect.",
+      "invalid_response": "Failed to connect due to an invalid response from the MotionMount.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motionmount_is_moving": {
+        "name": "Moving"
+      }
+    },
+    "number": {
+      "motionmount_extension": {
+        "name": "Extension"
+      },
+      "motionmount_turn": {
+        "name": "Turn"
+      }
+    },
+    "sensor": {
+      "motionmount_error_status": {
+        "name": "Error status",
+        "state": {
+          "none": "None",
+          "motor": "Motor",
+          "hdmi_cec": "HDMI CEC",
+          "obstruction": "Obstruction",
+          "tv_width_constraint": "TV width constraint",
+          "internal": "Internal"
+        }
+      }
+    },
+    "select": {
+      "motionmount_preset": {
+        "name": "Preset",
+        "state": {
+          "0_wall": "0: Wall"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "failed_communication": {
+      "message": "Failed to communicate with MotionMount"
+    },
+    "no_pin_provided": {
+      "message": "No PIN provided"
+    },
+    "incorrect_pin": {
+      "message": "[%key:component::motionmount::common::incorrect_pin%]"
+    }
+  }
+}

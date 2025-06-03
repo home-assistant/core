@@ -1,6 +1,8 @@
 """Example auth module."""
-import logging
-from typing import Any, Dict
+
+from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
@@ -22,8 +24,6 @@ CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
     extra=vol.PREVENT_EXTRA,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @MULTI_FACTOR_AUTH_MODULES.register("insecure_example")
 class InsecureExampleModule(MultiFactorAuthModule):
@@ -31,7 +31,7 @@ class InsecureExampleModule(MultiFactorAuthModule):
 
     DEFAULT_TITLE = "Insecure Personal Identify Number"
 
-    def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._data = config["data"]
@@ -39,12 +39,12 @@ class InsecureExampleModule(MultiFactorAuthModule):
     @property
     def input_schema(self) -> vol.Schema:
         """Validate login flow input data."""
-        return vol.Schema({"pin": str})
+        return vol.Schema({vol.Required("pin"): str})
 
     @property
     def setup_schema(self) -> vol.Schema:
         """Validate async_setup_user input data."""
-        return vol.Schema({"pin": str})
+        return vol.Schema({vol.Required("pin"): str})
 
     async def async_setup_flow(self, user_id: str) -> SetupFlow:
         """Return a data entry flow handler for setup module.
@@ -78,17 +78,11 @@ class InsecureExampleModule(MultiFactorAuthModule):
 
     async def async_is_user_setup(self, user_id: str) -> bool:
         """Return whether user is setup."""
-        for data in self._data:
-            if data["user_id"] == user_id:
-                return True
-        return False
+        return any(data["user_id"] == user_id for data in self._data)
 
-    async def async_validate(self, user_id: str, user_input: Dict[str, Any]) -> bool:
+    async def async_validate(self, user_id: str, user_input: dict[str, Any]) -> bool:
         """Return True if validation passed."""
-        for data in self._data:
-            if data["user_id"] == user_id:
-                # user_input has been validate in caller
-                if data["pin"] == user_input["pin"]:
-                    return True
-
-        return False
+        return any(
+            data["user_id"] == user_id and data["pin"] == user_input["pin"]
+            for data in self._data
+        )

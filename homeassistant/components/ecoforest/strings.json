@@ -1,0 +1,91 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Ecoforest device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      },
+      "gas_temperature": {
+        "name": "Gas temperature"
+      },
+      "ntc_temperature": {
+        "name": "NTC probe temperature"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "starting": "Starting",
+          "pre_heating": "Pre-heating",
+          "on": "[%key:common::state::on%]",
+          "shutting_down": "Shutting down",
+          "stand_by": "[%key:common::state::standby%]",
+          "alarm": "Alarm"
+        }
+      },
+      "alarm": {
+        "name": "Alarm",
+        "state": {
+          "air_depression": "Air depression",
+          "pellets": "Pellets",
+          "cpu_overheating": "CPU overheating",
+          "unkownn": "Unknown alarm",
+          "none": "None"
+        }
+      },
+      "depression": {
+        "name": "Depression"
+      },
+      "working_hours": {
+        "name": "Working time"
+      },
+      "working_state": {
+        "name": "Working state"
+      },
+      "working_level": {
+        "name": "Working level"
+      },
+      "ignitions": {
+        "name": "Ignitions"
+      },
+      "live_pulse": {
+        "name": "Live pulse"
+      },
+      "pulse_offset": {
+        "name": "Pulse offset"
+      },
+      "extractor": {
+        "name": "Extractor"
+      },
+      "convector_air_flow": {
+        "name": "Convector air flow"
+      }
+    },
+    "number": {
+      "power_level": {
+        "name": "Power level"
+      }
+    }
+  }
+}

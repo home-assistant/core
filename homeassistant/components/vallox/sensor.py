@@ -1,237 +1,292 @@
 """Support for Vallox ventilation unit sensors."""
 
-from datetime import datetime, timedelta
-import logging
+from __future__ import annotations
 
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    TEMP_CELSIUS,
+from dataclasses import dataclass
+from datetime import datetime, time
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
-from . import DOMAIN, METRIC_KEY_MODE, SIGNAL_VALLOX_STATE_UPDATE
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the sensors."""
-    if discovery_info is None:
-        return
-
-    name = hass.data[DOMAIN]["name"]
-    state_proxy = hass.data[DOMAIN]["state_proxy"]
-
-    sensors = [
-        ValloxProfileSensor(
-            name=f"{name} Current Profile",
-            state_proxy=state_proxy,
-            device_class=None,
-            unit_of_measurement=None,
-            icon="mdi:gauge",
-        ),
-        ValloxFanSpeedSensor(
-            name=f"{name} Fan Speed",
-            state_proxy=state_proxy,
-            metric_key="A_CYC_FAN_SPEED",
-            device_class=None,
-            unit_of_measurement="%",
-            icon="mdi:fan",
-        ),
-        ValloxSensor(
-            name=f"{name} Extract Air",
-            state_proxy=state_proxy,
-            metric_key="A_CYC_TEMP_EXTRACT_AIR",
-            device_class=DEVICE_CLASS_TEMPERATURE,
-            unit_of_measurement=TEMP_CELSIUS,
-            icon=None,
-        ),
-        ValloxSensor(
-            name=f"{name} Exhaust Air",
-            state_proxy=state_proxy,
-            metric_key="A_CYC_TEMP_EXHAUST_AIR",
-            device_class=DEVICE_CLASS_TEMPERATURE,
-            unit_of_measurement=TEMP_CELSIUS,
-            icon=None,
-        ),
-        ValloxSensor(
-            name=f"{name} Outdoor Air",
-            state_proxy=state_proxy,
-            metric_key="A_CYC_TEMP_OUTDOOR_AIR",
-            device_class=DEVICE_CLASS_TEMPERATURE,
-            unit_of_measurement=TEMP_CELSIUS,
-            icon=None,
-        ),
-        ValloxSensor(
-            name=f"{name} Supply Air",
-            state_proxy=state_proxy,
-            metric_key="A_CYC_TEMP_SUPPLY_AIR",
-            device_class=DEVICE_CLASS_TEMPERATURE,
-            unit_of_measurement=TEMP_CELSIUS,
-            icon=None,
-        ),
-        ValloxSensor(
-            name=f"{name} Humidity",
-            state_proxy=state_proxy,
-            metric_key="A_CYC_RH_VALUE",
-            device_class=DEVICE_CLASS_HUMIDITY,
-            unit_of_measurement="%",
-            icon=None,
-        ),
-        ValloxFilterRemainingSensor(
-            name=f"{name} Remaining Time For Filter",
-            state_proxy=state_proxy,
-            metric_key="A_CYC_REMAINING_TIME_FOR_FILTER",
-            device_class=DEVICE_CLASS_TIMESTAMP,
-            unit_of_measurement=None,
-            icon="mdi:filter",
-        ),
-    ]
-
-    async_add_entities(sensors, update_before_add=False)
+from .const import (
+    DOMAIN,
+    METRIC_KEY_MODE,
+    MODE_ON,
+    VALLOX_CELL_STATE_TO_STR,
+    VALLOX_PROFILE_TO_PRESET_MODE,
+)
+from .coordinator import ValloxDataUpdateCoordinator
+from .entity import ValloxEntity
 
 
-class ValloxSensor(Entity):
+class ValloxSensorEntity(ValloxEntity, SensorEntity):
     """Representation of a Vallox sensor."""
 
+    entity_description: ValloxSensorEntityDescription
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
     def __init__(
-        self, name, state_proxy, metric_key, device_class, unit_of_measurement, icon
+        self,
+        name: str,
+        coordinator: ValloxDataUpdateCoordinator,
+        description: ValloxSensorEntityDescription,
     ) -> None:
         """Initialize the Vallox sensor."""
-        self._name = name
-        self._state_proxy = state_proxy
-        self._metric_key = metric_key
-        self._device_class = device_class
-        self._unit_of_measurement = unit_of_measurement
-        self._icon = icon
-        self._available = None
-        self._state = None
+        super().__init__(name, coordinator)
+
+        self.entity_description = description
+
+        self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
-    def should_poll(self):
-        """Do not poll the device."""
-        return False
+    def native_value(self) -> StateType | datetime:
+        """Return the value reported by the sensor."""
+        if (metric_key := self.entity_description.metric_key) is None:
+            return None
 
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
+        value = self.coordinator.data.get(metric_key)
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
+        if self.entity_description.round_ndigits is not None and isinstance(
+            value, float
+        ):
+            value = round(value, self.entity_description.round_ndigits)
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
-
-    @property
-    def state(self):
-        """Return the state."""
-        return self._state
-
-    async def async_added_to_hass(self):
-        """Call to update."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_VALLOX_STATE_UPDATE, self._update_callback
-        )
-
-    @callback
-    def _update_callback(self):
-        """Call update method."""
-        self.async_schedule_update_ha_state(True)
-
-    async def async_update(self):
-        """Fetch state from the ventilation unit."""
-        try:
-            self._state = self._state_proxy.fetch_metric(self._metric_key)
-            self._available = True
-
-        except (OSError, KeyError) as err:
-            self._available = False
-            _LOGGER.error("Error updating sensor: %s", err)
+        return value
 
 
-# There seems to be a quirk with respect to the fan speed reporting. The device
-# keeps on reporting the last valid fan speed from when the device was in
-# regular operation mode, even if it left that state and has been shut off in
-# the meantime.
-#
-# Therefore, first query the overall state of the device, and report zero
-# percent fan speed in case it is not in regular operation mode.
-class ValloxFanSpeedSensor(ValloxSensor):
-    """Child class for fan speed reporting."""
-
-    async def async_update(self):
-        """Fetch state from the ventilation unit."""
-        try:
-            # If device is in regular operation, continue.
-            if self._state_proxy.fetch_metric(METRIC_KEY_MODE) == 0:
-                await super().async_update()
-            else:
-                # Report zero percent otherwise.
-                self._state = 0
-                self._available = True
-
-        except (OSError, KeyError) as err:
-            self._available = False
-            _LOGGER.error("Error updating sensor: %s", err)
-
-
-class ValloxProfileSensor(ValloxSensor):
+class ValloxProfileSensor(ValloxSensorEntity):
     """Child class for profile reporting."""
 
-    def __init__(
-        self, name, state_proxy, device_class, unit_of_measurement, icon
-    ) -> None:
-        """Initialize the Vallox sensor."""
-        super().__init__(
-            name, state_proxy, None, device_class, unit_of_measurement, icon
-        )
-
-    async def async_update(self):
-        """Fetch state from the ventilation unit."""
-        try:
-            self._state = self._state_proxy.get_profile()
-            self._available = True
-
-        except OSError as err:
-            self._available = False
-            _LOGGER.error("Error updating sensor: %s", err)
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        vallox_profile = self.coordinator.data.profile
+        return VALLOX_PROFILE_TO_PRESET_MODE.get(vallox_profile)
 
 
-class ValloxFilterRemainingSensor(ValloxSensor):
+# There is a quirk with respect to the fan speed reporting. The device keeps on reporting the last
+# valid fan speed from when the device was in regular operation mode, even if it left that state and
+# has been shut off in the meantime.
+#
+# Therefore, first query the overall state of the device, and report zero percent fan speed in case
+# it is not in regular operation mode.
+class ValloxFanSpeedSensor(ValloxSensorEntity):
+    """Child class for fan speed reporting."""
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the value reported by the sensor."""
+        fan_is_on = self.coordinator.data.get(METRIC_KEY_MODE) == MODE_ON
+        return super().native_value if fan_is_on else 0
+
+
+class ValloxFilterRemainingSensor(ValloxSensorEntity):
     """Child class for filter remaining time reporting."""
 
-    async def async_update(self):
-        """Fetch state from the ventilation unit."""
-        try:
-            days_remaining = int(self._state_proxy.fetch_metric(self._metric_key))
-            days_remaining_delta = timedelta(days=days_remaining)
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the value reported by the sensor."""
+        next_filter_change_date = self.coordinator.data.next_filter_change_date
 
-            # Since only a delta of days is received from the device, fix the
-            # time so the timestamp does not change with every update.
-            now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
+        if next_filter_change_date is None:
+            return None
 
-            self._state = (now + days_remaining_delta).isoformat()
-            self._available = True
+        return datetime.combine(
+            next_filter_change_date,
+            time(hour=13, minute=0, second=0, tzinfo=dt_util.get_default_time_zone()),
+        )
 
-        except (OSError, KeyError) as err:
-            self._available = False
-            _LOGGER.error("Error updating sensor: %s", err)
+
+class ValloxCellStateSensor(ValloxSensorEntity):
+    """Child class for cell state reporting."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        super_native_value = super().native_value
+
+        if not isinstance(super_native_value, int):
+            return None
+
+        return VALLOX_CELL_STATE_TO_STR.get(super_native_value)
+
+
+class ValloxProfileDurationSensor(ValloxSensorEntity):
+    """Child class for profile duration reporting."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+
+        return self.coordinator.data.get_remaining_profile_duration(
+            self.coordinator.data.profile
+        )
+
+
+@dataclass(frozen=True)
+class ValloxSensorEntityDescription(SensorEntityDescription):
+    """Describes Vallox sensor entity."""
+
+    metric_key: str | None = None
+    entity_type: type[ValloxSensorEntity] = ValloxSensorEntity
+    round_ndigits: int | None = None
+
+
+SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
+    ValloxSensorEntityDescription(
+        key="current_profile",
+        translation_key="current_profile",
+        entity_type=ValloxProfileSensor,
+    ),
+    ValloxSensorEntityDescription(
+        key="fan_speed",
+        translation_key="fan_speed",
+        metric_key="A_CYC_FAN_SPEED",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_type=ValloxFanSpeedSensor,
+    ),
+    ValloxSensorEntityDescription(
+        key="extract_fan_speed",
+        translation_key="extract_fan_speed",
+        metric_key="A_CYC_EXTR_FAN_SPEED",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        entity_type=ValloxFanSpeedSensor,
+        entity_registry_enabled_default=False,
+    ),
+    ValloxSensorEntityDescription(
+        key="supply_fan_speed",
+        translation_key="supply_fan_speed",
+        metric_key="A_CYC_SUPP_FAN_SPEED",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        entity_type=ValloxFanSpeedSensor,
+        entity_registry_enabled_default=False,
+    ),
+    ValloxSensorEntityDescription(
+        key="remaining_time_for_filter",
+        translation_key="remaining_time_for_filter",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_type=ValloxFilterRemainingSensor,
+    ),
+    ValloxSensorEntityDescription(
+        key="cell_state",
+        translation_key="cell_state",
+        metric_key="A_CYC_CELL_STATE",
+        entity_type=ValloxCellStateSensor,
+    ),
+    ValloxSensorEntityDescription(
+        key="extract_air",
+        translation_key="extract_air",
+        metric_key="A_CYC_TEMP_EXTRACT_AIR",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    ValloxSensorEntityDescription(
+        key="exhaust_air",
+        translation_key="exhaust_air",
+        metric_key="A_CYC_TEMP_EXHAUST_AIR",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    ValloxSensorEntityDescription(
+        key="outdoor_air",
+        translation_key="outdoor_air",
+        metric_key="A_CYC_TEMP_OUTDOOR_AIR",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    ValloxSensorEntityDescription(
+        key="supply_air",
+        translation_key="supply_air",
+        metric_key="A_CYC_TEMP_SUPPLY_AIR",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    ValloxSensorEntityDescription(
+        key="supply_cell_air",
+        translation_key="supply_cell_air",
+        metric_key="A_CYC_TEMP_SUPPLY_CELL_AIR",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    ValloxSensorEntityDescription(
+        key="optional_air",
+        translation_key="optional_air",
+        metric_key="A_CYC_TEMP_OPTIONAL",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_registry_enabled_default=False,
+    ),
+    ValloxSensorEntityDescription(
+        key="humidity",
+        metric_key="A_CYC_RH_VALUE",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    ValloxSensorEntityDescription(
+        key="efficiency",
+        translation_key="efficiency",
+        metric_key="A_CYC_EXTRACT_EFFICIENCY",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        round_ndigits=0,
+    ),
+    ValloxSensorEntityDescription(
+        key="co2",
+        metric_key="A_CYC_CO2_VALUE",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        entity_registry_enabled_default=False,
+    ),
+    ValloxSensorEntityDescription(
+        key="profile_duration",
+        translation_key="profile_duration",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        entity_type=ValloxProfileDurationSensor,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the sensors."""
+    name = hass.data[DOMAIN][entry.entry_id]["name"]
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+
+    async_add_entities(
+        description.entity_type(name, coordinator, description)
+        for description in SENSOR_ENTITIES
+    )

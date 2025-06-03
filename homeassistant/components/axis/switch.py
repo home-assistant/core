@@ -1,60 +1,75 @@
 """Support for Axis switches."""
 
-from axis.event_stream import CLASS_OUTPUT
+from dataclasses import dataclass
+from typing import Any
 
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from axis.models.event import Event, EventTopic
 
-from .axis_base import AxisEventBase
-from .const import DOMAIN as AXIS_DOMAIN
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import AxisConfigEntry
+from .entity import AxisEventDescription, AxisEventEntity
+from .hub import AxisHub
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up a Axis switch."""
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+@dataclass(frozen=True, kw_only=True)
+class AxisSwitchDescription(AxisEventDescription, SwitchEntityDescription):
+    """Axis switch entity description."""
 
-    @callback
-    def async_add_switch(event_id):
-        """Add switch from Axis device."""
-        event = device.api.event.events[event_id]
 
-        if event.CLASS == CLASS_OUTPUT:
-            async_add_entities([AxisSwitch(event, device)], True)
+ENTITY_DESCRIPTIONS = (
+    AxisSwitchDescription(
+        key="Relay state control",
+        device_class=SwitchDeviceClass.OUTLET,
+        entity_category=EntityCategory.CONFIG,
+        event_topic=EventTopic.RELAY,
+        supported_fn=lambda hub, event: isinstance(int(event.id), int),
+        name_fn=lambda hub, event: hub.api.vapix.ports[event.id].name,
+    ),
+)
 
-    device.listeners.append(
-        async_dispatcher_connect(hass, device.event_new_sensor, async_add_switch)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: AxisConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Axis switch platform."""
+    config_entry.runtime_data.entity_loader.register_platform(
+        async_add_entities, AxisSwitch, ENTITY_DESCRIPTIONS
     )
 
 
-class AxisSwitch(AxisEventBase, SwitchDevice):
+class AxisSwitch(AxisEventEntity, SwitchEntity):
     """Representation of a Axis switch."""
 
-    @property
-    def is_on(self):
-        """Return true if event is active."""
-        return self.event.is_tripped
+    entity_description: AxisSwitchDescription
 
-    async def async_turn_on(self, **kwargs):
+    def __init__(
+        self, hub: AxisHub, description: AxisSwitchDescription, event: Event
+    ) -> None:
+        """Initialize the Axis switch."""
+        super().__init__(hub, description, event)
+
+        self._attr_is_on = event.is_tripped
+
+    @callback
+    def async_event_callback(self, event: Event) -> None:
+        """Update light state."""
+        self._attr_is_on = event.is_tripped
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        action = "/"
-        await self.hass.async_add_executor_job(
-            self.device.api.vapix.ports[self.event.id].action, action
-        )
+        await self.hub.api.vapix.ports.close(self._event_id)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        action = "\\"
-        await self.hass.async_add_executor_job(
-            self.device.api.vapix.ports[self.event.id].action, action
-        )
-
-    @property
-    def name(self):
-        """Return the name of the event."""
-        if self.event.id and self.device.api.vapix.ports[self.event.id].name:
-            return "{} {}".format(
-                self.device.name, self.device.api.vapix.ports[self.event.id].name
-            )
-
-        return super().name
+        await self.hub.api.vapix.ports.open(self._event_id)

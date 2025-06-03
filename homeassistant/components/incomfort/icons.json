@@ -1,0 +1,66 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "is_burning": {
+        "state": {
+          "off": "mdi:fire-off",
+          "on": "mdi:fire"
+        }
+      },
+      "is_pumping": {
+        "state": {
+          "off": "mdi:pump-off",
+          "on": "mdi:pump"
+        }
+      },
+      "is_tapping": {
+        "state": {
+          "off": "mdi:water-pump-off",
+          "on": "mdi:water-pump"
+        }
+      }
+    },
+    "water_heater": {
+      "boiler": {
+        "state": {
+          "unknown": "mdi:water-boiler-alert",
+          "opentherm": "mdi:radiator",
+          "boiler_ext": "mdi:water-boiler",
+          "frost": "mdi:snowflake-thermometer",
+          "central_heating_rf": "mdi:radiator",
+          "tapwater_int": "mdi:faucet",
+          "sensor_test": "mdi:thermometer-check",
+          "central_heating": "mdi:radiator",
+          "standby": "mdi:water-boiler-off",
+          "off": "mdi:water-boiler-off",
+          "postrun_boyler": "mdi:water-boiler-auto",
+          "service": "mdi:progress-wrench",
+          "tapwater": "mdi:faucet",
+          "postrun_ch": "mdi:radiator-disabled",
+          "boiler_int": "mdi:water-boiler",
+          "buffer": "mdi:water-boiler-auto",
+          "sensor_fault_after_self_check_e0": "mdi:thermometer-alert",
+          "cv_temperature_too_high_e1": "mdi:thermometer-alert",
+          "s1_and_s2_interchanged_e2": "mdi:thermometer-alert",
+          "no_flame_signal_e4": "mdi:fire-alert",
+          "poor_flame_signal_e5": "mdi:fire-alert",
+          "flame_detection_fault_e6": "mdi:fire-alert",
+          "incorrect_fan_speed_e8": "mdi:water-boiler-alert",
+          "sensor_fault_s1_e10": "mdi:water-boiler-alert",
+          "sensor_fault_s1_e11": "mdi:water-boiler-alert",
+          "sensor_fault_s1_e12": "mdi:water-boiler-alert",
+          "sensor_fault_s1_e13": "mdi:water-boiler-alert",
+          "sensor_fault_s1_e14": "mdi:water-boiler-alert",
+          "sensor_fault_s2_e20": "mdi:water-boiler-alert",
+          "sensor_fault_s2_e21": "mdi:water-boiler-alert",
+          "sensor_fault_s2_e22": "mdi:water-boiler-alert",
+          "sensor_fault_s2_e23": "mdi:water-boiler-alert",
+          "sensor_fault_s2_e24": "mdi:water-boiler-alert",
+          "shortcut_outside_sensor_temperature_e27": "mdi:thermometer-alert",
+          "gas_valve_relay_faulty_e29": "mdi:water-boiler-alert",
+          "gas_valve_relay_faulty_e30": "mdi:water-boiler-alert"
+        }
+      }
+    }
+  }
+}

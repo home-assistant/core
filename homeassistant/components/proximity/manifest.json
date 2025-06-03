@@ -1,9 +1,10 @@
 {
   "domain": "proximity",
   "name": "Proximity",
-  "documentation": "https://www.home-assistant.io/integrations/proximity",
-  "requirements": [],
+  "codeowners": ["@mib1185"],
+  "config_flow": true,
   "dependencies": ["device_tracker", "zone"],
-  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/proximity",
+  "iot_class": "calculated",
   "quality_scale": "internal"
 }

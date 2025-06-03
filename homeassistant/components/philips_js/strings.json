@@ -1,0 +1,74 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_version": "API Version"
+        }
+      },
+      "pair": {
+        "title": "Pair",
+        "description": "Enter the PIN displayed on your TV",
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_pin": "Invalid PIN"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "pairing_failure": "Unable to pair: {error_id}",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "allow_notify": "Allow notification service"
+        },
+        "data_description": {
+          "allow_notify": "Allow the usage of data notification service on TV instead of periodic polling. This allows faster reaction to state changes on the TV, however, some TV's will stop responding with this activated due to firmware bugs."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "turn_on": "Device is requested to turn on"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "recording_new": {
+        "name": "New recording available"
+      },
+      "recording_ongoing": {
+        "name": "Recording ongoing"
+      }
+    },
+    "light": {
+      "ambilight": {
+        "name": "Ambilight"
+      }
+    },
+    "remote": {
+      "remote": {
+        "name": "[%key:component::remote::title%]"
+      }
+    },
+    "switch": {
+      "screen_state": {
+        "name": "Screen state"
+      },
+      "ambilight_hue": {
+        "name": "Ambilight + Hue"
+      }
+    }
+  }
+}

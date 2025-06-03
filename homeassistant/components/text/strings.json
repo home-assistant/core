@@ -1,0 +1,46 @@
+{
+  "title": "Text",
+  "device_automation": {
+    "action_type": {
+      "set_value": "Set value for {entity_name}"
+    },
+    "extra_fields": {
+      "value": "[%key:common::device_automation::extra_fields::value%]"
+    }
+  },
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::text::title%]",
+      "state_attributes": {
+        "max": {
+          "name": "Max length"
+        },
+        "min": {
+          "name": "Min length"
+        },
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "state": {
+            "text": "Text",
+            "password": "[%key:common::config_flow::data::password%]"
+          }
+        },
+        "pattern": {
+          "name": "Pattern"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_value": {
+      "name": "Set value",
+      "description": "Sets the value.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "Enter your text."
+        }
+      }
+    }
+  }
+}

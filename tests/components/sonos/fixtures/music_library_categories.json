@@ -1,0 +1,44 @@
+[
+  {
+    "title": "Contributing Artists",
+    "item_id": "A:ARTIST",
+    "parent_id": "A:",
+    "item_class": "object.container"
+  },
+  {
+    "title": "Artists",
+    "item_id": "A:ALBUMARTIST",
+    "parent_id": "A:",
+    "item_class": "object.container"
+  },
+  {
+    "title": "Albums",
+    "item_id": "A:ALBUM",
+    "parent_id": "A:",
+    "item_class": "object.container"
+  },
+  {
+    "title": "Genres",
+    "item_id": "A:GENRE",
+    "parent_id": "A:",
+    "item_class": "object.container"
+  },
+  {
+    "title": "Composers",
+    "item_id": "A:COMPOSER",
+    "parent_id": "A:",
+    "item_class": "object.container"
+  },
+  {
+    "title": "Tracks",
+    "item_id": "A:TRACKS",
+    "parent_id": "A:",
+    "item_class": "object.container.playlistContainer"
+  },
+  {
+    "title": "Playlists",
+    "item_id": "A:PLAYLISTS",
+    "parent_id": "A:",
+    "item_class": "object.container"
+  }
+]

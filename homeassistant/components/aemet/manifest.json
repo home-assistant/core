@@ -1,0 +1,10 @@
+{
+  "domain": "aemet",
+  "name": "AEMET OpenData",
+  "codeowners": ["@Noltari"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/aemet",
+  "iot_class": "cloud_polling",
+  "loggers": ["aemet_opendata"],
+  "requirements": ["AEMET-OpenData==0.6.4"]
+}

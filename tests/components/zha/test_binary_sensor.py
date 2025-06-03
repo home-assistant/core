@@ -1,111 +1,98 @@
-"""Test zha binary sensor."""
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.measurement as measurement
-import zigpy.zcl.clusters.security as security
-import zigpy.zcl.foundation as zcl_f
+"""Test ZHA binary sensor."""
 
-from homeassistant.components.binary_sensor import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from unittest.mock import patch
 
-from .common import (
-    async_enable_traffic,
-    async_init_zigpy_device,
-    async_test_device_join,
-    find_entity_id,
-    make_attribute,
-    make_zcl_header,
+import pytest
+from zigpy.profiles import zha
+from zigpy.zcl.clusters import general
+
+from homeassistant.components.zha.helpers import (
+    ZHADeviceProxy,
+    ZHAGatewayProxy,
+    get_zha_gateway,
+    get_zha_gateway_proxy,
 )
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .common import find_entity_id, send_attributes_report
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+
+ON = 1
+OFF = 0
 
 
-async def test_binary_sensor(hass, config_entry, zha_gateway):
-    """Test zha binary_sensor platform."""
+@pytest.fixture(autouse=True)
+def binary_sensor_platform_only():
+    """Only set up the binary_sensor and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BINARY_SENSOR,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
 
-    # create zigpy devices
-    zigpy_device_zone = await async_init_zigpy_device(
-        hass,
-        [security.IasZone.cluster_id, general.Basic.cluster_id],
-        [],
-        None,
-        zha_gateway,
-        ieee="00:0d:6f:11:9a:90:69:e6",
+
+async def test_binary_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_zha,
+    zigpy_device_mock,
+) -> None:
+    """Test ZHA binary_sensor platform."""
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SENSOR,
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [general.OnOff.cluster_id],
+            }
+        },
+        ieee="01:2d:6f:00:0a:90:69:e8",
     )
+    cluster = zigpy_device.endpoints[1].out_clusters[general.OnOff.cluster_id]
 
-    zigpy_device_occupancy = await async_init_zigpy_device(
-        hass,
-        [measurement.OccupancySensing.cluster_id, general.Basic.cluster_id],
-        [],
-        None,
-        zha_gateway,
-        ieee="00:0d:6f:11:9a:90:69:e7",
-        manufacturer="FakeOccupancy",
-        model="FakeOccupancyModel",
-    )
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    # load up binary_sensor domain
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
+    zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
+    entity_id = find_entity_id(Platform.BINARY_SENSOR, zha_device_proxy, hass)
+    assert entity_id is not None
 
-    # on off binary_sensor
-    zone_cluster = zigpy_device_zone.endpoints.get(1).ias_zone
-    zone_zha_device = zha_gateway.get_device(zigpy_device_zone.ieee)
-    zone_entity_id = await find_entity_id(DOMAIN, zone_zha_device, hass)
-    assert zone_entity_id is not None
-
-    # occupancy binary_sensor
-    occupancy_cluster = zigpy_device_occupancy.endpoints.get(1).occupancy
-    occupancy_zha_device = zha_gateway.get_device(zigpy_device_occupancy.ieee)
-    occupancy_entity_id = await find_entity_id(DOMAIN, occupancy_zha_device, hass)
-    assert occupancy_entity_id is not None
-
-    # test that the sensors exist and are in the unavailable state
-    assert hass.states.get(zone_entity_id).state == STATE_UNAVAILABLE
-    assert hass.states.get(occupancy_entity_id).state == STATE_UNAVAILABLE
-
-    await async_enable_traffic(
-        hass, zha_gateway, [zone_zha_device, occupancy_zha_device]
-    )
-
-    # test that the sensors exist and are in the off state
-    assert hass.states.get(zone_entity_id).state == STATE_OFF
-    assert hass.states.get(occupancy_entity_id).state == STATE_OFF
-
-    # test getting messages that trigger and reset the sensors
-    await async_test_binary_sensor_on_off(hass, occupancy_cluster, occupancy_entity_id)
-
-    # test IASZone binary sensors
-    await async_test_iaszone_on_off(hass, zone_cluster, zone_entity_id)
-
-    # test new sensor join
-    await async_test_device_join(
-        hass, zha_gateway, measurement.OccupancySensing.cluster_id, occupancy_entity_id
-    )
-
-
-async def async_test_binary_sensor_on_off(hass, cluster, entity_id):
-    """Test getting on and off messages for binary sensors."""
-    # binary sensor on
-    attr = make_attribute(0, 1)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ON
-
-    # binary sensor off
-    attr.value.value = 0
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 
-
-async def async_test_iaszone_on_off(hass, cluster, entity_id):
-    """Test getting on and off messages for iaszone binary sensors."""
-    # binary sensor on
-    cluster.listener_event("cluster_command", 1, 0, [1])
-    await hass.async_block_till_done()
+    await send_attributes_report(
+        hass, cluster, {general.OnOff.AttributeDefs.on_off.id: ON}
+    )
     assert hass.states.get(entity_id).state == STATE_ON
 
-    # binary sensor off
-    cluster.listener_event("cluster_command", 1, 0, [0])
-    await hass.async_block_till_done()
+    await send_attributes_report(
+        hass, cluster, {general.OnOff.AttributeDefs.on_off.id: OFF}
+    )
     assert hass.states.get(entity_id).state == STATE_OFF
+
+    # test enable / disable sync w/ ZHA library
+    entity_entry = entity_registry.async_get(entity_id)
+    entity_key = (Platform.BINARY_SENSOR, entity_entry.unique_id)
+    assert zha_device_proxy.device.platform_entities.get(entity_key).enabled
+
+    entity_registry.async_update_entity(
+        entity_id=entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert not zha_device_proxy.device.platform_entities.get(entity_key).enabled
+
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    assert zha_device_proxy.device.platform_entities.get(entity_key).enabled

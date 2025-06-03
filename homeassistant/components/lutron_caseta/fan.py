@@ -1,96 +1,95 @@
 """Support for Lutron Caseta fans."""
-import logging
+
+from __future__ import annotations
+
+from typing import Any
 
 from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF
 
 from homeassistant.components.fan import (
-    DOMAIN,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_SET_SPEED,
+    DOMAIN as FAN_DOMAIN,
     FanEntity,
+    FanEntityFeature,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
 )
 
-from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
+from .entity import LutronCasetaUpdatableEntity
+from .models import LutronCasetaConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
-
-VALUE_TO_SPEED = {
-    None: SPEED_OFF,
-    FAN_OFF: SPEED_OFF,
-    FAN_LOW: SPEED_LOW,
-    FAN_MEDIUM: SPEED_MEDIUM,
-    FAN_MEDIUM_HIGH: SPEED_MEDIUM,
-    FAN_HIGH: SPEED_HIGH,
-}
-
-SPEED_TO_VALUE = {
-    SPEED_OFF: FAN_OFF,
-    SPEED_LOW: FAN_LOW,
-    SPEED_MEDIUM: FAN_MEDIUM,
-    SPEED_HIGH: FAN_HIGH,
-}
-
-FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+DEFAULT_ON_PERCENTAGE = 50
+ORDERED_NAMED_FAN_SPEEDS = [FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up Lutron fan."""
-    entities = []
-    bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
-    fan_devices = bridge.get_devices_by_domain(DOMAIN)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: LutronCasetaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Lutron Caseta fan platform.
 
-    for fan_device in fan_devices:
-        entity = LutronCasetaFan(fan_device, bridge)
-        entities.append(entity)
+    Adds fan controllers from the Caseta bridge associated with the config_entry
+    as fan entities.
+    """
+    data = config_entry.runtime_data
+    bridge = data.bridge
+    fan_devices = bridge.get_devices_by_domain(FAN_DOMAIN)
+    async_add_entities(LutronCasetaFan(fan_device, data) for fan_device in fan_devices)
 
-    async_add_entities(entities, True)
 
-
-class LutronCasetaFan(LutronCasetaDevice, FanEntity):
+class LutronCasetaFan(LutronCasetaUpdatableEntity, FanEntity):
     """Representation of a Lutron Caseta fan. Including Fan Speed."""
 
-    @property
-    def speed(self) -> str:
-        """Return the current speed."""
-        return VALUE_TO_SPEED[self._device["fan_speed"]]
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return FAN_SPEEDS
+    def percentage(self) -> int | None:
+        """Return the current speed percentage."""
+        if self._device["fan_speed"] is None:
+            return None
+        if self._device["fan_speed"] == FAN_OFF:
+            return 0
+        return ordered_list_item_to_percentage(
+            ORDERED_NAMED_FAN_SPEEDS, self._device["fan_speed"]
+        )
 
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features. Speed Only."""
-        return SUPPORT_SET_SPEED
-
-    async def async_turn_on(self, speed: str = None, **kwargs):
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Turn the fan on."""
-        if speed is None:
-            speed = SPEED_MEDIUM
-        await self.async_set_speed(speed)
+        if percentage is None:
+            percentage = DEFAULT_ON_PERCENTAGE
 
-    async def async_turn_off(self, **kwargs):
+        await self.async_set_percentage(percentage)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self.async_set_speed(SPEED_OFF)
+        await self.async_set_percentage(0)
 
-    async def async_set_speed(self, speed: str) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
-        self._smartbridge.set_fan(self.device_id, SPEED_TO_VALUE[speed])
+        if percentage == 0:
+            named_speed = FAN_OFF
+        else:
+            named_speed = percentage_to_ordered_list_item(
+                ORDERED_NAMED_FAN_SPEEDS, percentage
+            )
+
+        await self._smartbridge.set_fan(self.device_id, named_speed)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return VALUE_TO_SPEED[self._device["fan_speed"]] in [
-            SPEED_LOW,
-            SPEED_MEDIUM,
-            SPEED_HIGH,
-        ]
-
-    async def async_update(self):
-        """Update when forcing a refresh of the device."""
-        self._device = self._smartbridge.get_device_by_id(self.device_id)
-        _LOGGER.debug("State of this lutron fan device is %s", self._device)
+        return bool(self.percentage)

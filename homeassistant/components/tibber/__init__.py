@@ -1,56 +1,81 @@
 """Support for Tibber."""
-import asyncio
+
 import logging
 
 import aiohttp
 import tibber
-import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import discovery
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util, ssl as ssl_util
 
-DOMAIN = "tibber"
+from .const import DATA_HASS_CONFIG, DOMAIN
+from .services import async_setup_services
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
-    extra=vol.ALLOW_EXTRA,
-)
+PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tibber component."""
-    conf = config.get(DOMAIN)
+
+    hass.data[DATA_HASS_CONFIG] = config
+
+    async_setup_services(hass)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
 
     tibber_connection = tibber.Tibber(
-        conf[CONF_ACCESS_TOKEN],
+        access_token=entry.data[CONF_ACCESS_TOKEN],
         websession=async_get_clientsession(hass),
-        time_zone=dt_util.DEFAULT_TIME_ZONE,
+        time_zone=dt_util.get_default_time_zone(),
+        ssl=ssl_util.get_default_context(),
     )
     hass.data[DOMAIN] = tibber_connection
 
-    async def _close(event):
+    async def _close(event: Event) -> None:
         await tibber_connection.rt_disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     try:
         await tibber_connection.update_info()
-    except asyncio.TimeoutError as err:
-        _LOGGER.error("Timeout connecting to Tibber: %s ", err)
-        return False
-    except aiohttp.ClientError as err:
-        _LOGGER.error("Error connecting to Tibber: %s ", err)
-        return False
-    except tibber.InvalidLogin as exp:
+
+    except (
+        TimeoutError,
+        aiohttp.ClientError,
+        tibber.RetryableHttpExceptionError,
+    ) as err:
+        raise ConfigEntryNotReady("Unable to connect") from err
+    except tibber.InvalidLoginError as exp:
         _LOGGER.error("Failed to login. %s", exp)
         return False
+    except tibber.FatalHttpExceptionError:
+        return False
 
-    for component in ["sensor", "notify"]:
-        discovery.load_platform(hass, component, DOMAIN, {CONF_NAME: DOMAIN}, config)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        tibber_connection = hass.data[DOMAIN]
+        await tibber_connection.rt_disconnect()
+    return unload_ok

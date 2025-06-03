@@ -1,82 +1,84 @@
-"""
-Support for MQTT lights.
+"""Support for MQTT lights."""
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.mqtt/
-"""
-import logging
+from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import light
-from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW,
-    clear_discovery_hash,
-)
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
+from ..entity import async_setup_entity_entry_helper
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
-from .schema_basic import PLATFORM_SCHEMA_BASIC, async_setup_entity_basic
-from .schema_json import PLATFORM_SCHEMA_JSON, async_setup_entity_json
-from .schema_template import PLATFORM_SCHEMA_TEMPLATE, async_setup_entity_template
+from .schema_basic import (
+    DISCOVERY_SCHEMA_BASIC,
+    PLATFORM_SCHEMA_MODERN_BASIC,
+    MqttLight,
+)
+from .schema_json import (
+    DISCOVERY_SCHEMA_JSON,
+    PLATFORM_SCHEMA_MODERN_JSON,
+    MqttLightJson,
+)
+from .schema_template import (
+    DISCOVERY_SCHEMA_TEMPLATE,
+    PLATFORM_SCHEMA_MODERN_TEMPLATE,
+    MqttLightTemplate,
+)
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
-def validate_mqtt_light(value):
-    """Validate MQTT light schema."""
-    schemas = {
-        "basic": PLATFORM_SCHEMA_BASIC,
-        "json": PLATFORM_SCHEMA_JSON,
-        "template": PLATFORM_SCHEMA_TEMPLATE,
+def validate_mqtt_light_discovery(config_value: dict[str, Any]) -> ConfigType:
+    """Validate MQTT light schema for discovery."""
+    schemas: dict[str, VolSchemaType] = {
+        "basic": DISCOVERY_SCHEMA_BASIC,
+        "json": DISCOVERY_SCHEMA_JSON,
+        "template": DISCOVERY_SCHEMA_TEMPLATE,
     }
-    return schemas[value[CONF_SCHEMA]](value)
+    config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
+    return config
 
 
-PLATFORM_SCHEMA = vol.All(
-    MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_mqtt_light
+def validate_mqtt_light_modern(config_value: dict[str, Any]) -> ConfigType:
+    """Validate MQTT light schema for setup from configuration.yaml."""
+    schemas: dict[str, VolSchemaType] = {
+        "basic": PLATFORM_SCHEMA_MODERN_BASIC,
+        "json": PLATFORM_SCHEMA_MODERN_JSON,
+        "template": PLATFORM_SCHEMA_MODERN_TEMPLATE,
+    }
+    config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
+    return config
+
+
+DISCOVERY_SCHEMA = vol.All(
+    MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
+    validate_mqtt_light_discovery,
+)
+
+PLATFORM_SCHEMA_MODERN = vol.All(
+    MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
+    validate_mqtt_light_modern,
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
-):
-    """Set up MQTT light through configuration.yaml."""
-    await _async_setup_entity(config, async_add_entities)
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up MQTT light dynamically through MQTT discovery."""
-
-    async def async_discover(discovery_payload):
-        """Discover and add a MQTT light."""
-        try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
-            config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_hash
-            )
-        except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(light.DOMAIN, "mqtt"), async_discover
-    )
-
-
-async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_hash=None
-):
-    """Set up a MQTT Light."""
-    setup_entity = {
-        "basic": async_setup_entity_basic,
-        "json": async_setup_entity_json,
-        "template": async_setup_entity_template,
-    }
-    await setup_entity[config[CONF_SCHEMA]](
-        config, async_add_entities, config_entry, discovery_hash
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up MQTT lights through YAML and through MQTT discovery."""
+    async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        None,
+        light.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
+        {"basic": MqttLight, "json": MqttLightJson, "template": MqttLightTemplate},
     )

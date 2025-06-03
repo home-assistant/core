@@ -1,0 +1,15 @@
+{
+  "domain": "airzone",
+  "name": "Airzone",
+  "codeowners": ["@Noltari"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "macaddress": "E84F25*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/airzone",
+  "iot_class": "local_polling",
+  "loggers": ["aioairzone"],
+  "requirements": ["aioairzone==1.0.0"]
+}

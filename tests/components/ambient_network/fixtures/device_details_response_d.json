@@ -1,0 +1,30 @@
+{
+  "_id": "dddddddddddddddddddddddddddddddd",
+  "macAddress": "DD:DD:DD:DD:DD:DD",
+  "lastData": {
+    "stationtype": "AMBWeatherPro_V5.0.6",
+    "tempf": 82.9,
+    "dewPoint": 82.0,
+    "feelsLike": 85.0,
+    "humidity": 60,
+    "windspeedmph": 8.72,
+    "windgustmph": 9.17,
+    "maxdailygust": 22.82,
+    "winddir": 11,
+    "uv": 0,
+    "solarradiation": 37.64,
+    "hourlyrainin": 0,
+    "dailyrainin": 0,
+    "weeklyrainin": 0,
+    "monthlyrainin": 0,
+    "totalrainin": 26.402,
+    "baromrelin": 29.586,
+    "baromabsin": 28.869,
+    "batt_co2": 1,
+    "type": "weather-data",
+    "tz": "America/Chicago"
+  },
+  "info": {
+    "name": "Station D"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "gree",
+  "name": "Gree Climate",
+  "codeowners": ["@cmroche"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/gree",
+  "iot_class": "local_polling",
+  "loggers": ["greeclimate"],
+  "requirements": ["greeclimate==2.1.0"]
+}

@@ -1,0 +1,6 @@
+{
+  "domain": "smart_blinds",
+  "name": "Smartblinds",
+  "integration_type": "virtual",
+  "supported_by": "motion_blinds"
+}

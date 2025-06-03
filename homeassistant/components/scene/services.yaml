@@ -1,41 +1,62 @@
 # Describes the format for available scene services
 
 turn_on:
-  description: Activate a scene.
+  target:
+    entity:
+      domain: scene
   fields:
-    entity_id:
-      description: Name(s) of scenes to turn on
-      example: "scene.romantic"
+    transition:
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: seconds
 
 reload:
-  description: Reload the scene configuration
-
 apply:
-  description: Activate a scene. Takes same data as the entities field from a single scene in the config.
   fields:
     entities:
-      description: The entities and the state that they need to be.
-      example:
+      required: true
+      example: |
         light.kitchen: "on"
         light.ceiling:
           state: "on"
           brightness: 80
+      selector:
+        object:
+    transition:
+      selector:
+        number:
+          min: 0
+          max: 300
+          unit_of_measurement: seconds
 
 create:
-  description: Creates a new scene.
   fields:
     scene_id:
-      description: The entity_id of the new scene.
+      required: true
       example: all_lights
+      selector:
+        text:
     entities:
-      description: The entities to control with the scene.
-      example:
+      advanced: true
+      example: |
         light.tv_back_light: "on"
         light.ceiling:
           state: "on"
           brightness: 200
+      selector:
+        object:
     snapshot_entities:
-      description: The entities of which a snapshot is to be taken
-      example:
+      example: |
         - light.ceiling
         - light.kitchen
+      selector:
+        entity:
+          multiple: true
+
+delete:
+  target:
+    entity:
+      - integration: homeassistant
+        domain: scene

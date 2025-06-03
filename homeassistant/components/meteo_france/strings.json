@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter the postal code (only for France, recommended) or city name",
+        "data": {
+          "city": "City"
+        }
+      },
+      "cities": {
+        "description": "Choose your city from the list",
+        "data": {
+          "city": "[%key:component::meteo_france::config::step::user::data::city%]"
+        }
+      }
+    },
+    "error": {
+      "empty": "No result in city search: please check the city field"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

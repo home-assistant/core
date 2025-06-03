@@ -1,14 +1,22 @@
 """Support for displaying details about a Gitter.im chat room."""
+
+from __future__ import annotations
+
 import logging
 
 from gitterpy.client import GitterClient
 from gitterpy.errors import GitterRoomError, GitterTokenError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_ROOM
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,9 +27,8 @@ ATTR_USERNAME = "username"
 DEFAULT_NAME = "Gitter messages"
 DEFAULT_ROOM = "home-assistant/home-assistant"
 
-ICON = "mdi:message-settings-variant"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -30,7 +37,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Gitter sensor."""
 
     name = config.get(CONF_NAME)
@@ -47,8 +59,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([GitterSensor(gitter, room, name, username)], True)
 
 
-class GitterSensor(Entity):
+class GitterSensor(SensorEntity):
     """Representation of a Gitter sensor."""
+
+    _attr_icon = "mdi:message-cog"
 
     def __init__(self, data, room, name, username):
         """Initialize the sensor."""
@@ -66,17 +80,17 @@ class GitterSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_USERNAME: self._username,
@@ -84,12 +98,7 @@ class GitterSensor(Entity):
             ATTR_MENTION: self._mention,
         }
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
 
         try:
@@ -98,7 +107,7 @@ class GitterSensor(Entity):
             _LOGGER.error(error)
             return
 
-        if "error" not in data.keys():
+        if "error" not in data:
             self._mention = len(data["mention"])
             self._state = len(data["chat"])
         else:

@@ -1,22 +1,48 @@
 """Support for Rflink sensors."""
-import logging
+
+from __future__ import annotations
+
+from typing import Any
 
 from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONF_DEVICES,
+    CONF_NAME,
+    CONF_SENSOR_TYPE,
+    CONF_UNIT_OF_MEASUREMENT,
+    DEGREE,
+    LIGHT_LUX,
+    PERCENTAGE,
+    UV_INDEX,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfLength,
+    UnitOfPower,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolumetricFlux,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
     CONF_ALIASES,
     CONF_AUTOMATIC_ADD,
-    CONF_DEVICES,
     DATA_DEVICE_REGISTER,
     DATA_ENTITY_LOOKUP,
     EVENT_KEY_ID,
@@ -25,20 +51,221 @@ from . import (
     SIGNAL_AVAILABILITY,
     SIGNAL_HANDLE_EVENT,
     TMP_ENTITY,
-    RflinkDevice,
+)
+from .entity import RflinkDevice
+
+SENSOR_TYPES = (
+    # check new descriptors against PACKET_FIELDS & UNITS from rflink.parser
+    SensorEntityDescription(
+        key="average_windspeed",
+        name="Average windspeed",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="barometric_pressure",
+        name="Barometric pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.HPA,
+    ),
+    SensorEntityDescription(
+        # Rflink devices reports ok/low so device class can’t be used
+        # It should be migrated to a binary sensor
+        key="battery",
+        name="Battery",
+        icon="mdi:battery",
+    ),
+    SensorEntityDescription(
+        key="co2_air_quality",
+        name="CO2 air quality",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+    ),
+    SensorEntityDescription(
+        key="command",
+        name="Command",
+        icon="mdi:text",
+    ),
+    SensorEntityDescription(
+        key="current_phase_1",
+        name="Current phase 1",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    ),
+    SensorEntityDescription(
+        key="current_phase_2",
+        name="Current phase 2",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    ),
+    SensorEntityDescription(
+        key="current_phase_3",
+        name="Current phase 3",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    ),
+    SensorEntityDescription(
+        key="distance",
+        name="Distance",
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    SensorEntityDescription(
+        key="doorbell_melody",
+        name="Doorbell melody",
+        icon="mdi:bell",
+    ),
+    SensorEntityDescription(
+        key="firmware",
+        name="Firmware",
+        icon="mdi:information-outline",
+    ),
+    SensorEntityDescription(
+        key="hardware",
+        name="Hardware",
+        icon="mdi:chip",
+    ),
+    SensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="humidity_status",
+        name="Humidity status",
+        icon="mdi:water-percent",
+    ),
+    SensorEntityDescription(
+        key="kilowatt",
+        name="Kilowatt",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+    ),
+    SensorEntityDescription(
+        key="light_intensity",
+        name="Light intensity",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=LIGHT_LUX,
+    ),
+    SensorEntityDescription(
+        key="meter_value",
+        name="Meter value",
+        icon="mdi:counter",
+    ),
+    SensorEntityDescription(
+        key="noise_level",
+        name="Noise level",
+        icon="mdi:bell-alert",
+    ),
+    SensorEntityDescription(
+        key="rain_rate",
+        name="Rain rate",
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="revision",
+        name="Revision",
+        icon="mdi:information",
+    ),
+    SensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="total_rain",
+        name="Total rain",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+    ),
+    SensorEntityDescription(
+        key="uv_intensity",
+        name="UV intensity",
+        icon="mdi:sunglasses",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UV_INDEX,
+    ),
+    SensorEntityDescription(
+        key="version",
+        name="Version",
+        icon="mdi:information",
+    ),
+    SensorEntityDescription(
+        key="voltage",
+        name="Voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+    ),
+    SensorEntityDescription(
+        key="watt",
+        name="Watt",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    SensorEntityDescription(
+        key="weather_forecast",
+        name="Weather forecast",
+        icon="mdi:weather-cloudy-clock",
+    ),
+    SensorEntityDescription(
+        key="windchill",
+        name="Wind chill",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="winddirection",
+        name="Wind direction",
+        icon="mdi:compass",
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        native_unit_of_measurement=DEGREE,
+    ),
+    SensorEntityDescription(
+        key="windgusts",
+        name="Wind gusts",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="windspeed",
+        name="Wind speed",
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+    ),
+    SensorEntityDescription(
+        key="windtemp",
+        name="Wind temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
 )
 
-_LOGGER = logging.getLogger(__name__)
+SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
-SENSOR_ICONS = {
-    "humidity": "mdi:water-percent",
-    "battery": "mdi:battery",
-    "temperature": "mdi:thermometer",
-}
-
-CONF_SENSOR_TYPE = "sensor_type"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
         vol.Optional(CONF_DEVICES, default={}): {
@@ -72,17 +299,18 @@ def devices_from_config(domain_config):
     """Parse configuration and add Rflink sensor devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
-        if ATTR_UNIT_OF_MEASUREMENT not in config:
-            config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
-                config[CONF_SENSOR_TYPE]
-            )
         device = RflinkSensor(device_id, **config)
         devices.append(device)
 
     return devices
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Rflink platform."""
     async_add_entities(devices_from_config(config))
 
@@ -103,22 +331,33 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
 
-class RflinkSensor(RflinkDevice):
+class RflinkSensor(RflinkDevice, SensorEntity):
     """Representation of a Rflink sensor."""
 
     def __init__(
-        self, device_id, sensor_type, unit_of_measurement, initial_event=None, **kwargs
-    ):
+        self,
+        device_id: str,
+        sensor_type: str,
+        unit_of_measurement: str | None = None,
+        initial_event=None,
+        **kwargs: Any,
+    ) -> None:
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
         self._unit_of_measurement = unit_of_measurement
+        if sensor_type in SENSOR_TYPES_DICT:
+            self.entity_description = SENSOR_TYPES_DICT[sensor_type]
+        elif not unit_of_measurement:
+            self._unit_of_measurement = lookup_unit_for_sensor_type(sensor_type)
+
         super().__init__(device_id, initial_event=initial_event, **kwargs)
 
     def _handle_event(self, event):
         """Domain specific event handler."""
         self._state = event["value"]
 
-    async def async_added_to_hass(self):
+    # pylint: disable-next=hass-missing-super-call
+    async def async_added_to_hass(self) -> None:
         """Register update callback."""
         # Remove temporary bogus entity_id if added
         tmp_entity = TMP_ENTITY.format(self._device_id)
@@ -139,13 +378,17 @@ class RflinkSensor(RflinkDevice):
                 self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][_id].append(
                     self.entity_id
                 )
-        async_dispatcher_connect(
-            self.hass, SIGNAL_AVAILABILITY, self._availability_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_AVAILABILITY, self._availability_callback
+            )
         )
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_HANDLE_EVENT.format(self.entity_id),
-            self.handle_event_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_HANDLE_EVENT.format(self.entity_id),
+                self.handle_event_callback,
+            )
         )
 
         # Process the initial event now that the entity is created
@@ -153,17 +396,15 @@ class RflinkSensor(RflinkDevice):
             self.handle_event_callback(self._initial_event)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return measurement unit."""
-        return self._unit_of_measurement
+        if self._unit_of_measurement:
+            return self._unit_of_measurement
+        if hasattr(self, "entity_description"):
+            return self.entity_description.native_unit_of_measurement
+        return None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return value."""
         return self._state
-
-    @property
-    def icon(self):
-        """Return possible sensor specific icon."""
-        if self._sensor_type in SENSOR_ICONS:
-            return SENSOR_ICONS[self._sensor_type]

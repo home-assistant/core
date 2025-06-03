@@ -1,8 +1,0 @@
-{
-  "domain": "alarmdotcom",
-  "name": "Alarm.com",
-  "documentation": "https://www.home-assistant.io/integrations/alarmdotcom",
-  "requirements": ["pyalarmdotcom==0.3.2"],
-  "dependencies": [],
-  "codeowners": []
-}

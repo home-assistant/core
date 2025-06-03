@@ -1,112 +1,101 @@
 """Meteo-France component constants."""
 
-from homeassistant.const import TEMP_CELSIUS
+from __future__ import annotations
+
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
+)
+from homeassistant.const import Platform
 
 DOMAIN = "meteo_france"
-DATA_METEO_FRANCE = "data_meteo_france"
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
+COORDINATOR_FORECAST = "coordinator_forecast"
+COORDINATOR_RAIN = "coordinator_rain"
+COORDINATOR_ALERT = "coordinator_alert"
+UNDO_UPDATE_LISTENER = "undo_update_listener"
 ATTRIBUTION = "Data provided by Météo-France"
+MODEL = "Météo-France mobile API"
+MANUFACTURER = "Météo-France"
 
 CONF_CITY = "city"
+FORECAST_MODE_HOURLY = "hourly"
+FORECAST_MODE_DAILY = "daily"
 
-DEFAULT_WEATHER_CARD = True
+ATTR_NEXT_RAIN_1_HOUR_FORECAST = "1_hour_forecast"
+ATTR_NEXT_RAIN_DT_REF = "forecast_time_ref"
 
-SENSOR_TYPE_NAME = "name"
-SENSOR_TYPE_UNIT = "unit"
-SENSOR_TYPE_ICON = "icon"
-SENSOR_TYPE_CLASS = "device_class"
-SENSOR_TYPES = {
-    "rain_chance": {
-        SENSOR_TYPE_NAME: "Rain chance",
-        SENSOR_TYPE_UNIT: "%",
-        SENSOR_TYPE_ICON: "mdi:weather-rainy",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "freeze_chance": {
-        SENSOR_TYPE_NAME: "Freeze chance",
-        SENSOR_TYPE_UNIT: "%",
-        SENSOR_TYPE_ICON: "mdi:snowflake",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "thunder_chance": {
-        SENSOR_TYPE_NAME: "Thunder chance",
-        SENSOR_TYPE_UNIT: "%",
-        SENSOR_TYPE_ICON: "mdi:weather-lightning",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "snow_chance": {
-        SENSOR_TYPE_NAME: "Snow chance",
-        SENSOR_TYPE_UNIT: "%",
-        SENSOR_TYPE_ICON: "mdi:weather-snowy",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "weather": {
-        SENSOR_TYPE_NAME: "Weather",
-        SENSOR_TYPE_UNIT: None,
-        SENSOR_TYPE_ICON: "mdi:weather-partly-cloudy",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "wind_speed": {
-        SENSOR_TYPE_NAME: "Wind Speed",
-        SENSOR_TYPE_UNIT: "km/h",
-        SENSOR_TYPE_ICON: "mdi:weather-windy",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "next_rain": {
-        SENSOR_TYPE_NAME: "Next rain",
-        SENSOR_TYPE_UNIT: "min",
-        SENSOR_TYPE_ICON: "mdi:weather-rainy",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "temperature": {
-        SENSOR_TYPE_NAME: "Temperature",
-        SENSOR_TYPE_UNIT: TEMP_CELSIUS,
-        SENSOR_TYPE_ICON: "mdi:thermometer",
-        SENSOR_TYPE_CLASS: "temperature",
-    },
-    "uv": {
-        SENSOR_TYPE_NAME: "UV",
-        SENSOR_TYPE_UNIT: None,
-        SENSOR_TYPE_ICON: "mdi:sunglasses",
-        SENSOR_TYPE_CLASS: None,
-    },
-    "weather_alert": {
-        SENSOR_TYPE_NAME: "Weather Alert",
-        SENSOR_TYPE_UNIT: None,
-        SENSOR_TYPE_ICON: "mdi:weather-cloudy-alert",
-        SENSOR_TYPE_CLASS: None,
-    },
-}
 
-CONDITION_CLASSES = {
-    "clear-night": ["Nuit Claire"],
-    "cloudy": ["Très nuageux"],
-    "fog": ["Brume ou bancs de brouillard", "Brouillard", "Brouillard givrant"],
-    "hail": ["Risque de grêle"],
-    "lightning": ["Risque d'orages", "Orages"],
-    "lightning-rainy": ["Pluie orageuses", "Pluies orageuses", "Averses orageuses"],
-    "partlycloudy": ["Ciel voilé", "Ciel voilé nuit", "Éclaircies"],
-    "pouring": ["Pluie forte"],
-    "rainy": [
+CONDITION_CLASSES: dict[str, list[str]] = {
+    ATTR_CONDITION_CLEAR_NIGHT: ["Nuit Claire", "Nuit claire", "Ciel clair"],
+    ATTR_CONDITION_CLOUDY: ["Très nuageux", "Couvert"],
+    ATTR_CONDITION_FOG: [
+        "Brume ou bancs de brouillard",
+        "Brume",
+        "Brouillard",
+        "Brouillard givrant",
+        "Bancs de Brouillard",
+        "Brouillard dense",
+    ],
+    ATTR_CONDITION_HAIL: ["Risque de grêle", "Risque de grèle"],
+    ATTR_CONDITION_LIGHTNING: ["Risque d'orages", "Orages", "Orage avec grêle"],
+    ATTR_CONDITION_LIGHTNING_RAINY: [
+        "Pluie orageuses",
+        "Pluies orageuses",
+        "Averses orageuses",
+    ],
+    ATTR_CONDITION_PARTLYCLOUDY: [
+        "Ciel voilé",
+        "Ciel voilé nuit",
+        "Éclaircies",
+        "Eclaircies",
+        "Peu nuageux",
+        "Variable",
+    ],
+    ATTR_CONDITION_POURING: ["Pluie forte"],
+    ATTR_CONDITION_RAINY: [
         "Bruine / Pluie faible",
         "Bruine",
         "Pluie faible",
         "Pluies éparses / Rares averses",
         "Pluies éparses",
         "Rares averses",
+        "Pluie modérée",
         "Pluie / Averses",
         "Averses",
+        "Averses faibles",
         "Pluie",
     ],
-    "snowy": [
+    ATTR_CONDITION_SNOWY: [
         "Neige / Averses de neige",
         "Neige",
         "Averses de neige",
         "Neige forte",
+        "Neige faible",
+        "Averses de neige faible",
         "Quelques flocons",
     ],
-    "snowy-rainy": ["Pluie et neige", "Pluie verglaçante"],
-    "sunny": ["Ensoleillé"],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
+    ATTR_CONDITION_SNOWY_RAINY: ["Pluie et neige", "Pluie verglaçante"],
+    ATTR_CONDITION_SUNNY: ["Ensoleillé"],
+    ATTR_CONDITION_WINDY: [],
+    ATTR_CONDITION_WINDY_VARIANT: [],
+    ATTR_CONDITION_EXCEPTIONAL: [],
+}
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
 }

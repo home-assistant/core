@@ -1,43 +1,42 @@
-"""
-Platform for Flexit AC units with CI66 Modbus adapter.
+"""Platform for Flexit AC units with CI66 Modbus adapter."""
 
-Example configuration:
+from __future__ import annotations
 
-climate:
-  - platform: flexit
-    name: Main AC
-    slave: 21
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.flexit/
-"""
 import logging
-from typing import List
+from typing import Any
 
-from pyflexit.pyflexit import pyflexit
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
-from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.components.modbus import (
-    CONF_HUB,
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
     DEFAULT_HUB,
-    DOMAIN as MODBUS_DOMAIN,
+    ModbusHub,
+    get_hub,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
     CONF_SLAVE,
     DEVICE_DEFAULT_NAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+CALL_TYPE_WRITE_REGISTER = "write_register"
+CONF_HUB = "hub"
+
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
@@ -47,69 +46,103 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Flexit Platform."""
-    modbus_slave = config.get(CONF_SLAVE, None)
-    name = config.get(CONF_NAME, None)
-    hub = hass.data[MODBUS_DOMAIN][config.get(CONF_HUB)]
-    add_entities([Flexit(hub, modbus_slave, name)], True)
+    modbus_slave = config.get(CONF_SLAVE)
+    name = config.get(CONF_NAME)
+    hub = get_hub(hass, config[CONF_HUB])
+    async_add_entities([Flexit(hub, modbus_slave, name)], True)
 
 
-class Flexit(ClimateDevice):
+class Flexit(ClimateEntity):
     """Representation of a Flexit AC unit."""
 
-    def __init__(self, hub, modbus_slave, name):
+    _attr_fan_modes = ["Off", "Low", "Medium", "High"]
+    _attr_hvac_mode = HVACMode.COOL
+    _attr_hvac_modes = [HVACMode.COOL]
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+    )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+    def __init__(
+        self, hub: ModbusHub, modbus_slave: int | None, name: str | None
+    ) -> None:
         """Initialize the unit."""
         self._hub = hub
-        self._name = name
+        self._attr_name = name
         self._slave = modbus_slave
-        self._target_temperature = None
-        self._current_temperature = None
-        self._current_fan_mode = None
-        self._current_operation = None
-        self._fan_modes = ["Off", "Low", "Medium", "High"]
-        self._current_operation = None
-        self._filter_hours = None
-        self._filter_alarm = None
-        self._heat_recovery = None
-        self._heater_enabled = False
-        self._heating = None
-        self._cooling = None
+        self._attr_fan_mode = None
+        self._filter_hours: int | None = None
+        self._filter_alarm: int | None = None
+        self._heat_recovery: int | None = None
+        self._heater_enabled: int | None = None
+        self._heating: int | None = None
+        self._cooling: int | None = None
         self._alarm = False
-        self.unit = pyflexit(hub, modbus_slave)
+        self._outdoor_air_temp: float | None = None
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    def update(self):
+    async def async_update(self) -> None:
         """Update unit attributes."""
-        if not self.unit.update():
-            _LOGGER.warning("Modbus read failed")
+        self._attr_target_temperature = await self._async_read_temp_from_register(
+            CALL_TYPE_REGISTER_HOLDING, 8
+        )
+        self._attr_current_temperature = await self._async_read_temp_from_register(
+            CALL_TYPE_REGISTER_INPUT, 9
+        )
+        res = await self._async_read_int16_from_register(CALL_TYPE_REGISTER_HOLDING, 17)
+        if self.fan_modes and res < len(self.fan_modes):
+            self._attr_fan_mode = self.fan_modes[res]
+        self._filter_hours = await self._async_read_int16_from_register(
+            CALL_TYPE_REGISTER_INPUT, 8
+        )
+        # # Mechanical heat recovery, 0-100%
+        self._heat_recovery = await self._async_read_int16_from_register(
+            CALL_TYPE_REGISTER_INPUT, 14
+        )
+        # # Heater active 0-100%
+        self._heating = await self._async_read_int16_from_register(
+            CALL_TYPE_REGISTER_INPUT, 15
+        )
+        # # Cooling active 0-100%
+        self._cooling = await self._async_read_int16_from_register(
+            CALL_TYPE_REGISTER_INPUT, 13
+        )
+        # # Filter alarm 0/1
+        self._filter_alarm = await self._async_read_int16_from_register(
+            CALL_TYPE_REGISTER_INPUT, 27
+        )
+        # # Heater enabled or not. Does not mean it's necessarily heating
+        self._heater_enabled = await self._async_read_int16_from_register(
+            CALL_TYPE_REGISTER_INPUT, 28
+        )
+        self._outdoor_air_temp = await self._async_read_temp_from_register(
+            CALL_TYPE_REGISTER_INPUT, 11
+        )
 
-        self._target_temperature = self.unit.get_target_temp
-        self._current_temperature = self.unit.get_temp
-        self._current_fan_mode = self._fan_modes[self.unit.get_fan_speed]
-        self._filter_hours = self.unit.get_filter_hours
-        # Mechanical heat recovery, 0-100%
-        self._heat_recovery = self.unit.get_heat_recovery
-        # Heater active 0-100%
-        self._heating = self.unit.get_heating
-        # Cooling active 0-100%
-        self._cooling = self.unit.get_cooling
-        # Filter alarm 0/1
-        self._filter_alarm = self.unit.get_filter_alarm
-        # Heater enabled or not. Does not mean it's necessarily heating
-        self._heater_enabled = self.unit.get_heater_enabled
-        # Current operation mode
-        self._current_operation = self.unit.get_operation
+        actual_air_speed = await self._async_read_int16_from_register(
+            CALL_TYPE_REGISTER_INPUT, 48
+        )
+
+        if self._heating:
+            self._attr_hvac_action = HVACAction.HEATING
+        elif self._cooling:
+            self._attr_hvac_action = HVACAction.COOLING
+        elif self._heat_recovery:
+            self._attr_hvac_action = HVACAction.IDLE
+        elif actual_air_speed:
+            self._attr_hvac_action = HVACAction.FAN
+        else:
+            self._attr_hvac_action = HVACAction.OFF
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
             "filter_hours": self._filter_hours,
@@ -118,62 +151,55 @@ class Flexit(ClimateDevice):
             "heating": self._heating,
             "heater_enabled": self._heater_enabled,
             "cooling": self._cooling,
+            "outdoor_air_temp": self._outdoor_air_temp,
         }
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._target_temperature
-
-    @property
-    def hvac_mode(self):
-        """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
-
-    @property
-    def hvac_modes(self) -> List[str]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return [HVAC_MODE_COOL]
-
-    @property
-    def fan_mode(self):
-        """Return the fan setting."""
-        return self._current_fan_mode
-
-    @property
-    def fan_modes(self):
-        """Return the list of available fan modes."""
-        return self._fan_modes
-
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.unit.set_temp(self._target_temperature)
+        if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            _LOGGER.error("Received invalid temperature")
+            return
 
-    def set_fan_mode(self, fan_mode):
+        if await self._async_write_int16_to_register(8, int(target_temperature * 10)):
+            self._attr_target_temperature = target_temperature
+        else:
+            _LOGGER.error("Modbus error setting target temperature to Flexit")
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
-        self.unit.set_fan_speed(self._fan_modes.index(fan_mode))
+        if self.fan_modes and await self._async_write_int16_to_register(
+            17, self.fan_modes.index(fan_mode)
+        ):
+            self._attr_fan_mode = fan_mode
+        else:
+            _LOGGER.error("Modbus error setting fan mode to Flexit")
+
+    # Based on _async_read_register in ModbusThermostat class
+    async def _async_read_int16_from_register(
+        self, register_type: str, register: int
+    ) -> int:
+        """Read register using the Modbus hub slave."""
+        result = await self._hub.async_pb_call(self._slave, register, 1, register_type)
+        if result is None:
+            _LOGGER.error("Error reading value from Flexit modbus adapter")
+            return -1
+
+        return int(result.registers[0])
+
+    async def _async_read_temp_from_register(
+        self, register_type: str, register: int
+    ) -> float:
+        result = float(
+            await self._async_read_int16_from_register(register_type, register)
+        )
+        if not result:
+            return -1
+        return result / 10.0
+
+    async def _async_write_int16_to_register(self, register: int, value: int) -> bool:
+        result = await self._hub.async_pb_call(
+            self._slave, register, value, CALL_TYPE_WRITE_REGISTER
+        )
+        if not result:
+            return False
+        return True

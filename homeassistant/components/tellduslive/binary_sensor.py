@@ -1,43 +1,39 @@
 """Support for binary sensors using Tellstick Net."""
-import logging
 
-from homeassistant.components import binary_sensor, tellduslive
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components import binary_sensor
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entry import TelldusLiveEntity
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up TelldusLive.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
-    pass
+from .const import DOMAIN, TELLDUS_DISCOVERY_NEW
+from .entity import TelldusLiveEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up tellduslive sensors dynamically."""
 
     async def async_discover_binary_sensor(device_id):
         """Discover and add a discovered sensor."""
-        client = hass.data[tellduslive.DOMAIN]
+        client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveSensor(client, device_id)])
 
     async_dispatcher_connect(
         hass,
-        tellduslive.TELLDUS_DISCOVERY_NEW.format(
-            binary_sensor.DOMAIN, tellduslive.DOMAIN
-        ),
+        TELLDUS_DISCOVERY_NEW.format(binary_sensor.DOMAIN, DOMAIN),
         async_discover_binary_sensor,
     )
 
 
-class TelldusLiveSensor(TelldusLiveEntity, BinarySensorDevice):
+class TelldusLiveSensor(TelldusLiveEntity, BinarySensorEntity):
     """Representation of a Tellstick sensor."""
+
+    _attr_name = None
 
     @property
     def is_on(self):

@@ -1,0 +1,10 @@
+{
+  "domain": "progettihwsw",
+  "name": "ProgettiHWSW Automation",
+  "codeowners": ["@ardaseremet"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/progettihwsw",
+  "iot_class": "local_polling",
+  "loggers": ["ProgettiHWSW"],
+  "requirements": ["ProgettiHWSW==0.1.3"]
+}

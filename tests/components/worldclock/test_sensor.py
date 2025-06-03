@@ -1,31 +1,52 @@
 """The test for the World clock sensor platform."""
-import unittest
 
-from homeassistant.setup import setup_component
-import homeassistant.util.dt as dt_util
+from datetime import tzinfo
 
-from tests.common import get_test_home_assistant
+import pytest
+
+from homeassistant.components.worldclock.const import CONF_TIME_FORMAT, DEFAULT_NAME
+from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
+from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
+
+from tests.common import MockConfigEntry
 
 
-class TestWorldClockSensor(unittest.TestCase):
-    """Test the World clock sensor."""
+@pytest.fixture
+async def time_zone() -> tzinfo | None:
+    """Fixture for time zone."""
+    return await dt_util.async_get_time_zone("America/New_York")
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.time_zone = dt_util.get_time_zone("America/New_York")
 
-        config = {"sensor": {"platform": "worldclock", "time_zone": "America/New_York"}}
+async def test_time_from_config_entry(
+    hass: HomeAssistant, time_zone: tzinfo | None, loaded_entry: MockConfigEntry
+) -> None:
+    """Test the time at a different location."""
 
-        assert setup_component(self.hass, "sensor", config)
+    state = hass.states.get("sensor.worldclock_sensor")
+    assert state is not None
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    assert state.state == dt_util.now(time_zone=time_zone).strftime("%H:%M")
 
-    def test_time(self):
-        """Test the time at a different location."""
-        state = self.hass.states.get("sensor.worldclock_sensor")
-        assert state is not None
 
-        assert state.state == dt_util.now(time_zone=self.time_zone).strftime("%H:%M")
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            CONF_NAME: DEFAULT_NAME,
+            CONF_TIME_ZONE: "America/New_York",
+            CONF_TIME_FORMAT: "%a, %b %d, %Y %I:%M %p",
+        }
+    ],
+)
+async def test_time_format(
+    hass: HomeAssistant, time_zone: tzinfo | None, loaded_entry: MockConfigEntry
+) -> None:
+    """Test time_format setting."""
+
+    state = hass.states.get("sensor.worldclock_sensor")
+    assert state is not None
+
+    assert state.state == dt_util.now(time_zone=time_zone).strftime(
+        "%a, %b %d, %Y %I:%M %p"
+    )

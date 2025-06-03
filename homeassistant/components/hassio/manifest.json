@@ -1,8 +1,11 @@
 {
   "domain": "hassio",
-  "name": "Hass.io",
-  "documentation": "https://www.home-assistant.io/hassio",
-  "requirements": [],
-  "dependencies": ["http", "panel_custom"],
-  "codeowners": ["@home-assistant/hass-io"]
+  "name": "Home Assistant Supervisor",
+  "codeowners": ["@home-assistant/supervisor"],
+  "dependencies": ["http", "repairs"],
+  "documentation": "https://www.home-assistant.io/integrations/hassio",
+  "iot_class": "local_polling",
+  "quality_scale": "internal",
+  "requirements": ["aiohasupervisor==0.3.1"],
+  "single_config_entry": true
 }

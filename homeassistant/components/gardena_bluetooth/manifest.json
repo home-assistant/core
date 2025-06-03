@@ -1,0 +1,18 @@
+{
+  "domain": "gardena_bluetooth",
+  "name": "Gardena Bluetooth",
+  "bluetooth": [
+    {
+      "manufacturer_id": 1062,
+      "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
+      "connectable": true
+    }
+  ],
+  "codeowners": ["@elupus"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/gardena_bluetooth",
+  "iot_class": "local_polling",
+  "loggers": ["bleak", "bleak_esphome", "gardena_bluetooth"],
+  "requirements": ["gardena-bluetooth==1.6.0"]
+}

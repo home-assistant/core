@@ -1,0 +1,71 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "invalid_url": "Invalid URL",
+      "syncthru_not_supported": "Device does not support SyncThru",
+      "unknown_state": "Printer state unknown, verify URL and network connectivity"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "confirm": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "url": "[%key:component::syncthru::config::step::user::data::url%]"
+        }
+      },
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "url": "Web interface URL"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "toner_black": {
+        "name": "Black toner level"
+      },
+      "toner_cyan": {
+        "name": "Cyan toner level"
+      },
+      "toner_magenta": {
+        "name": "Magenta toner level"
+      },
+      "toner_yellow": {
+        "name": "Yellow toner level"
+      },
+      "drum_black": {
+        "name": "Black drum level"
+      },
+      "drum_cyan": {
+        "name": "Cyan drum level"
+      },
+      "drum_magenta": {
+        "name": "Magenta drum level"
+      },
+      "drum_yellow": {
+        "name": "Yellow drum level"
+      },
+      "tray_mp": {
+        "name": "Multi-purpose tray"
+      },
+      "tray_manual": {
+        "name": "Manual feed tray"
+      },
+      "tray": {
+        "name": "Input tray {tray_number}"
+      },
+      "output_tray": {
+        "name": "Output tray {tray_number}"
+      },
+      "active_alerts": {
+        "name": "Active alerts",
+        "unit_of_measurement": "alerts"
+      }
+    }
+  }
+}

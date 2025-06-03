@@ -1,0 +1,10 @@
+{
+  "domain": "azure_devops",
+  "name": "Azure DevOps",
+  "codeowners": ["@timmo001"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/azure_devops",
+  "iot_class": "cloud_polling",
+  "loggers": ["aioazuredevops"],
+  "requirements": ["aioazuredevops==2.2.1"]
+}

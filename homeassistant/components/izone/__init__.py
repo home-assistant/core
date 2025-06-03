@@ -1,22 +1,18 @@
-"""
-Platform for the iZone AC.
-
-For more details about this component, please refer to the documentation
-https://home-assistant.io/integrations/izone/
-"""
-import logging
+"""Platform for the iZone AC."""
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EXCLUDE
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EXCLUDE, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_CONFIG, IZONE
 from .discovery import async_start_discovery_service, async_stop_discovery_service
 
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [Platform.CLIMATE]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -32,36 +28,37 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the iZone component config."""
-    conf = config.get(IZONE)
-    if not conf:
-        return True
 
-    hass.data[DATA_CONFIG] = conf
+    # Check for manually added config, this may exclude some devices
+    if conf := config.get(IZONE):
+        hass.data[DATA_CONFIG] = conf
 
-    # Explicitly added in the config file, create a config entry.
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            IZONE, context={"source": config_entries.SOURCE_IMPORT}
+        # Explicitly added in the config file, create a config entry.
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                IZONE, context={"source": config_entries.SOURCE_IMPORT}
+            )
         )
-    )
 
-    return True
-
-
-async def async_setup_entry(hass, entry):
-    """Set up from a config entry."""
+    # Start the discovery service
     await async_start_discovery_service(hass)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "climate")
-    )
+    async def shutdown_event(event):
+        await async_stop_discovery_service(hass)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_event)
+
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up from a config entry."""
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the config entry and stop discovery process."""
-    await async_stop_discovery_service(hass)
-    await hass.config_entries.async_forward_entry_unload(entry, "climate")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

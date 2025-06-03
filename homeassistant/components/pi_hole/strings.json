@@ -1,0 +1,103 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "location": "[%key:common::config_flow::data::location%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
+      "api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Pi-hole",
+        "description": "Please enter a new API key for Pi-hole at {host}/{location}",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "sensor": {
+      "ads_blocked_today": {
+        "name": "Ads blocked today",
+        "unit_of_measurement": "ads"
+      },
+      "ads_percentage_today": {
+        "name": "Ads percentage blocked today"
+      },
+      "clients_ever_seen": {
+        "name": "Seen clients",
+        "unit_of_measurement": "clients"
+      },
+      "dns_queries_today": {
+        "name": "DNS queries today",
+        "unit_of_measurement": "queries"
+      },
+      "domains_being_blocked": {
+        "name": "Domains blocked",
+        "unit_of_measurement": "domains"
+      },
+      "queries_cached": {
+        "name": "DNS queries cached",
+        "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::dns_queries_today::unit_of_measurement%]"
+      },
+      "queries_forwarded": {
+        "name": "DNS queries forwarded",
+        "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::dns_queries_today::unit_of_measurement%]"
+      },
+      "unique_clients": {
+        "name": "DNS unique clients",
+        "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::clients_ever_seen::unit_of_measurement%]"
+      },
+      "unique_domains": {
+        "name": "DNS unique domains",
+        "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::domains_being_blocked::unit_of_measurement%]"
+      }
+    },
+    "update": {
+      "core_update_available": {
+        "name": "Core update available"
+      },
+      "ftl_update_available": {
+        "name": "FTL update available"
+      },
+      "web_update_available": {
+        "name": "Web update available"
+      }
+    }
+  },
+  "services": {
+    "disable": {
+      "name": "[%key:common::action::disable%]",
+      "description": "Disables configured Pi-hole(s) for an amount of time.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Time that the Pi-hole should be disabled for."
+        }
+      }
+    }
+  }
+}

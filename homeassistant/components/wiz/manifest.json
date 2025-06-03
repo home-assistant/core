@@ -1,0 +1,30 @@
+{
+  "domain": "wiz",
+  "name": "WiZ",
+  "codeowners": ["@sbidy"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "dhcp": [
+    {
+      "registered_devices": true
+    },
+    {
+      "macaddress": "A8BB50*"
+    },
+    {
+      "macaddress": "D8A011*"
+    },
+    {
+      "macaddress": "444F8E*"
+    },
+    {
+      "macaddress": "6C2990*"
+    },
+    {
+      "hostname": "wiz_*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/wiz",
+  "iot_class": "local_push",
+  "requirements": ["pywizlight==0.6.2"]
+}

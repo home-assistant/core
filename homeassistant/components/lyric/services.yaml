@@ -1,0 +1,14 @@
+set_hold_time:
+  target:
+    device:
+      integration: lyric
+    entity:
+      integration: lyric
+      domain: climate
+  fields:
+    time_period:
+      default: "01:00:00"
+      example: "01:00:00"
+      required: true
+      selector:
+        text:

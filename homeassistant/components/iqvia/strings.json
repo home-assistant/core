@@ -1,18 +1,18 @@
 {
   "config": {
-    "title": "IQVIA",
     "step": {
       "user": {
-        "title": "IQVIA",
         "description": "Fill out your U.S. or Canadian ZIP code.",
         "data": {
-          "zip_code": "ZIP Code"
+          "zip_code": "ZIP code"
         }
       }
     },
     "error": {
-      "identifier_exists": "ZIP code already registered",
       "invalid_zip_code": "ZIP code is invalid"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }

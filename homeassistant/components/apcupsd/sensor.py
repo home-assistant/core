@@ -1,188 +1,487 @@
 """Support for APCUPSd sensors."""
+
+from __future__ import annotations
+
 import logging
 
-from apcaccess.status import ALL_UNITS
-import voluptuous as vol
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfApparentPower,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from homeassistant.components import apcupsd
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_RESOURCES, POWER_WATT, TEMP_CELSIUS
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from .const import LAST_S_TEST
+from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_PREFIX = "UPS "
-SENSOR_TYPES = {
-    "alarmdel": ["Alarm Delay", "", "mdi:alarm"],
-    "ambtemp": ["Ambient Temperature", "", "mdi:thermometer"],
-    "apc": ["Status Data", "", "mdi:information-outline"],
-    "apcmodel": ["Model", "", "mdi:information-outline"],
-    "badbatts": ["Bad Batteries", "", "mdi:information-outline"],
-    "battdate": ["Battery Replaced", "", "mdi:calendar-clock"],
-    "battstat": ["Battery Status", "", "mdi:information-outline"],
-    "battv": ["Battery Voltage", "V", "mdi:flash"],
-    "bcharge": ["Battery", "%", "mdi:battery"],
-    "cable": ["Cable Type", "", "mdi:ethernet-cable"],
-    "cumonbatt": ["Total Time on Battery", "", "mdi:timer"],
-    "date": ["Status Date", "", "mdi:calendar-clock"],
-    "dipsw": ["Dip Switch Settings", "", "mdi:information-outline"],
-    "dlowbatt": ["Low Battery Signal", "", "mdi:clock-alert"],
-    "driver": ["Driver", "", "mdi:information-outline"],
-    "dshutd": ["Shutdown Delay", "", "mdi:timer"],
-    "dwake": ["Wake Delay", "", "mdi:timer"],
-    "endapc": ["Date and Time", "", "mdi:calendar-clock"],
-    "extbatts": ["External Batteries", "", "mdi:information-outline"],
-    "firmware": ["Firmware Version", "", "mdi:information-outline"],
-    "hitrans": ["Transfer High", "V", "mdi:flash"],
-    "hostname": ["Hostname", "", "mdi:information-outline"],
-    "humidity": ["Ambient Humidity", "%", "mdi:water-percent"],
-    "itemp": ["Internal Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "lastxfer": ["Last Transfer", "", "mdi:transfer"],
-    "linefail": ["Input Voltage Status", "", "mdi:information-outline"],
-    "linefreq": ["Line Frequency", "Hz", "mdi:information-outline"],
-    "linev": ["Input Voltage", "V", "mdi:flash"],
-    "loadpct": ["Load", "%", "mdi:gauge"],
-    "loadapnt": ["Load Apparent Power", "%", "mdi:gauge"],
-    "lotrans": ["Transfer Low", "V", "mdi:flash"],
-    "mandate": ["Manufacture Date", "", "mdi:calendar"],
-    "masterupd": ["Master Update", "", "mdi:information-outline"],
-    "maxlinev": ["Input Voltage High", "V", "mdi:flash"],
-    "maxtime": ["Battery Timeout", "", "mdi:timer-off"],
-    "mbattchg": ["Battery Shutdown", "%", "mdi:battery-alert"],
-    "minlinev": ["Input Voltage Low", "V", "mdi:flash"],
-    "mintimel": ["Shutdown Time", "", "mdi:timer"],
-    "model": ["Model", "", "mdi:information-outline"],
-    "nombattv": ["Battery Nominal Voltage", "V", "mdi:flash"],
-    "nominv": ["Nominal Input Voltage", "V", "mdi:flash"],
-    "nomoutv": ["Nominal Output Voltage", "V", "mdi:flash"],
-    "nompower": ["Nominal Output Power", POWER_WATT, "mdi:flash"],
-    "nomapnt": ["Nominal Apparent Power", "VA", "mdi:flash"],
-    "numxfers": ["Transfer Count", "", "mdi:counter"],
-    "outcurnt": ["Output Current", "A", "mdi:flash"],
-    "outputv": ["Output Voltage", "V", "mdi:flash"],
-    "reg1": ["Register 1 Fault", "", "mdi:information-outline"],
-    "reg2": ["Register 2 Fault", "", "mdi:information-outline"],
-    "reg3": ["Register 3 Fault", "", "mdi:information-outline"],
-    "retpct": ["Restore Requirement", "%", "mdi:battery-alert"],
-    "selftest": ["Last Self Test", "", "mdi:calendar-clock"],
-    "sense": ["Sensitivity", "", "mdi:information-outline"],
-    "serialno": ["Serial Number", "", "mdi:information-outline"],
-    "starttime": ["Startup Time", "", "mdi:calendar-clock"],
-    "statflag": ["Status Flag", "", "mdi:information-outline"],
-    "status": ["Status", "", "mdi:information-outline"],
-    "stesti": ["Self Test Interval", "", "mdi:information-outline"],
-    "timeleft": ["Time Left", "", "mdi:clock-alert"],
-    "tonbatt": ["Time on Battery", "", "mdi:timer"],
-    "upsmode": ["Mode", "", "mdi:information-outline"],
-    "upsname": ["Name", "", "mdi:information-outline"],
-    "version": ["Daemon Info", "", "mdi:information-outline"],
-    "xoffbat": ["Transfer from Battery", "", "mdi:transfer"],
-    "xoffbatt": ["Transfer from Battery", "", "mdi:transfer"],
-    "xonbatt": ["Transfer to Battery", "", "mdi:transfer"],
+SENSORS: dict[str, SensorEntityDescription] = {
+    "alarmdel": SensorEntityDescription(
+        key="alarmdel",
+        translation_key="alarm_delay",
+    ),
+    "ambtemp": SensorEntityDescription(
+        key="ambtemp",
+        translation_key="ambient_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "apc": SensorEntityDescription(
+        key="apc",
+        translation_key="apc_status",
+        entity_registry_enabled_default=False,
+    ),
+    "apcmodel": SensorEntityDescription(
+        key="apcmodel",
+        translation_key="apc_model",
+        entity_registry_enabled_default=False,
+    ),
+    "badbatts": SensorEntityDescription(
+        key="badbatts",
+        translation_key="bad_batteries",
+    ),
+    "battdate": SensorEntityDescription(
+        key="battdate",
+        translation_key="battery_replacement_date",
+    ),
+    "battstat": SensorEntityDescription(
+        key="battstat",
+        translation_key="battery_status",
+    ),
+    "battv": SensorEntityDescription(
+        key="battv",
+        translation_key="battery_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "bcharge": SensorEntityDescription(
+        key="bcharge",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "cable": SensorEntityDescription(
+        key="cable",
+        translation_key="cable_type",
+        entity_registry_enabled_default=False,
+    ),
+    "cumonbatt": SensorEntityDescription(
+        key="cumonbatt",
+        translation_key="total_time_on_battery",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    "date": SensorEntityDescription(
+        key="date",
+        translation_key="date",
+        entity_registry_enabled_default=False,
+    ),
+    "dipsw": SensorEntityDescription(
+        key="dipsw",
+        translation_key="dip_switch_settings",
+    ),
+    "dlowbatt": SensorEntityDescription(
+        key="dlowbatt",
+        translation_key="low_battery_signal",
+    ),
+    "driver": SensorEntityDescription(
+        key="driver",
+        translation_key="driver",
+        entity_registry_enabled_default=False,
+    ),
+    "dshutd": SensorEntityDescription(
+        key="dshutd",
+        translation_key="shutdown_delay",
+    ),
+    "dwake": SensorEntityDescription(
+        key="dwake",
+        translation_key="wake_delay",
+    ),
+    "end apc": SensorEntityDescription(
+        key="end apc",
+        translation_key="date_and_time",
+        entity_registry_enabled_default=False,
+    ),
+    "extbatts": SensorEntityDescription(
+        key="extbatts",
+        translation_key="external_batteries",
+    ),
+    "firmware": SensorEntityDescription(
+        key="firmware",
+        translation_key="firmware_version",
+        entity_registry_enabled_default=False,
+    ),
+    "hitrans": SensorEntityDescription(
+        key="hitrans",
+        translation_key="transfer_high",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+    ),
+    "hostname": SensorEntityDescription(
+        key="hostname",
+        translation_key="hostname",
+        entity_registry_enabled_default=False,
+    ),
+    "humidity": SensorEntityDescription(
+        key="humidity",
+        translation_key="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "itemp": SensorEntityDescription(
+        key="itemp",
+        translation_key="internal_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    LAST_S_TEST: SensorEntityDescription(
+        key=LAST_S_TEST,
+        translation_key="last_self_test",
+    ),
+    "lastxfer": SensorEntityDescription(
+        key="lastxfer",
+        translation_key="last_transfer",
+        entity_registry_enabled_default=False,
+    ),
+    "linefail": SensorEntityDescription(
+        key="linefail",
+        translation_key="line_failure",
+    ),
+    "linefreq": SensorEntityDescription(
+        key="linefreq",
+        translation_key="line_frequency",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "linev": SensorEntityDescription(
+        key="linev",
+        translation_key="line_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "loadpct": SensorEntityDescription(
+        key="loadpct",
+        translation_key="load_capacity",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "loadapnt": SensorEntityDescription(
+        key="loadapnt",
+        translation_key="apparent_power",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    "lotrans": SensorEntityDescription(
+        key="lotrans",
+        translation_key="transfer_low",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+    ),
+    "mandate": SensorEntityDescription(
+        key="mandate",
+        translation_key="manufacture_date",
+        entity_registry_enabled_default=False,
+    ),
+    "masterupd": SensorEntityDescription(
+        key="masterupd",
+        translation_key="master_update",
+    ),
+    "maxlinev": SensorEntityDescription(
+        key="maxlinev",
+        translation_key="input_voltage_high",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+    ),
+    "maxtime": SensorEntityDescription(
+        key="maxtime",
+        translation_key="max_time",
+    ),
+    "mbattchg": SensorEntityDescription(
+        key="mbattchg",
+        translation_key="max_battery_charge",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    "minlinev": SensorEntityDescription(
+        key="minlinev",
+        translation_key="input_voltage_low",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+    ),
+    "mintimel": SensorEntityDescription(
+        key="mintimel",
+        translation_key="min_time",
+    ),
+    "model": SensorEntityDescription(
+        key="model",
+        translation_key="model",
+        entity_registry_enabled_default=False,
+    ),
+    "nombattv": SensorEntityDescription(
+        key="nombattv",
+        translation_key="battery_nominal_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+    ),
+    "nominv": SensorEntityDescription(
+        key="nominv",
+        translation_key="nominal_input_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+    ),
+    "nomoutv": SensorEntityDescription(
+        key="nomoutv",
+        translation_key="nominal_output_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+    ),
+    "nompower": SensorEntityDescription(
+        key="nompower",
+        translation_key="nominal_output_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+    ),
+    "nomapnt": SensorEntityDescription(
+        key="nomapnt",
+        translation_key="nominal_apparent_power",
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
+    ),
+    "numxfers": SensorEntityDescription(
+        key="numxfers",
+        translation_key="transfer_count",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "outcurnt": SensorEntityDescription(
+        key="outcurnt",
+        translation_key="output_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "outputv": SensorEntityDescription(
+        key="outputv",
+        translation_key="output_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "reg1": SensorEntityDescription(
+        key="reg1",
+        translation_key="register_1_fault",
+        entity_registry_enabled_default=False,
+    ),
+    "reg2": SensorEntityDescription(
+        key="reg2",
+        translation_key="register_2_fault",
+        entity_registry_enabled_default=False,
+    ),
+    "reg3": SensorEntityDescription(
+        key="reg3",
+        translation_key="register_3_fault",
+        entity_registry_enabled_default=False,
+    ),
+    "retpct": SensorEntityDescription(
+        key="retpct",
+        translation_key="restore_capacity",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    "selftest": SensorEntityDescription(
+        key="selftest",
+        translation_key="self_test_result",
+    ),
+    "sense": SensorEntityDescription(
+        key="sense",
+        translation_key="sensitivity",
+        entity_registry_enabled_default=False,
+    ),
+    "serialno": SensorEntityDescription(
+        key="serialno",
+        translation_key="serial_number",
+        entity_registry_enabled_default=False,
+    ),
+    "starttime": SensorEntityDescription(
+        key="starttime",
+        translation_key="startup_time",
+    ),
+    "statflag": SensorEntityDescription(
+        key="statflag",
+        translation_key="online_status",
+        entity_registry_enabled_default=False,
+    ),
+    "status": SensorEntityDescription(
+        key="status",
+        translation_key="status",
+    ),
+    "stesti": SensorEntityDescription(
+        key="stesti",
+        translation_key="self_test_interval",
+    ),
+    "timeleft": SensorEntityDescription(
+        key="timeleft",
+        translation_key="time_left",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    "tonbatt": SensorEntityDescription(
+        key="tonbatt",
+        translation_key="time_on_battery",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    "upsmode": SensorEntityDescription(
+        key="upsmode",
+        translation_key="ups_mode",
+    ),
+    "upsname": SensorEntityDescription(
+        key="upsname",
+        translation_key="ups_name",
+        entity_registry_enabled_default=False,
+    ),
+    "version": SensorEntityDescription(
+        key="version",
+        translation_key="version",
+        entity_registry_enabled_default=False,
+    ),
+    "xoffbat": SensorEntityDescription(
+        key="xoffbat",
+        translation_key="transfer_from_battery",
+    ),
+    "xoffbatt": SensorEntityDescription(
+        key="xoffbatt",
+        translation_key="transfer_from_battery",
+    ),
+    "xonbatt": SensorEntityDescription(
+        key="xonbatt",
+        translation_key="transfer_to_battery",
+    ),
 }
 
-SPECIFIC_UNITS = {"ITEMP": TEMP_CELSIUS}
 INFERRED_UNITS = {
-    " Minutes": "min",
-    " Seconds": "sec",
-    " Percent": "%",
-    " Volts": "V",
-    " Ampere": "A",
-    " Volt-Ampere": "VA",
-    " Watts": POWER_WATT,
-    " Hz": "Hz",
-    " C": TEMP_CELSIUS,
-    " Percent Load Capacity": "%",
+    " Minutes": UnitOfTime.MINUTES,
+    " Seconds": UnitOfTime.SECONDS,
+    " Percent": PERCENTAGE,
+    " Volts": UnitOfElectricPotential.VOLT,
+    " Ampere": UnitOfElectricCurrent.AMPERE,
+    " Amps": UnitOfElectricCurrent.AMPERE,
+    " Volt-Ampere": UnitOfApparentPower.VOLT_AMPERE,
+    " VA": UnitOfApparentPower.VOLT_AMPERE,
+    " Watts": UnitOfPower.WATT,
+    " Hz": UnitOfFrequency.HERTZ,
+    " C": UnitOfTemperature.CELSIUS,
+    # APCUPSd reports data for "itemp" field (eventually represented by UPS Internal
+    # Temperature sensor in this integration) with a trailing "Internal", e.g.,
+    # "34.6 C Internal". Here we create a fake unit " C Internal" to handle this case.
+    " C Internal": UnitOfTemperature.CELSIUS,
+    " Percent Load Capacity": PERCENTAGE,
+    # "stesti" field (Self Test Interval) field could report a "days" unit, e.g.,
+    # "7 days", so here we add support for it.
+    " days": UnitOfTime.DAYS,
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_RESOURCES, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        )
-    }
-)
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: APCUPSdConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the APCUPSd sensors from config entries."""
+    coordinator = config_entry.runtime_data
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the APCUPSd sensors."""
+    # The resource keys in the data dict collected in the coordinator is in upper-case
+    # by default, but we use lower cases throughout this integration.
+    available_resources: set[str] = {k.lower() for k, _ in coordinator.data.items()}
+
     entities = []
 
-    for resource in config[CONF_RESOURCES]:
-        sensor_type = resource.lower()
+    # "laststest" is a special sensor that only appears when the APC UPS daemon has done a
+    # periodical (or manual) self test since last daemon restart. It might not be available
+    # when we set up the integration, and we do not know if it would ever be available. Here we
+    # add it anyway and mark it as unknown initially.
+    for resource in available_resources | {LAST_S_TEST}:
+        if resource not in SENSORS:
+            _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
+            continue
 
-        if sensor_type not in SENSOR_TYPES:
-            SENSOR_TYPES[sensor_type] = [
-                sensor_type.title(),
-                "",
-                "mdi:information-outline",
-            ]
+        entities.append(APCUPSdSensor(coordinator, SENSORS[resource]))
 
-        if sensor_type.upper() not in apcupsd.DATA.status:
-            _LOGGER.warning(
-                "Sensor type: %s does not appear in the APCUPSd status output",
-                sensor_type,
-            )
-
-        entities.append(APCUPSdSensor(apcupsd.DATA, sensor_type))
-
-    add_entities(entities, True)
+    async_add_entities(entities)
 
 
-def infer_unit(value):
-    """If the value ends with any of the units from ALL_UNITS.
+def infer_unit(value: str) -> tuple[str, str | None]:
+    """If the value ends with any of the units from supported units.
 
     Split the unit off the end of the value and return the value, unit tuple
     pair. Else return the original value and None as the unit.
     """
 
-    for unit in ALL_UNITS:
+    for unit, ha_unit in INFERRED_UNITS.items():
         if value.endswith(unit):
-            return value[: -len(unit)], INFERRED_UNITS.get(unit, unit.strip())
+            return value.removesuffix(unit), ha_unit
+
     return value, None
 
 
-class APCUPSdSensor(Entity):
+class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
 
-    def __init__(self, data, sensor_type):
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: APCUPSdCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        self._data = data
-        self.type = sensor_type
-        self._name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
-        self._unit = SENSOR_TYPES[sensor_type][1]
-        self._inferred_unit = None
-        self._state = None
+        super().__init__(coordinator=coordinator, context=description.key.upper())
 
-    @property
-    def name(self):
-        """Return the name of the UPS sensor."""
-        return self._name
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.unique_device_id}_{description.key}"
+        self._attr_device_info = coordinator.device_info
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
+        # Initial update of attributes.
+        self._update_attrs()
 
-    @property
-    def state(self):
-        """Return true if the UPS is online, else False."""
-        return self._state
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attrs()
+        self.async_write_ha_state()
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        if not self._unit:
-            return self._inferred_unit
-        return self._unit
+    def _update_attrs(self) -> None:
+        """Update sensor attributes based on coordinator data."""
+        key = self.entity_description.key.upper()
+        # For most sensors the key will always be available for each refresh. However, some sensors
+        # (e.g., "laststest") will only appear after certain event occurs (e.g., a self test is
+        # performed) and may disappear again after certain event. So we mark the state as "unknown"
+        # when it becomes unknown after such events.
+        if key not in self.coordinator.data:
+            self._attr_native_value = None
+            return
 
-    def update(self):
-        """Get the latest status and use it to update our sensor state."""
-        if self.type.upper() not in self._data.status:
-            self._state = None
-            self._inferred_unit = None
-        else:
-            self._state, self._inferred_unit = infer_unit(
-                self._data.status[self.type.upper()]
-            )
+        self._attr_native_value, inferred_unit = infer_unit(self.coordinator.data[key])
+        if not self.native_unit_of_measurement:
+            self._attr_native_unit_of_measurement = inferred_unit

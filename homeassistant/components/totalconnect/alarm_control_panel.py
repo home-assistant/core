@@ -1,143 +1,268 @@
 """Interfaces with TotalConnect alarm control panels."""
-import logging
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+from __future__ import annotations
+
+from total_connect_client import ArmingHelper
+from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
+from total_connect_client.location import TotalConnectLocation
+
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+    CodeFormat,
 )
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_TRIGGERED,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as TOTALCONNECT_DOMAIN
+from .const import CODE_REQUIRED, DOMAIN
+from .coordinator import TotalConnectConfigEntry, TotalConnectDataUpdateCoordinator
+from .entity import TotalConnectLocationEntity
 
-_LOGGER = logging.getLogger(__name__)
+SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
+SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up an alarm control panel for a TotalConnect device."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: TotalConnectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up TotalConnect alarm panels based on a config entry."""
+    coordinator = entry.runtime_data
+    code_required = entry.options.get(CODE_REQUIRED, False)
 
-    alarms = []
+    async_add_entities(
+        TotalConnectAlarm(coordinator, location, partition_id, code_required)
+        for location in coordinator.client.locations.values()
+        for partition_id in location.partitions
+    )
 
-    client = hass.data[TOTALCONNECT_DOMAIN].client
+    # Set up services
+    platform = entity_platform.async_get_current_platform()
 
-    for location in client.locations:
-        location_id = location.get("LocationID")
-        name = location.get("LocationName")
-        alarms.append(TotalConnectAlarm(name, location_id, client))
-    add_entities(alarms)
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_AWAY_INSTANT,
+        None,
+        "async_alarm_arm_away_instant",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_HOME_INSTANT,
+        None,
+        "async_alarm_arm_home_instant",
+    )
 
 
-class TotalConnectAlarm(alarm.AlarmControlPanel):
-    """Represent an TotalConnect status."""
+class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
+    """Represent a TotalConnect alarm panel."""
 
-    def __init__(self, name, location_id, client):
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+    )
+
+    def __init__(
+        self,
+        coordinator: TotalConnectDataUpdateCoordinator,
+        location: TotalConnectLocation,
+        partition_id: int,
+        require_code: bool,
+    ) -> None:
         """Initialize the TotalConnect status."""
-        self._name = name
-        self._location_id = location_id
-        self._client = client
-        self._state = None
-        self._device_state_attributes = {}
+        super().__init__(coordinator, location)
+        self._partition_id = int(partition_id)
+        self._partition = self._location.partitions[partition_id]
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._device_state_attributes
-
-    def update(self):
-        """Return the state of the device."""
-        status = self._client.get_armed_status(self._name)
-        attr = {
-            "location_name": self._name,
-            "location_id": self._location_id,
-            "ac_loss": self._client.ac_loss,
-            "low_battery": self._client.low_battery,
-            "triggered_source": None,
-            "triggered_zone": None,
-        }
-
-        if status == self._client.DISARMED:
-            state = STATE_ALARM_DISARMED
-        elif status == self._client.DISARMED_BYPASS:
-            state = STATE_ALARM_DISARMED
-        elif status == self._client.ARMED_STAY:
-            state = STATE_ALARM_ARMED_HOME
-        elif status == self._client.ARMED_STAY_INSTANT:
-            state = STATE_ALARM_ARMED_HOME
-        elif status == self._client.ARMED_STAY_INSTANT_BYPASS:
-            state = STATE_ALARM_ARMED_HOME
-        elif status == self._client.ARMED_STAY_NIGHT:
-            state = STATE_ALARM_ARMED_NIGHT
-        elif status == self._client.ARMED_AWAY:
-            state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_AWAY_BYPASS:
-            state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_AWAY_INSTANT:
-            state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_AWAY_INSTANT_BYPASS:
-            state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_CUSTOM_BYPASS:
-            state = STATE_ALARM_ARMED_CUSTOM_BYPASS
-        elif status == self._client.ARMING:
-            state = STATE_ALARM_ARMING
-        elif status == self._client.DISARMING:
-            state = STATE_ALARM_DISARMING
-        elif status == self._client.ALARMING:
-            state = STATE_ALARM_TRIGGERED
-            attr["triggered_source"] = "Police/Medical"
-        elif status == self._client.ALARMING_FIRE_SMOKE:
-            state = STATE_ALARM_TRIGGERED
-            attr["triggered_source"] = "Fire/Smoke"
-        elif status == self._client.ALARMING_CARBON_MONOXIDE:
-            state = STATE_ALARM_TRIGGERED
-            attr["triggered_source"] = "Carbon Monoxide"
+        """
+        Set unique_id to location_id for partition 1 to avoid breaking change
+        for most users with new support for partitions.
+        Add _# for partition 2 and beyond.
+        """
+        if int(partition_id) == 1:
+            self._attr_name = None
+            self._attr_unique_id = str(location.location_id)
         else:
-            logging.info(
-                "Total Connect Client returned unknown status code: %s", status
-            )
-            state = None
+            self._attr_translation_key = "partition"
+            self._attr_translation_placeholders = {"partition_id": str(partition_id)}
+            self._attr_unique_id = f"{location.location_id}_{partition_id}"
 
-        self._state = state
-        self._device_state_attributes = attr
+        self._attr_code_arm_required = require_code
+        if require_code:
+            self._attr_code_format = CodeFormat.NUMBER
 
-    def alarm_disarm(self, code=None):
+    @property
+    def alarm_state(self) -> AlarmControlPanelState | None:
+        """Return the state of the device."""
+        state: AlarmControlPanelState | None = None
+        if self._partition.arming_state.is_disarmed():
+            state = AlarmControlPanelState.DISARMED
+        elif self._partition.arming_state.is_armed_night():
+            state = AlarmControlPanelState.ARMED_NIGHT
+        elif self._partition.arming_state.is_armed_home():
+            state = AlarmControlPanelState.ARMED_HOME
+        elif self._partition.arming_state.is_armed_away():
+            state = AlarmControlPanelState.ARMED_AWAY
+        elif self._partition.arming_state.is_armed_custom_bypass():
+            state = AlarmControlPanelState.ARMED_CUSTOM_BYPASS
+        elif self._partition.arming_state.is_arming():
+            state = AlarmControlPanelState.ARMING
+        elif self._partition.arming_state.is_disarming():
+            state = AlarmControlPanelState.DISARMING
+        elif (
+            self._partition.arming_state.is_triggered_police()
+            or self._partition.arming_state.is_triggered_fire()
+            or self._partition.arming_state.is_triggered_gas()
+        ):
+            state = AlarmControlPanelState.TRIGGERED
+
+        return state
+
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self._client.disarm(self._name)
+        self._check_usercode(code)
+        try:
+            await self.hass.async_add_executor_job(self._disarm)
+        except UsercodeInvalid as error:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="disarm_invalid_code",
+            ) from error
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="disarm_failed",
+                translation_placeholders={"device": self.device.name},
+            ) from error
+        await self.coordinator.async_request_refresh()
 
-    def alarm_arm_home(self, code=None):
+    def _disarm(self) -> None:
+        """Disarm synchronous."""
+        ArmingHelper(self._partition).disarm()
+
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        self._client.arm_stay(self._name)
+        self._check_usercode(code)
+        try:
+            await self.hass.async_add_executor_job(self._arm_home)
+        except UsercodeInvalid as error:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_home_invalid_code",
+            ) from error
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_home_failed",
+                translation_placeholders={"device": self.device.name},
+            ) from error
+        await self.coordinator.async_request_refresh()
 
-    def alarm_arm_away(self, code=None):
+    def _arm_home(self) -> None:
+        """Arm home synchronous."""
+        ArmingHelper(self._partition).arm_stay()
+
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        self._client.arm_away(self._name)
+        self._check_usercode(code)
+        try:
+            await self.hass.async_add_executor_job(self._arm_away)
+        except UsercodeInvalid as error:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_away_invalid_code",
+            ) from error
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_away_failed",
+                translation_placeholders={"device": self.device.name},
+            ) from error
+        await self.coordinator.async_request_refresh()
 
-    def alarm_arm_night(self, code=None):
+    def _arm_away(self) -> None:
+        """Arm away synchronous."""
+        ArmingHelper(self._partition).arm_away()
+
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        self._client.arm_stay_night(self._name)
+        self._check_usercode(code)
+        try:
+            await self.hass.async_add_executor_job(self._arm_night)
+        except UsercodeInvalid as error:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_night_invalid_code",
+            ) from error
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_night_failed",
+                translation_placeholders={"device": self.device.name},
+            ) from error
+        await self.coordinator.async_request_refresh()
+
+    def _arm_night(self) -> None:
+        """Arm night synchronous."""
+        ArmingHelper(self._partition).arm_stay_night()
+
+    async def async_alarm_arm_home_instant(self) -> None:
+        """Send arm home instant command."""
+        try:
+            await self.hass.async_add_executor_job(self._arm_home_instant)
+        except UsercodeInvalid as error:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_home_instant_invalid_code",
+            ) from error
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_home_instant_failed",
+                translation_placeholders={"device": self.device.name},
+            ) from error
+        await self.coordinator.async_request_refresh()
+
+    def _arm_home_instant(self):
+        """Arm home instant synchronous."""
+        ArmingHelper(self._partition).arm_stay_instant()
+
+    async def async_alarm_arm_away_instant(self) -> None:
+        """Send arm away instant command."""
+        try:
+            await self.hass.async_add_executor_job(self._arm_away_instant)
+        except UsercodeInvalid as error:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_away_instant_invalid_code",
+            ) from error
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="arm_away_instant_failed",
+                translation_placeholders={"device": self.device.name},
+            ) from error
+        await self.coordinator.async_request_refresh()
+
+    def _arm_away_instant(self):
+        """Arm away instant synchronous."""
+        ArmingHelper(self._partition).arm_away_instant()
+
+    def _check_usercode(self, code):
+        """Check if the run-time entered code matches configured code."""
+        if (
+            self._attr_code_arm_required
+            and self.coordinator.client.usercodes[self._location.location_id] != code
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="invalid_pin"
+            )

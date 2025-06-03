@@ -1,13 +1,22 @@
 """Support for Ankuoo RecSwitch MS6126 devices."""
 
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from pyrecswitch import RSNetwork, RSNetworkError
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +24,7 @@ DEFAULT_NAME = "RecSwitch {0}"
 
 DATA_RSN = "RSN"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_MAC): vol.All(cv.string, vol.Upper),
@@ -24,7 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the device."""
 
     host = config[CONF_HOST]
@@ -40,7 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([RecSwitchSwitch(device, device_name, mac_address)])
 
 
-class RecSwitchSwitch(SwitchDevice):
+class RecSwitchSwitch(SwitchEntity):
     """Representation of a recswitch device."""
 
     def __init__(self, device, device_name, mac_address):
@@ -67,11 +81,11 @@ class RecSwitchSwitch(SwitchDevice):
         """Return true if switch is on."""
         return self.gpio_state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.async_set_gpio_status(True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self.async_set_gpio_status(False)
 
@@ -84,7 +98,7 @@ class RecSwitchSwitch(SwitchDevice):
         except RSNetworkError as error:
             _LOGGER.error("Setting status to %s: %r", self.name, error)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the current switch status."""
 
         try:

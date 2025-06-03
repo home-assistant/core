@@ -1,180 +1,169 @@
 """Support for the Google speech service."""
-import asyncio
+
+from __future__ import annotations
+
+from io import BytesIO
 import logging
-import re
+from typing import Any
 
-import aiohttp
-from aiohttp.hdrs import REFERER, USER_AGENT
-import async_timeout
-from gtts_token import gtts_token
+from gtts import gTTS, gTTSError
 import voluptuous as vol
-import yarl
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+    TextToSpeechEntity,
+    TtsAudioType,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import (
+    CONF_TLD,
+    DEFAULT_LANG,
+    DEFAULT_TLD,
+    MAP_LANG_TLD,
+    SUPPORT_LANGUAGES,
+    SUPPORT_TLD,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-GOOGLE_SPEECH_URL = "https://translate.google.com/translate_tts"
-MESSAGE_SIZE = 148
+SUPPORT_OPTIONS = ["tld"]
 
-SUPPORT_LANGUAGES = [
-    "af",
-    "sq",
-    "ar",
-    "hy",
-    "bn",
-    "ca",
-    "zh",
-    "zh-cn",
-    "zh-tw",
-    "zh-yue",
-    "hr",
-    "cs",
-    "da",
-    "nl",
-    "en",
-    "en-au",
-    "en-uk",
-    "en-us",
-    "eo",
-    "fi",
-    "fr",
-    "de",
-    "el",
-    "hi",
-    "hu",
-    "is",
-    "id",
-    "it",
-    "ja",
-    "ko",
-    "la",
-    "lv",
-    "mk",
-    "no",
-    "pl",
-    "pt",
-    "pt-br",
-    "ro",
-    "ru",
-    "sr",
-    "sk",
-    "es",
-    "es-es",
-    "es-mx",
-    "es-us",
-    "sw",
-    "sv",
-    "ta",
-    "th",
-    "tr",
-    "vi",
-    "cy",
-    "uk",
-    "bg-BG",
-]
-
-DEFAULT_LANG = "en"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
+        vol.Optional(CONF_TLD, default=DEFAULT_TLD): vol.In(SUPPORT_TLD),
+    }
 )
 
 
-async def async_get_engine(hass, config, discovery_info=None):
+async def async_get_engine(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> GoogleProvider:
     """Set up Google speech component."""
-    return GoogleProvider(hass, config[CONF_LANG])
+    return GoogleProvider(hass, config[CONF_LANG], config[CONF_TLD])
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Google Translate speech platform via config entry."""
+    default_language = config_entry.data[CONF_LANG]
+    default_tld = config_entry.data[CONF_TLD]
+    async_add_entities([GoogleTTSEntity(config_entry, default_language, default_tld)])
+
+
+class GoogleTTSEntity(TextToSpeechEntity):
+    """The Google speech API entity."""
+
+    def __init__(self, config_entry: ConfigEntry, lang: str, tld: str) -> None:
+        """Init Google TTS service."""
+        if lang in MAP_LANG_TLD:
+            self._lang = MAP_LANG_TLD[lang].lang
+            self._tld = MAP_LANG_TLD[lang].tld
+        else:
+            self._lang = lang
+            self._tld = tld
+        self._attr_name = f"Google Translate {self._lang} {self._tld}"
+        self._attr_unique_id = config_entry.entry_id
+
+    @property
+    def default_language(self) -> str:
+        """Return the default language."""
+        return self._lang
+
+    @property
+    def supported_languages(self) -> list[str]:
+        """Return list of supported languages."""
+        return SUPPORT_LANGUAGES
+
+    @property
+    def supported_options(self) -> list[str]:
+        """Return a list of supported options."""
+        return SUPPORT_OPTIONS
+
+    def get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any] | None = None
+    ) -> TtsAudioType:
+        """Load TTS from google."""
+        tld = self._tld
+        if language in MAP_LANG_TLD:
+            tld_language = MAP_LANG_TLD[language]
+            tld = tld_language.tld
+            language = tld_language.lang
+        if options is not None and "tld" in options:
+            tld = options["tld"]
+
+        tts = gTTS(text=message, lang=language, tld=tld)
+        mp3_data = BytesIO()
+
+        try:
+            tts.write_to_fp(mp3_data)
+        except gTTSError as exc:
+            _LOGGER.debug(
+                "Error during processing of TTS request %s", exc, exc_info=True
+            )
+            raise HomeAssistantError(exc) from exc
+
+        return "mp3", mp3_data.getvalue()
 
 
 class GoogleProvider(Provider):
     """The Google speech API provider."""
 
-    def __init__(self, hass, lang):
+    def __init__(self, hass: HomeAssistant, lang: str, tld: str) -> None:
         """Init Google TTS service."""
         self.hass = hass
-        self._lang = lang
-        self.headers = {
-            REFERER: "http://translate.google.com/",
-            USER_AGENT: (
-                "Mozilla/5.0 (Windows NT 10.0; WOW64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/47.0.2526.106 Safari/537.36"
-            ),
-        }
-        self.name = "Google"
+        if lang in MAP_LANG_TLD:
+            self._lang = MAP_LANG_TLD[lang].lang
+            self._tld = MAP_LANG_TLD[lang].tld
+        else:
+            self._lang = lang
+            self._tld = tld
+        self.name = "Google Translate"
 
     @property
-    def default_language(self):
+    def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    @property
+    def supported_options(self) -> list[str]:
+        """Return a list of supported options."""
+        return SUPPORT_OPTIONS
+
+    def get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
         """Load TTS from google."""
+        tld = self._tld
+        if language in MAP_LANG_TLD:
+            tld = MAP_LANG_TLD[language].tld
+            language = MAP_LANG_TLD[language].lang
+        if "tld" in options:
+            tld = options["tld"]
+        tts = gTTS(text=message, lang=language, tld=tld)
+        mp3_data = BytesIO()
 
-        token = gtts_token.Token()
-        websession = async_get_clientsession(self.hass)
-        message_parts = self._split_message_to_parts(message)
+        try:
+            tts.write_to_fp(mp3_data)
+        except gTTSError:
+            _LOGGER.exception("Error during processing of TTS request")
+            return None, None
 
-        data = b""
-        for idx, part in enumerate(message_parts):
-            part_token = await self.hass.async_add_job(token.calculate_token, part)
-
-            url_param = {
-                "ie": "UTF-8",
-                "tl": language,
-                "q": yarl.URL(part).raw_path,
-                "tk": part_token,
-                "total": len(message_parts),
-                "idx": idx,
-                "client": "tw-ob",
-                "textlen": len(part),
-            }
-
-            try:
-                with async_timeout.timeout(10):
-                    request = await websession.get(
-                        GOOGLE_SPEECH_URL, params=url_param, headers=self.headers
-                    )
-
-                    if request.status != 200:
-                        _LOGGER.error(
-                            "Error %d on load URL %s", request.status, request.url
-                        )
-                        return None, None
-                    data += await request.read()
-
-            except (asyncio.TimeoutError, aiohttp.ClientError):
-                _LOGGER.error("Timeout for google speech")
-                return None, None
-
-        return "mp3", data
-
-    @staticmethod
-    def _split_message_to_parts(message):
-        """Split message into single parts."""
-        if len(message) <= MESSAGE_SIZE:
-            return [message]
-
-        punc = "!()[]?.,;:"
-        punc_list = [re.escape(c) for c in punc]
-        pattern = "|".join(punc_list)
-        parts = re.split(pattern, message)
-
-        def split_by_space(fullstring):
-            """Split a string by space."""
-            if len(fullstring) > MESSAGE_SIZE:
-                idx = fullstring.rfind(" ", 0, MESSAGE_SIZE)
-                return [fullstring[:idx]] + split_by_space(fullstring[idx:])
-            return [fullstring]
-
-        msg_parts = []
-        for part in parts:
-            msg_parts += split_by_space(part)
-
-        return [msg for msg in msg_parts if len(msg) > 0]
+        return "mp3", mp3_data.getvalue()

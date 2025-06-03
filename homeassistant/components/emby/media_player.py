@@ -1,21 +1,18 @@
 """Support to interface with the Emby API."""
+
+from __future__ import annotations
+
 import logging
 
 from pyemby import EmbyServer
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_STOP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -25,37 +22,32 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
 MEDIA_TYPE_TRAILER = "trailer"
-MEDIA_TYPE_GENERIC_VIDEO = "video"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8096
 DEFAULT_SSL_PORT = 8920
 DEFAULT_SSL = False
 
-_LOGGER = logging.getLogger(__name__)
-
 SUPPORT_EMBY = (
-    SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_STOP
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.PLAY
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -65,13 +57,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Emby platform."""
 
     host = config.get(CONF_HOST)
     key = config.get(CONF_API_KEY)
     port = config.get(CONF_PORT)
-    ssl = config.get(CONF_SSL)
+    ssl = config[CONF_SSL]
 
     if port is None:
         port = DEFAULT_SSL_PORT if ssl else DEFAULT_PORT
@@ -80,15 +77,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     emby = EmbyServer(host, key, port, ssl, hass.loop)
 
-    active_emby_devices = {}
-    inactive_emby_devices = {}
+    active_emby_devices: dict[str, EmbyDevice] = {}
+    inactive_emby_devices: dict[str, EmbyDevice] = {}
 
     @callback
     def device_update_callback(data):
         """Handle devices which are added to Emby."""
         new_devices = []
         active_devices = []
-        for dev_id in emby.devices:
+        for dev_id, dev in emby.devices.items():
             active_devices.append(dev_id)
             if (
                 dev_id not in active_emby_devices
@@ -98,12 +95,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 active_emby_devices[dev_id] = new
                 new_devices.append(new)
 
-            elif dev_id in inactive_emby_devices:
-                if emby.devices[dev_id].state != "Off":
-                    add = inactive_emby_devices.pop(dev_id)
-                    active_emby_devices[dev_id] = add
-                    _LOGGER.debug("Showing %s, item: %s", dev_id, add)
-                    add.set_available(True)
+            elif dev_id in inactive_emby_devices and dev.state != "Off":
+                add = inactive_emby_devices.pop(dev_id)
+                active_emby_devices[dev_id] = add
+                _LOGGER.debug("Showing %s, item: %s", dev_id, add)
+                add.set_available(True)
 
         if new_devices:
             _LOGGER.debug("Adding new devices: %s", new_devices)
@@ -134,8 +130,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_emby)
 
 
-class EmbyDevice(MediaPlayerDevice):
+class EmbyDevice(MediaPlayerEntity):
     """Representation of an Emby device."""
+
+    _attr_should_poll = False
 
     def __init__(self, emby, device_id):
         """Initialize the Emby device."""
@@ -144,12 +142,12 @@ class EmbyDevice(MediaPlayerDevice):
         self.device_id = device_id
         self.device = self.emby.devices[self.device_id]
 
-        self._available = True
-
         self.media_status_last_position = None
         self.media_status_received = None
 
-    async def async_added_to_hass(self):
+        self._attr_unique_id = device_id
+
+    async def async_added_to_hass(self) -> None:
         """Register callback."""
         self.emby.add_update_callback(self.async_update_callback, self.device_id)
 
@@ -166,21 +164,11 @@ class EmbyDevice(MediaPlayerDevice):
             self.media_status_last_position = None
             self.media_status_received = None
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    def set_available(self, value):
+    def set_available(self, value: bool) -> None:
         """Set available property."""
-        self._available = value
-
-    @property
-    def unique_id(self):
-        """Return the id of this emby client."""
-        return self.device_id
+        self._attr_available = value
 
     @property
     def supports_remote_control(self):
@@ -190,27 +178,21 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return (
-            f"Emby - {self.device.client} - {self.device.name}" or DEVICE_DEFAULT_NAME
-        )
+        return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
 
     @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
-
-    @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         state = self.device.state
         if state == "Paused":
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
         if state == "Playing":
-            return STATE_PLAYING
+            return MediaPlayerState.PLAYING
         if state == "Idle":
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
         if state == "Off":
-            return STATE_OFF
+            return MediaPlayerState.OFF
+        return None
 
     @property
     def app_name(self):
@@ -224,23 +206,23 @@ class EmbyDevice(MediaPlayerDevice):
         return self.device.media_id
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | str | None:
         """Content type of current playing media."""
         media_type = self.device.media_type
         if media_type == "Episode":
-            return MEDIA_TYPE_TVSHOW
+            return MediaType.TVSHOW
         if media_type == "Movie":
-            return MEDIA_TYPE_MOVIE
+            return MediaType.MOVIE
         if media_type == "Trailer":
             return MEDIA_TYPE_TRAILER
         if media_type == "Music":
-            return MEDIA_TYPE_MUSIC
+            return MediaType.MUSIC
         if media_type == "Video":
-            return MEDIA_TYPE_GENERIC_VIDEO
+            return MediaType.VIDEO
         if media_type == "Audio":
-            return MEDIA_TYPE_MUSIC
+            return MediaType.MUSIC
         if media_type == "TvChannel":
-            return MEDIA_TYPE_CHANNEL
+            return MediaType.CHANNEL
         return None
 
     @property
@@ -255,8 +237,7 @@ class EmbyDevice(MediaPlayerDevice):
 
     @property
     def media_position_updated_at(self):
-        """
-        When was the position of the current playing media valid.
+        """When was the position of the current playing media valid.
 
         Returns value from homeassistant.util.dt.utcnow().
         """
@@ -303,50 +284,32 @@ class EmbyDevice(MediaPlayerDevice):
         return self.device.media_album_artist
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.supports_remote_control:
             return SUPPORT_EMBY
-        return None
+        return MediaPlayerEntityFeature(0)
 
-    def async_media_play(self):
-        """Play media.
+    async def async_media_play(self) -> None:
+        """Play media."""
+        await self.device.media_play()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_play()
+    async def async_media_pause(self) -> None:
+        """Pause the media player."""
+        await self.device.media_pause()
 
-    def async_media_pause(self):
-        """Pause the media player.
+    async def async_media_stop(self) -> None:
+        """Stop the media player."""
+        await self.device.media_stop()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_pause()
+    async def async_media_next_track(self) -> None:
+        """Send next track command."""
+        await self.device.media_next()
 
-    def async_media_stop(self):
-        """Stop the media player.
+    async def async_media_previous_track(self) -> None:
+        """Send next track command."""
+        await self.device.media_previous()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_stop()
-
-    def async_media_next_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_next()
-
-    def async_media_previous_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_previous()
-
-    def async_media_seek(self, position):
-        """Send seek command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.device.media_seek(position)
+    async def async_media_seek(self, position: float) -> None:
+        """Send seek command."""
+        await self.device.media_seek(position)

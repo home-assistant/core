@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up Tasmota?"
+      },
+      "config": {
+        "data": {
+          "discovery_prefix": "Discovery topic prefix"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "invalid_discovery_topic": "Invalid discovery topic prefix."
+    }
+  },
+  "issues": {
+    "topic_duplicated": {
+      "title": "Several Tasmota devices are sharing the same topic",
+      "description": "Several Tasmota devices are sharing the topic {topic}.\n\nTasmota devices with this problem: {offenders}."
+    },
+    "topic_no_prefix": {
+      "title": "Tasmota device {name} has an invalid MQTT topic",
+      "description": "Tasmota device {name} with IP {ip} does not include `%prefix%` in its FullTopic.\n\nEntities for this device are disabled until the configuration has been corrected."
+    }
+  }
+}

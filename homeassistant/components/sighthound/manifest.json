@@ -1,0 +1,10 @@
+{
+  "domain": "sighthound",
+  "name": "Sighthound",
+  "codeowners": ["@robmarkcole"],
+  "documentation": "https://www.home-assistant.io/integrations/sighthound",
+  "iot_class": "cloud_polling",
+  "loggers": ["simplehound"],
+  "quality_scale": "legacy",
+  "requirements": ["Pillow==11.2.1", "simplehound==0.3"]
+}

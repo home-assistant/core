@@ -1,0 +1,165 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To get an API key, sign up at [Tomorrow.io](https://app.tomorrow.io/signup).",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location": "[%key:common::config_flow::data::location%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "rate_limited": "Currently rate limited, please try again later."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update Tomorrow.io Options",
+        "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
+        "data": {
+          "timestep": "Min. Between NowCast Forecasts"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "feels_like": {
+        "name": "Feels like"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "cloud_base": {
+        "name": "Cloud base"
+      },
+      "cloud_ceiling": {
+        "name": "Cloud ceiling"
+      },
+      "cloud_cover": {
+        "name": "Cloud cover"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "precipitation_type": {
+        "name": "Precipitation type",
+        "state": {
+          "none": "None",
+          "rain": "Rain",
+          "snow": "Snow",
+          "freezing_rain": "Freezing rain",
+          "ice_pellets": "Ice pellets"
+        }
+      },
+      "us_epa_air_quality_index": {
+        "name": "US EPA air quality index"
+      },
+      "primary_pollutant": {
+        "name": "US EPA primary pollutant",
+        "state": {
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+          "o3": "[%key:component::sensor::entity_component::ozone::name%]",
+          "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+        }
+      },
+      "health_concern": {
+        "name": "US EPA health concern",
+        "state": {
+          "good": "Good",
+          "moderate": "Moderate",
+          "unhealthy_for_sensitive_groups": "Unhealthy for sensitive groups",
+          "unhealthy": "Unhealthy",
+          "very_unhealthy": "Very unhealthy",
+          "hazardous": "Hazardous"
+        }
+      },
+      "china_mep_air_quality_index": {
+        "name": "China MEP air quality index"
+      },
+      "china_mep_primary_pollutant": {
+        "name": "China MEP primary pollutant",
+        "state": {
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+          "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+          "o3": "[%key:component::sensor::entity_component::ozone::name%]",
+          "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+          "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+        }
+      },
+      "china_mep_health_concern": {
+        "name": "China MEP health concern",
+        "state": {
+          "good": "[%key:component::tomorrowio::entity::sensor::health_concern::state::good%]",
+          "moderate": "[%key:component::tomorrowio::entity::sensor::health_concern::state::moderate%]",
+          "unhealthy_for_sensitive_groups": "[%key:component::tomorrowio::entity::sensor::health_concern::state::unhealthy_for_sensitive_groups%]",
+          "unhealthy": "[%key:component::tomorrowio::entity::sensor::health_concern::state::unhealthy%]",
+          "very_unhealthy": "[%key:component::tomorrowio::entity::sensor::health_concern::state::very_unhealthy%]",
+          "hazardous": "[%key:component::tomorrowio::entity::sensor::health_concern::state::hazardous%]"
+        }
+      },
+      "pollen_index": {
+        "name": "Tree pollen index",
+        "state": {
+          "none": "None",
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
+      "weed_pollen_index": {
+        "name": "Weed pollen index",
+        "state": {
+          "none": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::none%]",
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
+      "grass_pollen_index": {
+        "name": "Grass pollen index",
+        "state": {
+          "none": "[%key:component::tomorrowio::entity::sensor::pollen_index::state::none%]",
+          "very_low": "[%key:common::state::very_low%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]"
+        }
+      },
+      "fire_index": {
+        "name": "Fire index"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "uv_radiation_health_concern": {
+        "name": "UV radiation health concern",
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "moderate": "Moderate",
+          "high": "[%key:common::state::high%]",
+          "very_high": "[%key:common::state::very_high%]",
+          "extreme": "Extreme"
+        }
+      }
+    }
+  }
+}

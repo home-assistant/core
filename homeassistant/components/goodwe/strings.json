@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "GoodWe inverter",
+        "description": "Connect to inverter",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        }
+      }
+    },
+    "error": {
+      "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "synchronize_clock": {
+        "name": "Synchronize inverter clock"
+      }
+    },
+    "number": {
+      "grid_export_limit": {
+        "name": "Grid export limit"
+      },
+      "battery_discharge_depth": {
+        "name": "Depth of discharge (on-grid)"
+      }
+    },
+    "select": {
+      "operation_mode": {
+        "name": "Inverter operation mode",
+        "state": {
+          "general": "General mode",
+          "off_grid": "Off-grid mode",
+          "backup": "Backup mode",
+          "eco": "Eco mode",
+          "peak_shaving": "Peak shaving mode",
+          "eco_charge": "Eco charge mode",
+          "eco_discharge": "Eco discharge mode"
+        }
+      }
+    }
+  }
+}

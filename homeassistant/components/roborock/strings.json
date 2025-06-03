@@ -1,0 +1,504 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter your Roborock email address.",
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "username": "The email address used to sign in to the Roborock app."
+        }
+      },
+      "code": {
+        "description": "Type the verification code sent to your email",
+        "data": {
+          "code": "Verification code"
+        },
+        "data_description": {
+          "code": "The verification code sent to your email."
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Roborock integration needs to re-authenticate your account"
+      }
+    },
+    "error": {
+      "invalid_code": "The code you entered was incorrect, please check it and try again.",
+      "invalid_email": "There is no account associated with the email you entered, please try again.",
+      "invalid_email_format": "There is an issue with the formatting of your email - please try again.",
+      "too_frequent_code_requests": "You have attempted to request too many codes. Try again later.",
+      "unknown_roborock": "There was an unknown Roborock exception - please check your logs.",
+      "unknown_url": "There was an issue determining the correct URL for your Roborock account - please check your logs.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "Wrong account: Please authenticate with the right account."
+    }
+  },
+  "options": {
+    "step": {
+      "drawables": {
+        "description": "Specify which features to draw on the map.",
+        "data": {
+          "charger": "Charger",
+          "cleaned_area": "Cleaned area",
+          "goto_path": "Go-to path",
+          "ignored_obstacles": "Ignored obstacles",
+          "ignored_obstacles_with_photo": "Ignored obstacles with photo",
+          "mop_path": "Mop path",
+          "no_carpet_zones": "No carpet zones",
+          "no_go_zones": "No-go zones",
+          "no_mopping_zones": "No mopping zones",
+          "obstacles": "Obstacles",
+          "obstacles_with_photo": "Obstacles with photo",
+          "path": "Path",
+          "predicted_path": "Predicted path",
+          "room_names": "Room names",
+          "vacuum_position": "Vacuum position",
+          "virtual_walls": "Virtual walls",
+          "zones": "Zones"
+        },
+        "data_description": {
+          "charger": "Show the charger on the map.",
+          "cleaned_area": "Show the area cleaned on the map.",
+          "goto_path": "Show the go-to path on the map.",
+          "ignored_obstacles": "Show ignored obstacles on the map.",
+          "ignored_obstacles_with_photo": "Show ignored obstacles with photos on the map.",
+          "mop_path": "Show the mop path on the map.",
+          "no_carpet_zones": "Show the no carpet zones on the map.",
+          "no_go_zones": "Show the no-go zones on the map.",
+          "no_mopping_zones": "Show the no-mop zones on the map.",
+          "obstacles": "Show obstacles on the map.",
+          "obstacles_with_photo": "Show obstacles with photos on the map.",
+          "path": "Show the path on the map.",
+          "predicted_path": "Show the predicted path on the map.",
+          "room_names": "Show room names on the map.",
+          "vacuum_position": "Show the vacuum position on the map.",
+          "virtual_walls": "Show virtual walls on the map.",
+          "zones": "Show zones on the map."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "in_cleaning": {
+        "name": "Cleaning"
+      },
+      "mop_attached": {
+        "name": "Mop attached"
+      },
+      "mop_drying_status": {
+        "name": "Mop drying"
+      },
+      "water_box_attached": {
+        "name": "Water box attached"
+      },
+      "water_shortage": {
+        "name": "Water shortage"
+      }
+    },
+    "button": {
+      "reset_sensor_consumable": {
+        "name": "Reset sensor consumable"
+      },
+      "reset_air_filter_consumable": {
+        "name": "Reset air filter consumable"
+      },
+      "reset_side_brush_consumable": {
+        "name": "Reset side brush consumable"
+      },
+      "reset_main_brush_consumable": {
+        "name": "Reset main brush consumable"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volume"
+      }
+    },
+    "sensor": {
+      "a01_error": {
+        "name": "Error",
+        "state": {
+          "none": "[%key:component::roborock::entity::sensor::vacuum_error::state::none%]",
+          "dirty_tank_full": "Dirty tank full",
+          "water_level_sensor_stuck": "Water level sensor stuck.",
+          "clean_tank_empty": "Clean tank empty",
+          "clean_head_entangled": "Cleaning head entangled",
+          "clean_head_too_hot": "Cleaning head too hot.",
+          "fan_protection_e5": "Fan protection",
+          "cleaning_head_blocked": "Cleaning head blocked",
+          "temperature_protection": "Temperature protection",
+          "fan_protection_e4": "[%key:component::roborock::entity::sensor::a01_error::state::fan_protection_e5%]",
+          "fan_protection_e9": "[%key:component::roborock::entity::sensor::a01_error::state::fan_protection_e5%]",
+          "battery_temperature_protection_e0": "[%key:component::roborock::entity::sensor::a01_error::state::temperature_protection%]",
+          "battery_temperature_protection": "Battery temperature protection",
+          "battery_temperature_protection_2": "[%key:component::roborock::entity::sensor::a01_error::state::battery_temperature_protection%]",
+          "power_adapter_error": "Power adapter error",
+          "dirty_charging_contacts": "Clean charging contacts",
+          "low_battery": "[%key:component::roborock::entity::sensor::vacuum_error::state::low_battery%]",
+          "battery_under_10": "Battery under 10%"
+        }
+      },
+      "a01_status": {
+        "name": "Status",
+        "state": {
+          "unknown": "[%key:component::roborock::entity::sensor::status::state::unknown%]",
+          "fetching": "Fetching",
+          "fetch_failed": "Fetch failed",
+          "updating": "[%key:component::roborock::entity::sensor::status::state::updating%]",
+          "washing": "Washing",
+          "ready": "Ready",
+          "charging": "[%key:common::state::charging%]",
+          "mop_washing": "Washing mop",
+          "self_clean_cleaning": "Self-clean cleaning",
+          "self_clean_deep_cleaning": "Self-clean deep cleaning",
+          "self_clean_rinsing": "Self-clean rinsing",
+          "self_clean_dehydrating": "Self-clean drying",
+          "drying": "Drying",
+          "ventilating": "Ventilating",
+          "reserving": "Reserving",
+          "mop_washing_paused": "Mop washing paused",
+          "dusting_mode": "Dusting mode"
+        }
+      },
+      "brush_remaining": {
+        "name": "Roller left"
+      },
+      "cleaning_area": {
+        "name": "Cleaning area"
+      },
+      "cleaning_time": {
+        "name": "Cleaning time"
+      },
+      "clean_percent": {
+        "name": "Cleaning progress"
+      },
+      "countdown": {
+        "name": "Countdown"
+      },
+      "current_room": {
+        "name": "Current room"
+      },
+      "dock_error": {
+        "name": "Dock error",
+        "state": {
+          "ok": "Ok",
+          "duct_blockage": "Duct blockage",
+          "water_empty": "Water empty",
+          "waste_water_tank_full": "Waste water tank full",
+          "dirty_tank_latch_open": "Dirty tank latch open",
+          "no_dustbin": "No dustbin",
+          "cleaning_tank_full_or_blocked": "Cleaning tank full or blocked"
+        }
+      },
+      "main_brush_time_left": {
+        "name": "Main brush time left"
+      },
+      "mop_drying_remaining_time": {
+        "name": "Mop drying remaining time"
+      },
+      "last_clean_start": {
+        "name": "Last clean begin"
+      },
+      "last_clean_end": {
+        "name": "Last clean end"
+      },
+      "side_brush_time_left": {
+        "name": "Side brush time left"
+      },
+      "filter_time_left": {
+        "name": "Filter time left"
+      },
+      "sensor_time_left": {
+        "name": "Sensor time left"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "starting": "Starting",
+          "charger_disconnected": "Charger disconnected",
+          "idle": "[%key:common::state::idle%]",
+          "remote_control_active": "Remote control active",
+          "cleaning": "Cleaning",
+          "returning_home": "Returning home",
+          "manual_mode": "Manual mode",
+          "charging": "[%key:common::state::charging%]",
+          "charging_problem": "Charging problem",
+          "paused": "[%key:common::state::paused%]",
+          "spot_cleaning": "Spot cleaning",
+          "error": "[%key:common::state::error%]",
+          "shutting_down": "Shutting down",
+          "updating": "Updating",
+          "docking": "Docking",
+          "going_to_target": "Going to target",
+          "zoned_cleaning": "Zoned cleaning",
+          "segment_cleaning": "Segment cleaning",
+          "emptying_the_bin": "Emptying the bin",
+          "washing_the_mop": "Washing the mop",
+          "going_to_wash_the_mop": "Going to wash the mop",
+          "charging_complete": "Charging complete",
+          "device_offline": "Device offline",
+          "unknown": "Unknown",
+          "locked": "Locked",
+          "air_drying_stopping": "Air drying stopping",
+          "egg_attack": "Cupid mode",
+          "mapping": "Mapping"
+        }
+      },
+      "total_cleaning_time": {
+        "name": "Total cleaning time"
+      },
+      "total_cleaning_area": {
+        "name": "Total cleaning area"
+      },
+      "total_cleaning_count": {
+        "name": "Total cleaning count"
+      },
+      "vacuum_error": {
+        "name": "Vacuum error",
+        "state": {
+          "none": "None",
+          "lidar_blocked": "Lidar blocked",
+          "bumper_stuck": "Bumper stuck",
+          "wheels_suspended": "Wheels suspended",
+          "cliff_sensor_error": "Cliff sensor error",
+          "main_brush_jammed": "Main brush jammed",
+          "side_brush_jammed": "Side brush jammed",
+          "wheels_jammed": "Wheels jammed",
+          "robot_trapped": "Robot trapped",
+          "no_dustbin": "No dustbin",
+          "low_battery": "Low battery",
+          "charging_error": "Charging error",
+          "battery_error": "Battery error",
+          "wall_sensor_dirty": "Wall sensor dirty",
+          "robot_tilted": "Robot tilted",
+          "side_brush_error": "Side brush error",
+          "fan_error": "Fan error",
+          "vertical_bumper_pressed": "Vertical bumper pressed",
+          "dock_locator_error": "Dock locator error",
+          "return_to_dock_fail": "Return to dock fail",
+          "nogo_zone_detected": "No-go zone detected",
+          "vibrarise_jammed": "VibraRise jammed",
+          "robot_on_carpet": "Robot on carpet",
+          "filter_blocked": "Filter blocked",
+          "invisible_wall_detected": "Invisible wall detected",
+          "cannot_cross_carpet": "Cannot cross carpet",
+          "internal_error": "Internal error",
+          "strainer_error": "Filter is wet or blocked",
+          "compass_error": "Strong magnetic field detected",
+          "dock": "Dock not connected to power",
+          "visual_sensor": "Camera error",
+          "light_touch": "Wall sensor error",
+          "collect_dust_error_3": "Clean auto-empty dock",
+          "collect_dust_error_4": "Auto empty dock voltage error",
+          "mopping_roller_1": "Wash roller may be jammed",
+          "mopping_roller_error_2": "Wash roller not lowered properly",
+          "clear_water_box_hoare": "Check the clean water tank",
+          "dirty_water_box_hoare": "Check the dirty water tank",
+          "sink_strainer_hoare": "Reinstall the water filter",
+          "clear_water_box_exception": "Clean water tank empty",
+          "clear_brush_exception": "Check that the water filter has been correctly installed",
+          "clear_brush_exception_2": "Positioning button error",
+          "filter_screen_exception": "Clean the dock water filter",
+          "mopping_roller_2": "[%key:component::roborock::entity::sensor::vacuum_error::state::mopping_roller_1%]",
+          "temperature_protection": "Unit temperature protection"
+        }
+      },
+      "washing_left": {
+        "name": "Washing left"
+      },
+      "zeo_error": {
+        "name": "Error",
+        "state": {
+          "none": "[%key:component::roborock::entity::sensor::vacuum_error::state::none%]",
+          "refill_error": "Refill error",
+          "drain_error": "Drain error",
+          "door_lock_error": "Door lock error",
+          "water_level_error": "Water level error",
+          "inverter_error": "Inverter error",
+          "heating_error": "Heating error",
+          "temperature_error": "Temperature error",
+          "communication_error": "Communication error",
+          "drying_error": "Drying error",
+          "drying_error_e_12": "Drying error E12",
+          "drying_error_e_13": "Drying error E13",
+          "drying_error_e_14": "Drying error E14",
+          "drying_error_e_15": "Drying error E15",
+          "drying_error_e_16": "Drying error E16",
+          "drying_error_water_flow": "Check water flow",
+          "drying_error_restart": "Restart the washer",
+          "spin_error": "Re-arrange clothes"
+        }
+      },
+      "zeo_state": {
+        "name": "State",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "weighing": "Weighing",
+          "soaking": "Soaking",
+          "washing": "Washing",
+          "rinsing": "Rinsing",
+          "spinning": "Spinning",
+          "drying": "Drying",
+          "cooling": "Cooling",
+          "under_delay_start": "Delayed start",
+          "done": "Done"
+        }
+      }
+    },
+    "select": {
+      "mop_mode": {
+        "name": "Mop mode",
+        "state": {
+          "standard": "Standard",
+          "deep": "Deep",
+          "deep_plus": "Deep+",
+          "custom": "Custom",
+          "fast": "Fast",
+          "smart_mode": "SmartPlan"
+        }
+      },
+      "mop_intensity": {
+        "name": "Mop intensity",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:common::state::low%]",
+          "mild": "Mild",
+          "medium": "[%key:common::state::medium%]",
+          "moderate": "Moderate",
+          "max": "Max",
+          "high": "[%key:common::state::high%]",
+          "intense": "Intense",
+          "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
+          "custom_water_flow": "Custom water flow",
+          "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]"
+        }
+      },
+      "selected_map": {
+        "name": "Selected map"
+      },
+      "dust_collection_mode": {
+        "name": "Empty mode",
+        "state": {
+          "smart": "Smart",
+          "light": "Light",
+          "balanced": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::balanced%]",
+          "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]"
+        }
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "dnd_switch": {
+        "name": "Do not disturb"
+      },
+      "off_peak_switch": {
+        "name": "Off-peak charging"
+      },
+      "status_indicator": {
+        "name": "Status indicator light"
+      }
+    },
+    "time": {
+      "dnd_start_time": {
+        "name": "Do not disturb begin"
+      },
+      "dnd_end_time": {
+        "name": "Do not disturb end"
+      },
+      "off_peak_start": {
+        "name": "Off-peak start"
+      },
+      "off_peak_end": {
+        "name": "Off-peak end"
+      }
+    },
+    "vacuum": {
+      "roborock": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "off": "[%key:common::state::off%]",
+              "auto": "[%key:common::state::auto%]",
+              "balanced": "Balanced",
+              "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
+              "gentle": "Gentle",
+              "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]",
+              "max_plus": "Max plus",
+              "medium": "[%key:common::state::medium%]",
+              "quiet": "Quiet",
+              "silent": "Silent",
+              "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
+              "turbo": "Turbo",
+              "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Error while calling {command}"
+    },
+    "home_data_fail": {
+      "message": "Failed to get Roborock home data"
+    },
+    "invalid_credentials": {
+      "message": "Invalid credentials."
+    },
+    "map_failure": {
+      "message": "Something went wrong creating the map"
+    },
+    "position_not_found": {
+      "message": "Robot position not found"
+    },
+    "update_data_fail": {
+      "message": "Failed to update data"
+    },
+    "no_coordinators": {
+      "message": "No devices were able to successfully setup"
+    },
+    "update_options_failed": {
+      "message": "Failed to update Roborock options"
+    },
+    "invalid_user_agreement": {
+      "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."
+    },
+    "no_user_agreement": {
+      "message": "You have not valid user agreement. Open your Roborock app and accept the agreement."
+    }
+  },
+  "services": {
+    "get_maps": {
+      "name": "Get maps",
+      "description": "Retrieves the map and room information of your device."
+    },
+    "set_vacuum_goto_position": {
+      "name": "Go to position",
+      "description": "Sends the vacuum to a specific position.",
+      "fields": {
+        "x": {
+          "name": "X-coordinate",
+          "description": "Coordinates are relative to the dock. x=25500,y=25500 is the dock position."
+        },
+        "y": {
+          "name": "Y-coordinate",
+          "description": "[%key:component::roborock::services::set_vacuum_goto_position::fields::x::description%]"
+        }
+      }
+    },
+    "get_vacuum_current_position": {
+      "name": "Get current position",
+      "description": "Retrieves the current position of the vacuum."
+    }
+  }
+}

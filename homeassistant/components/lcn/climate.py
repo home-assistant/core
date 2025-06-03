@@ -1,145 +1,201 @@
 """Support for LCN climate control."""
 
+from collections.abc import Iterable
+from functools import partial
+from typing import Any, cast
+
 import pypck
 
-from homeassistant.components.climate import ClimateDevice, const
-from homeassistant.const import ATTR_TEMPERATURE, CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.components.climate import (
+    DOMAIN as DOMAIN_CLIMATE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_DOMAIN,
+    CONF_ENTITIES,
+    CONF_SOURCE,
+    CONF_UNIT_OF_MEASUREMENT,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
-from . import LcnDevice
 from .const import (
-    CONF_CONNECTIONS,
+    ADD_ENTITIES_CALLBACKS,
+    CONF_DOMAIN_DATA,
     CONF_LOCKABLE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_SETPOINT,
-    CONF_SOURCE,
-    DATA_LCN,
+    CONF_TARGET_VALUE_LOCKED,
+    DOMAIN,
 )
-from .helpers import get_connection
+from .entity import LcnEntity
+from .helpers import InputType
+
+PARALLEL_UPDATES = 0
 
 
-async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
-):
-    """Set up the LCN climate platform."""
-    if discovery_info is None:
-        return
+def add_lcn_entities(
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    entity_configs: Iterable[ConfigType],
+) -> None:
+    """Add entities for this domain."""
+    entities = [
+        LcnClimate(entity_config, config_entry) for entity_config in entity_configs
+    ]
 
-    devices = []
-    for config in discovery_info:
-        address, connection_id = config[CONF_ADDRESS]
-        addr = pypck.lcn_addr.LcnAddr(*address)
-        connections = hass.data[DATA_LCN][CONF_CONNECTIONS]
-        connection = get_connection(connections, connection_id)
-        address_connection = connection.get_address_conn(addr)
-
-        devices.append(LcnClimate(config, address_connection))
-
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
-class LcnClimate(LcnDevice, ClimateDevice):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up LCN switch entities from a config entry."""
+    add_entities = partial(
+        add_lcn_entities,
+        config_entry,
+        async_add_entities,
+    )
+
+    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+        {DOMAIN_CLIMATE: add_entities}
+    )
+
+    add_entities(
+        (
+            entity_config
+            for entity_config in config_entry.data[CONF_ENTITIES]
+            if entity_config[CONF_DOMAIN] == DOMAIN_CLIMATE
+        ),
+    )
+
+
+class LcnClimate(LcnEntity, ClimateEntity):
     """Representation of a LCN climate device."""
 
-    def __init__(self, config, address_connection):
+    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize of a LCN climate device."""
-        super().__init__(config, address_connection)
+        super().__init__(config, config_entry)
 
-        self.variable = pypck.lcn_defs.Var[config[CONF_SOURCE]]
-        self.setpoint = pypck.lcn_defs.Var[config[CONF_SETPOINT]]
-        self.unit = pypck.lcn_defs.VarUnit.parse(config[CONF_UNIT_OF_MEASUREMENT])
+        self.variable = pypck.lcn_defs.Var[config[CONF_DOMAIN_DATA][CONF_SOURCE]]
+        self.setpoint = pypck.lcn_defs.Var[config[CONF_DOMAIN_DATA][CONF_SETPOINT]]
+        self.unit = pypck.lcn_defs.VarUnit.parse(
+            config[CONF_DOMAIN_DATA][CONF_UNIT_OF_MEASUREMENT]
+        )
 
         self.regulator_id = pypck.lcn_defs.Var.to_set_point_id(self.setpoint)
-        self.is_lockable = config[CONF_LOCKABLE]
-        self._max_temp = config[CONF_MAX_TEMP]
-        self._min_temp = config[CONF_MIN_TEMP]
+        self.is_lockable = config[CONF_DOMAIN_DATA][CONF_LOCKABLE]
+        self.target_value_locked = config[CONF_DOMAIN_DATA].get(
+            CONF_TARGET_VALUE_LOCKED, -1
+        )
+        self._max_temp = config[CONF_DOMAIN_DATA][CONF_MAX_TEMP]
+        self._min_temp = config[CONF_DOMAIN_DATA][CONF_MIN_TEMP]
 
         self._current_temperature = None
         self._target_temperature = None
-        self._is_on = None
+        self._is_on = True
 
-    async def async_added_to_hass(self):
+        self._attr_hvac_modes = [HVACMode.HEAT]
+        if self.is_lockable:
+            self._attr_hvac_modes.append(HVACMode.OFF)
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
+
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self.address_connection.activate_status_request_handler(self.variable)
-        await self.address_connection.activate_status_request_handler(self.setpoint)
+        if not self.device_connection.is_group:
+            await self.device_connection.activate_status_request_handler(self.variable)
+            await self.device_connection.activate_status_request_handler(self.setpoint)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        if not self.device_connection.is_group:
+            await self.device_connection.cancel_status_request_handler(self.variable)
+            await self.device_connection.cancel_status_request_handler(self.setpoint)
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return const.SUPPORT_TARGET_TEMPERATURE
-
-    @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return self.unit.value
+        # Config schema only allows for: UnitOfTemperature.CELSIUS and UnitOfTemperature.FAHRENHEIT
+        if self.unit == pypck.lcn_defs.VarUnit.FAHRENHEIT:
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._current_temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._target_temperature
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
         if self._is_on:
-            return const.HVAC_MODE_HEAT
-        return const.HVAC_MODE_OFF
+            return HVACMode.HEAT
+        return HVACMode.OFF
 
     @property
-    def hvac_modes(self):
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        modes = [const.HVAC_MODE_HEAT]
-        if self.is_lockable:
-            modes.append(const.HVAC_MODE_OFF)
-        return modes
-
-    @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self._max_temp
+        return cast(float, self._max_temp)
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self._min_temp
+        return cast(float, self._min_temp)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == const.HVAC_MODE_HEAT:
+        if hvac_mode == HVACMode.HEAT:
+            if not await self.device_connection.lock_regulator(
+                self.regulator_id, False
+            ):
+                return
             self._is_on = True
-            self.address_connection.lock_regulator(self.regulator_id, False)
-        elif hvac_mode == const.HVAC_MODE_OFF:
+            self.async_write_ha_state()
+        elif hvac_mode == HVACMode.OFF:
+            if not await self.device_connection.lock_regulator(
+                self.regulator_id, True, self.target_value_locked
+            ):
+                return
             self._is_on = False
-            self.address_connection.lock_regulator(self.regulator_id, True)
             self._target_temperature = None
+            self.async_write_ha_state()
 
-        self.async_schedule_update_ha_state()
-
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
+        if not await self.device_connection.var_abs(
+            self.setpoint, temperature, self.unit
+        ):
+            return
         self._target_temperature = temperature
-        self.address_connection.var_abs(
-            self.setpoint, self._target_temperature, self.unit
-        )
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def input_received(self, input_obj):
+    def input_received(self, input_obj: InputType) -> None:
         """Set temperature value when LCN input object is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusVar):
             return
@@ -151,4 +207,4 @@ class LcnClimate(LcnDevice, ClimateDevice):
             if self._is_on:
                 self._target_temperature = input_obj.get_value().to_var_unit(self.unit)
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

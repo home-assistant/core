@@ -1,0 +1,87 @@
+{
+  "nodeId": 52,
+  "index": 0,
+  "installerIcon": 3079,
+  "userIcon": 3079,
+  "status": 1,
+  "ready": true,
+  "deviceClass": {
+    "basic": { "key": 2, "label": "Static Controller" },
+    "generic": { "key": 21, "label": "Multilevel Sensor" },
+    "specific": { "key": 1, "label": "Routing Multilevel Sensor" },
+    "mandatorySupportedCCs": [],
+    "mandatoryControlledCCs": []
+  },
+  "isListening": true,
+  "isFrequentListening": false,
+  "isRouting": true,
+  "maxBaudRate": 40000,
+  "isSecure": false,
+  "version": 4,
+  "isBeaming": true,
+  "manufacturerId": 134,
+  "productId": 100,
+  "productType": 258,
+  "firmwareVersion": "1.12",
+  "zwavePlusVersion": 1,
+  "nodeType": 0,
+  "roleType": 5,
+  "deviceConfig": {
+    "manufacturerId": 134,
+    "manufacturer": "Test",
+    "label": "test",
+    "description": "foo",
+    "devices": [
+      {
+        "productType": "0xffff",
+        "productId": "0xffff"
+      }
+    ],
+    "firmwareVersion": {
+      "min": "1.10",
+      "max": "255.255"
+    },
+    "paramInformation": {
+      "_map": {}
+    }
+  },
+  "label": "test",
+  "neighbors": [1, 32],
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 52,
+      "index": 0,
+      "installerIcon": 3079,
+      "userIcon": 3079,
+      "commandClasses": [
+        {
+          "id": 32,
+          "name": "Basic",
+          "version": 8,
+          "isSecure": false
+        }
+      ]
+    }
+  ],
+  "values": [
+    {
+      "commandClassName": "Basic",
+      "commandClass": 32,
+      "endpoint": 0,
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 99,
+        "label": "Current value"
+      },
+      "value": 255
+    }
+  ],
+  "highestSecurityClass": 7,
+  "isControllerNode": false
+}

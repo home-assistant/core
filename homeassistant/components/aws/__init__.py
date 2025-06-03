@@ -1,17 +1,26 @@
 """Support for Amazon Web Services (AWS)."""
+
 import asyncio
 from collections import OrderedDict
 import logging
 
-import aiobotocore
+from aiobotocore.session import AioSession
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_CREDENTIALS, CONF_NAME, CONF_PROFILE_NAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_CREDENTIALS,
+    CONF_NAME,
+    CONF_PROFILE_NAME,
+    CONF_SERVICE,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.typing import ConfigType
 
 # Loading the config flow file will register the flow
-from . import config_flow  # noqa: F401
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_CONTEXT,
@@ -20,7 +29,6 @@ from .const import (
     CONF_NOTIFY,
     CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
-    CONF_SERVICE,
     CONF_VALIDATE,
     DATA_CONFIG,
     DATA_HASS_CONFIG,
@@ -44,7 +52,7 @@ DEFAULT_CREDENTIAL = [
     {CONF_NAME: "default", CONF_PROFILE_NAME: "default", CONF_VALIDATE: False}
 ]
 
-SUPPORTED_SERVICES = ["lambda", "sns", "sqs"]
+SUPPORTED_SERVICES = ["lambda", "sns", "sqs", "events"]
 
 NOTIFY_PLATFORM_SCHEMA = vol.Schema(
     {
@@ -78,12 +86,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up AWS component."""
     hass.data[DATA_HASS_CONFIG] = config
 
-    conf = config.get(DOMAIN)
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         # create a default conf using default profile
         conf = CONFIG_SCHEMA({ATTR_CREDENTIALS: DEFAULT_CREDENTIAL})
 
@@ -99,13 +106,13 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry.
 
     Validate and save sessions per aws credential.
     """
-    config = hass.data.get(DATA_HASS_CONFIG)
-    conf = hass.data.get(DATA_CONFIG)
+    config = hass.data[DATA_HASS_CONFIG]
+    conf = hass.data[DATA_CONFIG]
 
     if entry.source == config_entries.SOURCE_IMPORT:
         if conf is None:
@@ -122,9 +129,7 @@ async def async_setup_entry(hass, entry):
 
     # validate credentials and create sessions
     validation = True
-    tasks = []
-    for cred in conf[ATTR_CREDENTIALS]:
-        tasks.append(_validate_aws_credentials(hass, cred))
+    tasks = [_validate_aws_credentials(hass, cred) for cred in conf[ATTR_CREDENTIALS]]
     if tasks:
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for index, result in enumerate(results):
@@ -144,7 +149,9 @@ async def async_setup_entry(hass, entry):
     # have to use discovery to load platform.
     for notify_config in conf[CONF_NOTIFY]:
         hass.async_create_task(
-            discovery.async_load_platform(hass, "notify", DOMAIN, notify_config, config)
+            discovery.async_load_platform(
+                hass, Platform.NOTIFY, DOMAIN, notify_config, config
+            )
         )
 
     return validation
@@ -152,22 +159,19 @@ async def async_setup_entry(hass, entry):
 
 async def _validate_aws_credentials(hass, credential):
     """Validate AWS credential config."""
-
     aws_config = credential.copy()
     del aws_config[CONF_NAME]
     del aws_config[CONF_VALIDATE]
 
-    profile = aws_config.get(CONF_PROFILE_NAME)
-
-    if profile is not None:
-        session = aiobotocore.AioSession(profile=profile)
+    if (profile := aws_config.get(CONF_PROFILE_NAME)) is not None:
+        session = AioSession(profile=profile)
         del aws_config[CONF_PROFILE_NAME]
         if CONF_ACCESS_KEY_ID in aws_config:
             del aws_config[CONF_ACCESS_KEY_ID]
         if CONF_SECRET_ACCESS_KEY in aws_config:
             del aws_config[CONF_SECRET_ACCESS_KEY]
     else:
-        session = aiobotocore.AioSession()
+        session = AioSession()
 
     if credential[CONF_VALIDATE]:
         async with session.create_client("iam", **aws_config) as client:

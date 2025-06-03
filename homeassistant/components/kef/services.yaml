@@ -1,0 +1,122 @@
+update_dsp:
+  target:
+    entity:
+      integration: kef
+      domain: media_player
+
+set_mode:
+  target:
+    entity:
+      integration: kef
+      domain: media_player
+
+  fields:
+    desk_mode:
+      selector:
+        boolean:
+    wall_mode:
+      selector:
+        boolean:
+    phase_correction:
+      selector:
+        boolean:
+    high_pass:
+      selector:
+        boolean:
+    sub_polarity:
+      selector:
+        select:
+          options:
+            - "-"
+            - "+"
+    bass_extension:
+      selector:
+        select:
+          options:
+            - "Less"
+            - "Standard"
+            - "Extra"
+
+set_desk_db:
+  target:
+    entity:
+      integration: kef
+      domain: media_player
+  fields:
+    db_value:
+      example: 0.0
+      selector:
+        number:
+          min: -6
+          max: 0
+          step: 0.5
+          unit_of_measurement: dB
+
+set_wall_db:
+  target:
+    entity:
+      integration: kef
+      domain: media_player
+  fields:
+    db_value:
+      selector:
+        number:
+          min: -6
+          max: 0
+          step: 0.5
+          unit_of_measurement: dB
+
+set_treble_db:
+  target:
+    entity:
+      integration: kef
+      domain: media_player
+  fields:
+    db_value:
+      selector:
+        number:
+          min: -2
+          max: 2
+          step: 0.5
+          unit_of_measurement: dB
+
+set_high_hz:
+  target:
+    entity:
+      integration: kef
+      domain: media_player
+  fields:
+    hz_value:
+      selector:
+        number:
+          min: 50
+          max: 120
+          step: 5
+          unit_of_measurement: Hz
+
+set_low_hz:
+  target:
+    entity:
+      integration: kef
+      domain: media_player
+  fields:
+    hz_value:
+      selector:
+        number:
+          min: 40
+          max: 250
+          step: 5
+          unit_of_measurement: Hz
+
+set_sub_db:
+  target:
+    entity:
+      integration: kef
+      domain: media_player
+  fields:
+    db_value:
+      selector:
+        number:
+          min: -10
+          max: 10
+          unit_of_measurement: dB

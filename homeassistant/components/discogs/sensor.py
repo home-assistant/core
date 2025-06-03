@@ -1,4 +1,7 @@
 """Show the amount of records in a user's Discogs collection and its value."""
+
+from __future__ import annotations # Keep this for modern Python syntax
+
 from datetime import timedelta
 import logging
 import random
@@ -6,85 +9,101 @@ import random
 import discogs_client
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    CONF_TOKEN,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA, # Renamed PLATFORM_SCHEMA
+    SensorEntity,
+    SensorEntityDescription, # New import for sensor descriptions
 )
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_TOKEN
+from homeassistant.core import HomeAssistant # New import for HomeAssistant type
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback # New import for callback type
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType # New imports for typing
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_IDENTITY = "identity"
 
-ATTRIBUTION = "Data provided by Discogs"
+# ATTRIBUTION is now typically handled via _attr_attribution in the entity class
+# ATTRIBUTION = "Data provided by Discogs" # Remove this line
 
 DEFAULT_NAME = "Discogs"
 
 ICON_RECORD = "mdi:album"
 ICON_PLAYER = "mdi:record-player"
-ICON_CASH = "mdi:cash" # New icon for monetary values
+ICON_CASH = "mdi:cash"
 UNIT_RECORDS = "records"
-UNIT_CURRENCY = "$" # Assuming USD based on example, Discogs API typically returns currency with value
+UNIT_CURRENCY = "$"
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
 SENSOR_COLLECTION_TYPE = "collection"
 SENSOR_WANTLIST_TYPE = "wantlist"
 SENSOR_RANDOM_RECORD_TYPE = "random_record"
-SENSOR_COLLECTION_VALUE_MIN_TYPE = "collection_value_min" # New sensor type
-SENSOR_COLLECTION_VALUE_MEDIAN_TYPE = "collection_value_median" # New sensor type
-SENSOR_COLLECTION_VALUE_MAX_TYPE = "collection_value_max" # New sensor type
+SENSOR_COLLECTION_VALUE_MIN_TYPE = "collection_value_min"
+SENSOR_COLLECTION_VALUE_MEDIAN_TYPE = "collection_value_median"
+SENSOR_COLLECTION_VALUE_MAX_TYPE = "collection_value_max"
 
-SENSORS = {
-    SENSOR_COLLECTION_TYPE: {
-        "name": "Collection",
-        "icon": ICON_RECORD,
-        "unit_of_measurement": UNIT_RECORDS,
-    },
-    SENSOR_WANTLIST_TYPE: {
-        "name": "Wantlist",
-        "icon": ICON_RECORD,
-        "unit_of_measurement": UNIT_RECORDS,
-    },
-    SENSOR_RANDOM_RECORD_TYPE: {
-        "name": "Random Record",
-        "icon": ICON_PLAYER,
-        "unit_of_measurement": None,
-    },
-    SENSOR_COLLECTION_VALUE_MIN_TYPE: { # New sensor definition
-        "name": "Collection Value (Min)",
-        "icon": ICON_CASH,
-        "unit_of_measurement": UNIT_CURRENCY,
-    },
-    SENSOR_COLLECTION_VALUE_MEDIAN_TYPE: { # New sensor definition
-        "name": "Collection Value (Median)",
-        "icon": ICON_CASH,
-        "unit_of_measurement": UNIT_CURRENCY,
-    },
-    SENSOR_COLLECTION_VALUE_MAX_TYPE: { # New sensor definition
-        "name": "Collection Value (Max)",
-        "icon": ICON_CASH,
-        "unit_of_measurement": UNIT_CURRENCY,
-    },
-}
+# SENSORS dictionary is replaced by SENSOR_TYPES tuple of SensorEntityDescription objects
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_COLLECTION_TYPE,
+        name="Collection",
+        icon=ICON_RECORD,
+        native_unit_of_measurement=UNIT_RECORDS,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_WANTLIST_TYPE,
+        name="Wantlist",
+        icon=ICON_RECORD,
+        native_unit_of_measurement=UNIT_RECORDS,
+    ),
+    SensorEntityDescription(
+        key=SENSOR_RANDOM_RECORD_TYPE,
+        name="Random Record",
+        icon=ICON_PLAYER,
+        # unit_of_measurement is None, so it's omitted
+    ),
+    SensorEntityDescription( # New sensor definition for min value
+        key=SENSOR_COLLECTION_VALUE_MIN_TYPE,
+        name="Collection Value (Min)",
+        icon=ICON_CASH,
+        native_unit_of_measurement=UNIT_CURRENCY,
+    ),
+    SensorEntityDescription( # New sensor definition for median value
+        key=SENSOR_COLLECTION_VALUE_MEDIAN_TYPE,
+        name="Collection Value (Median)",
+        icon=ICON_CASH,
+        native_unit_of_measurement=UNIT_CURRENCY,
+    ),
+    SensorEntityDescription( # New sensor definition for max value
+        key=SENSOR_COLLECTION_VALUE_MAX_TYPE,
+        name="Collection Value (Max)",
+        icon=ICON_CASH,
+        native_unit_of_measurement=UNIT_CURRENCY,
+    ),
+)
+SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES] # Automatically generate keys from descriptions
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+# PLATFORM_SCHEMA now uses SENSOR_PLATFORM_SCHEMA from homeassistant.components.sensor
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(SENSORS)]
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Discogs sensor."""
     token = config[CONF_TOKEN]
     name = config[CONF_NAME]
@@ -100,109 +119,96 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "folders": _discogs_client.identity().collection_folders,
             "collection_count": _discogs_client.identity().num_collection,
             "wantlist_count": _discogs_client.identity().num_wantlist,
-            "collection_value_min": collection_value["minimum"], # Store min value
-            "collection_value_median": collection_value["median"], # Store median value
-            "collection_value_max": collection_value["maximum"], # Store max value
+            "collection_value_min": collection_value["minimum"],
+            "collection_value_median": collection_value["median"],
+            "collection_value_max": collection_value["maximum"],
         }
     except discogs_client.exceptions.HTTPError as err:
         _LOGGER.error("API token is not valid or Discogs API error: %s", err)
         return
 
-    sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        sensors.append(DiscogsSensor(discogs_data, name, sensor_type))
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    entities = [
+        DiscogsSensor(discogs_data, name, description)
+        for description in SENSOR_TYPES
+        if description.key in monitored_conditions
+    ]
 
-    add_entities(sensors, True)
+    add_entities(entities, True)
 
 
-class DiscogsSensor(Entity):
+# Class now inherits from SensorEntity
+class DiscogsSensor(SensorEntity):
     """Create a new Discogs sensor for a specific type."""
 
-    def __init__(self, discogs_data, name, sensor_type):
+    _attr_attribution = "Data provided by Discogs" # Standard way to add attribution
+
+    def __init__(
+        self, discogs_data, name, description: SensorEntityDescription
+    ) -> None:
         """Initialize the Discogs sensor."""
+        self.entity_description = description
         self._discogs_data = discogs_data
-        self._name = name
-        self._type = sensor_type
-        self._state = None
-        self._attrs = {}
+        self._attrs: dict = {} # For random record details
+
+        # Set entity name using description.name
+        self._attr_name = f"{name} {description.name}"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} {SENSORS[self._type]['name']}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return SENSORS[self._type]["icon"]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return SENSORS[self._type]["unit_of_measurement"]
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        if self._state is None or self._attrs is None:
+    def extra_state_attributes(self):
+        """Return the device state attributes of the sensor."""
+        # Use _attr_native_value for the current state value
+        if self._attr_native_value is None: # Removed _attrs check, as it might be empty for some sensor types
             return None
 
-        # Attributes for random record type
-        if self._type == SENSOR_RANDOM_RECORD_TYPE:
+        if (
+            self.entity_description.key == SENSOR_RANDOM_RECORD_TYPE
+            and self._attrs # Check if _attrs has data for random record
+        ):
             return {
                 "cat_no": self._attrs["labels"][0]["catno"],
                 "cover_image": self._attrs["cover_image"],
-                "format": f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})",
+                "format": (
+                    f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})"
+                ),
                 "label": self._attrs["labels"][0]["name"],
                 "released": self._attrs["year"],
-                ATTR_ATTRIBUTION: ATTRIBUTION,
+                # ATTR_ATTRIBUTION is now handled by _attr_attribution
                 ATTR_IDENTITY: self._discogs_data["user"],
             }
-        # Attributes for collection value sensors
-        if self._type in [
-            SENSOR_COLLECTION_VALUE_MIN_TYPE,
-            SENSOR_COLLECTION_VALUE_MEDIAN_TYPE,
-            SENSOR_COLLECTION_VALUE_MAX_TYPE,
-        ]:
-            return {
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-                ATTR_IDENTITY: self._discogs_data["user"],
-            }
-        # Attributes for collection/wantlist count
+        # For all other sensor types (collection count, wantlist count, collection value)
+        # the identity attribute is sufficient, and attribution is handled by _attr_attribution
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_IDENTITY: self._discogs_data["user"],
         }
 
-    def get_random_record(self):
+    def get_random_record(self) -> str | None: # Type hint for return
         """Get a random record suggestion from the user's collection."""
         # Index 0 in the folders is the 'All' folder
         collection = self._discogs_data["folders"][0]
-        if collection.count == 0: # Handle empty collection
-            return "No records in collection"
-        random_index = random.randrange(collection.count)
-        random_record = collection.releases[random_index].release
+        if collection.count > 0:
+            random_index = random.randrange(collection.count)
+            random_record = collection.releases[random_index].release
 
-        self._attrs = random_record.data
-        return f"{random_record.data['artists'][0]['name']} - {random_record.data['title']}"
+            self._attrs = random_record.data
+            return (
+                f"{random_record.data['artists'][0]['name']} -"
+                f" {random_record.data['title']}"
+            )
+        return None # Return None if collection is empty
 
-    def update(self):
+    def update(self) -> None: # Type hint for return
         """Set state to the amount of records or collection value."""
-        if self._type == SENSOR_COLLECTION_TYPE:
-            self._state = self._discogs_data["collection_count"]
-        elif self._type == SENSOR_WANTLIST_TYPE:
-            self._state = self._discogs_data["wantlist_count"]
-        elif self._type == SENSOR_COLLECTION_VALUE_MIN_TYPE:
-            # Remove the currency symbol '$' and convert to float for proper numeric representation
-            self._state = float(self._discogs_data["collection_value_min"].replace(UNIT_CURRENCY, ''))
-        elif self._type == SENSOR_COLLECTION_VALUE_MEDIAN_TYPE:
-            self._state = float(self._discogs_data["collection_value_median"].replace(UNIT_CURRENCY, ''))
-        elif self._type == SENSOR_COLLECTION_VALUE_MAX_TYPE:
-            self._state = float(self._discogs_data["collection_value_max"].replace(UNIT_CURRENCY, ''))
+        # Use self.entity_description.key to identify the sensor type
+        if self.entity_description.key == SENSOR_COLLECTION_TYPE:
+            self._attr_native_value = self._discogs_data["collection_count"]
+        elif self.entity_description.key == SENSOR_WANTLIST_TYPE:
+            self._attr_native_value = self._discogs_data["wantlist_count"]
+        elif self.entity_description.key == SENSOR_COLLECTION_VALUE_MIN_TYPE:
+            self._attr_native_value = float(self._discogs_data["collection_value_min"].replace(UNIT_CURRENCY, ''))
+        elif self.entity_description.key == SENSOR_COLLECTION_VALUE_MEDIAN_TYPE:
+            self._attr_native_value = float(self._discogs_data["collection_value_median"].replace(UNIT_CURRENCY, ''))
+        elif self.entity_description.key == SENSOR_COLLECTION_VALUE_MAX_TYPE:
+            self._attr_native_value = float(self._discogs_data["collection_value_max"].replace(UNIT_CURRENCY, ''))
         else: # SENSOR_RANDOM_RECORD_TYPE
-            self._state = self.get_random_record()
+            self._attr_native_value = self.get_random_record()

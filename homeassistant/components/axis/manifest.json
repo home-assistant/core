@@ -1,10 +1,64 @@
 {
   "domain": "axis",
   "name": "Axis",
+  "after_dependencies": ["mqtt"],
+  "codeowners": ["@Kane610"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "registered_devices": true
+    },
+    {
+      "hostname": "axis-00408c*",
+      "macaddress": "00408C*"
+    },
+    {
+      "hostname": "axis-accc8e*",
+      "macaddress": "ACCC8E*"
+    },
+    {
+      "hostname": "axis-b8a44f*",
+      "macaddress": "B8A44F*"
+    },
+    {
+      "hostname": "axis-e82725*",
+      "macaddress": "E82725*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/axis",
-  "requirements": ["axis==25"],
-  "dependencies": [],
-  "zeroconf": ["_axis-video._tcp.local."],
-  "codeowners": ["@kane610"]
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["axis"],
+  "requirements": ["axis==64"],
+  "ssdp": [
+    {
+      "manufacturer": "AXIS"
+    }
+  ],
+  "zeroconf": [
+    {
+      "type": "_axis-video._tcp.local.",
+      "properties": {
+        "macaddress": "00408c*"
+      }
+    },
+    {
+      "type": "_axis-video._tcp.local.",
+      "properties": {
+        "macaddress": "accc8e*"
+      }
+    },
+    {
+      "type": "_axis-video._tcp.local.",
+      "properties": {
+        "macaddress": "b8a44f*"
+      }
+    },
+    {
+      "type": "_axis-video._tcp.local.",
+      "properties": {
+        "macaddress": "e82725*"
+      }
+    }
+  ]
 }

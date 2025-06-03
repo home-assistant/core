@@ -1,185 +1,355 @@
 """Support for locks which integrates with other components."""
-import logging
+
+from __future__ import annotations
+
+from collections.abc import Generator, Sequence
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
+from homeassistant.components.lock import (
+    PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
+    LockEntity,
+    LockEntityFeature,
+    LockState,
+)
 from homeassistant.const import (
+    ATTR_CODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_STATE,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
-    STATE_LOCKED,
-    STATE_ON,
 )
-from homeassistant.core import callback
-from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.script import Script
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError, TemplateError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import extract_entities, initialise_templates
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_PICTURE, DOMAIN
+from .entity import AbstractTemplateEntity
+from .template_entity import (
+    LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_ICON_SCHEMA,
+    TemplateEntity,
+    rewrite_common_legacy_to_modern_conf,
+)
 
-_LOGGER = logging.getLogger(__name__)
-
+CONF_CODE_FORMAT_TEMPLATE = "code_format_template"
+CONF_CODE_FORMAT = "code_format"
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
+CONF_OPEN = "open"
 
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    }
+LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
+    CONF_CODE_FORMAT_TEMPLATE: CONF_CODE_FORMAT,
+    CONF_VALUE_TEMPLATE: CONF_STATE,
+}
+
+LOCK_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(CONF_CODE_FORMAT): cv.template,
+            vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_NAME): cv.template,
+            vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_PICTURE): cv.template,
+            vol.Required(CONF_STATE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
 )
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the Template lock."""
-    device = config.get(CONF_NAME)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    availability_template = config.get(CONF_AVAILABILITY_TEMPLATE)
-
-    templates = {
-        CONF_VALUE_TEMPLATE: value_template,
-        CONF_AVAILABILITY_TEMPLATE: availability_template,
+PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_CODE_FORMAT_TEMPLATE): cv.template,
+        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     }
+).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
 
-    initialise_templates(hass, templates)
-    entity_ids = extract_entities(device, "lock", None, templates)
 
-    async_add_devices(
-        [
+@callback
+def _async_create_template_tracking_entities(
+    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    definitions: list[dict],
+    unique_id_prefix: str | None,
+) -> None:
+    """Create the template fans."""
+    fans = []
+
+    for entity_conf in definitions:
+        unique_id = entity_conf.get(CONF_UNIQUE_ID)
+
+        if unique_id and unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
+
+        fans.append(
             TemplateLock(
                 hass,
-                device,
-                value_template,
-                availability_template,
-                entity_ids,
-                config.get(CONF_LOCK),
-                config.get(CONF_UNLOCK),
-                config.get(CONF_OPTIMISTIC),
+                entity_conf,
+                unique_id,
             )
-        ]
+        )
+
+    async_add_entities(fans)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the template fans."""
+    if discovery_info is None:
+        _async_create_template_tracking_entities(
+            async_add_entities,
+            hass,
+            [rewrite_common_legacy_to_modern_conf(hass, config, LEGACY_FIELDS)],
+            None,
+        )
+        return
+
+    _async_create_template_tracking_entities(
+        async_add_entities,
+        hass,
+        discovery_info["entities"],
+        discovery_info["unique_id"],
     )
 
 
-class TemplateLock(LockDevice):
+class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
+    """Representation of a template lock features."""
+
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+        """Initialize the features."""
+
+        self._state: LockState | None = None
+        self._state_template = config.get(CONF_STATE)
+        self._code_format_template = config.get(CONF_CODE_FORMAT)
+        self._code_format: str | None = None
+        self._code_format_template_error: TemplateError | None = None
+        self._optimistic = config.get(CONF_OPTIMISTIC)
+        self._attr_assumed_state = bool(self._optimistic)
+
+    def _register_scripts(
+        self, config: dict[str, Any]
+    ) -> Generator[tuple[str, Sequence[dict[str, Any]], LockEntityFeature | int]]:
+        for action_id, supported_feature in (
+            (CONF_LOCK, 0),
+            (CONF_UNLOCK, 0),
+            (CONF_OPEN, LockEntityFeature.OPEN),
+        ):
+            if (action_config := config.get(action_id)) is not None:
+                yield (action_id, action_config, supported_feature)
+
+    @property
+    def is_locked(self) -> bool:
+        """Return true if lock is locked."""
+        return self._state == LockState.LOCKED
+
+    @property
+    def is_jammed(self) -> bool:
+        """Return true if lock is jammed."""
+        return self._state == LockState.JAMMED
+
+    @property
+    def is_unlocking(self) -> bool:
+        """Return true if lock is unlocking."""
+        return self._state == LockState.UNLOCKING
+
+    @property
+    def is_locking(self) -> bool:
+        """Return true if lock is locking."""
+        return self._state == LockState.LOCKING
+
+    @property
+    def is_open(self) -> bool:
+        """Return true if lock is open."""
+        return self._state == LockState.OPEN
+
+    @property
+    def code_format(self) -> str | None:
+        """Regex for code format or None if no code is required."""
+        return self._code_format
+
+    def _handle_state(self, result: Any) -> None:
+        if isinstance(result, bool):
+            self._state = LockState.LOCKED if result else LockState.UNLOCKED
+            return
+
+        if isinstance(result, str):
+            if result.lower() in (
+                "true",
+                "on",
+                "locked",
+            ):
+                self._state = LockState.LOCKED
+            elif result.lower() in (
+                "false",
+                "off",
+                "unlocked",
+            ):
+                self._state = LockState.UNLOCKED
+            else:
+                try:
+                    self._state = LockState(result.lower())
+                except ValueError:
+                    self._state = None
+            return
+
+        self._state = None
+
+    @callback
+    def _update_code_format(self, render: str | TemplateError | None):
+        """Update code format from the template."""
+        if isinstance(render, TemplateError):
+            self._code_format = None
+            self._code_format_template_error = render
+        elif render in (None, "None", ""):
+            self._code_format = None
+            self._code_format_template_error = None
+        else:
+            self._code_format = render
+            self._code_format_template_error = None
+
+    async def async_lock(self, **kwargs: Any) -> None:
+        """Lock the device."""
+        # Check if we need to raise for incorrect code format
+        # template before processing the action.
+        self._raise_template_error_if_available()
+
+        if self._optimistic:
+            self._state = LockState.LOCKED
+            self.async_write_ha_state()
+
+        tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
+
+        await self.async_run_script(
+            self._action_scripts[CONF_LOCK],
+            run_variables=tpl_vars,
+            context=self._context,
+        )
+
+    async def async_unlock(self, **kwargs: Any) -> None:
+        """Unlock the device."""
+        # Check if we need to raise for incorrect code format
+        # template before processing the action.
+        self._raise_template_error_if_available()
+
+        if self._optimistic:
+            self._state = LockState.UNLOCKED
+            self.async_write_ha_state()
+
+        tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
+
+        await self.async_run_script(
+            self._action_scripts[CONF_UNLOCK],
+            run_variables=tpl_vars,
+            context=self._context,
+        )
+
+    async def async_open(self, **kwargs: Any) -> None:
+        """Open the device."""
+        # Check if we need to raise for incorrect code format
+        # template before processing the action.
+        self._raise_template_error_if_available()
+
+        if self._optimistic:
+            self._state = LockState.OPEN
+            self.async_write_ha_state()
+
+        tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
+
+        await self.async_run_script(
+            self._action_scripts[CONF_OPEN],
+            run_variables=tpl_vars,
+            context=self._context,
+        )
+
+    def _raise_template_error_if_available(self):
+        """Raise an error if the rendered code format is not valid."""
+        if self._code_format_template_error is not None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="code_format_template_error",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_format_template": self._code_format_template.template,
+                    "cause": str(self._code_format_template_error),
+                },
+            )
+
+
+class TemplateLock(TemplateEntity, AbstractTemplateLock):
     """Representation of a template lock."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
-        hass,
-        name,
-        value_template,
-        availability_template,
-        entity_ids,
-        command_lock,
-        command_unlock,
-        optimistic,
-    ):
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        unique_id: str | None,
+    ) -> None:
         """Initialize the lock."""
-        self._state = None
-        self._hass = hass
-        self._name = name
-        self._state_template = value_template
-        self._availability_template = availability_template
-        self._state_entities = entity_ids
-        self._command_lock = Script(hass, command_lock)
-        self._command_unlock = Script(hass, command_unlock)
-        self._optimistic = optimistic
-        self._available = True
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        @callback
-        def template_lock_state_listener(entity, old_state, new_state):
-            """Handle target device state changes."""
-            self.async_schedule_update_ha_state(True)
-
-        @callback
-        def template_lock_startup(event):
-            """Update template on startup."""
-            if self._state_entities != MATCH_ALL:
-                # Track state change only for valid templates
-                async_track_state_change(
-                    self._hass, self._state_entities, template_lock_state_listener
-                )
-            self.async_schedule_update_ha_state(True)
-
-        self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_lock_startup
+        TemplateEntity.__init__(
+            self, hass, config=config, fallback_name=DEFAULT_NAME, unique_id=unique_id
         )
+        AbstractTemplateLock.__init__(self, config)
+        name = self._attr_name
+        if TYPE_CHECKING:
+            assert name is not None
 
-    @property
-    def assumed_state(self):
-        """Return true if we do optimistic updates."""
-        return self._optimistic
+        for action_id, action_config, supported_feature in self._register_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the lock."""
-        return self._name
-
-    @property
-    def is_locked(self):
-        """Return true if lock is locked."""
-        return self._state
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return self._available
-
-    async def async_update(self):
+    @callback
+    def _update_state(self, result: str | TemplateError) -> None:
         """Update the state from the template."""
-        try:
-            self._state = self._state_template.async_render().lower() in (
-                "true",
-                STATE_ON,
-                STATE_LOCKED,
-            )
-        except TemplateError as ex:
+        super()._update_state(result)
+        if isinstance(result, TemplateError):
             self._state = None
-            _LOGGER.error("Could not render template %s: %s", self._name, ex)
+            return
 
-        if self._availability_template is not None:
-            try:
-                self._available = (
-                    self._availability_template.async_render().lower() == "true"
-                )
-            except (TemplateError, ValueError) as ex:
-                _LOGGER.error(
-                    "Could not render %s template %s: %s",
-                    CONF_AVAILABILITY_TEMPLATE,
-                    self._name,
-                    ex,
-                )
+        self._handle_state(result)
 
-    async def async_lock(self, **kwargs):
-        """Lock the device."""
-        if self._optimistic:
-            self._state = True
-            self.async_schedule_update_ha_state()
-        await self._command_lock.async_run(context=self._context)
-
-    async def async_unlock(self, **kwargs):
-        """Unlock the device."""
-        if self._optimistic:
-            self._state = False
-            self.async_schedule_update_ha_state()
-        await self._command_unlock.async_run(context=self._context)
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
+        if TYPE_CHECKING:
+            assert self._state_template is not None
+        self.add_template_attribute(
+            "_state", self._state_template, None, self._update_state
+        )
+        if self._code_format_template:
+            self.add_template_attribute(
+                "_code_format_template",
+                self._code_format_template,
+                None,
+                self._update_code_format,
+            )
+        super()._async_setup_templates()

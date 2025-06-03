@@ -1,30 +1,28 @@
 """Support for monitoring the state of UpCloud servers."""
-import logging
 
-import voluptuous as vol
-
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
-import homeassistant.helpers.config_validation as cv
-
-from . import CONF_SERVERS, DATA_UPCLOUD, UpCloudServerEntity
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SERVERS): vol.All(cv.ensure_list, [cv.string])}
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import UpCloudConfigEntry
+from .entity import UpCloudServerEntity
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: UpCloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the UpCloud server binary sensor."""
-    upcloud = hass.data[DATA_UPCLOUD]
-
-    servers = config.get(CONF_SERVERS)
-
-    devices = [UpCloudBinarySensor(upcloud, uuid) for uuid in servers]
-
-    add_entities(devices, True)
+    coordinator = config_entry.runtime_data
+    entities = [UpCloudBinarySensor(config_entry, uuid) for uuid in coordinator.data]
+    async_add_entities(entities, True)
 
 
-class UpCloudBinarySensor(UpCloudServerEntity, BinarySensorDevice):
+class UpCloudBinarySensor(UpCloudServerEntity, BinarySensorEntity):
     """Representation of an UpCloud server sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.POWER

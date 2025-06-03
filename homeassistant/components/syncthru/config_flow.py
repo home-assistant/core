@@ -1,0 +1,146 @@
+"""Config flow for Samsung SyncThru."""
+
+import re
+from typing import TYPE_CHECKING, Any
+from urllib.parse import urlparse
+
+from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
+from url_normalize import url_normalize
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_PRESENTATION_URL,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
+
+from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
+
+
+class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Samsung SyncThru config flow."""
+
+    VERSION = 1
+
+    url: str
+    name: str
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user initiated flow."""
+        if user_input is None:
+            return await self._async_show_form(step_id="user")
+        return await self._async_check_and_create("user", user_input)
+
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle SSDP initiated flow."""
+        await self.async_set_unique_id(discovery_info.upnp[ATTR_UPNP_UDN])
+        self._abort_if_unique_id_configured()
+
+        norm_url = url_normalize(
+            discovery_info.upnp.get(ATTR_UPNP_PRESENTATION_URL)
+            or f"http://{urlparse(discovery_info.ssdp_location or '').hostname}/"
+        )
+        if TYPE_CHECKING:
+            # url_normalize only returns None if passed None, and we don't do that
+            assert norm_url is not None
+        self.url = norm_url
+
+        for existing_entry in (
+            x for x in self._async_current_entries() if x.data[CONF_URL] == self.url
+        ):
+            # Update unique id of entry with the same URL
+            if not existing_entry.unique_id:
+                self.hass.config_entries.async_update_entry(
+                    existing_entry, unique_id=discovery_info.upnp[ATTR_UPNP_UDN]
+                )
+            return self.async_abort(reason="already_configured")
+
+        self.name = discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME, "")
+        if self.name:
+            # Remove trailing " (ip)" if present for consistency with user driven config
+            self.name = re.sub(r"\s+\([\d.]+\)\s*$", "", self.name)
+
+        self.context["title_placeholders"] = {CONF_NAME: self.name}
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Handle discovery confirmation by user."""
+        if user_input is not None:
+            return await self._async_check_and_create("confirm", user_input)
+
+        return await self._async_show_form(
+            step_id="confirm",
+            user_input={CONF_URL: self.url, CONF_NAME: self.name},
+        )
+
+    async def _async_show_form(self, step_id, user_input=None, errors=None):
+        """Show our form."""
+        if user_input is None:
+            user_input = {}
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
+                    vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, "")): str,
+                }
+            ),
+            errors=errors or {},
+        )
+
+    async def _async_check_and_create(self, step_id, user_input):
+        """Validate input, proceed to create."""
+        user_input[CONF_URL] = url_normalize(
+            user_input[CONF_URL], default_scheme="http"
+        )
+        if "://" not in user_input[CONF_URL]:
+            return await self._async_show_form(
+                step_id=step_id, user_input=user_input, errors={CONF_URL: "invalid_url"}
+            )
+
+        # If we don't have a unique id, copy one from existing entry with same URL
+        if not self.unique_id:
+            for existing_entry in (
+                x
+                for x in self._async_current_entries()
+                if x.data[CONF_URL] == user_input[CONF_URL] and x.unique_id
+            ):
+                await self.async_set_unique_id(existing_entry.unique_id)
+                break
+
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        printer = SyncThru(
+            user_input[CONF_URL], session, connection_mode=ConnectionMode.API
+        )
+        errors = {}
+        try:
+            await printer.update()
+            if not user_input.get(CONF_NAME):
+                user_input[CONF_NAME] = DEFAULT_NAME_TEMPLATE.format(
+                    printer.model() or DEFAULT_MODEL
+                )
+        except SyncThruAPINotSupported:
+            errors[CONF_URL] = "syncthru_not_supported"
+        else:
+            if printer.is_unknown_state():
+                errors[CONF_URL] = "unknown_state"
+
+        if errors:
+            return await self._async_show_form(
+                step_id=step_id, user_input=user_input, errors=errors
+            )
+
+        return self.async_create_entry(
+            title=user_input.get(CONF_NAME),
+            data=user_input,
+        )

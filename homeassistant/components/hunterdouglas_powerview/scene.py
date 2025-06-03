@@ -1,102 +1,62 @@
 """Support for Powerview scenes from a Powerview hub."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
-from aiopvapi.helpers.aiorequest import AioRequest
+from aiopvapi.helpers.constants import ATTR_NAME
 from aiopvapi.resources.scene import Scene as PvScene
-from aiopvapi.rooms import Rooms
-from aiopvapi.scenes import Scenes
-import voluptuous as vol
 
-from homeassistant.components.scene import DOMAIN, Scene
-from homeassistant.const import CONF_PLATFORM
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.components.scene import Scene
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import STATE_ATTRIBUTE_ROOM_NAME
+from .coordinator import PowerviewShadeUpdateCoordinator
+from .entity import HDEntity
+from .model import PowerviewConfigEntry, PowerviewDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-HUB_ADDRESS = "address"
 
-PLATFORM_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PLATFORM): "hunterdouglas_powerview",
-        vol.Required(HUB_ADDRESS): cv.string,
-    }
-)
+RESYNC_DELAY = 60
 
 
-SCENE_DATA = "sceneData"
-ROOM_DATA = "roomData"
-SCENE_NAME = "name"
-ROOM_NAME = "name"
-SCENE_ID = "id"
-ROOM_ID = "id"
-ROOM_ID_IN_SCENE = "roomId"
-STATE_ATTRIBUTE_ROOM_NAME = "roomName"
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up Home Assistant scene entries."""
-
-    hub_address = config.get(HUB_ADDRESS)
-    websession = async_get_clientsession(hass)
-
-    pv_request = AioRequest(hub_address, loop=hass.loop, websession=websession)
-
-    _scenes = await Scenes(pv_request).get_resources()
-    _rooms = await Rooms(pv_request).get_resources()
-
-    if not _scenes or not _rooms:
-        _LOGGER.error("Unable to initialize PowerView hub: %s", hub_address)
-        return
-    pvscenes = (
-        PowerViewScene(hass, PvScene(_raw_scene, pv_request), _rooms)
-        for _raw_scene in _scenes[SCENE_DATA]
-    )
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: PowerviewConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up powerview scene entries."""
+    pv_entry = entry.runtime_data
+    pvscenes: list[PowerViewScene] = []
+    for scene in pv_entry.scene_data.values():
+        room_name = getattr(pv_entry.room_data.get(scene.room_id), ATTR_NAME, "")
+        pvscenes.append(
+            PowerViewScene(pv_entry.coordinator, pv_entry.device_info, room_name, scene)
+        )
     async_add_entities(pvscenes)
 
 
-class PowerViewScene(Scene):
+class PowerViewScene(HDEntity, Scene):
     """Representation of a Powerview scene."""
 
-    def __init__(self, hass, scene, room_data):
+    _attr_icon = "mdi:blinds"
+
+    def __init__(
+        self,
+        coordinator: PowerviewShadeUpdateCoordinator,
+        device_info: PowerviewDeviceInfo,
+        room_name: str,
+        scene: PvScene,
+    ) -> None:
         """Initialize the scene."""
-        self._scene = scene
-        self.hass = hass
-        self._room_name = None
-        self._sync_room_data(room_data)
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, str(self._scene.id), hass=hass
-        )
+        super().__init__(coordinator, device_info, room_name, scene.id)
+        self._scene: PvScene = scene
+        self._attr_name = scene.name
+        self._attr_extra_state_attributes = {STATE_ATTRIBUTE_ROOM_NAME: room_name}
 
-    def _sync_room_data(self, room_data):
-        """Sync room data."""
-        room = next(
-            (
-                room
-                for room in room_data[ROOM_DATA]
-                if room[ROOM_ID] == self._scene.room_id
-            ),
-            {},
-        )
-
-        self._room_name = room.get(ROOM_NAME, "")
-
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._scene.name
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return "mdi:blinds"
-
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
-        await self._scene.activate()
+        shades = await self._scene.activate()
+        _LOGGER.debug("Scene activated for shade(s) %s", shades)

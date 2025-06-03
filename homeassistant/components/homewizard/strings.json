@@ -1,0 +1,185 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure device",
+        "description": "Enter the IP address of your HomeWizard Energy device to integrate with Home Assistant.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "The IP address of your HomeWizard Energy device."
+        }
+      },
+      "discovery_confirm": {
+        "title": "Confirm",
+        "description": "Do you want to set up {product_type} ({serial}) at {ip_address}?"
+      },
+      "reauth_enable_api": {
+        "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."
+      },
+      "reauth_confirm_update_token": {
+        "title": "Re-authenticate",
+        "description": "[%key:component::homewizard::config::step::authorize::description%]"
+      },
+      "authorize": {
+        "title": "Authorize",
+        "description": "Press the button on the HomeWizard Energy device, then select the button below."
+      },
+      "reconfigure": {
+        "description": "Update configuration for {title}.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "[%key:component::homewizard::config::step::user::data_description::ip_address%]"
+        }
+      }
+    },
+    "error": {
+      "api_not_enabled": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings.",
+      "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network",
+      "authorization_failed": "Failed to authorize, make sure to press the button of the device within 30 seconds"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_discovery_parameters": "Invalid discovery parameters",
+      "device_not_supported": "This device is not supported",
+      "unknown_error": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_api_version": "Detected unsupported API version",
+      "reauth_enable_api_successful": "Enabling API was successful",
+      "reauth_successful": "Authorization successful",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "The configured device is not the same found on this IP address."
+    }
+  },
+  "entity": {
+    "number": {
+      "status_light_brightness": {
+        "name": "Status light brightness"
+      }
+    },
+    "sensor": {
+      "dsmr_version": {
+        "name": "DSMR version"
+      },
+      "meter_model": {
+        "name": "Smart meter model"
+      },
+      "unique_meter_id": {
+        "name": "Smart meter identifier"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "active_tariff": {
+        "name": "Tariff"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi strength"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
+      "total_energy_import_kwh": {
+        "name": "Energy import"
+      },
+      "total_energy_import_tariff_kwh": {
+        "name": "Energy import tariff {tariff}"
+      },
+      "total_energy_export_kwh": {
+        "name": "Energy export"
+      },
+      "total_energy_export_tariff_kwh": {
+        "name": "Energy export tariff {tariff}"
+      },
+      "active_power_phase_w": {
+        "name": "Power phase {phase}"
+      },
+      "active_voltage_phase_v": {
+        "name": "Voltage phase {phase}"
+      },
+      "active_current_phase_a": {
+        "name": "Current phase {phase}"
+      },
+      "active_apparent_power_phase_va": {
+        "name": "Apparent power phase {phase}"
+      },
+      "active_reactive_power_phase_var": {
+        "name": "Reactive power phase {phase}"
+      },
+      "active_power_factor_phase": {
+        "name": "Power factor phase {phase}"
+      },
+      "voltage_sag_phase_count": {
+        "name": "Voltage sags detected phase {phase}"
+      },
+      "voltage_swell_phase_count": {
+        "name": "Voltage swells detected phase {phase}"
+      },
+      "any_power_fail_count": {
+        "name": "Power failures detected"
+      },
+      "long_power_fail_count": {
+        "name": "Long power failures detected"
+      },
+      "active_power_average_w": {
+        "name": "Average demand"
+      },
+      "monthly_power_peak_w": {
+        "name": "Peak demand current month"
+      },
+      "active_liter_lpm": {
+        "name": "Water usage"
+      },
+      "total_liter_m3": {
+        "name": "Total water usage"
+      },
+      "cycles": {
+        "name": "Battery cycles"
+      },
+      "state_of_charge_pct": {
+        "name": "State of charge"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
+    },
+    "switch": {
+      "switch_lock": {
+        "name": "Switch lock"
+      },
+      "cloud_connection": {
+        "name": "Cloud connection"
+      }
+    }
+  },
+  "exceptions": {
+    "api_disabled": {
+      "message": "The local API is disabled."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with HomeWizard device"
+    }
+  },
+  "issues": {
+    "migrate_to_v2_api": {
+      "title": "Update authentication method",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::homewizard::issues::migrate_to_v2_api::title%]",
+            "description": "Your {title} now supports a more secure and feature-rich communication method. To take advantage of this, you need to reconfigure the integration.\n\nSelect **Submit** to start the reconfiguration."
+          },
+          "authorize": {
+            "title": "[%key:component::homewizard::config::step::authorize::title%]",
+            "description": "[%key:component::homewizard::config::step::authorize::description%]"
+          }
+        },
+        "error": {
+          "authorization_failed": "[%key:component::homewizard::config::error::authorization_failed%]"
+        }
+      }
+    }
+  }
+}

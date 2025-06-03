@@ -1,0 +1,10 @@
+{
+  "domain": "melcloud",
+  "name": "MELCloud",
+  "codeowners": ["@erwindouna"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/melcloud",
+  "iot_class": "cloud_polling",
+  "loggers": ["pymelcloud"],
+  "requirements": ["python-melcloud==0.1.0"]
+}

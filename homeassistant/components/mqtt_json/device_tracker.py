@@ -1,11 +1,17 @@
 """Support for GPS tracking MQTT enabled devices."""
+
+from __future__ import annotations
+
 import json
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components import mqtt
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
+    AsyncSeeCallback,
+)
 from homeassistant.components.mqtt import CONF_QOS
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -14,8 +20,9 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_DEVICES,
 )
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,13 +36,25 @@ GPS_JSON_PAYLOAD_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(mqtt.config.SCHEMA_BASE).extend(
     {vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic}}
 )
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: AsyncSeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the MQTT JSON tracker."""
+    # Make sure MQTT integration is enabled and the client is available
+    # We cannot count on dependencies as the device_tracker platform setup
+    # also will be triggered when mqtt is loading the `device_tracker` platform
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return False
+
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
 
@@ -48,8 +67,10 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
                 data = GPS_JSON_PAYLOAD_SCHEMA(json.loads(msg.payload))
             except vol.MultipleInvalid:
                 _LOGGER.error(
-                    "Skipping update for following data "
-                    "because of missing or malformatted data: %s",
+                    (
+                        "Skipping update for following data "
+                        "because of missing or malformatted data: %s"
+                    ),
                     msg.payload,
                 )
                 return

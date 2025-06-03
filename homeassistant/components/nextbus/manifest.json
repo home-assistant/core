@@ -1,8 +1,10 @@
 {
   "domain": "nextbus",
   "name": "NextBus",
-  "documentation": "https://www.home-assistant.io/integrations/nextbus",
-  "dependencies": [],
   "codeowners": ["@vividboarder"],
-  "requirements": ["py_nextbusnext==0.1.4"]
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nextbus",
+  "iot_class": "cloud_polling",
+  "loggers": ["py_nextbus"],
+  "requirements": ["py-nextbusnext==2.1.2"]
 }

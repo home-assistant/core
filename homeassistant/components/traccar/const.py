@@ -1,4 +1,4 @@
-"""Constants for Traccar integration."""
+"""Constants for Traccar client integration."""
 
 DOMAIN = "traccar"
 
@@ -12,7 +12,6 @@ ATTR_BATTERY = "batt"
 ATTR_BEARING = "bearing"
 ATTR_CATEGORY = "category"
 ATTR_GEOFENCE = "geofence"
-ATTR_ID = "id"
 ATTR_LATITUDE = "lat"
 ATTR_LONGITUDE = "lon"
 ATTR_MOTION = "motion"

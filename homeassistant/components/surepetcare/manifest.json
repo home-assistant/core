@@ -1,8 +1,10 @@
 {
   "domain": "surepetcare",
   "name": "Sure Petcare",
+  "codeowners": ["@benleb", "@danielhiversen"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/surepetcare",
-  "dependencies": [],
-  "codeowners": ["@benleb"],
-  "requirements": ["surepy==0.1.10"]
+  "iot_class": "cloud_polling",
+  "loggers": ["rich", "surepy"],
+  "requirements": ["surepy==0.9.0"]
 }

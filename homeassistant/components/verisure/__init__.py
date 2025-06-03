@@ -1,229 +1,113 @@
 """Support for Verisure devices."""
-from datetime import timedelta
-import logging
-import threading
 
-from jsonpath import jsonpath
-import verisure
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from contextlib import suppress
+import os
+from pathlib import Path
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.components.lock import CONF_DEFAULT_CODE, DOMAIN as LOCK_DOMAIN
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.storage import STORAGE_DIR
 
-ATTR_DEVICE_SERIAL = "device_serial"
+from .const import CONF_LOCK_DEFAULT_CODE, DOMAIN, LOGGER
+from .coordinator import VerisureDataUpdateCoordinator
 
-CONF_ALARM = "alarm"
-CONF_CODE_DIGITS = "code_digits"
-CONF_DOOR_WINDOW = "door_window"
-CONF_GIID = "giid"
-CONF_HYDROMETERS = "hygrometers"
-CONF_LOCKS = "locks"
-CONF_DEFAULT_LOCK_CODE = "default_lock_code"
-CONF_MOUSE = "mouse"
-CONF_SMARTPLUGS = "smartplugs"
-CONF_THERMOMETERS = "thermometers"
-CONF_SMARTCAM = "smartcam"
-
-DOMAIN = "verisure"
-
-MIN_SCAN_INTERVAL = timedelta(minutes=1)
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
-
-SERVICE_CAPTURE_SMARTCAM = "capture_smartcam"
-SERVICE_DISABLE_AUTOLOCK = "disable_autolock"
-SERVICE_ENABLE_AUTOLOCK = "enable_autolock"
-
-HUB = None
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_ALARM, default=True): cv.boolean,
-                vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
-                vol.Optional(CONF_DOOR_WINDOW, default=True): cv.boolean,
-                vol.Optional(CONF_GIID): cv.string,
-                vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
-                vol.Optional(CONF_LOCKS, default=True): cv.boolean,
-                vol.Optional(CONF_DEFAULT_LOCK_CODE): cv.string,
-                vol.Optional(CONF_MOUSE, default=True): cv.boolean,
-                vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
-                vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
-                vol.Optional(CONF_SMARTCAM, default=True): cv.boolean,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): (
-                    vol.All(cv.time_period, vol.Clamp(min=MIN_SCAN_INTERVAL))
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
-def setup(hass, config):
-    """Set up the Verisure component."""
-    global HUB
-    HUB = VerisureHub(config[DOMAIN])
-    HUB.update_overview = Throttle(config[DOMAIN][CONF_SCAN_INTERVAL])(
-        HUB.update_overview
-    )
-    if not HUB.login():
-        return False
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: HUB.logout())
-    HUB.update_overview()
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Verisure from a config entry."""
+    await hass.async_add_executor_job(migrate_cookie_files, hass, entry)
 
-    for component in (
-        "sensor",
-        "switch",
-        "alarm_control_panel",
-        "lock",
-        "camera",
-        "binary_sensor",
-    ):
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    coordinator = VerisureDataUpdateCoordinator(hass, entry=entry)
 
-    async def capture_smartcam(service):
-        """Capture a new picture from a smartcam."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(HUB.smartcam_capture, device_id)
-            _LOGGER.debug("Capturing new image from %s", ATTR_DEVICE_SERIAL)
-        except verisure.Error as ex:
-            _LOGGER.error("Could not capture image, %s", ex)
+    if not await coordinator.async_login():
+        raise ConfigEntryNotReady("Could not log in to verisure.")
 
-    hass.services.register(
-        DOMAIN, SERVICE_CAPTURE_SMARTCAM, capture_smartcam, schema=DEVICE_SERIAL_SCHEMA
-    )
+    await coordinator.async_config_entry_first_refresh()
 
-    async def disable_autolock(service):
-        """Disable autolock on a doorlock."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(HUB.disable_autolock, device_id)
-            _LOGGER.debug("Disabling autolock on%s", ATTR_DEVICE_SERIAL)
-        except verisure.Error as ex:
-            _LOGGER.error("Could not disable autolock, %s", ex)
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.services.register(
-        DOMAIN, SERVICE_DISABLE_AUTOLOCK, disable_autolock, schema=DEVICE_SERIAL_SCHEMA
-    )
+    # Migrate lock default code from config entry to lock entity
 
-    async def enable_autolock(service):
-        """Enable autolock on a doorlock."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(HUB.enable_autolock, device_id)
-            _LOGGER.debug("Enabling autolock on %s", ATTR_DEVICE_SERIAL)
-        except verisure.Error as ex:
-            _LOGGER.error("Could not enable autolock, %s", ex)
+    # Set up all platforms for this device/entry.
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    hass.services.register(
-        DOMAIN, SERVICE_ENABLE_AUTOLOCK, enable_autolock, schema=DEVICE_SERIAL_SCHEMA
-    )
+    # Update options
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
 
 
-class VerisureHub:
-    """A Verisure hub wrapper class."""
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    # Propagate configuration change.
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator.async_update_listeners()
 
-    def __init__(self, domain_config):
-        """Initialize the Verisure hub."""
-        self.overview = {}
-        self.imageseries = {}
 
-        self.config = domain_config
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Verisure config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not unload_ok:
+        return False
 
-        self._lock = threading.Lock()
+    cookie_file = hass.config.path(STORAGE_DIR, f"verisure_{entry.entry_id}")
+    with suppress(FileNotFoundError):
+        await hass.async_add_executor_job(os.unlink, cookie_file)
 
-        self.session = verisure.Session(
-            domain_config[CONF_USERNAME], domain_config[CONF_PASSWORD]
+    del hass.data[DOMAIN][entry.entry_id]
+
+    if not hass.data[DOMAIN]:
+        del hass.data[DOMAIN]
+
+    return True
+
+
+def migrate_cookie_files(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Migrate old cookie file to new location."""
+    cookie_file = Path(hass.config.path(STORAGE_DIR, f"verisure_{entry.unique_id}"))
+    if cookie_file.exists():
+        cookie_file.rename(
+            hass.config.path(STORAGE_DIR, f"verisure_{entry.data[CONF_EMAIL]}")
         )
 
-        self.giid = domain_config.get(CONF_GIID)
 
-    def login(self):
-        """Login to Verisure."""
-        try:
-            self.session.login()
-        except verisure.Error as ex:
-            _LOGGER.error("Could not log in to verisure, %s", ex)
-            return False
-        if self.giid:
-            return self.set_giid()
-        return True
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    LOGGER.debug("Migrating from version %s", entry.version)
 
-    def logout(self):
-        """Logout from Verisure."""
-        try:
-            self.session.logout()
-        except verisure.Error as ex:
-            _LOGGER.error("Could not log out from verisure, %s", ex)
-            return False
-        return True
+    if entry.version == 1:
+        if config_entry_default_code := entry.options.get(CONF_LOCK_DEFAULT_CODE):
+            entity_reg = er.async_get(hass)
+            entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
+            for entity in entries:
+                if entity.entity_id.startswith("lock"):
+                    entity_reg.async_update_entity_options(
+                        entity.entity_id,
+                        LOCK_DOMAIN,
+                        {CONF_DEFAULT_CODE: config_entry_default_code},
+                    )
+            new_options = entry.options.copy()
+            del new_options[CONF_LOCK_DEFAULT_CODE]
 
-    def set_giid(self):
-        """Set installation GIID."""
-        try:
-            self.session.set_giid(self.giid)
-        except verisure.Error as ex:
-            _LOGGER.error("Could not set installation GIID, %s", ex)
-            return False
-        return True
+            hass.config_entries.async_update_entry(entry, options=new_options)
 
-    def update_overview(self):
-        """Update the overview."""
-        try:
-            self.overview = self.session.get_overview()
-        except verisure.ResponseError as ex:
-            _LOGGER.error("Could not read overview, %s", ex)
-            if ex.status_code == 503:  # Service unavailable
-                _LOGGER.info("Trying to log in again")
-                self.login()
-            else:
-                raise
+        hass.config_entries.async_update_entry(entry, version=2)
 
-    @Throttle(timedelta(seconds=60))
-    def update_smartcam_imageseries(self):
-        """Update the image series."""
-        self.imageseries = self.session.get_camera_imageseries()
+    LOGGER.debug("Migration to version %s successful", entry.version)
 
-    @Throttle(timedelta(seconds=30))
-    def smartcam_capture(self, device_id):
-        """Capture a new image from a smartcam."""
-        self.session.capture_image(device_id)
-
-    def disable_autolock(self, device_id):
-        """Disable autolock."""
-        self.session.set_lock_config(device_id, auto_lock_enabled=False)
-
-    def enable_autolock(self, device_id):
-        """Enable autolock."""
-        self.session.set_lock_config(device_id, auto_lock_enabled=True)
-
-    def get(self, jpath, *args):
-        """Get values from the overview that matches the jsonpath."""
-        res = jsonpath(self.overview, jpath % args)
-        return res if res else []
-
-    def get_first(self, jpath, *args):
-        """Get first value from the overview that matches the jsonpath."""
-        res = self.get(jpath, *args)
-        return res[0] if res else None
-
-    def get_image_info(self, jpath, *args):
-        """Get values from the imageseries that matches the jsonpath."""
-        res = jsonpath(self.imageseries, jpath % args)
-        return res if res else []
+    return True

@@ -1,266 +1,267 @@
-"""This component provides HA sensor support for Ring Door Bell/Chimes."""
-import logging
+"""Component providing HA sensor support for Ring Door Bell/Chimes."""
 
-from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.icon import icon_for_battery_level
+from __future__ import annotations
 
-from . import DOMAIN
-from .entity import RingEntityMixin
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, Generic, cast
 
-_LOGGER = logging.getLogger(__name__)
+from ring_doorbell import (
+    RingCapability,
+    RingChime,
+    RingDoorBell,
+    RingEventKind,
+    RingGeneric,
+    RingOther,
+)
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
+
+from . import RingConfigEntry
+from .coordinator import RingDataCoordinator
+from .entity import (
+    DeprecatedInfo,
+    RingDeviceT,
+    RingEntity,
+    RingEntityDescription,
+    async_check_create_deprecated,
+)
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: RingConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up a sensor for a Ring device."""
-    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
+    ring_data = entry.runtime_data
+    devices_coordinator = ring_data.devices_coordinator
 
-    # Makes a ton of requests. We will make this a config entry option in the future
-    wifi_enabled = False
+    entities = [
+        RingSensor(device, devices_coordinator, description)
+        for description in SENSOR_TYPES
+        for device in ring_data.devices.all_devices
+        if description.exists_fn(device)
+        and async_check_create_deprecated(
+            hass,
+            Platform.SENSOR,
+            f"{device.id}-{description.key}",
+            description,
+        )
+    ]
 
-    sensors = []
-
-    for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams"):
-        for sensor_type in SENSOR_TYPES:
-            if device_type not in SENSOR_TYPES[sensor_type][1]:
-                continue
-
-            if not wifi_enabled and sensor_type.startswith("wifi_"):
-                continue
-
-            for device in devices[device_type]:
-                if device_type == "battery" and device.battery_life is None:
-                    continue
-
-                sensors.append(
-                    SENSOR_TYPES[sensor_type][6](
-                        config_entry.entry_id, device, sensor_type
-                    )
-                )
-
-    async_add_entities(sensors)
+    async_add_entities(entities)
 
 
-class RingSensor(RingEntityMixin, Entity):
+class RingSensor(RingEntity[RingDeviceT], SensorEntity):
     """A sensor implementation for Ring device."""
 
-    def __init__(self, config_entry_id, device, sensor_type):
+    entity_description: RingSensorEntityDescription[RingDeviceT]
+
+    def __init__(
+        self,
+        device: RingDeviceT,
+        coordinator: RingDataCoordinator,
+        description: RingSensorEntityDescription[RingDeviceT],
+    ) -> None:
         """Initialize a sensor for Ring device."""
-        super().__init__(config_entry_id, device)
-        self._sensor_type = sensor_type
-        self._extra = None
-        self._icon = "mdi:{}".format(SENSOR_TYPES.get(sensor_type)[3])
-        self._kind = SENSOR_TYPES.get(sensor_type)[4]
-        self._name = "{0} {1}".format(
-            self._device.name, SENSOR_TYPES.get(sensor_type)[0]
+        super().__init__(device, coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{device.id}-{description.key}"
+        self._attr_entity_registry_enabled_default = (
+            description.entity_registry_enabled_default
         )
-        self._unique_id = f"{device.id}-{sensor_type}"
+        self._attr_native_value = self.entity_description.value_fn(self._device)
 
-    @property
-    def should_poll(self):
-        """Return False, updates are controlled via the hub."""
-        return False
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Call update method."""
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._device = cast(
+            RingDeviceT,
+            self._get_coordinator_data().get_device(self._device.device_api_id),
+        )
+        # History values can drop off the last 10 events so only update
+        # the value if it's not None
+        if native_value := self.entity_description.value_fn(self._device):
+            self._attr_native_value = native_value
+        if extra_attrs := self.entity_description.extra_state_attributes_fn(
+            self._device
+        ):
+            self._attr_extra_state_attributes = extra_attrs
+        super()._handle_coordinator_update()
 
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self._sensor_type == "volume":
-            return self._device.volume
 
-        if self._sensor_type == "battery":
-            return self._device.battery_life
+def _get_last_event(
+    history_data: list[dict[str, Any]], kind: RingEventKind | None
+) -> dict[str, Any] | None:
+    if not history_data:
+        return None
+    if kind is None:
+        return history_data[0]
+    for entry in history_data:
+        if entry["kind"] == kind.value:
+            return entry
+    return None
 
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
 
-    @property
-    def device_class(self):
-        """Return sensor device class."""
-        return SENSOR_TYPES[self._sensor_type][5]
+def _get_last_event_attrs(
+    history_data: list[dict[str, Any]], kind: RingEventKind | None
+) -> dict[str, Any] | None:
+    if last_event := _get_last_event(history_data, kind):
+        return {
+            "created_at": last_event.get("created_at"),
+            "answered": last_event.get("answered"),
+            "recording_status": last_event.get("recording", {}).get("status"),
+            "category": last_event.get("kind"),
+        }
+    return None
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        if self._sensor_type == "battery" and self._device.battery_life is not None:
-            return icon_for_battery_level(
-                battery_level=self._device.battery_life, charging=False
+
+@dataclass(frozen=True, kw_only=True)
+class RingSensorEntityDescription(
+    SensorEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+):
+    """Describes Ring sensor entity."""
+
+    value_fn: Callable[[RingDeviceT], StateType] = lambda _: True
+    exists_fn: Callable[[RingGeneric], bool] = lambda _: True
+    extra_state_attributes_fn: Callable[[RingDeviceT], dict[str, Any] | None] = (
+        lambda _: None
+    )
+
+
+# For some reason mypy doesn't properly type check the default TypeVar value here
+# so for now the [RingGeneric] subscript needs to be specified.
+# Once https://github.com/python/mypy/issues/14851 is closed this should hopefully
+# be fixed and the [RingGeneric] subscript can be removed.
+# https://github.com/home-assistant/core/pull/115276#discussion_r1560106576
+SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
+    RingSensorEntityDescription[RingGeneric](
+        key="battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.battery_life,
+        exists_fn=lambda device: device.family != "chimes",
+    ),
+    RingSensorEntityDescription[RingGeneric](
+        key="last_activity",
+        translation_key="last_activity",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda device: last_event.get("created_at")
+        if (last_event := _get_last_event(device.last_history, None))
+        else None,
+        extra_state_attributes_fn=lambda device: last_event_attrs
+        if (last_event_attrs := _get_last_event_attrs(device.last_history, None))
+        else None,
+        exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
+    ),
+    RingSensorEntityDescription[RingGeneric](
+        key="last_ding",
+        translation_key="last_ding",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda device: last_event.get("created_at")
+        if (last_event := _get_last_event(device.last_history, RingEventKind.DING))
+        else None,
+        extra_state_attributes_fn=lambda device: last_event_attrs
+        if (
+            last_event_attrs := _get_last_event_attrs(
+                device.last_history, RingEventKind.DING
             )
-        return self._icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return SENSOR_TYPES.get(self._sensor_type)[2]
-
-
-class HealthDataRingSensor(RingSensor):
-    """Ring sensor that relies on health data."""
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        await super().async_added_to_hass()
-
-        await self.ring_objects["health_data"].async_track_device(
-            self._device, self._health_update_callback
         )
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect callbacks."""
-        await super().async_will_remove_from_hass()
-
-        self.ring_objects["health_data"].async_untrack_device(
-            self._device, self._health_update_callback
+        else None,
+        exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
+        ),
+    ),
+    RingSensorEntityDescription[RingGeneric](
+        key="last_motion",
+        translation_key="last_motion",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda device: last_event.get("created_at")
+        if (last_event := _get_last_event(device.last_history, RingEventKind.MOTION))
+        else None,
+        extra_state_attributes_fn=lambda device: last_event_attrs
+        if (
+            last_event_attrs := _get_last_event_attrs(
+                device.last_history, RingEventKind.MOTION
+            )
         )
-
-    @callback
-    def _health_update_callback(self, _health_data):
-        """Call update method."""
-        self.async_write_ha_state()
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self._sensor_type == "wifi_signal_category":
-            return self._device.wifi_signal_category
-
-        if self._sensor_type == "wifi_signal_strength":
-            return self._device.wifi_signal_strength
-
-
-class HistoryRingSensor(RingSensor):
-    """Ring sensor that relies on history data."""
-
-    _latest_event = None
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        await super().async_added_to_hass()
-
-        await self.ring_objects["history_data"].async_track_device(
-            self._device, self._history_update_callback
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect callbacks."""
-        await super().async_will_remove_from_hass()
-
-        self.ring_objects["history_data"].async_untrack_device(
-            self._device, self._history_update_callback
-        )
-
-    @callback
-    def _history_update_callback(self, history_data):
-        """Call update method."""
-        if not history_data:
-            return
-
-        found = None
-        if self._kind is None:
-            found = history_data[0]
-        else:
-            for entry in history_data:
-                if entry["kind"] == self._kind:
-                    found = entry
-                    break
-
-        if not found:
-            return
-
-        self._latest_event = found
-        self.async_write_ha_state()
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self._latest_event is None:
-            return None
-
-        return self._latest_event["created_at"].isoformat()
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attrs = super().device_state_attributes
-
-        if self._latest_event:
-            attrs["created_at"] = self._latest_event["created_at"]
-            attrs["answered"] = self._latest_event["answered"]
-            attrs["recording_status"] = self._latest_event["recording"]["status"]
-            attrs["category"] = self._latest_event["kind"]
-
-        return attrs
-
-
-# Sensor types: Name, category, units, icon, kind, device_class, class
-SENSOR_TYPES = {
-    "battery": [
-        "Battery",
-        ["doorbots", "authorized_doorbots", "stickup_cams"],
-        "%",
-        None,
-        None,
-        "battery",
-        RingSensor,
-    ],
-    "last_activity": [
-        "Last Activity",
-        ["doorbots", "authorized_doorbots", "stickup_cams"],
-        None,
-        "history",
-        None,
-        "timestamp",
-        HistoryRingSensor,
-    ],
-    "last_ding": [
-        "Last Ding",
-        ["doorbots", "authorized_doorbots"],
-        None,
-        "history",
-        "ding",
-        "timestamp",
-        HistoryRingSensor,
-    ],
-    "last_motion": [
-        "Last Motion",
-        ["doorbots", "authorized_doorbots", "stickup_cams"],
-        None,
-        "history",
-        "motion",
-        "timestamp",
-        HistoryRingSensor,
-    ],
-    "volume": [
-        "Volume",
-        ["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
-        None,
-        "bell-ring",
-        None,
-        None,
-        RingSensor,
-    ],
-    "wifi_signal_category": [
-        "WiFi Signal Category",
-        ["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
-        None,
-        "wifi",
-        None,
-        None,
-        HealthDataRingSensor,
-    ],
-    "wifi_signal_strength": [
-        "WiFi Signal Strength",
-        ["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
-        "dBm",
-        "wifi",
-        None,
-        "signal_strength",
-        HealthDataRingSensor,
-    ],
-}
+        else None,
+        exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
+        ),
+    ),
+    RingSensorEntityDescription[RingDoorBell | RingChime](
+        key="volume",
+        translation_key="volume",
+        value_fn=lambda device: device.volume,
+        exists_fn=lambda device: isinstance(device, (RingDoorBell, RingChime)),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
+    ),
+    RingSensorEntityDescription[RingOther](
+        key="doorbell_volume",
+        translation_key="doorbell_volume",
+        value_fn=lambda device: device.doorbell_volume,
+        exists_fn=lambda device: isinstance(device, RingOther),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
+    ),
+    RingSensorEntityDescription[RingOther](
+        key="mic_volume",
+        translation_key="mic_volume",
+        value_fn=lambda device: device.mic_volume,
+        exists_fn=lambda device: isinstance(device, RingOther),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
+    ),
+    RingSensorEntityDescription[RingOther](
+        key="voice_volume",
+        translation_key="voice_volume",
+        value_fn=lambda device: device.voice_volume,
+        exists_fn=lambda device: isinstance(device, RingOther),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
+    ),
+    RingSensorEntityDescription[RingGeneric](
+        key="wifi_signal_category",
+        translation_key="wifi_signal_category",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.wifi_signal_category,
+    ),
+    RingSensorEntityDescription[RingGeneric](
+        key="wifi_signal_strength",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.wifi_signal_strength,
+    ),
+)

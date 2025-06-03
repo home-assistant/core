@@ -1,28 +1,29 @@
 """Support for hydrological data from the Fed. Office for the Environment."""
+
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from swisshydrodata import SwissHydroData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by the Swiss Federal Office for the Environment FOEN"
-
-ATTR_DELTA_24H = "delta-24h"
-ATTR_MAX_1H = "max-1h"
 ATTR_MAX_24H = "max-24h"
-ATTR_MEAN_1H = "mean-1h"
 ATTR_MEAN_24H = "mean-24h"
-ATTR_MIN_1H = "min-1h"
 ATTR_MIN_24H = "min-24h"
-ATTR_PREVIOUS_24H = "previous-24h"
 ATTR_STATION = "station"
 ATTR_STATION_UPDATE = "station_update"
 ATTR_WATER_BODY = "water_body"
@@ -43,17 +44,12 @@ CONDITIONS = {
 }
 
 CONDITION_DETAILS = [
-    ATTR_DELTA_24H,
-    ATTR_MAX_1H,
     ATTR_MAX_24H,
-    ATTR_MEAN_1H,
     ATTR_MEAN_24H,
-    ATTR_MIN_1H,
     ATTR_MIN_24H,
-    ATTR_PREVIOUS_24H,
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATION): vol.Coerce(int),
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_TEMPERATURE]): vol.All(
@@ -63,10 +59,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Swiss hydrological sensor."""
-    station = config.get(CONF_STATION)
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+    station = config[CONF_STATION]
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
     hydro_data = HydrologicalData(station)
     hydro_data.update()
@@ -75,16 +76,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("The station doesn't exists: %s", station)
         return
 
-    entities = []
+    add_entities(
+        (
+            SwissHydrologicalDataSensor(hydro_data, station, condition)
+            for condition in monitored_conditions
+        ),
+        True,
+    )
 
-    for condition in monitored_conditions:
-        entities.append(SwissHydrologicalDataSensor(hydro_data, station, condition))
 
-    add_entities(entities, True)
-
-
-class SwissHydrologicalDataSensor(Entity):
+class SwissHydrologicalDataSensor(SensorEntity):
     """Implementation of a Swiss hydrological sensor."""
+
+    _attr_attribution = (
+        "Data provided by the Swiss Federal Office for the Environment FOEN"
+    )
 
     def __init__(self, hydro_data, station, condition):
         """Initialize the Swiss hydrological sensor."""
@@ -97,7 +103,7 @@ class SwissHydrologicalDataSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{0} {1}".format(self._data["water-body-name"], self._condition)
+        return f"{self._data['water-body-name']} {self._condition}"
 
     @property
     def unique_id(self) -> str:
@@ -105,26 +111,25 @@ class SwissHydrologicalDataSensor(Entity):
         return f"{self._station}_{self._condition}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if self._state is not None:
             return self.hydro_data.data["parameters"][self._condition]["unit"]
         return None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if isinstance(self._state, (int, float)):
             return round(self._state, 2)
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attrs = {}
 
         if not self._data:
-            attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
             return attrs
 
         attrs[ATTR_WATER_BODY_TYPE] = self._data["water-body-type"]
@@ -132,7 +137,6 @@ class SwissHydrologicalDataSensor(Entity):
         attrs[ATTR_STATION_UPDATE] = self._data["parameters"][self._condition][
             "datetime"
         ]
-        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         for entry in CONDITION_DETAILS:
             attrs[entry.replace("-", "_")] = self._data["parameters"][self._condition][
@@ -146,7 +150,7 @@ class SwissHydrologicalDataSensor(Entity):
         """Icon to use in the frontend."""
         return self._icon
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the state."""
         self.hydro_data.update()
         self._data = self.hydro_data.data

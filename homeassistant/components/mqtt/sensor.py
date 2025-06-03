@@ -1,262 +1,425 @@
 """Support for MQTT sensors."""
-from datetime import timedelta
-import json
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from datetime import datetime, timedelta
 import logging
-from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt, sensor
-from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
+from homeassistant.components import sensor
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
+    DEVICE_CLASSES_SCHEMA,
+    ENTITY_ID_FORMAT,
+    STATE_CLASS_UNITS,
+    STATE_CLASSES_SCHEMA,
+    RestoreSensor,
+    SensorDeviceClass,
+    SensorExtraStoredData,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
-    CONF_ICON,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util import dt as dt_util
 
-from . import (
-    ATTR_DISCOVERY_HASH,
-    CONF_QOS,
+from . import subscription
+from .config import MQTT_RO_SCHEMA
+from .const import (
+    CONF_EXPIRE_AFTER,
+    CONF_LAST_RESET_VALUE_TEMPLATE,
+    CONF_OPTIONS,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    subscription,
+    CONF_SUGGESTED_DISPLAY_PRECISION,
+    DOMAIN,
+    PAYLOAD_NONE,
 )
-from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
+from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
+from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXPIRE_AFTER = "expire_after"
-CONF_JSON_ATTRS = "json_attributes"
+PARALLEL_UPDATES = 0
+
+MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
+    {
+        sensor.ATTR_LAST_RESET,
+        sensor.ATTR_STATE_CLASS,
+    }
+)
 
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
-PLATFORM_SCHEMA = (
-    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
-            vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        }
-    )
-    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+
+URL_DOCS_SUPPORTED_SENSOR_UOM = (
+    "https://www.home-assistant.io/integrations/sensor/#device-class"
+)
+
+_PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
+        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+        vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
+        vol.Optional(CONF_OPTIONS): cv.ensure_list,
+        vol.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
+        vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
+    }
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+
+
+def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigType:
+    """Validate the sensor options, state and device class config."""
+    if (
+        CONF_LAST_RESET_VALUE_TEMPLATE in config
+        and (state_class := config.get(CONF_STATE_CLASS)) != SensorStateClass.TOTAL
+    ):
+        raise vol.Invalid(
+            f"The option `{CONF_LAST_RESET_VALUE_TEMPLATE}` cannot be used "
+            f"together with state class `{state_class}`"
+        )
+
+    # Only allow `options` to be set for `enum` sensors
+    # to limit the possible sensor values
+    if (options := config.get(CONF_OPTIONS)) is not None:
+        if not options:
+            raise vol.Invalid("An empty options list is not allowed")
+        if config.get(CONF_STATE_CLASS) or config.get(CONF_UNIT_OF_MEASUREMENT):
+            raise vol.Invalid(
+                f"Specifying `{CONF_OPTIONS}` is not allowed together with "
+                f"the `{CONF_STATE_CLASS}` or `{CONF_UNIT_OF_MEASUREMENT}` option"
+            )
+
+        if (device_class := config.get(CONF_DEVICE_CLASS)) != SensorDeviceClass.ENUM:
+            raise vol.Invalid(
+                f"The option `{CONF_OPTIONS}` must be used "
+                f"together with device class `{SensorDeviceClass.ENUM}`, "
+                f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
+            )
+
+    if (
+        (state_class := config.get(CONF_STATE_CLASS)) is not None
+        and state_class in STATE_CLASS_UNITS
+        and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT))
+        not in STATE_CLASS_UNITS[state_class]
+    ):
+        raise vol.Invalid(
+            f"The unit of measurement '{unit_of_measurement}' is not valid "
+            f"together with state class '{state_class}'"
+        )
+
+    if (device_class := config.get(CONF_DEVICE_CLASS)) is None or (
+        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
+    ) is None:
+        return config
+
+    if (
+        device_class in DEVICE_CLASS_UNITS
+        and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
+    ):
+        _LOGGER.warning(
+            "The unit of measurement `%s` is not valid "
+            "together with device class `%s`. "
+            "this will stop working in HA Core 2025.7.0",
+            unit_of_measurement,
+            device_class,
+        )
+
+    return config
+
+
+PLATFORM_SCHEMA_MODERN = vol.All(
+    _PLATFORM_SCHEMA_BASE,
+    validate_sensor_state_and_device_class_config,
+)
+
+DISCOVERY_SCHEMA = vol.All(
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+    validate_sensor_state_and_device_class_config,
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
-):
-    """Set up MQTT sensors through configuration.yaml."""
-    await _async_setup_entity(config, async_add_entities)
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up MQTT sensors dynamically through MQTT discovery."""
-
-    async def async_discover_sensor(discovery_payload):
-        """Discover and add a discovered MQTT sensor."""
-        try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
-            config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_hash
-            )
-        except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(sensor.DOMAIN, "mqtt"), async_discover_sensor
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up MQTT sensor through YAML and through MQTT discovery."""
+    async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttSensor,
+        sensor.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
 
 
-async def _async_setup_entity(
-    config: ConfigType, async_add_entities, config_entry=None, discovery_hash=None
-):
-    """Set up MQTT sensor."""
-    async_add_entities([MqttSensor(config, config_entry, discovery_hash)])
-
-
-class MqttSensor(
-    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Entity
-):
+class MqttSensor(MqttEntity, RestoreSensor):
     """Representation of a sensor that can be updated using MQTT."""
 
-    def __init__(self, config, config_entry, discovery_hash):
-        """Initialize the sensor."""
-        self._config = config
-        self._unique_id = config.get(CONF_UNIQUE_ID)
-        self._state = None
-        self._sub_state = None
-        self._expiration_trigger = None
-        self._attributes = None
-
-        device_config = config.get(CONF_DEVICE)
-
-        if config.get(CONF_JSON_ATTRS):
-            _LOGGER.warning(
-                'configuration variable "json_attributes" is '
-                'deprecated, replace with "json_attributes_topic"'
-            )
-
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
-
-    async def async_added_to_hass(self):
-        """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
-
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        self._config = config
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
-
-    async def _subscribe_topics(self):
-        """(Re)Subscribe to topics."""
-        template = self._config.get(CONF_VALUE_TEMPLATE)
-        if template is not None:
-            template.hass = self.hass
-
-        @callback
-        def message_received(msg):
-            """Handle new MQTT messages."""
-            payload = msg.payload
-            # auto-expire enabled?
-            expire_after = self._config.get(CONF_EXPIRE_AFTER)
-            if expire_after is not None and expire_after > 0:
-                # Reset old trigger
-                if self._expiration_trigger:
-                    self._expiration_trigger()
-                    self._expiration_trigger = None
-
-                # Set new trigger
-                expiration_at = dt_util.utcnow() + timedelta(seconds=expire_after)
-
-                self._expiration_trigger = async_track_point_in_utc_time(
-                    self.hass, self.value_is_expired, expiration_at
-                )
-
-            json_attributes = set(self._config[CONF_JSON_ATTRS])
-            if json_attributes:
-                self._attributes = {}
-                try:
-                    json_dict = json.loads(payload)
-                    if isinstance(json_dict, dict):
-                        attrs = {
-                            k: json_dict[k] for k in json_attributes & json_dict.keys()
-                        }
-                        self._attributes = attrs
-                    else:
-                        _LOGGER.warning("JSON result was not a dictionary")
-                except ValueError:
-                    _LOGGER.warning("MQTT payload could not be parsed as JSON")
-                    _LOGGER.debug("Erroneous JSON: %s", payload)
-
-            if template is not None:
-                payload = template.async_render_with_possible_json_value(
-                    payload, self._state
-                )
-            self._state = payload
-            self.async_write_ha_state()
-
-        self._sub_state = await subscription.async_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": self._config[CONF_STATE_TOPIC],
-                    "msg_callback": message_received,
-                    "qos": self._config[CONF_QOS],
-                }
-            },
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
+    _default_name = DEFAULT_NAME
+    _entity_id_format = ENTITY_ID_FORMAT
+    _attr_last_reset: datetime | None = None
+    _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
+    _expiration_trigger: CALLBACK_TYPE | None = None
+    _expire_after: int | None
+    _expired: bool | None
+    _template: (
+        Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType] | None
+    ) = None
+    _last_reset_template: Callable[[ReceivePayloadType], ReceivePayloadType] | None = (
+        None
+    )
 
     @callback
-    def value_is_expired(self, *_):
+    def async_check_uom(self) -> None:
+        """Check if the unit of measurement is valid with the device class."""
+        if (
+            self._discovery_data is not None
+            or self.device_class is None
+            or self.native_unit_of_measurement is None
+        ):
+            return
+        if (
+            self.device_class in DEVICE_CLASS_UNITS
+            and self.native_unit_of_measurement
+            not in DEVICE_CLASS_UNITS[self.device_class]
+        ):
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                self.entity_id,
+                issue_domain=sensor.DOMAIN,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                learn_more_url=URL_DOCS_SUPPORTED_SENSOR_UOM,
+                translation_placeholders={
+                    "uom": self.native_unit_of_measurement,
+                    "device_class": self.device_class.value,
+                    "entity_id": self.entity_id,
+                },
+                translation_key="invalid_unit_of_measurement",
+                breaks_in_ha_version="2025.7.0",
+            )
+
+    async def mqtt_async_added_to_hass(self) -> None:
+        """Restore state for entities with expire_after set."""
+        self.async_check_uom()
+        last_state: State | None
+        last_sensor_data: SensorExtraStoredData | None
+        if (
+            (_expire_after := self._expire_after) is not None
+            and _expire_after > 0
+            and (last_state := await self.async_get_last_state()) is not None
+            and last_state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+            and (last_sensor_data := await self.async_get_last_sensor_data())
+            is not None
+            # We might have set up a trigger already after subscribing from
+            # MqttEntity.async_added_to_hass(), then we should not restore state
+            and not self._expiration_trigger
+        ):
+            expiration_at = last_state.last_changed + timedelta(seconds=_expire_after)
+            remain_seconds = (expiration_at - dt_util.utcnow()).total_seconds()
+
+            if remain_seconds <= 0:
+                # Skip reactivating the sensor
+                _LOGGER.debug("Skip state recovery after reload for %s", self.entity_id)
+                return
+            self._expired = False
+            self._attr_native_value = last_sensor_data.native_value
+
+            self._expiration_trigger = async_call_later(
+                self.hass, remain_seconds, self._value_is_expired
+            )
+            _LOGGER.debug(
+                (
+                    "State recovered after reload for %s, remaining time before"
+                    " expiring %s"
+                ),
+                self.entity_id,
+                remain_seconds,
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove expire triggers."""
+        if self._expiration_trigger:
+            _LOGGER.debug("Clean up expire after trigger for %s", self.entity_id)
+            self._expiration_trigger()
+            self._expiration_trigger = None
+            self._expired = False
+        await MqttEntity.async_will_remove_from_hass(self)
+
+    @staticmethod
+    def config_schema() -> VolSchemaType:
+        """Return the config schema."""
+        return DISCOVERY_SCHEMA
+
+    def _setup_from_config(self, config: ConfigType) -> None:
+        """(Re)Setup the entity."""
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_force_update = config[CONF_FORCE_UPDATE]
+        self._attr_suggested_display_precision = config.get(
+            CONF_SUGGESTED_DISPLAY_PRECISION
+        )
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_options = config.get(CONF_OPTIONS)
+        self._attr_state_class = config.get(CONF_STATE_CLASS)
+
+        self._expire_after = config.get(CONF_EXPIRE_AFTER)
+        if self._expire_after is not None and self._expire_after > 0:
+            self._expired = True
+        else:
+            self._expired = None
+
+        if value_template := config.get(CONF_VALUE_TEMPLATE):
+            self._template = MqttValueTemplate(
+                value_template, entity=self
+            ).async_render_with_possible_json_value
+        if last_reset_template := config.get(CONF_LAST_RESET_VALUE_TEMPLATE):
+            self._last_reset_template = MqttValueTemplate(
+                last_reset_template, entity=self
+            ).async_render_with_possible_json_value
+
+    @callback
+    def _update_state(self, msg: ReceiveMessage) -> None:
+        # auto-expire enabled?
+        if self._expire_after is not None and self._expire_after > 0:
+            # When self._expire_after is set, and we receive a message, assume
+            # device is not expired since it has to be to receive the message
+            self._expired = False
+
+            # Reset old trigger
+            if self._expiration_trigger:
+                self._expiration_trigger()
+
+            # Set new trigger
+            self._expiration_trigger = async_call_later(
+                self.hass, self._expire_after, self._value_is_expired
+            )
+
+        if template := self._template:
+            payload = template(msg.payload, PayloadSentinel.DEFAULT)
+        else:
+            payload = msg.payload
+        if payload is PayloadSentinel.DEFAULT:
+            return
+        if not isinstance(payload, str):
+            _LOGGER.warning(
+                "Invalid undecoded state message '%s' received from '%s'",
+                payload,
+                msg.topic,
+            )
+            return
+
+        if payload == PAYLOAD_NONE:
+            self._attr_native_value = None
+            return
+
+        if self._numeric_state_expected:
+            if payload == "":
+                _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
+            else:
+                self._attr_native_value = payload
+            return
+
+        if self.options and payload not in self.options:
+            _LOGGER.warning(
+                "Ignoring invalid option received on topic '%s', got '%s', allowed: %s",
+                msg.topic,
+                payload,
+                ", ".join(self.options),
+            )
+            return
+
+        if self.device_class in {
+            None,
+            SensorDeviceClass.ENUM,
+        } and not check_state_too_long(_LOGGER, payload, self.entity_id, msg):
+            self._attr_native_value = payload
+            return
+        try:
+            if (payload_datetime := dt_util.parse_datetime(payload)) is None:
+                raise ValueError  # noqa: TRY301
+        except ValueError:
+            _LOGGER.warning("Invalid state message '%s' from '%s'", payload, msg.topic)
+            self._attr_native_value = None
+            return
+        if self.device_class == SensorDeviceClass.DATE:
+            self._attr_native_value = payload_datetime.date()
+            return
+        self._attr_native_value = payload_datetime
+
+    @callback
+    def _update_last_reset(self, msg: ReceiveMessage) -> None:
+        template = self._last_reset_template
+        payload = msg.payload if template is None else template(msg.payload)
+        if not payload:
+            _LOGGER.debug("Ignoring empty last_reset message from '%s'", msg.topic)
+            return
+        try:
+            last_reset = dt_util.parse_datetime(str(payload))
+            if last_reset is None:
+                raise ValueError  # noqa: TRY301
+            self._attr_last_reset = last_reset
+        except ValueError:
+            _LOGGER.warning(
+                "Invalid last_reset message '%s' from '%s'", msg.payload, msg.topic
+            )
+
+    @callback
+    def _state_message_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT state messages."""
+        self._update_state(msg)
+        if CONF_LAST_RESET_VALUE_TEMPLATE in self._config:
+            self._update_last_reset(msg)
+
+    @callback
+    def _prepare_subscribe_topics(self) -> None:
+        """(Re)Subscribe to topics."""
+        self.add_subscription(
+            CONF_STATE_TOPIC,
+            self._state_message_received,
+            {"_attr_native_value", "_attr_last_reset", "_expired"},
+        )
+
+    async def _subscribe_topics(self) -> None:
+        """(Re)Subscribe to topics."""
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
+
+    @callback
+    def _value_is_expired(self, *_: datetime) -> None:
         """Triggered when value is expired."""
         self._expiration_trigger = None
-        self._state = None
+        self._expired = True
         self.async_write_ha_state()
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._config[CONF_NAME]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._config[CONF_FORCE_UPDATE]
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return self._state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._config.get(CONF_ICON)
-
-    @property
-    def device_class(self) -> Optional[str]:
-        """Return the device class of the sensor."""
-        return self._config.get(CONF_DEVICE_CLASS)
+    def available(self) -> bool:
+        """Return true if the device is available and value has not expired."""
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        return MqttAvailabilityMixin.available.fget(self) and (  # type: ignore[attr-defined]
+            self._expire_after is None or not self._expired
+        )

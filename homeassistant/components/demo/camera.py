@@ -1,88 +1,78 @@
 """Demo camera platform that has a fake camera."""
-import logging
-import os
 
-from homeassistant.components.camera import SUPPORT_ON_OFF, Camera
+from __future__ import annotations
 
-_LOGGER = logging.getLogger(__name__)
+from pathlib import Path
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Demo camera platform."""
-    async_add_entities([DemoCamera("Demo camera")])
+from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
+    async_add_entities(
+        [
+            DemoCamera("Demo camera", "image/jpg"),
+            DemoCamera("Demo camera png", "image/png"),
+            DemoCameraWithoutStream("Demo camera without stream", "image/jpg"),
+        ]
+    )
 
 
 class DemoCamera(Camera):
     """The representation of a Demo camera."""
 
-    def __init__(self, name):
+    _attr_is_streaming = True
+    _attr_motion_detection_enabled = False
+    _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
+
+    def __init__(self, name: str, content_type: str) -> None:
         """Initialize demo camera component."""
         super().__init__()
-        self._name = name
-        self._motion_status = False
-        self.is_streaming = True
+        self._attr_name = name
+        self.content_type = content_type
         self._images_index = 0
 
-    def camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes:
         """Return a faked still image response."""
         self._images_index = (self._images_index + 1) % 4
+        ext = "jpg" if self.content_type == "image/jpg" else "png"
+        image_path = Path(__file__).parent / f"demo_{self._images_index}.{ext}"
 
-        image_path = os.path.join(
-            os.path.dirname(__file__), f"demo_{self._images_index}.jpg"
-        )
-        _LOGGER.debug("Loading camera_image: %s", image_path)
-        with open(image_path, "rb") as file:
-            return file.read()
+        return await self.hass.async_add_executor_job(image_path.read_bytes)
 
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Demo camera doesn't need poll.
-
-        Need explicitly call schedule_update_ha_state() after state changed.
-        """
-        return False
-
-    @property
-    def supported_features(self):
-        """Camera support turn on/off features."""
-        return SUPPORT_ON_OFF
-
-    @property
-    def is_on(self):
-        """Whether camera is on (streaming)."""
-        return self.is_streaming
-
-    @property
-    def motion_detection_enabled(self):
-        """Camera Motion Detection Status."""
-        return self._motion_status
-
-    def enable_motion_detection(self):
+    async def async_enable_motion_detection(self) -> None:
         """Enable the Motion detection in base station (Arm)."""
-        self._motion_status = True
-        self.schedule_update_ha_state()
+        self._attr_motion_detection_enabled = True
+        self.async_write_ha_state()
 
-    def disable_motion_detection(self):
+    async def async_disable_motion_detection(self) -> None:
         """Disable the motion detection in base station (Disarm)."""
-        self._motion_status = False
-        self.schedule_update_ha_state()
+        self._attr_motion_detection_enabled = False
+        self.async_write_ha_state()
 
-    def turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off camera."""
-        self.is_streaming = False
-        self.schedule_update_ha_state()
+        self._attr_is_streaming = False
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
-    def turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on camera."""
-        self.is_streaming = True
-        self.schedule_update_ha_state()
+        self._attr_is_streaming = True
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+
+class DemoCameraWithoutStream(DemoCamera):
+    """The representation of a Demo camera without stream."""
+
+    _attr_supported_features = CameraEntityFeature.ON_OFF

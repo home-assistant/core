@@ -1,10 +1,9 @@
-"""Constants for the Epson projector component."""
+"""Constants for the epson integration."""
+
 DOMAIN = "epson"
 SERVICE_SELECT_CMODE = "select_cmode"
+CONF_CONNECTION_TYPE = "connection_type"
 
 ATTR_CMODE = "cmode"
-
-DATA_EPSON = "epson"
-DEFAULT_NAME = "EPSON Projector"
-
-SUPPORT_CMODE = 33001
+HTTP = "http"
+SERIAL = "serial"

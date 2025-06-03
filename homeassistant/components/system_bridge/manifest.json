@@ -1,0 +1,14 @@
+{
+  "domain": "system_bridge",
+  "name": "System Bridge",
+  "after_dependencies": ["zeroconf"],
+  "codeowners": ["@timmo001"],
+  "config_flow": true,
+  "dependencies": ["media_source"],
+  "documentation": "https://www.home-assistant.io/integrations/system_bridge",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["systembridgeconnector"],
+  "requirements": ["systembridgeconnector==4.1.5", "systembridgemodels==4.2.4"],
+  "zeroconf": ["_system-bridge._tcp.local."]
+}

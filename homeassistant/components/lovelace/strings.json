@@ -1,0 +1,16 @@
+{
+  "system_health": {
+    "info": {
+      "dashboards": "Dashboards",
+      "mode": "[%key:common::config_flow::data::mode%]",
+      "resources": "Resources",
+      "views": "Views"
+    }
+  },
+  "services": {
+    "reload_resources": {
+      "name": "Reload resources",
+      "description": "Reloads dashboard resources from the YAML-configuration."
+    }
+  }
+}

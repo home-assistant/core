@@ -1,0 +1,16 @@
+# Describes the format for available Litter-Robot services
+
+set_sleep_mode:
+  target:
+    entity:
+      integration: litterrobot
+  fields:
+    enabled:
+      required: true
+      selector:
+        boolean:
+    start_time:
+      required: false
+      example: '"22:30:00"'
+      selector:
+        time:

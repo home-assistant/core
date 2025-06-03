@@ -1,0 +1,121 @@
+set_custom_effect:
+  target:
+    entity:
+      integration: flux_led
+      domain: light
+  fields:
+    colors:
+      example: |
+        - [255,0,0]
+        - [0,255,0]
+        - [0,0,255]
+      required: true
+      selector:
+        object:
+    speed_pct:
+      example: 80
+      default: 50
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
+          max: 100
+          unit_of_measurement: "%"
+    transition:
+      example: "jump"
+      default: "gradual"
+      required: false
+      selector:
+        select:
+          options:
+            - "gradual"
+            - "jump"
+            - "strobe"
+set_zones:
+  target:
+    entity:
+      integration: flux_led
+      domain: light
+  fields:
+    colors:
+      example: |
+        - [255,0,0]
+        - [0,255,0]
+        - [0,0,255]
+        - [255,255,255]
+      required: true
+      selector:
+        object:
+    speed_pct:
+      example: 80
+      default: 50
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
+          max: 100
+          unit_of_measurement: "%"
+    effect:
+      example: "running_water"
+      default: "static"
+      required: false
+      selector:
+        select:
+          options:
+            - "static"
+            - "running_water"
+            - "strobe"
+            - "jump"
+            - "breathing"
+set_music_mode:
+  target:
+    entity:
+      integration: flux_led
+      domain: light
+  fields:
+    sensitivity:
+      example: 80
+      default: 100
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
+          max: 100
+          unit_of_measurement: "%"
+    brightness:
+      example: 80
+      default: 100
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
+          max: 100
+          unit_of_measurement: "%"
+    light_screen:
+      default: false
+      required: false
+      selector:
+        boolean:
+    effect:
+      example: 1
+      default: 1
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          max: 16
+    foreground_color:
+      example: "[255, 100, 100]"
+      required: false
+      selector:
+        color_rgb:
+    background_color:
+      example: "[255, 100, 100]"
+      required: false
+      selector:
+        color_rgb:

@@ -1,0 +1,6 @@
+{
+  "domain": "pinecil",
+  "name": "Pinecil",
+  "integration_type": "virtual",
+  "supported_by": "iron_os"
+}

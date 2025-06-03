@@ -1,246 +1,195 @@
-"""Support for interface with a Panasonic Viera TV."""
+"""Media player support for Panasonic Viera TV."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
-from panasonic_viera import RemoteControl
-import voluptuous as vol
-import wakeonlan
+from panasonic_viera import Keys
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_URL,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components import media_source
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
+    async_process_play_media_url,
 )
-from homeassistant.const import (
-    CONF_BROADCAST_ADDRESS,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_ON,
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import (
+    ATTR_DEVICE_INFO,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL_NUMBER,
+    ATTR_REMOTE,
+    ATTR_UDN,
+    DEFAULT_MANUFACTURER,
+    DEFAULT_MODEL_NUMBER,
+    DOMAIN,
 )
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_APP_POWER = "app_power"
 
-DEFAULT_NAME = "Panasonic Viera TV"
-DEFAULT_PORT = 55000
-DEFAULT_BROADCAST_ADDRESS = "255.255.255.255"
-DEFAULT_APP_POWER = False
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Panasonic Viera TV from a config entry."""
 
-SUPPORT_VIERATV = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-)
+    config = config_entry.data
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_MAC): cv.string,
-        vol.Optional(
-            CONF_BROADCAST_ADDRESS, default=DEFAULT_BROADCAST_ADDRESS
-        ): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_APP_POWER, default=DEFAULT_APP_POWER): cv.boolean,
-    }
-)
+    remote = hass.data[DOMAIN][config_entry.entry_id][ATTR_REMOTE]
+    name = config[CONF_NAME]
+    device_info = config[ATTR_DEVICE_INFO]
+
+    tv_device = PanasonicVieraTVEntity(remote, name, device_info)
+    async_add_entities([tv_device])
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Panasonic Viera TV platform."""
-    mac = config.get(CONF_MAC)
-    broadcast = config.get(CONF_BROADCAST_ADDRESS)
-    name = config.get(CONF_NAME)
-    port = config.get(CONF_PORT)
-    app_power = config.get(CONF_APP_POWER)
-
-    if discovery_info:
-        _LOGGER.debug("%s", discovery_info)
-        name = discovery_info.get("name")
-        host = discovery_info.get("host")
-        port = discovery_info.get("port")
-        udn = discovery_info.get("udn")
-        if udn and udn.startswith("uuid:"):
-            uuid = udn[len("uuid:") :]
-        else:
-            uuid = None
-        remote = RemoteControl(host, port)
-        add_entities([PanasonicVieraTVDevice(mac, name, remote, host, app_power, uuid)])
-        return True
-
-    host = config.get(CONF_HOST)
-    remote = RemoteControl(host, port)
-
-    add_entities(
-        [PanasonicVieraTVDevice(mac, name, remote, host, broadcast, app_power)]
-    )
-    return True
-
-
-class PanasonicVieraTVDevice(MediaPlayerDevice):
+class PanasonicVieraTVEntity(MediaPlayerEntity):
     """Representation of a Panasonic Viera TV."""
 
-    def __init__(self, mac, name, remote, host, broadcast, app_power, uuid=None):
-        """Initialize the Panasonic device."""
-        # Save a reference to the imported class
-        self._wol = wakeonlan
-        self._mac = mac
-        self._name = name
-        self._uuid = uuid
-        self._muted = False
-        self._playing = True
-        self._state = None
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+    )
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.TV
+
+    def __init__(self, remote, name, device_info):
+        """Initialize the entity."""
         self._remote = remote
-        self._host = host
-        self._broadcast = broadcast
-        self._volume = 0
-        self._app_power = app_power
+        if device_info is not None:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, device_info[ATTR_UDN])},
+                manufacturer=device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
+                model=device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
+                name=name,
+            )
+            self._attr_unique_id = device_info[ATTR_UDN]
+        else:
+            self._attr_name = name
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique ID of this Viera TV."""
-        return self._uuid
-
-    def update(self):
-        """Retrieve the latest data."""
-        try:
-            self._muted = self._remote.get_mute()
-            self._volume = self._remote.get_volume() / 100
-            self._state = STATE_ON
-        except OSError:
-            self._state = STATE_OFF
-
-    def send_key(self, key):
-        """Send a key to the tv and handles exceptions."""
-        try:
-            self._remote.send_key(key)
-            self._state = STATE_ON
-        except OSError:
-            self._state = STATE_OFF
-            return False
-        return True
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        return self._state
+        return self._remote.state
 
     @property
-    def volume_level(self):
+    def available(self) -> bool:
+        """Return True if the device is available."""
+        return self._remote.available
+
+    @property
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        return self._volume
+        return self._remote.volume
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
-        return self._muted
+        return self._remote.muted
 
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        if self._mac or self._app_power:
-            return SUPPORT_VIERATV | SUPPORT_TURN_ON
-        return SUPPORT_VIERATV
+    async def async_update(self) -> None:
+        """Retrieve the latest data."""
+        await self._remote.async_update()
 
-    def turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on the media player."""
-        if self._mac:
-            self._wol.send_magic_packet(self._mac, ip_address=self._broadcast)
-            self._state = STATE_ON
-        elif self._app_power:
-            self._remote.turn_on()
-            self._state = STATE_ON
+        await self._remote.async_turn_on(context=self._context)
 
-    def turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off media player."""
-        if self._state != STATE_OFF:
-            self._remote.turn_off()
-            self._state = STATE_OFF
+        await self._remote.async_turn_off()
 
-    def volume_up(self):
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        self._remote.volume_up()
+        await self._remote.async_send_key(Keys.VOLUME_UP)
 
-    def volume_down(self):
+    async def async_volume_down(self) -> None:
         """Volume down media player."""
-        self._remote.volume_down()
+        await self._remote.async_send_key(Keys.VOLUME_DOWN)
 
-    def mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        self._remote.set_mute(mute)
+        await self._remote.async_set_mute(mute)
 
-    def set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        volume = int(volume * 100)
-        try:
-            self._remote.set_volume(volume)
-            self._state = STATE_ON
-        except OSError:
-            self._state = STATE_OFF
+        await self._remote.async_set_volume(volume)
 
-    def media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """Simulate play pause media player."""
-        if self._playing:
-            self.media_pause()
+        if self._remote.playing:
+            await self._remote.async_send_key(Keys.PAUSE)
+            self._remote.playing = False
         else:
-            self.media_play()
+            await self._remote.async_send_key(Keys.PLAY)
+            self._remote.playing = True
 
-    def media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
-        self._playing = True
-        self._remote.media_play()
+        await self._remote.async_send_key(Keys.PLAY)
+        self._remote.playing = True
 
-    def media_pause(self):
-        """Send media pause command to media player."""
-        self._playing = False
-        self._remote.media_pause()
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        await self._remote.async_send_key(Keys.PAUSE)
+        self._remote.playing = False
 
-    def media_next_track(self):
-        """Send next track command."""
-        self._remote.media_next_track()
-
-    def media_previous_track(self):
-        """Send the previous track command."""
-        self._remote.media_previous_track()
-
-    def play_media(self, media_type, media_id, **kwargs):
-        """Play media."""
-        _LOGGER.debug("Play media: %s (%s)", media_id, media_type)
-
-        if media_type == MEDIA_TYPE_URL:
-            try:
-                self._remote.open_webpage(media_id)
-            except (TimeoutError, OSError):
-                self._state = STATE_OFF
-        else:
-            _LOGGER.warning("Unsupported media_type: %s", media_type)
-
-    def media_stop(self):
+    async def async_media_stop(self) -> None:
         """Stop playback."""
-        self.send_key("NRC_CANCEL-ONOFF")
+        await self._remote.async_send_key(Keys.STOP)
+
+    async def async_media_next_track(self) -> None:
+        """Send the fast forward command."""
+        await self._remote.async_send_key(Keys.FAST_FORWARD)
+
+    async def async_media_previous_track(self) -> None:
+        """Send the rewind command."""
+        await self._remote.async_send_key(Keys.REWIND)
+
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Play media."""
+        if media_source.is_media_source_id(media_id):
+            media_type = MediaType.URL
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = play_item.url
+
+        if media_type != MediaType.URL:
+            _LOGGER.warning("Unsupported media_type: %s", media_type)
+            return
+
+        media_id = async_process_play_media_url(self.hass, media_id)
+        await self._remote.async_play_media(media_type, media_id)
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(self.hass, media_content_id)

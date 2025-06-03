@@ -1,75 +1,142 @@
 """The tests for the demo light component."""
+
+from collections.abc import Generator
+from unittest.mock import patch
+
 import pytest
 
-from homeassistant.components import light
+from homeassistant.components.demo import DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_EFFECT,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
+    ATTR_RGB_COLOR,
+    ATTR_XY_COLOR,
+    DOMAIN as LIGHT_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.components.light import common
 
 ENTITY_LIGHT = "light.bed_light"
 
 
+@pytest.fixture
+def light_only() -> Generator[None]:
+    """Enable only the light platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.LIGHT],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-def setup_comp(hass):
+async def setup_comp(hass: HomeAssistant, light_only: None) -> None:
     """Set up demo component."""
-    hass.loop.run_until_complete(
-        async_setup_component(hass, light.DOMAIN, {"light": {"platform": "demo"}})
+    assert await async_setup_component(
+        hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": DOMAIN}}
     )
+    await hass.async_block_till_done()
 
 
-async def test_state_attributes(hass):
+async def test_state_attributes(hass: HomeAssistant) -> None:
     """Test light state attributes."""
-    await common.async_turn_on(hass, ENTITY_LIGHT, xy_color=(0.4, 0.4), brightness=25)
-    state = hass.states.get(ENTITY_LIGHT)
-    assert light.is_on(hass, ENTITY_LIGHT)
-    assert (0.4, 0.4) == state.attributes.get(light.ATTR_XY_COLOR)
-    assert 25 == state.attributes.get(light.ATTR_BRIGHTNESS)
-    assert (255, 234, 164) == state.attributes.get(light.ATTR_RGB_COLOR)
-    assert "rainbow" == state.attributes.get(light.ATTR_EFFECT)
-    await common.async_turn_on(
-        hass, ENTITY_LIGHT, rgb_color=(251, 253, 255), white_value=254
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_XY_COLOR: (0.4, 0.4), ATTR_BRIGHTNESS: 25},
+        blocking=True,
     )
+
     state = hass.states.get(ENTITY_LIGHT)
-    assert 254 == state.attributes.get(light.ATTR_WHITE_VALUE)
-    assert (250, 252, 255) == state.attributes.get(light.ATTR_RGB_COLOR)
-    assert (0.319, 0.326) == state.attributes.get(light.ATTR_XY_COLOR)
-    await common.async_turn_on(hass, ENTITY_LIGHT, color_temp=400, effect="none")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_XY_COLOR) == (0.4, 0.4)
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 25
+    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 234, 164)
+    assert state.attributes.get(ATTR_EFFECT) == "rainbow"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            ATTR_RGB_COLOR: (251, 253, 255),
+        },
+        blocking=True,
+    )
+
     state = hass.states.get(ENTITY_LIGHT)
-    assert 400 == state.attributes.get(light.ATTR_COLOR_TEMP)
-    assert 153 == state.attributes.get(light.ATTR_MIN_MIREDS)
-    assert 500 == state.attributes.get(light.ATTR_MAX_MIREDS)
-    assert "none" == state.attributes.get(light.ATTR_EFFECT)
-    await common.async_turn_on(hass, ENTITY_LIGHT, kelvin=3000, brightness_pct=50)
+    assert state.attributes.get(ATTR_RGB_COLOR) == (251, 253, 255)
+    assert state.attributes.get(ATTR_XY_COLOR) == (0.319, 0.327)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            ATTR_EFFECT: "off",
+            ATTR_COLOR_TEMP_KELVIN: 2500,
+        },
+        blocking=True,
+    )
+
     state = hass.states.get(ENTITY_LIGHT)
-    assert 333 == state.attributes.get(light.ATTR_COLOR_TEMP)
-    assert 127 == state.attributes.get(light.ATTR_BRIGHTNESS)
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 2500
+    assert state.attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN) == 6535
+    assert state.attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN) == 2000
+    assert state.attributes.get(ATTR_EFFECT) == "off"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            ATTR_BRIGHTNESS_PCT: 50,
+            ATTR_COLOR_TEMP_KELVIN: 3000,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_LIGHT)
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == 3000
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 128
 
 
-async def test_turn_off(hass):
+async def test_turn_off(hass: HomeAssistant) -> None:
     """Test light turn off method."""
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": ENTITY_LIGHT}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_LIGHT}, blocking=True
     )
 
-    assert light.is_on(hass, ENTITY_LIGHT)
+    state = hass.states.get(ENTITY_LIGHT)
+    assert state.state == STATE_ON
 
     await hass.services.async_call(
-        "light", "turn_off", {"entity_id": ENTITY_LIGHT}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_LIGHT}, blocking=True
     )
 
-    assert not light.is_on(hass, ENTITY_LIGHT)
+    state = hass.states.get(ENTITY_LIGHT)
+    assert state.state == STATE_OFF
 
 
-async def test_turn_off_without_entity_id(hass):
+async def test_turn_off_without_entity_id(hass: HomeAssistant) -> None:
     """Test light turn off all lights."""
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": "all"}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "all"}, blocking=True
     )
 
-    assert light.is_on(hass, ENTITY_LIGHT)
+    state = hass.states.get(ENTITY_LIGHT)
+    assert state.state == STATE_ON
 
     await hass.services.async_call(
-        "light", "turn_off", {"entity_id": "all"}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "all"}, blocking=True
     )
 
-    assert not light.is_on(hass, ENTITY_LIGHT)
+    state = hass.states.get(ENTITY_LIGHT)
+    assert state.state == STATE_OFF

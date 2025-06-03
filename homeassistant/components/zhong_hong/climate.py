@@ -1,33 +1,36 @@
 """Support for ZhongHong HVAC Controller."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import voluptuous as vol
 from zhong_hong_hvac.hub import ZhongHongGateway
 from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +42,7 @@ DEFAULT_GATEWAY_ADDRRESS = 1
 SIGNAL_DEVICE_ADDED = "zhong_hong_device_added"
 SIGNAL_ZHONG_HONG_HUB_START = "zhong_hong_hub_start"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -49,14 +52,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SUPPORT_HVAC = [
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_OFF,
-]
-
 ZHONG_HONG_MODE_COOL = "cool"
 ZHONG_HONG_MODE_HEAT = "heat"
 ZHONG_HONG_MODE_DRY = "dry"
@@ -64,14 +59,19 @@ ZHONG_HONG_MODE_FAN_ONLY = "fan_only"
 
 
 MODE_TO_STATE = {
-    ZHONG_HONG_MODE_COOL: HVAC_MODE_COOL,
-    ZHONG_HONG_MODE_HEAT: HVAC_MODE_HEAT,
-    ZHONG_HONG_MODE_DRY: HVAC_MODE_DRY,
-    ZHONG_HONG_MODE_FAN_ONLY: HVAC_MODE_FAN_ONLY,
+    ZHONG_HONG_MODE_COOL: HVACMode.COOL,
+    ZHONG_HONG_MODE_HEAT: HVACMode.HEAT,
+    ZHONG_HONG_MODE_DRY: HVACMode.DRY,
+    ZHONG_HONG_MODE_FAN_ONLY: HVACMode.FAN_ONLY,
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ZhongHong HVAC platform."""
 
     host = config.get(CONF_HOST)
@@ -87,18 +87,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     hub_is_initialized = False
 
+    def _start_hub():
+        """Start the hub socket and query status of all devices."""
+        hub.start_listen()
+        hub.query_all_status()
+
     async def startup():
-        """Start hub socket after all climate entity is setted up."""
+        """Start hub socket after all climate entity is set up."""
         nonlocal hub_is_initialized
-        if not all([device.is_initialized for device in devices]):
+        if not all(device.is_initialized for device in devices):
             return
 
         if hub_is_initialized:
             return
 
         _LOGGER.debug("zhong_hong hub start listen event")
-        await hass.async_add_job(hub.start_listen)
-        await hass.async_add_job(hub.query_all_status)
+        await hass.async_add_executor_job(_start_hub)
         hub_is_initialized = True
 
     async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, startup)
@@ -113,8 +117,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen)
 
 
-class ZhongHongClimate(ClimateDevice):
+class ZhongHongClimate(ClimateEntity):
     """Representation of a ZhongHong controller support HVAC."""
+
+    _attr_hvac_modes = [
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
+        HVACMode.OFF,
+    ]
+    _attr_should_poll = False
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, hub, addr_out, addr_in):
         """Set up the ZhongHong climate devices."""
@@ -127,7 +147,7 @@ class ZhongHongClimate(ClimateDevice):
         self._current_fan_mode = None
         self.is_initialized = False
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._device.register_update_callback(self._after_update)
         self.is_initialized = True
@@ -149,11 +169,6 @@ class ZhongHongClimate(ClimateDevice):
         self.schedule_update_ha_state()
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the thermostat, if any."""
         return self.unique_id
@@ -164,26 +179,11 @@ class ZhongHongClimate(ClimateDevice):
         return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
-
-    @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         if self.is_on:
             return self._current_operation
-        return HVAC_MODE_OFF
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return SUPPORT_HVAC
+        return HVACMode.OFF
 
     @property
     def current_temperature(self):
@@ -216,36 +216,34 @@ class ZhongHongClimate(ClimateDevice):
         return self._device.fan_list
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._device.min_temp
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.max_temp
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn on ac."""
         return self._device.turn_on()
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off ac."""
         return self._device.turn_off()
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is not None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._device.set_temperature(temperature)
 
-        operation_mode = kwargs.get(ATTR_HVAC_MODE)
-        if operation_mode is not None:
+        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             self.set_hvac_mode(operation_mode)
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             if self.is_on:
                 self.turn_off()
             return
@@ -255,6 +253,6 @@ class ZhongHongClimate(ClimateDevice):
 
         self._device.set_operation_mode(hvac_mode.upper())
 
-    def set_fan_mode(self, fan_mode):
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         self._device.set_fan_mode(fan_mode)

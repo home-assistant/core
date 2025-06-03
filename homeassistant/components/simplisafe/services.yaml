@@ -1,54 +1,100 @@
 # Describes the format for available SimpliSafe services
-
----
 remove_pin:
-  description: Remove a PIN by its label or value.
   fields:
-    system_id:
-      description: The SimpliSafe system ID to affect.
-      example: 123987
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: simplisafe
+          entity:
+            domain: alarm_control_panel
     label_or_pin:
-      description: The label/value to remove.
+      required: true
       example: Test PIN
+      selector:
+        text:
 set_pin:
-  description: Set/update a PIN
   fields:
-    system_id:
-      description: The SimpliSafe system ID to affect
-      example: 123987
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: simplisafe
+          entity:
+            domain: alarm_control_panel
     label:
-      description: The label of the PIN
+      required: true
       example: Test PIN
+      selector:
+        text:
     pin:
-      description: The value of the PIN
+      required: true
       example: 1256
+      selector:
+        text:
 set_system_properties:
-  description: Set one or more system properties
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: simplisafe
+          entity:
+            domain: alarm_control_panel
     alarm_duration:
-      description: The length of a triggered alarm
-      example: 300
+      selector:
+        number:
+          min: 30
+          max: 480
+          unit_of_measurement: seconds
     alarm_volume:
-      description: The volume level of a triggered alarm
-      example: 2
+      selector:
+        select:
+          options:
+            - "low"
+            - "medium"
+            - "high"
+            - "off"
     chime_volume:
-      description: The volume level of the door chime
-      example: 2
+      selector:
+        select:
+          options:
+            - "low"
+            - "medium"
+            - "high"
+            - "off"
     entry_delay_away:
-      description: How long to delay when entering while "away"
-      example: 45
+      selector:
+        number:
+          min: 30
+          max: 255
+          unit_of_measurement: seconds
     entry_delay_home:
-      description: How long to delay when entering while "home"
-      example: 45
+      selector:
+        number:
+          min: 0
+          max: 255
+          unit_of_measurement: seconds
     exit_delay_away:
-      description: How long to delay when exiting while "away"
-      example: 45
+      selector:
+        number:
+          min: 45
+          max: 255
+          unit_of_measurement: seconds
     exit_delay_home:
-      description: How long to delay when exiting while "home"
-      example: 45
+      selector:
+        number:
+          min: 0
+          max: 255
+          unit_of_measurement: seconds
     light:
-      description: Whether the armed light should be visible
-      example: true
+      selector:
+        boolean:
     voice_prompt_volume:
-      description: The volume level of the voice prompt
-      example: 2
+      selector:
+        select:
+          options:
+            - "low"
+            - "medium"
+            - "high"
+            - "off"

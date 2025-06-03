@@ -1,86 +1,58 @@
-"""Support for KNX/IP notification services."""
-import voluptuous as vol
+"""Support for KNX/IP notifications."""
+
+from __future__ import annotations
+
+from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import CONF_ADDRESS, CONF_NAME
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant import config_entries
+from homeassistant.components.notify import NotifyEntity
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
-from . import ATTR_DISCOVER_DEVICES, DATA_KNX
-
-DEFAULT_NAME = "KNX Notify"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+from . import KNXModule
+from .const import KNX_ADDRESS, KNX_MODULE_KEY
+from .entity import KnxYamlEntity
 
 
-async def async_get_service(hass, config, discovery_info=None):
-    """Get the KNX notification service."""
-    return (
-        async_get_service_discovery(hass, discovery_info)
-        if discovery_info is not None
-        else async_get_service_config(hass, config)
-    )
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up notify(s) for KNX platform."""
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.NOTIFY]
+
+    async_add_entities(KNXNotify(knx_module, entity_config) for entity_config in config)
 
 
-@callback
-def async_get_service_discovery(hass, discovery_info):
-    """Set up notifications for KNX platform configured via xknx.yaml."""
-    notification_devices = []
-    for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
-        device = hass.data[DATA_KNX].xknx.devices[device_name]
-        notification_devices.append(device)
-    return (
-        KNXNotificationService(notification_devices) if notification_devices else None
-    )
-
-
-@callback
-def async_get_service_config(hass, config):
-    """Set up notification for KNX platform configured within platform."""
-    notification = XknxNotification(
-        hass.data[DATA_KNX].xknx,
+def _create_notification_instance(xknx: XKNX, config: ConfigType) -> XknxNotification:
+    """Return a KNX Notification to be used within XKNX."""
+    return XknxNotification(
+        xknx,
         name=config[CONF_NAME],
-        group_address=config[CONF_ADDRESS],
+        group_address=config[KNX_ADDRESS],
+        value_type=config[CONF_TYPE],
     )
-    hass.data[DATA_KNX].xknx.devices.add(notification)
-    return KNXNotificationService([notification])
 
 
-class KNXNotificationService(BaseNotificationService):
-    """Implement demo notification service."""
+class KNXNotify(KnxYamlEntity, NotifyEntity):
+    """Representation of a KNX notification entity."""
 
-    def __init__(self, devices):
-        """Initialize the service."""
-        self.devices = devices
+    _device: XknxNotification
 
-    @property
-    def targets(self):
-        """Return a dictionary of registered targets."""
-        ret = {}
-        for device in self.devices:
-            ret[device.name] = device.name
-        return ret
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
+        """Initialize a KNX notification."""
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_notification_instance(knx_module.xknx, config),
+        )
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+        self._attr_unique_id = str(self._device.remote_value.group_address)
 
-    async def async_send_message(self, message="", **kwargs):
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a notification to knx bus."""
-        if "target" in kwargs:
-            await self._async_send_to_device(message, kwargs["target"])
-        else:
-            await self._async_send_to_all_devices(message)
-
-    async def _async_send_to_all_devices(self, message):
-        """Send a notification to knx bus to all connected devices."""
-        for device in self.devices:
-            await device.set(message)
-
-    async def _async_send_to_device(self, message, names):
-        """Send a notification to knx bus to device with given names."""
-        for device in self.devices:
-            if device.name in names:
-                await device.set(message)
+        await self._device.set(message)

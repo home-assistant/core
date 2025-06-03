@@ -1,0 +1,10 @@
+{
+  "domain": "tailscale",
+  "name": "Tailscale",
+  "codeowners": ["@frenck"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tailscale",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["tailscale==0.6.2"]
+}

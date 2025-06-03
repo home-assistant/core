@@ -1,50 +1,58 @@
 """The test for the Facebook notify module."""
-import unittest
 
+from http import HTTPStatus
+
+import pytest
 import requests_mock
 
-# import homeassistant.components.facebook as facebook
-import homeassistant.components.facebook.notify as facebook
+from homeassistant.components.facebook import notify as fb
+from homeassistant.core import HomeAssistant
 
 
-class TestFacebook(unittest.TestCase):
-    """Tests for Facebook notification service."""
+@pytest.fixture
+def facebook() -> fb.FacebookNotificationService:
+    """Fixture for facebook."""
+    access_token = "page-access-token"
+    return fb.FacebookNotificationService(access_token)
 
-    def setUp(self):
-        """Set up test variables."""
-        access_token = "page-access-token"
-        self.facebook = facebook.FacebookNotificationService(access_token)
 
-    @requests_mock.Mocker()
-    def test_send_simple_message(self, mock):
-        """Test sending a simple message with success."""
-        mock.register_uri(requests_mock.POST, facebook.BASE_URL, status_code=200)
+async def test_send_simple_message(
+    hass: HomeAssistant, facebook: fb.FacebookNotificationService
+) -> None:
+    """Test sending a simple message with success."""
+    with requests_mock.Mocker() as mock:
+        mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=HTTPStatus.OK)
 
         message = "This is just a test"
         target = ["+15555551234"]
 
-        self.facebook.send_message(message=message, target=target)
+        facebook.send_message(message=message, target=target)
         assert mock.called
         assert mock.call_count == 1
 
         expected_body = {
             "recipient": {"phone_number": target[0]},
             "message": {"text": message},
+            "messaging_type": "MESSAGE_TAG",
+            "tag": "ACCOUNT_UPDATE",
         }
         assert mock.last_request.json() == expected_body
 
         expected_params = {"access_token": ["page-access-token"]}
         assert mock.last_request.qs == expected_params
 
-    @requests_mock.Mocker()
-    def test_sending_multiple_messages(self, mock):
-        """Test sending a message to multiple targets."""
-        mock.register_uri(requests_mock.POST, facebook.BASE_URL, status_code=200)
+
+async def test_send_multiple_message(
+    hass: HomeAssistant, facebook: fb.FacebookNotificationService
+) -> None:
+    """Test sending a message to multiple targets."""
+    with requests_mock.Mocker() as mock:
+        mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=HTTPStatus.OK)
 
         message = "This is just a test"
         targets = ["+15555551234", "+15555551235"]
 
-        self.facebook.send_message(message=message, target=targets)
+        facebook.send_message(message=message, target=targets)
         assert mock.called
         assert mock.call_count == 2
 
@@ -53,16 +61,21 @@ class TestFacebook(unittest.TestCase):
             expected_body = {
                 "recipient": {"phone_number": target},
                 "message": {"text": message},
+                "messaging_type": "MESSAGE_TAG",
+                "tag": "ACCOUNT_UPDATE",
             }
             assert request.json() == expected_body
 
             expected_params = {"access_token": ["page-access-token"]}
             assert request.qs == expected_params
 
-    @requests_mock.Mocker()
-    def test_send_message_attachment(self, mock):
-        """Test sending a message with a remote attachment."""
-        mock.register_uri(requests_mock.POST, facebook.BASE_URL, status_code=200)
+
+async def test_send_message_attachment(
+    hass: HomeAssistant, facebook: fb.FacebookNotificationService
+) -> None:
+    """Test sending a message with a remote attachment."""
+    with requests_mock.Mocker() as mock:
+        mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=HTTPStatus.OK)
 
         message = "This will be thrown away."
         data = {
@@ -73,31 +86,42 @@ class TestFacebook(unittest.TestCase):
         }
         target = ["+15555551234"]
 
-        self.facebook.send_message(message=message, data=data, target=target)
+        facebook.send_message(message=message, data=data, target=target)
         assert mock.called
         assert mock.call_count == 1
 
-        expected_body = {"recipient": {"phone_number": target[0]}, "message": data}
+        expected_body = {
+            "recipient": {"phone_number": target[0]},
+            "message": data,
+            "messaging_type": "MESSAGE_TAG",
+            "tag": "ACCOUNT_UPDATE",
+        }
         assert mock.last_request.json() == expected_body
 
         expected_params = {"access_token": ["page-access-token"]}
         assert mock.last_request.qs == expected_params
 
-    @requests_mock.Mocker()
-    def test_send_targetless_message(self, mock):
-        """Test sending a message without a target."""
-        mock.register_uri(requests_mock.POST, facebook.BASE_URL, status_code=200)
 
-        self.facebook.send_message(message="goin nowhere")
+async def test_send_targetless_message(
+    hass: HomeAssistant, facebook: fb.FacebookNotificationService
+) -> None:
+    """Test sending a message without a target."""
+    with requests_mock.Mocker() as mock:
+        mock.register_uri(requests_mock.POST, fb.BASE_URL, status_code=HTTPStatus.OK)
+
+        facebook.send_message(message="going nowhere")
         assert not mock.called
 
-    @requests_mock.Mocker()
-    def test_send_message_with_400(self, mock):
-        """Test sending a message with a 400 from Facebook."""
+
+async def test_send_message_with_400(
+    hass: HomeAssistant, facebook: fb.FacebookNotificationService
+) -> None:
+    """Test sending a message with a 400 from Facebook."""
+    with requests_mock.Mocker() as mock:
         mock.register_uri(
             requests_mock.POST,
-            facebook.BASE_URL,
-            status_code=400,
+            fb.BASE_URL,
+            status_code=HTTPStatus.BAD_REQUEST,
             json={
                 "error": {
                     "message": "Invalid OAuth access token.",
@@ -107,6 +131,6 @@ class TestFacebook(unittest.TestCase):
                 }
             },
         )
-        self.facebook.send_message(message="nope!", target=["+15555551234"])
+        facebook.send_message(message="nope!", target=["+15555551234"])
         assert mock.called
         assert mock.call_count == 1

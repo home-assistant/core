@@ -1,0 +1,95 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "If the IP and MAC addresses are left empty, auto-discovery is used",
+        "data": {
+          "interface": "The network interface to use",
+          "host": "IP address (optional)",
+          "mac": "MAC address (optional)"
+        }
+      },
+      "settings": {
+        "title": "Optional settings",
+        "description": "The key (password) can be retrieved using this tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. If the key is not provided only sensors will be accessible",
+        "data": {
+          "key": "The key of your Gateway",
+          "name": "Name of the Gateway"
+        }
+      },
+      "select": {
+        "description": "Select the Xiaomi Aqara Gateway that you wish to connect",
+        "data": {
+          "select_ip": "[%key:common::config_flow::data::ip%]"
+        }
+      }
+    },
+    "error": {
+      "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running Home Assistant as interface",
+      "invalid_interface": "Invalid network interface",
+      "invalid_key": "Invalid Gateway key",
+      "invalid_host": "Invalid hostname or IP address, see https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+      "invalid_mac": "Invalid MAC address"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "not_xiaomi_aqara": "Not a Xiaomi Aqara Gateway, discovered device did not match known gateways"
+    }
+  },
+  "services": {
+    "add_device": {
+      "name": "Add device",
+      "description": "Enables the join permission of the Xiaomi Aqara Gateway for 30 seconds. A new device can be added afterwards by pressing the pairing button once.",
+      "fields": {
+        "gw_mac": {
+          "name": "Gateway MAC",
+          "description": "MAC address of the Xiaomi Aqara Gateway."
+        }
+      }
+    },
+    "play_ringtone": {
+      "name": "Play ringtone",
+      "description": "Plays a specific ringtone. The version of the gateway firmware must be 1.4.1_145 at least.",
+      "fields": {
+        "gw_mac": {
+          "name": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::name%]",
+          "description": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::description%]"
+        },
+        "ringtone_id": {
+          "name": "Ringtone ID",
+          "description": "One of the allowed ringtone IDs."
+        },
+        "ringtone_vol": {
+          "name": "Ringtone volume",
+          "description": "The volume in percent."
+        }
+      }
+    },
+    "remove_device": {
+      "name": "Remove device",
+      "description": "Removes a specific device. The removal is required if a device shall be paired with another gateway.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "Hardware address of the device to remove."
+        },
+        "gw_mac": {
+          "name": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::name%]",
+          "description": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::description%]"
+        }
+      }
+    },
+    "stop_ringtone": {
+      "name": "Stop ringtone",
+      "description": "Stops a playing ringtone immediately.",
+      "fields": {
+        "gw_mac": {
+          "name": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::name%]",
+          "description": "[%key:component::xiaomi_aqara::services::add_device::fields::gw_mac::description%]"
+        }
+      }
+    }
+  }
+}

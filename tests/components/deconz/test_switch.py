@@ -1,164 +1,120 @@
 """deCONZ switch platform tests."""
-from copy import deepcopy
 
-from asynctest import patch
+from collections.abc import Callable
 
-from homeassistant.components import deconz
-import homeassistant.components.switch as switch
-from homeassistant.setup import async_setup_component
+import pytest
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+from homeassistant.components.deconz.const import DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-SWITCHES = {
-    "1": {
-        "id": "On off switch id",
-        "name": "On off switch",
-        "type": "On/Off plug-in unit",
-        "state": {"on": True, "reachable": True},
-        "uniqueid": "00:00:00:00:00:00:00:00-00",
-    },
-    "2": {
-        "id": "Smart plug id",
-        "name": "Smart plug",
-        "type": "Smart plug",
-        "state": {"on": False, "reachable": True},
-        "uniqueid": "00:00:00:00:00:00:00:01-00",
-    },
-    "3": {
-        "id": "Warning device id",
-        "name": "Warning device",
-        "type": "Warning device",
-        "state": {"alert": "lselect", "reachable": True},
-        "uniqueid": "00:00:00:00:00:00:00:02-00",
-    },
-    "4": {
-        "id": "Unsupported switch id",
-        "name": "Unsupported switch",
-        "type": "Not a smart plug",
-        "state": {"reachable": True},
-        "uniqueid": "00:00:00:00:00:00:00:03-00",
-    },
-}
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, switch.DOMAIN, {"switch": {"platform": deconz.DOMAIN}}
-        )
-        is True
-    )
-    assert deconz.DOMAIN not in hass.data
-
-
-async def test_no_switches(hass):
-    """Test that no switch entities are created."""
-    gateway = await setup_deconz_integration(hass)
-    assert len(gateway.deconz_ids) == 0
-    assert len(hass.states.async_all()) == 0
-
-
-async def test_switches(hass):
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
+            "0": {
+                "name": "On off switch",
+                "type": "On/Off plug-in unit",
+                "state": {"on": True, "reachable": True},
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            },
+            "1": {
+                "name": "Smart plug",
+                "type": "Smart plug",
+                "state": {"on": False, "reachable": True},
+                "uniqueid": "00:00:00:00:00:00:00:01-00",
+            },
+            "2": {
+                "name": "Unsupported switch",
+                "type": "Not a switch",
+                "state": {"reachable": True},
+                "uniqueid": "00:00:00:00:00:00:00:02-00",
+            },
+            "3": {
+                "name": "On off relay",
+                "state": {"on": True, "reachable": True},
+                "type": "On/Off light",
+                "uniqueid": "00:00:00:00:00:00:00:03-00",
+            },
+        }
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_power_plugs(
+    hass: HomeAssistant,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    light_ws_data: WebsocketDataType,
+) -> None:
     """Test that all supported switch entities are created."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["lights"] = deepcopy(SWITCHES)
-    gateway = await setup_deconz_integration(hass, get_state_response=data)
-    assert "switch.on_off_switch" in gateway.deconz_ids
-    assert "switch.smart_plug" in gateway.deconz_ids
-    assert "switch.warning_device" in gateway.deconz_ids
-    assert "switch.unsupported_switch" not in gateway.deconz_ids
     assert len(hass.states.async_all()) == 4
+    assert hass.states.get("switch.on_off_switch").state == STATE_ON
+    assert hass.states.get("switch.smart_plug").state == STATE_OFF
+    assert hass.states.get("switch.on_off_relay").state == STATE_ON
+    assert hass.states.get("switch.unsupported_switch") is None
 
-    on_off_switch = hass.states.get("switch.on_off_switch")
-    assert on_off_switch.state == "on"
+    await light_ws_data({"state": {"on": False}})
+    assert hass.states.get("switch.on_off_switch").state == STATE_OFF
 
-    smart_plug = hass.states.get("switch.smart_plug")
-    assert smart_plug.state == "off"
+    # Verify service calls
 
-    warning_device = hass.states.get("switch.warning_device")
-    assert warning_device.state == "on"
+    aioclient_mock = mock_put_request("/lights/0/state")
 
-    state_changed_event = {
-        "t": "event",
-        "e": "changed",
-        "r": "lights",
-        "id": "1",
-        "state": {"on": False},
-    }
-    gateway.api.async_event_handler(state_changed_event)
-    state_changed_event = {
-        "t": "event",
-        "e": "changed",
-        "r": "lights",
-        "id": "3",
-        "state": {"alert": None},
-    }
-    gateway.api.async_event_handler(state_changed_event)
-    await hass.async_block_till_done()
+    # Service turn on power plug
 
-    on_off_switch = hass.states.get("switch.on_off_switch")
-    assert on_off_switch.state == "off"
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.on_off_switch"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"on": True}
 
-    warning_device = hass.states.get("switch.warning_device")
-    assert warning_device.state == "off"
+    # Service turn off power plug
 
-    on_off_switch_device = gateway.api.lights["1"]
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.on_off_switch"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {"on": False}
 
-    with patch.object(
-        on_off_switch_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            switch.DOMAIN,
-            switch.SERVICE_TURN_ON,
-            {"entity_id": "switch.on_off_switch"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/1/state", json={"on": True})
 
-    with patch.object(
-        on_off_switch_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            switch.DOMAIN,
-            switch.SERVICE_TURN_OFF,
-            {"entity_id": "switch.on_off_switch"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/1/state", json={"on": False})
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
+            "name": "On Off output device",
+            "type": "On/Off output",
+            "state": {"on": True, "reachable": True},
+            "uniqueid": "00:00:00:00:00:00:00:00-00",
+        }
+    ],
+)
+async def test_remove_legacy_on_off_output_as_light(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Test that switch platform cleans up legacy light entities."""
+    assert entity_registry.async_get_or_create(
+        LIGHT_DOMAIN, DOMAIN, "00:00:00:00:00:00:00:00-00"
+    )
 
-    warning_device_device = gateway.api.lights["3"]
+    await config_entry_factory()
 
-    with patch.object(
-        warning_device_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            switch.DOMAIN,
-            switch.SERVICE_TURN_ON,
-            {"entity_id": "switch.warning_device"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put", "/lights/3/state", json={"alert": "lselect"}
-        )
-
-    with patch.object(
-        warning_device_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            switch.DOMAIN,
-            switch.SERVICE_TURN_OFF,
-            {"entity_id": "switch.warning_device"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put", "/lights/3/state", json={"alert": "none"}
-        )
-
-    await gateway.async_reset()
-
-    assert len(hass.states.async_all()) == 0
+    assert not entity_registry.async_get("light.on_off_output_device")
+    assert entity_registry.async_get("switch.on_off_output_device")
+    assert len(hass.states.async_all()) == 1

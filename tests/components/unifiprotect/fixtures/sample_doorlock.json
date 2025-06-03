@@ -1,0 +1,52 @@
+{
+  "mac": "F10599AB6955",
+  "host": null,
+  "connectionHost": "192.168.102.63",
+  "type": "UFP-LOCK-R",
+  "name": "Test Lock",
+  "upSince": 1643050461849,
+  "uptime": null,
+  "lastSeen": 1643052750858,
+  "connectedSince": 1643052765849,
+  "state": "CONNECTED",
+  "hardwareRevision": 7,
+  "firmwareVersion": "1.2.0",
+  "latestFirmwareVersion": "1.2.0",
+  "firmwareBuild": null,
+  "isUpdating": false,
+  "isAdopting": false,
+  "isAdopted": true,
+  "isAdoptedByOther": false,
+  "isProvisioned": false,
+  "isRebooting": false,
+  "isSshEnabled": false,
+  "canAdopt": false,
+  "isAttemptingToConnect": false,
+  "credentials": "955756200c7f43936df9d5f7865f058e1528945aac0f0cb27cef960eb58f17db",
+  "lockStatus": "OPEN",
+  "enableHomekit": false,
+  "autoCloseTimeMs": 45000,
+  "wiredConnectionState": {
+    "phyRate": null
+  },
+  "ledSettings": {
+    "isEnabled": true
+  },
+  "bluetoothConnectionState": {
+    "signalQuality": 62,
+    "signalStrength": -65
+  },
+  "batteryStatus": {
+    "percentage": 100,
+    "isLow": false
+  },
+  "bridge": "61b3f5c90050a703e700042a",
+  "camera": "e2ff0ade6be0f2a2beb61869",
+  "bridgeCandidates": [],
+  "id": "1c812e80fd693ab51535be38",
+  "isConnected": true,
+  "hasHomekit": false,
+  "marketName": "UP DoorLock",
+  "modelKey": "doorlock",
+  "privateToken": "MsjIV0UUpMWuAQZvJnCOfC1K9UAfgqDKCIcWtANWIuW66OXLwSgMbNEG2MEkL2TViSkMbJvFxAQEyHU0EJeVCWzY6dGHGuKXFXZMqJWZivBGDC8JoXiRxNIBqHZtXQKXZIoXWKLmhBL7SDxLoFNYEYNNLUGKGFBBGX2oNLi8KRW3SDSUTTWJZNwAUs8GKeJJ"
+}

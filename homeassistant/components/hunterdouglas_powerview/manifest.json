@@ -1,8 +1,23 @@
 {
   "domain": "hunterdouglas_powerview",
   "name": "Hunter Douglas PowerView",
+  "codeowners": ["@bdraco", "@kingy444", "@trullock"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "registered_devices": true
+    },
+    {
+      "hostname": "hunter*",
+      "macaddress": "002674*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/hunterdouglas_powerview",
-  "requirements": ["aiopvapi==1.6.14"],
-  "dependencies": [],
-  "codeowners": []
+  "homekit": {
+    "models": ["PowerView"]
+  },
+  "iot_class": "local_polling",
+  "loggers": ["aiopvapi"],
+  "requirements": ["aiopvapi==3.1.1"],
+  "zeroconf": ["_powerview._tcp.local.", "_PowerView-G3._tcp.local."]
 }

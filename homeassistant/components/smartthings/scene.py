@@ -1,46 +1,46 @@
 """Support for scenes through the SmartThings cloud API."""
+
+from typing import Any
+
+from pysmartthings import Scene as STScene, SmartThings
+
 from homeassistant.components.scene import Scene
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_BROKERS, DOMAIN
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
+from . import SmartThingsConfigEntry
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Add switches for a config entry."""
-    broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    async_add_entities([SmartThingsScene(scene) for scene in broker.scenes.values()])
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SmartThingsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add lights for a config entry."""
+    client = entry.runtime_data.client
+    scenes = entry.runtime_data.scenes
+    async_add_entities(SmartThingsScene(scene, client) for scene in scenes.values())
 
 
 class SmartThingsScene(Scene):
     """Define a SmartThings scene."""
 
-    def __init__(self, scene):
+    def __init__(self, scene: STScene, client: SmartThings) -> None:
         """Init the scene class."""
+        self.client = client
         self._scene = scene
+        self._attr_name = scene.name
+        self._attr_unique_id = scene.scene_id
 
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
-        await self._scene.execute()
+        await self.client.execute_scene(self._scene.scene_id)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Get attributes about the state."""
         return {
             "icon": self._scene.icon,
             "color": self._scene.color,
             "location_id": self._scene.location_id,
         }
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._scene.name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._scene.scene_id

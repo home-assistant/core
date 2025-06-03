@@ -1,0 +1,61 @@
+{
+  "config": {
+    "flow_title": "Add Shark IQ account",
+    "step": {
+      "user": {
+        "description": "Sign in to your SharkClean account to control your devices.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "Region"
+        },
+        "data_description": {
+          "region": "Shark IQ uses different services in the EU. Select your region to connect to the correct service for your account."
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "Region"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "europe": "Europe",
+        "elsewhere": "Everywhere else"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_room": {
+      "message": "The room {room} is unavailable to your vacuum. Make sure all rooms match the SharkClean app, including capitalization."
+    }
+  },
+  "services": {
+    "clean_room": {
+      "name": "Clean room",
+      "description": "Cleans a specific user-defined room or set of rooms.",
+      "fields": {
+        "rooms": {
+          "name": "Rooms",
+          "description": "List of rooms to clean"
+        }
+      }
+    }
+  }
+}

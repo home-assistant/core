@@ -1,0 +1,10 @@
+{
+  "domain": "wiffi",
+  "name": "Wiffi",
+  "codeowners": ["@mampfes"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/wiffi",
+  "iot_class": "local_push",
+  "loggers": ["wiffi"],
+  "requirements": ["wiffi==1.1.2"]
+}

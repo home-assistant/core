@@ -1,24 +1,29 @@
 """Support for UPC ConnectBox router."""
+
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 from connect_box import ConnectBox
 from connect_box.exceptions import ConnectBoxError, ConnectBoxLoginError
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_IP = "192.168.0.1"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
@@ -26,10 +31,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_scanner(hass, config):
+async def async_get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> UPCDeviceScanner | None:
     """Return the UPC device scanner."""
-    conf = config[DOMAIN]
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    conf = config[DEVICE_TRACKER_DOMAIN]
+    session = async_get_clientsession(hass)
     connect_box = ConnectBox(session, conf[CONF_PASSWORD], host=conf[CONF_HOST])
 
     # Check login data
@@ -51,13 +58,13 @@ async def async_get_scanner(hass, config):
 
 
 class UPCDeviceScanner(DeviceScanner):
-    """This class queries a router running UPC ConnectBox firmware."""
+    """Class which queries a router running UPC ConnectBox firmware."""
 
-    def __init__(self, connect_box: ConnectBox):
+    def __init__(self, connect_box: ConnectBox) -> None:
         """Initialize the scanner."""
         self.connect_box: ConnectBox = connect_box
 
-    async def async_scan_devices(self) -> List[str]:
+    async def async_scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
         try:
             await self.connect_box.async_get_devices()
@@ -66,11 +73,13 @@ class UPCDeviceScanner(DeviceScanner):
 
         return [device.mac for device in self.connect_box.devices]
 
-    async def async_get_device_name(self, device: str) -> Optional[str]:
+    async def async_get_device_name(self, device: str) -> str | None:
         """Get the device name (the name of the wireless device not used)."""
         for connected_device in self.connect_box.devices:
-            if connected_device != device:
-                continue
-            return connected_device.hostname
+            if (
+                connected_device.mac == device
+                and connected_device.hostname.lower() != "unknown"
+            ):
+                return connected_device.hostname
 
         return None

@@ -1,0 +1,10 @@
+{
+  "domain": "fireservicerota",
+  "name": "FireServiceRota",
+  "codeowners": ["@cyberjunky"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/fireservicerota",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyfireservicerota"],
+  "requirements": ["pyfireservicerota==0.0.46"]
+}

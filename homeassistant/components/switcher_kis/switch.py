@@ -1,158 +1,261 @@
-"""Home Assistant Switcher Component Switch platform."""
+"""Switcher integration Switch platform."""
 
-from logging import getLogger
-from typing import TYPE_CHECKING, Callable, Dict
+from __future__ import annotations
 
-from aioswitcher.api import SwitcherV2Api
-from aioswitcher.consts import (
-    COMMAND_OFF,
-    COMMAND_ON,
-    STATE_OFF as SWITCHER_STATE_OFF,
-    STATE_ON as SWITCHER_STATE_ON,
-    WAITING_TEXT,
+from datetime import timedelta
+import logging
+from typing import Any, cast
+
+from aioswitcher.api import Command
+from aioswitcher.device import (
+    DeviceCategory,
+    DeviceState,
+    ShutterChildLock,
+    SwitcherShutter,
 )
+import voluptuous as vol
 
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
-from . import (
-    ATTR_AUTO_OFF_SET,
-    ATTR_ELECTRIC_CURRENT,
-    ATTR_REMAINING_TIME,
-    DATA_DEVICE,
-    DOMAIN,
-    SIGNAL_SWITCHER_DEVICE_UPDATE,
+from .const import (
+    CONF_AUTO_OFF,
+    CONF_TIMER_MINUTES,
+    SERVICE_SET_AUTO_OFF_NAME,
+    SERVICE_TURN_ON_WITH_TIMER_NAME,
+    SIGNAL_DEVICE_ADD,
 )
+from .coordinator import SwitcherDataUpdateCoordinator
+from .entity import SwitcherEntity
 
-# pylint: disable=ungrouped-imports
-if TYPE_CHECKING:
-    from aioswitcher.devices import SwitcherV2Device
-    from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
+_LOGGER = logging.getLogger(__name__)
 
+API_CONTROL_DEVICE = "control_device"
+API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
+API_SET_CHILD_LOCK = "set_shutter_child_lock"
 
-_LOGGER = getLogger(__name__)
+SERVICE_SET_AUTO_OFF_SCHEMA: VolDictType = {
+    vol.Required(CONF_AUTO_OFF): cv.time_period_str,
+}
 
-DEVICE_PROPERTIES_TO_HA_ATTRIBUTES = {
-    "power_consumption": ATTR_CURRENT_POWER_W,
-    "electric_current": ATTR_ELECTRIC_CURRENT,
-    "remaining_time": ATTR_REMAINING_TIME,
-    "auto_off_set": ATTR_AUTO_OFF_SET,
+SERVICE_TURN_ON_WITH_TIMER_SCHEMA: VolDictType = {
+    vol.Required(CONF_TIMER_MINUTES): vol.All(
+        cv.positive_int, vol.Range(min=1, max=150)
+    ),
 }
 
 
-async def async_setup_platform(
-    hass: HomeAssistantType,
-    config: Dict,
-    async_add_entities: Callable,
-    discovery_info: Dict,
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the switcher platform for the switch component."""
-    if discovery_info is None:
-        return
-    async_add_entities([SwitcherControl(hass.data[DOMAIN][DATA_DEVICE])])
+    """Set up Switcher switch from config entry."""
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_AUTO_OFF_NAME,
+        SERVICE_SET_AUTO_OFF_SCHEMA,
+        "async_set_auto_off_service",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_TURN_ON_WITH_TIMER_NAME,
+        SERVICE_TURN_ON_WITH_TIMER_SCHEMA,
+        "async_turn_on_with_timer_service",
+    )
+
+    @callback
+    def async_add_switch(coordinator: SwitcherDataUpdateCoordinator) -> None:
+        """Add switch from Switcher device."""
+        entities: list[SwitchEntity] = []
+
+        if coordinator.data.device_type.category == DeviceCategory.POWER_PLUG:
+            entities.append(SwitcherPowerPlugSwitchEntity(coordinator))
+        elif coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
+            entities.append(SwitcherWaterHeaterSwitchEntity(coordinator))
+        elif coordinator.data.device_type.category in (
+            DeviceCategory.SHUTTER,
+            DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
+            DeviceCategory.DUAL_SHUTTER_SINGLE_LIGHT,
+        ):
+            number_of_covers = len(cast(SwitcherShutter, coordinator.data).position)
+            if number_of_covers == 1:
+                entities.append(
+                    SwitcherShutterChildLockSingleSwitchEntity(coordinator, 0)
+                )
+            else:
+                entities.extend(
+                    SwitcherShutterChildLockMultiSwitchEntity(coordinator, i)
+                    for i in range(number_of_covers)
+                )
+        async_add_entities(entities)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_switch)
+    )
 
 
-class SwitcherControl(SwitchDevice):
-    """Home Assistant switch entity."""
+class SwitcherBaseSwitchEntity(SwitcherEntity, SwitchEntity):
+    """Representation of a Switcher switch entity."""
 
-    def __init__(self, device_data: "SwitcherV2Device") -> None:
+    _attr_name = None
+
+    def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Initialize the entity."""
-        self._self_initiated = False
-        self._device_data = device_data
-        self._state = device_data.state
+        super().__init__(coordinator)
+        self.control_result: bool | None = None
+        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
+        self._update_data()
 
-    @property
-    def name(self) -> str:
-        """Return the device's name."""
-        return self._device_data.name
+    def _update_data(self) -> None:
+        """Update data from device."""
+        if self.control_result is not None:
+            self._attr_is_on = self.control_result
+            self.control_result = None
+            return
 
-    @property
-    def should_poll(self) -> bool:
-        """Return False, entity pushes its state to HA."""
-        return False
+        self._attr_is_on = bool(self.coordinator.data.device_state == DeviceState.ON)
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device_data.device_id}-{self._device_data.mac_addr}"
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self._async_call_api(API_CONTROL_DEVICE, Command.ON)
+        self._attr_is_on = self.control_result = True
+        self.async_write_ha_state()
 
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self._async_call_api(API_CONTROL_DEVICE, Command.OFF)
+        self._attr_is_on = self.control_result = False
+        self.async_write_ha_state()
 
-        return self._state == SWITCHER_STATE_ON
-
-    @property
-    def current_power_w(self) -> int:
-        """Return the current power usage in W."""
-        return self._device_data.power_consumption
-
-    @property
-    def device_state_attributes(self) -> Dict:
-        """Return the optional state attributes."""
-
-        attribs = {}
-
-        for prop, attr in DEVICE_PROPERTIES_TO_HA_ATTRIBUTES.items():
-            value = getattr(self._device_data, prop)
-            if value and value is not WAITING_TEXT:
-                attribs[attr] = value
-
-        return attribs
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-
-        return self._state in [SWITCHER_STATE_ON, SWITCHER_STATE_OFF]
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_SWITCHER_DEVICE_UPDATE, self.async_update_data
+    async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
+        """Use for handling setting device auto-off service calls."""
+        _LOGGER.warning(
+            "Service '%s' is not supported by %s",
+            SERVICE_SET_AUTO_OFF_NAME,
+            self.coordinator.name,
         )
 
-    async def async_update_data(self, device_data: "SwitcherV2Device") -> None:
-        """Update the entity data."""
-        if device_data:
-            if self._self_initiated:
-                self._self_initiated = False
-            else:
-                self._device_data = device_data
-                self._state = self._device_data.state
-                self.async_schedule_update_ha_state()
+    async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:
+        """Use for turning device on with a timer service calls."""
+        _LOGGER.warning(
+            "Service '%s' is not supported by %s",
+            SERVICE_TURN_ON_WITH_TIMER_NAME,
+            self.coordinator.name,
+        )
 
-    async def async_turn_on(self, **kwargs: Dict) -> None:
-        """Turn the entity on.
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        await self._control_device(True)
+class SwitcherPowerPlugSwitchEntity(SwitcherBaseSwitchEntity):
+    """Representation of a Switcher power plug switch entity."""
 
-    async def async_turn_off(self, **kwargs: Dict) -> None:
-        """Turn the entity off.
+    _attr_device_class = SwitchDeviceClass.OUTLET
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        await self._control_device(False)
 
-    async def _control_device(self, send_on: bool) -> None:
-        """Turn the entity on or off."""
+class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
+    """Representation of a Switcher water heater switch entity."""
 
-        response: "SwitcherV2ControlResponseMSG" = None
-        async with SwitcherV2Api(
-            self.hass.loop,
-            self._device_data.ip_addr,
-            self._device_data.phone_id,
-            self._device_data.device_id,
-            self._device_data.device_password,
-        ) as swapi:
-            response = await swapi.control_device(
-                COMMAND_ON if send_on else COMMAND_OFF
-            )
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
-        if response and response.successful:
-            self._self_initiated = True
-            self._state = SWITCHER_STATE_ON if send_on else SWITCHER_STATE_OFF
-            self.async_schedule_update_ha_state()
+    async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
+        """Use for handling setting device auto-off service calls."""
+        await self._async_call_api(API_SET_AUTO_SHUTDOWN, auto_off)
+        self.async_write_ha_state()
+
+    async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:
+        """Use for turning device on with a timer service calls."""
+        await self._async_call_api(API_CONTROL_DEVICE, Command.ON, timer_minutes)
+        self._attr_is_on = self.control_result = True
+        self.async_write_ha_state()
+
+
+class SwitcherShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
+    """Representation of a Switcher child lock base switch entity."""
+
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:lock-open"
+    _cover_id: int
+
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        cover_id: int,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self._cover_id = cover_id
+        self.control_result: bool | None = None
+        self._update_data()
+
+    def _update_data(self) -> None:
+        """Update data from device."""
+        if self.control_result is not None:
+            self._attr_is_on = self.control_result
+            self.control_result = None
+            return
+
+        data = cast(SwitcherShutter, self.coordinator.data)
+        self._attr_is_on = bool(data.child_lock[self._cover_id] == ShutterChildLock.ON)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self._async_call_api(
+            API_SET_CHILD_LOCK, ShutterChildLock.ON, self._cover_id
+        )
+        self._attr_is_on = self.control_result = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self._async_call_api(
+            API_SET_CHILD_LOCK, ShutterChildLock.OFF, self._cover_id
+        )
+        self._attr_is_on = self.control_result = False
+        self.async_write_ha_state()
+
+
+class SwitcherShutterChildLockSingleSwitchEntity(
+    SwitcherShutterChildLockBaseSwitchEntity
+):
+    """Representation of a Switcher runner child lock single switch entity."""
+
+    _attr_translation_key = "child_lock"
+
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        cover_id: int,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, cover_id)
+        self._attr_unique_id = (
+            f"{coordinator.device_id}-{coordinator.mac_address}-child_lock"
+        )
+
+
+class SwitcherShutterChildLockMultiSwitchEntity(
+    SwitcherShutterChildLockBaseSwitchEntity
+):
+    """Representation of a Switcher runner child lock multiple switch entity."""
+
+    _attr_translation_key = "multi_child_lock"
+
+    def __init__(
+        self,
+        coordinator: SwitcherDataUpdateCoordinator,
+        cover_id: int,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, cover_id)
+
+        self._attr_translation_placeholders = {"cover_id": str(cover_id + 1)}
+        self._attr_unique_id = (
+            f"{coordinator.device_id}-{coordinator.mac_address}-{cover_id}-child_lock"
+        )

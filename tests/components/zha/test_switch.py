@@ -1,97 +1,143 @@
-"""Test zha switch."""
+"""Test ZHA switch."""
+
 from unittest.mock import call, patch
 
-import zigpy.zcl.clusters.general as general
+import pytest
+from zigpy.profiles import zha
+from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.switch import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-
-from .common import (
-    async_enable_traffic,
-    async_init_zigpy_device,
-    async_test_device_join,
-    find_entity_id,
-    make_attribute,
-    make_zcl_header,
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.zha.helpers import (
+    ZHADeviceProxy,
+    ZHAGatewayProxy,
+    get_zha_gateway,
+    get_zha_gateway_proxy,
 )
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from .common import find_entity_id, send_attributes_report
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 ON = 1
 OFF = 0
 
 
-async def test_switch(hass, config_entry, zha_gateway):
-    """Test zha switch platform."""
+@pytest.fixture(autouse=True)
+def switch_platform_only():
+    """Only set up the switch and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.DEVICE_TRACKER,
+            Platform.SENSOR,
+            Platform.SELECT,
+            Platform.SWITCH,
+        ),
+    ):
+        yield
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass,
-        [general.OnOff.cluster_id, general.Basic.cluster_id],
-        [],
-        None,
-        zha_gateway,
+
+async def test_switch(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
+    """Test ZHA switch platform."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    general.OnOff.cluster_id,
+                    general.Groups.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        ieee="01:2d:6f:00:0a:90:69:e8",
+        node_descriptor=b"\x02@\x8c\x02\x10RR\x00\x00\x00R\x00\x00",
     )
 
-    # load up switch domain
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    cluster = zigpy_device.endpoints.get(1).on_off
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
+    entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
+    cluster = zigpy_device.endpoints[1].on_off
     assert entity_id is not None
 
-    # test that the switch was created and that its state is unavailable
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-    # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
-
-    # test that the state has changed from unavailable to off
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on at switch
-    attr = make_attribute(0, 1)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(
+        hass, cluster, {general.OnOff.AttributeDefs.on_off.id: ON}
+    )
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off at switch
-    attr.value.value = 0
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(
+        hass, cluster, {general.OnOff.AttributeDefs.on_off.id: OFF}
+    )
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
+        return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         # turn on via UI
         await hass.services.async_call(
-            DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
-            False, ON, (), expect_reply=True, manufacturer=None
+            False,
+            ON,
+            cluster.commands_by_name["on"].schema,
+            expect_reply=True,
+            manufacturer=None,
+            tsn=None,
         )
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_ON
 
     # turn off from HA
     with patch(
         "zigpy.zcl.Cluster.request",
-        return_value=mock_coro([0x01, zcl_f.Status.SUCCESS]),
+        return_value=[0x01, zcl_f.Status.SUCCESS],
     ):
         # turn off via UI
         await hass.services.async_call(
-            DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
+            SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
-            False, OFF, (), expect_reply=True, manufacturer=None
+            False,
+            OFF,
+            cluster.commands_by_name["off"].schema,
+            expect_reply=True,
+            manufacturer=None,
+            tsn=None,
         )
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_OFF
 
-    # test joining a new switch to the network and HA
-    await async_test_device_join(hass, zha_gateway, general.OnOff.cluster_id, entity_id)
+    await async_setup_component(hass, "homeassistant", {})
+
+    cluster.read_attributes.reset_mock()
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    assert len(cluster.read_attributes.mock_calls) == 1
+    assert cluster.read_attributes.call_args == call(
+        ["on_off"], allow_cache=False, only_cache=False, manufacturer=None
+    )

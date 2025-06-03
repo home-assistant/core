@@ -1,154 +1,177 @@
-"""Reads vehicle status from BMW connected drive portal."""
+"""Reads vehicle status from MyBMW portal."""
+
+from __future__ import annotations
+
 import logging
 
-from bimmer_connected.account import ConnectedDriveAccount
-from bimmer_connected.country_selector import get_region_from_name
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_utc_time_change
-import homeassistant.util.dt as dt_util
+from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_NAME, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+    entity_registry as er,
+)
+
+from .const import ATTR_VIN, CONF_READ_ONLY, DOMAIN
+from .coordinator import BMWConfigEntry, BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "bmw_connected_drive"
-CONF_REGION = "region"
-CONF_READ_ONLY = "read_only"
-ATTR_VIN = "vin"
 
-ACCOUNT_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_REGION): vol.Any("north_america", "china", "rest_of_world"),
-        vol.Optional(CONF_READ_ONLY, default=False): cv.boolean,
-    }
+SERVICE_SCHEMA = vol.Schema(
+    vol.Any(
+        {vol.Required(ATTR_VIN): cv.string},
+        {vol.Required(CONF_DEVICE_ID): cv.string},
+    )
 )
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: ACCOUNT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
+DEFAULT_OPTIONS = {
+    CONF_READ_ONLY: False,
+}
 
-SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
-
-
-BMW_COMPONENTS = ["binary_sensor", "device_tracker", "lock", "sensor"]
-UPDATE_INTERVAL = 5  # in minutes
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.NOTIFY,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 SERVICE_UPDATE_STATE = "update_state"
 
-_SERVICE_MAP = {
-    "light_flash": "trigger_remote_light_flash",
-    "sound_horn": "trigger_remote_horn",
-    "activate_air_conditioning": "trigger_remote_air_conditioning",
-}
+
+@callback
+def _async_migrate_options_from_data_if_missing(
+    hass: HomeAssistant, entry: BMWConfigEntry
+) -> None:
+    data = dict(entry.data)
+    options = dict(entry.options)
+
+    if CONF_READ_ONLY in data or list(options) != list(DEFAULT_OPTIONS):
+        options = dict(
+            DEFAULT_OPTIONS,
+            **{k: v for k, v in options.items() if k in DEFAULT_OPTIONS},
+        )
+        options[CONF_READ_ONLY] = data.pop(CONF_READ_ONLY, False)
+
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
 
 
-def setup(hass, config: dict):
-    """Set up the BMW connected drive components."""
-    accounts = []
-    for name, account_config in config[DOMAIN].items():
-        accounts.append(setup_account(account_config, hass, name))
+async def _async_migrate_entries(
+    hass: HomeAssistant, config_entry: BMWConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    entity_registry = er.async_get(hass)
 
-    hass.data[DOMAIN] = accounts
+    @callback
+    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
+        replacements = {
+            Platform.SENSOR.value: {
+                "charging_level_hv": "fuel_and_battery.remaining_battery_percent",
+                "fuel_percent": "fuel_and_battery.remaining_fuel_percent",
+                "ac_current_limit": "charging_profile.ac_current_limit",
+                "charging_start_time": "fuel_and_battery.charging_start_time",
+                "charging_end_time": "fuel_and_battery.charging_end_time",
+                "charging_status": "fuel_and_battery.charging_status",
+                "charging_target": "fuel_and_battery.charging_target",
+                "remaining_battery_percent": "fuel_and_battery.remaining_battery_percent",
+                "remaining_range_total": "fuel_and_battery.remaining_range_total",
+                "remaining_range_electric": "fuel_and_battery.remaining_range_electric",
+                "remaining_range_fuel": "fuel_and_battery.remaining_range_fuel",
+                "remaining_fuel": "fuel_and_battery.remaining_fuel",
+                "remaining_fuel_percent": "fuel_and_battery.remaining_fuel_percent",
+                "activity": "climate.activity",
+            }
+        }
+        if (key := entry.unique_id.split("-")[-1]) in replacements.get(
+            entry.domain, []
+        ):
+            new_unique_id = entry.unique_id.replace(
+                key, replacements[entry.domain][key]
+            )
+            _LOGGER.debug(
+                "Migrating entity '%s' unique_id from '%s' to '%s'",
+                entry.entity_id,
+                entry.unique_id,
+                new_unique_id,
+            )
+            if existing_entity_id := entity_registry.async_get_entity_id(
+                entry.domain, entry.platform, new_unique_id
+            ):
+                _LOGGER.debug(
+                    "Cannot migrate to unique_id '%s', already exists for '%s'",
+                    new_unique_id,
+                    existing_entity_id,
+                )
+                return None
+            return {
+                "new_unique_id": new_unique_id,
+            }
+        return None
 
-    def _update_all(call) -> None:
-        """Update all BMW accounts."""
-        for cd_account in hass.data[DOMAIN]:
-            cd_account.update()
-
-    # Service to manually trigger updates for all accounts.
-    hass.services.register(DOMAIN, SERVICE_UPDATE_STATE, _update_all)
-
-    _update_all(None)
-
-    for component in BMW_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
     return True
 
 
-def setup_account(account_config: dict, hass, name: str) -> "BMWConnectedDriveAccount":
-    """Set up a new BMWConnectedDriveAccount based on the config."""
-    username = account_config[CONF_USERNAME]
-    password = account_config[CONF_PASSWORD]
-    region = account_config[CONF_REGION]
-    read_only = account_config[CONF_READ_ONLY]
+async def async_setup_entry(hass: HomeAssistant, entry: BMWConfigEntry) -> bool:
+    """Set up BMW Connected Drive from a config entry."""
 
-    _LOGGER.debug("Adding new account %s", name)
-    cd_account = BMWConnectedDriveAccount(username, password, region, name, read_only)
+    _async_migrate_options_from_data_if_missing(hass, entry)
 
-    def execute_service(call):
-        """Execute a service for a vehicle.
+    await _async_migrate_entries(hass, entry)
 
-        This must be a member function as we need access to the cd_account
-        object here.
-        """
-        vin = call.data[ATTR_VIN]
-        vehicle = cd_account.account.get_vehicle(vin)
-        if not vehicle:
-            _LOGGER.error("Could not find a vehicle for VIN %s", vin)
-            return
-        function_name = _SERVICE_MAP[call.service]
-        function_call = getattr(vehicle.remote_services, function_name)
-        function_call()
-
-    if not read_only:
-        # register the remote services
-        for service in _SERVICE_MAP:
-            hass.services.register(
-                DOMAIN, service, execute_service, schema=SERVICE_SCHEMA
-            )
-
-    # update every UPDATE_INTERVAL minutes, starting now
-    # this should even out the load on the servers
-    now = dt_util.utcnow()
-    track_utc_time_change(
+    # Set up one data coordinator per account/config entry
+    coordinator = BMWDataUpdateCoordinator(
         hass,
-        cd_account.update,
-        minute=range(now.minute % UPDATE_INTERVAL, 60, UPDATE_INTERVAL),
-        second=now.second,
+        config_entry=entry,
+    )
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
+
+    # Set up all platforms except notify
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
-    return cd_account
-
-
-class BMWConnectedDriveAccount:
-    """Representation of a BMW vehicle."""
-
-    def __init__(
-        self, username: str, password: str, region_str: str, name: str, read_only
-    ) -> None:
-        """Initialize account."""
-
-        region = get_region_from_name(region_str)
-
-        self.read_only = read_only
-        self.account = ConnectedDriveAccount(username, password, region)
-        self.name = name
-        self._update_listeners = []
-
-    def update(self, *_):
-        """Update the state of all vehicles.
-
-        Notify all listeners about the update.
-        """
-        _LOGGER.debug(
-            "Updating vehicle state for account %s, notifying %d listeners",
-            self.name,
-            len(self._update_listeners),
+    # set up notify platform, no entry support for notify platform yet,
+    # have to use discovery to load platform.
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {CONF_NAME: DOMAIN, CONF_ENTITY_ID: entry.entry_id},
+            {},
         )
-        try:
-            self.account.update_vehicle_states()
-            for listener in self._update_listeners:
-                listener()
-        except OSError as exception:
-            _LOGGER.error(
-                "Could not connect to the BMW Connected Drive portal. "
-                "The vehicle state could not be updated."
-            )
-            _LOGGER.exception(exception)
+    )
 
-    def add_update_listener(self, listener):
-        """Add a listener for update notifications."""
-        self._update_listeners.append(listener)
+    # Clean up vehicles which are not assigned to the account anymore
+    account_vehicles = {(DOMAIN, v.vin) for v in coordinator.account.vehicles}
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry_id=entry.entry_id
+    )
+    for device in device_entries:
+        if not device.identifiers.intersection(account_vehicles):
+            device_registry.async_update_device(
+                device.id, remove_config_entry_id=entry.entry_id
+            )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: BMWConfigEntry) -> bool:
+    """Unload a config entry."""
+
+    return await hass.config_entries.async_unload_platforms(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+    )

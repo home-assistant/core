@@ -1,158 +1,297 @@
 # Describes the format for available media player services
 
 turn_on:
-  description: Turn a media player power on.
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn on.
-      example: 'media_player.living_room_chromecast'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.TURN_ON
 
 turn_off:
-  description: Turn a media player power off.
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn off.
-      example: 'media_player.living_room_chromecast'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.TURN_OFF
 
 toggle:
-  description: Toggles a media player power state.
-  fields:
-    entity_id:
-      description: Name(s) of entities to toggle.
-      example: 'media_player.living_room_chromecast'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - - media_player.MediaPlayerEntityFeature.TURN_OFF
+          - media_player.MediaPlayerEntityFeature.TURN_ON
 
 volume_up:
-  description: Turn a media player volume up.
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn volume up on.
-      example: 'media_player.living_room_sonos'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_SET
+        - media_player.MediaPlayerEntityFeature.VOLUME_STEP
 
 volume_down:
-  description: Turn a media player volume down.
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn volume down on.
-      example: 'media_player.living_room_sonos'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_SET
+        - media_player.MediaPlayerEntityFeature.VOLUME_STEP
 
 volume_mute:
-  description: Mute a media player's volume.
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_MUTE
   fields:
-    entity_id:
-      description: Name(s) of entities to mute.
-      example: 'media_player.living_room_sonos'
     is_volume_muted:
-      description: True/false for mute/unmute.
-      example: true
+      required: true
+      selector:
+        boolean:
 
 volume_set:
-  description: Set a media player's volume level.
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.VOLUME_SET
   fields:
-    entity_id:
-      description: Name(s) of entities to set volume level on.
-      example: 'media_player.living_room_sonos'
     volume_level:
-      description: Volume level to set as float.
-      example: 0.6
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
 
 media_play_pause:
-  description: Toggle media player play/pause state.
-  fields:
-    entity_id:
-      description: Name(s) of entities to toggle play/pause state on.
-      example: 'media_player.living_room_sonos'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - - media_player.MediaPlayerEntityFeature.PAUSE
+          - media_player.MediaPlayerEntityFeature.PLAY
 
 media_play:
-  description: Send the media player the command for play.
-  fields:
-    entity_id:
-      description: Name(s) of entities to play on.
-      example: 'media_player.living_room_sonos'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY
 
 media_pause:
-  description: Send the media player the command for pause.
-  fields:
-    entity_id:
-      description: Name(s) of entities to pause on.
-      example: 'media_player.living_room_sonos'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PAUSE
 
 media_stop:
-  description: Send the media player the stop command.
-  fields:
-    entity_id:
-      description: Name(s) of entities to stop on.
-      example: 'media_player.living_room_sonos'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.STOP
 
 media_next_track:
-  description: Send the media player the command for next track.
-  fields:
-    entity_id:
-      description: Name(s) of entities to send next track command to.
-      example: 'media_player.living_room_sonos'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.NEXT_TRACK
 
 media_previous_track:
-  description: Send the media player the command for previous track.
-  fields:
-    entity_id:
-      description: Name(s) of entities to send previous track command to.
-      example: 'media_player.living_room_sonos'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PREVIOUS_TRACK
 
 media_seek:
-  description: Send the media player the command to seek in current playing media.
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SEEK
   fields:
-    entity_id:
-      description: Name(s) of entities to seek media on.
-      example: 'media_player.living_room_chromecast'
     seek_position:
-      description: Position to seek to. The format is platform dependent.
-      example: 100
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          step: 0.01
+          mode: box
 
 play_media:
-  description: Send the media player the command for playing media.
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
   fields:
-    entity_id:
-      description: Name(s) of entities to seek media on
-      example: 'media_player.living_room_chromecast'
     media_content_id:
-      description: The ID of the content to play. Platform dependent.
-      example: 'https://home-assistant.io/images/cast/splash.png'
+      required: true
+      example: "https://home-assistant.io/images/cast/splash.png"
+      selector:
+        text:
+
     media_content_type:
-      description: The type of the content to play. Must be one of image, music, tvshow, video, episode, channel or playlist
-      example: 'music'
+      required: true
+      example: "music"
+      selector:
+        text:
+
+    enqueue:
+      filter:
+        supported_features:
+          - media_player.MediaPlayerEntityFeature.MEDIA_ENQUEUE
+      required: false
+      selector:
+        select:
+          options:
+            - "play"
+            - "next"
+            - "add"
+            - "replace"
+          translation_key: enqueue
+    announce:
+      filter:
+        supported_features:
+          - media_player.MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+      required: false
+      example: "true"
+      selector:
+        boolean:
+
+browse_media:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.BROWSE_MEDIA
+  fields:
+    media_content_type:
+      required: false
+      example: "music"
+      selector:
+        text:
+    media_content_id:
+      required: false
+      example: "A:ALBUMARTIST/Beatles"
+      selector:
+        text:
+
+search_media:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SEARCH_MEDIA
+  fields:
+    search_query:
+      required: true
+      example: "Beatles"
+      selector:
+        text:
+    media_content_type:
+      required: false
+      example: "music"
+      selector:
+        text:
+    media_content_id:
+      required: false
+      example: "A:ALBUMARTIST/Beatles"
+      selector:
+        text:
+    media_filter_classes:
+      required: false
+      example: ["album", "artist"]
+      selector:
+        text:
+          multiple: true
 
 select_source:
-  description: Send the media player the command to change input source.
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SELECT_SOURCE
   fields:
-    entity_id:
-      description: Name(s) of entities to change source on.
-      example: 'media_player.txnr535_0009b0d81f82'
     source:
-      description: Name of the source to switch to. Platform dependent.
-      example: 'video1'
+      required: true
+      example: "video1"
+      selector:
+        text:
 
 select_sound_mode:
-  description: Send the media player the command to change sound mode.
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SELECT_SOUND_MODE
   fields:
-    entity_id:
-      description: Name(s) of entities to change sound mode on.
-      example: 'media_player.marantz'
     sound_mode:
-      description: Name of the sound mode to switch to.
-      example: 'Music'
+      example: "Music"
+      selector:
+        text:
 
 clear_playlist:
-  description: Send the media player the command to clear players playlist.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change source on.
-      example: 'media_player.living_room_chromecast'
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.CLEAR_PLAYLIST
 
 shuffle_set:
-  description: Set shuffling state.
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SHUFFLE_SET
   fields:
-    entity_id:
-      description: Name(s) of entities to set.
-      example: 'media_player.spotify'
     shuffle:
-      description: True/false for enabling/disabling shuffle.
-      example: true
+      required: true
+      selector:
+        boolean:
+
+repeat_set:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.REPEAT_SET
+  fields:
+    repeat:
+      required: true
+      selector:
+        select:
+          options:
+            - "off"
+            - "all"
+            - "one"
+          translation_key: repeat
+join:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.GROUPING
+  fields:
+    group_members:
+      required: true
+      example: |
+        - media_player.multiroom_player2
+        - media_player.multiroom_player3
+      selector:
+        entity:
+          multiple: true
+          domain: media_player
+
+unjoin:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.GROUPING

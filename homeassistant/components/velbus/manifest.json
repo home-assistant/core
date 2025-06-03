@@ -1,9 +1,36 @@
 {
   "domain": "velbus",
   "name": "Velbus",
-  "documentation": "https://www.home-assistant.io/integrations/velbus",
-  "requirements": ["python-velbus==2.0.35"],
+  "codeowners": ["@Cereal2nd", "@brefra"],
   "config_flow": true,
-  "dependencies": [],
-  "codeowners": ["@cereal2nd"]
+  "dependencies": ["usb"],
+  "documentation": "https://www.home-assistant.io/integrations/velbus",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": [
+    "velbus-parser",
+    "velbus-module",
+    "velbus-packet",
+    "velbus-protocol"
+  ],
+  "quality_scale": "bronze",
+  "requirements": ["velbus-aio==2025.5.0"],
+  "usb": [
+    {
+      "vid": "10CF",
+      "pid": "0B1B"
+    },
+    {
+      "vid": "10CF",
+      "pid": "0516"
+    },
+    {
+      "vid": "10CF",
+      "pid": "0517"
+    },
+    {
+      "vid": "10CF",
+      "pid": "0518"
+    }
+  ]
 }

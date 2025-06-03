@@ -1,0 +1,703 @@
+{
+  "nodeId": 35,
+  "index": 0,
+  "installerIcon": 7172,
+  "userIcon": 7172,
+  "status": 1,
+  "ready": true,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 24,
+      "label": "Wall Controller"
+    },
+    "specific": {
+      "key": 1,
+      "label": "Basic Wall Controller"
+    },
+    "mandatorySupportedCCs": [],
+    "mandatoryControlledCCs": []
+  },
+  "isListening": false,
+  "isFrequentListening": false,
+  "isRouting": true,
+  "maxBaudRate": 40000,
+  "isSecure": false,
+  "version": 4,
+  "isBeaming": true,
+  "manufacturerId": 134,
+  "productId": 130,
+  "productType": 258,
+  "firmwareVersion": "2.3",
+  "zwavePlusVersion": 1,
+  "nodeType": 0,
+  "roleType": 4,
+  "name": "mbr_wallmote_quad",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0086:0x0002:0x0082:0.0",
+  "deviceConfig": {
+    "filename": "/usr/src/app/node_modules/@zwave-js/config/config/devices/0x0086/zw130.json",
+    "manufacturerId": 134,
+    "manufacturer": "AEON Labs",
+    "label": "ZW130",
+    "description": "WallMote Quad",
+    "devices": [
+      {
+        "productType": 2,
+        "productId": 130
+      },
+      {
+        "productType": 258,
+        "productId": 130
+      },
+      {
+        "productType": 514,
+        "productId": 130
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "paramInformation": {
+      "_map": {}
+    },
+    "metadata": {
+      "inclusion": "To add the ZP3111 to the Z-Wave network (inclusion), place the Z-Wave primary controller into inclusion mode. Press the Program Switch of ZP3111 for sending the NIF. After sending NIF, Z-Wave will send the auto inclusion, otherwise, ZP3111 will go to sleep after 20 seconds.",
+      "exclusion": "To remove the ZP3111 from the Z-Wave network (exclusion), place the Z-Wave primary controller into \u201cexclusion\u201d mode, and following its instruction to delete the ZP3111 to the controller. Press the Program Switch of ZP3111 once to be excluded.",
+      "reset": "Remove cover to triggered tamper switch, LED flash once & send out Alarm Report. Press Program Switch 10 times within 10 seconds, ZP3111 will send the \u201cDevice Reset Locally Notification\u201d command and reset to the factory default. (Remark: This is to be used only in the case of primary controller being inoperable or otherwise unavailable.)",
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2479/ZP3111-5_R2_20170316.pdf",
+      "comments": {
+        "level": "info",
+        "text": "test"
+      }
+    },
+    "isEmbedded": true
+  },
+  "label": "ZW130",
+  "neighbors": [1, 14, 15, 16, 22, 30, 31, 5, 6, 7, 8],
+  "endpointCountIsDynamic": false,
+  "endpointsHaveIdenticalCapabilities": true,
+  "individualEndpointCount": 4,
+  "aggregatedEndpointCount": 0,
+  "interviewAttempts": 1,
+  "interviewStage": "NodeInfo",
+  "endpoints": [
+    {
+      "nodeId": 35,
+      "index": 0,
+      "installerIcon": 7172,
+      "userIcon": 7172,
+      "commandClasses": [
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 91,
+          "name": "Central Scene",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 132,
+          "name": "Wake Up",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": false
+        }
+      ]
+    },
+    {
+      "nodeId": 35,
+      "index": 1,
+      "installerIcon": 7169,
+      "userIcon": 7169
+    },
+    {
+      "nodeId": 35,
+      "index": 2,
+      "installerIcon": 7169,
+      "userIcon": 7169
+    },
+    {
+      "nodeId": 35,
+      "index": 3,
+      "installerIcon": 7169,
+      "userIcon": 7169
+    },
+    {
+      "nodeId": 35,
+      "index": 4,
+      "installerIcon": 7169,
+      "userIcon": 7169
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "slowRefresh",
+      "propertyName": "slowRefresh",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Send held down notifications at a slow rate",
+        "description": "When this is true, KeyHeldDown notifications are sent every 55s. When this is false, the notifications are sent every 200ms."
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "004",
+      "propertyName": "scene",
+      "propertyKeyName": "004",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Scene 004",
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "001",
+      "propertyName": "scene",
+      "propertyKeyName": "001",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Scene 001",
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "002",
+      "propertyName": "scene",
+      "propertyKeyName": "002",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Scene 002",
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 91,
+      "commandClassName": "Central Scene",
+      "property": "scene",
+      "propertyKey": "003",
+      "propertyName": "scene",
+      "propertyKeyName": "003",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Scene 003",
+        "states": {
+          "0": "KeyPressed",
+          "1": "KeyReleased",
+          "2": "KeyHeldDown"
+        }
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyName": "Touch sound",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "label": "Touch sound",
+        "description": "Enable/disable the touch sound.",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyName": "Touch vibration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "label": "Touch vibration",
+        "description": "Enable/disable the touch vibration.",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyName": "Button slide",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "label": "Button slide",
+        "description": "Enable/disable the function of button slide.",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 4,
+      "propertyName": "Notification report",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 3,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "1": "Central scene",
+          "3": "Central scene and config"
+        },
+        "label": "Notification report",
+        "description": "Which notification to be sent to the associated devices.",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 39,
+      "propertyName": "Low battery value",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 50,
+        "default": 5,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Low battery value",
+        "description": "Set the low battery value",
+        "isFromConfig": true
+      },
+      "value": 20
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 255,
+      "propertyName": "Reset the WallMote Quad",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 1431655765,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Reset to factory default",
+          "1431655765": "Reset and remove"
+        },
+        "label": "Reset the WallMote Quad",
+        "description": "Reset the WallMote Quad to factory default.",
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Battery load status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Battery load status",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Battery load status",
+        "states": {
+          "0": "idle",
+          "12": "Battery is charging"
+        },
+        "ccSpecific": {
+          "notificationType": 8
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Battery level status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Battery level status",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Battery level status",
+        "states": {
+          "0": "idle",
+          "13": "Battery is fully charged",
+          "14": "Charge battery soon",
+          "15": "Charge battery now"
+        },
+        "ccSpecific": {
+          "notificationType": 8
+        }
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Manufacturer ID"
+      },
+      "value": 134
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product type"
+      },
+      "value": 258
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product ID"
+      },
+      "value": 130
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "level",
+      "propertyName": "level",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "label": "Battery level"
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "isLow",
+      "propertyName": "isLow",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Low battery level"
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 132,
+      "commandClassName": "Wake Up",
+      "property": "wakeUpInterval",
+      "propertyName": "wakeUpInterval",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "min": 0,
+        "max": 864000,
+        "label": "Wake Up interval",
+        "steps": 240,
+        "default": 0
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 132,
+      "commandClassName": "Wake Up",
+      "property": "controllerNodeId",
+      "propertyName": "controllerNodeId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Node ID of the controller"
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "4.62"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["2.3"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      }
+    }
+  ],
+  "isControllerNode": false
+}

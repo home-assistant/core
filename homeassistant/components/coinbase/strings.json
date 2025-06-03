@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Coinbase API key details",
+        "description": "Please enter the details of your API key as provided by Coinbase.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_token": "API secret"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_auth_key": "API credentials rejected by Coinbase due to an invalid API key.",
+      "invalid_auth_secret": "API credentials rejected by Coinbase due to an invalid API secret.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Adjust Coinbase options",
+        "data": {
+          "account_balance_currencies": "Wallet balances to report.",
+          "exchange_rate_currencies": "Exchange rates to report.",
+          "exchange_base": "Base currency for exchange rate sensors.",
+          "exchange_rate_precision": "Number of decimal places for exchange rates."
+        }
+      }
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "currency_unavailable": "One or more of the requested currency balances is not provided by your Coinbase API.",
+      "exchange_rate_unavailable": "One or more of the requested exchange rates is not provided by Coinbase."
+    }
+  }
+}

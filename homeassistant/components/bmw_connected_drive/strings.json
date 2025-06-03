@@ -1,0 +1,248 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Connect to your MyBMW/MINI Connected account to retrieve vehicle data.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "ConnectedDrive region"
+        },
+        "data_description": {
+          "username": "The email address of your MyBMW/MINI Connected account.",
+          "password": "The password of your MyBMW/MINI Connected account.",
+          "region": "The region of your MyBMW/MINI Connected account."
+        }
+      },
+      "captcha": {
+        "title": "Are you a robot?",
+        "description": "A captcha is required for BMW login. Visit the external website to complete the challenge and submit the form. Copy the resulting token into the field below.\n\n{captcha_url}\n\nNo data will be exposed outside of your Home Assistant instance.",
+        "data": {
+          "captcha_token": "Captcha token"
+        },
+        "data_description": {
+          "captcha_token": "One-time token retrieved from the captcha challenge."
+        }
+      },
+      "change_password": {
+        "description": "Update your MyBMW/MINI Connected password for account `{username}` in region `{region}`.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::bmw_connected_drive::config::step::user::data_description::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_captcha": "Captcha validation missing"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "account_options": {
+        "data": {
+          "read_only": "Read-only mode"
+        },
+        "data_description": {
+          "read_only": "Only retrieve values and send POI data, but don't offer any services that can change the vehicle state."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "lids": {
+        "name": "Lids"
+      },
+      "windows": {
+        "name": "Windows"
+      },
+      "door_lock_state": {
+        "name": "Door lock state"
+      },
+      "condition_based_services": {
+        "name": "Condition-based services"
+      },
+      "check_control_messages": {
+        "name": "Check control messages"
+      },
+      "charging_status": {
+        "name": "Charging status"
+      },
+      "connection_status": {
+        "name": "Connection status"
+      },
+      "is_pre_entry_climatization_enabled": {
+        "name": "Pre-entry climatization"
+      }
+    },
+    "button": {
+      "light_flash": {
+        "name": "Flash lights"
+      },
+      "sound_horn": {
+        "name": "Sound horn"
+      },
+      "activate_air_conditioning": {
+        "name": "Activate air conditioning"
+      },
+      "deactivate_air_conditioning": {
+        "name": "Deactivate air conditioning"
+      },
+      "find_vehicle": {
+        "name": "Find vehicle"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "number": {
+      "target_soc": {
+        "name": "Target SoC"
+      }
+    },
+    "select": {
+      "ac_limit": {
+        "name": "AC charging limit"
+      },
+      "charging_mode": {
+        "name": "Charging mode",
+        "state": {
+          "immediate_charging": "Immediate charging",
+          "delayed_charging": "Delayed charging",
+          "no_action": "No action"
+        }
+      }
+    },
+    "sensor": {
+      "ac_current_limit": {
+        "name": "AC current limit"
+      },
+      "charging_start_time": {
+        "name": "Charging start time"
+      },
+      "charging_end_time": {
+        "name": "Charging end time"
+      },
+      "charging_status": {
+        "name": "Charging status",
+        "state": {
+          "default": "Default",
+          "charging": "[%key:common::state::charging%]",
+          "error": "[%key:common::state::error%]",
+          "complete": "Complete",
+          "fully_charged": "Fully charged",
+          "finished_fully_charged": "Finished, fully charged",
+          "finished_not_full": "Finished, not full",
+          "invalid": "Invalid",
+          "not_charging": "Not charging",
+          "plugged_in": "Plugged in",
+          "waiting_for_charging": "Waiting for charging",
+          "target_reached": "Target reached"
+        }
+      },
+      "charging_target": {
+        "name": "Charging target"
+      },
+      "remaining_battery_percent": {
+        "name": "Remaining battery percent"
+      },
+      "mileage": {
+        "name": "Mileage"
+      },
+      "remaining_range_total": {
+        "name": "Remaining range total"
+      },
+      "remaining_range_electric": {
+        "name": "Remaining range electric"
+      },
+      "remaining_range_fuel": {
+        "name": "Remaining range fuel"
+      },
+      "remaining_fuel": {
+        "name": "Remaining fuel"
+      },
+      "remaining_fuel_percent": {
+        "name": "Remaining fuel percent"
+      },
+      "climate_status": {
+        "name": "Climate status",
+        "state": {
+          "cooling": "Cooling",
+          "heating": "Heating",
+          "inactive": "Inactive",
+          "standby": "[%key:common::state::standby%]",
+          "ventilation": "Ventilation"
+        }
+      },
+      "front_left_current_pressure": {
+        "name": "Front left tire pressure"
+      },
+      "front_right_current_pressure": {
+        "name": "Front right tire pressure"
+      },
+      "rear_left_current_pressure": {
+        "name": "Rear left tire pressure"
+      },
+      "rear_right_current_pressure": {
+        "name": "Rear right tire pressure"
+      },
+      "front_left_target_pressure": {
+        "name": "Front left target pressure"
+      },
+      "front_right_target_pressure": {
+        "name": "Front right target pressure"
+      },
+      "rear_left_target_pressure": {
+        "name": "Rear left target pressure"
+      },
+      "rear_right_target_pressure": {
+        "name": "Rear right target pressure"
+      }
+    },
+    "switch": {
+      "climate": {
+        "name": "Climate"
+      },
+      "charging": {
+        "name": "Charging"
+      }
+    }
+  },
+  "selector": {
+    "regions": {
+      "options": {
+        "china": "China",
+        "north_america": "North America",
+        "rest_of_world": "Rest of world"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_poi": {
+      "message": "Invalid data for point of interest: {poi_exception}"
+    },
+    "missing_captcha": {
+      "message": "Login requires captcha validation"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "remote_service_error": {
+      "message": "Error executing remote service on vehicle. {exception}"
+    },
+    "update_failed": {
+      "message": "Error updating vehicle data. {exception}"
+    }
+  }
+}

@@ -1,9 +1,12 @@
 """Support for Ness D8X/D16X zone states - represented as binary sensors."""
-import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.core import callback
+from __future__ import annotations
+
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_ZONE_ID,
@@ -14,10 +17,13 @@ from . import (
     ZoneChangedData,
 )
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Ness Alarm binary sensor devices."""
     if not discovery_info:
         return
@@ -38,8 +44,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class NessZoneBinarySensor(BinarySensorDevice):
+class NessZoneBinarySensor(BinarySensorEntity):
     """Representation of an Ness alarm zone as a binary sensor."""
+
+    _attr_should_poll = False
 
     def __init__(self, zone_id, name, zone_type):
         """Initialize the binary_sensor."""
@@ -48,21 +56,18 @@ class NessZoneBinarySensor(BinarySensorDevice):
         self._type = zone_type
         self._state = 0
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ZONE_CHANGED, self._handle_zone_change
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_ZONE_CHANGED, self._handle_zone_change
+            )
         )
 
     @property
     def name(self):
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def is_on(self):
@@ -79,4 +84,4 @@ class NessZoneBinarySensor(BinarySensorDevice):
         """Handle zone state update."""
         if self._zone_id == data.zone_id:
             self._state = data.state
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

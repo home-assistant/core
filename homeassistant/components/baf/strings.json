@@ -1,0 +1,110 @@
+{
+  "config": {
+    "flow_title": "{name} - {model} ({ip_address})",
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to set up {name} - {model} ({ip_address})?"
+      }
+    },
+    "abort": {
+      "ipv6_not_supported": "IPv6 is not supported.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "climate": {
+      "auto_comfort": {
+        "name": "Auto Comfort"
+      }
+    },
+    "fan": {
+      "baf": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "comfort_min_speed": {
+        "name": "Auto Comfort minimum speed"
+      },
+      "comfort_max_speed": {
+        "name": "Auto Comfort maximum speed"
+      },
+      "comfort_heat_assist_speed": {
+        "name": "Auto Comfort Heat Assist speed"
+      },
+      "return_to_auto_timeout": {
+        "name": "Return to Auto timeout"
+      },
+      "motion_sense_timeout": {
+        "name": "Motion sense timeout"
+      },
+      "light_return_to_auto_timeout": {
+        "name": "Light return to Auto timeout"
+      },
+      "light_auto_motion_timeout": {
+        "name": "Light motion sense timeout"
+      }
+    },
+    "sensor": {
+      "current_rpm": {
+        "name": "Current RPM"
+      },
+      "target_rpm": {
+        "name": "Target RPM"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "ip_address": {
+        "name": "[%key:common::config_flow::data::ip%]"
+      }
+    },
+    "switch": {
+      "legacy_ir_remote_enable": {
+        "name": "Legacy IR remote"
+      },
+      "led_indicators_enable": {
+        "name": "LED indicators"
+      },
+      "comfort_heat_assist_enable": {
+        "name": "Auto Comfort Heat Assist"
+      },
+      "fan_beep_enable": {
+        "name": "Beep"
+      },
+      "eco_enable": {
+        "name": "Eco mode"
+      },
+      "motion_sense_enable": {
+        "name": "Motion sense"
+      },
+      "return_to_auto_enable": {
+        "name": "Return to Auto"
+      },
+      "whoosh_enable": {
+        "name": "Whoosh"
+      },
+      "light_dim_to_warm_enable": {
+        "name": "Dim to Warm"
+      },
+      "light_return_to_auto_enable": {
+        "name": "Light return to Auto"
+      }
+    }
+  }
+}

@@ -1,20 +1,26 @@
 """Support for Xiaomi Mi routers."""
+
+from __future__ import annotations
+
+from http import HTTPStatus
 import logging
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME, default="admin"): cv.string,
@@ -23,15 +29,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> XiaomiDeviceScanner | None:
     """Validate the configuration and return a Xiaomi Device Scanner."""
-    scanner = XiaomiDeviceScanner(config[DOMAIN])
+    scanner = XiaomiDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
 class XiaomiDeviceScanner(DeviceScanner):
-    """This class queries a Xiaomi Mi router.
+    """Class which queries a Xiaomi Mi router.
 
     Adapted from Luci scanner.
     """
@@ -63,7 +69,7 @@ class XiaomiDeviceScanner(DeviceScanner):
                 self.mac2name = dict(mac2name_list)
             else:
                 # Error, handled in the _retrieve_list_with_retry
-                return
+                return None
         return self.mac2name.get(device.upper(), None)
 
     def _update_info(self):
@@ -85,12 +91,12 @@ class XiaomiDeviceScanner(DeviceScanner):
 
         Return the list if successful.
         """
-        _LOGGER.info("Refreshing device list")
+        _LOGGER.debug("Refreshing device list")
         result = _retrieve_list(self.host, self.token)
         if result:
             return result
 
-        _LOGGER.info("Refreshing token and retrying device list refresh")
+        _LOGGER.debug("Refreshing token and retrying device list refresh")
         self.token = _get_token(self.host, self.username, self.password)
         return _retrieve_list(self.host, self.token)
 
@@ -108,37 +114,37 @@ def _retrieve_list(host, token, **kwargs):
     url = "http://{}/cgi-bin/luci/;stok={}/api/misystem/devicelist"
     url = url.format(host, token)
     try:
-        res = requests.get(url, timeout=5, **kwargs)
+        res = requests.get(url, timeout=10, **kwargs)
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out at URL %s", url)
-        return
-    if res.status_code != 200:
+        return None
+    if res.status_code != HTTPStatus.OK:
         _LOGGER.exception("Connection failed with http code %s", res.status_code)
-        return
+        return None
     try:
         result = res.json()
     except ValueError:
         # If json decoder could not parse the response
         _LOGGER.exception("Failed to parse response from mi router")
-        return
+        return None
     try:
         xiaomi_code = result["code"]
     except KeyError:
         _LOGGER.exception("No field code in response from mi router. %s", result)
-        return
+        return None
     if xiaomi_code == 0:
         try:
             return result["list"]
         except KeyError:
             _LOGGER.exception("No list in response from mi router. %s", result)
-            return
+            return None
     else:
-        _LOGGER.info(
+        _LOGGER.warning(
             "Receive wrong Xiaomi code %s, expected 0 in response %s",
             xiaomi_code,
             result,
         )
-        return
+        return None
 
 
 def _get_token(host, username, password):
@@ -149,24 +155,23 @@ def _get_token(host, username, password):
         res = requests.post(url, data=data, timeout=5)
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out")
-        return
-    if res.status_code == 200:
+        return None
+    if res.status_code == HTTPStatus.OK:
         try:
             result = res.json()
         except ValueError:
             # If JSON decoder could not parse the response
             _LOGGER.exception("Failed to parse response from mi router")
-            return
+            return None
         try:
             return result["token"]
         except KeyError:
             error_message = (
                 "Xiaomi token cannot be refreshed, response from "
-                + "url: [%s] \nwith parameter: [%s] \nwas: [%s]"
+                "url: [%s] \nwith parameter: [%s] \nwas: [%s]"
             )
             _LOGGER.exception(error_message, url, data, result)
-            return
-    else:
-        _LOGGER.error(
-            "Invalid response: [%s] at url: [%s] with data [%s]", res, url, data
-        )
+            return None
+
+    _LOGGER.error("Invalid response: [%s] at url: [%s] with data [%s]", res, url, data)
+    return None

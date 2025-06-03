@@ -1,0 +1,14 @@
+{
+  "__typename": "iometer.reading.v1",
+  "meter": {
+    "number": "1ISK0000000000",
+    "reading": {
+      "time": "2024-11-11T11:11:11Z",
+      "registers": [
+        { "obis": "01-00:01.08.00*ff", "value": 1234.5, "unit": "Wh" },
+        { "obis": "01-00:02.08.00*ff", "value": 5432.1, "unit": "Wh" },
+        { "obis": "01-00:10.07.00*ff", "value": 100, "unit": "W" }
+      ]
+    }
+  }
+}

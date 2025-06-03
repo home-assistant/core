@@ -1,0 +1,75 @@
+{
+  "config": {
+    "flow_title": "{name} ({type})",
+    "step": {
+      "user": {
+        "title": "Set up a new Apple TV",
+        "description": "Start by entering the device name (e.g. Kitchen or Bedroom) or IP address of the Apple TV you want to add.\n\nIf you cannot see your device or experience any issues, try specifying the device IP address.",
+        "data": {
+          "device_input": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "restore_device": {
+        "title": "Device reconfiguration",
+        "description": "Reconfigure this device to restore its functionality."
+      },
+      "pair_with_pin": {
+        "title": "Pairing",
+        "description": "Pairing is required for the `{protocol}` protocol. Please enter the PIN code displayed on screen. Leading zeros shall be omitted, i.e. enter 123 if the displayed code is 0123.",
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]"
+        }
+      },
+      "pair_no_pin": {
+        "title": "Pairing",
+        "description": "Pairing is required for the `{protocol}` service. Please enter PIN {pin} on your device to continue."
+      },
+      "protocol_disabled": {
+        "title": "Pairing not possible",
+        "description": "Pairing is required for `{protocol}` but it is disabled on the device. Please review potential access restrictions (e.g. allow all devices on the local network to connect) on the device.\n\nYou may continue without pairing this protocol, but some functionality will be limited."
+      },
+      "confirm": {
+        "title": "Confirm adding Apple TV",
+        "description": "You are about to add `{name}` of type `{type}` to Home Assistant.\n\n**To complete the process, you may have to enter multiple PIN codes.**\n\nPlease note that you will *not* be able to power off your Apple TV with this integration. Only the media player in Home Assistant will turn off!"
+      },
+      "service_problem": {
+        "title": "Failed to add service",
+        "description": "A problem occurred while pairing protocol `{protocol}`. It will be ignored."
+      },
+      "password": {
+        "title": "Password required",
+        "description": "A password is required by `{protocol}`. This is not yet supported, please disable password to continue."
+      }
+    },
+    "error": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "ipv6_not_supported": "IPv6 is not supported.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "device_did_not_pair": "No attempt to finish pairing process was made from the device.",
+      "backoff": "Device does not accept pairing requests at this time (you might have entered an invalid PIN code too many times), try again later.",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "setup_failed": "Failed to set up device.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "device_not_found": "Device was not found during discovery, please try adding it again.",
+      "inconsistent_device": "Expected protocols were not found during discovery. This normally indicates a problem with multicast DNS (Zeroconf). Please try adding the device again."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Configure general device settings",
+        "data": {
+          "start_off": "Do not turn device on when starting Home Assistant"
+        }
+      }
+    }
+  }
+}

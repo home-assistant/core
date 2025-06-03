@@ -1,9 +1,10 @@
 """Define constants for the GeoNet NZ Volcano integration."""
+
 from datetime import timedelta
 
-DOMAIN = "geonetnz_volcano"
+from homeassistant.const import Platform
 
-FEED = "feed"
+DOMAIN = "geonetnz_volcano"
 
 ATTR_ACTIVITY = "activity"
 ATTR_DISTANCE = "distance"
@@ -15,5 +16,7 @@ DEFAULT_ICON = "mdi:image-filter-hdr"
 DEFAULT_RADIUS = 50.0
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 
-SIGNAL_NEW_SENSOR = "geonetnz_volcano_new_sensor_{}"
-SIGNAL_UPDATE_ENTITY = "geonetnz_volcano_update_{}"
+PLATFORMS = [Platform.SENSOR]
+
+IMPERIAL_UNITS = "imperial"
+METRIC_UNITS = "metric"

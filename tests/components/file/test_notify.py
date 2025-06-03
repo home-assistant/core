@@ -1,89 +1,185 @@
 """The tests for the notify file platform."""
+
 import os
-import unittest
-from unittest.mock import call, mock_open, patch
+from typing import Any
+from unittest.mock import MagicMock, call, mock_open, patch
 
-import homeassistant.components.notify as notify
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+
+from homeassistant.components import notify
+from homeassistant.components.file import DOMAIN
 from homeassistant.components.notify import ATTR_TITLE_DEFAULT
-from homeassistant.setup import setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import MockConfigEntry
 
 
-class TestNotifyFile(unittest.TestCase):
-    """Test the file notify."""
+@pytest.mark.parametrize(
+    ("domain", "service", "params"),
+    [
+        (
+            notify.DOMAIN,
+            "send_message",
+            {"entity_id": "notify.test", "message": "one, two, testing, testing"},
+        ),
+    ],
+)
+@pytest.mark.parametrize("timestamp", [False, True], ids=["no_timestamp", "timestamp"])
+async def test_notify_file(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_is_allowed_path: MagicMock,
+    timestamp: bool,
+    domain: str,
+    service: str,
+    params: dict[str, str],
+) -> None:
+    """Test the notify file output."""
+    filename = "mock_file"
+    full_filename = os.path.join(hass.config.path(), filename)
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    message = params["message"]
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop down everything that was started."""
-        self.hass.stop()
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"name": "test", "platform": "notify", "file_path": full_filename},
+        options={"timestamp": timestamp},
+        version=2,
+        title=f"test [{filename}]",
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
-    def test_bad_config(self):
-        """Test set up the platform with bad/missing config."""
-        config = {notify.DOMAIN: {"name": "test", "platform": "file"}}
-        with assert_setup_component(0) as handle_config:
-            assert setup_component(self.hass, notify.DOMAIN, config)
-        assert not handle_config[notify.DOMAIN]
+    freezer.move_to(dt_util.utcnow())
 
-    def _test_notify_file(self, timestamp):
-        """Test the notify file output."""
-        filename = "mock_file"
-        message = "one, two, testing, testing"
-        with assert_setup_component(1) as handle_config:
-            assert setup_component(
-                self.hass,
-                notify.DOMAIN,
-                {
-                    "notify": {
-                        "name": "test",
-                        "platform": "file",
-                        "filename": filename,
-                        "timestamp": timestamp,
-                    }
-                },
-            )
-        assert handle_config[notify.DOMAIN]
+    m_open = mock_open()
+    with (
+        patch("homeassistant.components.file.notify.open", m_open, create=True),
+        patch("homeassistant.components.file.notify.os.stat") as mock_st,
+    ):
+        mock_st.return_value.st_size = 0
+        title = (
+            f"{ATTR_TITLE_DEFAULT} notifications "
+            f"(Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
+        )
 
-        m_open = mock_open()
-        with patch(
-            "homeassistant.components.file.notify.open", m_open, create=True
-        ), patch("homeassistant.components.file.notify.os.stat") as mock_st, patch(
-            "homeassistant.util.dt.utcnow", return_value=dt_util.utcnow()
-        ):
+        await hass.services.async_call(domain, service, params, blocking=True)
 
-            mock_st.return_value.st_size = 0
-            title = "{} notifications (Log started: {})\n{}\n".format(
-                ATTR_TITLE_DEFAULT, dt_util.utcnow().isoformat(), "-" * 80
-            )
+        assert m_open.call_count == 1
+        assert m_open.call_args == call(full_filename, "a", encoding="utf8")
 
-            self.hass.services.call(
-                "notify", "test", {"message": message}, blocking=True
-            )
+        assert m_open.return_value.write.call_count == 2
+        if not timestamp:
+            assert m_open.return_value.write.call_args_list == [
+                call(title),
+                call(f"{message}\n"),
+            ]
+        else:
+            assert m_open.return_value.write.call_args_list == [
+                call(title),
+                call(f"{dt_util.utcnow().isoformat()} {message}\n"),
+            ]
 
-            full_filename = os.path.join(self.hass.config.path(), filename)
-            assert m_open.call_count == 1
-            assert m_open.call_args == call(full_filename, "a")
 
-            assert m_open.return_value.write.call_count == 2
-            if not timestamp:
-                assert m_open.return_value.write.call_args_list == [
-                    call(title),
-                    call("{}\n".format(message)),
-                ]
-            else:
-                assert m_open.return_value.write.call_args_list == [
-                    call(title),
-                    call("{} {}\n".format(dt_util.utcnow().isoformat(), message)),
-                ]
+@pytest.mark.parametrize(
+    ("is_allowed", "config", "options"),
+    [
+        (
+            False,
+            {
+                "name": "test",
+                "platform": "notify",
+                "file_path": "mock_file",
+            },
+            {
+                "timestamp": False,
+            },
+        ),
+    ],
+    ids=["not_allowed"],
+)
+async def test_notify_file_not_allowed(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_is_allowed_path: MagicMock,
+    config: dict[str, Any],
+    options: dict[str, Any],
+) -> None:
+    """Test notify file output not allowed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config,
+        version=2,
+        options=options,
+        title=f"test [{config['file_path']}]",
+    )
+    entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert "is not allowed" in caplog.text
 
-    def test_notify_file(self):
-        """Test the notify file output without timestamp."""
-        self._test_notify_file(False)
 
-    def test_notify_file_timestamp(self):
-        """Test the notify file output with timestamp."""
-        self._test_notify_file(True)
+@pytest.mark.parametrize(
+    ("service", "params"),
+    [
+        (
+            "send_message",
+            {"entity_id": "notify.test", "message": "one, two, testing, testing"},
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("data", "options", "is_allowed"),
+    [
+        (
+            {
+                "name": "test",
+                "platform": "notify",
+                "file_path": "mock_file",
+            },
+            {
+                "timestamp": False,
+            },
+            True,
+        ),
+    ],
+    ids=["not_allowed"],
+)
+async def test_notify_file_write_access_failed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_is_allowed_path: MagicMock,
+    service: str,
+    params: dict[str, Any],
+    data: dict[str, Any],
+    options: dict[str, Any],
+) -> None:
+    """Test the notify file fails."""
+    domain = notify.DOMAIN
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        version=2,
+        options=options,
+        title=f"test [{data['file_path']}]",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    freezer.move_to(dt_util.utcnow())
+
+    m_open = mock_open()
+    with (
+        patch("homeassistant.components.file.notify.open", m_open, create=True),
+        patch("homeassistant.components.file.notify.os.stat") as mock_st,
+    ):
+        mock_st.side_effect = OSError("Access Failed")
+        with pytest.raises(ServiceValidationError) as exc:
+            await hass.services.async_call(domain, service, params, blocking=True)
+        assert f"{exc.value!r}" == "ServiceValidationError('write_access_failed')"

@@ -1,0 +1,74 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Traccar Server",
+          "username": "The username (email) you use to log in to your Traccar Server"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "max_accuracy": "Max accuracy",
+          "skip_accuracy_filter_for": "Position skip filter for attributes",
+          "custom_attributes": "Custom attributes",
+          "events": "Events"
+        },
+        "data_description": {
+          "max_accuracy": "Any position reports with accuracy higher than this value will be ignored",
+          "skip_accuracy_filter_for": "Attributes defined here will bypass the accuracy filter if they are present in the update",
+          "custom_attributes": "Add any custom or calculated attributes here. These will be added to the device attributes",
+          "events": "Selected events will be fired in Home Assistant"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Motion",
+        "state": {
+          "off": "[%key:common::state::stopped%]",
+          "on": "Moving"
+        }
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "off": "Offline",
+          "on": "Online"
+        }
+      }
+    },
+    "sensor": {
+      "address": {
+        "name": "Address"
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "geofence": {
+        "name": "Geofence"
+      }
+    }
+  }
+}

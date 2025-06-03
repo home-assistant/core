@@ -1,112 +1,126 @@
 """Config flow to configure SMHI component."""
-from smhi.smhi_lib import Smhi, SmhiForecastException
+
+from __future__ import annotations
+
+from typing import Any
+
+from pysmhi import SmhiForecastException, SMHIPointForecast
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.selector import LocationSelector
 
-from .const import DOMAIN, HOME_LOCATION_NAME
-
-
-@callback
-def smhi_locations(hass: HomeAssistant):
-    """Return configurations of SMHI component."""
-    return set(
-        (slugify(entry.data[CONF_NAME]))
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+from .const import DEFAULT_NAME, DOMAIN, HOME_LOCATION_NAME
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class SmhiFlowHandler(config_entries.ConfigFlow):
+async def async_check_location(
+    hass: HomeAssistant, longitude: float, latitude: float
+) -> bool:
+    """Return true if location is ok."""
+    session = aiohttp_client.async_get_clientsession(hass)
+    smhi_api = SMHIPointForecast(str(longitude), str(latitude), session=session)
+    try:
+        await smhi_api.async_get_daily_forecast()
+    except SmhiForecastException:
+        return False
+
+    return True
+
+
+class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for SMHI component."""
 
-    VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    VERSION = 3
 
-    def __init__(self) -> None:
-        """Initialize SMHI forecast configuration flow."""
-        self._errors = {}
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        self._errors = {}
+
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            is_ok = await self._check_location(
-                user_input[CONF_LONGITUDE], user_input[CONF_LATITUDE]
-            )
-            if is_ok:
-                name = slugify(user_input[CONF_NAME])
-                if not self._name_in_configuration_exists(name):
-                    return self.async_create_entry(
-                        title=user_input[CONF_NAME], data=user_input
-                    )
+            lat: float = user_input[CONF_LOCATION][CONF_LATITUDE]
+            lon: float = user_input[CONF_LOCATION][CONF_LONGITUDE]
+            if await async_check_location(self.hass, lon, lat):
+                name = f"{DEFAULT_NAME} {round(lat, 6)} {round(lon, 6)}"
+                if (
+                    lat == self.hass.config.latitude
+                    and lon == self.hass.config.longitude
+                ):
+                    name = HOME_LOCATION_NAME
 
-                self._errors[CONF_NAME] = "name_exists"
-            else:
-                self._errors["base"] = "wrong_location"
+                await self.async_set_unique_id(f"{lat}-{lon}")
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=name, data=user_input)
 
-        # If hass config has the location set and is a valid coordinate the
-        # default location is set as default values in the form
-        if not smhi_locations(self.hass):
-            if await self._homeassistant_location_exists():
-                return await self._show_config_form(
-                    name=HOME_LOCATION_NAME,
-                    latitude=self.hass.config.latitude,
-                    longitude=self.hass.config.longitude,
-                )
+            errors["base"] = "wrong_location"
 
-        return await self._show_config_form()
-
-    async def _homeassistant_location_exists(self) -> bool:
-        """Return true if default location is set and is valid."""
-        if self.hass.config.latitude != 0.0 and self.hass.config.longitude != 0.0:
-            # Return true if valid location
-            if await self._check_location(
-                self.hass.config.longitude, self.hass.config.latitude
-            ):
-                return True
-        return False
-
-    def _name_in_configuration_exists(self, name: str) -> bool:
-        """Return True if name exists in configuration."""
-        if name in smhi_locations(self.hass):
-            return True
-        return False
-
-    async def _show_config_form(
-        self, name: str = None, latitude: str = None, longitude: str = None
-    ):
-        """Show the configuration form to edit location data."""
+        home_location = {
+            CONF_LATITUDE: self.hass.config.latitude,
+            CONF_LONGITUDE: self.hass.config.longitude,
+        }
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME, default=name): str,
-                    vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
-                    vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude,
-                }
+                {vol.Required(CONF_LOCATION, default=home_location): LocationSelector()}
             ),
-            errors=self._errors,
+            errors=errors,
         )
 
-    async def _check_location(self, longitude: str, latitude: str) -> bool:
-        """Return true if location is ok."""
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
 
-        try:
-            session = aiohttp_client.async_get_clientsession(self.hass)
-            smhi_api = Smhi(longitude, latitude, session=session)
+        if user_input is not None:
+            lat: float = user_input[CONF_LOCATION][CONF_LATITUDE]
+            lon: float = user_input[CONF_LOCATION][CONF_LONGITUDE]
+            if await async_check_location(self.hass, lon, lat):
+                unique_id = f"{lat}-{lon}"
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
 
-            await smhi_api.async_get_forecast()
+                old_lat = reconfigure_entry.data[CONF_LOCATION][CONF_LATITUDE]
+                old_lon = reconfigure_entry.data[CONF_LOCATION][CONF_LONGITUDE]
 
-            return True
-        except SmhiForecastException:
-            # The API will throw an exception if faulty location
-            pass
+                entity_reg = er.async_get(self.hass)
+                if entity := entity_reg.async_get_entity_id(
+                    WEATHER_DOMAIN, DOMAIN, f"{old_lat}, {old_lon}"
+                ):
+                    entity_reg.async_update_entity(
+                        entity, new_unique_id=f"{lat}, {lon}"
+                    )
 
-        return False
+                device_reg = dr.async_get(self.hass)
+                if device := device_reg.async_get_device(
+                    identifiers={(DOMAIN, f"{old_lat}, {old_lon}")}
+                ):
+                    device_reg.async_update_device(
+                        device.id, new_identifiers={(DOMAIN, f"{lat}, {lon}")}
+                    )
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    unique_id=unique_id,
+                    data_updates=user_input,
+                )
+            errors["base"] = "wrong_location"
+
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema({vol.Required(CONF_LOCATION): LocationSelector()}),
+            reconfigure_entry.data,
+        )
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=schema, errors=errors
+        )

@@ -1,350 +1,613 @@
 """Tests for the SmartThings config flow module."""
-from uuid import uuid4
 
-from aiohttp import ClientResponseError
-from asynctest import Mock, patch
-from pysmartthings import APIResponseError
+from http import HTTPStatus
+from unittest.mock import AsyncMock
 
-from homeassistant import data_entry_flow
-from homeassistant.components.smartthings import smartapp
-from homeassistant.components.smartthings.config_flow import SmartThingsFlowHandler
+import pytest
+
+from homeassistant.components.smartthings import OLD_DATA
 from homeassistant.components.smartthings.const import (
     CONF_INSTALLED_APP_ID,
-    CONF_INSTALLED_APPS,
     CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN,
+    CONF_SUBSCRIPTION_ID,
     DOMAIN,
 )
-from homeassistant.setup import async_setup_component
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_TOKEN,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.common import MockConfigEntry, mock_coro
-
-
-async def test_step_user(hass):
-    """Test the access token form is shown for a user initiated flow."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-
-async def test_step_init(hass):
-    """Test the access token form is shown for an init flow."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_import()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
-async def test_base_url_not_https(hass):
-    """Test the base_url parameter starts with https://."""
-    hass.config.api.base_url = "http://0.0.0.0"
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user({"access_token": str(uuid4())})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "base_url_not_https"}
-
-
-async def test_invalid_token_format(hass):
-    """Test an error is shown for invalid token formats."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user({"access_token": "123456789"})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"access_token": "token_invalid_format"}
-
-
-async def test_token_already_setup(hass):
-    """Test an error is shown when the token is already setup."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-    token = str(uuid4())
-    entry = MockConfigEntry(domain=DOMAIN, data={"access_token": token})
-    entry.add_to_hass(hass)
-
-    result = await flow.async_step_user({"access_token": token})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"access_token": "token_already_setup"}
-
-
-async def test_token_unauthorized(hass, smartthings_mock):
-    """Test an error is shown when the token is not authorized."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-
-    request_info = Mock(real_url="http://example.com")
-    smartthings_mock.apps.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=401
-    )
-
-    result = await flow.async_step_user({"access_token": str(uuid4())})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"access_token": "token_unauthorized"}
-
-
-async def test_token_forbidden(hass, smartthings_mock):
-    """Test an error is shown when the token is forbidden."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-
-    request_info = Mock(real_url="http://example.com")
-    smartthings_mock.apps.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=403
-    )
-
-    result = await flow.async_step_user({"access_token": str(uuid4())})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"access_token": "token_forbidden"}
-
-
-async def test_webhook_error(hass, smartthings_mock):
-    """Test an error is when there's an error with the webhook endpoint."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-
-    data = {"error": {}}
-    request_info = Mock(real_url="http://example.com")
-    error = APIResponseError(
-        request_info=request_info, history=None, data=data, status=422
-    )
-    error.is_target_error = Mock(return_value=True)
-
-    smartthings_mock.apps.side_effect = error
-
-    result = await flow.async_step_user({"access_token": str(uuid4())})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "webhook_error"}
-
-
-async def test_api_error(hass, smartthings_mock):
-    """Test an error is shown when other API errors occur."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-
-    data = {"error": {}}
-    request_info = Mock(real_url="http://example.com")
-    error = APIResponseError(
-        request_info=request_info, history=None, data=data, status=400
-    )
-
-    smartthings_mock.apps.side_effect = error
-
-    result = await flow.async_step_user({"access_token": str(uuid4())})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "app_setup_error"}
-
-
-async def test_unknown_api_error(hass, smartthings_mock):
-    """Test an error is shown when there is an unknown API error."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-
-    request_info = Mock(real_url="http://example.com")
-    smartthings_mock.apps.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=404
-    )
-
-    result = await flow.async_step_user({"access_token": str(uuid4())})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "app_setup_error"}
-
-
-async def test_unknown_error(hass, smartthings_mock):
-    """Test an error is shown when there is an unknown API error."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-
-    smartthings_mock.apps.side_effect = Exception("Unknown error")
-
-    result = await flow.async_step_user({"access_token": str(uuid4())})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "app_setup_error"}
-
-
-async def test_app_created_then_show_wait_form(
-    hass, app, app_oauth_client, smartthings_mock
-):
-    """Test SmartApp is created when one does not exist and shows wait form."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-
-    smartthings_mock.apps.return_value = []
-    smartthings_mock.create_app.return_value = (app, app_oauth_client)
-
-    result = await flow.async_step_user({"access_token": str(uuid4())})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "wait_install"
-
-
-async def test_cloudhook_app_created_then_show_wait_form(
-    hass, app, app_oauth_client, smartthings_mock
-):
-    """Test SmartApp is created with a cloudhoko and shows wait form."""
+@pytest.fixture
+def use_cloud(hass: HomeAssistant) -> None:
+    """Set up the cloud component."""
     hass.config.components.add("cloud")
 
-    # Unload the endpoint so we can reload it under the cloud.
-    await smartapp.unload_smartapp_endpoint(hass)
 
-    with patch.object(
-        hass.components.cloud, "async_active_subscription", return_value=True
-    ), patch.object(
-        hass.components.cloud,
-        "async_create_cloudhook",
-        return_value=mock_coro("http://cloud.test"),
-    ) as mock_create_cloudhook:
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_full_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Check a full flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-        await smartapp.setup_smartapp_endpoint(hass)
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
-        flow = SmartThingsFlowHandler()
-        flow.hass = hass
-        smartthings_mock.apps.return_value = []
-        smartthings_mock.create_app.return_value = (app, app_oauth_client)
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        "https://api.smartthings.com/oauth/authorize"
+        "?response_type=code&client_id=CLIENT_ID"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
+        "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
+        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps+"
+        "w:installedapps"
+    )
 
-        result = await flow.async_step_user({"access_token": str(uuid4())})
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "wait_install"
-        assert mock_create_cloudhook.call_count == 1
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
+            "access_tier": 0,
+            "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        },
+    )
 
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-async def test_app_updated_then_show_wait_form(
-    hass, app, app_oauth_client, smartthings_mock
-):
-    """Test SmartApp is updated when an existing is already created."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-
-    smartthings_mock.apps.return_value = [app]
-    smartthings_mock.generate_app_oauth.return_value = app_oauth_client
-
-    result = await flow.async_step_user({"access_token": str(uuid4())})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "wait_install"
-
-
-async def test_wait_form_displayed(hass):
-    """Test the wait for installation form is displayed."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_wait_install(None)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "wait_install"
-
-
-async def test_wait_form_displayed_after_checking(hass, smartthings_mock):
-    """Test error is shown when the user has not installed the app."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-    flow.access_token = str(uuid4())
-
-    result = await flow.async_step_wait_install({})
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "wait_install"
-    assert result["errors"] == {"base": "app_not_installed"}
-
-
-async def test_config_entry_created_when_installed(
-    hass, location, installed_app, smartthings_mock
-):
-    """Test a config entry is created once the app is installed."""
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-    flow.access_token = str(uuid4())
-    flow.app_id = installed_app.app_id
-    flow.api = smartthings_mock
-    flow.oauth_client_id = str(uuid4())
-    flow.oauth_client_secret = str(uuid4())
-    data = {
-        CONF_REFRESH_TOKEN: str(uuid4()),
-        CONF_LOCATION_ID: installed_app.location_id,
-        CONF_INSTALLED_APP_ID: installed_app.installed_app_id,
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    result["data"]["token"].pop("expires_at")
+    assert result["data"][CONF_TOKEN] == {
+        "refresh_token": "mock-refresh-token",
+        "access_token": "mock-access-token",
+        "token_type": "Bearer",
+        "expires_in": 82806,
+        "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+        "r:locations:* w:locations:* x:locations:* "
+        "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
+        "access_tier": 0,
+        "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
     }
-    hass.data[DOMAIN][CONF_INSTALLED_APPS].append(data)
-
-    result = await flow.async_step_wait_install({})
-
-    assert not hass.data[DOMAIN][CONF_INSTALLED_APPS]
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"]["app_id"] == installed_app.app_id
-    assert result["data"]["installed_app_id"] == installed_app.installed_app_id
-    assert result["data"]["location_id"] == installed_app.location_id
-    assert result["data"]["access_token"] == flow.access_token
-    assert result["data"]["refresh_token"] == data[CONF_REFRESH_TOKEN]
-    assert result["data"]["client_secret"] == flow.oauth_client_secret
-    assert result["data"]["client_id"] == flow.oauth_client_id
-    assert result["title"] == location.name
+    assert result["result"].unique_id == "397678e5-9995-4a39-9d9f-ae6ba310236c"
 
 
-async def test_multiple_config_entry_created_when_installed(
-    hass, app, locations, installed_apps, smartthings_mock
-):
-    """Test a config entries are created for multiple installs."""
-    assert await async_setup_component(hass, "persistent_notification", {})
-    flow = SmartThingsFlowHandler()
-    flow.hass = hass
-    flow.access_token = str(uuid4())
-    flow.app_id = app.app_id
-    flow.api = smartthings_mock
-    flow.oauth_client_id = str(uuid4())
-    flow.oauth_client_secret = str(uuid4())
-    for installed_app in installed_apps:
-        data = {
-            CONF_REFRESH_TOKEN: str(uuid4()),
-            CONF_LOCATION_ID: installed_app.location_id,
-            CONF_INSTALLED_APP_ID: installed_app.installed_app_id,
-        }
-        hass.data[DOMAIN][CONF_INSTALLED_APPS].append(data)
-    install_data = hass.data[DOMAIN][CONF_INSTALLED_APPS].copy()
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_not_enough_scopes(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test we abort if we don't have enough scopes."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    result = await flow.async_step_wait_install({})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
-    assert not hass.data[DOMAIN][CONF_INSTALLED_APPS]
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        "https://api.smartthings.com/oauth/authorize"
+        "?response_type=code&client_id=CLIENT_ID"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
+        "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
+        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps+"
+        "w:installedapps"
+    )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"]["app_id"] == installed_apps[0].app_id
-    assert result["data"]["installed_app_id"] == installed_apps[0].installed_app_id
-    assert result["data"]["location_id"] == installed_apps[0].location_id
-    assert result["data"]["access_token"] == flow.access_token
-    assert result["data"]["refresh_token"] == install_data[0][CONF_REFRESH_TOKEN]
-    assert result["data"]["client_secret"] == flow.oauth_client_secret
-    assert result["data"]["client_id"] == flow.oauth_client_id
-    assert result["title"] == locations[0].name
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
+            "r:installedapps w:installedapps",
+            "access_tier": 0,
+            "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_scopes"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_duplicate_entry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test duplicate entry is not able to set up."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        "https://api.smartthings.com/oauth/authorize"
+        "?response_type=code&client_id=CLIENT_ID"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
+        "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
+        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps+"
+        "w:installedapps"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
+            "access_tier": 0,
+            "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_no_cloud(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Check we abort when cloud is not enabled."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cloud_not_enabled"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_reauthentication(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test SmartThings reauthentication."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* sse w:rules:*",
+            "access_tier": 0,
+            "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_config_entry.data["token"].pop("expires_at")
+    assert mock_config_entry.data[CONF_TOKEN] == {
+        "refresh_token": "new-refresh-token",
+        "access_token": "new-access-token",
+        "token_type": "Bearer",
+        "expires_in": 82806,
+        "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+        "r:locations:* w:locations:* x:locations:* "
+        "r:scenes:* x:scenes:* r:rules:* sse w:rules:*",
+        "access_tier": 0,
+        "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+    }
+
+
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_reauthentication_wrong_scopes(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test SmartThings reauthentication with wrong scopes."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
+            "r:installedapps w:installedapps",
+            "access_tier": 0,
+            "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_scopes"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_reauth_account_mismatch(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test SmartThings reauthentication with different account."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_smartthings.get_locations.return_value[
+        0
+    ].location_id = "123123123-2be1-4e40-b257-e4ef59083324"
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
+            "access_tier": 0,
+            "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_account_mismatch"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauthentication_no_cloud(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test SmartThings reauthentication without cloud."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cloud_not_enabled"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_migration(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_old_config_entry: MockConfigEntry,
+) -> None:
+    """Test SmartThings reauthentication with different account."""
+    mock_old_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_old_config_entry.entry_id)
     await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries("smartthings")
-    assert len(entries) == 1
-    assert entries[0].data["app_id"] == installed_apps[1].app_id
-    assert entries[0].data["installed_app_id"] == installed_apps[1].installed_app_id
-    assert entries[0].data["location_id"] == installed_apps[1].location_id
-    assert entries[0].data["access_token"] == flow.access_token
-    assert entries[0].data["client_secret"] == flow.oauth_client_secret
-    assert entries[0].data["client_id"] == flow.oauth_client_id
-    assert entries[0].title == locations[1].name
+
+    assert mock_old_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    result = hass.config_entries.flow.async_progress()[0]
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
+            "access_tier": 0,
+            "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_old_config_entry.state is ConfigEntryState.LOADED
+    assert len(hass.config_entries.flow.async_progress()) == 0
+    mock_old_config_entry.data[CONF_TOKEN].pop("expires_at")
+    assert mock_old_config_entry.data == {
+        "auth_implementation": DOMAIN,
+        "old_data": {
+            CONF_ACCESS_TOKEN: "mock-access-token",
+            CONF_REFRESH_TOKEN: "mock-refresh-token",
+            CONF_CLIENT_ID: "CLIENT_ID",
+            CONF_CLIENT_SECRET: "CLIENT_SECRET",
+            CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+            CONF_INSTALLED_APP_ID: "123aa123-2be1-4e40-b257-e4ef59083324",
+        },
+        CONF_TOKEN: {
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
+            "access_tier": 0,
+            "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
+        },
+        CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+        CONF_SUBSCRIPTION_ID: "f5768ce8-c9e5-4507-9020-912c0c60e0ab",
+    }
+    assert mock_old_config_entry.unique_id == "397678e5-9995-4a39-9d9f-ae6ba310236c"
+    assert mock_old_config_entry.version == 3
+    assert mock_old_config_entry.minor_version == 2
+
+
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+async def test_migration_wrong_location(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_old_config_entry: MockConfigEntry,
+) -> None:
+    """Test SmartThings reauthentication with wrong location."""
+    mock_old_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_old_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_old_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    mock_smartthings.get_locations.return_value[
+        0
+    ].location_id = "123123123-2be1-4e40-b257-e4ef59083324"
+
+    result = hass.config_entries.flow.async_progress()[0]
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
+            "access_tier": 0,
+            "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_location_mismatch"
+    assert mock_old_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_old_config_entry.data == {
+        OLD_DATA: {
+            CONF_ACCESS_TOKEN: "mock-access-token",
+            CONF_REFRESH_TOKEN: "mock-refresh-token",
+            CONF_CLIENT_ID: "CLIENT_ID",
+            CONF_CLIENT_SECRET: "CLIENT_SECRET",
+            CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+            CONF_INSTALLED_APP_ID: "123aa123-2be1-4e40-b257-e4ef59083324",
+        }
+    }
+    assert (
+        mock_old_config_entry.unique_id
+        == "appid123-2be1-4e40-b257-e4ef59083324_397678e5-9995-4a39-9d9f-ae6ba310236c"
+    )
+    assert mock_old_config_entry.version == 3
+    assert mock_old_config_entry.minor_version == 2
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_migration_no_cloud(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_old_config_entry: MockConfigEntry,
+) -> None:
+    """Test SmartThings reauthentication with different account."""
+    mock_old_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_old_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_old_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    result = hass.config_entries.flow.async_progress()[0]
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cloud_not_enabled"

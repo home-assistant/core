@@ -1,68 +1,109 @@
-"""Support for Juicenet cloud."""
+"""The JuiceNet integration."""
+
+from datetime import timedelta
 import logging
 
-import pyjuicenet
+import aiohttp
+from pyjuicenet import Api, TokenError
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
+from .device import JuiceNetApi
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "juicenet"
+PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
-JUICENET_COMPONENTS = ["sensor", "switch"]
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the JuiceNet component."""
+    conf = config.get(DOMAIN)
+    hass.data.setdefault(DOMAIN, {})
+
+    if not conf:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        )
+    )
+    return True
 
 
-def setup(hass, config):
-    """Set up the Juicenet component."""
-    hass.data[DOMAIN] = {}
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up JuiceNet from a config entry."""
 
-    access_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
-    hass.data[DOMAIN]["api"] = pyjuicenet.Api(access_token)
+    config = entry.data
 
-    for component in JUICENET_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    session = async_get_clientsession(hass)
+
+    access_token = config[CONF_ACCESS_TOKEN]
+    api = Api(access_token, session)
+
+    juicenet = JuiceNetApi(api)
+
+    try:
+        await juicenet.setup()
+    except TokenError as error:
+        _LOGGER.error("JuiceNet Error %s", error)
+        return False
+    except aiohttp.ClientError as error:
+        _LOGGER.error("Could not reach the JuiceNet API %s", error)
+        raise ConfigEntryNotReady from error
+
+    if not juicenet.devices:
+        _LOGGER.error("No JuiceNet devices found for this account")
+        return False
+    _LOGGER.debug("%d JuiceNet device(s) found", len(juicenet.devices))
+
+    async def async_update_data():
+        """Update all device states from the JuiceNet API."""
+        for device in juicenet.devices:
+            await device.update_state(True)
+        return True
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        config_entry=entry,
+        name="JuiceNet",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=30),
+    )
+
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        JUICENET_API: juicenet,
+        JUICENET_COORDINATOR: coordinator,
+    }
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-class JuicenetDevice(Entity):
-    """Represent a base Juicenet device."""
-
-    def __init__(self, device, sensor_type, hass):
-        """Initialise the sensor."""
-        self.hass = hass
-        self.device = device
-        self.type = sensor_type
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self.device.name()
-
-    def update(self):
-        """Update state of the device."""
-        self.device.update_state()
-
-    @property
-    def _manufacturer_device_id(self):
-        """Return the manufacturer device id."""
-        return self.device.id()
-
-    @property
-    def _token(self):
-        """Return the device API token."""
-        return self.device.token()
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return "{}-{}".format(self.device.id(), self.type)
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok

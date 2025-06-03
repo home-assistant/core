@@ -1,9 +1,10 @@
 {
   "domain": "opentherm_gw",
   "name": "OpenTherm Gateway",
-  "documentation": "https://www.home-assistant.io/integrations/opentherm_gw",
-  "requirements": ["pyotgw==0.5b1"],
-  "dependencies": [],
   "codeowners": ["@mvn23"],
-  "config_flow": true
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/opentherm_gw",
+  "iot_class": "local_push",
+  "loggers": ["pyotgw"],
+  "requirements": ["pyotgw==2.2.2"]
 }

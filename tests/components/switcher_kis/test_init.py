@@ -1,170 +1,141 @@
 """Test cases for the switcher_kis component."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, Generator
 
-from pytest import raises
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 
-from homeassistant.components.switcher_kis import (
-    CONF_AUTO_OFF,
-    DATA_DEVICE,
-    DOMAIN,
-    SERVICE_SET_AUTO_OFF_NAME,
-    SERVICE_SET_AUTO_OFF_SCHEMA,
-    SIGNAL_SWITCHER_DEVICE_UPDATE,
-)
-from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import Context, callback
-from homeassistant.exceptions import Unauthorized, UnknownUser
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.components.switcher_kis.const import DOMAIN, MAX_UPDATE_INTERVAL_SEC
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util, slugify
 
-from .consts import (
-    DUMMY_AUTO_OFF_SET,
-    DUMMY_DEVICE_ID,
-    DUMMY_DEVICE_NAME,
-    DUMMY_DEVICE_STATE,
-    DUMMY_ELECTRIC_CURRENT,
-    DUMMY_IP_ADDRESS,
-    DUMMY_MAC_ADDRESS,
-    DUMMY_PHONE_ID,
-    DUMMY_POWER_CONSUMPTION,
-    DUMMY_REMAINING_TIME,
-    MANDATORY_CONFIGURATION,
-    SWITCH_ENTITY_ID,
-)
+from . import init_integration
+from .consts import DUMMY_DEVICE_ID1, DUMMY_DEVICE_ID4, DUMMY_SWITCHER_DEVICES
 
-from tests.common import async_fire_time_changed, async_mock_service
-
-if TYPE_CHECKING:
-    from tests.common import MockUser
-    from aioswitcher.devices import SwitcherV2Device
+from tests.common import async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 
-async def test_failed_config(
-    hass: HomeAssistantType, mock_failed_bridge: Generator[None, Any, None]
+async def test_update_fail(
+    hass: HomeAssistant,
+    mock_bridge,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test failed configuration."""
-    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION) is False
+    """Test entities state unavailable when updates fail.."""
+    entry = await init_integration(hass)
+    assert mock_bridge
 
-
-async def test_minimal_config(
-    hass: HomeAssistantType, mock_bridge: Generator[None, Any, None]
-) -> None:
-    """Test setup with configuration minimal entries."""
-    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
-
-
-async def test_discovery_data_bucket(
-    hass: HomeAssistantType, mock_bridge: Generator[None, Any, None]
-) -> None:
-    """Test the event send with the updated device."""
-    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
-
+    mock_bridge.mock_callbacks(DUMMY_SWITCHER_DEVICES)
     await hass.async_block_till_done()
 
-    device = hass.data[DOMAIN].get(DATA_DEVICE)
-    assert device.device_id == DUMMY_DEVICE_ID
-    assert device.ip_addr == DUMMY_IP_ADDRESS
-    assert device.mac_addr == DUMMY_MAC_ADDRESS
-    assert device.name == DUMMY_DEVICE_NAME
-    assert device.state == DUMMY_DEVICE_STATE
-    assert device.remaining_time == DUMMY_REMAINING_TIME
-    assert device.auto_off_set == DUMMY_AUTO_OFF_SET
-    assert device.power_consumption == DUMMY_POWER_CONSUMPTION
-    assert device.electric_current == DUMMY_ELECTRIC_CURRENT
-    assert device.phone_id == DUMMY_PHONE_ID
+    assert mock_bridge.is_running is True
+    assert len(entry.runtime_data) == 2
 
-
-async def test_set_auto_off_service(
-    hass: HomeAssistantType,
-    mock_bridge: Generator[None, Any, None],
-    mock_api: Generator[None, Any, None],
-    hass_owner_user: "MockUser",
-    hass_read_only_user: "MockUser",
-) -> None:
-    """Test the set_auto_off service."""
-    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
-
+    freezer.tick(timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(DOMAIN, SERVICE_SET_AUTO_OFF_NAME)
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_AUTO_OFF_NAME,
-        {CONF_ENTITY_ID: SWITCH_ENTITY_ID, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-        blocking=True,
-        context=Context(user_id=hass_owner_user.id),
-    )
-
-    with raises(Unauthorized) as unauthorized_read_only_exc:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {CONF_ENTITY_ID: SWITCH_ENTITY_ID, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-            blocking=True,
-            context=Context(user_id=hass_read_only_user.id),
+    for device in DUMMY_SWITCHER_DEVICES:
+        assert (
+            f"Device {device.name} did not send update for {MAX_UPDATE_INTERVAL_SEC} seconds"
+            in caplog.text
         )
 
-    assert unauthorized_read_only_exc.type is Unauthorized
+        entity_id = f"switch.{slugify(device.name)}"
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_UNAVAILABLE
 
-    with raises(Unauthorized) as unauthorized_wrong_entity_exc:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {
-                CONF_ENTITY_ID: "light.not_related_entity",
-                CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET,
-            },
-            blocking=True,
-            context=Context(user_id=hass_owner_user.id),
-        )
+        entity_id = f"sensor.{slugify(device.name)}_power"
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_UNAVAILABLE
 
-    assert unauthorized_wrong_entity_exc.type is Unauthorized
-
-    with raises(UnknownUser) as unknown_user_exc:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {CONF_ENTITY_ID: SWITCH_ENTITY_ID, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-            blocking=True,
-            context=Context(user_id="not_real_user"),
-        )
-
-    assert unknown_user_exc.type is UnknownUser
-
-    service_calls = async_mock_service(
-        hass, DOMAIN, SERVICE_SET_AUTO_OFF_NAME, SERVICE_SET_AUTO_OFF_SCHEMA
+    mock_bridge.mock_callbacks(DUMMY_SWITCHER_DEVICES)
+    await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC - 2)
     )
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_AUTO_OFF_NAME,
-        {CONF_ENTITY_ID: SWITCH_ENTITY_ID, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-    )
-
     await hass.async_block_till_done()
 
-    assert len(service_calls) == 1
-    assert str(service_calls[0].data[CONF_AUTO_OFF]) == DUMMY_AUTO_OFF_SET.lstrip("0")
+    for device in DUMMY_SWITCHER_DEVICES:
+        entity_id = f"switch.{slugify(device.name)}"
+        state = hass.states.get(entity_id)
+        assert state.state != STATE_UNAVAILABLE
+
+        entity_id = f"sensor.{slugify(device.name)}_power"
+        state = hass.states.get(entity_id)
+        assert state.state != STATE_UNAVAILABLE
 
 
-async def test_signal_dispatcher(
-    hass: HomeAssistantType, mock_bridge: Generator[None, Any, None]
+async def test_entry_unload(hass: HomeAssistant, mock_bridge) -> None:
+    """Test entry unload."""
+    entry = await init_integration(hass)
+    assert mock_bridge
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert mock_bridge.is_running is True
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_bridge.is_running is False
+
+
+async def test_remove_device(
+    hass: HomeAssistant,
+    mock_bridge,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test signal dispatcher dispatching device updates every 4 seconds."""
-    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
+    """Test being able to remove a disconnected device."""
+    assert await async_setup_component(hass, "config", {})
+    entry = await init_integration(hass)
+    entry_id = entry.entry_id
+    assert mock_bridge
 
+    mock_bridge.mock_callbacks(DUMMY_SWITCHER_DEVICES)
     await hass.async_block_till_done()
 
-    @callback
-    def verify_update_data(device: "SwitcherV2Device") -> None:
-        """Use as callback for signal dispatcher."""
-        pass
+    assert mock_bridge.is_running is True
+    assert len(entry.runtime_data) == 2
 
-    async_dispatcher_connect(hass, SIGNAL_SWITCHER_DEVICE_UPDATE, verify_update_data)
+    live_device_id = DUMMY_DEVICE_ID1
+    dead_device_id = DUMMY_DEVICE_ID4
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=5))
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
+
+    # Create a dead device
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, dead_device_id)},
+        manufacturer="Switcher",
+        model="Switcher Model",
+        name="Switcher Device",
+    )
+    await hass.async_block_till_done()
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 3
+
+    # Try to remove a live device - fails
+    device = device_registry.async_get_device(identifiers={(DOMAIN, live_device_id)})
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device.id, entry_id)
+    assert not response["success"]
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 3
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, live_device_id)})
+        is not None
+    )
+
+    # Try to remove a dead device - succeeds
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dead_device_id)})
+    response = await client.remove_device(device.id, entry_id)
+    assert response["success"]
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, dead_device_id)}) is None
+    )

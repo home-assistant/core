@@ -1,4 +1,5 @@
 """Support for SCSGate components."""
+
 import logging
 from threading import Lock
 
@@ -8,19 +9,16 @@ from scsgate.reactor import Reactor
 from scsgate.tasks import GetStatusTask
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_NAME
-from homeassistant.core import EVENT_HOMEASSISTANT_STOP
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_DEVICE, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_STATE = "state"
 
 CONF_SCS_ID = "scs_id"
 
 DOMAIN = "scsgate"
-
-SCSGATE = None
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -31,24 +29,25 @@ SCSGATE_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SCSGate component."""
     device = config[DOMAIN][CONF_DEVICE]
-    global SCSGATE
+    scsgate = None
 
     try:
-        SCSGATE = SCSGate(device=device, logger=_LOGGER)
-        SCSGATE.start()
-    except Exception as exception:  # pylint: disable=broad-except
+        scsgate = SCSGate(device=device, logger=_LOGGER)
+        scsgate.start()
+    except Exception as exception:  # noqa: BLE001
         _LOGGER.error("Cannot setup SCSGate component: %s", exception)
         return False
 
     def stop_monitor(event):
         """Stop the SCSGate."""
-        _LOGGER.info("Stopping SCSGate monitor thread")
-        SCSGATE.stop()
+        _LOGGER.debug("Stopping SCSGate monitor thread")
+        scsgate.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_monitor)
+    hass.data[DOMAIN] = scsgate
 
     return True
 
@@ -76,7 +75,7 @@ class SCSGate:
     def handle_message(self, message):
         """Handle a messages seen on the bus."""
 
-        self._logger.debug(f"Received message {message}")
+        self._logger.debug("Received message %s", message)
         if not isinstance(message, StateMessage) and not isinstance(
             message, ScenarioTriggeredMessage
         ):
@@ -95,14 +94,12 @@ class SCSGate:
 
             try:
                 self._devices[message.entity].process_event(message)
-            except Exception as exception:  # pylint: disable=broad-except
+            except Exception as exception:  # noqa: BLE001
                 msg = f"Exception while processing event: {exception}"
                 self._logger.error(msg)
         else:
             self._logger.info(
-                "Ignoring state message for device {} because unknown".format(
-                    message.entity
-                )
+                "Ignoring state message for device %s because unknown", message.entity
             )
 
     @property
@@ -134,7 +131,7 @@ class SCSGate:
 
         with self._devices_to_register_lock:
             while self._devices_to_register:
-                _, device = self._devices_to_register.popitem()
+                device = self._devices_to_register.popitem()[1]
                 self._devices[device.scs_id] = device
                 self._device_being_registered = device.scs_id
                 self._reactor.append_task(GetStatusTask(target=device.scs_id))
@@ -142,7 +139,7 @@ class SCSGate:
     def is_device_registered(self, device_id):
         """Check whether a device is already registered or not."""
         with self._devices_to_register_lock:
-            if device_id in self._devices_to_register.keys():
+            if device_id in self._devices_to_register:
                 return False
 
         with self._device_being_registered_lock:

@@ -1,0 +1,105 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "admin_username": "Admin username",
+          "admin_password": "Admin password",
+          "surveillance_username": "Surveillance username",
+          "surveillance_password": "Surveillance password"
+        }
+      },
+      "hassio_confirm": {
+        "title": "motionEye via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the motionEye service provided by the add-on: {addon}?"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_url": "Invalid URL"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "webhook_set": "Configure motionEye webhooks to report events to Home Assistant",
+          "webhook_set_overwrite": "Overwrite unrecognized webhooks",
+          "stream_url_template": "Stream URL template"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "actions": {
+        "name": "Actions"
+      }
+    },
+    "switch": {
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "text_overlay": {
+        "name": "Text overlay"
+      },
+      "video_streaming": {
+        "name": "Video streaming"
+      },
+      "still_images": {
+        "name": "Still images"
+      },
+      "movies": {
+        "name": "Movies"
+      },
+      "upload_enabled": {
+        "name": "Upload enabled"
+      }
+    }
+  },
+  "services": {
+    "set_text_overlay": {
+      "name": "Set text overlay",
+      "description": "Sets the text overlay for a camera.",
+      "fields": {
+        "left_text": {
+          "name": "Left text overlay",
+          "description": "Text to display on the left."
+        },
+        "custom_left_text": {
+          "name": "Left custom text",
+          "description": "Custom text to display on the left."
+        },
+        "right_text": {
+          "name": "Right text overlay",
+          "description": "Text to display on the right."
+        },
+        "custom_right_text": {
+          "name": "Right custom text",
+          "description": "Custom text to display on the right."
+        }
+      }
+    },
+    "action": {
+      "name": "Action",
+      "description": "Triggers a motionEye action.",
+      "fields": {
+        "action": {
+          "name": "Action",
+          "description": "Action to trigger."
+        }
+      }
+    },
+    "snapshot": {
+      "name": "Snapshot",
+      "description": "Triggers a motionEye still snapshot."
+    }
+  }
+}

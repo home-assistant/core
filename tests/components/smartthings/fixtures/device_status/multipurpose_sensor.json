@@ -1,0 +1,79 @@
+{
+  "components": {
+    "main": {
+      "contactSensor": {
+        "contact": {
+          "value": "closed",
+          "timestamp": "2025-02-08T14:00:28.332Z"
+        }
+      },
+      "threeAxis": {
+        "threeAxis": {
+          "value": [20, 8, -1042],
+          "unit": "mG",
+          "timestamp": "2025-02-09T17:27:36.673Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 67.0,
+          "unit": "F",
+          "timestamp": "2025-02-09T17:56:19.744Z"
+        }
+      },
+      "refresh": {},
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 50,
+          "unit": "%",
+          "timestamp": "2025-02-09T12:24:02.074Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "0000001B",
+          "timestamp": "2025-02-09T04:20:25.600Z"
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2025-02-09T04:20:25.600Z"
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2025-02-09T04:20:25.601Z"
+        },
+        "currentVersion": {
+          "value": "0000001B",
+          "timestamp": "2025-02-09T04:20:25.593Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        }
+      },
+      "accelerationSensor": {
+        "acceleration": {
+          "value": "inactive",
+          "timestamp": "2025-02-09T17:27:46.812Z"
+        }
+      }
+    }
+  }
+}

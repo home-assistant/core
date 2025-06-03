@@ -1,20 +1,28 @@
 """Support for particulate matter sensors connected to a serial port."""
+
+from __future__ import annotations
+
 import logging
 
 from pmsensor import serial_pm as pm
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BRAND = "brand"
 CONF_SERIAL_DEVICE = "serial_device"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BRAND): cv.string,
         vol.Required(CONF_SERIAL_DEVICE): cv.string,
@@ -23,7 +31,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the available PM sensors."""
     try:
         coll = pm.PMDataCollector(
@@ -48,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for pmname in coll.supported_values():
         if config.get(CONF_NAME) is not None:
-            name = "{} PM{}".format(config.get(CONF_NAME), pmname)
+            name = f"{config.get(CONF_NAME)} PM{pmname}"
         else:
             name = f"PM{pmname}"
         dev.append(ParticulateMatterSensor(coll, name, pmname))
@@ -56,15 +69,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev)
 
 
-class ParticulateMatterSensor(Entity):
+class ParticulateMatterSensor(SensorEntity):
     """Representation of an Particulate matter sensor."""
 
-    def __init__(self, pmDataCollector, name, pmname):
+    def __init__(self, pm_data_collector, name, pmname):
         """Initialize a new PM sensor."""
         self._name = name
         self._pmname = pmname
         self._state = None
-        self._collector = pmDataCollector
+        self._collector = pm_data_collector
 
     @property
     def name(self):
@@ -72,16 +85,16 @@ class ParticulateMatterSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return "µg/m³"
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
-    def update(self):
+    def update(self) -> None:
         """Read from sensor and update the state."""
         _LOGGER.debug("Reading data from PM sensor")
         try:

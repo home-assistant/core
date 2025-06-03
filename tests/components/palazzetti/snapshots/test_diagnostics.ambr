@@ -1,0 +1,13 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'api_data': dict({
+      'attributes': dict({
+      }),
+      'connected': True,
+      'host': 'XXXXXXXXXX',
+      'properties': dict({
+      }),
+    }),
+  })
+# ---

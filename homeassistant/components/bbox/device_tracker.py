@@ -1,21 +1,24 @@
 """Support for French FAI Bouygues Bbox routers."""
+
+from __future__ import annotations
+
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import List
 
 import pybbox
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,23 +26,23 @@ DEFAULT_HOST = "192.168.1.254"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> BboxDeviceScanner | None:
     """Validate the configuration and return a Bbox scanner."""
-    scanner = BboxDeviceScanner(config[DOMAIN])
+    scanner = BboxDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
+Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])  # noqa: PYI024
 
 
 class BboxDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to the bbox."""
+    """Scanner for devices connected to the bbox."""
 
     def __init__(self, config):
         """Get host from config."""
@@ -47,10 +50,9 @@ class BboxDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
 
         """Initialize the scanner."""
-        self.last_results: List[Device] = []
+        self.last_results: list[Device] = []
 
         self.success_init = self._update_info()
-        _LOGGER.info("Scanner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -74,7 +76,7 @@ class BboxDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info("Scanning...")
+        _LOGGER.debug("Scanning")
 
         box = pybbox.Bbox(ip=self.host)
         result = box.get_all_connected_devices()
@@ -92,5 +94,5 @@ class BboxDeviceScanner(DeviceScanner):
 
         self.last_results = last_results
 
-        _LOGGER.info("Scan successful")
+        _LOGGER.debug("Scan successful")
         return True

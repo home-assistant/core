@@ -1,0 +1,10 @@
+{
+  "domain": "aussie_broadband",
+  "name": "Aussie Broadband",
+  "codeowners": ["@nickw444", "@Bre77"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/aussie_broadband",
+  "iot_class": "cloud_polling",
+  "loggers": ["aussiebb"],
+  "requirements": ["pyaussiebb==0.1.5"]
+}

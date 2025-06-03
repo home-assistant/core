@@ -1,14 +1,22 @@
 """Support for Hikvision event stream events represented as binary sensors."""
+
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from pyhik.hikvision import HikCamera
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     ATTR_LAST_TRIP_TIME,
     CONF_CUSTOMIZE,
+    CONF_DELAY,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -18,14 +26,16 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = "ignored"
-CONF_DELAY = "delay"
 
 DEFAULT_PORT = 80
 DEFAULT_IGNORED = False
@@ -34,28 +44,27 @@ DEFAULT_DELAY = 0
 ATTR_DELAY = "delay"
 
 DEVICE_CLASS_MAP = {
-    "Motion": "motion",
-    "Line Crossing": "motion",
-    "Field Detection": "motion",
-    "Video Loss": None,
-    "Tamper Detection": "motion",
+    "Motion": BinarySensorDeviceClass.MOTION,
+    "Line Crossing": BinarySensorDeviceClass.MOTION,
+    "Field Detection": BinarySensorDeviceClass.MOTION,
+    "Tamper Detection": BinarySensorDeviceClass.MOTION,
     "Shelter Alarm": None,
     "Disk Full": None,
     "Disk Error": None,
-    "Net Interface Broken": "connectivity",
-    "IP Conflict": "connectivity",
+    "Net Interface Broken": BinarySensorDeviceClass.CONNECTIVITY,
+    "IP Conflict": BinarySensorDeviceClass.CONNECTIVITY,
     "Illegal Access": None,
     "Video Mismatch": None,
     "Bad Video": None,
-    "PIR Alarm": "motion",
-    "Face Detection": "motion",
-    "Scene Change Detection": "motion",
+    "PIR Alarm": BinarySensorDeviceClass.MOTION,
+    "Face Detection": BinarySensorDeviceClass.MOTION,
+    "Scene Change Detection": BinarySensorDeviceClass.MOTION,
     "I/O": None,
-    "Unattended Baggage": "motion",
-    "Attended Baggage": "motion",
+    "Unattended Baggage": BinarySensorDeviceClass.MOTION,
+    "Attended Baggage": BinarySensorDeviceClass.MOTION,
     "Recording Failure": None,
-    "Exiting Region": "motion",
-    "Entering Region": "motion",
+    "Exiting Region": BinarySensorDeviceClass.MOTION,
+    "Entering Region": BinarySensorDeviceClass.MOTION,
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema(
@@ -65,7 +74,7 @@ CUSTOMIZE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
@@ -80,20 +89,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Hikvision binary sensor devices."""
     name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
-    customize = config.get(CONF_CUSTOMIZE)
+    customize = config[CONF_CUSTOMIZE]
 
-    if config.get(CONF_SSL):
-        protocol = "https"
-    else:
-        protocol = "http"
+    protocol = "https" if config[CONF_SSL] else "http"
 
     url = f"{protocol}://{host}"
 
@@ -101,7 +112,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if data.sensors is None:
         _LOGGER.error("Hikvision event stream has no data, unable to set up")
-        return False
+        return
 
     entities = []
 
@@ -109,7 +120,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for channel in channel_list:
             # Build sensor name, then parse customize config.
             if data.type == "NVR":
-                sensor_name = "{}_{}".format(sensor.replace(" ", "_"), channel[1])
+                sensor_name = f"{sensor.replace(' ', '_')}_{channel[1]}"
             else:
                 sensor_name = sensor.replace(" ", "_")
 
@@ -137,7 +148,6 @@ class HikvisionData:
 
     def __init__(self, hass, url, port, name, username, password):
         """Initialize the data object."""
-
         self._url = url
         self._port = port
         self._name = name
@@ -186,8 +196,10 @@ class HikvisionData:
         return self.camdata.fetch_attributes(sensor, channel)
 
 
-class HikvisionBinarySensor(BinarySensorDevice):
+class HikvisionBinarySensor(BinarySensorEntity):
     """Representation of a Hikvision binary sensor."""
+
+    _attr_should_poll = False
 
     def __init__(self, hass, sensor, channel, cam, delay):
         """Initialize the binary_sensor."""
@@ -246,15 +258,9 @@ class HikvisionBinarySensor(BinarySensorDevice):
             return None
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr[ATTR_LAST_TRIP_TIME] = self._sensor_last_update()
+        attr = {ATTR_LAST_TRIP_TIME: self._sensor_last_update()}
 
         if self._delay != 0:
             attr[ATTR_DELAY] = self._delay

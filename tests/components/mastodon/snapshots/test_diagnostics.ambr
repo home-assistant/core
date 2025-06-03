@@ -1,0 +1,84 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'account': dict({
+      'acct': 'trwnh',
+      'avatar': 'https://files.mastodon.social/accounts/avatars/000/014/715/original/051c958388818705.png',
+      'avatar_static': 'https://files.mastodon.social/accounts/avatars/000/014/715/original/051c958388818705.png',
+      'bot': True,
+      'created_at': '2016-11-24T00:00:00+00:00',
+      'discoverable': True,
+      'display_name': 'infinite love ⴳ',
+      'emojis': list([
+      ]),
+      'fields': list([
+        dict({
+          'name': 'Website',
+          'value': '<a href="https://trwnh.com" target="_blank" rel="nofollow noopener me" translate="no"><span class="invisible">https://</span><span class="">trwnh.com</span><span class="invisible"></span></a>',
+          'verified_at': '2019-08-29T04:14:55.571+00:00',
+        }),
+        dict({
+          'name': 'Portfolio',
+          'value': '<a href="https://abdullahtarawneh.com" target="_blank" rel="nofollow noopener me" translate="no"><span class="invisible">https://</span><span class="">abdullahtarawneh.com</span><span class="invisible"></span></a>',
+          'verified_at': '2021-02-11T20:34:13.574+00:00',
+        }),
+        dict({
+          'name': 'Fan of:',
+          'value': 'Punk-rock and post-hardcore (Circa Survive, letlive., La Dispute, THE FEVER 333)Manga (Yu-Gi-Oh!, One Piece, JoJo&#39;s Bizarre Adventure, Death Note, Shaman King)Platformers and RPGs (Banjo-Kazooie, Boktai, Final Fantasy Crystal Chronicles)',
+          'verified_at': None,
+        }),
+        dict({
+          'name': 'What to expect:',
+          'value': 'talking about various things i find interesting, and otherwise being a genuine and decent wholesome poster. i&#39;m just here to hang out and talk to cool people! and to spill my thoughts.',
+          'verified_at': None,
+        }),
+      ]),
+      'followers_count': 3169,
+      'following_count': 328,
+      'group': False,
+      'header': 'https://files.mastodon.social/accounts/headers/000/014/715/original/5c6fc24edb3bb873.jpg',
+      'header_static': 'https://files.mastodon.social/accounts/headers/000/014/715/original/5c6fc24edb3bb873.jpg',
+      'hide_collections': True,
+      'id': '14715',
+      'indexable': False,
+      'last_status_at': '2025-03-04T00:00:00',
+      'limited': None,
+      'locked': False,
+      'memorial': None,
+      'moved_to_account': None,
+      'mute_expires_at': None,
+      'noindex': False,
+      'note': '<p>i have approximate knowledge of many things. perpetual student. (nb/ace/they)</p><p>xmpp/email: a@trwnh.com<br /><a href="https://trwnh.com" target="_blank" rel="nofollow noopener" translate="no"><span class="invisible">https://</span><span class="">trwnh.com</span><span class="invisible"></span></a><br />help me live:<br />- <a href="https://donate.stripe.com/4gwcPCaMpcQ19RC4gg" target="_blank" rel="nofollow noopener" translate="no"><span class="invisible">https://</span><span class="ellipsis">donate.stripe.com/4gwcPCaMpcQ1</span><span class="invisible">9RC4gg</span></a><br />- <a href="https://liberapay.com/trwnh" target="_blank" rel="nofollow noopener" translate="no"><span class="invisible">https://</span><span class="">liberapay.com/trwnh</span><span class="invisible"></span></a></p><p>notes:<br />- my triggers are moths and glitter<br />- i have all notifs except mentions turned off, so please interact if you wanna be friends! i literally will not notice otherwise<br />- dm me if i did something wrong, so i can improve<br />- purest person on fedi, do not lewd in my presence</p>',
+      'role': None,
+      'roles': list([
+      ]),
+      'source': None,
+      'statuses_count': 69523,
+      'suspended': None,
+      'uri': 'https://mastodon.social/users/trwnh',
+      'url': 'https://mastodon.social/@trwnh',
+      'username': 'trwnh',
+    }),
+    'instance': dict({
+      'api_versions': None,
+      'configuration': None,
+      'contact': None,
+      'description': 'The original server operated by the Mastodon gGmbH non-profit',
+      'domain': 'mastodon.social',
+      'icon': None,
+      'languages': None,
+      'registrations': None,
+      'rules': None,
+      'source_url': 'https://github.com/mastodon/mastodon',
+      'thumbnail': None,
+      'title': 'Mastodon',
+      'uri': 'mastodon.social',
+      'usage': dict({
+        'users': dict({
+          'active_month': 380143,
+        }),
+      }),
+      'version': '4.4.0-nightly.2025-02-07',
+    }),
+  })
+# ---

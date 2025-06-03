@@ -1,0 +1,29 @@
+{
+  "TopLevelPartition": "",
+  "Partition": "",
+  "ClassDisplay": "",
+  "Unit": {
+    "Id": 1,
+    "Symbol": "",
+    "Short": "",
+    "RestURL": "",
+    "Name": "",
+    "DisplayName": ""
+  },
+  "ConstituentUnit": {
+    "Id": 1,
+    "Short": "",
+    "Name": "",
+    "Address": ""
+  },
+  "Pupil": {
+    "Id": 1,
+    "LoginId": 1,
+    "LoginValue": "",
+    "FirstName": "Magda",
+    "SecondName": "",
+    "Surname": "Kowalska",
+    "Sex": false
+  },
+  "Periods": []
+}

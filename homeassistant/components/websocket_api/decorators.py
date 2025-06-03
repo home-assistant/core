@@ -1,37 +1,54 @@
 """Decorators for the Websocket API."""
-from functools import wraps
-import logging
-from typing import Awaitable, Callable
 
+from __future__ import annotations
+
+from collections.abc import Callable
+from functools import wraps
+from typing import TYPE_CHECKING, Any
+
+import voluptuous as vol
+
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers.typing import VolDictType
 
 from . import const, messages
 from .connection import ActiveConnection
 
-# mypy: allow-untyped-calls, allow-untyped-defs
 
-_LOGGER = logging.getLogger(__name__)
-
-
-async def _handle_async_response(func, hass, connection, msg):
+async def _handle_async_response(
+    func: const.AsyncWebSocketCommandHandler,
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Create a response and handle exception."""
     try:
         await func(hass, connection, msg)
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         connection.async_handle_exception(msg, err)
 
 
 def async_response(
-    func: Callable[[HomeAssistant, ActiveConnection, dict], Awaitable[None]]
+    func: const.AsyncWebSocketCommandHandler,
 ) -> const.WebSocketCommandHandler:
     """Decorate an async function to handle WebSocket API messages."""
+    task_name = f"websocket_api.async:{func.__name__}"
 
     @callback
     @wraps(func)
-    def schedule_handler(hass, connection, msg):
+    def schedule_handler(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
         """Schedule the handler."""
-        hass.async_create_task(_handle_async_response(func, hass, connection, msg))
+        # As the webserver is now started before the start
+        # event we do not want to block for websocket responders
+        hass.async_create_background_task(
+            _handle_async_response(func, hass, connection, msg),
+            task_name,
+            eager_start=True,
+        )
 
     return schedule_handler
 
@@ -40,12 +57,14 @@ def require_admin(func: const.WebSocketCommandHandler) -> const.WebSocketCommand
     """Websocket decorator to require user to be an admin."""
 
     @wraps(func)
-    def with_admin(hass, connection, msg):
+    def with_admin(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
         """Check admin and call function."""
         user = connection.user
 
         if user is None or not user.is_admin:
-            raise Unauthorized()
+            raise Unauthorized
 
         func(hass, connection, msg)
 
@@ -53,53 +72,56 @@ def require_admin(func: const.WebSocketCommandHandler) -> const.WebSocketCommand
 
 
 def ws_require_user(
-    only_owner=False,
-    only_system_user=False,
-    allow_system_user=True,
-    only_active_user=True,
-    only_inactive_user=False,
-):
+    only_owner: bool = False,
+    only_system_user: bool = False,
+    allow_system_user: bool = True,
+    only_active_user: bool = True,
+    only_inactive_user: bool = False,
+    only_supervisor: bool = False,
+) -> Callable[[const.WebSocketCommandHandler], const.WebSocketCommandHandler]:
     """Decorate function validating login user exist in current WS connection.
 
     Will write out error message if not authenticated.
     """
 
-    def validator(func):
+    def validator(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate func."""
 
         @wraps(func)
-        def check_current_user(hass, connection, msg):
+        def check_current_user(
+            hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+        ) -> None:
             """Check current user."""
 
-            def output_error(message_id, message):
+            def output_error(message_id: str, message: str) -> None:
                 """Output error message."""
                 connection.send_message(
                     messages.error_message(msg["id"], message_id, message)
                 )
 
-            if connection.user is None:
-                output_error("no_user", "Not authenticated as a user")
-                return
-
             if only_owner and not connection.user.is_owner:
                 output_error("only_owner", "Only allowed as owner")
-                return
+                return None
 
             if only_system_user and not connection.user.system_generated:
                 output_error("only_system_user", "Only allowed as system user")
-                return
+                return None
 
             if not allow_system_user and connection.user.system_generated:
                 output_error("not_system_user", "Not allowed as system user")
-                return
+                return None
 
             if only_active_user and not connection.user.is_active:
                 output_error("only_active_user", "Only allowed as active user")
-                return
+                return None
 
             if only_inactive_user and connection.user.is_active:
                 output_error("only_inactive_user", "Not allowed as active user")
-                return
+                return None
+
+            if only_supervisor and connection.user.name != HASSIO_USER_NAME:
+                output_error("only_supervisor", "Only allowed as Supervisor")
+                return None
 
             return func(hass, connection, msg)
 
@@ -109,16 +131,35 @@ def ws_require_user(
 
 
 def websocket_command(
-    schema: dict,
+    schema: VolDictType | vol.All,
 ) -> Callable[[const.WebSocketCommandHandler], const.WebSocketCommandHandler]:
-    """Tag a function as a websocket command."""
-    command = schema["type"]
+    """Tag a function as a websocket command.
 
-    def decorate(func):
+    The schema must be either a dictionary where the keys are voluptuous markers, or
+    a voluptuous.All schema where the first item is a voluptuous Mapping schema.
+    """
+    if is_dict := isinstance(schema, dict):
+        command = schema["type"]
+    else:
+        command = schema.validators[0].schema["type"]
+
+    def decorate(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate ws command function."""
-        # pylint: disable=protected-access
-        func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)
-        func._ws_command = command
+        if is_dict and len(schema) == 1:  # type: ignore[arg-type]  # type only empty schema
+            func._ws_schema = False  # type: ignore[attr-defined]  # noqa: SLF001
+        elif is_dict:
+            func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]  # noqa: SLF001
+        else:
+            if TYPE_CHECKING:
+                assert not isinstance(schema, dict)
+            extended_schema = vol.All(
+                schema.validators[0].extend(
+                    messages.BASE_COMMAND_MESSAGE_SCHEMA.schema
+                ),
+                *schema.validators[1:],
+            )
+            func._ws_schema = extended_schema  # type: ignore[attr-defined]  # noqa: SLF001
+        func._ws_command = command  # type: ignore[attr-defined]  # noqa: SLF001
         return func
 
     return decorate

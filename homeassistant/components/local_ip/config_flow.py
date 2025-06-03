@@ -1,34 +1,22 @@
 """Config flow for local_ip."""
-import voluptuous as vol
 
-from homeassistant import config_entries
+from __future__ import annotations
 
-from . import DOMAIN
+from typing import Any
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+
+from .const import DOMAIN
 
 
-class SimpleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SimpleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for local_ip."""
 
-    VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is not None:
-            if any(
-                user_input["name"] == entry.data["name"]
-                for entry in self._async_current_entries()
-            ):
-                return self.async_abort(reason="already_configured")
+        if user_input is None:
+            return self.async_show_form(step_id="user")
 
-            return self.async_create_entry(title=user_input["name"], data=user_input)
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required("name", default=DOMAIN): str}),
-            errors={},
-        )
-
-    async def async_step_import(self, import_info):
-        """Handle import from config file."""
-        return await self.async_step_user(import_info)
+        return self.async_create_entry(title=DOMAIN, data=user_input)

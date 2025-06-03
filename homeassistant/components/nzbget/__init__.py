@@ -1,198 +1,90 @@
-"""The nzbget component."""
-from datetime import timedelta
-import logging
+"""The NZBGet integration."""
 
-import pynzbgetapi
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_SSL,
-    CONF_USERNAME,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import track_time_interval
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    ATTR_SPEED,
+    DATA_COORDINATOR,
+    DATA_UNDO_UPDATE_LISTENER,
+    DEFAULT_SPEED_LIMIT,
+    DOMAIN,
+    SERVICE_PAUSE,
+    SERVICE_RESUME,
+    SERVICE_SET_SPEED,
+)
+from .coordinator import NZBGetDataUpdateCoordinator
 
-ATTR_SPEED = "speed"
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
-DOMAIN = "nzbget"
-DATA_NZBGET = "data_nzbget"
-DATA_UPDATED = "nzbget_data_updated"
-
-DEFAULT_NAME = "NZBGet"
-DEFAULT_PORT = 6789
-DEFAULT_SPEED_LIMIT = 1000  # 1 Megabyte/Sec
-
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
-
-SERVICE_PAUSE = "pause"
-SERVICE_RESUME = "resume"
-SERVICE_SET_SPEED = "set_speed"
 
 SPEED_LIMIT_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.positive_int}
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-                vol.Optional(CONF_SSL, default=False): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up NZBGet from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
 
-def setup(hass, config):
-    """Set up the NZBGet sensors."""
+    coordinator = NZBGetDataUpdateCoordinator(hass, entry)
 
-    host = config[DOMAIN][CONF_HOST]
-    port = config[DOMAIN][CONF_PORT]
-    ssl = "s" if config[DOMAIN][CONF_SSL] else ""
-    name = config[DOMAIN][CONF_NAME]
-    username = config[DOMAIN].get(CONF_USERNAME)
-    password = config[DOMAIN].get(CONF_PASSWORD)
-    scan_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
+    await coordinator.async_config_entry_first_refresh()
 
-    try:
-        nzbget_api = pynzbgetapi.NZBGetAPI(host, username, password, ssl, ssl, port)
-        nzbget_api.version()
-    except pynzbgetapi.NZBGetAPIException as conn_err:
-        _LOGGER.error("Error setting up NZBGet API: %s", conn_err)
-        return False
+    undo_listener = entry.add_update_listener(_async_update_listener)
 
-    _LOGGER.debug("Successfully validated NZBGet API connection")
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_COORDINATOR: coordinator,
+        DATA_UNDO_UPDATE_LISTENER: undo_listener,
+    }
 
-    nzbget_data = hass.data[DATA_NZBGET] = NZBGetData(hass, nzbget_api)
-    nzbget_data.init_download_list()
-    nzbget_data.update()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    def service_handler(service):
-        """Handle service calls."""
-        if service.service == SERVICE_PAUSE:
-            nzbget_data.pause_download()
-        elif service.service == SERVICE_RESUME:
-            nzbget_data.resume_download()
-        elif service.service == SERVICE_SET_SPEED:
-            limit = service.data[ATTR_SPEED]
-            nzbget_data.rate(limit)
-
-    hass.services.register(
-        DOMAIN, SERVICE_PAUSE, service_handler, schema=vol.Schema({})
-    )
-
-    hass.services.register(
-        DOMAIN, SERVICE_RESUME, service_handler, schema=vol.Schema({})
-    )
-
-    hass.services.register(
-        DOMAIN, SERVICE_SET_SPEED, service_handler, schema=SPEED_LIMIT_SCHEMA
-    )
-
-    def refresh(event_time):
-        """Get the latest data from NZBGet."""
-        nzbget_data.update()
-
-    track_time_interval(hass, refresh, scan_interval)
-
-    sensorconfig = {"client_name": name}
-
-    hass.helpers.discovery.load_platform("sensor", DOMAIN, sensorconfig, config)
+    _async_register_services(hass, coordinator)
 
     return True
 
 
-class NZBGetData:
-    """Get the latest data and update the states."""
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    def __init__(self, hass, api):
-        """Initialize the NZBGet RPC API."""
-        self.hass = hass
-        self.status = None
-        self.available = True
-        self._api = api
-        self.downloads = None
-        self.completed_downloads = set()
+    if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]()
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    def update(self):
-        """Get the latest data from NZBGet instance."""
+    return unload_ok
 
-        try:
-            self.status = self._api.status()
-            self.downloads = self._api.history()
 
-            self.check_completed_downloads()
+def _async_register_services(
+    hass: HomeAssistant,
+    coordinator: NZBGetDataUpdateCoordinator,
+) -> None:
+    """Register integration-level services."""
 
-            self.available = True
-            dispatcher_send(self.hass, DATA_UPDATED)
-        except pynzbgetapi.NZBGetAPIException as err:
-            self.available = False
-            _LOGGER.error("Unable to refresh NZBGet data: %s", err)
+    def pause(call: ServiceCall) -> None:
+        """Service call to pause downloads in NZBGet."""
+        coordinator.nzbget.pausedownload()
 
-    def init_download_list(self):
-        """Initialize download list."""
-        self.downloads = self._api.history()
-        self.completed_downloads = {
-            (x["Name"], x["Category"], x["Status"]) for x in self.downloads
-        }
+    def resume(call: ServiceCall) -> None:
+        """Service call to resume downloads in NZBGet."""
+        coordinator.nzbget.resumedownload()
 
-    def check_completed_downloads(self):
-        """Check history for newly completed downloads."""
+    def set_speed(call: ServiceCall) -> None:
+        """Service call to rate limit speeds in NZBGet."""
+        coordinator.nzbget.rate(call.data[ATTR_SPEED])
 
-        actual_completed_downloads = {
-            (x["Name"], x["Category"], x["Status"]) for x in self.downloads
-        }
+    hass.services.async_register(DOMAIN, SERVICE_PAUSE, pause, schema=vol.Schema({}))
+    hass.services.async_register(DOMAIN, SERVICE_RESUME, resume, schema=vol.Schema({}))
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_SPEED, set_speed, schema=SPEED_LIMIT_SCHEMA
+    )
 
-        tmp_completed_downloads = list(
-            actual_completed_downloads.difference(self.completed_downloads)
-        )
 
-        for download in tmp_completed_downloads:
-            self.hass.bus.fire(
-                "nzbget_download_complete",
-                {"name": download[0], "category": download[1], "status": download[2]},
-            )
-
-        self.completed_downloads = actual_completed_downloads
-
-    def pause_download(self):
-        """Pause download queue."""
-
-        try:
-            self._api.pausedownload()
-        except pynzbgetapi.NZBGetAPIException as err:
-            _LOGGER.error("Unable to pause queue: %s", err)
-
-    def resume_download(self):
-        """Resume download queue."""
-
-        try:
-            self._api.resumedownload()
-        except pynzbgetapi.NZBGetAPIException as err:
-            _LOGGER.error("Unable to resume download queue: %s", err)
-
-    def rate(self, limit):
-        """Set download speed."""
-
-        try:
-            if not self._api.rate(limit):
-                _LOGGER.error("Limit was out of range")
-        except pynzbgetapi.NZBGetAPIException as err:
-            _LOGGER.error("Unable to set download speed: %s", err)
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)

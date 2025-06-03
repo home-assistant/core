@@ -1,8 +1,10 @@
 {
   "domain": "aurora",
   "name": "Aurora",
+  "codeowners": ["@djtimca"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aurora",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "iot_class": "cloud_polling",
+  "loggers": ["auroranoaa"],
+  "requirements": ["auroranoaa==0.0.5"]
 }

@@ -1,0 +1,35 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "step": {
+      "user": {
+        "title": "Set up Rheem EcoNet Account",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "migrate_aux_heat": {
+      "title": "Migration of EcoNet set_aux_heat action",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The EcoNet `set_aux_heat` action has been migrated. A new `aux_heat_only` switch entity is available for each thermostat.\n\nUpdate any automations to use the new `aux_heat_only` switch entity. When this is done, select **Submit** to fix this issue.",
+            "title": "[%key:component::econet::issues::migrate_aux_heat::title%]"
+          }
+        }
+      }
+    }
+  }
+}

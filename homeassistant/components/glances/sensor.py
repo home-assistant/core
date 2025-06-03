@@ -1,188 +1,382 @@
 """Support gathering system information of hosts which are running glances."""
-import logging
 
-from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from __future__ import annotations
 
-from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
+from dataclasses import dataclass
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
+    UnitOfDataRate,
+    UnitOfInformation,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import CPU_ICON, DOMAIN
+from .coordinator import GlancesConfigEntry, GlancesDataUpdateCoordinator
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Glances sensors is done through async_setup_entry."""
-    pass
+@dataclass(frozen=True, kw_only=True)
+class GlancesSensorEntityDescription(SensorEntityDescription):
+    """Describe Glances sensor entity."""
+
+    type: str
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+SENSOR_TYPES = {
+    ("fs", "disk_use_percent"): GlancesSensorEntityDescription(
+        key="disk_use_percent",
+        type="fs",
+        translation_key="disk_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("fs", "disk_use"): GlancesSensorEntityDescription(
+        key="disk_use",
+        type="fs",
+        translation_key="disk_used",
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("fs", "disk_free"): GlancesSensorEntityDescription(
+        key="disk_free",
+        type="fs",
+        translation_key="disk_free",
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("diskio", "read"): GlancesSensorEntityDescription(
+        key="read",
+        type="diskio",
+        translation_key="diskio_read",
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("diskio", "write"): GlancesSensorEntityDescription(
+        key="write",
+        type="diskio",
+        translation_key="diskio_write",
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("mem", "memory_use_percent"): GlancesSensorEntityDescription(
+        key="memory_use_percent",
+        type="mem",
+        translation_key="memory_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("mem", "memory_use"): GlancesSensorEntityDescription(
+        key="memory_use",
+        type="mem",
+        translation_key="memory_use",
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("mem", "memory_free"): GlancesSensorEntityDescription(
+        key="memory_free",
+        type="mem",
+        translation_key="memory_free",
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("memswap", "swap_use_percent"): GlancesSensorEntityDescription(
+        key="swap_use_percent",
+        type="memswap",
+        translation_key="swap_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("memswap", "swap_use"): GlancesSensorEntityDescription(
+        key="swap_use",
+        type="memswap",
+        translation_key="swap_use",
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("memswap", "swap_free"): GlancesSensorEntityDescription(
+        key="swap_free",
+        type="memswap",
+        translation_key="swap_free",
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("load", "processor_load"): GlancesSensorEntityDescription(
+        key="processor_load",
+        type="load",
+        translation_key="processor_load",
+        icon=CPU_ICON,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("processcount", "process_running"): GlancesSensorEntityDescription(
+        key="process_running",
+        type="processcount",
+        translation_key="process_running",
+        icon=CPU_ICON,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("processcount", "process_total"): GlancesSensorEntityDescription(
+        key="process_total",
+        type="processcount",
+        translation_key="process_total",
+        icon=CPU_ICON,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("processcount", "process_thread"): GlancesSensorEntityDescription(
+        key="process_thread",
+        type="processcount",
+        translation_key="process_threads",
+        icon=CPU_ICON,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("processcount", "process_sleeping"): GlancesSensorEntityDescription(
+        key="process_sleeping",
+        type="processcount",
+        translation_key="process_sleeping",
+        icon=CPU_ICON,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("cpu", "cpu_use_percent"): GlancesSensorEntityDescription(
+        key="cpu_use_percent",
+        type="cpu",
+        translation_key="cpu_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        icon=CPU_ICON,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("sensors", "temperature_core"): GlancesSensorEntityDescription(
+        key="temperature_core",
+        type="sensors",
+        translation_key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("sensors", "temperature_hdd"): GlancesSensorEntityDescription(
+        key="temperature_hdd",
+        type="sensors",
+        translation_key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("sensors", "fan_speed"): GlancesSensorEntityDescription(
+        key="fan_speed",
+        type="sensors",
+        translation_key="fan_speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("sensors", "battery"): GlancesSensorEntityDescription(
+        key="battery",
+        type="sensors",
+        translation_key="charge",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("docker", "docker_active"): GlancesSensorEntityDescription(
+        key="docker_active",
+        type="docker",
+        translation_key="container_active",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("docker", "docker_cpu_use"): GlancesSensorEntityDescription(
+        key="docker_cpu_use",
+        type="docker",
+        translation_key="container_cpu_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("docker", "docker_memory_use"): GlancesSensorEntityDescription(
+        key="docker_memory_use",
+        type="docker",
+        translation_key="container_memory_used",
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("raid", "available"): GlancesSensorEntityDescription(
+        key="available",
+        type="raid",
+        translation_key="raid_available",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("raid", "used"): GlancesSensorEntityDescription(
+        key="used",
+        type="raid",
+        translation_key="raid_used",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("computed", "uptime"): GlancesSensorEntityDescription(
+        key="uptime",
+        type="computed",
+        translation_key="uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    ("gpu", "mem"): GlancesSensorEntityDescription(
+        key="mem",
+        type="gpu",
+        translation_key="gpu_memory_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "proc"): GlancesSensorEntityDescription(
+        key="proc",
+        type="gpu",
+        translation_key="gpu_processor_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    ("gpu", "temperature"): GlancesSensorEntityDescription(
+        key="temperature",
+        type="gpu",
+        translation_key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "fan_speed"): GlancesSensorEntityDescription(
+        key="fan_speed",
+        type="gpu",
+        translation_key="fan_speed",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("network", "rx"): GlancesSensorEntityDescription(
+        key="rx",
+        type="network",
+        translation_key="network_rx",
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("network", "tx"): GlancesSensorEntityDescription(
+        key="tx",
+        type="network",
+        translation_key="network_tx",
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+}
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: GlancesConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the Glances sensors."""
 
-    glances_data = hass.data[DOMAIN][config_entry.entry_id]
-    name = config_entry.data[CONF_NAME]
-    dev = []
-    for sensor_type in SENSOR_TYPES:
-        dev.append(
-            GlancesSensor(glances_data, name, SENSOR_TYPES[sensor_type][0], sensor_type)
-        )
+    coordinator = config_entry.runtime_data
+    entities: list[GlancesSensor] = []
 
-    async_add_entities(dev, True)
+    for sensor_type, sensors in coordinator.data.items():
+        if sensor_type in ["fs", "diskio", "sensors", "raid", "gpu", "network"]:
+            entities.extend(
+                GlancesSensor(
+                    coordinator,
+                    sensor_description,
+                    sensor_label,
+                )
+                for sensor_label, params in sensors.items()
+                for param in params
+                if (sensor_description := SENSOR_TYPES.get((sensor_type, param)))
+            )
+        else:
+            entities.extend(
+                GlancesSensor(
+                    coordinator,
+                    sensor_description,
+                )
+                for sensor in sensors
+                if (sensor_description := SENSOR_TYPES.get((sensor_type, sensor)))
+            )
+
+    async_add_entities(entities)
 
 
-class GlancesSensor(Entity):
+class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntity):
     """Implementation of a Glances sensor."""
 
-    def __init__(self, glances_data, name, sensor_name, sensor_type):
+    entity_description: GlancesSensorEntityDescription
+    _attr_has_entity_name = True
+    _data_valid: bool = False
+
+    def __init__(
+        self,
+        coordinator: GlancesDataUpdateCoordinator,
+        description: GlancesSensorEntityDescription,
+        sensor_label: str = "",
+    ) -> None:
         """Initialize the sensor."""
-        self.glances_data = glances_data
-        self._sensor_name = sensor_name
-        self._name = name
-        self.type = sensor_type
-        self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} {self._sensor_name}"
-
-    @property
-    def unique_id(self):
-        """Set unique_id for sensor."""
-        return f"{self.glances_data.host}-{self.name}"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def available(self):
-        """Could the device be accessed during the last update call."""
-        return self.glances_data.available
-
-    @property
-    def state(self):
-        """Return the state of the resources."""
-        return self._state
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement for this sensor."""
-        return False
-
-    async def async_added_to_hass(self):
-        """Handle entity which will be added."""
-        async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        super().__init__(coordinator)
+        self._sensor_label = sensor_label
+        self.entity_description = description
+        if sensor_label:
+            self._attr_translation_placeholders = {"sensor_label": sensor_label}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            manufacturer="Glances",
+            name=coordinator.host,
         )
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}-{sensor_label}-{description.key}"
+        )
+        self._update_native_value()
+
+    @property
+    def available(self) -> bool:
+        """Set sensor unavailable when native value is invalid."""
+        return super().available and self._data_valid
 
     @callback
-    def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state(True)
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_native_value()
+        super()._handle_coordinator_update()
 
-    async def async_update(self):
-        """Get the latest data from REST API."""
-        value = self.glances_data.api.data
+    def _update_native_value(self) -> None:
+        """Update sensor native value from coordinator data."""
+        data = self.coordinator.data.get(self.entity_description.type)
+        if data and (dict_val := data.get(self._sensor_label)):
+            self._attr_native_value = dict_val.get(self.entity_description.key)
+        elif data and (self.entity_description.key in data):
+            self._attr_native_value = data.get(self.entity_description.key)
+        else:
+            self._attr_native_value = None
+        self._update_data_valid()
 
-        if value is not None:
-            if self.type == "disk_use_percent":
-                self._state = value["fs"][0]["percent"]
-            elif self.type == "disk_use":
-                self._state = round(value["fs"][0]["used"] / 1024 ** 3, 1)
-            elif self.type == "disk_free":
-                try:
-                    self._state = round(value["fs"][0]["free"] / 1024 ** 3, 1)
-                except KeyError:
-                    self._state = round(
-                        (value["fs"][0]["size"] - value["fs"][0]["used"]) / 1024 ** 3, 1
-                    )
-            elif self.type == "memory_use_percent":
-                self._state = value["mem"]["percent"]
-            elif self.type == "memory_use":
-                self._state = round(value["mem"]["used"] / 1024 ** 2, 1)
-            elif self.type == "memory_free":
-                self._state = round(value["mem"]["free"] / 1024 ** 2, 1)
-            elif self.type == "swap_use_percent":
-                self._state = value["memswap"]["percent"]
-            elif self.type == "swap_use":
-                self._state = round(value["memswap"]["used"] / 1024 ** 3, 1)
-            elif self.type == "swap_free":
-                self._state = round(value["memswap"]["free"] / 1024 ** 3, 1)
-            elif self.type == "processor_load":
-                # Windows systems don't provide load details
-                try:
-                    self._state = value["load"]["min15"]
-                except KeyError:
-                    self._state = value["cpu"]["total"]
-            elif self.type == "process_running":
-                self._state = value["processcount"]["running"]
-            elif self.type == "process_total":
-                self._state = value["processcount"]["total"]
-            elif self.type == "process_thread":
-                self._state = value["processcount"]["thread"]
-            elif self.type == "process_sleeping":
-                self._state = value["processcount"]["sleeping"]
-            elif self.type == "cpu_use_percent":
-                self._state = value["quicklook"]["cpu"]
-            elif self.type == "cpu_temp":
-                for sensor in value["sensors"]:
-                    if sensor["label"] in [
-                        "amdgpu 1",
-                        "aml_thermal",
-                        "Core 0",
-                        "Core 1",
-                        "CPU Temperature",
-                        "CPU",
-                        "cpu-thermal 1",
-                        "cpu_thermal 1",
-                        "exynos-therm 1",
-                        "Package id 0",
-                        "Physical id 0",
-                        "radeon 1",
-                        "soc-thermal 1",
-                        "soc_thermal 1",
-                    ]:
-                        self._state = sensor["value"]
-            elif self.type == "docker_active":
-                count = 0
-                try:
-                    for container in value["docker"]["containers"]:
-                        if (
-                            container["Status"] == "running"
-                            or "Up" in container["Status"]
-                        ):
-                            count += 1
-                    self._state = count
-                except KeyError:
-                    self._state = count
-            elif self.type == "docker_cpu_use":
-                cpu_use = 0.0
-                try:
-                    for container in value["docker"]["containers"]:
-                        if (
-                            container["Status"] == "running"
-                            or "Up" in container["Status"]
-                        ):
-                            cpu_use += container["cpu"]["total"]
-                        self._state = round(cpu_use, 1)
-                except KeyError:
-                    self._state = STATE_UNAVAILABLE
-            elif self.type == "docker_memory_use":
-                mem_use = 0.0
-                try:
-                    for container in value["docker"]["containers"]:
-                        if (
-                            container["Status"] == "running"
-                            or "Up" in container["Status"]
-                        ):
-                            mem_use += container["memory"]["usage"]
-                        self._state = round(mem_use / 1024 ** 2, 1)
-                except KeyError:
-                    self._state = STATE_UNAVAILABLE
+    def _update_data_valid(self) -> None:
+        self._data_valid = self._attr_native_value is not None and (
+            not self._numeric_state_expected
+            or isinstance(self._attr_native_value, (int, float))
+            or (
+                isinstance(self._attr_native_value, str)
+                and self._attr_native_value.isnumeric()
+            )
+        )

@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Freebox router."
+        }
+      },
+      "link": {
+        "title": "Link Freebox router",
+        "description": "Select **Submit**, then touch the right arrow on the router to register Freebox with Home Assistant.\n\n![Location of button on the router](/static/images/config_freebox.png)"
+      }
+    },
+    "error": {
+      "register_failed": "Failed to register, please try again",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "services": {
+    "reboot": {
+      "name": "Reboot",
+      "description": "Reboots the Freebox."
+    }
+  }
+}

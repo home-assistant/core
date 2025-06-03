@@ -1,0 +1,92 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "FAA Delays",
+        "description": "Enter a US Airport Code in IATA Format",
+        "data": {
+          "id": "Airport"
+        }
+      }
+    },
+    "error": {
+      "invalid_airport": "Airport code is not valid",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "This airport is already configured."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ground_delay": {
+        "name": "Ground delay",
+        "state_attributes": {
+          "average": {
+            "name": "Average"
+          },
+          "reason": {
+            "name": "Reason"
+          }
+        }
+      },
+      "ground_stop": {
+        "name": "Ground stop",
+        "state_attributes": {
+          "endtime": {
+            "name": "End time"
+          },
+          "reason": {
+            "name": "[%key:component::faa_delays::entity::binary_sensor::ground_delay::state_attributes::reason::name%]"
+          }
+        }
+      },
+      "depart_delay": {
+        "name": "Departure delay",
+        "state_attributes": {
+          "minimum": {
+            "name": "Minimum"
+          },
+          "maximum": {
+            "name": "Maximum"
+          },
+          "trend": {
+            "name": "Trend"
+          },
+          "reason": {
+            "name": "[%key:component::faa_delays::entity::binary_sensor::ground_delay::state_attributes::reason::name%]"
+          }
+        }
+      },
+      "arrive_delay": {
+        "name": "Arrival delay",
+        "state_attributes": {
+          "minimum": {
+            "name": "[%key:component::faa_delays::entity::binary_sensor::depart_delay::state_attributes::minimum::name%]"
+          },
+          "maximum": {
+            "name": "[%key:component::faa_delays::entity::binary_sensor::depart_delay::state_attributes::maximum::name%]"
+          },
+          "trend": {
+            "name": "[%key:component::faa_delays::entity::binary_sensor::depart_delay::state_attributes::trend::name%]"
+          },
+          "reason": {
+            "name": "[%key:component::faa_delays::entity::binary_sensor::ground_delay::state_attributes::reason::name%]"
+          }
+        }
+      },
+      "closure": {
+        "name": "Closure",
+        "state_attributes": {
+          "begin": {
+            "name": "Begin"
+          },
+          "end": {
+            "name": "End"
+          }
+        }
+      }
+    }
+  }
+}

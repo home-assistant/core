@@ -1,74 +1,82 @@
 """Provide animated GIF loops of Buienradar imagery."""
+
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Optional
 
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import CONF_NAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.camera import Camera
+from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-CONF_DIMENSION = "dimension"
-CONF_DELTA = "delta"
+from . import BuienRadarConfigEntry
+from .const import CONF_DELTA, DEFAULT_COUNTRY, DEFAULT_DELTA, DEFAULT_DIMENSION
 
-RADAR_MAP_URL_TEMPLATE = "https://api.buienradar.nl/image/1.0/RadarMapNL?w={w}&h={h}"
-
-_LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 # Maximum range according to docs
 DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
 
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_DIMENSION, default=512): DIM_RANGE,
-            vol.Optional(CONF_DELTA, default=600.0): vol.All(
-                vol.Coerce(float), vol.Range(min=0)
-            ),
-            vol.Optional(CONF_NAME, default="Buienradar loop"): cv.string,
-        }
-    )
-)
+# Multiple choice for available Radar Map URL
+SUPPORTED_COUNTRY_CODES = ["NL", "BE"]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: BuienRadarConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up buienradar radar-loop camera component."""
-    dimension = config[CONF_DIMENSION]
-    delta = config[CONF_DELTA]
-    name = config[CONF_NAME]
+    config = entry.data
+    options = entry.options
 
-    async_add_entities([BuienradarCam(name, dimension, delta)])
+    country = options.get(
+        CONF_COUNTRY_CODE, config.get(CONF_COUNTRY_CODE, DEFAULT_COUNTRY)
+    )
+
+    delta = options.get(CONF_DELTA, config.get(CONF_DELTA, DEFAULT_DELTA))
+
+    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+
+    async_add_entities([BuienradarCam(latitude, longitude, delta, country)])
 
 
 class BuienradarCam(Camera):
-    """
-    A camera component producing animated buienradar radar-imagery GIFs.
+    """A camera component producing animated buienradar radar-imagery GIFs.
 
     Rain radar imagery camera based on image URL taken from [0].
 
     [0]: https://www.buienradar.nl/overbuienradar/gratis-weerdata
     """
 
-    def __init__(self, name: str, dimension: int, delta: float):
-        """
-        Initialize the component.
+    _attr_entity_registry_enabled_default = False
+    _attr_name = "Buienradar"
+
+    def __init__(
+        self, latitude: float, longitude: float, delta: float, country: str
+    ) -> None:
+        """Initialize the component.
 
         This constructor must be run in the event loop.
         """
         super().__init__()
 
-        self._name = name
-
         # dimension (x and y) of returned radar image
-        self._dimension = dimension
+        self._dimension = DEFAULT_DIMENSION
 
         # time a cached image stays valid for
         self._delta = delta
+
+        # country location
+        self._country = country
 
         # Condition that guards the loading indicator.
         #
@@ -78,18 +86,15 @@ class BuienradarCam(Camera):
         # invariant: this condition is private to and owned by this instance.
         self._condition = asyncio.Condition()
 
-        self._last_image: Optional[bytes] = None
+        self._last_image: bytes | None = None
         # value of the last seen last modified header
-        self._last_modified: Optional[str] = None
+        self._last_modified: str | None = None
         # loading status
         self._loading = False
         # deadline for image refresh - self.delta after last successful load
-        self._deadline: Optional[datetime] = None
+        self._deadline: datetime | None = None
 
-    @property
-    def name(self) -> str:
-        """Return the component name."""
-        return self._name
+        self._attr_unique_id = f"{latitude:2.6f}{longitude:2.6f}"
 
     def __needs_refresh(self) -> bool:
         if not (self._delta and self._deadline and self._last_image):
@@ -101,7 +106,10 @@ class BuienradarCam(Camera):
         """Retrieve new radar image and return whether this succeeded."""
         session = async_get_clientsession(self.hass)
 
-        url = RADAR_MAP_URL_TEMPLATE.format(w=self._dimension, h=self._dimension)
+        url = (
+            f"https://api.buienradar.nl/image/1.0/RadarMap{self._country}"
+            f"?w={self._dimension}&h={self._dimension}"
+        )
 
         if self._last_modified:
             headers = {"If-Modified-Since": self._last_modified}
@@ -109,30 +117,32 @@ class BuienradarCam(Camera):
             headers = {}
 
         try:
-            async with session.get(url, timeout=5, headers=headers) as res:
+            async with session.get(
+                url, timeout=aiohttp.ClientTimeout(total=5), headers=headers
+            ) as res:
                 res.raise_for_status()
 
                 if res.status == 304:
-                    _LOG.debug("HTTP 304 - success")
+                    _LOGGER.debug("HTTP 304 - success")
                     return True
 
-                last_modified = res.headers.get("Last-Modified", None)
-                if last_modified:
+                if last_modified := res.headers.get("Last-Modified"):
                     self._last_modified = last_modified
 
                 self._last_image = await res.read()
-                _LOG.debug("HTTP 200 - Last-Modified: %s", last_modified)
+                _LOGGER.debug("HTTP 200 - Last-Modified: %s", last_modified)
 
                 return True
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-            _LOG.error("Failed to fetch image, %s", type(err))
+        except (TimeoutError, aiohttp.ClientError) as err:
+            _LOGGER.error("Failed to fetch image, %s", type(err))
             return False
 
-    async def async_camera_image(self) -> Optional[bytes]:
-        """
-        Return a still image response from the camera.
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return a still image response from the camera.
 
-        Uses ayncio conditions to make sure only one task enters the critical
+        Uses asyncio conditions to make sure only one task enters the critical
         section at the same time. Otherwise, two http requests would start
         when two tabs with Home Assistant are open.
 
@@ -152,9 +162,9 @@ class BuienradarCam(Camera):
 
         # get lock, check iff loading, await notification if loading
         async with self._condition:
-            # can not be tested - mocked http response returns immediately
+            # cannot be tested - mocked http response returns immediately
             if self._loading:
-                _LOG.debug("already loading - waiting for notification")
+                _LOGGER.debug("already loading - waiting for notification")
                 await self._condition.wait()
                 return self._last_image
 

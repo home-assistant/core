@@ -1,0 +1,51 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:fan",
+      "state": {
+        "off": "mdi:fan-off"
+      },
+      "state_attributes": {
+        "direction": {
+          "default": "mdi:rotate-right",
+          "state": {
+            "reverse": "mdi:rotate-left"
+          }
+        },
+        "preset_mode": {
+          "default": "mdi:circle-medium",
+          "state": {}
+        }
+      }
+    }
+  },
+  "services": {
+    "decrease_speed": {
+      "service": "mdi:fan-minus"
+    },
+    "increase_speed": {
+      "service": "mdi:fan-plus"
+    },
+    "oscillate": {
+      "service": "mdi:arrow-oscillating"
+    },
+    "set_direction": {
+      "service": "mdi:rotate-3d-variant"
+    },
+    "set_percentage": {
+      "service": "mdi:fan"
+    },
+    "set_preset_mode": {
+      "service": "mdi:fan-auto"
+    },
+    "toggle": {
+      "service": "mdi:fan"
+    },
+    "turn_off": {
+      "service": "mdi:fan-off"
+    },
+    "turn_on": {
+      "service": "mdi:fan"
+    }
+  }
+}

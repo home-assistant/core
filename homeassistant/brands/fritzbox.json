@@ -1,0 +1,5 @@
+{
+  "domain": "fritzbox",
+  "name": "FRITZ!Box",
+  "integrations": ["fritz", "fritzbox", "fritzbox_callmonitor"]
+}

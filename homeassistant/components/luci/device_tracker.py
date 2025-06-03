@@ -1,12 +1,15 @@
 """Support for OpenWRT (luci) routers."""
+
+from __future__ import annotations
+
 import logging
 
 from openwrt_luci_rpc import OpenWrtRpc
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -16,14 +19,16 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -34,15 +39,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> LuciDeviceScanner | None:
     """Validate the configuration and return a Luci scanner."""
-    scanner = LuciDeviceScanner(config[DOMAIN])
+    scanner = LuciDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
 class LuciDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to an OpenWrt router."""
+    """Scanner for devices connected to an OpenWrt router."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -66,15 +71,13 @@ class LuciDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        name = next(
+        return next(
             (result.hostname for result in self.last_results if result.mac == device),
             None,
         )
-        return name
 
     def get_extra_attributes(self, device):
-        """
-        Get extra attributes of a device.
+        """Get extra attributes of a device.
 
         Some known extra attributes that may be returned in the device tuple
         include MAC address (mac), network device (dev), IP address
@@ -92,8 +95,11 @@ class LuciDeviceScanner(DeviceScanner):
 
         _LOGGER.debug("Luci get_all_connected_devices returned: %s", result)
 
-        last_results = []
-        for device in result:
-            last_results.append(device)
-
-        self.last_results = last_results
+        self.last_results = [
+            device
+            for device in result
+            if not hasattr(self.router.router.owrt_version, "release")
+            or not self.router.router.owrt_version.release
+            or self.router.router.owrt_version.release[0] < 19
+            or device.reachable
+        ]

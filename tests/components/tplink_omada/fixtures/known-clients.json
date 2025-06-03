@@ -1,0 +1,67 @@
+[
+  {
+    "name": "16-32-50-ED-FB-15",
+    "mac": "16-32-50-ED-FB-15",
+    "wireless": true,
+    "guest": false,
+    "download": 259310931013,
+    "upload": 43957031162,
+    "duration": 6832173,
+    "lastSeen": 1712488285622,
+    "block": false,
+    "manager": false,
+    "lockToAp": false
+  },
+  {
+    "name": "Banana",
+    "mac": "2C-71-FF-ED-34-83",
+    "wireless": true,
+    "guest": false,
+    "download": 22093851790,
+    "upload": 6961197401,
+    "duration": 16192898,
+    "lastSeen": 1712488285767,
+    "block": false,
+    "manager": false,
+    "lockToAp": false
+  },
+  {
+    "name": "Pear",
+    "mac": "2C-D2-6B-BA-9C-94",
+    "wireless": true,
+    "guest": false,
+    "download": 0,
+    "upload": 0,
+    "duration": 23,
+    "lastSeen": 1713083620997,
+    "block": false,
+    "manager": false,
+    "lockToAp": false
+  },
+  {
+    "name": "Apple",
+    "mac": "2E-DC-E1-C4-37-D3",
+    "wireless": true,
+    "guest": false,
+    "download": 1366833567,
+    "upload": 30126947,
+    "duration": 60255,
+    "lastSeen": 1713107649827,
+    "block": false,
+    "manager": false,
+    "lockToAp": false
+  },
+  {
+    "name": "32-39-24-B1-67-23",
+    "mac": "32-39-24-B1-67-23",
+    "wireless": false,
+    "guest": false,
+    "download": 1621140542,
+    "upload": 433306522,
+    "duration": 60571,
+    "lastSeen": 1713107438528,
+    "block": false,
+    "manager": false,
+    "lockToAp": false
+  }
+]

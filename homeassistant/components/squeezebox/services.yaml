@@ -1,12 +1,32 @@
 call_method:
-  description: Call a custom Squeezebox JSONRPC API.
+  target:
+    entity:
+      integration: squeezebox
+      domain: media_player
   fields:
-    entity_id:
-      description: Name(s) of the Squeezebox entities where to run the API method.
-      example: 'media_player.squeezebox_radio'
     command:
-      description: Command to pass to Logitech Media Server (p0 in the CLI documentation).
-      example: 'playlist'
+      required: true
+      example: "playlist"
+      selector:
+        text:
     parameters:
-      description: Array of additional parameters to pass to Logitech Media Server (p1, ..., pN in the CLI documentation).
-      example: ["loadtracks", "album.titlesearch="]
+      example: '["loadtracks", "album.titlesearch=Revolver"]'
+      advanced: true
+      selector:
+        object:
+call_query:
+  target:
+    entity:
+      integration: squeezebox
+      domain: media_player
+  fields:
+    command:
+      required: true
+      example: "albums"
+      selector:
+        text:
+    parameters:
+      example: '["0", "20", "search:Revolver"]'
+      advanced: true
+      selector:
+        object:

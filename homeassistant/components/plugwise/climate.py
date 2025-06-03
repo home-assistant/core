@@ -1,286 +1,246 @@
 """Plugwise Climate component for Home Assistant."""
 
-import logging
+from __future__ import annotations
 
-import haanna
-import voluptuous as vol
+from typing import Any
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    TEMP_CELSIUS,
-)
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+from .const import DOMAIN, MASTER_THERMOSTATS
+from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
+from .entity import PlugwiseEntity
+from .util import plugwise_command
 
-_LOGGER = logging.getLogger(__name__)
-
-# Configuration directives
-CONF_MIN_TEMP = "min_temp"
-CONF_MAX_TEMP = "max_temp"
-CONF_LEGACY = "legacy_anna"
-
-# Default directives
-DEFAULT_NAME = "Plugwise Thermostat"
-DEFAULT_USERNAME = "smile"
-DEFAULT_TIMEOUT = 10
-DEFAULT_PORT = 80
-DEFAULT_ICON = "mdi:thermometer"
-DEFAULT_MIN_TEMP = 4
-DEFAULT_MAX_TEMP = 30
-
-# HVAC modes
-HVAC_MODES_1 = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
-HVAC_MODES_2 = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
-
-# Read platform configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_LEGACY, default=False): cv.boolean,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): cv.positive_int,
-        vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): cv.positive_int,
-    }
-)
+PARALLEL_UPDATES = 0
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Add the Plugwise (Anna) Thermostate."""
-    api = haanna.Haanna(
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
-        config[CONF_HOST],
-        config[CONF_PORT],
-        config[CONF_LEGACY],
-    )
-    try:
-        api.ping_anna_thermostat()
-    except OSError:
-        _LOGGER.debug("Ping failed, retrying later", exc_info=True)
-        raise PlatformNotReady
-    devices = [
-        ThermostatDevice(
-            api, config[CONF_NAME], config[CONF_MIN_TEMP], config[CONF_MAX_TEMP]
-        )
-    ]
-    add_entities(devices, True)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: PlugwiseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Smile Thermostats from a config entry."""
+    coordinator = entry.runtime_data
 
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
 
-class ThermostatDevice(ClimateDevice):
-    """Representation of an Plugwise thermostat."""
-
-    def __init__(self, api, name, min_temp, max_temp):
-        """Set up the Plugwise API."""
-        self._api = api
-        self._min_temp = min_temp
-        self._max_temp = max_temp
-        self._name = name
-        self._domain_objects = None
-        self._outdoor_temperature = None
-        self._selected_schema = None
-        self._preset_mode = None
-        self._presets = None
-        self._presets_list = None
-        self._heating_status = None
-        self._cooling_status = None
-        self._schema_names = None
-        self._schema_status = None
-        self._current_temperature = None
-        self._thermostat_temperature = None
-        self._boiler_temperature = None
-        self._water_pressure = None
-        self._schedule_temperature = None
-        self._hvac_mode = None
-
-    @property
-    def hvac_action(self):
-        """Return the current action."""
-        if self._heating_status:
-            return CURRENT_HVAC_HEAT
-        if self._cooling_status:
-            return CURRENT_HVAC_COOL
-        return CURRENT_HVAC_IDLE
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return DEFAULT_ICON
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        attributes = {}
-        if self._outdoor_temperature:
-            attributes["outdoor_temperature"] = self._outdoor_temperature
-        attributes["available_schemas"] = self._schema_names
-        attributes["selected_schema"] = self._selected_schema
-        if self._boiler_temperature:
-            attributes["boiler_temperature"] = self._boiler_temperature
-        if self._water_pressure:
-            attributes["water_pressure"] = self._water_pressure
-        return attributes
-
-    @property
-    def preset_modes(self):
-        """Return the available preset modes list.
-
-        And make the presets with their temperatures available.
-        """
-        return self._presets_list
-
-    @property
-    def hvac_modes(self):
-        """Return the available hvac modes list."""
-        if self._heating_status is not None:
-            if self._cooling_status is not None:
-                return HVAC_MODES_2
-            return HVAC_MODES_1
-        return None
-
-    @property
-    def hvac_mode(self):
-        """Return current active hvac state."""
-        if self._schema_status:
-            return HVAC_MODE_AUTO
-        if self._heating_status:
-            if self._cooling_status:
-                return HVAC_MODE_HEAT_COOL
-            return HVAC_MODE_HEAT
-        return None
-
-    @property
-    def target_temperature(self):
-        """Return the target_temperature.
-
-        From the XML the thermostat-value is used because it updates 'immediately'
-        compared to the target_temperature-value. This way the information on the card
-        is "immediately" updated after changing the preset, temperature, etc.
-        """
-        return self._thermostat_temperature
-
-    @property
-    def preset_mode(self):
-        """Return the active selected schedule-name.
-
-        Or return the active preset, or return Temporary in case of a manual change
-        in the set-temperature with a weekschedule active,
-        or return Manual in case of a manual change and no weekschedule active.
-        """
-        if self._presets:
-            presets = self._presets
-            preset_temperature = presets.get(self._preset_mode, "none")
-            if self.hvac_mode == HVAC_MODE_AUTO:
-                if self._thermostat_temperature == self._schedule_temperature:
-                    return "{}".format(self._selected_schema)
-                if self._thermostat_temperature == preset_temperature:
-                    return self._preset_mode
-                return "Temporary"
-            if self._thermostat_temperature != preset_temperature:
-                return "Manual"
-            return self._preset_mode
-        return None
-
-    @property
-    def current_temperature(self):
-        """Return the current room temperature."""
-        return self._current_temperature
-
-    @property
-    def min_temp(self):
-        """Return the minimal temperature possible to set."""
-        return self._min_temp
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature possible to set."""
-        return self._max_temp
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measured temperature."""
-        return TEMP_CELSIUS
-
-    def set_temperature(self, **kwargs):
-        """Set new target temperature."""
-        _LOGGER.debug("Adjusting temperature")
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is not None and self._min_temp < temperature < self._max_temp:
-            _LOGGER.debug("Changing temporary temperature")
-            self._api.set_temperature(self._domain_objects, temperature)
+        if coordinator.api.smile_name == "Adam":
+            async_add_entities(
+                PlugwiseClimateEntity(coordinator, device_id)
+                for device_id in coordinator.new_devices
+                if coordinator.data[device_id]["dev_class"] == "climate"
+            )
         else:
-            _LOGGER.error("Invalid temperature requested")
+            async_add_entities(
+                PlugwiseClimateEntity(coordinator, device_id)
+                for device_id in coordinator.new_devices
+                if coordinator.data[device_id]["dev_class"] in MASTER_THERMOSTATS
+            )
 
-    def set_hvac_mode(self, hvac_mode):
+    _add_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+
+class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
+    """Representation of a Plugwise thermostat."""
+
+    _attr_name = None
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
+
+    _previous_mode: str = "heating"
+
+    def __init__(
+        self,
+        coordinator: PlugwiseDataUpdateCoordinator,
+        device_id: str,
+    ) -> None:
+        """Set up the Plugwise API."""
+        super().__init__(coordinator, device_id)
+        self._attr_unique_id = f"{device_id}-climate"
+
+        gateway_id: str = coordinator.api.gateway_id
+        self._gateway_data = coordinator.data[gateway_id]
+
+        self._location = device_id
+        if (location := self.device.get("location")) is not None:
+            self._location = location
+
+        # Determine supported features
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        if (
+            self.coordinator.api.cooling_present
+            and coordinator.api.smile_name != "Adam"
+        ):
+            self._attr_supported_features = (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
+        if HVACMode.OFF in self.hvac_modes:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
+        if presets := self.device.get("preset_modes"):
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            self._attr_preset_modes = presets
+
+        self._attr_min_temp = self.device["thermostat"]["lower_bound"]
+        self._attr_max_temp = min(self.device["thermostat"]["upper_bound"], 35.0)
+        # Ensure we don't drop below 0.1
+        self._attr_target_temperature_step = max(
+            self.device["thermostat"]["resolution"], 0.1
+        )
+
+    def _previous_action_mode(self, coordinator: PlugwiseDataUpdateCoordinator) -> None:
+        """Return the previous action-mode when the regulation-mode is not heating or cooling.
+
+        Helper for set_hvac_mode().
+        """
+        # When no cooling available, _previous_mode is always heating
+        if (
+            "regulation_modes" in self._gateway_data
+            and "cooling" in self._gateway_data["regulation_modes"]
+        ):
+            mode = self._gateway_data["select_regulation_mode"]
+            if mode in ("cooling", "heating"):
+                self._previous_mode = mode
+
+    @property
+    def current_temperature(self) -> float:
+        """Return the current temperature."""
+        return self.device["sensors"]["temperature"]
+
+    @property
+    def target_temperature(self) -> float:
+        """Return the temperature we try to reach.
+
+        Connected to the HVACMode combination of AUTO-HEAT.
+        """
+
+        return self.device["thermostat"]["setpoint"]
+
+    @property
+    def target_temperature_high(self) -> float:
+        """Return the temperature we try to reach in case of cooling.
+
+        Connected to the HVACMode combination of AUTO-HEAT_COOL.
+        """
+        return self.device["thermostat"]["setpoint_high"]
+
+    @property
+    def target_temperature_low(self) -> float:
+        """Return the heating temperature we try to reach in case of heating.
+
+        Connected to the HVACMode combination AUTO-HEAT_COOL.
+        """
+        return self.device["thermostat"]["setpoint_low"]
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return HVAC operation ie. auto, cool, heat, heat_cool, or off mode."""
+        if (
+            mode := self.device.get("climate_mode")
+        ) is None or mode not in self.hvac_modes:
+            return HVACMode.HEAT
+        return HVACMode(mode)
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return a list of available HVACModes."""
+        hvac_modes: list[HVACMode] = []
+        if "regulation_modes" in self._gateway_data:
+            hvac_modes.append(HVACMode.OFF)
+
+        if "available_schedules" in self.device:
+            hvac_modes.append(HVACMode.AUTO)
+
+        if self.coordinator.api.cooling_present:
+            if "regulation_modes" in self._gateway_data:
+                if self._gateway_data["select_regulation_mode"] == "cooling":
+                    hvac_modes.append(HVACMode.COOL)
+                if self._gateway_data["select_regulation_mode"] == "heating":
+                    hvac_modes.append(HVACMode.HEAT)
+            else:
+                hvac_modes.append(HVACMode.HEAT_COOL)
+        else:
+            hvac_modes.append(HVACMode.HEAT)
+
+        return hvac_modes
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return the current running hvac operation if supported."""
+        # Keep track of the previous action-mode
+        self._previous_action_mode(self.coordinator)
+        if (action := self.device.get("control_state")) is not None:
+            return HVACAction(action)
+
+        return HVACAction.IDLE
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        return self.device.get("active_preset")
+
+    @plugwise_command
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        data: dict[str, Any] = {}
+        if ATTR_TEMPERATURE in kwargs:
+            data["setpoint"] = kwargs.get(ATTR_TEMPERATURE)
+        if ATTR_TARGET_TEMP_HIGH in kwargs:
+            data["setpoint_high"] = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        if ATTR_TARGET_TEMP_LOW in kwargs:
+            data["setpoint_low"] = kwargs.get(ATTR_TARGET_TEMP_LOW)
+
+        if mode := kwargs.get(ATTR_HVAC_MODE):
+            await self.async_set_hvac_mode(mode)
+
+        await self.coordinator.api.set_temperature(self._location, data)
+
+    @plugwise_command
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
-        _LOGGER.debug("Adjusting hvac_mode (i.e. schedule/schema)")
-        schema_mode = "false"
-        if hvac_mode == HVAC_MODE_AUTO:
-            schema_mode = "true"
-        self._api.set_schema_state(
-            self._domain_objects, self._selected_schema, schema_mode
-        )
+        if hvac_mode not in self.hvac_modes:
+            hvac_modes = ", ".join(self.hvac_modes)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_hvac_mode_requested",
+                translation_placeholders={
+                    "hvac_mode": hvac_mode,
+                    "hvac_modes": hvac_modes,
+                },
+            )
 
-    def set_preset_mode(self, preset_mode):
+        if hvac_mode == self.hvac_mode:
+            return
+
+        if hvac_mode == HVACMode.OFF:
+            await self.coordinator.api.set_regulation_mode(hvac_mode)
+        else:
+            await self.coordinator.api.set_schedule_state(
+                self._location,
+                "on" if hvac_mode == HVACMode.AUTO else "off",
+            )
+            if self.hvac_mode == HVACMode.OFF:
+                await self.coordinator.api.set_regulation_mode(self._previous_mode)
+
+    @plugwise_command
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
-        _LOGGER.debug("Changing preset mode")
-        self._api.set_preset(self._domain_objects, preset_mode)
-
-    def update(self):
-        """Update the data from the thermostat."""
-        _LOGGER.debug("Update called")
-        self._domain_objects = self._api.get_domain_objects()
-        self._outdoor_temperature = self._api.get_outdoor_temperature(
-            self._domain_objects
-        )
-        self._selected_schema = self._api.get_active_schema_name(self._domain_objects)
-        self._preset_mode = self._api.get_current_preset(self._domain_objects)
-        self._presets = self._api.get_presets(self._domain_objects)
-        self._presets_list = list(self._api.get_presets(self._domain_objects))
-        self._heating_status = self._api.get_heating_status(self._domain_objects)
-        self._cooling_status = self._api.get_cooling_status(self._domain_objects)
-        self._schema_names = self._api.get_schema_names(self._domain_objects)
-        self._schema_status = self._api.get_schema_state(self._domain_objects)
-        self._current_temperature = self._api.get_current_temperature(
-            self._domain_objects
-        )
-        self._thermostat_temperature = self._api.get_thermostat_temperature(
-            self._domain_objects
-        )
-        self._schedule_temperature = self._api.get_schedule_temperature(
-            self._domain_objects
-        )
-        self._boiler_temperature = self._api.get_boiler_temperature(
-            self._domain_objects
-        )
-        self._water_pressure = self._api.get_water_pressure(self._domain_objects)
+        await self.coordinator.api.set_preset(self._location, preset_mode)

@@ -1,0 +1,11 @@
+# This extend our general Ruff rules specifically for tests
+extend = "../pyproject.toml"
+
+[lint.isort]
+forced-separate = [
+    "tests",
+]
+
+[lint.flake8-tidy-imports.banned-api]
+"async_timeout".msg = "use asyncio.timeout instead"
+"pytz".msg = "use zoneinfo instead"

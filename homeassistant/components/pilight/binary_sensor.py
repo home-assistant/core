@@ -1,11 +1,15 @@
 """Support for Pilight binary sensors."""
+
+from __future__ import annotations
+
 import datetime
-import logging
 
 import voluptuous as vol
 
-from homeassistant.components import pilight
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_DISARM_AFTER_TRIGGER,
     CONF_NAME,
@@ -13,17 +17,20 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_time
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from . import EVENT
 
 CONF_VARIABLE = "variable"
 CONF_RESET_DELAY_SEC = "reset_delay_sec"
 
 DEFAULT_NAME = "Pilight Binary Sensor"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_VARIABLE): cv.string,
         vol.Required(CONF_PAYLOAD): vol.Schema(dict),
@@ -40,10 +47,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Pilight Binary Sensor."""
-    disarm = config.get(CONF_DISARM_AFTER_TRIGGER)
-    if disarm:
+    if config.get(CONF_DISARM_AFTER_TRIGGER):
         add_entities(
             [
                 PilightTriggerSensor(
@@ -72,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
 
-class PilightBinarySensor(BinarySensorDevice):
+class PilightBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor that can be updated using Pilight."""
 
     def __init__(self, hass, name, variable, payload, on_value, off_value):
@@ -85,7 +96,7 @@ class PilightBinarySensor(BinarySensorDevice):
         self._on_value = on_value
         self._off_value = off_value
 
-        hass.bus.listen(pilight.EVENT, self._handle_code)
+        hass.bus.listen(EVENT, self._handle_code)
 
     @property
     def name(self):
@@ -121,7 +132,7 @@ class PilightBinarySensor(BinarySensorDevice):
             self.schedule_update_ha_state()
 
 
-class PilightTriggerSensor(BinarySensorDevice):
+class PilightTriggerSensor(BinarySensorEntity):
     """Representation of a binary sensor that can be updated using Pilight."""
 
     def __init__(
@@ -139,7 +150,7 @@ class PilightTriggerSensor(BinarySensorDevice):
         self._delay_after = None
         self._hass = hass
 
-        hass.bus.listen(pilight.EVENT, self._handle_code)
+        hass.bus.listen(EVENT, self._handle_code)
 
     @property
     def name(self):

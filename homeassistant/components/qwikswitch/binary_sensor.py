@@ -1,28 +1,39 @@
 """Support for Qwikswitch Binary Sensors."""
+
+from __future__ import annotations
+
 import logging
 
 from pyqwikswitch.qwikswitch import SENSORS
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.core import callback
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as QWIKSWITCH, QSEntity
+from . import DOMAIN
+from .entity import QSEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, _, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    _: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Add binary sensor from the main Qwikswitch component."""
     if discovery_info is None:
         return
 
-    qsusb = hass.data[QWIKSWITCH]
+    qsusb = hass.data[DOMAIN]
     _LOGGER.debug("Setup qwikswitch.binary_sensor %s, %s", qsusb, discovery_info)
-    devs = [QSBinarySensor(sensor) for sensor in discovery_info[QWIKSWITCH]]
+    devs = [QSBinarySensor(sensor) for sensor in discovery_info[DOMAIN]]
     add_entities(devs)
 
 
-class QSBinarySensor(QSEntity, BinarySensorDevice):
+class QSBinarySensor(QSEntity, BinarySensorEntity):
     """Sensor based on a Qwikswitch relay/dimmer module."""
 
     _val = False
@@ -52,7 +63,7 @@ class QSBinarySensor(QSEntity, BinarySensorDevice):
         )
         if val is not None:
             self._val = bool(val)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def is_on(self):

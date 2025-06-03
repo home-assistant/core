@@ -1,0 +1,71 @@
+{
+  "Type": "asthma",
+  "ForecastDate": "2018-10-29T00:00:00-04:00",
+  "Location": {
+    "ZIP": "12345",
+    "City": "SCHENECTADY",
+    "State": "NY",
+    "periods": [
+      {
+        "Triggers": [
+          {
+            "LGID": 1,
+            "Name": "OZONE",
+            "PPM": 42,
+            "Description": "Ozone (O3) is a odorless, colorless ...."
+          },
+          {
+            "LGID": 1,
+            "Name": "PM2.5",
+            "PPM": 30,
+            "Description": "Fine particles (PM2.5) are 2.5 ..."
+          },
+          {
+            "LGID": 1,
+            "Name": "PM10",
+            "PPM": 19,
+            "Description": "Coarse dust particles (PM10) are 2.5 ..."
+          }
+        ],
+        "Period": "0001-01-01T00:00:00",
+        "Type": "Yesterday",
+        "Index": 4.1,
+        "Idx": "4.1"
+      },
+      {
+        "Triggers": [
+          {
+            "LGID": 3,
+            "Name": "PM2.5",
+            "PPM": 105,
+            "Description": "Fine particles (PM2.5) are 2.5 ..."
+          },
+          {
+            "LGID": 2,
+            "Name": "PM10",
+            "PPM": 65,
+            "Description": "Coarse dust particles (PM10) are 2.5 ..."
+          },
+          {
+            "LGID": 1,
+            "Name": "OZONE",
+            "PPM": 42,
+            "Description": "Ozone (O3) is a odorless, colorless ..."
+          }
+        ],
+        "Period": "0001-01-01T00:00:00",
+        "Type": "Today",
+        "Index": 4.5,
+        "Idx": "4.5"
+      },
+      {
+        "Triggers": [],
+        "Period": "0001-01-01T00:00:00",
+        "Type": "Tomorrow",
+        "Index": 4.6,
+        "Idx": "4.6"
+      }
+    ],
+    "DisplayLocation": "Schenectady, NY"
+  }
+}

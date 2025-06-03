@@ -1,220 +1,153 @@
 """Support for Radarr."""
-from datetime import datetime, timedelta
-import logging
-import time
 
-from pytz import timezone
-import requests
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_PORT,
-    CONF_SSL,
+from collections.abc import Callable
+import dataclasses
+from datetime import UTC, datetime
+from typing import Any, Generic
+
+from aiopyarr import Diskspace, RootFolder, SystemStatus
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import EntityCategory, UnitOfInformation
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import RadarrConfigEntry, RadarrDataUpdateCoordinator, T
+from .entity import RadarrEntity
 
-CONF_DAYS = "days"
-CONF_INCLUDED = "include_paths"
-CONF_UNIT = "unit"
-CONF_URLBASE = "urlbase"
 
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 7878
-DEFAULT_URLBASE = ""
-DEFAULT_DAYS = "1"
-DEFAULT_UNIT = "GB"
+def get_space(data: list[Diskspace], name: str) -> str:
+    """Get space."""
+    space = [
+        mount.freeSpace / 1024 ** BYTE_SIZES.index(UnitOfInformation.GIGABYTES)
+        for mount in data
+        if name in mount.path
+    ]
+    return f"{space[0]:.2f}"
 
-SCAN_INTERVAL = timedelta(minutes=10)
 
-SENSOR_TYPES = {
-    "diskspace": ["Disk Space", "GB", "mdi:harddisk"],
-    "upcoming": ["Upcoming", "Movies", "mdi:television"],
-    "wanted": ["Wanted", "Movies", "mdi:television"],
-    "movies": ["Movies", "Movies", "mdi:television"],
-    "commands": ["Commands", "Commands", "mdi:code-braces"],
-    "status": ["Status", "Status", "mdi:information"],
+def get_modified_description(
+    description: RadarrSensorEntityDescription[T], mount: RootFolder
+) -> tuple[RadarrSensorEntityDescription[T], str]:
+    """Return modified description and folder name."""
+    name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
+    desc = dataclasses.replace(
+        description,
+        key=f"{description.key}_{name}",
+        name=f"{description.name} {name}".capitalize(),
+    )
+    return desc, name
+
+
+@dataclasses.dataclass(frozen=True)
+class RadarrSensorEntityDescriptionMixIn(Generic[T]):
+    """Mixin for required keys."""
+
+    value_fn: Callable[[T, str], str | int | datetime]
+
+
+@dataclasses.dataclass(frozen=True)
+class RadarrSensorEntityDescription(
+    SensorEntityDescription, RadarrSensorEntityDescriptionMixIn[T], Generic[T]
+):
+    """Class to describe a Radarr sensor."""
+
+    description_fn: (
+        Callable[
+            [RadarrSensorEntityDescription[T], RootFolder],
+            tuple[RadarrSensorEntityDescription[T], str] | None,
+        ]
+        | None
+    ) = None
+
+
+SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
+    "disk_space": RadarrSensorEntityDescription(
+        key="disk_space",
+        name="Disk space",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        icon="mdi:harddisk",
+        value_fn=get_space,
+        description_fn=get_modified_description,
+    ),
+    "movie": RadarrSensorEntityDescription[int](
+        key="movies",
+        translation_key="movies",
+        entity_registry_enabled_default=False,
+        value_fn=lambda data, _: data,
+    ),
+    "queue": RadarrSensorEntityDescription[int](
+        key="queue",
+        translation_key="queue",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data, _: data,
+    ),
+    "status": RadarrSensorEntityDescription[SystemStatus](
+        key="start_time",
+        translation_key="start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data, _: data.startTime.replace(tzinfo=UTC),
+    ),
 }
 
-ENDPOINTS = {
-    "diskspace": "http{0}://{1}:{2}/{3}api/diskspace",
-    "upcoming": "http{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}",
-    "movies": "http{0}://{1}:{2}/{3}api/movie",
-    "commands": "http{0}://{1}:{2}/{3}api/command",
-    "status": "http{0}://{1}:{2}/{3}api/system/status",
-}
+BYTE_SIZES = [
+    UnitOfInformation.BYTES,
+    UnitOfInformation.KILOBYTES,
+    UnitOfInformation.MEGABYTES,
+    UnitOfInformation.GIGABYTES,
+]
 
-# Support to Yottabytes for the future, why not
-BYTE_SIZES = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=["movies"]): vol.All(
-            cv.ensure_list, [vol.In(list(SENSOR_TYPES))]
-        ),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES),
-        vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
-    }
-)
+PARALLEL_UPDATES = 1
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Radarr platform."""
-    conditions = config.get(CONF_MONITORED_CONDITIONS)
-    add_entities([RadarrSensor(hass, config, sensor) for sensor in conditions], True)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: RadarrConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Radarr sensors based on a config entry."""
+    entities: list[RadarrSensor[Any]] = []
+    for coordinator_type, description in SENSOR_TYPES.items():
+        coordinator = getattr(entry.runtime_data, coordinator_type)
+        if coordinator_type != "disk_space":
+            entities.append(RadarrSensor(coordinator, description))
+        else:
+            entities.extend(
+                RadarrSensor(coordinator, *get_modified_description(description, mount))
+                for mount in coordinator.data
+                if description.description_fn
+            )
+    async_add_entities(entities)
 
 
-class RadarrSensor(Entity):
+class RadarrSensor(RadarrEntity[T], SensorEntity):
     """Implementation of the Radarr sensor."""
 
-    def __init__(self, hass, conf, sensor_type):
+    coordinator: RadarrDataUpdateCoordinator[T]
+    entity_description: RadarrSensorEntityDescription[T]
+
+    def __init__(
+        self,
+        coordinator: RadarrDataUpdateCoordinator[T],
+        description: RadarrSensorEntityDescription[T],
+        folder_name: str = "",
+    ) -> None:
         """Create Radarr entity."""
-
-        self.conf = conf
-        self.host = conf.get(CONF_HOST)
-        self.port = conf.get(CONF_PORT)
-        self.urlbase = conf.get(CONF_URLBASE)
-        if self.urlbase:
-            self.urlbase = "{}/".format(self.urlbase.strip("/"))
-        self.apikey = conf.get(CONF_API_KEY)
-        self.included = conf.get(CONF_INCLUDED)
-        self.days = int(conf.get(CONF_DAYS))
-        self.ssl = "s" if conf.get(CONF_SSL) else ""
-        self._state = None
-        self.data = []
-        self._tz = timezone(str(hass.config.time_zone))
-        self.type = sensor_type
-        self._name = SENSOR_TYPES[self.type][0]
-        if self.type == "diskspace":
-            self._unit = conf.get(CONF_UNIT)
-        else:
-            self._unit = SENSOR_TYPES[self.type][1]
-        self._icon = SENSOR_TYPES[self.type][2]
-        self._available = False
+        super().__init__(coordinator, description)
+        self.folder_name = folder_name
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "{} {}".format("Radarr", self._name)
-
-    @property
-    def state(self):
-        """Return sensor state."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return sensor availability."""
-        return self._available
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of the sensor."""
-        return self._unit
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        attributes = {}
-        if self.type == "upcoming":
-            for movie in self.data:
-                attributes[to_key(movie)] = get_release_date(movie)
-        elif self.type == "commands":
-            for command in self.data:
-                attributes[command["name"]] = command["state"]
-        elif self.type == "diskspace":
-            for data in self.data:
-                free_space = to_unit(data["freeSpace"], self._unit)
-                total_space = to_unit(data["totalSpace"], self._unit)
-                percentage_used = (
-                    0 if total_space == 0 else free_space / total_space * 100
-                )
-                attributes[data["path"]] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
-                    free_space, total_space, self._unit, percentage_used
-                )
-        elif self.type == "movies":
-            for movie in self.data:
-                attributes[to_key(movie)] = movie["downloaded"]
-        elif self.type == "status":
-            attributes = self.data
-
-        return attributes
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon
-
-    def update(self):
-        """Update the data for the sensor."""
-        start = get_date(self._tz)
-        end = get_date(self._tz, self.days)
-        try:
-            res = requests.get(
-                ENDPOINTS[self.type].format(
-                    self.ssl, self.host, self.port, self.urlbase, start, end
-                ),
-                headers={"X-Api-Key": self.apikey},
-                timeout=10,
-            )
-        except OSError:
-            _LOGGER.warning("Host %s is not available", self.host)
-            self._available = False
-            self._state = None
-            return
-
-        if res.status_code == 200:
-            if self.type in ["upcoming", "movies", "commands"]:
-                self.data = res.json()
-                self._state = len(self.data)
-            elif self.type == "diskspace":
-                # If included paths are not provided, use all data
-                if self.included == []:
-                    self.data = res.json()
-                else:
-                    # Filter to only show lists that are included
-                    self.data = list(
-                        filter(lambda x: x["path"] in self.included, res.json())
-                    )
-                self._state = "{:.2f}".format(
-                    to_unit(sum([data["freeSpace"] for data in self.data]), self._unit)
-                )
-            elif self.type == "status":
-                self.data = res.json()
-                self._state = self.data["version"]
-            self._available = True
-
-
-def get_date(zone, offset=0):
-    """Get date based on timezone and offset of days."""
-    day = 60 * 60 * 24
-    return datetime.date(datetime.fromtimestamp(time.time() + day * offset, tz=zone))
-
-
-def get_release_date(data):
-    """Get release date."""
-    date = data.get("physicalRelease")
-    if not date:
-        date = data.get("inCinemas")
-    return date
-
-
-def to_key(data):
-    """Get key."""
-    return "{} ({})".format(data["title"], data["year"])
-
-
-def to_unit(value, unit):
-    """Convert bytes to give unit."""
-    return value / 1024 ** BYTE_SIZES.index(unit)
+    def native_value(self) -> str | int | datetime:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data, self.folder_name)

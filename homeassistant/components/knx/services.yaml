@@ -1,9 +1,76 @@
 send:
-  description: "Send arbitrary data directly to the KNX bus."
   fields:
     address:
-      description: "Group address(es) to write to."
+      required: true
       example: "1/1/0"
+      selector:
+        object:
     payload:
-      description: "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length."
+      required: true
       example: "[0, 4]"
+      selector:
+        object:
+    type:
+      required: false
+      example: "temperature"
+      selector:
+        text:
+    response:
+      required: true
+      default: false
+      selector:
+        boolean:
+read:
+  fields:
+    address:
+      required: true
+      example: "1/1/0"
+      selector:
+        object:
+event_register:
+  fields:
+    address:
+      required: true
+      example: "1/1/0"
+      selector:
+        object:
+    type:
+      required: false
+      example: "2byte_float"
+      selector:
+        text:
+    remove:
+      default: false
+      required: true
+      selector:
+        boolean:
+exposure_register:
+  fields:
+    address:
+      required: true
+      example: "1/1/0"
+      selector:
+        text:
+    type:
+      required: true
+      example: "percentU8"
+      selector:
+        text:
+    entity_id:
+      required: true
+      selector:
+        entity:
+    attribute:
+      example: "brightness"
+      selector:
+        text:
+    default:
+      example: "0"
+      selector:
+        object:
+    remove:
+      default: false
+      required: true
+      selector:
+        boolean:
+reload:

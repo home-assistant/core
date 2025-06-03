@@ -1,66 +1,107 @@
 # Describes the format for available remote services
 
 turn_on:
-  description: Sends the Power On Command.
+  target:
+    entity:
+      domain: remote
   fields:
-    entity_id:
-      description: Name(s) of entities to turn on.
-      example: 'remote.family_room'
     activity:
-      description: Activity ID or Activity Name to start.
-      example: 'BedroomTV'
+      example: "BedroomTV"
+      filter:
+        supported_features:
+          - remote.RemoteEntityFeature.ACTIVITY
+      selector:
+        text:
 
 toggle:
-  description: Toggles a device.
-  fields:
-    entity_id:
-      description: Name(s) of entities to toggle.
-      example: 'remote.family_room'
+  target:
+    entity:
+      domain: remote
 
 turn_off:
-  description: Sends the Power Off Command.
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn off.
-      example: 'remote.family_room'
+  target:
+    entity:
+      domain: remote
 
 send_command:
-  description: Sends a command or a list of commands to a device.
+  target:
+    entity:
+      domain: remote
   fields:
-    entity_id:
-      description: Name(s) of entities to send command from.
-      example: 'remote.family_room'
     device:
-      description: Device ID to send command to.
-      example: '32756745'
+      example: "32756745"
+      selector:
+        text:
     command:
-      description: A single command or a list of commands to send.
-      example: 'Play'
+      required: true
+      example: "Play"
+      selector:
+        object:
     num_repeats:
-      description: An optional value that specifies the number of times you want to repeat the command(s). If not specified, the command(s) will not be repeated.
-      example: '5'
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 255
     delay_secs:
-      description: An optional value that specifies that number of seconds you want to wait in between repeated commands. If not specified, the default of 0.4 seconds will be used.
-      example: '0.75'
+      default: 0.4
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds
     hold_secs:
-      description: An optional value that specifies that number of seconds you want to have it held before the release is send. If not specified, the release will be send immediately after the press.
-      example: '2.5'
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 0.1
+          unit_of_measurement: seconds
 
 learn_command:
-  description: Learns a command or a list of commands from a device.
+  target:
+    entity:
+      domain: remote
   fields:
-    entity_id:
-      description: Name(s) of entities to learn command from.
-      example: 'remote.bedroom'
     device:
-      description: Device ID to learn command from.
-      example: 'television'
+      example: "television"
+      selector:
+        text:
     command:
-      description: A single command or a list of commands to learn.
-      example: 'Turn on'
+      example: "Turn on"
+      selector:
+        object:
+    command_type:
+      default: "ir"
+      selector:
+        select:
+          options:
+            - "ir"
+            - "rf"
     alternative:
-      description: If code must be stored as alternative (useful for discrete remotes).
-      example: 'True'
+      selector:
+        boolean:
     timeout:
-      description: Timeout, in seconds, for the command to be learned.
-      example: '30'
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 5
+          unit_of_measurement: seconds
+
+delete_command:
+  target:
+    entity:
+      domain: remote
+  fields:
+    device:
+      example: "television"
+      selector:
+        text:
+    command:
+      required: true
+      example: "Mute"
+      selector:
+        object:

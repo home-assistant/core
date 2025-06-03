@@ -1,0 +1,19 @@
+{
+  "options": {
+    "step": {
+      "options_1": {
+        "sections": {
+          "section_1": "mdi:robot"
+        }
+      }
+    }
+  },
+  "services": {
+    "test_service_1": {
+      "service": "mdi:flask",
+      "sections": {
+        "advanced_fields": "mdi:test-tube"
+      }
+    }
+  }
+}

@@ -1,25 +1,37 @@
 """Support for Rflink binary sensors."""
-import logging
+
+from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_FORCE_UPDATE, CONF_NAME
-import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.event as evt
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_DEVICES,
+    CONF_FORCE_UPDATE,
+    CONF_NAME,
+    STATE_ON,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, event as evt
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_ALIASES, CONF_DEVICES, RflinkDevice
+from .const import CONF_ALIASES
+from .entity import RflinkDevice
 
 CONF_OFF_DELAY = "off_delay"
 DEFAULT_FORCE_UPDATE = False
 
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICES, default={}): {
             cv.string: vol.Schema(
@@ -51,40 +63,60 @@ def devices_from_config(domain_config):
     return devices
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Rflink platform."""
     async_add_entities(devices_from_config(config))
 
 
-class RflinkBinarySensor(RflinkDevice, BinarySensorDevice):
+class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
     """Representation of an Rflink binary sensor."""
 
     def __init__(
-        self, device_id, device_class=None, force_update=False, off_delay=None, **kwargs
-    ):
+        self,
+        device_id: str,
+        device_class: BinarySensorDeviceClass | None = None,
+        force_update: bool = False,
+        off_delay: int | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Handle sensor specific args and super init."""
         self._state = None
-        self._device_class = device_class
-        self._force_update = force_update
+        self._attr_device_class = device_class
+        self._attr_force_update = force_update
         self._off_delay = off_delay
         self._delay_listener = None
         super().__init__(device_id, **kwargs)
 
+    async def async_added_to_hass(self) -> None:
+        """Restore RFLink BinarySensor state."""
+        await super().async_added_to_hass()
+        if (old_state := await self.async_get_last_state()) is not None:
+            if self._off_delay is None:
+                self._state = old_state.state == STATE_ON
+            else:
+                self._state = False
+
     def _handle_event(self, event):
         """Domain specific event handler."""
         command = event["command"]
-        if command == "on":
+        if command in ["on", "allon"]:
             self._state = True
-        elif command == "off":
+        elif command in ["off", "alloff"]:
             self._state = False
 
         if self._state and self._off_delay is not None:
 
+            @callback
             def off_delay_listener(now):
                 """Switch device off after a delay."""
                 self._delay_listener = None
                 self._state = False
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
             if self._delay_listener is not None:
                 self._delay_listener()
@@ -96,13 +128,3 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._force_update

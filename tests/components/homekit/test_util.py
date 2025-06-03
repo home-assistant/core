@@ -1,15 +1,49 @@
 """Test HomeKit util module."""
+
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.homekit.const import (
+    BRIDGE_NAME,
+    CONF_AUDIO_CODEC,
+    CONF_AUDIO_MAP,
+    CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
+    CONF_LINKED_DOORBELL_SENSOR,
+    CONF_LINKED_MOTION_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
+    CONF_MAX_FPS,
+    CONF_MAX_HEIGHT,
+    CONF_MAX_WIDTH,
+    CONF_STREAM_COUNT,
+    CONF_SUPPORT_AUDIO,
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
+    CONF_VIDEO_CODEC,
+    CONF_VIDEO_MAP,
+    CONF_VIDEO_PACKET_SIZE,
+    CONF_VIDEO_PROFILE_NAMES,
+    DEFAULT_AUDIO_CODEC,
+    DEFAULT_AUDIO_MAP,
+    DEFAULT_AUDIO_PACKET_SIZE,
+    DEFAULT_CONFIG_FLOW_PORT,
+    DEFAULT_LOW_BATTERY_THRESHOLD,
+    DEFAULT_MAX_FPS,
+    DEFAULT_MAX_HEIGHT,
+    DEFAULT_MAX_WIDTH,
+    DEFAULT_STREAM_COUNT,
+    DEFAULT_SUPPORT_AUDIO,
+    DEFAULT_VIDEO_CODEC,
+    DEFAULT_VIDEO_MAP,
+    DEFAULT_VIDEO_PACKET_SIZE,
+    DEFAULT_VIDEO_PROFILE_NAMES,
+    DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
-    HOMEKIT_NOTIFY_ID,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -17,38 +51,57 @@ from homeassistant.components.homekit.const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
+from homeassistant.components.homekit.models import HomeKitEntryData
 from homeassistant.components.homekit.util import (
-    HomeKitSpeedMapping,
-    SpeedRange,
+    accessory_friendly_name,
+    async_dismiss_setup_message,
+    async_find_next_available_port,
+    async_port_is_available,
+    async_show_setup_message,
+    cleanup_name_for_homekit,
+    coerce_int,
     convert_to_float,
     density_to_air_quality,
-    dismiss_setup_message,
-    show_setup_message,
+    format_version,
+    state_needs_accessory_mode,
     temperature_to_homekit,
     temperature_to_states,
     validate_entity_config as vec,
     validate_media_player_features,
 )
-from homeassistant.components.persistent_notification import (
-    ATTR_MESSAGE,
-    ATTR_NOTIFICATION_ID,
-    DOMAIN,
-)
+from homeassistant.components.persistent_notification import async_create, async_dismiss
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
+    CONF_PORT,
     CONF_TYPE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 
-from tests.common import async_mock_service
+from .util import async_init_integration
+
+from tests.common import MockConfigEntry
 
 
-def test_validate_entity_config():
+def _mock_socket(failure_attempts: int = 0) -> MagicMock:
+    """Mock a socket that fails to bind failure_attempts amount of times."""
+    mock_socket = MagicMock()
+    attempts = 0
+
+    def _simulate_bind(*_):
+        nonlocal attempts
+        attempts += 1
+        if attempts <= failure_attempts:
+            raise OSError
+
+    mock_socket.bind = Mock(side_effect=_simulate_bind)
+    return mock_socket
+
+
+def test_validate_entity_config() -> None:
     """Test validate entities."""
     configs = [
         None,
@@ -75,6 +128,7 @@ def test_validate_entity_config():
             }
         },
         {"switch.test": {CONF_TYPE: "invalid_type"}},
+        {"fan.test": {CONF_TYPE: "invalid_type"}},
     ]
 
     for conf in configs:
@@ -108,8 +162,20 @@ def test_validate_entity_config():
     assert vec({"lock.demo": {}}) == {
         "lock.demo": {ATTR_CODE: None, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
-    assert vec({"lock.demo": {ATTR_CODE: "1234"}}) == {
-        "lock.demo": {ATTR_CODE: "1234", CONF_LOW_BATTERY_THRESHOLD: 20}
+
+    assert vec(
+        {
+            "lock.demo": {
+                ATTR_CODE: "1234",
+                CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+            }
+        }
+    ) == {
+        "lock.demo": {
+            ATTR_CODE: "1234",
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+            CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+        }
     }
 
     assert vec({"media_player.demo": {}}) == {
@@ -146,9 +212,41 @@ def test_validate_entity_config():
     assert vec({"switch.demo": {CONF_TYPE: TYPE_VALVE}}) == {
         "switch.demo": {CONF_TYPE: TYPE_VALVE, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
+    assert vec({"sensor.co": {CONF_THRESHOLD_CO: 500}}) == {
+        "sensor.co": {CONF_THRESHOLD_CO: 500, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"sensor.co2": {CONF_THRESHOLD_CO2: 500}}) == {
+        "sensor.co2": {CONF_THRESHOLD_CO2: 500, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec(
+        {
+            "camera.demo": {
+                CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+                CONF_LINKED_MOTION_SENSOR: "event.motion",
+            }
+        }
+    ) == {
+        "camera.demo": {
+            CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+            CONF_LINKED_MOTION_SENSOR: "event.motion",
+            CONF_AUDIO_CODEC: DEFAULT_AUDIO_CODEC,
+            CONF_SUPPORT_AUDIO: DEFAULT_SUPPORT_AUDIO,
+            CONF_MAX_WIDTH: DEFAULT_MAX_WIDTH,
+            CONF_MAX_HEIGHT: DEFAULT_MAX_HEIGHT,
+            CONF_MAX_FPS: DEFAULT_MAX_FPS,
+            CONF_AUDIO_MAP: DEFAULT_AUDIO_MAP,
+            CONF_VIDEO_MAP: DEFAULT_VIDEO_MAP,
+            CONF_STREAM_COUNT: DEFAULT_STREAM_COUNT,
+            CONF_VIDEO_CODEC: DEFAULT_VIDEO_CODEC,
+            CONF_VIDEO_PROFILE_NAMES: DEFAULT_VIDEO_PROFILE_NAMES,
+            CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
+            CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
+    }
 
 
-def test_validate_media_player_features():
+def test_validate_media_player_features() -> None:
     """Test validate modes for media players."""
     config = {}
     attrs = {ATTR_SUPPORTED_FEATURES: 20873}
@@ -162,7 +260,7 @@ def test_validate_media_player_features():
     assert validate_media_player_features(entity_state, config) is False
 
 
-def test_convert_to_float():
+def test_convert_to_float() -> None:
     """Test convert_to_float method."""
     assert convert_to_float(12) == 12
     assert convert_to_float(12.4) == 12.4
@@ -170,106 +268,205 @@ def test_convert_to_float():
     assert convert_to_float(None) is None
 
 
-def test_temperature_to_homekit():
+def test_cleanup_name_for_homekit() -> None:
+    """Ensure name sanitize works as expected."""
+
+    assert cleanup_name_for_homekit("abc") == "abc"
+    assert cleanup_name_for_homekit("abc ") == "abc"
+    assert cleanup_name_for_homekit("a b c") == "a b c"
+    assert cleanup_name_for_homekit("ab_c") == "ab c"
+    assert (
+        cleanup_name_for_homekit('ab!@#$%^&*()-=":.,><?//\\ frog')
+        == "ab--#---&----- -.,------ frog"
+    )
+    assert cleanup_name_for_homekit("の日本_語文字セット") == "の日本 語文字セット"
+
+
+def test_temperature_to_homekit() -> None:
     """Test temperature conversion from HA to HomeKit."""
-    assert temperature_to_homekit(20.46, TEMP_CELSIUS) == 20.5
-    assert temperature_to_homekit(92.1, TEMP_FAHRENHEIT) == 33.4
+    assert temperature_to_homekit(20.46, UnitOfTemperature.CELSIUS) == 20.46
+    assert temperature_to_homekit(92.1, UnitOfTemperature.FAHRENHEIT) == pytest.approx(
+        33.388888888888886
+    )
 
 
-def test_temperature_to_states():
+def test_temperature_to_states() -> None:
     """Test temperature conversion from HomeKit to HA."""
-    assert temperature_to_states(20, TEMP_CELSIUS) == 20.0
-    assert temperature_to_states(20.2, TEMP_FAHRENHEIT) == 68.5
+    assert temperature_to_states(20, UnitOfTemperature.CELSIUS) == 20.0
+    assert temperature_to_states(20.2, UnitOfTemperature.FAHRENHEIT) == 68.36
 
 
-def test_density_to_air_quality():
+def test_density_to_air_quality() -> None:
     """Test map PM2.5 density to HomeKit AirQuality level."""
     assert density_to_air_quality(0) == 1
-    assert density_to_air_quality(35) == 1
-    assert density_to_air_quality(35.1) == 2
-    assert density_to_air_quality(75) == 2
-    assert density_to_air_quality(115) == 3
-    assert density_to_air_quality(150) == 4
-    assert density_to_air_quality(300) == 5
+    assert density_to_air_quality(9) == 1
+    assert density_to_air_quality(9.1) == 2
+    assert density_to_air_quality(12) == 2
+    assert density_to_air_quality(35.4) == 2
+    assert density_to_air_quality(35.5) == 3
+    assert density_to_air_quality(55.4) == 3
+    assert density_to_air_quality(55.5) == 4
+    assert density_to_air_quality(125.4) == 4
+    assert density_to_air_quality(125.5) == 5
+    assert density_to_air_quality(200) == 5
 
 
-async def test_show_setup_msg(hass):
+async def test_async_show_setup_msg(hass: HomeAssistant, hk_driver) -> None:
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 
-    call_create_notification = async_mock_service(hass, DOMAIN, "create")
+    entry = await async_init_integration(hass)
+    assert entry
 
-    await hass.async_add_job(show_setup_message, hass, pincode)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.persistent_notification.async_create",
+        side_effect=async_create,
+    ) as mock_create:
+        async_show_setup_message(
+            hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
+        )
+        await hass.async_block_till_done()
 
-    assert call_create_notification
-    assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == HOMEKIT_NOTIFY_ID
-    assert pincode.decode() in call_create_notification[0].data[ATTR_MESSAGE]
+    # New tests should not access runtime data.
+    # Do not use this pattern for new tests.
+    entry_data: HomeKitEntryData = hass.config_entries.async_get_entry(
+        entry.entry_id
+    ).runtime_data
+    assert entry_data.pairing_qr_secret
+    assert entry_data.pairing_qr
+
+    assert len(mock_create.mock_calls) == 1
+    assert mock_create.mock_calls[0][1][3] == entry.entry_id
+    assert pincode.decode() in mock_create.mock_calls[0][1][1]
 
 
-async def test_dismiss_setup_msg(hass):
+async def test_async_dismiss_setup_msg(hass: HomeAssistant) -> None:
     """Test dismiss setup message."""
-    call_dismiss_notification = async_mock_service(hass, DOMAIN, "dismiss")
+    with patch(
+        "homeassistant.components.persistent_notification.async_dismiss",
+        side_effect=async_dismiss,
+    ) as mock_dismiss:
+        async_dismiss_setup_message(hass, "entry_id")
+        await hass.async_block_till_done()
 
-    await hass.async_add_job(dismiss_setup_message, hass)
-    await hass.async_block_till_done()
-
-    assert call_dismiss_notification
-    assert call_dismiss_notification[0].data[ATTR_NOTIFICATION_ID] == HOMEKIT_NOTIFY_ID
-
-
-def test_homekit_speed_mapping():
-    """Test if the SpeedRanges from a speed_list are as expected."""
-    # A standard 2-speed fan
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
-    assert speed_mapping.speed_ranges == {
-        "off": SpeedRange(0, 0),
-        "low": SpeedRange(100 / 3, 50),
-        "high": SpeedRange(200 / 3, 100),
-    }
-
-    # A standard 3-speed fan
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "medium", "high"])
-    assert speed_mapping.speed_ranges == {
-        "off": SpeedRange(0, 0),
-        "low": SpeedRange(100 / 4, 100 / 3),
-        "medium": SpeedRange(200 / 4, 200 / 3),
-        "high": SpeedRange(300 / 4, 100),
-    }
-
-    # a Dyson-like fan with 10 speeds
-    speed_mapping = HomeKitSpeedMapping([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-    assert speed_mapping.speed_ranges == {
-        0: SpeedRange(0, 0),
-        1: SpeedRange(10, 100 / 9),
-        2: SpeedRange(20, 200 / 9),
-        3: SpeedRange(30, 300 / 9),
-        4: SpeedRange(40, 400 / 9),
-        5: SpeedRange(50, 500 / 9),
-        6: SpeedRange(60, 600 / 9),
-        7: SpeedRange(70, 700 / 9),
-        8: SpeedRange(80, 800 / 9),
-        9: SpeedRange(90, 100),
-    }
+    assert len(mock_dismiss.mock_calls) == 1
+    assert mock_dismiss.mock_calls[0][1][1] == "entry_id"
 
 
-def test_speed_to_homekit():
-    """Test speed conversion from HA to Homekit."""
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
-    assert speed_mapping.speed_to_homekit(None) is None
-    assert speed_mapping.speed_to_homekit("off") == 0
-    assert speed_mapping.speed_to_homekit("low") == 50
-    assert speed_mapping.speed_to_homekit("high") == 100
+async def test_port_is_available(hass: HomeAssistant) -> None:
+    """Test we can get an available port and it is actually available."""
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(0),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+    assert next_port
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(0),
+    ):
+        assert async_port_is_available(next_port)
+
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(5),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+    assert next_port == DEFAULT_CONFIG_FLOW_PORT + 5
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(0),
+    ):
+        assert async_port_is_available(next_port)
+
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(1),
+    ):
+        assert not async_port_is_available(next_port)
 
 
-def test_speed_to_states():
-    """Test speed conversion from Homekit to HA."""
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
-    assert speed_mapping.speed_to_states(-1) == "off"
-    assert speed_mapping.speed_to_states(0) == "off"
-    assert speed_mapping.speed_to_states(33) == "off"
-    assert speed_mapping.speed_to_states(34) == "low"
-    assert speed_mapping.speed_to_states(50) == "low"
-    assert speed_mapping.speed_to_states(66) == "low"
-    assert speed_mapping.speed_to_states(67) == "high"
-    assert speed_mapping.speed_to_states(100) == "high"
+async def test_port_is_available_skips_existing_entries(hass: HomeAssistant) -> None:
+    """Test we can get an available port and it is actually available."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_CONFIG_FLOW_PORT},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+
+    assert next_port == DEFAULT_CONFIG_FLOW_PORT + 1
+
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(),
+    ):
+        assert async_port_is_available(next_port)
+
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(4),
+    ):
+        next_port = async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+
+    assert next_port == DEFAULT_CONFIG_FLOW_PORT + 5
+    with patch(
+        "homeassistant.components.homekit.util.socket.socket",
+        return_value=_mock_socket(),
+    ):
+        assert async_port_is_available(next_port)
+
+    with (
+        pytest.raises(OSError),
+        patch(
+            "homeassistant.components.homekit.util.socket.socket",
+            return_value=_mock_socket(10),
+        ),
+    ):
+        async_find_next_available_port(hass, 65530)
+
+
+async def test_format_version() -> None:
+    """Test format_version method."""
+    assert format_version("soho+3.6.8+soho-release-rt120+10") == "3.6.8"
+    assert format_version("undefined-undefined-1.6.8") == "1.6.8"
+    assert format_version("56.0-76060") == "56.0.76060"
+    assert format_version(3.6) == "3.6"
+    assert format_version("AK001-ZJ100") == "1.100"
+    assert format_version("HF-LPB100-") == "100"
+    assert format_version("AK001-ZJ2149") == "1.2149"
+    assert format_version("13216407885") == "4294967295"  # max value
+    assert format_version("000132 16407885") == "132.16407885"
+    assert format_version("0.1") == "0.1"
+    assert format_version("0") is None
+    assert format_version("unknown") is None
+
+
+async def test_coerce_int() -> None:
+    """Test coerce_int method."""
+    assert coerce_int("1") == 1
+    assert coerce_int("") == 0
+    assert coerce_int(0) == 0
+
+
+async def test_accessory_friendly_name() -> None:
+    """Test we provide a helpful friendly name."""
+
+    accessory = Mock()
+    accessory.display_name = "same"
+    assert accessory_friendly_name("Same", accessory) == "Same"
+    assert accessory_friendly_name("hass title", accessory) == "hass title (same)"
+    accessory.display_name = "Hass title 123"
+    assert accessory_friendly_name("hass title", accessory) == "Hass title 123"
+
+
+async def test_lock_state_needs_accessory_mode(hass: HomeAssistant) -> None:
+    """Test that locks are setup as accessories."""
+    hass.states.async_set("lock.mine", "locked")
+    assert state_needs_accessory_mode(hass.states.get("lock.mine")) is True

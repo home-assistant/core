@@ -1,0 +1,31 @@
+{
+  "exceptions": {
+    "invalid_notification_icon": {
+      "message": "Invalid icon data provided. Got {type}"
+    },
+    "invalid_notification_image": {
+      "message": "Invalid image data provided. Got {type}"
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please refer to the documentation to make sure all requirements are met.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your TV."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

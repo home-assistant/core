@@ -1,0 +1,12 @@
+# Describes the format for available Number entity services
+
+set_value:
+  target:
+    entity:
+      domain: number
+  fields:
+    value:
+      example: 42
+      required: true
+      selector:
+        text:

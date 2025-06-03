@@ -1,6 +1,7 @@
 write:
-  description: Call ebusd write command.
   fields:
     call:
-      description: Property name and value to set
+      required: true
       example: '{"name": "Hc1MaxFlowTempDesired", "value": 21}'
+      selector:
+        object:

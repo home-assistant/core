@@ -2,28 +2,50 @@
 # Describes the format for available services
 
 set_zone_mode:
-  description: >-
-      Set the zone to an operating mode.
   fields:
     entity_id:
-      description: The zone's entity_id.
-      example: climate.kitchen
+      required: true
+      selector:
+        entity:
+          integration: geniushub
+          domain: climate
     mode:
-      description: 'One of: off, timer or footprint.'
-      example: timer
+      required: true
+      selector:
+        select:
+          options:
+            - "off"
+            - "timer"
+            - "footprint"
 
 set_zone_override:
-  description: >-
-      Override the zone's setpoint for a given duration.
   fields:
     entity_id:
-      description: The zone's entity_id.
-      example: climate.bathroom
+      required: true
+      selector:
+        entity:
+          integration: geniushub
+          domain: climate
     temperature:
-      description: The target temperature, to 0.1 C.
-      example: 19.2
+      required: true
+      selector:
+        number:
+          min: 4
+          max: 28
+          step: 0.1
+          unit_of_measurement: "°"
     duration:
-      description: >-
-          The duration of the override. Optional, default 1 hour, maximum 24 hours.
       example: '{"minutes": 135}'
+      selector:
+        object:
 
+set_switch_override:
+  target:
+    entity:
+      integration: geniushub
+      domain: switch
+  fields:
+    duration:
+      example: '{"minutes": 135}'
+      selector:
+        object:

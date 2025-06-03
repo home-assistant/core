@@ -1,0 +1,81 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your YouLess device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "device": {
+    "water": {
+      "name": "Water meter"
+    },
+    "gas": {
+      "name": "Gas meter"
+    },
+    "power": {
+      "name": "Power meter"
+    },
+    "delivery": {
+      "name": "Energy delivery meter"
+    },
+    "extra": {
+      "name": "S0 meter"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_water": {
+        "name": "Total water usage"
+      },
+      "total_gas_m3": {
+        "name": "Total gas usage"
+      },
+      "active_power_w": {
+        "name": "Current power usage"
+      },
+      "active_power_phase_w": {
+        "name": "Power phase {phase}"
+      },
+      "active_voltage_phase_v": {
+        "name": "Voltage phase {phase}"
+      },
+      "active_current_phase_a": {
+        "name": "Current phase {phase}"
+      },
+      "active_tariff": {
+        "name": "Tariff"
+      },
+      "total_energy_import_tariff_kwh": {
+        "name": "Energy import tariff {tariff}"
+      },
+      "total_energy_import_kwh": {
+        "name": "Total energy import"
+      },
+      "total_energy_export_tariff_kwh": {
+        "name": "Energy export tariff {tariff}"
+      },
+      "total_s0_kwh": {
+        "name": "Total energy"
+      },
+      "active_s0_w": {
+        "name": "Current usage"
+      },
+      "average_peak": {
+        "name": "Average peak"
+      },
+      "month_peak": {
+        "name": "Month peak"
+      }
+    }
+  }
+}

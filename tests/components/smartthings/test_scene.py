@@ -1,55 +1,47 @@
-"""
-Test for the SmartThings scene platform.
+"""Test for the SmartThings scene platform."""
 
-The only mocking required is of the underlying SmartThings API object so
-real HTTP calls are not initiated during testing.
-"""
+from unittest.mock import AsyncMock
+
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
-from homeassistant.components.smartthings import scene as scene_platform
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import setup_platform
+from . import setup_integration, snapshot_smartthings_entities
 
-
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await scene_platform.async_setup_platform(None, None, None)
+from tests.common import MockConfigEntry
 
 
-async def test_entity_and_device_attributes(hass, scene):
-    """Test the attributes of the entity are correct."""
-    # Arrange
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    # Act
-    await setup_platform(hass, SCENE_DOMAIN, scenes=[scene])
-    # Assert
-    entry = entity_registry.async_get("scene.test_scene")
-    assert entry
-    assert entry.unique_id == scene.scene_id
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_smartthings: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.SCENE)
 
 
-async def test_scene_activate(hass, scene):
-    """Test the scene is activated."""
-    await setup_platform(hass, SCENE_DOMAIN, scenes=[scene])
+async def test_activate_scene(
+    hass: HomeAssistant,
+    mock_smartthings: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test activating a scene."""
+    await setup_integration(hass, mock_config_entry)
+
     await hass.services.async_call(
         SCENE_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "scene.test_scene"},
+        {ATTR_ENTITY_ID: "scene.away"},
         blocking=True,
     )
-    state = hass.states.get("scene.test_scene")
-    assert state.attributes["icon"] == scene.icon
-    assert state.attributes["color"] == scene.color
-    assert state.attributes["location_id"] == scene.location_id
-    # pylint: disable=protected-access
-    assert scene.execute.call_count == 1  # type: ignore
 
-
-async def test_unload_config_entry(hass, scene):
-    """Test the scene is removed when the config entry is unloaded."""
-    # Arrange
-    config_entry = await setup_platform(hass, SCENE_DOMAIN, scenes=[scene])
-    # Act
-    await hass.config_entries.async_forward_entry_unload(config_entry, SCENE_DOMAIN)
-    # Assert
-    assert not hass.states.get("scene.test_scene")
+    mock_smartthings.execute_scene.assert_called_once_with(
+        "743b0f37-89b8-476c-aedf-eea8ad8cd29d"
+    )

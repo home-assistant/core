@@ -1,50 +1,36 @@
-"""The snapcast component."""
+"""Snapcast Integration."""
 
-import asyncio
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
-import voluptuous as vol
-
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-DOMAIN = "snapcast"
-
-SERVICE_SNAPSHOT = "snapshot"
-SERVICE_RESTORE = "restore"
-SERVICE_JOIN = "join"
-SERVICE_UNJOIN = "unjoin"
-
-ATTR_MASTER = "master"
-
-SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
-
-JOIN_SERVICE_SCHEMA = SERVICE_SCHEMA.extend({vol.Required(ATTR_MASTER): cv.entity_id})
+from .const import DOMAIN, PLATFORMS
+from .coordinator import SnapcastUpdateCoordinator
 
 
-async def async_setup(hass, config):
-    """Handle service configuration."""
-    service_event = asyncio.Event()
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Snapcast from a config entry."""
+    coordinator = SnapcastUpdateCoordinator(hass, entry)
 
-    async def service_handle(service):
-        """Dispatch a service call."""
-        service_event.clear()
-        async_dispatcher_send(
-            hass, DOMAIN, service_event, service.service, service.data
-        )
-        await service_event.wait()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except OSError as ex:
+        raise ConfigEntryNotReady(
+            "Could not connect to Snapcast server at "
+            f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        ) from ex
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_SNAPSHOT, service_handle, schema=SERVICE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_RESTORE, service_handle, schema=SERVICE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_JOIN, service_handle, schema=JOIN_SERVICE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_UNJOIN, service_handle, schema=SERVICE_SCHEMA
-    )
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        snapcast_data = hass.data[DOMAIN].pop(entry.entry_id)
+        # disconnect from server
+        await snapcast_data.disconnect()
+    return unload_ok

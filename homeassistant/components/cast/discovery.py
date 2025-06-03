@@ -1,16 +1,19 @@
 """Deal with Cast discovery."""
+
 import logging
 import threading
 
 import pychromecast
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
+    CAST_BROWSER_KEY,
+    CONF_KNOWN_HOSTS,
     INTERNAL_DISCOVERY_RUNNING_KEY,
-    KNOWN_CHROMECAST_INFO_KEY,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
 )
@@ -19,34 +22,33 @@ from .helpers import ChromecastInfo, ChromeCastZeroconf
 _LOGGER = logging.getLogger(__name__)
 
 
-def discover_chromecast(hass: HomeAssistant, info: ChromecastInfo):
+def discover_chromecast(
+    hass: HomeAssistant, cast_info: pychromecast.models.CastInfo
+) -> None:
     """Discover a Chromecast."""
-    if info in hass.data[KNOWN_CHROMECAST_INFO_KEY]:
-        _LOGGER.debug("Discovered previous chromecast %s", info)
 
-    # Either discovered completely new chromecast or a "moved" one.
-    info = info.fill_out_missing_chromecast_info()
-    _LOGGER.debug("Discovered chromecast %s", info)
+    info = ChromecastInfo(
+        cast_info=cast_info,
+    )
 
-    if info.uuid is not None:
-        # Remove previous cast infos with same uuid from known chromecasts.
-        same_uuid = set(
-            x for x in hass.data[KNOWN_CHROMECAST_INFO_KEY] if info.uuid == x.uuid
-        )
-        hass.data[KNOWN_CHROMECAST_INFO_KEY] -= same_uuid
+    if info.uuid is None:
+        _LOGGER.error("Discovered chromecast without uuid %s", info)
+        return
 
-    hass.data[KNOWN_CHROMECAST_INFO_KEY].add(info)
+    info = info.fill_out_missing_chromecast_info(hass)
+    _LOGGER.debug("Discovered new or updated chromecast %s", info)
+
     dispatcher_send(hass, SIGNAL_CAST_DISCOVERED, info)
 
 
-def _remove_chromecast(hass: HomeAssistant, info: ChromecastInfo):
+def _remove_chromecast(hass: HomeAssistant, info: ChromecastInfo) -> None:
     # Removed chromecast
     _LOGGER.debug("Removed chromecast %s", info)
 
     dispatcher_send(hass, SIGNAL_CAST_REMOVED, info)
 
 
-def setup_internal_discovery(hass: HomeAssistant) -> None:
+def setup_internal_discovery(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Set up the pychromecast internal discovery."""
     if INTERNAL_DISCOVERY_RUNNING_KEY not in hass.data:
         hass.data[INTERNAL_DISCOVERY_RUNNING_KEY] = threading.Lock()
@@ -55,45 +57,47 @@ def setup_internal_discovery(hass: HomeAssistant) -> None:
         # Internal discovery is already running
         return
 
-    def internal_add_callback(name):
-        """Handle zeroconf discovery of a new chromecast."""
-        mdns = listener.services[name]
-        discover_chromecast(
-            hass,
-            ChromecastInfo(
-                service=name,
-                host=mdns[0],
-                port=mdns[1],
-                uuid=mdns[2],
-                model_name=mdns[3],
-                friendly_name=mdns[4],
-            ),
-        )
+    class CastListener(pychromecast.discovery.AbstractCastListener):
+        """Listener for discovering chromecasts."""
 
-    def internal_remove_callback(name, mdns):
-        """Handle zeroconf discovery of a removed chromecast."""
-        _remove_chromecast(
-            hass,
-            ChromecastInfo(
-                service=name,
-                host=mdns[0],
-                port=mdns[1],
-                uuid=mdns[2],
-                model_name=mdns[3],
-                friendly_name=mdns[4],
-            ),
-        )
+        def add_cast(self, uuid, _):
+            """Handle zeroconf discovery of a new chromecast."""
+            discover_chromecast(hass, browser.devices[uuid])
 
-    _LOGGER.debug("Starting internal pychromecast discovery.")
-    listener, browser = pychromecast.start_discovery(
-        internal_add_callback, internal_remove_callback
+        def update_cast(self, uuid, _):
+            """Handle zeroconf discovery of an updated chromecast."""
+            discover_chromecast(hass, browser.devices[uuid])
+
+        def remove_cast(self, uuid, service, cast_info):
+            """Handle zeroconf discovery of a removed chromecast."""
+            _remove_chromecast(
+                hass,
+                ChromecastInfo(
+                    cast_info=cast_info,
+                ),
+            )
+
+    _LOGGER.debug("Starting internal pychromecast discovery")
+    browser = pychromecast.discovery.CastBrowser(
+        CastListener(),
+        ChromeCastZeroconf.get_zeroconf(),
+        config_entry.data.get(CONF_KNOWN_HOSTS),
     )
-    ChromeCastZeroconf.set_zeroconf(browser.zc)
+    hass.data[CAST_BROWSER_KEY] = browser
+    browser.start_discovery()
 
     def stop_discovery(event):
         """Stop discovery of new chromecasts."""
-        _LOGGER.debug("Stopping internal pychromecast discovery.")
-        pychromecast.stop_discovery(browser)
+        _LOGGER.debug("Stopping internal pychromecast discovery")
+        browser.stop_discovery()
         hass.data[INTERNAL_DISCOVERY_RUNNING_KEY].release()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_discovery)
+
+    config_entry.add_update_listener(config_entry_updated)
+
+
+async def config_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Handle config entry being updated."""
+    browser = hass.data[CAST_BROWSER_KEY]
+    browser.host_browser.update_hosts(config_entry.data.get(CONF_KNOWN_HOSTS))

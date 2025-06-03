@@ -1,0 +1,10 @@
+{
+  "domain": "kmtronic",
+  "name": "KMtronic",
+  "codeowners": ["@dgomes"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/kmtronic",
+  "iot_class": "local_push",
+  "loggers": ["pykmtronic"],
+  "requirements": ["pykmtronic==0.3.0"]
+}

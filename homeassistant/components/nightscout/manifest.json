@@ -1,0 +1,10 @@
+{
+  "domain": "nightscout",
+  "name": "Nightscout",
+  "codeowners": ["@marciogranzotto"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nightscout",
+  "iot_class": "cloud_polling",
+  "loggers": ["py_nightscout"],
+  "requirements": ["py-nightscout==1.2.2"]
+}

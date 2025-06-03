@@ -1,4 +1,8 @@
 """Support for DD-WRT routers."""
+
+from __future__ import annotations
+
+from http import HTTPStatus
 import logging
 import re
 
@@ -6,8 +10,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -17,7 +21,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +35,7 @@ DEFAULT_VERIFY_SSL = True
 CONF_WIRELESS_ONLY = "wireless_only"
 DEFAULT_WIRELESS_ONLY = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -41,16 +47,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DdWrtDeviceScanner | None:
     """Validate the configuration and return a DD-WRT scanner."""
     try:
-        return DdWrtDeviceScanner(config[DOMAIN])
+        return DdWrtDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
     except ConnectionError:
         return None
 
 
 class DdWrtDeviceScanner(DeviceScanner):
-    """This class queries a wireless router running DD-WRT firmware."""
+    """Class which queries a wireless router running DD-WRT firmware."""
 
     def __init__(self, config):
         """Initialize the DD-WRT scanner."""
@@ -66,8 +72,7 @@ class DdWrtDeviceScanner(DeviceScanner):
 
         # Test the router is accessible
         url = f"{self.protocol}://{self.host}/Status_Wireless.live.asp"
-        data = self.get_ddwrt_data(url)
-        if not data:
+        if not self.get_ddwrt_data(url):
             raise ConnectionError("Cannot connect to DD-Wrt router")
 
     def scan_devices(self):
@@ -81,14 +86,11 @@ class DdWrtDeviceScanner(DeviceScanner):
         # If not initialised and not already scanned and not found.
         if device not in self.mac2name:
             url = f"{self.protocol}://{self.host}/Status_Lan.live.asp"
-            data = self.get_ddwrt_data(url)
 
-            if not data:
+            if not (data := self.get_ddwrt_data(url)):
                 return None
 
-            dhcp_leases = data.get("dhcp_leases", None)
-
-            if not dhcp_leases:
+            if not (dhcp_leases := data.get("dhcp_leases")):
                 return None
 
             # Remove leading and trailing quotes and spaces
@@ -96,7 +98,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             elements = cleaned_str.split(",")
             num_clients = int(len(elements) / 5)
             self.mac2name = {}
-            for idx in range(0, num_clients):
+            for idx in range(num_clients):
                 # The data is a single array
                 # every 5 elements represents one host, the MAC
                 # is the third element and the name is the first.
@@ -112,21 +114,20 @@ class DdWrtDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Checking ARP")
+        _LOGGER.debug("Checking ARP")
 
         endpoint = "Wireless" if self.wireless_only else "Lan"
         url = f"{self.protocol}://{self.host}/Status_{endpoint}.live.asp"
-        data = self.get_ddwrt_data(url)
 
-        if not data:
+        if not (data := self.get_ddwrt_data(url)):
             return False
 
         self.last_results = []
 
         if self.wireless_only:
-            active_clients = data.get("active_wireless", None)
+            active_clients = data.get("active_wireless")
         else:
-            active_clients = data.get("arp_table", None)
+            active_clients = data.get("arp_table")
         if not active_clients:
             return False
 
@@ -151,16 +152,17 @@ class DdWrtDeviceScanner(DeviceScanner):
             )
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
-            return
-        if response.status_code == 200:
+            return None
+        if response.status_code == HTTPStatus.OK:
             return _parse_ddwrt_response(response.text)
-        if response.status_code == 401:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             # Authentication error
             _LOGGER.exception(
                 "Failed to authenticate, check your username and password"
             )
-            return
+            return None
         _LOGGER.error("Invalid response from DD-WRT: %s", response)
+        return None
 
 
 def _parse_ddwrt_response(data_str):

@@ -1,0 +1,38 @@
+# Describes the format for available Flo services
+
+set_sleep_mode:
+  target:
+    entity:
+      integration: flo
+      domain: switch
+  fields:
+    sleep_minutes:
+      default: true
+      selector:
+        select:
+          options:
+            - "120"
+            - "1440"
+            - "4320"
+    revert_to_mode:
+      default: true
+      selector:
+        select:
+          options:
+            - "away"
+            - "home"
+set_away_mode:
+  target:
+    entity:
+      integration: flo
+      domain: switch
+set_home_mode:
+  target:
+    entity:
+      integration: flo
+      domain: switch
+run_health_test:
+  target:
+    entity:
+      integration: flo
+      domain: switch

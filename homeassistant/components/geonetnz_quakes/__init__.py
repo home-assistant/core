@@ -1,28 +1,27 @@
 """The GeoNet NZ Quakes integration."""
-import asyncio
+
 from datetime import timedelta
 import logging
 
 from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_MILES,
+    UnitOfLength,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.unit_conversion import DistanceConverter
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .config_flow import configured_instances
 from .const import (
     CONF_MINIMUM_MAGNITUDE,
     CONF_MMI,
@@ -32,12 +31,7 @@ from .const import (
     DEFAULT_RADIUS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    FEED,
     PLATFORMS,
-    SIGNAL_DELETE_ENTITY,
-    SIGNAL_NEW_GEOLOCATION,
-    SIGNAL_STATUS,
-    SIGNAL_UPDATE_ENTITY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,15 +40,15 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_LATITUDE): cv.latitude,
-                vol.Optional(CONF_LONGITUDE): cv.longitude,
+                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
+                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
                 vol.Optional(CONF_MMI, default=DEFAULT_MMI): vol.All(
                     vol.Coerce(int), vol.Range(min=-1, max=8)
                 ),
                 vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
                 vol.Optional(
                     CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
-                ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+                ): cv.positive_float,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
@@ -64,22 +58,19 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+type GeonetnzQuakesConfigEntry = ConfigEntry[GeonetnzQuakesFeedEntityManager]
 
-async def async_setup(hass, config):
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the GeoNet NZ Quakes component."""
     if DOMAIN not in config:
         return True
 
     conf = config[DOMAIN]
-
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
     mmi = conf[CONF_MMI]
     scan_interval = conf[CONF_SCAN_INTERVAL]
-
-    identifier = f"{latitude}, {longitude}"
-    if identifier in configured_instances(hass):
-        return True
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -99,42 +90,35 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: GeonetnzQuakesConfigEntry
+) -> bool:
     """Set up the GeoNet NZ Quakes component as config entry."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    if FEED not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][FEED] = {}
-
     radius = config_entry.data[CONF_RADIUS]
-    unit_system = config_entry.data[CONF_UNIT_SYSTEM]
-    if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-        radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
+    if hass.config.units is US_CUSTOMARY_SYSTEM:
+        radius = DistanceConverter.convert(
+            radius, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+        )
     # Create feed entity manager for all platforms.
-    manager = GeonetnzQuakesFeedEntityManager(hass, config_entry, radius, unit_system)
-    hass.data[DOMAIN][FEED][config_entry.entry_id] = manager
+    manager = GeonetnzQuakesFeedEntityManager(hass, config_entry, radius)
+    config_entry.runtime_data = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(
+    hass: HomeAssistant, entry: GeonetnzQuakesConfigEntry
+) -> bool:
     """Unload an GeoNet NZ Quakes component config entry."""
-    manager = hass.data[DOMAIN][FEED].pop(config_entry.entry_id)
-    await manager.async_stop()
-    await asyncio.wait(
-        [
-            hass.config_entries.async_forward_entry_unload(config_entry, domain)
-            for domain in PLATFORMS
-        ]
-    )
-    return True
+    await entry.runtime_data.async_stop()
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class GeonetnzQuakesFeedEntityManager:
     """Feed Entity Manager for GeoNet NZ Quakes feed."""
 
-    def __init__(self, hass, config_entry, radius_in_km, unit_system):
+    def __init__(self, hass, config_entry, radius_in_km):
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         self._config_entry = config_entry
@@ -157,7 +141,6 @@ class GeonetnzQuakesFeedEntityManager:
         )
         self._config_entry_id = config_entry.entry_id
         self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
-        self._unit_system = unit_system
         self._track_time_remove_callback = None
         self._status_info = None
         self.listeners = []
@@ -165,12 +148,9 @@ class GeonetnzQuakesFeedEntityManager:
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
 
-        for domain in PLATFORMS:
-            self._hass.async_create_task(
-                self._hass.config_entries.async_forward_entry_setup(
-                    self._config_entry, domain
-                )
-            )
+        await self._hass.config_entries.async_forward_entry_setups(
+            self._config_entry, PLATFORMS
+        )
 
         async def update(event_time):
             """Update."""
@@ -200,7 +180,7 @@ class GeonetnzQuakesFeedEntityManager:
     @callback
     def async_event_new_entity(self):
         """Return manager specific event to signal new entity."""
-        return SIGNAL_NEW_GEOLOCATION.format(self._config_entry_id)
+        return f"geonetnz_quakes_new_geolocation_{self._config_entry_id}"
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
@@ -216,20 +196,22 @@ class GeonetnzQuakesFeedEntityManager:
             self._hass,
             self.async_event_new_entity(),
             self,
+            self._config_entry.unique_id,
             external_id,
-            self._unit_system,
         )
 
     async def _update_entity(self, external_id):
         """Update entity."""
-        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, f"geonetnz_quakes_update_{external_id}")
 
     async def _remove_entity(self, external_id):
         """Remove entity."""
-        async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, f"geonetnz_quakes_delete_{external_id}")
 
     async def _status_update(self, status_info):
         """Propagate status update."""
         _LOGGER.debug("Status update received: %s", status_info)
         self._status_info = status_info
-        async_dispatcher_send(self._hass, SIGNAL_STATUS.format(self._config_entry_id))
+        async_dispatcher_send(
+            self._hass, f"geonetnz_quakes_status_{self._config_entry_id}"
+        )

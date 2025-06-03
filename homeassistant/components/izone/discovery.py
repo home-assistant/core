@@ -4,10 +4,9 @@ import logging
 
 import pizone
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     DATA_DISCOVERY_SERVICE,
@@ -24,11 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 class DiscoveryService(pizone.Listener):
     """Discovery data and interfacing with pizone library."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialise discovery service."""
         super().__init__()
         self.hass = hass
-        self.pi_disco = None
+        self.pi_disco: pizone.DiscoveryService | None = None
 
     # Listener interface
     def controller_discovered(self, ctrl: pizone.Controller) -> None:
@@ -44,20 +43,20 @@ class DiscoveryService(pizone.Listener):
         async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_RECONNECTED, ctrl)
 
     def controller_update(self, ctrl: pizone.Controller) -> None:
-        """System update message is recieved from the controller."""
+        """System update message is received from the controller."""
         async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_UPDATE, ctrl)
 
     def zone_update(self, ctrl: pizone.Controller, zone: pizone.Zone) -> None:
-        """Zone update message is recieved from the controller."""
+        """Zone update message is received from the controller."""
         async_dispatcher_send(self.hass, DISPATCH_ZONE_UPDATE, ctrl, zone)
 
 
-async def async_start_discovery_service(hass: HomeAssistantType):
+async def async_start_discovery_service(hass: HomeAssistant):
     """Set up the pizone internal discovery."""
-    disco = hass.data.get(DATA_DISCOVERY_SERVICE)
-    if disco:
+    if disco := hass.data.get(DATA_DISCOVERY_SERVICE):
         # Already started
         return disco
+    _LOGGER.debug("Starting iZone Discovery Service")
 
     # discovery local services
     disco = DiscoveryService(hass)
@@ -65,24 +64,18 @@ async def async_start_discovery_service(hass: HomeAssistantType):
 
     # Start the pizone discovery service, disco is the listener
     session = aiohttp_client.async_get_clientsession(hass)
-    loop = hass.loop
-
-    disco.pi_disco = pizone.discovery(disco, loop=loop, session=session)
+    disco.pi_disco = pizone.discovery(disco, session=session)
     await disco.pi_disco.start_discovery()
-
-    async def shutdown_event(event):
-        await async_stop_discovery_service(hass)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_event)
 
     return disco
 
 
-async def async_stop_discovery_service(hass: HomeAssistantType):
+async def async_stop_discovery_service(hass: HomeAssistant):
     """Stop the discovery service."""
-    disco = hass.data.get(DATA_DISCOVERY_SERVICE)
-    if not disco:
+    if not (disco := hass.data.get(DATA_DISCOVERY_SERVICE)):
         return
 
     await disco.pi_disco.close()
     del hass.data[DATA_DISCOVERY_SERVICE]
+
+    _LOGGER.debug("Stopped iZone Discovery Service")

@@ -1,0 +1,10 @@
+{
+  "domain": "smarttub",
+  "name": "SmartTub",
+  "codeowners": ["@mdz"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/smarttub",
+  "iot_class": "cloud_polling",
+  "loggers": ["smarttub"],
+  "requirements": ["python-smarttub==0.0.39"]
+}

@@ -1,27 +1,47 @@
 """Support for esphome sensors."""
-import logging
+
+from __future__ import annotations
+
+from datetime import date, datetime
 import math
-from typing import Optional
 
-from aioesphomeapi import SensorInfo, SensorState, TextSensorInfo, TextSensorState
+from aioesphomeapi import (
+    EntityInfo,
+    SensorInfo,
+    SensorState,
+    SensorStateClass as EsphomeSensorStateClass,
+    TextSensorInfo,
+    TextSensorState,
+)
+from aioesphomeapi.model import LastResetType
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
-from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import EsphomeEntity, platform_async_setup_entry
+from .entry_data import ESPHomeConfigEntry
+from .enum_mapper import EsphomeEnumMapper
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up esphome sensors based on a config entry."""
     await platform_async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="sensor",
         info_type=SensorInfo,
         entity_type=EsphomeSensor,
         state_type=SensorState,
@@ -30,74 +50,89 @@ async def async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="text_sensor",
         info_type=TextSensorInfo,
         entity_type=EsphomeTextSensor,
         state_type=TextSensorState,
     )
 
 
-# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# pylint: disable=invalid-overridden-method
+_STATE_CLASSES: EsphomeEnumMapper[EsphomeSensorStateClass, SensorStateClass | None] = (
+    EsphomeEnumMapper(
+        {
+            EsphomeSensorStateClass.NONE: None,
+            EsphomeSensorStateClass.MEASUREMENT: SensorStateClass.MEASUREMENT,
+            EsphomeSensorStateClass.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
+            EsphomeSensorStateClass.TOTAL: SensorStateClass.TOTAL,
+        }
+    )
+)
 
 
-class EsphomeSensor(EsphomeEntity):
+class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     """A sensor implementation for esphome."""
 
-    @property
-    def _static_info(self) -> SensorInfo:
-        return super()._static_info
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        static_info = self._static_info
+        self._attr_force_update = static_info.force_update
+        # protobuf doesn't support nullable strings so we need to check
+        # if the string is empty
+        if unit_of_measurement := static_info.unit_of_measurement:
+            self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_device_class = try_parse_enum(
+            SensorDeviceClass, static_info.device_class
+        )
+        if not (state_class := static_info.state_class):
+            return
+        if (
+            state_class == EsphomeSensorStateClass.MEASUREMENT
+            and static_info.legacy_last_reset_type == LastResetType.AUTO
+        ):
+            # Legacy, legacy_last_reset_type auto was the equivalent to the
+            # TOTAL_INCREASING state class
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        else:
+            self._attr_state_class = _STATE_CLASSES.from_esphome(state_class)
 
     @property
-    def _state(self) -> Optional[SensorState]:
-        return super()._state
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._static_info.icon
-
-    @property
-    def force_update(self) -> bool:
-        """Return if this sensor should force a state update."""
-        return self._static_info.force_update
-
-    @esphome_state_property
-    def state(self) -> Optional[str]:
+    def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
-        if math.isnan(self._state.state):
+        if not self._has_state or (state := self._state).missing_state:
             return None
-        if self._state.missing_state:
+        state_float = state.state
+        if not math.isfinite(state_float):
             return None
-        return "{:.{prec}f}".format(
-            self._state.state, prec=self._static_info.accuracy_decimals
+        if self.device_class is SensorDeviceClass.TIMESTAMP:
+            return dt_util.utc_from_timestamp(state_float)
+        return f"{state_float:.{self._static_info.accuracy_decimals}f}"
+
+
+class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
+    """A text sensor implementation for ESPHome."""
+
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        static_info = self._static_info
+        self._attr_device_class = try_parse_enum(
+            SensorDeviceClass, static_info.device_class
         )
 
     @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit the value is expressed in."""
-        return self._static_info.unit_of_measurement
-
-
-class EsphomeTextSensor(EsphomeEntity):
-    """A text sensor implementation for ESPHome."""
-
-    @property
-    def _static_info(self) -> "TextSensorInfo":
-        return super()._static_info
-
-    @property
-    def _state(self) -> Optional["TextSensorState"]:
-        return super()._state
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._static_info.icon
-
-    @esphome_state_property
-    def state(self) -> Optional[str]:
+    def native_value(self) -> str | datetime | date | None:
         """Return the state of the entity."""
-        if self._state.missing_state:
+        if not self._has_state or (state := self._state).missing_state:
             return None
-        return self._state.state
+        state_str = state.state
+        device_class = self.device_class
+        if device_class is SensorDeviceClass.TIMESTAMP:
+            return dt_util.parse_datetime(state_str)
+        if (
+            device_class is SensorDeviceClass.DATE
+            and (value := dt_util.parse_datetime(state_str)) is not None
+        ):
+            return value.date()
+        return state_str

@@ -1,0 +1,104 @@
+{
+  "nodeId": 1,
+  "index": 0,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": false,
+  "isSecure": "unknown",
+  "manufacturerId": 134,
+  "productId": 90,
+  "productType": 1,
+  "firmwareVersion": "1.2",
+  "deviceConfig": {
+    "filename": "/data/db/devices/0x0086/zw090.json",
+    "isEmbedded": true,
+    "manufacturer": "AEON Labs",
+    "manufacturerId": 134,
+    "label": "ZW090",
+    "description": "Z\u2010Stick Gen5 USB Controller",
+    "devices": [
+      {
+        "productType": 1,
+        "productId": 90
+      },
+      {
+        "productType": 257,
+        "productId": 90
+      },
+      {
+        "productType": 513,
+        "productId": 90
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "associations": {},
+    "paramInformation": {
+      "_map": {}
+    },
+    "metadata": {
+      "reset": "Use this procedure only in the event that the primary controller is missing or otherwise inoperable.\n\nPress and hold the Action Button on Z-Stick for 20 seconds and then release",
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/1345/Z%20Stick%20Gen5%20manual%201.pdf"
+    }
+  },
+  "label": "ZW090",
+  "interviewAttempts": 0,
+  "endpoints": [
+    {
+      "nodeId": 1,
+      "index": 0,
+      "deviceClass": {
+        "basic": {
+          "key": 2,
+          "label": "Static Controller"
+        },
+        "generic": {
+          "key": 2,
+          "label": "Static Controller"
+        },
+        "specific": {
+          "key": 1,
+          "label": "PC Controller"
+        },
+        "mandatorySupportedCCs": [],
+        "mandatoryControlledCCs": [32]
+      },
+      "commandClasses": []
+    }
+  ],
+  "values": [],
+  "isFrequentListening": false,
+  "maxDataRate": 40000,
+  "supportedDataRates": [40000],
+  "protocolVersion": 3,
+  "deviceClass": {
+    "basic": {
+      "key": 2,
+      "label": "Static Controller"
+    },
+    "generic": {
+      "key": 2,
+      "label": "Static Controller"
+    },
+    "specific": {
+      "key": 1,
+      "label": "PC Controller"
+    },
+    "mandatorySupportedCCs": [],
+    "mandatoryControlledCCs": [32]
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0086:0x0001:0x005a:1.2",
+  "statistics": {
+    "commandsTX": 0,
+    "commandsRX": 0,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 0
+  },
+  "isControllerNode": true,
+  "keepAwake": false
+}

@@ -1,0 +1,9 @@
+{
+  "domain": "ukraine_alarm",
+  "name": "Ukraine Alarm",
+  "codeowners": ["@PaulAnnekov"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ukraine_alarm",
+  "iot_class": "cloud_polling",
+  "requirements": ["uasiren==0.0.1"]
+}

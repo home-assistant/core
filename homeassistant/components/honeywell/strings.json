@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please enter the credentials used to log in to mytotalconnectcomfort.com.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Honeywell integration needs to re-authenticate your account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Additional Honeywell config options. Temperatures are set in Fahrenheit.",
+        "data": {
+          "away_cool_temperature": "Away cool temperature",
+          "away_heat_temperature": "Away heat temperature"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "outdoor_humidity": {
+        "name": "Outdoor humidity"
+      }
+    },
+    "switch": {
+      "emergency_heat": {
+        "name": "Emergency heat"
+      }
+    },
+    "climate": {
+      "honeywell": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "hold": "Hold",
+              "away": "[%key:common::state::not_home%]",
+              "none": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::none%]"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "humidifier": {
+        "name": "[%key:component::humidifier::title%]"
+      },
+      "dehumidifier": {
+        "name": "[%key:component::humidifier::entity_component::dehumidifier::name%]"
+      }
+    }
+  },
+  "exceptions": {
+    "temp_failed": {
+      "message": "Honeywell set temperature failed"
+    },
+    "sys_mode_failed": {
+      "message": "Honeywell could not set system mode"
+    },
+    "fan_mode_failed": {
+      "message": "Honeywell could not set fan mode"
+    },
+    "away_mode_failed": {
+      "message": "Honeywell set away mode failed"
+    },
+    "temp_failed_value": {
+      "message": "Honeywell set temperature failed: invalid temperature {temperature}"
+    },
+    "temp_failed_range": {
+      "message": "Honeywell set temperature failed: temperature out of range. Mode: {mode}, Heat Temperuature: {heat}, Cool Temperature: {cool}"
+    },
+    "set_hold_failed": {
+      "message": "Honeywell could not set permanent hold"
+    },
+    "set_mode_failed": {
+      "message": "Honeywell invalid system mode returned {mode}"
+    },
+    "stop_hold_failed": {
+      "message": "Honeywell could not stop hold mode"
+    },
+    "switch_failed_off": {
+      "message": "Honeywell could turn off emergency heat mode."
+    },
+    "switch_failed_on": {
+      "message": "Honeywell could not set system mode to emergency heat mode."
+    }
+  }
+}

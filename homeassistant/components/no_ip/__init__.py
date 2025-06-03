@@ -1,17 +1,23 @@
 """Integrate with NO-IP Dynamic DNS service."""
+
 import asyncio
 import base64
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
-from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import (
+    SERVER_SOFTWARE,
+    async_get_clientsession,
+)
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +39,7 @@ NO_IP_ERRORS = {
     "911": "A fatal error on NO-IP's side such as a database outage",
 }
 
-UPDATE_URL = "https://dynupdate.noip.com/nic/update"
+UPDATE_URL = "https://dynupdate.no-ip.com/nic/update"
 HA_USER_AGENT = f"{SERVER_SOFTWARE} {EMAIL}"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -51,48 +57,55 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the NO-IP component."""
     domain = config[DOMAIN].get(CONF_DOMAIN)
     user = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
     timeout = config[DOMAIN].get(CONF_TIMEOUT)
 
-    auth_str = base64.b64encode(f"{user}:{password}".encode("utf-8"))
+    auth_str = base64.b64encode(f"{user}:{password}".encode())
 
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
 
     result = await _update_no_ip(hass, session, domain, auth_str, timeout)
 
     if not result:
         return False
 
-    async def update_domain_interval(now):
+    async def update_domain_interval(now: datetime) -> None:
         """Update the NO-IP entry."""
         await _update_no_ip(hass, session, domain, auth_str, timeout)
 
-    hass.helpers.event.async_track_time_interval(update_domain_interval, INTERVAL)
+    async_track_time_interval(hass, update_domain_interval, INTERVAL)
 
     return True
 
 
-async def _update_no_ip(hass, session, domain, auth_str, timeout):
+async def _update_no_ip(
+    hass: HomeAssistant,
+    session: aiohttp.ClientSession,
+    domain: str,
+    auth_str: bytes,
+    timeout: int,
+) -> bool:
     """Update NO-IP."""
     url = UPDATE_URL
 
     params = {"hostname": domain}
 
-    headers = {
-        AUTHORIZATION: "Basic {}".format(auth_str.decode("utf-8")),
+    headers: dict[str, str] = {
+        AUTHORIZATION: f"Basic {auth_str.decode('utf-8')}",
         USER_AGENT: HA_USER_AGENT,
     }
 
     try:
-        with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             resp = await session.get(url, params=params, headers=headers)
             body = await resp.text()
 
-            if body.startswith("good") or body.startswith("nochg"):
+            if body.startswith(("good", "nochg")):
+                _LOGGER.debug("Updating NO-IP success: %s", domain)
                 return True
 
             _LOGGER.warning(
@@ -102,7 +115,7 @@ async def _update_no_ip(hass, session, domain, auth_str, timeout):
     except aiohttp.ClientError:
         _LOGGER.warning("Can't connect to NO-IP API")
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.warning("Timeout from NO-IP API for domain: %s", domain)
 
     return False

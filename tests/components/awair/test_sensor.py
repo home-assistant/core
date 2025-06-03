@@ -1,310 +1,396 @@
 """Tests for the Awair sensor platform."""
 
-from contextlib import contextmanager
-from datetime import timedelta
-import json
-import logging
 from unittest.mock import patch
 
+from homeassistant.components.awair.const import (
+    API_CO2,
+    API_HUMID,
+    API_LUX,
+    API_PM10,
+    API_PM25,
+    API_SCORE,
+    API_SPL_A,
+    API_TEMP,
+    API_VOC,
+)
 from homeassistant.components.awair.sensor import (
-    ATTR_LAST_API_UPDATE,
-    ATTR_TIMESTAMP,
-    DEVICE_CLASS_CARBON_DIOXIDE,
-    DEVICE_CLASS_PM2_5,
-    DEVICE_CLASS_SCORE,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+    SENSOR_TYPE_SCORE,
+    SENSOR_TYPES,
+    SENSOR_TYPES_DUST,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
+    PERCENTAGE,
     STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import parse_datetime, utcnow
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
-from tests.common import async_fire_time_changed, load_fixture, mock_coro
+from . import setup_awair
+from .const import (
+    AWAIR_UUID,
+    CLOUD_CONFIG,
+    CLOUD_UNIQUE_ID,
+    LOCAL_CONFIG,
+    LOCAL_UNIQUE_ID,
+)
 
-DISCOVERY_CONFIG = {"sensor": {"platform": "awair", "access_token": "qwerty"}}
-
-MANUAL_CONFIG = {
-    "sensor": {
-        "platform": "awair",
-        "access_token": "qwerty",
-        "devices": [{"uuid": "awair_foo"}],
-    }
+SENSOR_TYPES_MAP = {
+    desc.key: desc for desc in (SENSOR_TYPE_SCORE, *SENSOR_TYPES, *SENSOR_TYPES_DUST)
 }
 
-_LOGGER = logging.getLogger(__name__)
 
-NOW = utcnow()
-AIR_DATA_FIXTURE = json.loads(load_fixture("awair_air_data_latest.json"))
-AIR_DATA_FIXTURE[0][ATTR_TIMESTAMP] = str(NOW)
-AIR_DATA_FIXTURE_UPDATED = json.loads(
-    load_fixture("awair_air_data_latest_updated.json")
-)
-AIR_DATA_FIXTURE_UPDATED[0][ATTR_TIMESTAMP] = str(NOW + timedelta(minutes=5))
-AIR_DATA_FIXTURE_EMPTY = []
+def assert_expected_properties(
+    hass: HomeAssistant,
+    entity_registry: er.RegistryEntry,
+    name: str,
+    unique_id: str,
+    state_value: str,
+    attributes: dict,
+    model="Awair",
+    model_id="awair",
+):
+    """Assert expected properties from a dict."""
+    entity_entry = entity_registry.async_get(name)
+    assert entity_entry.unique_id == unique_id
+
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert device_entry.model == model
+    assert device_entry.model_id == model_id
+
+    state = hass.states.get(name)
+    assert state
+    assert state.state == state_value
+    for attr, value in attributes.items():
+        assert state.attributes.get(attr) == value
 
 
-@contextmanager
-def alter_time(retval):
-    """Manage multiple time mocks."""
-    patch_one = patch("homeassistant.util.dt.utcnow", return_value=retval)
-    patch_two = patch("homeassistant.util.utcnow", return_value=retval)
-    patch_three = patch(
-        "homeassistant.components.awair.sensor.dt.utcnow", return_value=retval
+async def test_awair_gen1_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    gen1_data,
+) -> None:
+    """Test expected sensors on a 1st gen Awair."""
+
+    fixtures = [user, cloud_devices, gen1_data]
+    await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
+
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_score",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
+        "88",
+        {},
     )
 
-    with patch_one, patch_two, patch_three:
-        yield
-
-
-async def setup_awair(hass, config=None, data_fixture=AIR_DATA_FIXTURE):
-    """Load the Awair platform."""
-    devices_json = json.loads(load_fixture("awair_devices.json"))
-    devices_mock = mock_coro(devices_json)
-    devices_patch = patch("python_awair.AwairClient.devices", return_value=devices_mock)
-    air_data_mock = mock_coro(data_fixture)
-    air_data_patch = patch(
-        "python_awair.AwairClient.air_data_latest", return_value=air_data_mock
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_temperature",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_TEMP].unique_id_tag}",
+        "21.8",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS, "awair_index": 1.0},
     )
 
-    if config is None:
-        config = DISCOVERY_CONFIG
-
-    with devices_patch, air_data_patch, alter_time(NOW):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-        await hass.async_block_till_done()
-
-
-async def test_platform_manually_configured(hass):
-    """Test that we can manually configure devices."""
-    await setup_awair(hass, MANUAL_CONFIG)
-
-    assert len(hass.states.async_all()) == 6
-
-    # Ensure that we loaded the device with uuid 'awair_foo', not the
-    # 'awair_12345' device that we stub out for API device discovery
-    entity = hass.data[SENSOR_DOMAIN].get_entity("sensor.awair_co2")
-    assert entity.unique_id == "awair_foo_CO2"
-
-
-async def test_platform_automatically_configured(hass):
-    """Test that we can discover devices from the API."""
-    await setup_awair(hass)
-
-    assert len(hass.states.async_all()) == 6
-
-    # Ensure that we loaded the device with uuid 'awair_12345', which is
-    # the device that we stub out for API device discovery
-    entity = hass.data[SENSOR_DOMAIN].get_entity("sensor.awair_co2")
-    assert entity.unique_id == "awair_12345_CO2"
-
-
-async def test_bad_platform_setup(hass):
-    """Tests that we throw correct exceptions when setting up Awair."""
-    from python_awair import AwairClient
-
-    auth_patch = patch(
-        "python_awair.AwairClient.devices", side_effect=AwairClient.AuthError
-    )
-    rate_patch = patch(
-        "python_awair.AwairClient.devices", side_effect=AwairClient.RatelimitError
-    )
-    generic_patch = patch(
-        "python_awair.AwairClient.devices", side_effect=AwairClient.GenericError
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_humidity",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_HUMID].unique_id_tag}",
+        "41.59",
+        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, "awair_index": 0.0},
     )
 
-    with auth_patch:
-        assert await async_setup_component(hass, SENSOR_DOMAIN, DISCOVERY_CONFIG)
-        assert not hass.states.async_all()
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_carbon_dioxide",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_CO2].unique_id_tag}",
+        "654.0",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_MILLION,
+            "awair_index": 0.0,
+        },
+    )
 
-    with rate_patch:
-        assert await async_setup_component(hass, SENSOR_DOMAIN, DISCOVERY_CONFIG)
-        assert not hass.states.async_all()
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_volatile_organic_compounds_parts",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_VOC].unique_id_tag}",
+        "366",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_PARTS_PER_BILLION,
+            "awair_index": 1.0,
+        },
+    )
 
-    with generic_patch:
-        assert await async_setup_component(hass, SENSOR_DOMAIN, DISCOVERY_CONFIG)
-        assert not hass.states.async_all()
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_pm2_5",
+        # gen1 unique_id should be awair_12345-DUST, which matches old integration behavior
+        f"{AWAIR_UUID}_DUST",
+        "14.3",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            "awair_index": 1.0,
+        },
+    )
+
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_pm10",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM10].unique_id_tag}",
+        "14.3",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            "awair_index": 1.0,
+        },
+    )
+
+    # We should not have a dust sensor; it's aliased as pm2.5
+    # and pm10 sensors.
+    assert hass.states.get("sensor.living_room_dust") is None
+
+    # We should not have sound or lux sensors.
+    assert hass.states.get("sensor.living_room_sound_level") is None
+    assert hass.states.get("sensor.living_room_illuminance") is None
 
 
-async def test_awair_setup_no_data(hass):
-    """Ensure that we do not crash during setup when no data is returned."""
-    await setup_awair(hass, data_fixture=AIR_DATA_FIXTURE_EMPTY)
-    assert not hass.states.async_all()
+async def test_awair_gen2_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    gen2_data,
+) -> None:
+    """Test expected sensors on a 2nd gen Awair."""
+
+    fixtures = [user, cloud_devices, gen2_data]
+    await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
+
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_score",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
+        "97",
+        {},
+    )
+
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_pm2_5",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM25].unique_id_tag}",
+        "2.0",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            "awair_index": 0.0,
+        },
+    )
+
+    # The Awair 2nd gen reports specifically a pm2.5 sensor,
+    # and so we don't alias anything. Make sure we didn't do that.
+    assert hass.states.get("sensor.living_room_pm10") is None
 
 
-async def test_awair_misc_attributes(hass):
-    """Test that desired attributes are set."""
-    await setup_awair(hass)
+async def test_local_awair_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    local_devices,
+    local_data,
+) -> None:
+    """Test expected sensors on a local Awair."""
 
-    attributes = hass.states.get("sensor.awair_co2").attributes
-    assert attributes[ATTR_LAST_API_UPDATE] == parse_datetime(
-        AIR_DATA_FIXTURE[0][ATTR_TIMESTAMP]
+    fixtures = [local_devices, local_data]
+    await setup_awair(hass, fixtures, LOCAL_UNIQUE_ID, LOCAL_CONFIG)
+
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.mock_title_score",
+        f"{local_devices['device_uuid']}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
+        "94",
+        {},
+        model="Awair Element",
+        model_id="awair-element",
     )
 
 
-async def test_awair_score(hass):
-    """Test that we create a sensor for the 'Awair score'."""
-    await setup_awair(hass)
+async def test_awair_mint_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    mint_data,
+) -> None:
+    """Test expected sensors on an Awair mint."""
 
-    sensor = hass.states.get("sensor.awair_score")
-    assert sensor.state == "78"
-    assert sensor.attributes["device_class"] == DEVICE_CLASS_SCORE
-    assert sensor.attributes["unit_of_measurement"] == "%"
+    fixtures = [user, cloud_devices, mint_data]
+    await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
 
-
-async def test_awair_temp(hass):
-    """Test that we create a temperature sensor."""
-    await setup_awair(hass)
-
-    sensor = hass.states.get("sensor.awair_temperature")
-    assert sensor.state == "22.4"
-    assert sensor.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
-    assert sensor.attributes["unit_of_measurement"] == TEMP_CELSIUS
-
-
-async def test_awair_humid(hass):
-    """Test that we create a humidity sensor."""
-    await setup_awair(hass)
-
-    sensor = hass.states.get("sensor.awair_humidity")
-    assert sensor.state == "32.7"
-    assert sensor.attributes["device_class"] == DEVICE_CLASS_HUMIDITY
-    assert sensor.attributes["unit_of_measurement"] == "%"
-
-
-async def test_awair_co2(hass):
-    """Test that we create a CO2 sensor."""
-    await setup_awair(hass)
-
-    sensor = hass.states.get("sensor.awair_co2")
-    assert sensor.state == "612"
-    assert sensor.attributes["device_class"] == DEVICE_CLASS_CARBON_DIOXIDE
-    assert sensor.attributes["unit_of_measurement"] == "ppm"
-
-
-async def test_awair_voc(hass):
-    """Test that we create a CO2 sensor."""
-    await setup_awair(hass)
-
-    sensor = hass.states.get("sensor.awair_voc")
-    assert sensor.state == "1012"
-    assert sensor.attributes["device_class"] == DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS
-    assert sensor.attributes["unit_of_measurement"] == "ppb"
-
-
-async def test_awair_dust(hass):
-    """Test that we create a pm25 sensor."""
-    await setup_awair(hass)
-
-    # The Awair Gen1 that we mock actually returns 'DUST', but that
-    # is mapped to pm25 internally so that it shows up in Homekit
-    sensor = hass.states.get("sensor.awair_pm2_5")
-    assert sensor.state == "6.2"
-    assert sensor.attributes["device_class"] == DEVICE_CLASS_PM2_5
-    assert sensor.attributes["unit_of_measurement"] == "µg/m3"
-
-
-async def test_awair_unsupported_sensors(hass):
-    """Ensure we don't create sensors the stubbed device doesn't support."""
-    await setup_awair(hass)
-
-    # Our tests mock an Awair Gen 1 device, which should never return
-    # PM10 sensor readings. Assert that we didn't create a pm10 sensor,
-    # which could happen if someone were ever to refactor incorrectly.
-    assert hass.states.get("sensor.awair_pm10") is None
-
-
-async def test_availability(hass):
-    """Ensure that we mark the component available/unavailable correctly."""
-    await setup_awair(hass)
-
-    assert hass.states.get("sensor.awair_score").state == "78"
-
-    future = NOW + timedelta(minutes=30)
-    data_patch = patch(
-        "python_awair.AwairClient.air_data_latest",
-        return_value=mock_coro(AIR_DATA_FIXTURE),
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_score",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
+        "98",
+        {},
     )
 
-    with data_patch, alter_time(future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.awair_score").state == STATE_UNAVAILABLE
-
-    future = NOW + timedelta(hours=1)
-    fixture = AIR_DATA_FIXTURE_UPDATED
-    fixture[0][ATTR_TIMESTAMP] = str(future)
-    data_patch = patch(
-        "python_awair.AwairClient.air_data_latest", return_value=mock_coro(fixture)
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_pm2_5",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_PM25].unique_id_tag}",
+        "1.0",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            "awair_index": 0.0,
+        },
     )
 
-    with data_patch, alter_time(future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.awair_score").state == "79"
-
-    future = NOW + timedelta(minutes=90)
-    fixture = AIR_DATA_FIXTURE_EMPTY
-    data_patch = patch(
-        "python_awair.AwairClient.air_data_latest", return_value=mock_coro(fixture)
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_illuminance",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_LUX].unique_id_tag}",
+        "441.7",
+        {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
     )
 
-    with data_patch, alter_time(future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.awair_score").state == STATE_UNAVAILABLE
+    # The Mint does not have a CO2 sensor.
+    assert hass.states.get("sensor.living_room_carbon_dioxide") is None
 
 
-async def test_async_update(hass):
-    """Ensure we can update sensors."""
-    await setup_awair(hass)
+async def test_awair_glow_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    glow_data,
+) -> None:
+    """Test expected sensors on an Awair glow."""
 
-    future = NOW + timedelta(minutes=10)
-    data_patch = patch(
-        "python_awair.AwairClient.air_data_latest",
-        return_value=mock_coro(AIR_DATA_FIXTURE_UPDATED),
+    fixtures = [user, cloud_devices, glow_data]
+    await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
+
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_score",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
+        "93",
+        {},
     )
 
-    with data_patch, alter_time(future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-
-    score_sensor = hass.states.get("sensor.awair_score")
-    assert score_sensor.state == "79"
-
-    assert hass.states.get("sensor.awair_temperature").state == "23.4"
-    assert hass.states.get("sensor.awair_humidity").state == "33.7"
-    assert hass.states.get("sensor.awair_co2").state == "613"
-    assert hass.states.get("sensor.awair_voc").state == "1013"
-    assert hass.states.get("sensor.awair_pm2_5").state == "7.2"
+    # The glow does not have a particle sensor
+    assert hass.states.get("sensor.living_room_pm2_5") is None
 
 
-async def test_throttle_async_update(hass):
-    """Ensure we throttle updates."""
-    await setup_awair(hass)
+async def test_awair_omni_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    omni_data,
+) -> None:
+    """Test expected sensors on an Awair omni."""
 
-    future = NOW + timedelta(minutes=1)
-    data_patch = patch(
-        "python_awair.AwairClient.air_data_latest",
-        return_value=mock_coro(AIR_DATA_FIXTURE_UPDATED),
+    fixtures = [user, cloud_devices, omni_data]
+    await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
+
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_score",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
+        "99",
+        {},
     )
 
-    with data_patch, alter_time(future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_sound_level",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SPL_A].unique_id_tag}",
+        "47.0",
+        {ATTR_UNIT_OF_MEASUREMENT: "dBA"},
+    )
 
-    assert hass.states.get("sensor.awair_score").state == "78"
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_illuminance",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_LUX].unique_id_tag}",
+        "804.9",
+        {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
+    )
 
-    future = NOW + timedelta(minutes=15)
-    with data_patch, alter_time(future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.awair_score").state == "79"
+async def test_awair_offline(
+    hass: HomeAssistant, user, cloud_devices, awair_offline
+) -> None:
+    """Test expected behavior when an Awair is offline."""
+
+    fixtures = [user, cloud_devices, awair_offline]
+    await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
+
+    # The expected behavior is that we won't have any sensors
+    # if the device is not online when we set it up. python_awair
+    # does not make any assumptions about what sensors a device
+    # might have - they are created dynamically.
+
+    # We check for the absence of the "awair score", which every
+    # device *should* have if it's online. If we don't see it,
+    # then we probably didn't set anything up. Which is correct,
+    # in this case.
+    assert hass.states.get("sensor.living_room_score") is None
+
+
+async def test_awair_unavailable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    user,
+    cloud_devices,
+    gen1_data,
+    awair_offline,
+) -> None:
+    """Test expected behavior when an Awair becomes offline later."""
+
+    fixtures = [user, cloud_devices, gen1_data]
+    await setup_awair(hass, fixtures, CLOUD_UNIQUE_ID, CLOUD_CONFIG)
+
+    assert_expected_properties(
+        hass,
+        entity_registry,
+        "sensor.living_room_score",
+        f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
+        "88",
+        {},
+    )
+
+    with patch("python_awair.AwairClient.query", side_effect=awair_offline):
+        await async_update_entity(hass, "sensor.living_room_score")
+        assert_expected_properties(
+            hass,
+            entity_registry,
+            "sensor.living_room_score",
+            f"{AWAIR_UUID}_{SENSOR_TYPES_MAP[API_SCORE].unique_id_tag}",
+            STATE_UNAVAILABLE,
+            {},
+        )

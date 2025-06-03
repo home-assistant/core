@@ -1,81 +1,75 @@
 """The tests for the Logentries component."""
 
-import unittest
-from unittest import mock
+from unittest.mock import ANY, call, patch
 
-import homeassistant.components.logentries as logentries
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
-from homeassistant.setup import setup_component
+import pytest
 
-from tests.common import get_test_home_assistant
+from homeassistant.components import logentries
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
-class TestLogentries(unittest.TestCase):
-    """Test the Logentries component."""
+async def test_setup_config_full(hass: HomeAssistant) -> None:
+    """Test setup with all data."""
+    config = {"logentries": {"token": "secret"}}
+    assert await async_setup_component(hass, logentries.DOMAIN, config)
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    with patch("homeassistant.components.logentries.requests.post") as mock_post:
+        hass.states.async_set("fake.entity", STATE_ON)
+        await hass.async_block_till_done()
+        assert len(mock_post.mock_calls) == 1
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
 
-    def test_setup_config_full(self):
-        """Test setup with all data."""
-        config = {"logentries": {"token": "secret"}}
-        self.hass.bus.listen = mock.MagicMock()
-        assert setup_component(self.hass, logentries.DOMAIN, config)
-        assert self.hass.bus.listen.called
-        assert EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[0][0][0]
+async def test_setup_config_defaults(hass: HomeAssistant) -> None:
+    """Test setup with defaults."""
+    config = {"logentries": {"token": "token"}}
+    assert await async_setup_component(hass, logentries.DOMAIN, config)
 
-    def test_setup_config_defaults(self):
-        """Test setup with defaults."""
-        config = {"logentries": {"token": "token"}}
-        self.hass.bus.listen = mock.MagicMock()
-        assert setup_component(self.hass, logentries.DOMAIN, config)
-        assert self.hass.bus.listen.called
-        assert EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[0][0][0]
+    with patch("homeassistant.components.logentries.requests.post") as mock_post:
+        hass.states.async_set("fake.entity", STATE_ON)
+        await hass.async_block_till_done()
+        assert len(mock_post.mock_calls) == 1
 
-    def _setup(self, mock_requests):
-        """Test the setup."""
-        self.mock_post = mock_requests.post
-        self.mock_request_exception = Exception
-        mock_requests.exceptions.RequestException = self.mock_request_exception
-        config = {"logentries": {"token": "token"}}
-        self.hass.bus.listen = mock.MagicMock()
-        setup_component(self.hass, logentries.DOMAIN, config)
-        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
-    @mock.patch.object(logentries, "requests")
-    @mock.patch("json.dumps")
-    def test_event_listener(self, mock_dump, mock_requests):
-        """Test event listener."""
-        mock_dump.side_effect = lambda x: x
-        self._setup(mock_requests)
+@pytest.fixture
+def mock_dump():
+    """Mock json dumps."""
+    with patch("json.dumps") as mock_dump:
+        yield mock_dump
 
-        valid = {"1": 1, "1.0": 1.0, STATE_ON: 1, STATE_OFF: 0, "foo": "foo"}
-        for in_, out in valid.items():
-            state = mock.MagicMock(
-                state=in_, domain="fake", object_id="entity", attributes={}
-            )
-            event = mock.MagicMock(data={"new_state": state}, time_fired=12345)
-            body = [
+
+@pytest.fixture
+def mock_requests():
+    """Mock requests."""
+    with patch.object(logentries, "requests") as mock_requests:
+        yield mock_requests
+
+
+async def test_event_listener(hass: HomeAssistant, mock_dump, mock_requests) -> None:
+    """Test event listener."""
+    mock_dump.side_effect = lambda x: x
+    mock_post = mock_requests.post
+    mock_requests.exceptions.RequestException = Exception
+    config = {"logentries": {"token": "token"}}
+    assert await async_setup_component(hass, logentries.DOMAIN, config)
+
+    valid = {"1": 1, "1.0": 1.0, STATE_ON: 1, STATE_OFF: 0, "foo": "foo"}
+    for in_, out in valid.items():
+        payload = {
+            "host": "https://webhook.logentries.com/noformat/logs/token",
+            "event": [
                 {
                     "domain": "fake",
                     "entity_id": "entity",
                     "attributes": {},
-                    "time": "12345",
+                    "time": ANY,
                     "value": out,
                 }
-            ]
-            payload = {
-                "host": "https://webhook.logentries.com/noformat/logs/token",
-                "event": body,
-            }
-            self.handler_method(event)
-            assert self.mock_post.call_count == 1
-            assert self.mock_post.call_args == mock.call(
-                payload["host"], data=payload, timeout=10
-            )
-            self.mock_post.reset_mock()
+            ],
+        }
+        hass.states.async_set("fake.entity", in_)
+        await hass.async_block_till_done()
+        assert mock_post.call_count == 1
+        assert mock_post.call_args == call(payload["host"], data=payload, timeout=10)
+        mock_post.reset_mock()

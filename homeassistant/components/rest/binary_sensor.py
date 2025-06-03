@@ -1,144 +1,181 @@
 """Support for RESTful binary sensors."""
-import logging
 
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+from __future__ import annotations
+
+import logging
+import ssl
+from xml.parsers.expat import ExpatError
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
-    CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
-    CONF_HEADERS,
-    CONF_METHOD,
+    CONF_FORCE_UPDATE,
+    CONF_ICON,
     CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PAYLOAD,
     CONF_RESOURCE,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
+    CONF_RESOURCE_TEMPLATE,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    CONF_VERIFY_SSL,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
+    ManualTriggerEntity,
+    ValueTemplate,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .sensor import RestData
+from . import async_get_config_and_coordinator, create_rest_data_from_config
+from .const import DEFAULT_BINARY_SENSOR_NAME
+from .data import RestData
+from .entity import RestEntity
+from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_METHOD = "GET"
-DEFAULT_NAME = "REST Binary Sensor"
-DEFAULT_VERIFY_SSL = True
-DEFAULT_TIMEOUT = 10
+PLATFORM_SCHEMA = vol.All(
+    BINARY_SENSOR_PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **BINARY_SENSOR_SCHEMA}),
+    cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE),
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(CONF_AUTHENTICATION): vol.In(
-            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
-        ),
-        vol.Optional(CONF_HEADERS): {cv.string: cv.string},
-        vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(["POST", "GET"]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PAYLOAD): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
+TRIGGER_ENTITY_OPTIONS = (
+    CONF_AVAILABILITY,
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_PICTURE,
+    CONF_UNIQUE_ID,
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the REST binary sensor."""
-    name = config.get(CONF_NAME)
-    resource = config.get(CONF_RESOURCE)
-    method = config.get(CONF_METHOD)
-    payload = config.get(CONF_PAYLOAD)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
-    timeout = config.get(CONF_TIMEOUT)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    headers = config.get(CONF_HEADERS)
-    device_class = config.get(CONF_DEVICE_CLASS)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
-        value_template.hass = hass
-
-    if username and password:
-        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = HTTPDigestAuth(username, password)
-        else:
-            auth = HTTPBasicAuth(username, password)
+    # Must update the sensor now (including fetching the rest resource) to
+    # ensure it's updating its state.
+    if discovery_info is not None:
+        conf, coordinator, rest = await async_get_config_and_coordinator(
+            hass, BINARY_SENSOR_DOMAIN, discovery_info
+        )
     else:
-        auth = None
+        conf = config
+        coordinator = None
+        rest = create_rest_data_from_config(hass, conf)
+        await rest.async_update(log_errors=False)
 
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
-    rest.update()
     if rest.data is None:
+        if rest.last_exception:
+            if isinstance(rest.last_exception, ssl.SSLError):
+                _LOGGER.error(
+                    "Error connecting %s failed with %s",
+                    rest.url,
+                    rest.last_exception,
+                )
+                return
+            raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
-    # No need to update the sensor now because it will determine its state
-    # based in the rest resource that has just been retrieved.
-    add_entities([RestBinarySensor(hass, rest, name, device_class, value_template)])
+    name = conf.get(CONF_NAME) or Template(DEFAULT_BINARY_SENSOR_NAME, hass)
+
+    trigger_entity_config = {CONF_NAME: name}
+
+    for key in TRIGGER_ENTITY_OPTIONS:
+        if key not in conf:
+            continue
+        trigger_entity_config[key] = conf[key]
+
+    async_add_entities(
+        [
+            RestBinarySensor(
+                hass,
+                coordinator,
+                rest,
+                conf,
+                trigger_entity_config,
+            )
+        ],
+    )
 
 
-class RestBinarySensor(BinarySensorDevice):
+class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
     """Representation of a REST binary sensor."""
 
-    def __init__(self, hass, rest, name, device_class, value_template):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: DataUpdateCoordinator[None] | None,
+        rest: RestData,
+        config: ConfigType,
+        trigger_entity_config: ConfigType,
+    ) -> None:
         """Initialize a REST binary sensor."""
-        self._hass = hass
-        self.rest = rest
-        self._name = name
-        self._device_class = device_class
-        self._state = False
+        ManualTriggerEntity.__init__(self, hass, trigger_entity_config)
+        RestEntity.__init__(
+            self,
+            coordinator,
+            rest,
+            config.get(CONF_RESOURCE_TEMPLATE),
+            config[CONF_FORCE_UPDATE],
+        )
         self._previous_data = None
-        self._value_template = value_template
+        self._value_template: ValueTemplate | None = config.get(CONF_VALUE_TEMPLATE)
 
     @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return self._name
+    def available(self) -> bool:
+        """Return if entity is available."""
+        available1 = RestEntity.available.fget(self)  # type: ignore[attr-defined]
+        available2 = ManualTriggerEntity.available.fget(self)  # type: ignore[attr-defined]
+        return bool(available1 and available2)
 
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
-
-    @property
-    def available(self):
-        """Return the availability of this sensor."""
-        return self.rest.data is not None
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
+    def _update_from_rest_data(self) -> None:
+        """Update state from the rest data."""
         if self.rest.data is None:
-            return False
+            self._attr_is_on = False
+            return
 
-        response = self.rest.data
+        try:
+            response = self.rest.data_without_xml()
+        except ExpatError as err:
+            self._attr_is_on = False
+            _LOGGER.warning(
+                "REST xml result could not be parsed and converted to JSON: %s", err
+            )
+            return
 
-        if self._value_template is not None:
-            response = self._value_template.async_render_with_possible_json_value(
-                self.rest.data, False
+        variables = self._template_variables_with_value(response)
+        if not self._render_availability_template(variables):
+            self.async_write_ha_state()
+            return
+
+        if response is not None and self._value_template is not None:
+            response = self._value_template.async_render_as_value_template(
+                self.entity_id, variables, False
             )
 
         try:
-            return bool(int(response))
+            self._attr_is_on = bool(int(str(response)))
         except ValueError:
-            return {"true": True, "on": True, "open": True, "yes": True}.get(
-                response.lower(), False
-            )
+            self._attr_is_on = {
+                "true": True,
+                "on": True,
+                "open": True,
+                "yes": True,
+            }.get(str(response).lower(), False)
 
-    def update(self):
-        """Get the latest data from REST API and updates the state."""
-        self.rest.update()
+        self._process_manual_data(variables)
+        self.async_write_ha_state()

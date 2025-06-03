@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<nowPlaying deviceID="020000000001" source="AUX">
+    <ContentItem source="AUX" sourceAccount="AUX" isPresetable="true">
+        <itemName>AUX IN</itemName>
+    </ContentItem>
+    <playStatus>PLAY_STATE</playStatus>
+</nowPlaying>

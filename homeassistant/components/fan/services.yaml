@@ -1,55 +1,123 @@
 # Describes the format for available fan services
-
-set_speed:
-  description: Sets fan speed.
+set_preset_mode:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.PRESET_MODE
   fields:
-    entity_id:
-      description: Name(s) of the entities to set
-      example: 'fan.living_room'
-    speed:
-      description: Speed setting
-      example: 'low'
+    preset_mode:
+      required: true
+      example: "auto"
+      selector:
+        text:
+
+set_percentage:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.SET_SPEED
+  fields:
+    percentage:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
 
 turn_on:
-  description: Turns fan on.
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.TURN_ON
   fields:
-    entity_id:
-      description: Names(s) of the entities to turn on
-      example: 'fan.living_room'
-    speed:
-      description: Speed setting
-      example: 'high'
+    percentage:
+      filter:
+        supported_features:
+          - fan.FanEntityFeature.SET_SPEED
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    preset_mode:
+      example: "auto"
+      filter:
+        supported_features:
+          - fan.FanEntityFeature.PRESET_MODE
+      selector:
+        text:
 
 turn_off:
-  description: Turns fan off.
-  fields:
-    entity_id:
-      description: Names(s) of the entities to turn off
-      example: 'fan.living_room'
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.TURN_OFF
 
 oscillate:
-  description: Oscillates the fan.
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.OSCILLATE
   fields:
-    entity_id:
-      description: Name(s) of the entities to oscillate
-      example: 'fan.desk_fan'
     oscillating:
-      description: Flag to turn on/off oscillation
-      example: True
+      required: true
+      selector:
+        boolean:
 
 toggle:
-  description: Toggle the fan on/off.
-  fields:
-    entity_id:
-      description: Name(s) of the entities to toggle
-      example: 'fan.living_room'
+  target:
+    entity:
+      domain: fan
 
 set_direction:
-  description: Set the fan rotation.
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.DIRECTION
   fields:
-    entity_id:
-      description: Name(s) of the entities to toggle
-      example: 'fan.living_room'
     direction:
-      description: The direction to rotate. Either 'forward' or 'reverse'
-      example: 'forward'
+      required: true
+      selector:
+        select:
+          options:
+            - "forward"
+            - "reverse"
+          translation_key: direction
+increase_speed:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.SET_SPEED
+  fields:
+    percentage_step:
+      advanced: true
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+decrease_speed:
+  target:
+    entity:
+      domain: fan
+      supported_features:
+        - fan.FanEntityFeature.SET_SPEED
+  fields:
+    percentage_step:
+      advanced: true
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"

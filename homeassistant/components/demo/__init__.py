@@ -1,59 +1,81 @@
 """Set up the demo environment that mimics interaction with devices."""
-import asyncio
-import logging
-import time
 
-from homeassistant import bootstrap, config_entries
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
-import homeassistant.core as ha
+from __future__ import annotations
+
+import asyncio
+
+from homeassistant import config_entries, core as ha, setup
+from homeassistant.components import persistent_notification
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_START,
+    Platform,
+    UnitOfSoundPressure,
+)
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "demo"
-_LOGGER = logging.getLogger(__name__)
 
 COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
-    "air_quality",
-    "alarm_control_panel",
-    "binary_sensor",
-    "camera",
-    "climate",
-    "cover",
-    "fan",
-    "light",
-    "lock",
-    "media_player",
-    "sensor",
-    "switch",
-    "water_heater",
+    Platform.AIR_QUALITY,
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.CALENDAR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.DATE,
+    Platform.DATETIME,
+    Platform.EVENT,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.STT,
+    Platform.SWITCH,
+    Platform.TEXT,
+    Platform.TIME,
+    Platform.UPDATE,
+    Platform.VACUUM,
+    Platform.VALVE,
+    Platform.WATER_HEATER,
+    Platform.WEATHER,
 ]
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    "tts",
-    "stt",
-    "mailbox",
-    "notify",
-    "image_processing",
-    "calendar",
-    "device_tracker",
+    Platform.TTS,
+    Platform.IMAGE_PROCESSING,
+    Platform.DEVICE_TRACKER,
 ]
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-async def async_setup(hass, config):
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the demo environment."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+        )
+    )
+
     if DOMAIN not in config:
         return True
 
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
-            )
-        )
-
     # Set up demo platforms
-    for component in COMPONENTS_WITH_DEMO_PLATFORM:
-        hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(component, DOMAIN, {}, config)
-        )
+    for platform in COMPONENTS_WITH_DEMO_PLATFORM:
+        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     config.setdefault(ha.DOMAIN, {})
     config.setdefault(DOMAIN, {})
@@ -65,11 +87,11 @@ async def async_setup(hass, config):
     if not hass.config.longitude:
         hass.config.longitude = 117.22743
 
-    tasks = [bootstrap.async_setup_component(hass, "sun", config)]
+    tasks = [setup.async_setup_component(hass, "sun", config)]
 
     # Set up input select
     tasks.append(
-        bootstrap.async_setup_component(
+        setup.async_setup_component(
             hass,
             "input_select",
             {
@@ -90,7 +112,7 @@ async def async_setup(hass, config):
 
     # Set up input boolean
     tasks.append(
-        bootstrap.async_setup_component(
+        setup.async_setup_component(
             hass,
             "input_boolean",
             {
@@ -105,9 +127,25 @@ async def async_setup(hass, config):
         )
     )
 
-    # Set up input boolean
+    # Set up input button
     tasks.append(
-        bootstrap.async_setup_component(
+        setup.async_setup_component(
+            hass,
+            "input_button",
+            {
+                "input_button": {
+                    "bell": {
+                        "icon": "mdi:bell-ring-outline",
+                        "name": "Ring bell",
+                    }
+                }
+            },
+        )
+    )
+
+    # Set up input number
+    tasks.append(
+        setup.async_setup_component(
             hass,
             "input_number",
             {
@@ -117,21 +155,8 @@ async def async_setup(hass, config):
                         "min": 0,
                         "max": 10,
                         "name": "Allowed Noise",
-                        "unit_of_measurement": "dB",
+                        "unit_of_measurement": UnitOfSoundPressure.DECIBEL,
                     }
-                }
-            },
-        )
-    )
-
-    # Set up weblink
-    tasks.append(
-        bootstrap.async_setup_component(
-            hass,
-            "weblink",
-            {
-                "weblink": {
-                    "entities": [{"name": "Router", "url": "http://192.168.1.1"}]
                 }
             },
         )
@@ -143,42 +168,13 @@ async def async_setup(hass, config):
         return False
 
     # Set up example persistent notification
-    hass.components.persistent_notification.async_create(
-        "This is an example of a persistent notification.", title="Example Notification"
+    persistent_notification.async_create(
+        hass,
+        "This is an example of a persistent notification.",
+        title="Example Notification",
     )
 
-    # Set up configurator
-    configurator_ids = []
-    configurator = hass.components.configurator
-
-    def hue_configuration_callback(data):
-        """Fake callback, mark config as done."""
-        time.sleep(2)
-
-        # First time it is called, pretend it failed.
-        if len(configurator_ids) == 1:
-            configurator.notify_errors(
-                configurator_ids[0], "Failed to register, please try again."
-            )
-
-            configurator_ids.append(0)
-        else:
-            configurator.request_done(configurator_ids[0])
-
-    request_id = configurator.async_request_config(
-        "Philips Hue",
-        hue_configuration_callback,
-        description=(
-            "Press the button on the bridge to register Philips "
-            "Hue with Home Assistant."
-        ),
-        description_image="/static/images/config_philips_hue.jpg",
-        fields=[{"id": "username", "name": "Username"}],
-        submit_caption="I have pressed the button",
-    )
-    configurator_ids.append(request_id)
-
-    async def demo_start_listener(_event):
+    async def demo_start_listener(_event: Event) -> None:
         """Finish set up."""
         await finish_setup(hass, config)
 
@@ -187,20 +183,27 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set the config entry up."""
     # Set up demo platforms with config entry
-    for component in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
+    )
     return True
 
 
-async def finish_setup(hass, config):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms(
+        config_entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
+    )
+    return True
+
+
+async def finish_setup(hass: HomeAssistant, config: ConfigType) -> None:
     """Finish set up once demo platforms are set up."""
-    switches = None
-    lights = None
+    switches: list[str] | None = None
+    lights: list[str] | None = None
 
     while not switches and not lights:
         # Not all platforms might be loaded.
@@ -209,30 +212,16 @@ async def finish_setup(hass, config):
         switches = sorted(hass.states.async_entity_ids("switch"))
         lights = sorted(hass.states.async_entity_ids("light"))
 
-    # Set up history graph
-    await bootstrap.async_setup_component(
-        hass,
-        "history_graph",
-        {
-            "history_graph": {
-                "switches": {
-                    "name": "Recent Switches",
-                    "entities": switches,
-                    "hours_to_show": 1,
-                    "refresh": 60,
-                }
-            }
-        },
-    )
-
+    assert switches is not None
+    assert lights is not None
     # Set up scripts
-    await bootstrap.async_setup_component(
+    await setup.async_setup_component(
         hass,
         "script",
         {
             "script": {
                 "demo": {
-                    "alias": "Toggle {}".format(lights[0].split(".")[1]),
+                    "alias": f"Toggle {lights[0].split('.')[1]}",
                     "sequence": [
                         {
                             "service": "light.turn_off",
@@ -255,7 +244,7 @@ async def finish_setup(hass, config):
     )
 
     # Set up scenes
-    await bootstrap.async_setup_component(
+    await setup.async_setup_component(
         hass,
         "scene",
         {

@@ -1,98 +1,199 @@
 """Support for SimpliSafe alarm control panels."""
-import logging
-import re
 
-from simplipy.entity import EntityTypes
+from __future__ import annotations
+
+from simplipy.errors import SimplipyError
 from simplipy.system import SystemStates
-from simplipy.system.v3 import VOLUME_HIGH, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_OFF
+from simplipy.system.v3 import SystemV3
+from simplipy.websocket import (
+    EVENT_ALARM_CANCELED,
+    EVENT_ALARM_TRIGGERED,
+    EVENT_ARMED_AWAY,
+    EVENT_ARMED_AWAY_BY_KEYPAD,
+    EVENT_ARMED_AWAY_BY_REMOTE,
+    EVENT_ARMED_HOME,
+    EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
+    EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
+    EVENT_DISARMED_BY_KEYPAD,
+    EVENT_DISARMED_BY_REMOTE,
+    EVENT_ENTRY_DELAY,
+    EVENT_HOME_EXIT_DELAY,
+    EVENT_SECRET_ALERT_TRIGGERED,
+    EVENT_USER_INITIATED_TEST,
+    WebsocketEvent,
+)
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
-    FORMAT_TEXT,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import SimpliSafe
+from .const import (
+    ATTR_ALARM_DURATION,
+    ATTR_ALARM_VOLUME,
+    ATTR_CHIME_VOLUME,
+    ATTR_ENTRY_DELAY_AWAY,
+    ATTR_ENTRY_DELAY_HOME,
+    ATTR_EXIT_DELAY_AWAY,
+    ATTR_EXIT_DELAY_HOME,
+    ATTR_LIGHT,
+    ATTR_VOICE_PROMPT_VOLUME,
+    DOMAIN,
+    LOGGER,
 )
-from homeassistant.const import (
-    CONF_CODE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-)
-from homeassistant.util.dt import utc_from_timestamp
+from .entity import SimpliSafeEntity
+from .typing import SystemType
 
-from . import SimpliSafeEntity
-from .const import DATA_CLIENT, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_ALARM_ACTIVE = "alarm_active"
-ATTR_ALARM_DURATION = "alarm_duration"
-ATTR_ALARM_VOLUME = "alarm_volume"
 ATTR_BATTERY_BACKUP_POWER_LEVEL = "battery_backup_power_level"
-ATTR_CHIME_VOLUME = "chime_volume"
-ATTR_ENTRY_DELAY_AWAY = "entry_delay_away"
-ATTR_ENTRY_DELAY_HOME = "entry_delay_home"
-ATTR_EXIT_DELAY_AWAY = "exit_delay_away"
-ATTR_EXIT_DELAY_HOME = "exit_delay_home"
 ATTR_GSM_STRENGTH = "gsm_strength"
-ATTR_LAST_EVENT_INFO = "last_event_info"
-ATTR_LAST_EVENT_SENSOR_NAME = "last_event_sensor_name"
-ATTR_LAST_EVENT_SENSOR_TYPE = "last_event_sensor_type"
-ATTR_LAST_EVENT_TIMESTAMP = "last_event_timestamp"
-ATTR_LAST_EVENT_TYPE = "last_event_type"
-ATTR_LIGHT = "light"
+ATTR_PIN_NAME = "pin_name"
 ATTR_RF_JAMMING = "rf_jamming"
-ATTR_VOICE_PROMPT_VOLUME = "voice_prompt_volume"
 ATTR_WALL_POWER_LEVEL = "wall_power_level"
 ATTR_WIFI_STRENGTH = "wifi_strength"
 
-VOLUME_STRING_MAP = {
-    VOLUME_HIGH: "high",
-    VOLUME_LOW: "low",
-    VOLUME_MEDIUM: "medium",
-    VOLUME_OFF: "off",
+STATE_MAP_FROM_REST_API = {
+    SystemStates.ALARM: AlarmControlPanelState.TRIGGERED,
+    SystemStates.ALARM_COUNT: AlarmControlPanelState.PENDING,
+    SystemStates.AWAY: AlarmControlPanelState.ARMED_AWAY,
+    SystemStates.AWAY_COUNT: AlarmControlPanelState.ARMING,
+    SystemStates.ENTRY_DELAY: AlarmControlPanelState.PENDING,
+    SystemStates.EXIT_DELAY: AlarmControlPanelState.ARMING,
+    SystemStates.HOME: AlarmControlPanelState.ARMED_HOME,
+    SystemStates.HOME_COUNT: AlarmControlPanelState.ARMING,
+    SystemStates.OFF: AlarmControlPanelState.DISARMED,
+    SystemStates.TEST: AlarmControlPanelState.DISARMED,
 }
 
+STATE_MAP_FROM_WEBSOCKET_EVENT = {
+    EVENT_ALARM_CANCELED: AlarmControlPanelState.DISARMED,
+    EVENT_ALARM_TRIGGERED: AlarmControlPanelState.TRIGGERED,
+    EVENT_ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
+    EVENT_ARMED_AWAY_BY_KEYPAD: AlarmControlPanelState.ARMED_AWAY,
+    EVENT_ARMED_AWAY_BY_REMOTE: AlarmControlPanelState.ARMED_AWAY,
+    EVENT_ARMED_HOME: AlarmControlPanelState.ARMED_HOME,
+    EVENT_AWAY_EXIT_DELAY_BY_KEYPAD: AlarmControlPanelState.ARMING,
+    EVENT_AWAY_EXIT_DELAY_BY_REMOTE: AlarmControlPanelState.ARMING,
+    EVENT_DISARMED_BY_KEYPAD: AlarmControlPanelState.DISARMED,
+    EVENT_DISARMED_BY_REMOTE: AlarmControlPanelState.DISARMED,
+    EVENT_ENTRY_DELAY: AlarmControlPanelState.PENDING,
+    EVENT_HOME_EXIT_DELAY: AlarmControlPanelState.ARMING,
+    EVENT_SECRET_ALERT_TRIGGERED: AlarmControlPanelState.TRIGGERED,
+    EVENT_USER_INITIATED_TEST: AlarmControlPanelState.DISARMED,
+}
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up a SimpliSafe alarm control panel based on existing config."""
-    pass
+WEBSOCKET_EVENTS_TO_LISTEN_FOR = (
+    EVENT_ALARM_CANCELED,
+    EVENT_ALARM_TRIGGERED,
+    EVENT_ARMED_AWAY,
+    EVENT_ARMED_AWAY_BY_KEYPAD,
+    EVENT_ARMED_AWAY_BY_REMOTE,
+    EVENT_ARMED_HOME,
+    EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
+    EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
+    EVENT_DISARMED_BY_KEYPAD,
+    EVENT_DISARMED_BY_REMOTE,
+    EVENT_HOME_EXIT_DELAY,
+)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up a SimpliSafe alarm control panel based on a config entry."""
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    simplisafe = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            SimpliSafeAlarm(simplisafe, system, entry.data.get(CONF_CODE))
-            for system in simplisafe.systems.values()
-        ],
+        [SimpliSafeAlarm(simplisafe, system) for system in simplisafe.systems.values()],
         True,
     )
 
 
-class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
+class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     """Representation of a SimpliSafe alarm."""
 
-    def __init__(self, simplisafe, system, code):
-        """Initialize the SimpliSafe alarm."""
-        super().__init__(system, "Alarm Control Panel")
-        self._changed_by = None
-        self._code = code
-        self._simplisafe = simplisafe
-        self._state = None
+    _attr_code_arm_required = False
+    _attr_name = None
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
 
-        self._attrs.update({ATTR_ALARM_ACTIVE: self._system.alarm_going_off})
-        if self._system.version == 3:
-            self._attrs.update(
+    def __init__(self, simplisafe: SimpliSafe, system: SystemType) -> None:
+        """Initialize the SimpliSafe alarm."""
+        super().__init__(
+            simplisafe,
+            system,
+            additional_websocket_events=WEBSOCKET_EVENTS_TO_LISTEN_FOR,
+        )
+
+        self._last_event = None
+        self._set_state_from_system_data()
+
+    @callback
+    def _set_state_from_system_data(self) -> None:
+        """Set the state based on the latest REST API data."""
+        if self._system.alarm_going_off:
+            self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
+        elif state := STATE_MAP_FROM_REST_API.get(self._system.state):
+            self._attr_alarm_state = state
+            self.async_reset_error_count()
+        else:
+            LOGGER.warning("Unexpected system state (REST API): %s", self._system.state)
+            self.async_increment_error_count()
+
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
+        """Send disarm command."""
+        try:
+            await self._system.async_set_off()
+        except SimplipyError as err:
+            raise HomeAssistantError(
+                f'Error while disarming "{self._system.system_id}": {err}'
+            ) from err
+
+        self._attr_alarm_state = AlarmControlPanelState.DISARMED
+        self.async_write_ha_state()
+
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
+        """Send arm home command."""
+        try:
+            await self._system.async_set_home()
+        except SimplipyError as err:
+            raise HomeAssistantError(
+                f'Error while arming (home) "{self._system.system_id}": {err}'
+            ) from err
+
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
+        self.async_write_ha_state()
+
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
+        """Send arm away command."""
+        try:
+            await self._system.async_set_away()
+        except SimplipyError as err:
+            raise HomeAssistantError(
+                f'Error while arming (away) "{self._system.system_id}": {err}'
+            ) from err
+
+        self._attr_alarm_state = AlarmControlPanelState.ARMING
+        self.async_write_ha_state()
+
+    @callback
+    def async_update_from_rest_api(self) -> None:
+        """Update the entity with the provided REST API data."""
+        if isinstance(self._system, SystemV3):
+            self._attr_extra_state_attributes.update(
                 {
                     ATTR_ALARM_DURATION: self._system.alarm_duration,
-                    ATTR_ALARM_VOLUME: VOLUME_STRING_MAP[self._system.alarm_volume],
-                    ATTR_BATTERY_BACKUP_POWER_LEVEL: self._system.battery_backup_power_level,
-                    ATTR_CHIME_VOLUME: VOLUME_STRING_MAP[self._system.chime_volume],
+                    ATTR_BATTERY_BACKUP_POWER_LEVEL: (
+                        self._system.battery_backup_power_level
+                    ),
                     ATTR_ENTRY_DELAY_AWAY: self._system.entry_delay_away,
                     ATTR_ENTRY_DELAY_HOME: self._system.entry_delay_home,
                     ATTR_EXIT_DELAY_AWAY: self._system.exit_delay_away,
@@ -100,113 +201,32 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
                     ATTR_GSM_STRENGTH: self._system.gsm_strength,
                     ATTR_LIGHT: self._system.light,
                     ATTR_RF_JAMMING: self._system.rf_jamming,
-                    ATTR_VOICE_PROMPT_VOLUME: VOLUME_STRING_MAP[
-                        self._system.voice_prompt_volume
-                    ],
                     ATTR_WALL_POWER_LEVEL: self._system.wall_power_level,
                     ATTR_WIFI_STRENGTH: self._system.wifi_strength,
                 }
             )
 
-    @property
-    def changed_by(self):
-        """Return info about who changed the alarm last."""
-        return self._changed_by
+            for key, volume_prop in (
+                (ATTR_ALARM_VOLUME, self._system.alarm_volume),
+                (ATTR_CHIME_VOLUME, self._system.chime_volume),
+                (ATTR_VOICE_PROMPT_VOLUME, self._system.voice_prompt_volume),
+            ):
+                if not volume_prop:
+                    continue
+                self._attr_extra_state_attributes[key] = volume_prop.name.lower()
 
-    @property
-    def code_format(self):
-        """Return one or more digits/characters."""
-        if not self._code:
-            return None
-        if isinstance(self._code, str) and re.search("^\\d+$", self._code):
-            return FORMAT_NUMBER
-        return FORMAT_TEXT
+        self._set_state_from_system_data()
 
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return self._state
+    @callback
+    def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
+        """Update the entity when new data comes from the websocket."""
+        self._attr_changed_by = event.changed_by
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+        assert event.event_type
 
-    def _validate_code(self, code, state):
-        """Validate given code."""
-        check = self._code is None or code == self._code
-        if not check:
-            _LOGGER.warning("Wrong code entered for %s", state)
-        return check
-
-    async def async_alarm_disarm(self, code=None):
-        """Send disarm command."""
-        if not self._validate_code(code, "disarming"):
-            return
-
-        await self._system.set_off()
-
-    async def async_alarm_arm_home(self, code=None):
-        """Send arm home command."""
-        if not self._validate_code(code, "arming home"):
-            return
-
-        await self._system.set_home()
-
-    async def async_alarm_arm_away(self, code=None):
-        """Send arm away command."""
-        if not self._validate_code(code, "arming away"):
-            return
-
-        await self._system.set_away()
-
-    async def async_update(self):
-        """Update alarm status."""
-        event_data = self._simplisafe.last_event_data[self._system.system_id]
-
-        if event_data.get("pinName"):
-            self._changed_by = event_data["pinName"]
-
-        if self._system.state == SystemStates.error:
-            self._online = False
-            return
-
-        self._online = True
-
-        if self._system.state == SystemStates.off:
-            self._state = STATE_ALARM_DISARMED
-        elif self._system.state in (SystemStates.home, SystemStates.home_count):
-            self._state = STATE_ALARM_ARMED_HOME
-        elif self._system.state in (
-            SystemStates.away,
-            SystemStates.away_count,
-            SystemStates.exit_delay,
-        ):
-            self._state = STATE_ALARM_ARMED_AWAY
+        if state := STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type):
+            self._attr_alarm_state = state
+            self.async_reset_error_count()
         else:
-            self._state = None
-
-        last_event = self._simplisafe.last_event_data[self._system.system_id]
-
-        try:
-            last_event_sensor_type = EntityTypes(last_event["sensorType"]).name
-        except ValueError:
-            _LOGGER.warning(
-                'Encountered unknown entity type: %s ("%s"). Please report it at'
-                "https://github.com/home-assistant/home-assistant/issues.",
-                last_event["sensorType"],
-                last_event["sensorName"],
-            )
-            last_event_sensor_type = None
-
-        self._attrs.update(
-            {
-                ATTR_LAST_EVENT_INFO: last_event["info"],
-                ATTR_LAST_EVENT_SENSOR_NAME: last_event["sensorName"],
-                ATTR_LAST_EVENT_SENSOR_TYPE: last_event_sensor_type,
-                ATTR_LAST_EVENT_TIMESTAMP: utc_from_timestamp(
-                    last_event["eventTimestamp"]
-                ),
-                ATTR_LAST_EVENT_TYPE: last_event["eventType"],
-            }
-        )
+            LOGGER.error("Unknown alarm websocket event: %s", event.event_type)
+            self.async_increment_error_count()

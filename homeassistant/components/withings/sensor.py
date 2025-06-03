@@ -1,471 +1,1019 @@
 """Sensors flow for Withings."""
-from typing import Callable, List, Union
 
-from withings_api.common import (
-    GetSleepSummaryField,
-    MeasureGetMeasResponse,
-    MeasureGroupAttribs,
-    MeasureType,
-    SleepGetResponse,
-    SleepGetSummaryResponse,
-    SleepState,
-    get_measure_value,
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+from aiowithings import (
+    Activity,
+    Device,
+    Goals,
+    MeasurementPosition,
+    MeasurementType,
+    SleepSummary,
+    Workout,
+    WorkoutCategory,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    PERCENTAGE,
+    Platform,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
-from . import const
-from .common import _LOGGER, WithingsDataManager, get_data_manager
+from . import WithingsConfigEntry
+from .const import (
+    DOMAIN,
+    LOGGER,
+    SCORE_POINTS,
+    UOM_BEATS_PER_MINUTE,
+    UOM_BREATHS_PER_MINUTE,
+    UOM_FREQUENCY,
+    UOM_MMHG,
+)
+from .coordinator import (
+    WithingsActivityDataUpdateCoordinator,
+    WithingsDataUpdateCoordinator,
+    WithingsDeviceDataUpdateCoordinator,
+    WithingsGoalsDataUpdateCoordinator,
+    WithingsMeasurementDataUpdateCoordinator,
+    WithingsSleepDataUpdateCoordinator,
+    WithingsWorkoutDataUpdateCoordinator,
+)
+from .entity import WithingsDeviceEntity, WithingsEntity
 
-# There's only 3 calls (per profile) made to the withings api every 5
-# minutes (see throttle values). This component wouldn't benefit
-# much from parallel updates.
-PARALLEL_UPDATES = 1
+
+@dataclass(frozen=True, kw_only=True)
+class WithingsMeasurementSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
+
+    measurement_type: MeasurementType
+    measurement_position: MeasurementPosition | None = None
+
+
+MEASUREMENT_SENSORS: dict[
+    MeasurementType, WithingsMeasurementSensorEntityDescription
+] = {
+    MeasurementType.WEIGHT: WithingsMeasurementSensorEntityDescription(
+        key="weight_kg",
+        measurement_type=MeasurementType.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.FAT_MASS_WEIGHT: WithingsMeasurementSensorEntityDescription(
+        key="fat_mass_kg",
+        measurement_type=MeasurementType.FAT_MASS_WEIGHT,
+        translation_key="fat_mass",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.FAT_FREE_MASS: WithingsMeasurementSensorEntityDescription(
+        key="fat_free_mass_kg",
+        measurement_type=MeasurementType.FAT_FREE_MASS,
+        translation_key="fat_free_mass",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.MUSCLE_MASS: WithingsMeasurementSensorEntityDescription(
+        key="muscle_mass_kg",
+        measurement_type=MeasurementType.MUSCLE_MASS,
+        translation_key="muscle_mass",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.BONE_MASS: WithingsMeasurementSensorEntityDescription(
+        key="bone_mass_kg",
+        measurement_type=MeasurementType.BONE_MASS,
+        translation_key="bone_mass",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.HEIGHT: WithingsMeasurementSensorEntityDescription(
+        key="height_m",
+        measurement_type=MeasurementType.HEIGHT,
+        translation_key="height",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.TEMPERATURE: WithingsMeasurementSensorEntityDescription(
+        key="temperature_c",
+        measurement_type=MeasurementType.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.BODY_TEMPERATURE: WithingsMeasurementSensorEntityDescription(
+        key="body_temperature_c",
+        measurement_type=MeasurementType.BODY_TEMPERATURE,
+        translation_key="body_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.SKIN_TEMPERATURE: WithingsMeasurementSensorEntityDescription(
+        key="skin_temperature_c",
+        measurement_type=MeasurementType.SKIN_TEMPERATURE,
+        translation_key="skin_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.FAT_RATIO: WithingsMeasurementSensorEntityDescription(
+        key="fat_ratio_pct",
+        measurement_type=MeasurementType.FAT_RATIO,
+        translation_key="fat_ratio",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.DIASTOLIC_BLOOD_PRESSURE: WithingsMeasurementSensorEntityDescription(
+        key="diastolic_blood_pressure_mmhg",
+        measurement_type=MeasurementType.DIASTOLIC_BLOOD_PRESSURE,
+        translation_key="diastolic_blood_pressure",
+        native_unit_of_measurement=UOM_MMHG,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.SYSTOLIC_BLOOD_PRESSURE: WithingsMeasurementSensorEntityDescription(
+        key="systolic_blood_pressure_mmhg",
+        measurement_type=MeasurementType.SYSTOLIC_BLOOD_PRESSURE,
+        translation_key="systolic_blood_pressure",
+        native_unit_of_measurement=UOM_MMHG,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.HEART_RATE: WithingsMeasurementSensorEntityDescription(
+        key="heart_pulse_bpm",
+        measurement_type=MeasurementType.HEART_RATE,
+        translation_key="heart_pulse",
+        native_unit_of_measurement=UOM_BEATS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.SP02: WithingsMeasurementSensorEntityDescription(
+        key="spo2_pct",
+        measurement_type=MeasurementType.SP02,
+        translation_key="spo2",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.HYDRATION: WithingsMeasurementSensorEntityDescription(
+        key="hydration",
+        measurement_type=MeasurementType.HYDRATION,
+        translation_key="hydration",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.PULSE_WAVE_VELOCITY: WithingsMeasurementSensorEntityDescription(
+        key="pulse_wave_velocity",
+        measurement_type=MeasurementType.PULSE_WAVE_VELOCITY,
+        translation_key="pulse_wave_velocity",
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MeasurementType.VO2: WithingsMeasurementSensorEntityDescription(
+        key="vo2_max",
+        measurement_type=MeasurementType.VO2,
+        translation_key="vo2_max",
+        native_unit_of_measurement="ml/min/kg",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.EXTRACELLULAR_WATER: WithingsMeasurementSensorEntityDescription(
+        key="extracellular_water",
+        measurement_type=MeasurementType.EXTRACELLULAR_WATER,
+        translation_key="extracellular_water",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.INTRACELLULAR_WATER: WithingsMeasurementSensorEntityDescription(
+        key="intracellular_water",
+        measurement_type=MeasurementType.INTRACELLULAR_WATER,
+        translation_key="intracellular_water",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.VASCULAR_AGE: WithingsMeasurementSensorEntityDescription(
+        key="vascular_age",
+        measurement_type=MeasurementType.VASCULAR_AGE,
+        translation_key="vascular_age",
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.VISCERAL_FAT: WithingsMeasurementSensorEntityDescription(
+        key="visceral_fat",
+        measurement_type=MeasurementType.VISCERAL_FAT,
+        translation_key="visceral_fat_index",
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_FEET: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_feet",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_FEET,
+        translation_key="electrodermal_activity_feet",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_left_foot",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT,
+        translation_key="electrodermal_activity_left_foot",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_right_foot",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT,
+        translation_key="electrodermal_activity_right_foot",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+}
+
+
+def get_positional_measurement_description(
+    measurement_type: MeasurementType, measurement_position: MeasurementPosition
+) -> WithingsMeasurementSensorEntityDescription | None:
+    """Get the sensor description for a measurement type."""
+    if measurement_position not in (
+        MeasurementPosition.TORSO,
+        MeasurementPosition.LEFT_ARM,
+        MeasurementPosition.RIGHT_ARM,
+        MeasurementPosition.LEFT_LEG,
+        MeasurementPosition.RIGHT_LEG,
+    ) or measurement_type not in (
+        MeasurementType.MUSCLE_MASS_FOR_SEGMENTS,
+        MeasurementType.FAT_FREE_MASS_FOR_SEGMENTS,
+        MeasurementType.FAT_MASS_FOR_SEGMENTS,
+    ):
+        return None
+    return WithingsMeasurementSensorEntityDescription(
+        key=f"{measurement_type.name.lower()}_{measurement_position.name.lower()}",
+        measurement_type=measurement_type,
+        measurement_position=measurement_position,
+        translation_key=f"{measurement_type.name.lower()}_{measurement_position.name.lower()}",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    )
+
+
+def get_measurement_description(
+    measurement: tuple[MeasurementType, MeasurementPosition | None],
+) -> WithingsMeasurementSensorEntityDescription | None:
+    """Get the sensor description for a measurement type."""
+    measurement_type, measurement_position = measurement
+    if measurement_position is not None:
+        return get_positional_measurement_description(
+            measurement_type, measurement_position
+        )
+    return MEASUREMENT_SENSORS.get(measurement_type)
+
+
+@dataclass(frozen=True, kw_only=True)
+class WithingsSleepSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
+
+    value_fn: Callable[[SleepSummary], StateType]
+
+
+SLEEP_SENSORS = [
+    WithingsSleepSensorEntityDescription(
+        key="sleep_breathing_disturbances_intensity",
+        value_fn=lambda sleep_summary: sleep_summary.breathing_disturbances_intensity,
+        translation_key="breathing_disturbances_intensity",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_deep_duration_seconds",
+        value_fn=lambda sleep_summary: sleep_summary.deep_sleep_duration,
+        translation_key="deep_sleep",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_tosleep_duration_seconds",
+        value_fn=lambda sleep_summary: sleep_summary.sleep_latency,
+        translation_key="time_to_sleep",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_towakeup_duration_seconds",
+        value_fn=lambda sleep_summary: sleep_summary.wake_up_latency,
+        translation_key="time_to_wakeup",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_heart_rate_average_bpm",
+        value_fn=lambda sleep_summary: sleep_summary.average_heart_rate,
+        translation_key="average_heart_rate",
+        native_unit_of_measurement=UOM_BEATS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_heart_rate_max_bpm",
+        value_fn=lambda sleep_summary: sleep_summary.max_heart_rate,
+        translation_key="maximum_heart_rate",
+        native_unit_of_measurement=UOM_BEATS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_heart_rate_min_bpm",
+        value_fn=lambda sleep_summary: sleep_summary.min_heart_rate,
+        translation_key="minimum_heart_rate",
+        native_unit_of_measurement=UOM_BEATS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_light_duration_seconds",
+        value_fn=lambda sleep_summary: sleep_summary.light_sleep_duration,
+        translation_key="light_sleep",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_rem_duration_seconds",
+        value_fn=lambda sleep_summary: sleep_summary.rem_sleep_duration,
+        translation_key="rem_sleep",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_respiratory_average_bpm",
+        value_fn=lambda sleep_summary: sleep_summary.average_respiration_rate,
+        translation_key="average_respiratory_rate",
+        native_unit_of_measurement=UOM_BREATHS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_respiratory_max_bpm",
+        value_fn=lambda sleep_summary: sleep_summary.max_respiration_rate,
+        translation_key="maximum_respiratory_rate",
+        native_unit_of_measurement=UOM_BREATHS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_respiratory_min_bpm",
+        value_fn=lambda sleep_summary: sleep_summary.min_respiration_rate,
+        translation_key="minimum_respiratory_rate",
+        native_unit_of_measurement=UOM_BREATHS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_score",
+        value_fn=lambda sleep_summary: sleep_summary.sleep_score,
+        translation_key="sleep_score",
+        native_unit_of_measurement=SCORE_POINTS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_snoring",
+        value_fn=lambda sleep_summary: sleep_summary.snoring,
+        translation_key="snoring",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_snoring_eposode_count",
+        value_fn=lambda sleep_summary: sleep_summary.snoring_count,
+        translation_key="snoring_episode_count",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_wakeup_count",
+        value_fn=lambda sleep_summary: sleep_summary.wake_up_count,
+        translation_key="wakeup_count",
+        native_unit_of_measurement=UOM_FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsSleepSensorEntityDescription(
+        key="sleep_wakeup_duration_seconds",
+        value_fn=lambda sleep_summary: sleep_summary.total_time_awake,
+        translation_key="wakeup_time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+]
+
+
+@dataclass(frozen=True, kw_only=True)
+class WithingsActivitySensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
+
+    value_fn: Callable[[Activity], StateType]
+
+
+ACTIVITY_SENSORS = [
+    WithingsActivitySensorEntityDescription(
+        key="activity_steps_today",
+        value_fn=lambda activity: activity.steps,
+        translation_key="activity_steps_today",
+        native_unit_of_measurement="steps",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_distance_today",
+        value_fn=lambda activity: activity.distance,
+        translation_key="activity_distance_today",
+        suggested_display_precision=0,
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_floors_climbed_today",
+        value_fn=lambda activity: activity.elevation,
+        translation_key="activity_elevation_today",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_soft_duration_today",
+        value_fn=lambda activity: activity.soft_activity,
+        translation_key="activity_soft_duration_today",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_moderate_duration_today",
+        value_fn=lambda activity: activity.moderate_activity,
+        translation_key="activity_moderate_duration_today",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_intense_duration_today",
+        value_fn=lambda activity: activity.intense_activity,
+        translation_key="activity_intense_duration_today",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_active_duration_today",
+        value_fn=lambda activity: activity.total_time_active,
+        translation_key="activity_active_duration_today",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_active_calories_burnt_today",
+        value_fn=lambda activity: activity.active_calories_burnt,
+        suggested_display_precision=1,
+        translation_key="activity_active_calories_burnt_today",
+        native_unit_of_measurement="calories",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    WithingsActivitySensorEntityDescription(
+        key="activity_total_calories_burnt_today",
+        value_fn=lambda activity: activity.total_calories_burnt,
+        suggested_display_precision=1,
+        translation_key="activity_total_calories_burnt_today",
+        native_unit_of_measurement="calories",
+        state_class=SensorStateClass.TOTAL,
+    ),
+]
+
+
+STEP_GOAL = "steps"
+SLEEP_GOAL = "sleep"
+WEIGHT_GOAL = "weight"
+
+
+@dataclass(frozen=True, kw_only=True)
+class WithingsGoalsSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
+
+    value_fn: Callable[[Goals], StateType]
+
+
+GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
+    STEP_GOAL: WithingsGoalsSensorEntityDescription(
+        key="step_goal",
+        value_fn=lambda goals: goals.steps,
+        translation_key="step_goal",
+        native_unit_of_measurement="steps",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SLEEP_GOAL: WithingsGoalsSensorEntityDescription(
+        key="sleep_goal",
+        value_fn=lambda goals: goals.sleep,
+        translation_key="sleep_goal",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WEIGHT_GOAL: WithingsGoalsSensorEntityDescription(
+        key="weight_goal",
+        value_fn=lambda goals: goals.weight,
+        translation_key="weight_goal",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+}
+
+
+@dataclass(frozen=True, kw_only=True)
+class WithingsWorkoutSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
+
+    value_fn: Callable[[Workout], StateType]
+
+
+_WORKOUT_CATEGORY = [
+    workout_category.name.lower() for workout_category in WorkoutCategory
+]
+
+
+WORKOUT_SENSORS = [
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_type",
+        value_fn=lambda workout: workout.category.name.lower(),
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="workout_type",
+        options=_WORKOUT_CATEGORY,
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_active_calories_burnt",
+        value_fn=lambda workout: workout.active_calories_burnt,
+        translation_key="workout_active_calories_burnt",
+        suggested_display_precision=1,
+        native_unit_of_measurement="calories",
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_distance",
+        value_fn=lambda workout: workout.distance,
+        translation_key="workout_distance",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.METERS,
+        suggested_display_precision=0,
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_floors_climbed",
+        value_fn=lambda workout: workout.elevation,
+        translation_key="workout_elevation",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_intensity",
+        value_fn=lambda workout: workout.intensity,
+        translation_key="workout_intensity",
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_pause_duration",
+        value_fn=lambda workout: workout.pause_duration or 0,
+        translation_key="workout_pause_duration",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+    ),
+    WithingsWorkoutSensorEntityDescription(
+        key="workout_duration",
+        value_fn=lambda workout: (
+            workout.end_date - workout.start_date
+        ).total_seconds(),
+        translation_key="workout_duration",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+    ),
+]
+
+
+@dataclass(frozen=True, kw_only=True)
+class WithingsDeviceSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
+
+    value_fn: Callable[[Device], StateType]
+
+
+DEVICE_SENSORS = [
+    WithingsDeviceSensorEntityDescription(
+        key="battery",
+        translation_key="battery",
+        options=["low", "medium", "high"],
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda device: device.battery,
+    )
+]
+
+
+def get_current_goals(goals: Goals) -> set[str]:
+    """Return a list of present goals."""
+    result = set()
+    for goal in (STEP_GOAL, SLEEP_GOAL, WEIGHT_GOAL):
+        if getattr(goals, goal):
+            result.add(goal)
+    return result
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    entry: WithingsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-        hass, entry
+    ent_reg = er.async_get(hass)
+
+    withings_data = entry.runtime_data
+
+    measurement_coordinator = withings_data.measurement_coordinator
+
+    entities: list[SensorEntity] = []
+    entities.extend(
+        WithingsMeasurementSensor(measurement_coordinator, description)
+        for measurement_type in measurement_coordinator.data
+        if (description := get_measurement_description(measurement_type)) is not None
     )
 
-    data_manager = get_data_manager(hass, entry, implementation)
-    user_id = entry.data["token"]["userid"]
+    current_measurement_types = set(measurement_coordinator.data)
 
-    entities = create_sensor_entities(data_manager, user_id)
-    async_add_entities(entities, True)
+    def _async_measurement_listener() -> None:
+        """Listen for new measurements and add sensors if they did not exist."""
+        received_measurement_types = set(measurement_coordinator.data)
+        new_measurement_types = received_measurement_types - current_measurement_types
+        if new_measurement_types:
+            current_measurement_types.update(new_measurement_types)
+            async_add_entities(
+                WithingsMeasurementSensor(measurement_coordinator, description)
+                for measurement_type in new_measurement_types
+                if (description := get_measurement_description(measurement_type))
+                is not None
+            )
 
+    measurement_coordinator.async_add_listener(_async_measurement_listener)
 
-class WithingsAttribute:
-    """Base class for modeling withing data."""
+    goals_coordinator = withings_data.goals_coordinator
 
-    def __init__(
-        self,
-        measurement: str,
-        measure_type,
-        friendly_name: str,
-        unit_of_measurement: str,
-        icon: str,
-    ) -> None:
-        """Initialize attribute."""
-        self.measurement = measurement
-        self.measure_type = measure_type
-        self.friendly_name = friendly_name
-        self.unit_of_measurement = unit_of_measurement
-        self.icon = icon
+    current_goals = get_current_goals(goals_coordinator.data)
 
+    entities.extend(
+        WithingsGoalsSensor(goals_coordinator, GOALS_SENSORS[goal])
+        for goal in current_goals
+    )
 
-class WithingsMeasureAttribute(WithingsAttribute):
-    """Model measure attributes."""
+    def _async_goals_listener() -> None:
+        """Listen for new goals and add sensors if they did not exist."""
+        received_goals = get_current_goals(goals_coordinator.data)
+        new_goals = received_goals - current_goals
+        if new_goals:
+            current_goals.update(new_goals)
+            async_add_entities(
+                WithingsGoalsSensor(goals_coordinator, GOALS_SENSORS[goal])
+                for goal in new_goals
+            )
 
+    goals_coordinator.async_add_listener(_async_goals_listener)
 
-class WithingsSleepStateAttribute(WithingsAttribute):
-    """Model sleep data attributes."""
+    activity_coordinator = withings_data.activity_coordinator
 
-    def __init__(
-        self, measurement: str, friendly_name: str, unit_of_measurement: str, icon: str
-    ) -> None:
-        """Initialize sleep state attribute."""
-        super().__init__(measurement, None, friendly_name, unit_of_measurement, icon)
+    activity_entities_setup_before = ent_reg.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_activity_steps_today"
+    )
 
+    if activity_coordinator.data is not None or activity_entities_setup_before:
+        entities.extend(
+            WithingsActivitySensor(activity_coordinator, attribute)
+            for attribute in ACTIVITY_SENSORS
+        )
+    else:
+        remove_activity_listener: Callable[[], None]
 
-class WithingsSleepSummaryAttribute(WithingsAttribute):
-    """Models sleep summary attributes."""
+        def _async_add_activity_entities() -> None:
+            """Add activity entities."""
+            if activity_coordinator.data is not None:
+                async_add_entities(
+                    WithingsActivitySensor(activity_coordinator, attribute)
+                    for attribute in ACTIVITY_SENSORS
+                )
+                remove_activity_listener()
 
+        remove_activity_listener = activity_coordinator.async_add_listener(
+            _async_add_activity_entities
+        )
 
-WITHINGS_ATTRIBUTES = [
-    WithingsMeasureAttribute(
-        const.MEAS_WEIGHT_KG,
-        MeasureType.WEIGHT,
-        "Weight",
-        const.UOM_MASS_KG,
-        "mdi:weight-kilogram",
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_FAT_MASS_KG,
-        MeasureType.FAT_MASS_WEIGHT,
-        "Fat Mass",
-        const.UOM_MASS_KG,
-        "mdi:weight-kilogram",
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_FAT_FREE_MASS_KG,
-        MeasureType.FAT_FREE_MASS,
-        "Fat Free Mass",
-        const.UOM_MASS_KG,
-        "mdi:weight-kilogram",
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_MUSCLE_MASS_KG,
-        MeasureType.MUSCLE_MASS,
-        "Muscle Mass",
-        const.UOM_MASS_KG,
-        "mdi:weight-kilogram",
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_BONE_MASS_KG,
-        MeasureType.BONE_MASS,
-        "Bone Mass",
-        const.UOM_MASS_KG,
-        "mdi:weight-kilogram",
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_HEIGHT_M,
-        MeasureType.HEIGHT,
-        "Height",
-        const.UOM_LENGTH_M,
-        "mdi:ruler",
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_TEMP_C,
-        MeasureType.TEMPERATURE,
-        "Temperature",
-        const.UOM_TEMP_C,
-        "mdi:thermometer",
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_BODY_TEMP_C,
-        MeasureType.BODY_TEMPERATURE,
-        "Body Temperature",
-        const.UOM_TEMP_C,
-        "mdi:thermometer",
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_SKIN_TEMP_C,
-        MeasureType.SKIN_TEMPERATURE,
-        "Skin Temperature",
-        const.UOM_TEMP_C,
-        "mdi:thermometer",
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_FAT_RATIO_PCT,
-        MeasureType.FAT_RATIO,
-        "Fat Ratio",
-        const.UOM_PERCENT,
-        None,
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_DIASTOLIC_MMHG,
-        MeasureType.DIASTOLIC_BLOOD_PRESSURE,
-        "Diastolic Blood Pressure",
-        const.UOM_MMHG,
-        None,
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_SYSTOLIC_MMGH,
-        MeasureType.SYSTOLIC_BLOOD_PRESSURE,
-        "Systolic Blood Pressure",
-        const.UOM_MMHG,
-        None,
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_HEART_PULSE_BPM,
-        MeasureType.HEART_RATE,
-        "Heart Pulse",
-        const.UOM_BEATS_PER_MINUTE,
-        "mdi:heart-pulse",
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_SPO2_PCT, MeasureType.SP02, "SP02", const.UOM_PERCENT, None
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_HYDRATION,
-        MeasureType.HYDRATION,
-        "Hydration",
-        const.UOM_PERCENT,
-        "mdi:water",
-    ),
-    WithingsMeasureAttribute(
-        const.MEAS_PWV,
-        MeasureType.PULSE_WAVE_VELOCITY,
-        "Pulse Wave Velocity",
-        const.UOM_METERS_PER_SECOND,
-        None,
-    ),
-    WithingsSleepStateAttribute(
-        const.MEAS_SLEEP_STATE, "Sleep state", None, "mdi:sleep"
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_WAKEUP_DURATION_SECONDS,
-        GetSleepSummaryField.WAKEUP_DURATION.value,
-        "Wakeup time",
-        const.UOM_SECONDS,
-        "mdi:sleep-off",
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_LIGHT_DURATION_SECONDS,
-        GetSleepSummaryField.LIGHT_SLEEP_DURATION.value,
-        "Light sleep",
-        const.UOM_SECONDS,
-        "mdi:sleep",
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_DEEP_DURATION_SECONDS,
-        GetSleepSummaryField.DEEP_SLEEP_DURATION.value,
-        "Deep sleep",
-        const.UOM_SECONDS,
-        "mdi:sleep",
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_REM_DURATION_SECONDS,
-        GetSleepSummaryField.REM_SLEEP_DURATION.value,
-        "REM sleep",
-        const.UOM_SECONDS,
-        "mdi:sleep",
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_WAKEUP_COUNT,
-        GetSleepSummaryField.WAKEUP_COUNT.value,
-        "Wakeup count",
-        const.UOM_FREQUENCY,
-        "mdi:sleep-off",
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_TOSLEEP_DURATION_SECONDS,
-        GetSleepSummaryField.DURATION_TO_SLEEP.value,
-        "Time to sleep",
-        const.UOM_SECONDS,
-        "mdi:sleep",
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_TOWAKEUP_DURATION_SECONDS,
-        GetSleepSummaryField.DURATION_TO_WAKEUP.value,
-        "Time to wakeup",
-        const.UOM_SECONDS,
-        "mdi:sleep-off",
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_HEART_RATE_AVERAGE,
-        GetSleepSummaryField.HR_AVERAGE.value,
-        "Average heart rate",
-        const.UOM_BEATS_PER_MINUTE,
-        "mdi:heart-pulse",
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_HEART_RATE_MIN,
-        GetSleepSummaryField.HR_MIN.value,
-        "Minimum heart rate",
-        const.UOM_BEATS_PER_MINUTE,
-        "mdi:heart-pulse",
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_HEART_RATE_MAX,
-        GetSleepSummaryField.HR_MAX.value,
-        "Maximum heart rate",
-        const.UOM_BEATS_PER_MINUTE,
-        "mdi:heart-pulse",
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_RESPIRATORY_RATE_AVERAGE,
-        GetSleepSummaryField.RR_AVERAGE.value,
-        "Average respiratory rate",
-        const.UOM_BREATHS_PER_MINUTE,
-        None,
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_RESPIRATORY_RATE_MIN,
-        GetSleepSummaryField.RR_MIN.value,
-        "Minimum respiratory rate",
-        const.UOM_BREATHS_PER_MINUTE,
-        None,
-    ),
-    WithingsSleepSummaryAttribute(
-        const.MEAS_SLEEP_RESPIRATORY_RATE_MAX,
-        GetSleepSummaryField.RR_MAX.value,
-        "Maximum respiratory rate",
-        const.UOM_BREATHS_PER_MINUTE,
-        None,
-    ),
-]
+    sleep_coordinator = withings_data.sleep_coordinator
 
-WITHINGS_MEASUREMENTS_MAP = {attr.measurement: attr for attr in WITHINGS_ATTRIBUTES}
+    sleep_entities_setup_before = ent_reg.async_get_entity_id(
+        Platform.SENSOR,
+        DOMAIN,
+        f"withings_{entry.unique_id}_sleep_deep_duration_seconds",
+    )
+
+    if sleep_coordinator.data is not None or sleep_entities_setup_before:
+        entities.extend(
+            WithingsSleepSensor(sleep_coordinator, attribute)
+            for attribute in SLEEP_SENSORS
+        )
+    else:
+        remove_sleep_listener: Callable[[], None]
+
+        def _async_add_sleep_entities() -> None:
+            """Add sleep entities."""
+            if sleep_coordinator.data is not None:
+                async_add_entities(
+                    WithingsSleepSensor(sleep_coordinator, attribute)
+                    for attribute in SLEEP_SENSORS
+                )
+                remove_sleep_listener()
+
+        remove_sleep_listener = sleep_coordinator.async_add_listener(
+            _async_add_sleep_entities
+        )
+
+    workout_coordinator = withings_data.workout_coordinator
+
+    workout_entities_setup_before = ent_reg.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_workout_type"
+    )
+
+    if workout_coordinator.data is not None or workout_entities_setup_before:
+        entities.extend(
+            WithingsWorkoutSensor(workout_coordinator, attribute)
+            for attribute in WORKOUT_SENSORS
+        )
+    else:
+        remove_workout_listener: Callable[[], None]
+
+        def _async_add_workout_entities() -> None:
+            """Add workout entities."""
+            if workout_coordinator.data is not None:
+                async_add_entities(
+                    WithingsWorkoutSensor(workout_coordinator, attribute)
+                    for attribute in WORKOUT_SENSORS
+                )
+                remove_workout_listener()
+
+        remove_workout_listener = workout_coordinator.async_add_listener(
+            _async_add_workout_entities
+        )
+
+    device_coordinator = withings_data.device_coordinator
+
+    current_devices: set[str] = set()
+
+    def _async_device_listener() -> None:
+        """Add device entities."""
+        received_devices = set(device_coordinator.data)
+        new_devices = received_devices - current_devices
+        old_devices = current_devices - received_devices
+        if new_devices:
+            device_registry = dr.async_get(hass)
+            for device_id in new_devices:
+                if device := device_registry.async_get_device({(DOMAIN, device_id)}):
+                    if any(
+                        (
+                            config_entry := hass.config_entries.async_get_entry(
+                                config_entry_id
+                            )
+                        )
+                        and config_entry.state == ConfigEntryState.LOADED
+                        for config_entry_id in device.config_entries
+                    ):
+                        continue
+                async_add_entities(
+                    WithingsDeviceSensor(device_coordinator, description, device_id)
+                    for description in DEVICE_SENSORS
+                )
+                current_devices.add(device_id)
+
+        if old_devices:
+            device_registry = dr.async_get(hass)
+            for device_id in old_devices:
+                if device := device_registry.async_get_device({(DOMAIN, device_id)}):
+                    device_registry.async_update_device(
+                        device.id, remove_config_entry_id=entry.entry_id
+                    )
+                    current_devices.remove(device_id)
+
+    device_coordinator.async_add_listener(_async_device_listener)
+
+    _async_device_listener()
+
+    if not entities:
+        LOGGER.warning(
+            "No data found for Withings entry %s, sensors will be added when new data is available",
+            entry.title,
+        )
+
+    async_add_entities(entities)
 
 
-class WithingsHealthSensor(Entity):
+class WithingsSensor[
+    _T: WithingsDataUpdateCoordinator[Any],
+    _ED: SensorEntityDescription,
+](WithingsEntity[_T], SensorEntity):
     """Implementation of a Withings sensor."""
 
+    entity_description: _ED
+
     def __init__(
         self,
-        data_manager: WithingsDataManager,
-        attribute: WithingsAttribute,
-        user_id: str,
+        coordinator: _T,
+        entity_description: _ED,
     ) -> None:
-        """Initialize the Withings sensor."""
-        self._data_manager = data_manager
-        self._attribute = attribute
-        self._state = None
+        """Initialize sensor."""
+        super().__init__(coordinator, entity_description.key)
+        self.entity_description = entity_description
 
-        self._slug = self._data_manager.slug
-        self._user_id = user_id
+
+class WithingsMeasurementSensor(
+    WithingsSensor[
+        WithingsMeasurementDataUpdateCoordinator,
+        WithingsMeasurementSensorEntityDescription,
+    ]
+):
+    """Implementation of a Withings measurement sensor."""
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"Withings {self._attribute.measurement} {self._slug}"
+    def native_value(self) -> float:
+        """Return the state of the entity."""
+        return self.coordinator.data[
+            (
+                self.entity_description.measurement_type,
+                self.entity_description.measurement_position,
+            )
+        ]
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return "withings_{}_{}_{}".format(
-            self._slug, self._user_id, slugify(self._attribute.measurement)
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return (
+            super().available
+            and (
+                self.entity_description.measurement_type,
+                self.entity_description.measurement_position,
+            )
+            in self.coordinator.data
         )
 
-    @property
-    def state(self) -> Union[str, int, float, None]:
-        """Return the state of the sensor."""
-        return self._state
+
+class WithingsSleepSensor(
+    WithingsSensor[
+        WithingsSleepDataUpdateCoordinator,
+        WithingsSleepSensorEntityDescription,
+    ]
+):
+    """Implementation of a Withings sleep sensor."""
 
     @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._attribute.unit_of_measurement
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        if not self.coordinator.data:
+            return None
+        return self.entity_description.value_fn(self.coordinator.data)
+
+
+class WithingsGoalsSensor(
+    WithingsSensor[
+        WithingsGoalsDataUpdateCoordinator,
+        WithingsGoalsSensorEntityDescription,
+    ]
+):
+    """Implementation of a Withings goals sensor."""
 
     @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return self._attribute.icon
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        assert self.coordinator.data
+        return self.entity_description.value_fn(self.coordinator.data)
+
+
+class WithingsActivitySensor(
+    WithingsSensor[
+        WithingsActivityDataUpdateCoordinator,
+        WithingsActivitySensorEntityDescription,
+    ]
+):
+    """Implementation of a Withings activity sensor."""
 
     @property
-    def device_state_attributes(self) -> None:
-        """Get withings attributes."""
-        return self._attribute.__dict__
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        if not self.coordinator.data:
+            return None
+        return self.entity_description.value_fn(self.coordinator.data)
 
-    async def async_update(self) -> None:
-        """Update the data."""
-        _LOGGER.debug(
-            "Async update slug: %s, measurement: %s, user_id: %s",
-            self._slug,
-            self._attribute.measurement,
-            self._user_id,
-        )
-
-        if isinstance(self._attribute, WithingsMeasureAttribute):
-            _LOGGER.debug("Updating measures state")
-            await self._data_manager.update_measures()
-            await self.async_update_measure(self._data_manager.measures)
-
-        elif isinstance(self._attribute, WithingsSleepStateAttribute):
-            _LOGGER.debug("Updating sleep state")
-            await self._data_manager.update_sleep()
-            await self.async_update_sleep_state(self._data_manager.sleep)
-
-        elif isinstance(self._attribute, WithingsSleepSummaryAttribute):
-            _LOGGER.debug("Updating sleep summary state")
-            await self._data_manager.update_sleep_summary()
-            await self.async_update_sleep_summary(self._data_manager.sleep_summary)
-
-    async def async_update_measure(self, data: MeasureGetMeasResponse) -> None:
-        """Update the measures data."""
-        measure_type = self._attribute.measure_type
-
-        _LOGGER.debug(
-            "Finding the unambiguous measure group with measure_type: %s", measure_type
-        )
-
-        value = get_measure_value(data, measure_type, MeasureGroupAttribs.UNAMBIGUOUS)
-
-        if value is None:
-            _LOGGER.debug("Could not find a value, setting state to %s", None)
-            self._state = None
-            return
-
-        self._state = round(value, 2)
-
-    async def async_update_sleep_state(self, data: SleepGetResponse) -> None:
-        """Update the sleep state data."""
-        if not data.series:
-            _LOGGER.debug("No sleep data, setting state to %s", None)
-            self._state = None
-            return
-
-        sorted_series = sorted(data.series, key=lambda serie: serie.startdate)
-        serie = sorted_series[len(sorted_series) - 1]
-        state = None
-        if serie.state == SleepState.AWAKE:
-            state = const.STATE_AWAKE
-        elif serie.state == SleepState.LIGHT:
-            state = const.STATE_LIGHT
-        elif serie.state == SleepState.DEEP:
-            state = const.STATE_DEEP
-        elif serie.state == SleepState.REM:
-            state = const.STATE_REM
-
-        self._state = state
-
-    async def async_update_sleep_summary(self, data: SleepGetSummaryResponse) -> None:
-        """Update the sleep summary data."""
-        if not data.series:
-            _LOGGER.debug("Sleep data has no series, setting state to %s", None)
-            self._state = None
-            return
-
-        measurement = self._attribute.measurement
-        measure_type = self._attribute.measure_type
-
-        _LOGGER.debug("Determining total value for: %s", measurement)
-        total = 0
-        for serie in data.series:
-            data = serie.data
-            value = 0
-            if measure_type == GetSleepSummaryField.REM_SLEEP_DURATION.value:
-                value = data.remsleepduration
-            elif measure_type == GetSleepSummaryField.WAKEUP_DURATION.value:
-                value = data.wakeupduration
-            elif measure_type == GetSleepSummaryField.LIGHT_SLEEP_DURATION.value:
-                value = data.lightsleepduration
-            elif measure_type == GetSleepSummaryField.DEEP_SLEEP_DURATION.value:
-                value = data.deepsleepduration
-            elif measure_type == GetSleepSummaryField.WAKEUP_COUNT.value:
-                value = data.wakeupcount
-            elif measure_type == GetSleepSummaryField.DURATION_TO_SLEEP.value:
-                value = data.durationtosleep
-            elif measure_type == GetSleepSummaryField.DURATION_TO_WAKEUP.value:
-                value = data.durationtowakeup
-            elif measure_type == GetSleepSummaryField.HR_AVERAGE.value:
-                value = data.hr_average
-            elif measure_type == GetSleepSummaryField.HR_MIN.value:
-                value = data.hr_min
-            elif measure_type == GetSleepSummaryField.HR_MAX.value:
-                value = data.hr_max
-            elif measure_type == GetSleepSummaryField.RR_AVERAGE.value:
-                value = data.rr_average
-            elif measure_type == GetSleepSummaryField.RR_MIN.value:
-                value = data.rr_min
-            elif measure_type == GetSleepSummaryField.RR_MAX.value:
-                value = data.rr_max
-
-            # Sometimes a None is provided for value, default to 0.
-            total += value or 0
-
-        self._state = round(total, 4)
+    @property
+    def last_reset(self) -> datetime:
+        """These values reset every day."""
+        return dt_util.start_of_local_day()
 
 
-def create_sensor_entities(
-    data_manager: WithingsDataManager, user_id: str
-) -> List[WithingsHealthSensor]:
-    """Create sensor entities."""
-    entities = []
+class WithingsWorkoutSensor(
+    WithingsSensor[
+        WithingsWorkoutDataUpdateCoordinator,
+        WithingsWorkoutSensorEntityDescription,
+    ]
+):
+    """Implementation of a Withings workout sensor."""
 
-    for attribute in WITHINGS_ATTRIBUTES:
-        _LOGGER.debug(
-            "Creating entity for measurement: %s, measure_type: %s,"
-            "friendly_name: %s, unit_of_measurement: %s",
-            attribute.measurement,
-            attribute.measure_type,
-            attribute.friendly_name,
-            attribute.unit_of_measurement,
-        )
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        if not self.coordinator.data:
+            return None
+        return self.entity_description.value_fn(self.coordinator.data)
 
-        entity = WithingsHealthSensor(data_manager, attribute, user_id)
 
-        entities.append(entity)
+class WithingsDeviceSensor(WithingsDeviceEntity, SensorEntity):
+    """Implementation of a Withings workout sensor."""
 
-    return entities
+    entity_description: WithingsDeviceSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: WithingsDeviceDataUpdateCoordinator,
+        entity_description: WithingsDeviceSensorEntityDescription,
+        device_id: str,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, device_id, entity_description.key)
+        self.entity_description = entity_description
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        return self.entity_description.value_fn(self.device)

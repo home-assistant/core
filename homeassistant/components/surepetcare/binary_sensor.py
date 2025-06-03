@@ -1,176 +1,147 @@
 """Support for Sure PetCare Flaps/Pets binary sensors."""
-import logging
 
-from surepy import SureLocationID, SureLockStateID, SureThingID
+from __future__ import annotations
+
+from typing import cast
+
+from surepy.entities import SurepyEntity
+from surepy.entities.pet import Pet as SurepyPet
+from surepy.enums import EntityType, Location
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_LOCK,
-    DEVICE_CLASS_PRESENCE,
-    BinarySensorDevice,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
 )
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SURE_PETCARE, DEFAULT_DEVICE_CLASS, SPC, TOPIC_UPDATE
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up Sure PetCare Flaps sensors based on a config entry."""
-    if discovery_info is None:
-        return
-
-    entities = []
-
-    spc = hass.data[DATA_SURE_PETCARE][SPC]
-
-    for thing in spc.ids:
-        sure_id = thing[CONF_ID]
-        sure_type = thing[CONF_TYPE]
-
-        if sure_type == SureThingID.FLAP.name:
-            entity = Flap(sure_id, thing[CONF_NAME], spc)
-        elif sure_type == SureThingID.PET.name:
-            entity = Pet(sure_id, thing[CONF_NAME], spc)
-
-        entities.append(entity)
-
-    async_add_entities(entities, True)
+from .const import DOMAIN
+from .coordinator import SurePetcareDataCoordinator
+from .entity import SurePetcareEntity
 
 
-class SurePetcareBinarySensor(BinarySensorDevice):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Sure PetCare Flaps binary sensors based on a config entry."""
+
+    entities: list[SurePetcareBinarySensor] = []
+
+    coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    for surepy_entity in coordinator.data.values():
+        # connectivity
+        if surepy_entity.type in [
+            EntityType.CAT_FLAP,
+            EntityType.PET_FLAP,
+            EntityType.FEEDER,
+            EntityType.FELAQUA,
+        ]:
+            entities.append(DeviceConnectivity(surepy_entity.id, coordinator))
+        elif surepy_entity.type == EntityType.PET:
+            entities.append(Pet(surepy_entity.id, coordinator))
+        elif surepy_entity.type == EntityType.HUB:
+            entities.append(Hub(surepy_entity.id, coordinator))
+
+    async_add_entities(entities)
+
+
+class SurePetcareBinarySensor(SurePetcareEntity, BinarySensorEntity):
     """A binary sensor implementation for Sure Petcare Entities."""
 
     def __init__(
-        self, _id: int, name: str, spc, device_class: str, sure_type: SureThingID
-    ):
+        self,
+        surepetcare_id: int,
+        coordinator: SurePetcareDataCoordinator,
+    ) -> None:
         """Initialize a Sure Petcare binary sensor."""
-        self._id = _id
-        self._name = name
-        self._spc = spc
-        self._device_class = device_class
-        self._sure_type = sure_type
-        self._state = {}
+        super().__init__(surepetcare_id, coordinator)
 
-        self._async_unsub_dispatcher_connect = None
+        self._attr_name = self._device_name
+        self._attr_unique_id = self._device_id
 
-    @property
-    def is_on(self):
-        """Return true if entity is on/unlocked."""
-        return bool(self._state)
+
+class Hub(SurePetcareBinarySensor):
+    """Sure Petcare Hub."""
+
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def should_poll(self):
-        """Return true."""
-        return False
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and bool(self._attr_is_on)
 
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEFAULT_DEVICE_CLASS if not self._device_class else self._device_class
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return f"{self._spc.household_id}-{self._id}"
-
-    async def async_update(self):
+    @callback
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Get the latest data and update the state."""
-        self._state = self._spc.states[self._sure_type][self._id].get("data")
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-
-
-class Flap(SurePetcareBinarySensor):
-    """Sure Petcare Flap."""
-
-    def __init__(self, _id: int, name: str, spc):
-        """Initialize a Sure Petcare Flap."""
-        super().__init__(
-            _id,
-            f"Flap {name.capitalize()}",
-            spc,
-            DEVICE_CLASS_LOCK,
-            SureThingID.FLAP.name,
-        )
-
-    @property
-    def is_on(self):
-        """Return true if entity is on/unlocked."""
-        try:
-            return bool(self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
-        except (KeyError, TypeError):
-            return None
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attributes = None
-        if self._state:
-            try:
-                attributes = {
-                    "battery_voltage": self._state["battery"] / 4,
-                    "locking_mode": self._state["locking"]["mode"],
-                    "device_rssi": self._state["signal"]["device_rssi"],
-                    "hub_rssi": self._state["signal"]["hub_rssi"],
-                }
-
-            except (KeyError, TypeError) as error:
-                _LOGGER.error(
-                    "Error getting device state attributes from %s: %s\n\n%s",
-                    self._name,
-                    error,
-                    self._state,
-                )
-                attributes = self._state
-
-        return attributes
+        state = surepy_entity.raw_data()["status"]
+        self._attr_is_on = self._attr_available = bool(state["online"])
+        if surepy_entity.raw_data():
+            self._attr_extra_state_attributes = {
+                "led_mode": int(surepy_entity.raw_data()["status"]["led_mode"]),
+                "pairing_mode": bool(
+                    surepy_entity.raw_data()["status"]["pairing_mode"]
+                ),
+            }
+        else:
+            self._attr_extra_state_attributes = {}
 
 
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
-    def __init__(self, _id: int, name: str, spc):
-        """Initialize a Sure Petcare Pet."""
-        super().__init__(
-            _id,
-            f"Pet {name.capitalize()}",
-            spc,
-            DEVICE_CLASS_PRESENCE,
-            SureThingID.PET.name,
-        )
+    _attr_device_class = BinarySensorDeviceClass.PRESENCE
 
-    @property
-    def is_on(self):
-        """Return true if entity is at home."""
+    @callback
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
+        """Get the latest data and update the state."""
+        surepy_entity = cast(SurepyPet, surepy_entity)
+        state = surepy_entity.location
         try:
-            return bool(self._state["where"] == SureLocationID.INSIDE)
+            self._attr_is_on = bool(Location(state.where) == Location.INSIDE)
         except (KeyError, TypeError):
-            return False
+            self._attr_is_on = False
+        if state:
+            self._attr_extra_state_attributes = {
+                "since": state.since,
+                "where": state.where,
+            }
+        else:
+            self._attr_extra_state_attributes = {}
+
+
+class DeviceConnectivity(SurePetcareBinarySensor):
+    """Sure Petcare Device."""
+
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        surepetcare_id: int,
+        coordinator: SurePetcareDataCoordinator,
+    ) -> None:
+        """Initialize a Sure Petcare Device."""
+        super().__init__(surepetcare_id, coordinator)
+        self._attr_name = f"{self._device_name} Connectivity"
+        self._attr_unique_id = f"{self._device_id}-connectivity"
+
+    @callback
+    def _update_attr(self, surepy_entity: SurepyEntity) -> None:
+        state = surepy_entity.raw_data().get("status", {})
+        online = bool(state.get("online", False))
+        self._attr_is_on = online
+        self._attr_extra_state_attributes = {}
+        if online:
+            device_rssi = state.get("signal", {}).get("device_rssi")
+            self._attr_extra_state_attributes["device_rssi"] = (
+                f"{device_rssi:.2f}" if device_rssi else "Unknown"
+            )
+            hub_rssi = state.get("signal", {}).get("hub_rssi")
+            if hub_rssi is not None:
+                self._attr_extra_state_attributes["hub_rssi"] = f"{hub_rssi:.2f}"

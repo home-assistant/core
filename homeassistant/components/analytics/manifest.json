@@ -1,0 +1,11 @@
+{
+  "domain": "analytics",
+  "name": "Analytics",
+  "after_dependencies": ["energy", "hassio", "recorder"],
+  "codeowners": ["@home-assistant/core", "@ludeeus"],
+  "dependencies": ["api", "websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/analytics",
+  "integration_type": "system",
+  "iot_class": "cloud_push",
+  "quality_scale": "internal"
+}

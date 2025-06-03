@@ -1,0 +1,13 @@
+{
+  "domain": "devolo_home_control",
+  "name": "devolo Home Control",
+  "after_dependencies": ["zeroconf"],
+  "codeowners": ["@2Fake", "@Shutgun"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/devolo_home_control",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["devolo_home_control_api"],
+  "requirements": ["devolo-home-control-api==0.19.0"],
+  "zeroconf": ["_dvl-deviceapi._tcp.local."]
+}

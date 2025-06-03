@@ -1,0 +1,4 @@
+press:
+  target:
+    entity:
+      domain: button

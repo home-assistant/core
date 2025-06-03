@@ -1,0 +1,35 @@
+{
+  "title": "Person",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::person::title%]",
+      "state": {
+        "home": "[%key:common::state::home%]",
+        "not_home": "[%key:common::state::not_home%]"
+      },
+      "state_attributes": {
+        "device_trackers": {
+          "name": "Device trackers"
+        },
+        "gps_accuracy": {
+          "name": "[%key:component::device_tracker::entity_component::_::state_attributes::gps_accuracy::name%]"
+        },
+        "latitude": {
+          "name": "[%key:component::device_tracker::entity_component::_::state_attributes::latitude::name%]"
+        },
+        "longitude": {
+          "name": "[%key:component::device_tracker::entity_component::_::state_attributes::longitude::name%]"
+        },
+        "source": {
+          "name": "Source"
+        }
+      }
+    }
+  },
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads persons from the YAML-configuration."
+    }
+  }
+}

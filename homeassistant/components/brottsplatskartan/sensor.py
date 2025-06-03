@@ -1,122 +1,86 @@
 """Sensor platform for Brottsplatskartan information."""
+
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import timedelta
-import logging
-import uuid
+from typing import Literal
 
-import brottsplatskartan
-import voluptuous as vol
+from brottsplatskartan import ATTRIBUTION, BrottsplatsKartan
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_NAME,
-)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_AREA = "area"
-
-DEFAULT_NAME = "Brottsplatskartan"
+from .const import CONF_APP_ID, CONF_AREA, DOMAIN, LOGGER
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
-AREAS = [
-    "Blekinge län",
-    "Dalarnas län",
-    "Gotlands län",
-    "Gävleborgs län",
-    "Hallands län",
-    "Jämtlands län",
-    "Jönköpings län",
-    "Kalmar län",
-    "Kronobergs län",
-    "Norrbottens län",
-    "Skåne län",
-    "Stockholms län",
-    "Södermanlands län",
-    "Uppsala län",
-    "Värmlands län",
-    "Västerbottens län",
-    "Västernorrlands län",
-    "Västmanlands län",
-    "Västra Götalands län",
-    "Örebro län",
-    "Östergötlands län",
-]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_AREA, default=[]): vol.All(cv.ensure_list, [vol.In(AREAS)]),
-    }
-)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Brottsplatskartan sensor entry."""
 
+    area = entry.data.get(CONF_AREA)
+    latitude = entry.data.get(CONF_LATITUDE)
+    longitude = entry.data.get(CONF_LONGITUDE)
+    app = entry.data[CONF_APP_ID]
+    name = entry.title
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Brottsplatskartan platform."""
-
-    area = config.get(CONF_AREA)
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    name = config.get(CONF_NAME)
-
-    # Every Home Assistant instance should have their own unique
-    # app parameter: https://brottsplatskartan.se/sida/api
-    app = "ha-{}".format(uuid.getnode())
-
-    bpk = brottsplatskartan.BrottsplatsKartan(
-        app=app, area=area, latitude=latitude, longitude=longitude
+    bpk = BrottsplatsKartan(
+        app=app, areas=[area] if area else None, latitude=latitude, longitude=longitude
     )
 
-    add_entities([BrottsplatskartanSensor(bpk, name)], True)
+    async_add_entities([BrottsplatskartanSensor(bpk, name, entry.entry_id, area)], True)
 
 
-class BrottsplatskartanSensor(Entity):
+class BrottsplatskartanSensor(SensorEntity):
     """Representation of a Brottsplatskartan Sensor."""
 
-    def __init__(self, bpk, name):
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(
+        self, bpk: BrottsplatsKartan, name: str, entry_id: str, area: str | None
+    ) -> None:
         """Initialize the Brottsplatskartan sensor."""
-        self._attributes = {}
         self._brottsplatskartan = bpk
-        self._name = name
-        self._state = None
+        self._area = area
+        self._attr_unique_id = entry_id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="Brottsplatskartan",
+            name=name,
+        )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
 
-        incident_counts = defaultdict(int)
-        incidents = self._brottsplatskartan.get_incidents()
+        incident_counts: defaultdict[str, int] = defaultdict(int)
+        get_incidents: dict[str, list] | Literal[False] = (
+            self._brottsplatskartan.get_incidents()
+        )
 
-        if incidents is False:
-            _LOGGER.debug("Problems fetching incidents")
+        if get_incidents is False:
+            LOGGER.debug("Problems fetching incidents")
             return
 
-        for incident in incidents:
-            incident_type = incident.get("title_type")
-            incident_counts[incident_type] += 1
+        if self._area:
+            incidents = get_incidents.get(self._area) or []
+        else:
+            incidents = get_incidents.get("latlng") or []
 
-        self._attributes = {ATTR_ATTRIBUTION: brottsplatskartan.ATTRIBUTION}
-        self._attributes.update(incident_counts)
-        self._state = len(incidents)
+        for incident in incidents:
+            if (incident_type := incident.get("title_type")) is not None:
+                incident_counts[incident_type] += 1
+
+        self._attr_extra_state_attributes = incident_counts
+        self._attr_native_value = len(incidents)

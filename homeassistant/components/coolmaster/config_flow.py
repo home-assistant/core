@@ -1,32 +1,52 @@
 """Config flow to configure Coolmaster."""
 
-from pycoolmasternet import CoolMasterNet
+from __future__ import annotations
+
+from typing import Any
+
+from pycoolmasternet_async import CoolMasterNet
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant.components.climate import HVACMode
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import callback
 
-# pylint: disable=unused-import
-from .const import AVAILABLE_MODES, CONF_SUPPORTED_MODES, DEFAULT_PORT, DOMAIN
+from .const import CONF_SUPPORTED_MODES, CONF_SWING_SUPPORT, DEFAULT_PORT, DOMAIN
+
+AVAILABLE_MODES = [
+    HVACMode.OFF.value,
+    HVACMode.HEAT.value,
+    HVACMode.COOL.value,
+    HVACMode.DRY.value,
+    HVACMode.HEAT_COOL.value,
+    HVACMode.FAN_ONLY.value,
+]
 
 MODES_SCHEMA = {vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES}
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, **MODES_SCHEMA})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        **MODES_SCHEMA,
+        vol.Required(CONF_SWING_SUPPORT, default=False): bool,
+    }
+)
 
 
-async def _validate_connection(hass: core.HomeAssistant, host):
-    cool = CoolMasterNet(host, port=DEFAULT_PORT)
-    devices = await hass.async_add_executor_job(cool.devices)
-    return bool(devices)
+async def _validate_connection(host: str) -> bool:
+    cool = CoolMasterNet(host, DEFAULT_PORT)
+    units = await cool.status()
+    return bool(units)
 
 
-class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Coolmaster config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def _async_get_entry(self, data):
+    @callback
+    def _async_get_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         supported_modes = [
             key for (key, value) in data.items() if key in AVAILABLE_MODES and value
         ]
@@ -36,10 +56,13 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: data[CONF_HOST],
                 CONF_PORT: DEFAULT_PORT,
                 CONF_SUPPORTED_MODES: supported_modes,
+                CONF_SWING_SUPPORT: data[CONF_SWING_SUPPORT],
             },
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
@@ -49,11 +72,11 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = user_input[CONF_HOST]
 
         try:
-            result = await _validate_connection(self.hass, host)
+            result = await _validate_connection(host)
             if not result:
                 errors["base"] = "no_units"
-        except (ConnectionRefusedError, TimeoutError):
-            errors["base"] = "connection_error"
+        except OSError:
+            errors["base"] = "cannot_connect"
 
         if errors:
             return self.async_show_form(

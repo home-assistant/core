@@ -1,0 +1,37 @@
+{
+  "services": {
+    "clear": {
+      "name": "Clear",
+      "description": "Deletes all log entries."
+    },
+    "write": {
+      "name": "Write",
+      "description": "Write log entry.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Message to log."
+        },
+        "level": {
+          "name": "Level",
+          "description": "Log level."
+        },
+        "logger": {
+          "name": "Logger",
+          "description": "Logger name under which to log the message. Defaults to `system_log.external`."
+        }
+      }
+    }
+  },
+  "selector": {
+    "level": {
+      "options": {
+        "debug": "Debug",
+        "info": "Info",
+        "warning": "Warning",
+        "error": "Error",
+        "critical": "Critical"
+      }
+    }
+  }
+}

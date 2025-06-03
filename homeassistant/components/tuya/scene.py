@@ -1,34 +1,61 @@
-"""Support for the Tuya scenes."""
-from homeassistant.components.scene import DOMAIN, Scene
+"""Support for Tuya scenes."""
 
-from . import DATA_TUYA, TuyaDevice
+from __future__ import annotations
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+from typing import Any
+
+from tuya_sharing import Manager, SharingScene
+
+from homeassistant.components.scene import Scene
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import TuyaConfigEntry
+from .const import DOMAIN
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up Tuya scenes."""
-    if discovery_info is None:
-        return
-    tuya = hass.data[DATA_TUYA]
-    dev_ids = discovery_info.get("dev_ids")
-    devices = []
-    for dev_id in dev_ids:
-        device = tuya.get_device_by_id(dev_id)
-        if device is None:
-            continue
-        devices.append(TuyaScene(device))
-    add_entities(devices)
+    hass_data = entry.runtime_data
+    scenes = await hass.async_add_executor_job(hass_data.manager.query_scenes)
+    async_add_entities(TuyaSceneEntity(hass_data.manager, scene) for scene in scenes)
 
 
-class TuyaScene(TuyaDevice, Scene):
-    """Tuya Scene."""
+class TuyaSceneEntity(Scene):
+    """Tuya Scene Remote."""
 
-    def __init__(self, tuya):
-        """Init Tuya scene."""
-        super().__init__(tuya)
-        self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
+    _should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
-    def activate(self):
+    def __init__(self, home_manager: Manager, scene: SharingScene) -> None:
+        """Init Tuya Scene."""
+        super().__init__()
+        self._attr_unique_id = f"tys{scene.scene_id}"
+        self.home_manager = home_manager
+        self.scene = scene
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description for device registry."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self.unique_id}")},
+            manufacturer="tuya",
+            name=self.scene.name,
+            model="Tuya Scene",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return if the scene is enabled."""
+        return self.scene.enabled
+
+    def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        self.tuya.activate()
+        self.home_manager.trigger_scene(self.scene.home_id, self.scene.scene_id)

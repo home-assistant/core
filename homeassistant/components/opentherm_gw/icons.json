@@ -1,0 +1,40 @@
+{
+  "services": {
+    "reset_gateway": {
+      "service": "mdi:reload"
+    },
+    "set_central_heating_ovrd": {
+      "service": "mdi:heat-wave"
+    },
+    "set_clock": {
+      "service": "mdi:clock"
+    },
+    "set_control_setpoint": {
+      "service": "mdi:thermometer-lines"
+    },
+    "set_hot_water_ovrd": {
+      "service": "mdi:thermometer-lines"
+    },
+    "set_hot_water_setpoint": {
+      "service": "mdi:thermometer-lines"
+    },
+    "set_gpio_mode": {
+      "service": "mdi:cable-data"
+    },
+    "set_led_mode": {
+      "service": "mdi:led-on"
+    },
+    "set_max_modulation": {
+      "service": "mdi:thermometer-lines"
+    },
+    "set_outside_temperature": {
+      "service": "mdi:thermometer-lines"
+    },
+    "set_setback_temperature": {
+      "service": "mdi:thermometer-lines"
+    },
+    "send_transparent_command": {
+      "service": "mdi:console"
+    }
+  }
+}

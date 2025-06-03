@@ -1,222 +1,305 @@
 """Support for the OpenWeatherMap (OWM) service."""
-from datetime import timedelta
-import logging
 
-from pyowm import OWM
-from pyowm.exceptions.api_call_error import APICallError
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_API_KEY,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
+    PERCENTAGE,
+    UV_INDEX,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-_LOGGER = logging.getLogger(__name__)
+from . import OpenweathermapConfigEntry
+from .const import (
+    ATTR_API_AIRPOLLUTION_AQI,
+    ATTR_API_AIRPOLLUTION_CO,
+    ATTR_API_AIRPOLLUTION_NO,
+    ATTR_API_AIRPOLLUTION_NO2,
+    ATTR_API_AIRPOLLUTION_O3,
+    ATTR_API_AIRPOLLUTION_PM2_5,
+    ATTR_API_AIRPOLLUTION_PM10,
+    ATTR_API_AIRPOLLUTION_SO2,
+    ATTR_API_CLOUDS,
+    ATTR_API_CONDITION,
+    ATTR_API_CURRENT,
+    ATTR_API_DEW_POINT,
+    ATTR_API_FEELS_LIKE_TEMPERATURE,
+    ATTR_API_HUMIDITY,
+    ATTR_API_PRECIPITATION_KIND,
+    ATTR_API_PRESSURE,
+    ATTR_API_RAIN,
+    ATTR_API_SNOW,
+    ATTR_API_TEMPERATURE,
+    ATTR_API_UV_INDEX,
+    ATTR_API_VISIBILITY_DISTANCE,
+    ATTR_API_WEATHER,
+    ATTR_API_WEATHER_CODE,
+    ATTR_API_WIND_BEARING,
+    ATTR_API_WIND_SPEED,
+    ATTRIBUTION,
+    DOMAIN,
+    MANUFACTURER,
+    OWM_MODE_AIRPOLLUTION,
+    OWM_MODE_FREE_FORECAST,
+)
+from .coordinator import OWMUpdateCoordinator
 
-ATTRIBUTION = "Data provided by OpenWeatherMap"
+WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_API_WEATHER,
+        name="Weather",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_DEW_POINT,
+        name="Dew Point",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_TEMPERATURE,
+        name="Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_FEELS_LIKE_TEMPERATURE,
+        name="Feels like temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_WIND_SPEED,
+        name="Wind speed",
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_WIND_BEARING,
+        name="Wind bearing",
+        native_unit_of_measurement=DEGREE,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_HUMIDITY,
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_PRESSURE,
+        name="Pressure",
+        native_unit_of_measurement=UnitOfPressure.HPA,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_CLOUDS,
+        name="Cloud coverage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_RAIN,
+        name="Rain",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_SNOW,
+        name="Snow",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_PRECIPITATION_KIND,
+        name="Precipitation kind",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_UV_INDEX,
+        name="UV Index",
+        native_unit_of_measurement=UV_INDEX,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_VISIBILITY_DISTANCE,
+        name="Visibility",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_CONDITION,
+        name="Condition",
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_WEATHER_CODE,
+        name="Weather Code",
+    ),
+)
 
-CONF_FORECAST = "forecast"
-CONF_LANGUAGE = "language"
-
-DEFAULT_NAME = "OWM"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
-
-SENSOR_TYPES = {
-    "weather": ["Condition", None],
-    "temperature": ["Temperature", None],
-    "wind_speed": ["Wind speed", "m/s"],
-    "wind_bearing": ["Wind bearing", "°"],
-    "humidity": ["Humidity", "%"],
-    "pressure": ["Pressure", "mbar"],
-    "clouds": ["Cloud coverage", "%"],
-    "rain": ["Rain", "mm"],
-    "snow": ["Snow", "mm"],
-    "weather_code": ["Weather code", None],
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_FORECAST, default=False): cv.boolean,
-        vol.Optional(CONF_LANGUAGE): cv.string,
-    }
+AIRPOLLUTION_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_AQI,
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_CO,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_NO,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_NO2,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_O3,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.OZONE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_SO2,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_PM2_5,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_PM10,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the OpenWeatherMap sensor."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: OpenweathermapConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up OpenWeatherMap sensor entities based on a config entry."""
+    domain_data = config_entry.runtime_data
+    name = domain_data.name
+    unique_id = config_entry.unique_id
+    assert unique_id is not None
+    coordinator = domain_data.coordinator
 
-    if None in (hass.config.latitude, hass.config.longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return
-
-    SENSOR_TYPES["temperature"][1] = hass.config.units.temperature_unit
-
-    name = config.get(CONF_NAME)
-    forecast = config.get(CONF_FORECAST)
-    language = config.get(CONF_LANGUAGE)
-    if isinstance(language, str):
-        language = language.lower()[:2]
-
-    owm = OWM(API_key=config.get(CONF_API_KEY), language=language)
-
-    if not owm:
-        _LOGGER.error("Unable to connect to OpenWeatherMap")
-        return
-
-    data = WeatherData(owm, forecast, hass.config.latitude, hass.config.longitude)
-    dev = []
-    for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(
-            OpenWeatherMapSensor(name, data, variable, SENSOR_TYPES[variable][1])
+    if domain_data.mode == OWM_MODE_FREE_FORECAST:
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        for entry in entries:
+            entity_registry.async_remove(entry.entity_id)
+    elif domain_data.mode == OWM_MODE_AIRPOLLUTION:
+        async_add_entities(
+            OpenWeatherMapSensor(
+                name,
+                unique_id,
+                description,
+                coordinator,
+            )
+            for description in AIRPOLLUTION_SENSOR_TYPES
+        )
+    else:
+        async_add_entities(
+            OpenWeatherMapSensor(
+                name,
+                unique_id,
+                description,
+                coordinator,
+            )
+            for description in WEATHER_SENSOR_TYPES
         )
 
-    if forecast:
-        SENSOR_TYPES["forecast"] = ["Forecast", None]
-        dev.append(
-            OpenWeatherMapSensor(name, data, "forecast", SENSOR_TYPES["temperature"][1])
+
+class AbstractOpenWeatherMapSensor(SensorEntity):
+    """Abstract class for an OpenWeatherMap sensor."""
+
+    _attr_should_poll = False
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        name: str,
+        unique_id: str,
+        description: SensorEntityDescription,
+        coordinator: OWMUpdateCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        self._coordinator = coordinator
+
+        self._attr_unique_id = f"{unique_id}-{description.key}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer=MANUFACTURER,
+            name=name,
         )
 
-    add_entities(dev, True)
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._coordinator.last_update_success
+
+    async def async_added_to_hass(self) -> None:
+        """Connect to dispatcher listening for entity data notifications."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    async def async_update(self) -> None:
+        """Get the latest data from OWM and updates the states."""
+        await self._coordinator.async_request_refresh()
 
 
-class OpenWeatherMapSensor(Entity):
+class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
     """Implementation of an OpenWeatherMap sensor."""
 
-    def __init__(self, name, weather_data, sensor_type, temp_unit):
-        """Initialize the sensor."""
-        self.client_name = name
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self.owa_client = weather_data
-        self.temp_unit = temp_unit
-        self.type = sensor_type
-        self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def state(self):
+    def native_value(self) -> StateType:
         """Return the state of the device."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    def update(self):
-        """Get the latest data from OWM and updates the states."""
-        try:
-            self.owa_client.update()
-        except APICallError:
-            _LOGGER.error("Error when calling API to update data")
-            return
-
-        data = self.owa_client.data
-        fc_data = self.owa_client.fc_data
-
-        if data is None:
-            return
-
-        try:
-            if self.type == "weather":
-                self._state = data.get_detailed_status()
-            elif self.type == "temperature":
-                if self.temp_unit == TEMP_CELSIUS:
-                    self._state = round(data.get_temperature("celsius")["temp"], 1)
-                elif self.temp_unit == TEMP_FAHRENHEIT:
-                    self._state = round(data.get_temperature("fahrenheit")["temp"], 1)
-                else:
-                    self._state = round(data.get_temperature()["temp"], 1)
-            elif self.type == "wind_speed":
-                self._state = round(data.get_wind()["speed"], 1)
-            elif self.type == "wind_bearing":
-                self._state = round(data.get_wind()["deg"], 1)
-            elif self.type == "humidity":
-                self._state = round(data.get_humidity(), 1)
-            elif self.type == "pressure":
-                self._state = round(data.get_pressure()["press"], 0)
-            elif self.type == "clouds":
-                self._state = data.get_clouds()
-            elif self.type == "rain":
-                if data.get_rain():
-                    self._state = round(data.get_rain()["3h"], 0)
-                    self._unit_of_measurement = "mm"
-                else:
-                    self._state = "not raining"
-                    self._unit_of_measurement = ""
-            elif self.type == "snow":
-                if data.get_snow():
-                    self._state = round(data.get_snow(), 0)
-                    self._unit_of_measurement = "mm"
-                else:
-                    self._state = "not snowing"
-                    self._unit_of_measurement = ""
-            elif self.type == "forecast":
-                if fc_data is None:
-                    return
-                self._state = fc_data.get_weathers()[0].get_detailed_status()
-            elif self.type == "weather_code":
-                self._state = data.get_weather_code()
-        except KeyError:
-            self._state = None
-            _LOGGER.warning("Condition is currently not available: %s", self.type)
-
-
-class WeatherData:
-    """Get the latest data from OpenWeatherMap."""
-
-    def __init__(self, owm, forecast, latitude, longitude):
-        """Initialize the data object."""
-        self.owm = owm
-        self.forecast = forecast
-        self.latitude = latitude
-        self.longitude = longitude
-        self.data = None
-        self.fc_data = None
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from OpenWeatherMap."""
-        try:
-            obs = self.owm.weather_at_coords(self.latitude, self.longitude)
-        except (APICallError, TypeError):
-            _LOGGER.error("Error when calling API to get weather at coordinates")
-            obs = None
-
-        if obs is None:
-            _LOGGER.warning("Failed to fetch data")
-            return
-
-        self.data = obs.get_weather()
-
-        if self.forecast == 1:
-            try:
-                obs = self.owm.three_hours_forecast_at_coords(
-                    self.latitude, self.longitude
-                )
-                self.fc_data = obs.get_forecast()
-            except (ConnectionResetError, TypeError):
-                _LOGGER.warning("Failed to fetch forecast")
+        return self._coordinator.data[ATTR_API_CURRENT].get(self.entity_description.key)

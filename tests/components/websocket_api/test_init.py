@@ -1,21 +1,19 @@
 """Tests for the Home Assistant Websocket API."""
+
 from unittest.mock import Mock, patch
 
 from aiohttp import WSMsgType
-import pytest
 import voluptuous as vol
 
-from homeassistant.components.websocket_api import const, messages
+from homeassistant.components.websocket_api import (
+    async_register_command,
+    const,
+    messages,
+)
+from homeassistant.core import HomeAssistant
 
 
-@pytest.fixture
-def mock_low_queue():
-    """Mock a low queue."""
-    with patch("homeassistant.components.websocket_api.http.MAX_PENDING_MSG", 5):
-        yield
-
-
-async def test_invalid_message_format(websocket_client):
+async def test_invalid_message_format(websocket_client) -> None:
     """Test sending invalid JSON."""
     await websocket_client.send_json({"type": 5})
 
@@ -27,7 +25,7 @@ async def test_invalid_message_format(websocket_client):
     assert error["message"].startswith("Message incorrectly formatted")
 
 
-async def test_invalid_json(websocket_client):
+async def test_invalid_json(websocket_client) -> None:
     """Test sending invalid JSON."""
     await websocket_client.send_str("this is not JSON")
 
@@ -36,25 +34,17 @@ async def test_invalid_json(websocket_client):
     assert msg.type == WSMsgType.close
 
 
-async def test_quiting_hass(hass, websocket_client):
+async def test_quiting_hass(hass: HomeAssistant, websocket_client) -> None:
     """Test sending invalid JSON."""
     with patch.object(hass.loop, "stop"):
         await hass.async_stop()
 
     msg = await websocket_client.receive()
 
-    assert msg.type == WSMsgType.CLOSE
+    assert msg.type is WSMsgType.CLOSE
 
 
-async def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
-    """Test get_panels command."""
-    for idx in range(10):
-        await websocket_client.send_json({"id": idx + 1, "type": "ping"})
-    msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.close
-
-
-async def test_unknown_command(websocket_client):
+async def test_unknown_command(websocket_client) -> None:
     """Test get_panels command."""
     await websocket_client.send_json({"id": 5, "type": "unknown_command"})
 
@@ -63,9 +53,10 @@ async def test_unknown_command(websocket_client):
     assert msg["error"]["code"] == const.ERR_UNKNOWN_COMMAND
 
 
-async def test_handler_failing(hass, websocket_client):
+async def test_handler_failing(hass: HomeAssistant, websocket_client) -> None:
     """Test a command that raises."""
-    hass.components.websocket_api.async_register_command(
+    async_register_command(
+        hass,
         "bla",
         Mock(side_effect=TypeError),
         messages.BASE_COMMAND_MESSAGE_SCHEMA.extend({"type": "bla"}),
@@ -79,9 +70,10 @@ async def test_handler_failing(hass, websocket_client):
     assert msg["error"]["code"] == const.ERR_UNKNOWN_ERROR
 
 
-async def test_invalid_vol(hass, websocket_client):
+async def test_invalid_vol(hass: HomeAssistant, websocket_client) -> None:
     """Test a command that raises invalid vol error."""
-    hass.components.websocket_api.async_register_command(
+    async_register_command(
+        hass,
         "bla",
         Mock(side_effect=TypeError),
         messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(

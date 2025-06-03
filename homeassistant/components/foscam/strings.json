@@ -1,0 +1,61 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "rtsp_port": "RTSP port",
+          "stream": "Stream"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Foscam camera."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_response": "Invalid response from the device",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "switch": {
+      "sleep_switch": {
+        "name": "Sleep"
+      }
+    }
+  },
+  "services": {
+    "ptz": {
+      "name": "PTZ",
+      "description": "Moves a Foscam camera to a specified direction.",
+      "fields": {
+        "movement": {
+          "name": "Movement",
+          "description": "Direction of the movement."
+        },
+        "travel_time": {
+          "name": "Travel time",
+          "description": "Travel time in seconds."
+        }
+      }
+    },
+    "ptz_preset": {
+      "name": "PTZ preset",
+      "description": "Moves a Foscam camera to a predefined position.",
+      "fields": {
+        "preset_name": {
+          "name": "Preset name",
+          "description": "The name of the preset to move to. Presets can be created from within the official Foscam apps."
+        }
+      }
+    }
+  }
+}

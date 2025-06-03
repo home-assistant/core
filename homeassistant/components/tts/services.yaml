@@ -1,23 +1,58 @@
 # Describes the format for available TTS services
 
 say:
-  description: Say some things on a media player.
   fields:
     entity_id:
-      description: Name(s) of media player entities.
-      example: 'media_player.floor'
+      required: true
+      selector:
+        entity:
+          domain: media_player
     message:
-      description: Text to speak on devices.
-      example: 'My name is hanna'
+      example: "My name is hanna"
+      required: true
+      selector:
+        text:
     cache:
-      description: Control file cache of this message.
-      example: 'true'
+      default: false
+      selector:
+        boolean:
     language:
-      description: Language to use for speech generation.
-      example: 'ru'
+      example: "ru"
+      selector:
+        text:
     options:
-      description: A dictionary containing platform-specific options. Optional depending on the platform.
+      advanced: true
       example: platform specific
+      selector:
+        object:
+
+speak:
+  target:
+    entity:
+      domain: tts
+  fields:
+    media_player_entity_id:
+      required: true
+      selector:
+        entity:
+          domain: media_player
+    message:
+      example: "My name is hanna"
+      required: true
+      selector:
+        text:
+    cache:
+      default: true
+      selector:
+        boolean:
+    language:
+      example: "ru"
+      selector:
+        text:
+    options:
+      advanced: true
+      example: platform specific
+      selector:
+        object:
 
 clear_cache:
-  description: Remove cache files and RAM cache.

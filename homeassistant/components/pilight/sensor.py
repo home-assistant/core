@@ -1,20 +1,29 @@
 """Support for Pilight sensors."""
+
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components import pilight
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_PAYLOAD, CONF_UNIT_OF_MEASUREMENT
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_VARIABLE = "variable"
 
 DEFAULT_NAME = "Pilight Sensor"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_VARIABLE): cv.string,
         vol.Required(CONF_PAYLOAD): vol.Schema(dict),
@@ -24,7 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Pilight Sensor."""
     add_entities(
         [
@@ -39,8 +53,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class PilightSensor(Entity):
+class PilightSensor(SensorEntity):
     """Representation of a sensor that can be updated using Pilight."""
+
+    _attr_should_poll = False
 
     def __init__(self, hass, name, variable, payload, unit_of_measurement):
         """Initialize the sensor."""
@@ -51,12 +67,7 @@ class PilightSensor(Entity):
         self._payload = payload
         self._unit_of_measurement = unit_of_measurement
 
-        hass.bus.listen(pilight.EVENT, self._handle_code)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
+        hass.bus.listen(EVENT, self._handle_code)
 
     @property
     def name(self):
@@ -64,12 +75,12 @@ class PilightSensor(Entity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         return self._state
 

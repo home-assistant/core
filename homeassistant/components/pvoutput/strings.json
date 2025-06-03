@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To authenticate with PVOutput you'll need to get the API key at {account_url}.\n\nThe system IDs of registered systems are listed on that same page.",
+        "data": {
+          "system_id": "System ID",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "To re-authenticate with PVOutput you'll need to get the API key at {account_url}.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_consumption": {
+        "name": "Energy consumption"
+      },
+      "energy_generation": {
+        "name": "Energy generation"
+      },
+      "efficiency": {
+        "name": "Efficiency"
+      },
+      "power_consumption": {
+        "name": "Power consumption"
+      },
+      "power_generation": {
+        "name": "Power generation"
+      }
+    }
+  }
+}

@@ -1,213 +1,480 @@
 """The tests for the Google speech platform."""
-import asyncio
-import os
-import shutil
-from unittest.mock import patch
 
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
-    DOMAIN as DOMAIN_MP,
-    SERVICE_PLAY_MEDIA,
-)
-import homeassistant.components.tts as tts
-from homeassistant.setup import setup_component
+from __future__ import annotations
 
-from tests.common import assert_setup_component, get_test_home_assistant, mock_service
-from tests.components.tts.test_init import mutagen_mock  # noqa: F401
+from collections.abc import Generator
+from http import HTTPStatus
+from pathlib import Path
+from typing import Any
+from unittest.mock import MagicMock, patch
+
+from gtts import gTTSError
+import pytest
+
+from homeassistant.components import tts
+from homeassistant.components.google_translate.const import CONF_TLD, DOMAIN
+from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
+from tests.components.tts.common import retrieve_media
+from tests.typing import ClientSessionGenerator
 
 
-class TestTTSGooglePlatform:
-    """Test the Google speech component."""
+@pytest.fixture(autouse=True)
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
+    """Mock writing tags."""
 
-    def setup_method(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-        self.url = "https://translate.google.com/translate_tts"
-        self.url_param = {
-            "tl": "en",
-            "q": "90%25%20of%20I%20person%20is%20on%20front%20of%20your%20door.",
-            "tk": 5,
-            "client": "tw-ob",
-            "textlen": 41,
-            "total": 1,
-            "idx": 0,
-            "ie": "UTF-8",
-        }
+@pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
+    """Mock the TTS cache dir with empty dir."""
 
-    def teardown_method(self):
-        """Stop everything that was started."""
-        default_tts = self.hass.config.path(tts.DEFAULT_CACHE_DIR)
-        if os.path.isdir(default_tts):
-            shutil.rmtree(default_tts)
 
-        self.hass.stop()
+@pytest.fixture(autouse=True)
+async def setup_internal_url(hass: HomeAssistant) -> None:
+    """Set up internal url."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"}
+    )
 
-    def test_setup_component(self):
-        """Test setup component."""
-        config = {tts.DOMAIN: {"platform": "google_translate"}}
 
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
+@pytest.fixture
+def mock_gtts() -> Generator[MagicMock]:
+    """Mock gtts."""
+    with patch("homeassistant.components.google_translate.tts.gTTS") as mock_gtts:
+        yield mock_gtts
 
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_service_say(self, mock_calculate, aioclient_mock):
-        """Test service call say."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        aioclient_mock.get(self.url, params=self.url_param, status=200, content=b"test")
+@pytest.fixture(name="setup")
+async def setup_fixture(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Set up the test environment."""
+    if request.param == "mock_setup":
+        await mock_setup(hass, config)
+    elif request.param == "mock_config_entry_setup":
+        await mock_config_entry_setup(hass, config)
+    else:
+        raise RuntimeError("Invalid setup fixture")
 
-        config = {tts.DOMAIN: {"platform": "google_translate"}}
+    await hass.async_block_till_done()
 
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
 
-        self.hass.services.call(
-            tts.DOMAIN,
+@pytest.fixture(name="config")
+def config_fixture() -> dict[str, Any]:
+    """Return config."""
+    return {}
+
+
+async def mock_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
+    """Mock setup."""
+    assert await async_setup_component(
+        hass, tts.DOMAIN, {tts.DOMAIN: {CONF_PLATFORM: DOMAIN} | config}
+    )
+
+
+async def mock_config_entry_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
+    """Mock config entry setup."""
+    default_config = {tts.CONF_LANG: "en", CONF_TLD: "com"}
+    config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("setup", "tts_service", "service_data"),
+    [
+        (
+            "mock_setup",
             "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
-        )
-        self.hass.block_till_done()
-
-        assert len(calls) == 1
-        assert len(aioclient_mock.mock_calls) == 1
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
-
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_service_say_german_config(self, mock_calculate, aioclient_mock):
-        """Test service call say with german code in the config."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        self.url_param["tl"] = "de"
-        aioclient_mock.get(self.url, params=self.url_param, status=200, content=b"test")
-
-        config = {tts.DOMAIN: {"platform": "google_translate", "language": "de"}}
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-        self.hass.services.call(
-            tts.DOMAIN,
-            "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
-        )
-        self.hass.block_till_done()
-
-        assert len(calls) == 1
-        assert len(aioclient_mock.mock_calls) == 1
-
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_service_say_german_service(self, mock_calculate, aioclient_mock):
-        """Test service call say with german code in the service."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        self.url_param["tl"] = "de"
-        aioclient_mock.get(self.url, params=self.url_param, status=200, content=b"test")
-
-        config = {
-            tts.DOMAIN: {"platform": "google_translate", "service_name": "google_say"}
-        }
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-        self.hass.services.call(
-            tts.DOMAIN,
-            "google_say",
             {
-                tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
+                ATTR_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+            },
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.google_translate_en_com",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+            },
+        ),
+    ],
+    indirect=["setup"],
+)
+async def test_tts_service(
+    hass: HomeAssistant,
+    mock_gtts: MagicMock,
+    hass_client: ClientSessionGenerator,
+    service_calls: list[ServiceCall],
+    setup: str,
+    tts_service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test tts service."""
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert (
+        await retrieve_media(
+            hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
+        )
+        == HTTPStatus.OK
+    )
+    assert len(mock_gtts.mock_calls) == 2
+
+    assert mock_gtts.mock_calls[0][2] == {
+        "text": "There is a person at the front door.",
+        "lang": "en",
+        "tld": "com",
+    }
+
+
+@pytest.mark.parametrize("config", [{tts.CONF_LANG: "de"}])
+@pytest.mark.parametrize(
+    ("setup", "tts_service", "service_data"),
+    [
+        (
+            "mock_setup",
+            "google_translate_say",
+            {
+                ATTR_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+            },
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.google_translate_de_com",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+            },
+        ),
+    ],
+    indirect=["setup"],
+)
+async def test_service_say_german_config(
+    hass: HomeAssistant,
+    mock_gtts: MagicMock,
+    hass_client: ClientSessionGenerator,
+    service_calls: list[ServiceCall],
+    setup: str,
+    tts_service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test service call say with german code in the config."""
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert (
+        await retrieve_media(
+            hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
+        )
+        == HTTPStatus.OK
+    )
+    assert len(mock_gtts.mock_calls) == 2
+    assert mock_gtts.mock_calls[0][2] == {
+        "text": "There is a person at the front door.",
+        "lang": "de",
+        "tld": "com",
+    }
+
+
+@pytest.mark.parametrize(
+    ("setup", "tts_service", "service_data"),
+    [
+        (
+            "mock_setup",
+            "google_translate_say",
+            {
+                ATTR_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
                 tts.ATTR_LANGUAGE: "de",
             },
-        )
-        self.hass.block_till_done()
-
-        assert len(calls) == 1
-        assert len(aioclient_mock.mock_calls) == 1
-
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_service_say_error(self, mock_calculate, aioclient_mock):
-        """Test service call say with http response 400."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        aioclient_mock.get(self.url, params=self.url_param, status=400, content=b"test")
-
-        config = {tts.DOMAIN: {"platform": "google_translate"}}
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-        self.hass.services.call(
-            tts.DOMAIN,
-            "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
-        )
-        self.hass.block_till_done()
-
-        assert len(calls) == 0
-        assert len(aioclient_mock.mock_calls) == 1
-
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_service_say_timeout(self, mock_calculate, aioclient_mock):
-        """Test service call say with http timeout."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        aioclient_mock.get(self.url, params=self.url_param, exc=asyncio.TimeoutError())
-
-        config = {tts.DOMAIN: {"platform": "google_translate"}}
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-        self.hass.services.call(
-            tts.DOMAIN,
-            "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
-        )
-        self.hass.block_till_done()
-
-        assert len(calls) == 0
-        assert len(aioclient_mock.mock_calls) == 1
-
-    @patch("gtts_token.gtts_token.Token.calculate_token", autospec=True, return_value=5)
-    def test_service_say_long_size(self, mock_calculate, aioclient_mock):
-        """Test service call say with a lot of text."""
-        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
-
-        self.url_param["total"] = 9
-        self.url_param["q"] = "I%20person%20is%20on%20front%20of%20your%20door"
-        self.url_param["textlen"] = 33
-        for idx in range(0, 9):
-            self.url_param["idx"] = idx
-            aioclient_mock.get(
-                self.url, params=self.url_param, status=200, content=b"test"
-            )
-
-        config = {
-            tts.DOMAIN: {"platform": "google_translate", "service_name": "google_say"}
-        }
-
-        with assert_setup_component(1, tts.DOMAIN):
-            setup_component(self.hass, tts.DOMAIN, config)
-
-        self.hass.services.call(
-            tts.DOMAIN,
-            "google_say",
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
             {
-                tts.ATTR_MESSAGE: (
-                    "I person is on front of your door."
-                    "I person is on front of your door."
-                    "I person is on front of your door."
-                    "I person is on front of your door."
-                    "I person is on front of your door."
-                    "I person is on front of your door."
-                    "I person is on front of your door."
-                    "I person is on front of your door."
-                    "I person is on front of your door."
-                )
+                ATTR_ENTITY_ID: "tts.google_translate_en_com",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_LANGUAGE: "de",
             },
-        )
-        self.hass.block_till_done()
+        ),
+    ],
+    indirect=["setup"],
+)
+async def test_service_say_german_service(
+    hass: HomeAssistant,
+    mock_gtts: MagicMock,
+    hass_client: ClientSessionGenerator,
+    service_calls: list[ServiceCall],
+    setup: str,
+    tts_service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test service call say with german code in the service."""
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
 
-        assert len(calls) == 1
-        assert len(aioclient_mock.mock_calls) == 9
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".mp3") != -1
+    assert len(service_calls) == 2
+    assert (
+        await retrieve_media(
+            hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
+        )
+        == HTTPStatus.OK
+    )
+    assert len(mock_gtts.mock_calls) == 2
+    assert mock_gtts.mock_calls[0][2] == {
+        "text": "There is a person at the front door.",
+        "lang": "de",
+        "tld": "com",
+    }
+
+
+@pytest.mark.parametrize("config", [{tts.CONF_LANG: "en-uk"}])
+@pytest.mark.parametrize(
+    ("setup", "tts_service", "service_data"),
+    [
+        (
+            "mock_setup",
+            "google_translate_say",
+            {
+                ATTR_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+            },
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.google_translate_en_co_uk",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+            },
+        ),
+    ],
+    indirect=["setup"],
+)
+async def test_service_say_en_uk_config(
+    hass: HomeAssistant,
+    mock_gtts: MagicMock,
+    hass_client: ClientSessionGenerator,
+    service_calls: list[ServiceCall],
+    setup: str,
+    tts_service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test service call say with en-uk code in the config."""
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert (
+        await retrieve_media(
+            hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
+        )
+        == HTTPStatus.OK
+    )
+    assert len(mock_gtts.mock_calls) == 2
+    assert mock_gtts.mock_calls[0][2] == {
+        "text": "There is a person at the front door.",
+        "lang": "en",
+        "tld": "co.uk",
+    }
+
+
+@pytest.mark.parametrize(
+    ("setup", "tts_service", "service_data"),
+    [
+        (
+            "mock_setup",
+            "google_translate_say",
+            {
+                ATTR_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_LANGUAGE: "en-uk",
+            },
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.google_translate_en_com",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_LANGUAGE: "en-uk",
+            },
+        ),
+    ],
+    indirect=["setup"],
+)
+async def test_service_say_en_uk_service(
+    hass: HomeAssistant,
+    mock_gtts: MagicMock,
+    hass_client: ClientSessionGenerator,
+    service_calls: list[ServiceCall],
+    setup: str,
+    tts_service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test service call say with en-uk code in the config."""
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert (
+        await retrieve_media(
+            hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
+        )
+        == HTTPStatus.OK
+    )
+    assert len(mock_gtts.mock_calls) == 2
+    assert mock_gtts.mock_calls[0][2] == {
+        "text": "There is a person at the front door.",
+        "lang": "en",
+        "tld": "co.uk",
+    }
+
+
+@pytest.mark.parametrize(
+    ("setup", "tts_service", "service_data"),
+    [
+        (
+            "mock_setup",
+            "google_translate_say",
+            {
+                ATTR_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_OPTIONS: {"tld": "co.uk"},
+            },
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.google_translate_en_com",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_OPTIONS: {"tld": "co.uk"},
+            },
+        ),
+    ],
+    indirect=["setup"],
+)
+async def test_service_say_en_couk(
+    hass: HomeAssistant,
+    mock_gtts: MagicMock,
+    hass_client: ClientSessionGenerator,
+    service_calls: list[ServiceCall],
+    setup: str,
+    tts_service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test service call say in co.uk tld accent."""
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert (
+        await retrieve_media(
+            hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
+        )
+        == HTTPStatus.OK
+    )
+    assert len(mock_gtts.mock_calls) == 2
+
+    assert mock_gtts.mock_calls[0][2] == {
+        "text": "There is a person at the front door.",
+        "lang": "en",
+        "tld": "co.uk",
+    }
+
+
+@pytest.mark.parametrize(
+    ("setup", "tts_service", "service_data"),
+    [
+        (
+            "mock_setup",
+            "google_translate_say",
+            {
+                ATTR_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+            },
+        ),
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.google_translate_en_com",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+            },
+        ),
+    ],
+    indirect=["setup"],
+)
+async def test_service_say_error(
+    hass: HomeAssistant,
+    mock_gtts: MagicMock,
+    hass_client: ClientSessionGenerator,
+    service_calls: list[ServiceCall],
+    setup: str,
+    tts_service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test service call say with http response 400."""
+    mock_gtts.return_value.write_to_fp.side_effect = gTTSError
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert (
+        await retrieve_media(
+            hass, hass_client, service_calls[1].data[ATTR_MEDIA_CONTENT_ID]
+        )
+        == HTTPStatus.INTERNAL_SERVER_ERROR
+    )
+    assert len(mock_gtts.mock_calls) == 2

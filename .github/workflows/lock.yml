@@ -1,0 +1,21 @@
+name: Lock
+
+# yamllint disable-line rule:truthy
+on:
+  schedule:
+    - cron: "0 * * * *"
+
+jobs:
+  lock:
+    if: github.repository_owner == 'home-assistant'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dessant/lock-threads@v5.0.1
+        with:
+          github-token: ${{ github.token }}
+          issue-inactive-days: "30"
+          exclude-issue-created-before: "2020-10-01T00:00:00Z"
+          issue-lock-reason: ""
+          pr-inactive-days: "1"
+          exclude-pr-created-before: "2020-11-01T00:00:00Z"
+          pr-lock-reason: ""

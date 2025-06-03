@@ -1,0 +1,63 @@
+{
+  "config": {
+    "step": {
+      "cloud": {
+        "description": "You must register for an Awair developer access token at: {url}",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "email": "[%key:common::config_flow::data::email%]"
+        }
+      },
+      "local": {
+        "description": "Follow [these instructions]({url}) on how to enable the Awair Local API.\n\nSelect **Submit** when done."
+      },
+      "local_pick": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]",
+          "host": "[%key:common::config_flow::data::ip%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Please re-enter your Awair developer access token.",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "email": "[%key:common::config_flow::data::email%]"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to set up {model} ({device_id})?"
+      },
+      "user": {
+        "menu_options": {
+          "cloud": "Connect via the cloud",
+          "local": "Connect locally (preferred)"
+        },
+        "description": "Pick local for the best experience. Only use cloud if the device is not connected to the same network as Home Assistant, or if you have a legacy device."
+      }
+    },
+    "error": {
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unreachable": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unreachable": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "flow_title": "{model} ({device_id})"
+  },
+  "entity": {
+    "sensor": {
+      "score": {
+        "name": "Score"
+      },
+      "sound_level": {
+        "name": "Sound level"
+      }
+    }
+  }
+}

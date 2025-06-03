@@ -1,67 +1,46 @@
 """The tests for the Datadog component."""
-import unittest
+
 from unittest import mock
+from unittest.mock import patch
 
-import homeassistant.components.datadog as datadog
-from homeassistant.const import (
-    EVENT_LOGBOOK_ENTRY,
-    EVENT_STATE_CHANGED,
-    STATE_OFF,
-    STATE_ON,
-)
-import homeassistant.core as ha
-from homeassistant.setup import setup_component
+from homeassistant.components import datadog
+from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import assert_setup_component
 
 
-class TestDatadog(unittest.TestCase):
-    """Test the Datadog component."""
-
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_invalid_config(self):
-        """Test invalid configuration."""
-        with assert_setup_component(0):
-            assert not setup_component(
-                self.hass, datadog.DOMAIN, {datadog.DOMAIN: {"host1": "host1"}}
-            )
-
-    @mock.patch("homeassistant.components.datadog.statsd")
-    @mock.patch("homeassistant.components.datadog.initialize")
-    def test_datadog_setup_full(self, mock_connection, mock_client):
-        """Test setup with all data."""
-        self.hass.bus.listen = mock.MagicMock()
-
-        assert setup_component(
-            self.hass,
-            datadog.DOMAIN,
-            {datadog.DOMAIN: {"host": "host", "port": 123, "rate": 1, "prefix": "foo"}},
+async def test_invalid_config(hass: HomeAssistant) -> None:
+    """Test invalid configuration."""
+    with assert_setup_component(0):
+        assert not await async_setup_component(
+            hass, datadog.DOMAIN, {datadog.DOMAIN: {"host1": "host1"}}
         )
 
-        assert mock_connection.call_count == 1
-        assert mock_connection.call_args == mock.call(
-            statsd_host="host", statsd_port=123
-        )
 
-        assert self.hass.bus.listen.called
-        assert EVENT_LOGBOOK_ENTRY == self.hass.bus.listen.call_args_list[0][0][0]
-        assert EVENT_STATE_CHANGED == self.hass.bus.listen.call_args_list[1][0][0]
+async def test_datadog_setup_full(hass: HomeAssistant) -> None:
+    """Test setup with all data."""
+    config = {datadog.DOMAIN: {"host": "host", "port": 123, "rate": 1, "prefix": "foo"}}
 
-    @mock.patch("homeassistant.components.datadog.statsd")
-    @mock.patch("homeassistant.components.datadog.initialize")
-    def test_datadog_setup_defaults(self, mock_connection, mock_client):
-        """Test setup with defaults."""
-        self.hass.bus.listen = mock.MagicMock()
+    with (
+        patch("homeassistant.components.datadog.initialize") as mock_init,
+        patch("homeassistant.components.datadog.statsd"),
+    ):
+        assert await async_setup_component(hass, datadog.DOMAIN, config)
 
-        assert setup_component(
-            self.hass,
+        assert mock_init.call_count == 1
+        assert mock_init.call_args == mock.call(statsd_host="host", statsd_port=123)
+
+
+async def test_datadog_setup_defaults(hass: HomeAssistant) -> None:
+    """Test setup with defaults."""
+    with (
+        patch("homeassistant.components.datadog.initialize") as mock_init,
+        patch("homeassistant.components.datadog.statsd"),
+    ):
+        assert await async_setup_component(
+            hass,
             datadog.DOMAIN,
             {
                 datadog.DOMAIN: {
@@ -72,26 +51,21 @@ class TestDatadog(unittest.TestCase):
             },
         )
 
-        assert mock_connection.call_count == 1
-        assert mock_connection.call_args == mock.call(
-            statsd_host="host", statsd_port=8125
-        )
-        assert self.hass.bus.listen.called
+        assert mock_init.call_count == 1
+        assert mock_init.call_args == mock.call(statsd_host="host", statsd_port=8125)
 
-    @mock.patch("homeassistant.components.datadog.statsd")
-    @mock.patch("homeassistant.components.datadog.initialize")
-    def test_logbook_entry(self, mock_connection, mock_client):
-        """Test event listener."""
-        self.hass.bus.listen = mock.MagicMock()
 
-        assert setup_component(
-            self.hass,
+async def test_logbook_entry(hass: HomeAssistant) -> None:
+    """Test event listener."""
+    with (
+        patch("homeassistant.components.datadog.initialize"),
+        patch("homeassistant.components.datadog.statsd") as mock_statsd,
+    ):
+        assert await async_setup_component(
+            hass,
             datadog.DOMAIN,
             {datadog.DOMAIN: {"host": "host", "rate": datadog.DEFAULT_RATE}},
         )
-
-        assert self.hass.bus.listen.called
-        handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
         event = {
             "domain": "automation",
@@ -99,25 +73,27 @@ class TestDatadog(unittest.TestCase):
             "message": "foo bar biz",
             "name": "triggered something",
         }
-        handler_method(mock.MagicMock(data=event))
+        hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, event)
+        await hass.async_block_till_done()
 
-        assert mock_client.event.call_count == 1
-        assert mock_client.event.call_args == mock.call(
+        assert mock_statsd.event.call_count == 1
+        assert mock_statsd.event.call_args == mock.call(
             title="Home Assistant",
-            text="%%% \n **{}** {} \n %%%".format(event["name"], event["message"]),
+            text=f"%%% \n **{event['name']}** {event['message']} \n %%%",
             tags=["entity:sensor.foo.bar", "domain:automation"],
         )
 
-        mock_client.event.reset_mock()
+        mock_statsd.event.reset_mock()
 
-    @mock.patch("homeassistant.components.datadog.statsd")
-    @mock.patch("homeassistant.components.datadog.initialize")
-    def test_state_changed(self, mock_connection, mock_client):
-        """Test event listener."""
-        self.hass.bus.listen = mock.MagicMock()
 
-        assert setup_component(
-            self.hass,
+async def test_state_changed(hass: HomeAssistant) -> None:
+    """Test event listener."""
+    with (
+        patch("homeassistant.components.datadog.initialize"),
+        patch("homeassistant.components.datadog.statsd") as mock_statsd,
+    ):
+        assert await async_setup_component(
+            hass,
             datadog.DOMAIN,
             {
                 datadog.DOMAIN: {
@@ -128,47 +104,44 @@ class TestDatadog(unittest.TestCase):
             },
         )
 
-        assert self.hass.bus.listen.called
-        handler_method = self.hass.bus.listen.call_args_list[1][0][1]
-
         valid = {"1": 1, "1.0": 1.0, STATE_ON: 1, STATE_OFF: 0}
 
-        attributes = {"elevation": 3.2, "temperature": 5.0}
+        attributes = {"elevation": 3.2, "temperature": 5.0, "up": True, "down": False}
 
         for in_, out in valid.items():
             state = mock.MagicMock(
                 domain="sensor",
-                entity_id="sensor.foo.bar",
+                entity_id="sensor.foobar",
                 state=in_,
                 attributes=attributes,
             )
-            handler_method(mock.MagicMock(data={"new_state": state}))
-
-            assert mock_client.gauge.call_count == 3
+            hass.states.async_set(state.entity_id, state.state, state.attributes)
+            await hass.async_block_till_done()
+            assert mock_statsd.gauge.call_count == 5
 
             for attribute, value in attributes.items():
-                mock_client.gauge.assert_has_calls(
+                value = int(value) if isinstance(value, bool) else value
+                mock_statsd.gauge.assert_has_calls(
                     [
                         mock.call(
-                            "ha.sensor.{}".format(attribute),
+                            f"ha.sensor.{attribute}",
                             value,
                             sample_rate=1,
-                            tags=["entity:{}".format(state.entity_id)],
+                            tags=[f"entity:{state.entity_id}"],
                         )
                     ]
                 )
 
-            assert mock_client.gauge.call_args == mock.call(
+            assert mock_statsd.gauge.call_args == mock.call(
                 "ha.sensor",
                 out,
                 sample_rate=1,
-                tags=["entity:{}".format(state.entity_id)],
+                tags=[f"entity:{state.entity_id}"],
             )
 
-            mock_client.gauge.reset_mock()
+            mock_statsd.gauge.reset_mock()
 
         for invalid in ("foo", "", object):
-            handler_method(
-                mock.MagicMock(data={"new_state": ha.State("domain.test", invalid, {})})
-            )
-            assert not mock_client.gauge.called
+            hass.states.async_set("domain.test", invalid, {})
+            await hass.async_block_till_done()
+            assert not mock_statsd.gauge.called

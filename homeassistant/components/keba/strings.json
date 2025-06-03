@@ -1,0 +1,62 @@
+{
+  "services": {
+    "request_data": {
+      "name": "Request data",
+      "description": "Requests new data from the charging station."
+    },
+    "authorize": {
+      "name": "Authorize",
+      "description": "Authorizes a charging process with the predefined RFID tag of the configuration file."
+    },
+    "deauthorize": {
+      "name": "Deauthorize",
+      "description": "Deauthorizes the running charging process with the predefined RFID tag of the configuration file."
+    },
+    "set_energy": {
+      "name": "Set energy",
+      "description": "Sets the energy target after which the charging process stops.",
+      "fields": {
+        "energy": {
+          "name": "Energy",
+          "description": "The energy target to stop charging. Setting 0 disables the limit."
+        }
+      }
+    },
+    "set_current": {
+      "name": "Set current",
+      "description": "Sets the maximum current for charging processes.",
+      "fields": {
+        "current": {
+          "name": "Current",
+          "description": "The maximum current used for the charging process. The value is depending on the DIP-switch settings and the used cable of the charging station."
+        }
+      }
+    },
+    "enable": {
+      "name": "[%key:common::action::enable%]",
+      "description": "Starts a charging process if charging station is authorized."
+    },
+    "disable": {
+      "name": "[%key:common::action::disable%]",
+      "description": "Stops the charging process if charging station is authorized."
+    },
+    "set_failsafe": {
+      "name": "Set failsafe",
+      "description": "Sets the failsafe mode of the charging station. If all parameters are 0, the failsafe mode will be disabled.",
+      "fields": {
+        "failsafe_timeout": {
+          "name": "Failsafe timeout",
+          "description": "Timeout after which the failsafe mode is triggered if the 'Set current' action was not run during this time."
+        },
+        "failsafe_fallback": {
+          "name": "Failsafe fallback",
+          "description": "Fallback current to be set after timeout."
+        },
+        "failsafe_persist": {
+          "name": "Failsafe persist",
+          "description": "If set to 0, the failsafe option will be disabled after a charging station reboot. If set to 1, the failsafe option will survive a reboot."
+        }
+      }
+    }
+  }
+}

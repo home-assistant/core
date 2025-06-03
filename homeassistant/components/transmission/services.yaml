@@ -1,9 +1,55 @@
 add_torrent:
-  description: Add a new torrent to download (URL, magnet link or Base64 encoded).
   fields:
-    name:
-      description: Instance name as entered during entry config
-      example: Transmission
+    entry_id:
+      selector:
+        config_entry:
+          integration: transmission
     torrent:
-      description: URL, magnet link or Base64 encoded file.
+      required: true
       example: http://releases.ubuntu.com/19.04/ubuntu-19.04-desktop-amd64.iso.torrent
+      selector:
+        text:
+    download_path:
+      required: false
+      example: "/path/to/download/directory"
+      selector:
+        text:
+
+remove_torrent:
+  fields:
+    entry_id:
+      selector:
+        config_entry:
+          integration: transmission
+    id:
+      required: true
+      example: 123
+      selector:
+        text:
+    delete_data:
+      default: false
+      selector:
+        boolean:
+
+start_torrent:
+  fields:
+    entry_id:
+      selector:
+        config_entry:
+          integration: transmission
+    id:
+      example: 123
+      selector:
+        text:
+
+stop_torrent:
+  fields:
+    entry_id:
+      selector:
+        config_entry:
+          integration: transmission
+    id:
+      required: true
+      example: 123
+      selector:
+        text:

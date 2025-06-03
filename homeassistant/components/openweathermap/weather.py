@@ -1,282 +1,196 @@
 """Support for the OpenWeatherMap (OWM) service."""
-from datetime import timedelta
-import logging
 
-from pyowm import OWM
-from pyowm.exceptions.api_call_error import APICallError
-import voluptuous as vol
+from __future__ import annotations
 
 from homeassistant.components.weather import (
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
-    PLATFORM_SCHEMA,
-    WeatherEntity,
+    Forecast,
+    SingleCoordinatorWeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_MODE,
-    CONF_NAME,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    STATE_UNKNOWN,
-    TEMP_CELSIUS,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
-from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by OpenWeatherMap"
-
-FORECAST_MODE = ["hourly", "daily", "freedaily"]
-
-DEFAULT_NAME = "OpenWeatherMap"
-
-MIN_TIME_BETWEEN_FORECAST_UPDATES = timedelta(minutes=30)
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
-
-CONDITION_CLASSES = {
-    "cloudy": [803, 804],
-    "fog": [701, 741],
-    "hail": [906],
-    "lightning": [210, 211, 212, 221],
-    "lightning-rainy": [200, 201, 202, 230, 231, 232],
-    "partlycloudy": [801, 802],
-    "pouring": [504, 314, 502, 503, 522],
-    "rainy": [300, 301, 302, 310, 311, 312, 313, 500, 501, 520, 521],
-    "snowy": [600, 601, 602, 611, 612, 620, 621, 622],
-    "snowy-rainy": [511, 615, 616],
-    "sunny": [800],
-    "windy": [905, 951, 952, 953, 954, 955, 956, 957],
-    "windy-variant": [958, 959, 960, 961],
-    "exceptional": [711, 721, 731, 751, 761, 762, 771, 900, 901, 962, 903, 904],
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_MODE, default="hourly"): vol.In(FORECAST_MODE),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
+from . import OpenweathermapConfigEntry
+from .const import (
+    ATTR_API_CLOUDS,
+    ATTR_API_CONDITION,
+    ATTR_API_CURRENT,
+    ATTR_API_DAILY_FORECAST,
+    ATTR_API_DEW_POINT,
+    ATTR_API_FEELS_LIKE_TEMPERATURE,
+    ATTR_API_HOURLY_FORECAST,
+    ATTR_API_HUMIDITY,
+    ATTR_API_MINUTE_FORECAST,
+    ATTR_API_PRESSURE,
+    ATTR_API_TEMPERATURE,
+    ATTR_API_VISIBILITY_DISTANCE,
+    ATTR_API_WIND_BEARING,
+    ATTR_API_WIND_GUST,
+    ATTR_API_WIND_SPEED,
+    ATTRIBUTION,
+    DEFAULT_NAME,
+    DOMAIN,
+    MANUFACTURER,
+    OWM_MODE_AIRPOLLUTION,
+    OWM_MODE_FREE_FORECAST,
+    OWM_MODE_V30,
 )
+from .coordinator import OWMUpdateCoordinator
+
+SERVICE_GET_MINUTE_FORECAST = "get_minute_forecast"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the OpenWeatherMap weather platform."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: OpenweathermapConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up OpenWeatherMap weather entity based on a config entry."""
+    domain_data = config_entry.runtime_data
+    name = domain_data.name
+    mode = domain_data.mode
 
-    longitude = config.get(CONF_LONGITUDE, round(hass.config.longitude, 5))
-    latitude = config.get(CONF_LATITUDE, round(hass.config.latitude, 5))
-    name = config.get(CONF_NAME)
-    mode = config.get(CONF_MODE)
+    if mode != OWM_MODE_AIRPOLLUTION:
+        weather_coordinator = domain_data.coordinator
 
-    try:
-        owm = OWM(config.get(CONF_API_KEY))
-    except APICallError:
-        _LOGGER.error("Error while connecting to OpenWeatherMap")
-        return False
+        unique_id = f"{config_entry.unique_id}"
+        owm_weather = OpenWeatherMapWeather(name, unique_id, mode, weather_coordinator)
 
-    data = WeatherData(owm, latitude, longitude, mode)
+        async_add_entities([owm_weather], False)
 
-    add_entities(
-        [OpenWeatherMapWeather(name, data, hass.config.units.temperature_unit, mode)],
-        True,
-    )
+        platform = entity_platform.async_get_current_platform()
+        platform.async_register_entity_service(
+            name=SERVICE_GET_MINUTE_FORECAST,
+            schema=None,
+            func="async_get_minute_forecast",
+            supports_response=SupportsResponse.ONLY,
+        )
 
 
-class OpenWeatherMapWeather(WeatherEntity):
+class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[OWMUpdateCoordinator]):
     """Implementation of an OpenWeatherMap sensor."""
 
-    def __init__(self, name, owm, temperature_unit, mode):
+    _attr_attribution = ATTRIBUTION
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_native_visibility_unit = UnitOfLength.METERS
+
+    def __init__(
+        self,
+        name: str,
+        unique_id: str,
+        mode: str,
+        weather_coordinator: OWMUpdateCoordinator,
+    ) -> None:
         """Initialize the sensor."""
-        self._name = name
-        self._owm = owm
-        self._temperature_unit = temperature_unit
-        self._mode = mode
-        self.data = None
-        self.forecast_data = None
+        super().__init__(weather_coordinator)
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer=MANUFACTURER,
+            name=name,
+        )
+        self.mode = mode
+
+        if mode == OWM_MODE_V30:
+            self._attr_supported_features = (
+                WeatherEntityFeature.FORECAST_DAILY
+                | WeatherEntityFeature.FORECAST_HOURLY
+            )
+        elif mode == OWM_MODE_FREE_FORECAST:
+            self._attr_supported_features = WeatherEntityFeature.FORECAST_HOURLY
+
+    async def async_get_minute_forecast(self) -> dict[str, list[dict]] | dict:
+        """Return Minute forecast."""
+
+        if self.mode == OWM_MODE_V30:
+            return self.coordinator.data[ATTR_API_MINUTE_FORECAST]
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="service_minute_forecast_mode",
+            translation_placeholders={"name": DEFAULT_NAME},
+        )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
-        try:
-            return [
-                k
-                for k, v in CONDITION_CLASSES.items()
-                if self.data.get_weather_code() in v
-            ][0]
-        except IndexError:
-            return STATE_UNKNOWN
+        return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_CONDITION)
 
     @property
-    def temperature(self):
+    def cloud_coverage(self) -> float | None:
+        """Return the Cloud coverage in %."""
+        return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_CLOUDS)
+
+    @property
+    def native_apparent_temperature(self) -> float | None:
+        """Return the apparent temperature."""
+        return self.coordinator.data[ATTR_API_CURRENT].get(
+            ATTR_API_FEELS_LIKE_TEMPERATURE
+        )
+
+    @property
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
-        return self.data.get_temperature("celsius").get("temp")
+        return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_TEMPERATURE)
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
-        pressure = self.data.get_pressure().get("press")
-        if self.hass.config.units.name == "imperial":
-            return round(convert_pressure(pressure, PRESSURE_HPA, PRESSURE_INHG), 2)
-        return pressure
+        return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_PRESSURE)
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
-        return self.data.get_humidity()
+        return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_HUMIDITY)
 
     @property
-    def wind_speed(self):
+    def native_dew_point(self) -> float | None:
+        """Return the dew point."""
+        return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_DEW_POINT)
+
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed."""
+        return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_WIND_GUST)
+
+    @property
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        if self.hass.config.units.name == "imperial":
-            return round(self.data.get_wind().get("speed") * 2.24, 2)
-
-        return round(self.data.get_wind().get("speed") * 3.6, 2)
+        return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_WIND_SPEED)
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        return self.data.get_wind().get("deg")
+        return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_WIND_BEARING)
 
     @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
+    def visibility(self) -> float | str | None:
+        """Return visibility."""
+        return self.coordinator.data[ATTR_API_CURRENT].get(ATTR_API_VISIBILITY_DISTANCE)
 
-    @property
-    def forecast(self):
-        """Return the forecast array."""
-        data = []
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self.coordinator.data[ATTR_API_DAILY_FORECAST]
 
-        def calc_precipitation(rain, snow):
-            """Calculate the precipitation."""
-            rain_value = 0 if rain is None else rain
-            snow_value = 0 if snow is None else snow
-            if round(rain_value + snow_value, 1) == 0:
-                return None
-            return round(rain_value + snow_value, 1)
-
-        if self._mode == "freedaily":
-            weather = self.forecast_data.get_weathers()[::8]
-        else:
-            weather = self.forecast_data.get_weathers()
-
-        for entry in weather:
-            if self._mode == "daily":
-                data.append(
-                    {
-                        ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
-                        ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get("day"),
-                        ATTR_FORECAST_TEMP_LOW: entry.get_temperature("celsius").get(
-                            "night"
-                        ),
-                        ATTR_FORECAST_PRECIPITATION: calc_precipitation(
-                            entry.get_rain().get("all"), entry.get_snow().get("all")
-                        ),
-                        ATTR_FORECAST_WIND_SPEED: entry.get_wind().get("speed"),
-                        ATTR_FORECAST_WIND_BEARING: entry.get_wind().get("deg"),
-                        ATTR_FORECAST_CONDITION: [
-                            k
-                            for k, v in CONDITION_CLASSES.items()
-                            if entry.get_weather_code() in v
-                        ][0],
-                    }
-                )
-            else:
-                data.append(
-                    {
-                        ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
-                        ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get(
-                            "temp"
-                        ),
-                        ATTR_FORECAST_PRECIPITATION: (
-                            round(entry.get_rain().get("3h"), 1)
-                            if entry.get_rain().get("3h") is not None
-                            and (round(entry.get_rain().get("3h"), 1) > 0)
-                            else None
-                        ),
-                        ATTR_FORECAST_CONDITION: [
-                            k
-                            for k, v in CONDITION_CLASSES.items()
-                            if entry.get_weather_code() in v
-                        ][0],
-                    }
-                )
-        return data
-
-    def update(self):
-        """Get the latest data from OWM and updates the states."""
-        try:
-            self._owm.update()
-            self._owm.update_forecast()
-        except APICallError:
-            _LOGGER.error("Exception when calling OWM web API to update data")
-            return
-
-        self.data = self._owm.data
-        self.forecast_data = self._owm.forecast_data
-
-
-class WeatherData:
-    """Get the latest data from OpenWeatherMap."""
-
-    def __init__(self, owm, latitude, longitude, mode):
-        """Initialize the data object."""
-        self._mode = mode
-        self.owm = owm
-        self.latitude = latitude
-        self.longitude = longitude
-        self.data = None
-        self.forecast_data = None
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from OpenWeatherMap."""
-        obs = self.owm.weather_at_coords(self.latitude, self.longitude)
-        if obs is None:
-            _LOGGER.warning("Failed to fetch data from OWM")
-            return
-
-        self.data = obs.get_weather()
-
-    @Throttle(MIN_TIME_BETWEEN_FORECAST_UPDATES)
-    def update_forecast(self):
-        """Get the latest forecast from OpenWeatherMap."""
-        try:
-            if self._mode == "daily":
-                fcd = self.owm.daily_forecast_at_coords(
-                    self.latitude, self.longitude, 15
-                )
-            else:
-                fcd = self.owm.three_hours_forecast_at_coords(
-                    self.latitude, self.longitude
-                )
-        except APICallError:
-            _LOGGER.error("Exception when calling OWM web API to update forecast")
-            return
-
-        if fcd is None:
-            _LOGGER.warning("Failed to fetch forecast data from OWM")
-            return
-
-        self.forecast_data = fcd.get_forecast()
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
+        """Return the hourly forecast in native units."""
+        return self.coordinator.data[ATTR_API_HOURLY_FORECAST]

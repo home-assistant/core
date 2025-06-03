@@ -1,87 +1,96 @@
 # Describes the format for available vacuum services
 
 turn_on:
-  description: Start a new cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.TURN_ON
 
 turn_off:
-  description: Stop the current cleaning task and return to home.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.TURN_OFF
+
+toggle:
+  target:
+    entity:
+      domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.TURN_OFF
+        - vacuum.VacuumEntityFeature.TURN_ON
 
 stop:
-  description: Stop the current cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.STOP
 
 locate:
-  description: Locate the vacuum cleaner robot.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.LOCATE
 
 start_pause:
-  description: Start, pause, or resume the cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.PAUSE
 
 start:
-  description: Start or resume the cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.START
 
 pause:
-  description: Pause the cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.PAUSE
 
 return_to_base:
-  description: Tell the vacuum cleaner to return to its dock.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
+      supported_features:
+        - vacuum.VacuumEntityFeature.RETURN_HOME
 
 clean_spot:
-  description: Tell the vacuum cleaner to do a spot clean-up.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
+  target:
+    entity:
+      domain: vacuum
 
 send_command:
-  description: Send a raw command to the vacuum cleaner.
+  target:
+    entity:
+      domain: vacuum
   fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
     command:
-      description: Command to execute.
-      example: 'set_dnd_timer'
+      required: true
+      example: "set_dnd_timer"
+      selector:
+        text:
     params:
-      description: Parameters for the command.
       example: '{ "key": "value" }'
+      selector:
+        object:
 
 set_fan_speed:
-  description: Set the fan speed of the vacuum cleaner.
+  target:
+    entity:
+      domain: vacuum
   fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: 'vacuum.xiaomi_vacuum_cleaner'
     fan_speed:
-      description: Platform dependent vacuum cleaner fan speed, with speed steps, like 'medium' or by percentage, between 0 and 100.
-      example: 'low'
+      required: true
+      example: "low"
+      selector:
+        text:

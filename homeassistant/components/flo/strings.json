@@ -1,0 +1,84 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Flo device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "pending_system_alerts": {
+        "name": "Pending system alerts"
+      },
+      "water_detected": {
+        "name": "Water detected"
+      }
+    },
+    "sensor": {
+      "daily_consumption": {
+        "name": "Today's water usage"
+      },
+      "current_system_mode": {
+        "name": "Current system mode"
+      },
+      "current_flow_rate": {
+        "name": "Water flow rate"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      }
+    },
+    "switch": {
+      "shutoff_valve": {
+        "name": "Shutoff valve"
+      }
+    }
+  },
+  "services": {
+    "set_sleep_mode": {
+      "name": "Set sleep mode",
+      "description": "Sets the location into sleep mode.",
+      "fields": {
+        "sleep_minutes": {
+          "name": "Sleep minutes",
+          "description": "The duration to sleep in minutes."
+        },
+        "revert_to_mode": {
+          "name": "Revert to mode",
+          "description": "The mode to revert to after the 'Sleep minutes' duration has elapsed."
+        }
+      }
+    },
+    "set_away_mode": {
+      "name": "Set away mode",
+      "description": "Sets the location into away mode."
+    },
+    "set_home_mode": {
+      "name": "Set home mode",
+      "description": "Sets the location into home mode."
+    },
+    "run_health_test": {
+      "name": "Run health test",
+      "description": "Requests the Flo device to run a health test."
+    }
+  }
+}

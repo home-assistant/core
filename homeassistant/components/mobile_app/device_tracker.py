@@ -1,22 +1,30 @@
-"""Device tracker platform that adds support for OwnTracks over MQTT."""
-import logging
+"""Device tracker for Mobile app."""
+
+from typing import Any
 
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
     ATTR_GPS_ACCURACY,
     ATTR_LOCATION_NAME,
+    TrackerEntity,
 )
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_ID,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_ALTITUDE,
     ATTR_COURSE,
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_SPEED,
     ATTR_VERTICAL_ACCURACY,
@@ -24,111 +32,100 @@ from .const import (
 )
 from .helpers import device_info
 
-_LOGGER = logging.getLogger(__name__)
 ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up OwnTracks based off an entry."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Mobile app based off an entry."""
     entity = MobileAppEntity(entry)
     async_add_entities([entity])
-    return True
 
 
 class MobileAppEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
     def __init__(self, entry, data=None):
-        """Set up OwnTracks entity."""
+        """Set up Mobile app entity."""
         self._entry = entry
         self._data = data
         self._dispatch_unsub = None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID."""
         return self._entry.data[ATTR_DEVICE_ID]
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._data.get(ATTR_BATTERY)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific attributes."""
         attrs = {}
         for key in ATTR_KEYS:
-            value = self._data.get(key)
-            if value is not None:
+            if (value := self._data.get(key)) is not None:
                 attrs[key] = value
 
         return attrs
 
     @property
-    def location_accuracy(self):
+    def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
-        return self._data.get(ATTR_GPS_ACCURACY)
+        return self._data.get(ATTR_GPS_ACCURACY, 0)
 
     @property
-    def latitude(self):
+    def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        gps = self._data.get(ATTR_GPS)
-
-        if gps is None:
+        if (gps := self._data.get(ATTR_GPS)) is None:
             return None
 
         return gps[0]
 
     @property
-    def longitude(self):
+    def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        gps = self._data.get(ATTR_GPS)
-
-        if gps is None:
+        if (gps := self._data.get(ATTR_GPS)) is None:
             return None
 
         return gps[1]
 
     @property
-    def location_name(self):
+    def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
-        return self._data.get(ATTR_LOCATION_NAME)
+        if location_name := self._data.get(ATTR_LOCATION_NAME):
+            return location_name
+        return None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._entry.data[ATTR_DEVICE_NAME]
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def source_type(self):
-        """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
-
-    @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return device_info(self._entry.data)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
-        self._dispatch_unsub = self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_LOCATION_UPDATE.format(self._entry.entry_id), self.update_data
+        self._dispatch_unsub = async_dispatcher_connect(
+            self.hass,
+            SIGNAL_LOCATION_UPDATE.format(self._entry.entry_id),
+            self.update_data,
         )
 
         # Don't restore if we got set up with data.
         if self._data is not None:
             return
 
-        state = await self.async_get_last_state()
-
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             self._data = {}
             return
 
@@ -141,7 +138,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         data.update({key: attr[key] for key in attr if key in ATTR_KEYS})
         self._data = data
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Call when entity is being removed from hass."""
         await super().async_will_remove_from_hass()
 

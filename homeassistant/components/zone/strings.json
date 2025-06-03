@@ -1,21 +1,8 @@
 {
-    "config": {
-        "title": "Zone",
-        "step": {
-            "init": {
-                "title": "Define zone parameters",
-                "data": {
-                    "name": "Name",
-                    "latitude": "Latitude",
-                    "longitude": "Longitude",
-                    "radius": "Radius",
-                    "passive": "Passive",
-                    "icon": "Icon"
-                }
-            }
-        },
-        "error": {
-            "name_exists": "Name already exists"
-        }
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads zones from the YAML-configuration."
     }
+  }
 }

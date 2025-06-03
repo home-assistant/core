@@ -1,31 +1,47 @@
 """Class to hold all light accessories."""
+
+from __future__ import annotations
+
+from datetime import datetime
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_LIGHTBULB
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_MODE,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
-    DOMAIN,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
+    ATTR_WHITE,
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+    brightness_supported,
+    color_supported,
+    color_temp_supported,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import CALLBACK_TYPE, State, callback
+from homeassistant.helpers.event import async_call_later
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+    color_temperature_to_hs,
+    color_temperature_to_rgbww,
+)
 
-from . import TYPES
-from .accessories import HomeAccessory, debounce
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_BRIGHTNESS,
     CHAR_COLOR_TEMPERATURE,
@@ -36,10 +52,17 @@ from .const import (
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
 )
+from .util import get_min_max
 
 _LOGGER = logging.getLogger(__name__)
 
-RGB_COLOR = "rgb_color"
+
+CHANGE_COALESCE_TIME_WINDOW = 0.01
+
+DEFAULT_MIN_COLOR_TEMP = 2000  # 500 mireds
+DEFAULT_MAX_COLOR_TEMP = 6500  # 153 mireds
+
+COLOR_MODES_WITH_WHITES = {ColorMode.RGBW, ColorMode.RGBWW, ColorMode.WHITE}
 
 
 @TYPES.register("Light")
@@ -49,189 +72,246 @@ class Light(HomeAccessory):
     Currently supports: state, brightness, color temperature, rgb_color.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a new Light accessory object."""
         super().__init__(*args, category=CATEGORY_LIGHTBULB)
-        self._flag = {
-            CHAR_ON: False,
-            CHAR_BRIGHTNESS: False,
-            CHAR_HUE: False,
-            CHAR_SATURATION: False,
-            CHAR_COLOR_TEMPERATURE: False,
-            RGB_COLOR: False,
-        }
-        self._state = 0
-
-        self.chars = []
-        self._features = self.hass.states.get(self.entity_id).attributes.get(
-            ATTR_SUPPORTED_FEATURES
+        self._reload_on_change_attrs.extend(
+            (
+                ATTR_SUPPORTED_COLOR_MODES,
+                ATTR_MAX_COLOR_TEMP_KELVIN,
+                ATTR_MIN_COLOR_TEMP_KELVIN,
+            )
         )
+        self.chars = []
+        self._event_timer: CALLBACK_TYPE | None = None
+        self._pending_events: dict[str, Any] = {}
 
-        if self._features & SUPPORT_BRIGHTNESS:
+        state = self.hass.states.get(self.entity_id)
+        assert state
+        attributes = state.attributes
+        self.color_modes = color_modes = (
+            attributes.get(ATTR_SUPPORTED_COLOR_MODES) or []
+        )
+        self._previous_color_mode = attributes.get(ATTR_COLOR_MODE)
+        self.color_supported = color_supported(color_modes)
+        self.color_temp_supported = color_temp_supported(color_modes)
+        self.rgbw_supported = ColorMode.RGBW in color_modes
+        self.rgbww_supported = ColorMode.RGBWW in color_modes
+        self.white_supported = ColorMode.WHITE in color_modes
+        self.brightness_supported = brightness_supported(color_modes)
+
+        if self.brightness_supported:
             self.chars.append(CHAR_BRIGHTNESS)
 
-        if self._features & SUPPORT_COLOR:
-            self.chars.append(CHAR_HUE)
-            self.chars.append(CHAR_SATURATION)
-            self._hue = None
-            self._saturation = None
-        elif self._features & SUPPORT_COLOR_TEMP:
-            # ColorTemperature and Hue characteristic should not be
-            # exposed both. Both states are tracked separately in HomeKit,
-            # causing "source of truth" problems.
+        if self.color_supported:
+            self.chars.extend([CHAR_HUE, CHAR_SATURATION])
+
+        if self.color_temp_supported or COLOR_MODES_WITH_WHITES.intersection(
+            self.color_modes
+        ):
             self.chars.append(CHAR_COLOR_TEMPERATURE)
 
         serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
-        self.char_on = serv_light.configure_char(
-            CHAR_ON, value=self._state, setter_callback=self.set_state
-        )
+        self.char_on = serv_light.configure_char(CHAR_ON, value=0)
 
-        if CHAR_BRIGHTNESS in self.chars:
+        if self.brightness_supported:
             # Initial value is set to 100 because 0 is a special value (off). 100 is
-            # an arbitrary non-zero value. It is updated immediately by update_state
+            # an arbitrary non-zero value. It is updated immediately by async_update_state
             # to set to the correct initial value.
-            self.char_brightness = serv_light.configure_char(
-                CHAR_BRIGHTNESS, value=100, setter_callback=self.set_brightness
-            )
+            self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
-            min_mireds = self.hass.states.get(self.entity_id).attributes.get(
-                ATTR_MIN_MIREDS, 153
+            min_mireds = color_temperature_kelvin_to_mired(
+                attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN, DEFAULT_MAX_COLOR_TEMP)
             )
-            max_mireds = self.hass.states.get(self.entity_id).attributes.get(
-                ATTR_MAX_MIREDS, 500
+            max_mireds = color_temperature_kelvin_to_mired(
+                attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN, DEFAULT_MIN_COLOR_TEMP)
             )
-            self.char_color_temperature = serv_light.configure_char(
+            # Ensure min is less than max
+            self.min_mireds, self.max_mireds = get_min_max(min_mireds, max_mireds)
+            if not self.color_temp_supported and not self.rgbww_supported:
+                self.max_mireds = self.min_mireds
+            self.char_color_temp = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE,
-                value=min_mireds,
-                properties={PROP_MIN_VALUE: min_mireds, PROP_MAX_VALUE: max_mireds},
-                setter_callback=self.set_color_temperature,
+                value=self.min_mireds,
+                properties={
+                    PROP_MIN_VALUE: self.min_mireds,
+                    PROP_MAX_VALUE: self.max_mireds,
+                },
             )
 
-        if CHAR_HUE in self.chars:
-            self.char_hue = serv_light.configure_char(
-                CHAR_HUE, value=0, setter_callback=self.set_hue
-            )
+        if self.color_supported:
+            self.char_hue = serv_light.configure_char(CHAR_HUE, value=0)
+            self.char_saturation = serv_light.configure_char(CHAR_SATURATION, value=75)
 
-        if CHAR_SATURATION in self.chars:
-            self.char_saturation = serv_light.configure_char(
-                CHAR_SATURATION, value=75, setter_callback=self.set_saturation
-            )
+        self.async_update_state(state)
+        serv_light.setter_callback = self._set_chars
 
-    def set_state(self, value):
-        """Set state if call came from HomeKit."""
-        if self._state == value:
-            return
+    def _set_chars(self, char_values: dict[str, Any]) -> None:
+        _LOGGER.debug("Light _set_chars: %s", char_values)
+        # Newest change always wins
+        if CHAR_COLOR_TEMPERATURE in self._pending_events and (
+            CHAR_SATURATION in char_values or CHAR_HUE in char_values
+        ):
+            del self._pending_events[CHAR_COLOR_TEMPERATURE]
+        for char in (CHAR_HUE, CHAR_SATURATION):
+            if char in self._pending_events and CHAR_COLOR_TEMPERATURE in char_values:
+                del self._pending_events[char]
 
-        _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
-        self._flag[CHAR_ON] = True
-        params = {ATTR_ENTITY_ID: self.entity_id}
-        service = SERVICE_TURN_ON if value == 1 else SERVICE_TURN_OFF
-        self.call_service(DOMAIN, service, params)
-
-    @debounce
-    def set_brightness(self, value):
-        """Set brightness if call came from HomeKit."""
-        _LOGGER.debug("%s: Set brightness to %d", self.entity_id, value)
-        self._flag[CHAR_BRIGHTNESS] = True
-        if value == 0:
-            self.set_state(0)  # Turn off light
-            return
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_BRIGHTNESS_PCT: value}
-        self.call_service(DOMAIN, SERVICE_TURN_ON, params, f"brightness at {value}%")
-
-    def set_color_temperature(self, value):
-        """Set color temperature if call came from HomeKit."""
-        _LOGGER.debug("%s: Set color temp to %s", self.entity_id, value)
-        self._flag[CHAR_COLOR_TEMPERATURE] = True
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_COLOR_TEMP: value}
-        self.call_service(
-            DOMAIN, SERVICE_TURN_ON, params, f"color temperature at {value}"
+        self._pending_events.update(char_values)
+        if self._event_timer:
+            self._event_timer()
+        self._event_timer = async_call_later(
+            self.hass, CHANGE_COALESCE_TIME_WINDOW, self._async_send_events
         )
 
-    def set_saturation(self, value):
-        """Set saturation if call came from HomeKit."""
-        _LOGGER.debug("%s: Set saturation to %d", self.entity_id, value)
-        self._flag[CHAR_SATURATION] = True
-        self._saturation = value
-        self.set_color()
+    @callback
+    def _async_send_events(self, _now: datetime) -> None:
+        """Process all changes at once."""
+        _LOGGER.debug("Coalesced _set_chars: %s", self._pending_events)
+        char_values = self._pending_events
+        self._pending_events = {}
+        events = []
+        service = SERVICE_TURN_ON
+        params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
+        has_on = CHAR_ON in char_values
 
-    def set_hue(self, value):
-        """Set hue if call came from HomeKit."""
-        _LOGGER.debug("%s: Set hue to %d", self.entity_id, value)
-        self._flag[CHAR_HUE] = True
-        self._hue = value
-        self.set_color()
+        if has_on:
+            if not char_values[CHAR_ON]:
+                service = SERVICE_TURN_OFF
+            events.append(f"Set state to {char_values[CHAR_ON]}")
 
-    def set_color(self):
-        """Set color if call came from HomeKit."""
-        if (
-            self._features & SUPPORT_COLOR
-            and self._flag[CHAR_HUE]
-            and self._flag[CHAR_SATURATION]
-        ):
-            color = (self._hue, self._saturation)
-            _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, color)
-            self._flag.update(
-                {CHAR_HUE: False, CHAR_SATURATION: False, RGB_COLOR: True}
+        brightness_pct = None
+        if CHAR_BRIGHTNESS in char_values:
+            if char_values[CHAR_BRIGHTNESS] == 0:
+                if has_on:
+                    events[-1] = "Set state to 0"
+                else:
+                    events.append("Set state to 0")
+                service = SERVICE_TURN_OFF
+            else:
+                brightness_pct = char_values[CHAR_BRIGHTNESS]
+            events.append(f"brightness at {char_values[CHAR_BRIGHTNESS]}%")
+
+        if service == SERVICE_TURN_OFF:
+            self.async_call_service(
+                LIGHT_DOMAIN,
+                service,
+                {ATTR_ENTITY_ID: self.entity_id},
+                ", ".join(events),
             )
-            params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HS_COLOR: color}
-            self.call_service(DOMAIN, SERVICE_TURN_ON, params, f"set color at {color}")
+            return
 
-    def update_state(self, new_state):
+        # Handle white channels
+        if CHAR_COLOR_TEMPERATURE in char_values:
+            temp = char_values[CHAR_COLOR_TEMPERATURE]
+            events.append(f"color temperature at {temp}")
+            bright_val = round(
+                ((brightness_pct or self.char_brightness.value) * 255) / 100
+            )
+            if self.color_temp_supported:
+                params[ATTR_COLOR_TEMP_KELVIN] = color_temperature_mired_to_kelvin(temp)
+            elif self.rgbww_supported:
+                params[ATTR_RGBWW_COLOR] = color_temperature_to_rgbww(
+                    color_temperature_mired_to_kelvin(temp),
+                    bright_val,
+                    color_temperature_mired_to_kelvin(self.max_mireds),
+                    color_temperature_mired_to_kelvin(self.min_mireds),
+                )
+            elif self.rgbw_supported:
+                params[ATTR_RGBW_COLOR] = (*(0,) * 3, bright_val)
+            elif self.white_supported:
+                params[ATTR_WHITE] = bright_val
+
+        elif CHAR_HUE in char_values or CHAR_SATURATION in char_values:
+            hue_sat = (
+                char_values.get(CHAR_HUE, self.char_hue.value),
+                char_values.get(CHAR_SATURATION, self.char_saturation.value),
+            )
+            _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, hue_sat)
+            events.append(f"set color at {hue_sat}")
+            params[ATTR_HS_COLOR] = hue_sat
+
+        if (
+            brightness_pct
+            and ATTR_RGBWW_COLOR not in params
+            and ATTR_RGBW_COLOR not in params
+        ):
+            params[ATTR_BRIGHTNESS_PCT] = brightness_pct
+
+        _LOGGER.debug(
+            "Calling light service with params: %s -> %s", char_values, params
+        )
+        self.async_call_service(LIGHT_DOMAIN, service, params, ", ".join(events))
+
+    @callback
+    def async_update_state(self, new_state: State) -> None:
         """Update light after state change."""
         # Handle State
         state = new_state.state
-        if state in (STATE_ON, STATE_OFF):
-            self._state = 1 if state == STATE_ON else 0
-            if not self._flag[CHAR_ON] and self.char_on.value != self._state:
-                self.char_on.set_value(self._state)
-            self._flag[CHAR_ON] = False
+        attributes = new_state.attributes
+        color_mode = attributes.get(ATTR_COLOR_MODE)
+        self.char_on.set_value(int(state == STATE_ON))
+        color_mode_changed = self._previous_color_mode != color_mode
+        self._previous_color_mode = color_mode
 
         # Handle Brightness
-        if CHAR_BRIGHTNESS in self.chars:
-            brightness = new_state.attributes.get(ATTR_BRIGHTNESS)
-            if not self._flag[CHAR_BRIGHTNESS] and isinstance(brightness, int):
-                brightness = round(brightness / 255 * 100, 0)
-                if self.char_brightness.value != brightness:
-                    # The homeassistant component might report its brightness as 0 but is
-                    # not off. But 0 is a special value in homekit. When you turn on a
-                    # homekit accessory it will try to restore the last brightness state
-                    # which will be the last value saved by char_brightness.set_value.
-                    # But if it is set to 0, HomeKit will update the brightness to 100 as
-                    # it thinks 0 is off.
-                    #
-                    # Therefore, if the the brighness is 0 and the device is still on,
-                    # the brightness is mapped to 1 otherwise the update is ignored in
-                    # order to avoid this incorrect behavior.
-                    if brightness == 0:
-                        if state == STATE_ON:
-                            self.char_brightness.set_value(1)
-                    else:
-                        self.char_brightness.set_value(brightness)
-            self._flag[CHAR_BRIGHTNESS] = False
+        if (
+            self.brightness_supported
+            and (brightness := attributes.get(ATTR_BRIGHTNESS)) is not None
+            and isinstance(brightness, (int, float))
+        ):
+            brightness = round(brightness / 255 * 100, 0)
+            # The homeassistant component might report its brightness as 0 but is
+            # not off. But 0 is a special value in homekit. When you turn on a
+            # homekit accessory it will try to restore the last brightness state
+            # which will be the last value saved by char_brightness.set_value.
+            # But if it is set to 0, HomeKit will update the brightness to 100 as
+            # it thinks 0 is off.
+            #
+            # Therefore, if the brightness is 0 and the device is still on,
+            # the brightness is mapped to 1 otherwise the update is ignored in
+            # order to avoid this incorrect behavior.
+            if brightness == 0 and state == STATE_ON:
+                brightness = 1
+            self.char_brightness.set_value(brightness)
+            if color_mode_changed:
+                self.char_brightness.notify()
 
-        # Handle color temperature
+        # Handle Color - color must always be set before color temperature
+        # or the iOS UI will not display it correctly.
+        if self.color_supported:
+            if color_temp := attributes.get(ATTR_COLOR_TEMP_KELVIN):
+                hue, saturation = color_temperature_to_hs(color_temp)
+            elif color_mode == ColorMode.WHITE:
+                hue, saturation = 0, 0
+            elif (
+                (hue_sat := attributes.get(ATTR_HS_COLOR))
+                and isinstance(hue_sat, (list, tuple))
+                and len(hue_sat) == 2
+            ):
+                hue, saturation = hue_sat
+            else:
+                hue = None
+                saturation = None
+            if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
+                self.char_hue.set_value(round(hue, 0))
+                self.char_saturation.set_value(round(saturation, 0))
+                if color_mode_changed:
+                    # If the color temp changed, be sure to force the color to update
+                    self.char_hue.notify()
+                    self.char_saturation.notify()
+
+        # Handle white channels
         if CHAR_COLOR_TEMPERATURE in self.chars:
-            color_temperature = new_state.attributes.get(ATTR_COLOR_TEMP)
-            if (
-                not self._flag[CHAR_COLOR_TEMPERATURE]
-                and isinstance(color_temperature, int)
-                and self.char_color_temperature.value != color_temperature
-            ):
-                self.char_color_temperature.set_value(color_temperature)
-            self._flag[CHAR_COLOR_TEMPERATURE] = False
-
-        # Handle Color
-        if CHAR_SATURATION in self.chars and CHAR_HUE in self.chars:
-            hue, saturation = new_state.attributes.get(ATTR_HS_COLOR, (None, None))
-            if (
-                not self._flag[RGB_COLOR]
-                and (hue != self._hue or saturation != self._saturation)
-                and isinstance(hue, (int, float))
-                and isinstance(saturation, (int, float))
-            ):
-                self.char_hue.set_value(hue)
-                self.char_saturation.set_value(saturation)
-                self._hue, self._saturation = (hue, saturation)
-            self._flag[RGB_COLOR] = False
+            color_temp = None
+            if self.color_temp_supported:
+                color_temp_kelvin = attributes.get(ATTR_COLOR_TEMP_KELVIN)
+                if color_temp_kelvin is not None:
+                    color_temp = color_temperature_kelvin_to_mired(color_temp_kelvin)
+            elif color_mode == ColorMode.WHITE:
+                color_temp = self.min_mireds
+            if isinstance(color_temp, (int, float)):
+                self.char_color_temp.set_value(round(color_temp, 0))
+                if color_mode_changed:
+                    self.char_color_temp.notify()

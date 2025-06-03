@@ -1,35 +1,44 @@
 """API for Netatmo bound to HASS OAuth."""
-from asyncio import run_coroutine_threadsafe
-import logging
 
+from collections.abc import Iterable
+from typing import cast
+
+from aiohttp import ClientSession
 import pyatmo
 
-from homeassistant import config_entries, core
+from homeassistant.components import cloud
 from homeassistant.helpers import config_entry_oauth2_flow
 
-_LOGGER = logging.getLogger(__name__)
+from .const import API_SCOPES_EXCLUDED_FROM_CLOUD
 
 
-class ConfigEntryNetatmoAuth(pyatmo.auth.NetatmOAuth2):
+def get_api_scopes(auth_implementation: str) -> Iterable[str]:
+    """Return the Netatmo API scopes based on the auth implementation."""
+
+    if auth_implementation == cloud.DOMAIN:
+        return set(
+            {
+                scope
+                for scope in pyatmo.const.ALL_SCOPES
+                if scope not in API_SCOPES_EXCLUDED_FROM_CLOUD
+            }
+        )
+    return sorted(pyatmo.const.ALL_SCOPES)
+
+
+class AsyncConfigEntryNetatmoAuth(pyatmo.AbstractAsyncAuth):
     """Provide Netatmo authentication tied to an OAuth2 based config entry."""
 
     def __init__(
         self,
-        hass: core.HomeAssistant,
-        config_entry: config_entries.ConfigEntry,
-        implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
-    ):
-        """Initialize Netatmo Auth."""
-        self.hass = hass
-        self.session = config_entry_oauth2_flow.OAuth2Session(
-            hass, config_entry, implementation
-        )
-        super().__init__(token=self.session.token)
+        websession: ClientSession,
+        oauth_session: config_entry_oauth2_flow.OAuth2Session,
+    ) -> None:
+        """Initialize the auth."""
+        super().__init__(websession)
+        self._oauth_session = oauth_session
 
-    def refresh_tokens(self,) -> dict:
-        """Refresh and return new Netatmo tokens using Home Assistant OAuth2 session."""
-        run_coroutine_threadsafe(
-            self.session.async_ensure_token_valid(), self.hass.loop
-        ).result()
-
-        return self.session.token
+    async def async_get_access_token(self) -> str:
+        """Return a valid access token for Netatmo API."""
+        await self._oauth_session.async_ensure_token_valid()
+        return cast(str, self._oauth_session.token["access_token"])

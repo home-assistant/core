@@ -1,12 +1,12 @@
-"""
-Support for Rejseplanen information from rejseplanen.dk.
+"""Support for Rejseplanen information from rejseplanen.dk.
 
 For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rejseplanen/
 """
+
+from __future__ import annotations
+
+from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 from operator import itemgetter
@@ -14,11 +14,16 @@ from operator import itemgetter
 import rjpl
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME, UnitOfTime
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,11 +32,13 @@ ATTR_STOP_NAME = "stop"
 ATTR_ROUTE = "route"
 ATTR_TYPE = "type"
 ATTR_DIRECTION = "direction"
+ATTR_FINAL_STOP = "final_stop"
 ATTR_DUE_IN = "due_in"
 ATTR_DUE_AT = "due_at"
+ATTR_SCHEDULED_AT = "scheduled_at"
+ATTR_REAL_TIME_AT = "real_time_at"
+ATTR_TRACK = "track"
 ATTR_NEXT_UP = "next_departures"
-
-ATTRIBUTION = "Data provided by rejseplanen.dk"
 
 CONF_STOP_ID = "stop_id"
 CONF_ROUTE = "route"
@@ -39,7 +46,7 @@ CONF_DIRECTION = "direction"
 CONF_DEPARTURE_TYPE = "departure_type"
 
 DEFAULT_NAME = "Next departure"
-ICON = "mdi:bus"
+
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -47,7 +54,7 @@ BUS_TYPES = ["BUS", "EXB", "TB"]
 TRAIN_TYPES = ["LET", "S", "REG", "IC", "LYN", "TOG"]
 METRO_TYPES = ["M"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -72,7 +79,12 @@ def due_in_minutes(timestamp):
     return int(diff.total_seconds() // 60)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Rejseplanen transport sensor."""
     name = config[CONF_NAME]
     stop_id = config[CONF_STOP_ID]
@@ -86,8 +98,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     )
 
 
-class RejseplanenTransportSensor(Entity):
+class RejseplanenTransportSensor(SensorEntity):
     """Implementation of Rejseplanen transport sensor."""
+
+    _attr_attribution = "Data provided by rejseplanen.dk"
+    _attr_icon = "mdi:bus"
 
     def __init__(self, data, stop_id, route, direction, name):
         """Initialize the sensor."""
@@ -104,43 +119,36 @@ class RejseplanenTransportSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if not self._times:
-            return {ATTR_STOP_ID: self._stop_id, ATTR_ATTRIBUTION: ATTRIBUTION}
+            return {ATTR_STOP_ID: self._stop_id}
 
         next_up = []
         if len(self._times) > 1:
             next_up = self._times[1:]
 
-        return {
-            ATTR_DUE_IN: self._times[0][ATTR_DUE_IN],
-            ATTR_DUE_AT: self._times[0][ATTR_DUE_AT],
-            ATTR_TYPE: self._times[0][ATTR_TYPE],
-            ATTR_ROUTE: self._times[0][ATTR_ROUTE],
-            ATTR_DIRECTION: self._times[0][ATTR_DIRECTION],
-            ATTR_STOP_NAME: self._times[0][ATTR_STOP_NAME],
-            ATTR_STOP_ID: self._stop_id,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
+        attributes = {
             ATTR_NEXT_UP: next_up,
+            ATTR_STOP_ID: self._stop_id,
         }
 
+        if self._times[0] is not None:
+            attributes.update(self._times[0])
+
+        return attributes
+
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return UnitOfTime.MINUTES
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from rejseplanen.dk and update the states."""
         self.data.update()
         self._times = self.data.info
@@ -148,10 +156,8 @@ class RejseplanenTransportSensor(Entity):
         if not self._times:
             self._state = None
         else:
-            try:
+            with suppress(TypeError):
                 self._state = self._times[0][ATTR_DUE_IN]
-            except TypeError:
-                pass
 
 
 class PublicTransportData:
@@ -206,13 +212,15 @@ class PublicTransportData:
         for item in results:
             route = item.get("name")
 
-            due_at_date = item.get("rtDate")
-            due_at_time = item.get("rtTime")
+            scheduled_date = item.get("date")
+            scheduled_time = item.get("time")
+            real_time_date = due_at_date = item.get("rtDate")
+            real_time_time = due_at_time = item.get("rtTime")
 
             if due_at_date is None:
-                due_at_date = item.get("date")  # Scheduled date
+                due_at_date = scheduled_date
             if due_at_time is None:
-                due_at_time = item.get("time")  # Scheduled time
+                due_at_time = scheduled_time
 
             if (
                 due_at_date is not None
@@ -220,15 +228,26 @@ class PublicTransportData:
                 and route is not None
             ):
                 due_at = f"{due_at_date} {due_at_time}"
+                scheduled_at = f"{scheduled_date} {scheduled_time}"
 
                 departure_data = {
+                    ATTR_DIRECTION: item.get("direction"),
                     ATTR_DUE_IN: due_in_minutes(due_at),
                     ATTR_DUE_AT: due_at,
-                    ATTR_TYPE: item.get("type"),
+                    ATTR_FINAL_STOP: item.get("finalStop"),
                     ATTR_ROUTE: route,
-                    ATTR_DIRECTION: item.get("direction"),
+                    ATTR_SCHEDULED_AT: scheduled_at,
                     ATTR_STOP_NAME: item.get("stop"),
+                    ATTR_TYPE: item.get("type"),
                 }
+
+                if real_time_date is not None and real_time_time is not None:
+                    departure_data[ATTR_REAL_TIME_AT] = (
+                        f"{real_time_date} {real_time_time}"
+                    )
+                if item.get("rtTrack") is not None:
+                    departure_data[ATTR_TRACK] = item.get("rtTrack")
+
                 self.info.append(departure_data)
 
         if not self.info:

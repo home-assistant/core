@@ -1,85 +1,131 @@
 # Describes the format for available component services
 
 virtualkey:
-  description: Press a virtual key from CCU/Homegear or simulate keypress.
   fields:
     address:
-      description: Address of homematic device or BidCoS-RF for virtual remote.
+      required: true
       example: BidCoS-RF
+      selector:
+        text:
     channel:
-      description: Channel for calling a keypress.
-      example: 1
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 6
     param:
-      description: Event to send i.e. PRESS_LONG, PRESS_SHORT.
+      required: true
       example: PRESS_LONG
+      selector:
+        text:
     interface:
-      description: (Optional) for set an interface value.
       example: Interfaces name from config
+      selector:
+        text:
 
 set_variable_value:
-  description: Set the name of a node.
   fields:
     entity_id:
-      description: Name(s) of homematic central to set value.
-      example: 'homematic.ccu2'
+      selector:
+        entity:
+          domain: homematic
     name:
-      description: Name of the variable to set.
-      example: 'testvariable'
+      required: true
+      example: "testvariable"
+      selector:
+        text:
     value:
-      description: New value
+      required: true
       example: 1
+      selector:
+        text:
 
 set_device_value:
-  description: Set a device property on RPC XML interface.
   fields:
     address:
-      description: Address of homematic device or BidCoS-RF for virtual remote
+      required: true
       example: BidCoS-RF
+      selector:
+        text:
     channel:
-      description: Channel for calling a keypress
-      example: 1
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 6
     param:
-      description: Event to send i.e. PRESS_LONG, PRESS_SHORT
+      required: true
       example: PRESS_LONG
+      selector:
+        text:
     interface:
-      description: (Optional) for set an interface value
       example: Interfaces name from config
+      selector:
+        text:
     value:
-      description: New value
+      required: true
       example: 1
+      selector:
+        text:
+    value_type:
+      selector:
+        select:
+          options:
+            - "boolean"
+            - "dateTime.iso8601"
+            - "double"
+            - "int"
+            - "string"
 
 reconnect:
-  description: Reconnect to all Homematic Hubs.
-
 set_install_mode:
-  description: Set a RPC XML interface into installation mode.
   fields:
     interface:
-      description: Select the given interface into install mode
+      required: true
       example: Interfaces name from config
+      selector:
+        text:
     mode:
-      description: (Default 1) 1= Normal mode / 2= Remove exists old links
-      example: 1
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 2
     time:
-      description: (Default 60) Time in seconds to run in install mode
-      example: 1
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
     address:
-      description: (Optional) Address of homematic device or BidCoS-RF to learn
       example: LEQ3948571
+      selector:
+        text:
 
 put_paramset:
-  description: Call to putParamset in the RPC XML interface
   fields:
     interface:
-      description: The interfaces name from the config
+      required: true
       example: wireless
+      selector:
+        text:
     address:
-      description: Address of Homematic device
-      example: LEQ3948571
+      required: true
+      example: LEQ3948571:0
+      selector:
+        text:
     paramset_key:
-      description: The paramset_key argument to putParamset
+      required: true
       example: MASTER
+      selector:
+        text:
     paramset:
-      description: A paramset dictionary
+      required: true
       example: '{"WEEK_PROGRAM_POINTER": 1}'
-
+      selector:
+        object:
+    rx_mode:
+      example: BURST
+      selector:
+        text:

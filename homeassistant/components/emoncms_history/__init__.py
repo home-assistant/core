@@ -1,5 +1,7 @@
 """Support for sending data to Emoncms."""
+
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
@@ -13,9 +15,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.helpers import state as state_helper
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.event import track_point_in_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Emoncms history component."""
     conf = config[DOMAIN]
     whitelist = conf.get(CONF_WHITELIST)
@@ -58,7 +61,7 @@ def setup(hass, config):
             _LOGGER.error("Error saving data '%s' to '%s'", payload, fullurl)
 
         else:
-            if req.status_code != 200:
+            if req.status_code != HTTPStatus.OK:
                 _LOGGER.error(
                     "Error saving data %s to %s (http status code = %d)",
                     payload,
@@ -82,15 +85,13 @@ def setup(hass, config):
                 continue
 
         if payload_dict:
-            payload = "{%s}" % ",".join(
-                f"{key}:{val}" for key, val in payload_dict.items()
-            )
+            payload = ",".join(f"{key}:{val}" for key, val in payload_dict.items())
 
             send_data(
                 conf.get(CONF_URL),
                 conf.get(CONF_API_KEY),
                 str(conf.get(CONF_INPUTNODE)),
-                payload,
+                f"{{{payload}}}",
             )
 
         track_point_in_time(

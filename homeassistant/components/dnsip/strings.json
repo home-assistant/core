@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "hostname": "The hostname for which to perform the DNS query",
+          "resolver": "Resolver for IPV4 lookup",
+          "port": "Port for IPV4 lookup",
+          "resolver_ipv6": "Resolver for IPV6 lookup",
+          "port_ipv6": "Port for IPV6 lookup"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "invalid_hostname": "Invalid hostname"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "resolver": "[%key:component::dnsip::config::step::user::data::resolver%]",
+          "port": "[%key:component::dnsip::config::step::user::data::port%]",
+          "resolver_ipv6": "[%key:component::dnsip::config::step::user::data::resolver_ipv6%]",
+          "port_ipv6": "[%key:component::dnsip::config::step::user::data::port_ipv6%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "invalid_resolver": "Invalid IP address or port for resolver"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "dnsip": {
+        "state_attributes": {
+          "resolver": {
+            "name": "Resolver"
+          },
+          "querytype": {
+            "name": "Query type"
+          },
+          "ip_addresses": {
+            "name": "IP addresses"
+          }
+        }
+      }
+    }
+  }
+}

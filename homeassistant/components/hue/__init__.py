@@ -1,155 +1,117 @@
 """Support for the Philips Hue system."""
-import ipaddress
-import logging
 
 from aiohue.util import normalize_bridge_id
-import voluptuous as vol
 
-from homeassistant import config_entries, core
-from homeassistant.const import CONF_HOST
+from homeassistant.components import persistent_notification
+from homeassistant.config_entries import SOURCE_IGNORE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
-from .bridge import HueBridge
+from .bridge import HueBridge, HueConfigEntry
 from .const import DOMAIN
+from .migration import check_migration
+from .services import async_register_services
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_BRIDGES = "bridges"
-
-CONF_ALLOW_UNREACHABLE = "allow_unreachable"
-DEFAULT_ALLOW_UNREACHABLE = False
-
-DATA_CONFIGS = "hue_configs"
-
-PHUE_CONFIG_FILE = "phue.conf"
-
-CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
-DEFAULT_ALLOW_HUE_GROUPS = True
-
-BRIDGE_CONFIG_SCHEMA = vol.Schema(
-    {
-        # Validate as IP address and then convert back to a string.
-        vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
-        vol.Optional(
-            CONF_ALLOW_UNREACHABLE, default=DEFAULT_ALLOW_UNREACHABLE
-        ): cv.boolean,
-        vol.Optional(
-            CONF_ALLOW_HUE_GROUPS, default=DEFAULT_ALLOW_HUE_GROUPS
-        ): cv.boolean,
-        vol.Optional("filename"): str,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_BRIDGES): vol.All(
-                    cv.ensure_list,
-                    [
-                        vol.All(
-                            cv.deprecated("filename", invalidation_version="0.106.0"),
-                            BRIDGE_CONFIG_SCHEMA,
-                        ),
-                    ],
-                )
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup(hass, config):
-    """Set up the Hue platform."""
-    conf = config.get(DOMAIN)
-    if conf is None:
-        conf = {}
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Hue integration."""
 
-    hass.data[DOMAIN] = {}
-    hass.data[DATA_CONFIGS] = {}
-
-    # User has configured bridges
-    if CONF_BRIDGES not in conf:
-        return True
-
-    bridges = conf[CONF_BRIDGES]
-
-    configured_hosts = set(
-        entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
-    for bridge_conf in bridges:
-        host = bridge_conf[CONF_HOST]
-
-        # Store config in hass.data so the config entry can find it
-        hass.data[DATA_CONFIGS][host] = bridge_conf
-
-        if host in configured_hosts:
-            continue
-
-        # No existing config entry found, trigger link config flow. Because we're
-        # inside the setup of this component we'll have to use hass.async_add_job
-        # to avoid a deadlock: creating a config entry will set up the component
-        # but the setup would block till the entry is created!
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={"host": bridge_conf[CONF_HOST]},
-            )
-        )
+    async_register_services(hass)
 
     return True
 
 
-async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
     """Set up a bridge from a config entry."""
-    host = entry.data["host"]
-    config = hass.data[DATA_CONFIGS].get(host)
+    # check (and run) migrations if needed
+    await check_migration(hass, entry)
 
-    if config is None:
-        allow_unreachable = DEFAULT_ALLOW_UNREACHABLE
-        allow_groups = DEFAULT_ALLOW_HUE_GROUPS
-    else:
-        allow_unreachable = config[CONF_ALLOW_UNREACHABLE]
-        allow_groups = config[CONF_ALLOW_HUE_GROUPS]
-
-    bridge = HueBridge(hass, entry, allow_unreachable, allow_groups)
-
-    if not await bridge.async_setup():
+    # setup the bridge instance
+    bridge = HueBridge(hass, entry)
+    if not await bridge.async_initialize_bridge():
         return False
 
-    hass.data[DOMAIN][host] = bridge
-    config = bridge.api.config
+    api = bridge.api
 
     # For backwards compat
+    unique_id = normalize_bridge_id(api.config.bridge_id)
     if entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=normalize_bridge_id(config.bridgeid)
+        hass.config_entries.async_update_entry(entry, unique_id=unique_id)
+
+    # For recovering from bug where we incorrectly assumed homekit ID = bridge ID
+    # Remove this logic after Home Assistant 2022.4
+    elif entry.unique_id != unique_id:
+        # Find entries with this unique ID
+        other_entry = next(
+            (
+                entry
+                for entry in hass.config_entries.async_entries(DOMAIN)
+                if entry.unique_id == unique_id
+            ),
+            None,
         )
+        if other_entry is None:
+            # If no other entry, update unique ID of this entry ID.
+            hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, config.mac)},
-        identifiers={(DOMAIN, config.bridgeid)},
-        manufacturer="Signify",
-        name=config.name,
-        model=config.modelid,
-        sw_version=config.swversion,
-    )
+        elif other_entry.source == SOURCE_IGNORE:
+            # There is another entry but it is ignored, delete that one and update this one
+            hass.async_create_task(
+                hass.config_entries.async_remove(other_entry.entry_id)
+            )
+            hass.config_entries.async_update_entry(entry, unique_id=unique_id)
+        else:
+            # There is another entry that already has the right unique ID. Delete this entry
+            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+            return False
 
-    if config.swupdate2_bridge_state == "readytoinstall":
-        err = "Please check for software updates of the bridge in the Philips Hue App."
-        _LOGGER.warning(err)
+    # add bridge device to device registry
+    device_registry = dr.async_get(hass)
+    if bridge.api_version == 1:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, api.config.mac_address)},
+            identifiers={(DOMAIN, api.config.bridge_id)},
+            manufacturer="Signify",
+            name=api.config.name,
+            model=api.config.model_id,
+            sw_version=api.config.software_version,
+        )
+        # create persistent notification if we found a bridge version with security vulnerability
+        if (
+            api.config.model_id == "BSB002"
+            and api.config.software_version < "1935144040"
+        ):
+            persistent_notification.async_create(
+                hass,
+                (
+                    "Your Hue hub has a known security vulnerability ([CVE-2020-6007] "
+                    "(https://cve.circl.lu/cve/CVE-2020-6007)). "
+                    "Go to the Hue app and check for software updates."
+                ),
+                "Signify Hue",
+                "hue_hub_firmware",
+            )
+    else:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, api.config.mac_address)},
+            identifiers={
+                (DOMAIN, api.config.bridge_id),
+                (DOMAIN, api.config.bridge_device.id),
+            },
+            manufacturer=api.config.bridge_device.product_data.manufacturer_name,
+            name=api.config.name,
+            model=api.config.model_id,
+            sw_version=api.config.software_version,
+        )
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
     """Unload a config entry."""
-    bridge = hass.data[DOMAIN].pop(entry.data["host"])
-    return await bridge.async_reset()
+    return await entry.runtime_data.async_reset()

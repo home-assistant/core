@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "menu_options": {
+          "nibegw": "NibeGW",
+          "modbus": "Modbus"
+        },
+        "description": "Pick the connection method to your pump. In general, F-series pumps require a NibeGW custom accessory, while an S-series pump has Modbus support built-in."
+      },
+      "modbus": {
+        "data": {
+          "model": "Model of heat pump",
+          "modbus_url": "Modbus URL",
+          "modbus_unit": "Modbus unit identifier"
+        },
+        "data_description": {
+          "modbus_url": "Modbus URL that describes the connection to your heat pump or MODBUS40 unit. It should be in the form:\n - `tcp://[HOST]:[PORT]` for Modbus TCP connection\n - `serial://[LOCAL DEVICE]` for a local Modbus RTU connection\n - `rfc2217://[HOST]:[PORT]` for a remote Telnet-based Modbus RTU connection.",
+          "modbus_unit": "Unit identification for your heat pump. Can usually be left at 0."
+        }
+      },
+      "nibegw": {
+        "description": "Before attempting to configure the integration, verify that:\n - The NibeGW unit is connected to a heat pump.\n - The MODBUS40 accessory has been enabled in the heat pump configuration.\n - The pump has not gone into an alarm state about missing MODBUS40 accessory.",
+        "data": {
+          "model": "[%key:component::nibe_heatpump::config::step::modbus::data::model%]",
+          "ip_address": "Remote address",
+          "remote_read_port": "Remote read port",
+          "remote_write_port": "Remote write port",
+          "listening_port": "Local listening port"
+        },
+        "data_description": {
+          "ip_address": "The address of the NibeGW unit. The device should have been configured with a static address.",
+          "remote_read_port": "The port the NibeGW unit is listening for read requests on.",
+          "remote_write_port": "The port the NibeGW unit is listening for write requests on.",
+          "listening_port": "The local port on this system, that the NibeGW unit is configured to send data to."
+        }
+      }
+    },
+    "error": {
+      "write": "Error on write request to pump. Verify your `Remote write port` or `Remote address`.",
+      "read": "Error on read request from pump. Verify your `Remote read port` or `Remote address`.",
+      "address": "Invalid remote address specified. Address must be an IP address or a resolvable hostname.",
+      "address_in_use": "The selected listening port is already in use on this system.",
+      "model": "The selected model doesn't seem to support MODBUS40",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "url": "The specified URL is not well formed nor supported"
+    }
+  }
+}

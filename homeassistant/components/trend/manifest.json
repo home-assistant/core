@@ -1,9 +1,11 @@
 {
   "domain": "trend",
   "name": "Trend",
+  "codeowners": ["@jpbede"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/trend",
-  "requirements": ["numpy==1.17.4"],
-  "dependencies": [],
-  "codeowners": [],
-  "quality_scale": "internal"
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "quality_scale": "internal",
+  "requirements": ["numpy==2.2.6"]
 }

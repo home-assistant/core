@@ -1,0 +1,562 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "characteristics": [
+          {
+            "format": "string",
+            "iid": 2,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "SIMPLEconnect Fan-06F674"
+          },
+          {
+            "format": "string",
+            "iid": 3,
+            "perms": ["pr"],
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "value": "Hunter Fan"
+          },
+          {
+            "format": "string",
+            "iid": 4,
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "value": "SIMPLEconnect"
+          },
+          {
+            "format": "string",
+            "iid": 5,
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "value": "1234567890abcd"
+          },
+          {
+            "format": "bool",
+            "iid": 6,
+            "perms": ["pw"],
+            "type": "00000014-0000-1000-8000-0026BB765291"
+          },
+          {
+            "format": "string",
+            "iid": 7,
+            "perms": ["pr"],
+            "type": "54",
+            "value": "0.22"
+          }
+        ],
+        "iid": 1,
+        "stype": "accessory-information",
+        "type": "0000003E-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "bool",
+            "iid": 9,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "format": "string",
+            "iid": 10,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hunter Fan"
+          },
+          {
+            "ev": false,
+            "format": "float",
+            "iid": 11,
+            "maxValue": 100.0,
+            "minStep": 25.0,
+            "minValue": 0.0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000029-0000-1000-8000-0026BB765291",
+            "value": 0.0
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 12,
+            "maxValue": 1,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000028-0000-1000-8000-0026BB765291",
+            "value": 0
+          },
+          {
+            "description": "Set Fan Fast On",
+            "ev": false,
+            "format": "bool",
+            "iid": 13,
+            "perms": ["pr", "pw", "ev"],
+            "type": "2BD83CC0-6C60-11E5-A837-0800200C9A66",
+            "value": false
+          },
+          {
+            "description": "Set Fan Fast Off",
+            "ev": false,
+            "format": "bool",
+            "iid": 14,
+            "perms": ["pr", "pw", "ev"],
+            "type": "2BD83CC1-6C60-11E5-A837-0800200C9A66",
+            "value": false
+          },
+          {
+            "description": "Is BLDC in Scope",
+            "ev": false,
+            "format": "bool",
+            "iid": 15,
+            "perms": ["pr", "ev"],
+            "type": "2BD83CC5-6C60-11E5-A837-0800200C9A66",
+            "value": false
+          },
+          {
+            "ev": false,
+            "format": "bool",
+            "iid": 16,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000005-0000-1000-8000-0026BB765291",
+            "value": false
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 17,
+            "perms": ["pr", "ev"],
+            "type": "2BD83CC4-6C60-11E5-A837-0800200C9A66",
+            "value": 341
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 18,
+            "perms": ["pr", "ev"],
+            "type": "2BD83CC3-6C60-11E5-A837-0800200C9A66",
+            "value": 0
+          }
+        ],
+        "iid": 8,
+        "stype": "fan",
+        "type": "00000040-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "FW Upgrade supported types",
+            "format": "string",
+            "iid": 20,
+            "perms": ["pr"],
+            "type": "151909D2-3802-11E4-916C-0800200C9A66",
+            "value": "url,data"
+          },
+          {
+            "description": "FW Upgrade URL",
+            "format": "string",
+            "iid": 21,
+            "maxLen": 256,
+            "perms": ["pw"],
+            "type": "151909D1-3802-11E4-916C-0800200C9A66"
+          },
+          {
+            "description": "FW Upgrade Status",
+            "ev": false,
+            "format": "int",
+            "iid": 22,
+            "perms": ["pr", "ev"],
+            "type": "151909D6-3802-11E4-916C-0800200C9A66",
+            "value": 0
+          },
+          {
+            "description": "FW Upgrade Data",
+            "format": "data",
+            "iid": 23,
+            "perms": ["pw"],
+            "type": "151909D7-3802-11E4-916C-0800200C9A66"
+          }
+        ],
+        "iid": 19,
+        "stype": "Unknown Service: 151909D0-3802-11E4-916C-0800200C9A66",
+        "type": "151909D0-3802-11E4-916C-0800200C9A66"
+      },
+      {
+        "characteristics": [
+          {
+            "description": "FW Upgrade supported types",
+            "format": "string",
+            "iid": 25,
+            "perms": ["pr"],
+            "type": "151909D2-3802-11E4-916C-0800200C9A66",
+            "value": "url,data"
+          },
+          {
+            "description": "FW Upgrade URL",
+            "format": "string",
+            "iid": 26,
+            "maxLen": 256,
+            "perms": ["pw"],
+            "type": "151909D1-3802-11E4-916C-0800200C9A66"
+          },
+          {
+            "description": "FW Upgrade Status",
+            "ev": false,
+            "format": "int",
+            "iid": 27,
+            "perms": ["pr", "ev"],
+            "type": "151909D6-3802-11E4-916C-0800200C9A66",
+            "value": 0
+          },
+          {
+            "description": "FW Upgrade Data",
+            "format": "data",
+            "iid": 28,
+            "perms": ["pw"],
+            "type": "151909D7-3802-11E4-916C-0800200C9A66"
+          }
+        ],
+        "iid": 24,
+        "stype": "Unknown Service: 151909D8-3802-11E4-916C-0800200C9A66",
+        "type": "151909D8-3802-11E4-916C-0800200C9A66"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "bool",
+            "iid": 30,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000025-0000-1000-8000-0026BB765291",
+            "value": true
+          },
+          {
+            "format": "string",
+            "iid": 31,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "value": "Hunter Light"
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 32,
+            "maxValue": 100,
+            "minStep": 10,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "00000008-0000-1000-8000-0026BB765291",
+            "value": 30
+          },
+          {
+            "description": "Set Light Dimming",
+            "ev": false,
+            "format": "bool",
+            "iid": 33,
+            "perms": ["pr", "pw", "ev"],
+            "type": "151909DC-3802-11E4-916C-0800200C9A66",
+            "value": true
+          },
+          {
+            "description": "Set Light Security",
+            "ev": false,
+            "format": "bool",
+            "iid": 34,
+            "perms": ["pr", "pw", "ev"],
+            "type": "2BD815B0-6C60-11E5-A837-0800200C9A66",
+            "value": false
+          },
+          {
+            "description": "Get Light Power",
+            "ev": false,
+            "format": "bool",
+            "iid": 35,
+            "perms": ["pr", "ev"],
+            "type": "2BD815B5-6C60-11E5-A837-0800200C9A66",
+            "value": true
+          }
+        ],
+        "iid": 29,
+        "stype": "lightbulb",
+        "type": "00000043-0000-1000-8000-0026BB765291"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 37,
+            "perms": ["pr", "ev"],
+            "type": "2BD83CC6-6C60-11E5-A837-0800200C9A66",
+            "value": -65
+          },
+          {
+            "ev": false,
+            "format": "bool",
+            "iid": 38,
+            "perms": ["pr", "pw", "ev"],
+            "type": "2BD83CC7-6C60-11E5-A837-0800200C9A66",
+            "value": false
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 39,
+            "maxLen": 256,
+            "perms": ["pr", "pw", "ev"],
+            "type": "0049CFF1-4B37-11E5-B970-0800200C9A66",
+            "value": "url, data"
+          },
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 40,
+            "maxLen": 256,
+            "perms": ["pr", "pw", "ev"],
+            "type": "2BD83CC2-6C60-11E5-A837-0800200C9A66",
+            "value": "url, data"
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 41,
+            "maxValue": 110,
+            "minValue": 0,
+            "perms": ["pr", "ev"],
+            "type": "0049CFF2-4B37-11E5-B970-0800200C9A66",
+            "value": 0
+          },
+          {
+            "ev": false,
+            "format": "bool",
+            "iid": 42,
+            "perms": ["pr", "ev"],
+            "type": "0049CFF3-4B37-11E5-B970-0800200C9A66",
+            "value": false
+          }
+        ],
+        "iid": 36,
+        "stype": "Unknown Service: 0049CFF0-4B37-11E5-B970-0800200C9A66",
+        "type": "0049CFF0-4B37-11E5-B970-0800200C9A66"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "string",
+            "iid": 44,
+            "perms": ["pr", "pw", "ev"],
+            "type": "2BD815B2-6C60-11E5-A837-0800200C9A66",
+            "value": "NULL"
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 45,
+            "maxValue": 63,
+            "minValue": 0,
+            "perms": ["pr", "pw", "ev"],
+            "type": "2BD815B4-6C60-11E5-A837-0800200C9A66",
+            "value": 7
+          },
+          {
+            "ev": false,
+            "format": "bool",
+            "iid": 46,
+            "perms": ["pr", "pw", "ev"],
+            "type": "2BD815B3-6C60-11E5-A837-0800200C9A66",
+            "value": true
+          }
+        ],
+        "iid": 43,
+        "stype": "Unknown Service: 2BD815B1-6C60-11E5-A837-0800200C9A66",
+        "type": "2BD815B1-6C60-11E5-A837-0800200C9A66"
+      },
+      {
+        "characteristics": [
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 48,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC61-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 49,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC62-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 50,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC63-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 51,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC64-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 52,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC65-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 53,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC66-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 54,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC67-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 55,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC68-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 56,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC69-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 57,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC6A-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 58,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC6B-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 59,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC6C-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 60,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC6D-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 61,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC6E-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 62,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC6F-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 63,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC70-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 64,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC71-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 65,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC72-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 66,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC73-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 67,
+            "perms": ["pr", "pw", "ev"],
+            "type": "E836DC74-6C6E-11E5-A837-0800200C9A66",
+            "value": 4294967295
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 68,
+            "perms": ["pr", "pw", "ev"],
+            "type": "CC9EA121-FC1C-11E5-A837-0800200C9A66",
+            "value": 4294901760
+          },
+          {
+            "ev": false,
+            "format": "int",
+            "iid": 69,
+            "perms": ["pr", "pw", "ev"],
+            "type": "CC9EA120-FC1C-11E5-A837-0800200C9A66",
+            "value": 4294901760
+          }
+        ],
+        "iid": 47,
+        "stype": "Unknown Service: E836DC60-6C6E-11E5-A837-0800200C9A66",
+        "type": "E836DC60-6C6E-11E5-A837-0800200C9A66"
+      }
+    ]
+  }
+]

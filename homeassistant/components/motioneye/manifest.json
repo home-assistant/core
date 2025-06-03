@@ -1,0 +1,12 @@
+{
+  "domain": "motioneye",
+  "name": "motionEye",
+  "after_dependencies": ["media_source"],
+  "codeowners": ["@dermotduffy"],
+  "config_flow": true,
+  "dependencies": ["http", "webhook"],
+  "documentation": "https://www.home-assistant.io/integrations/motioneye",
+  "iot_class": "local_polling",
+  "loggers": ["motioneye_client"],
+  "requirements": ["motioneye-client==0.3.14"]
+}

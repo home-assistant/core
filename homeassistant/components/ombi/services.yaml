@@ -1,27 +1,32 @@
 # Ombi services.yaml entries
-
 submit_movie_request:
-  description: Searches for a movie and requests the first result.
   fields:
     name:
-      description: Search parameter
+      required: true
       example: "beverly hills cop"
-
+      selector:
+        text:
 
 submit_tv_request:
-  description: Searches for a TV show and requests the first result.
   fields:
     name:
-      description: Search parameter
+      required: true
       example: "breaking bad"
+      selector:
+        text:
     season:
-      description: Which season(s) to request (first, latest or all)
-      example: "latest"
-
+      default: latest
+      selector:
+        select:
+          options:
+            - "all"
+            - "first"
+            - "latest"
 
 submit_music_request:
-  description: Searches for a music album and requests the first result.
   fields:
     name:
-      description: Search parameter
+      required: true
       example: "nevermind"
+      selector:
+        text:

@@ -1,0 +1,13 @@
+turn_on:
+  target:
+    entity:
+      domain: light
+  fields:
+    color_extract_url:
+      example: https://www.example.com/images/logo.png
+      selector:
+        text:
+    color_extract_path:
+      example: /opt/images/logo.png
+      selector:
+        text:

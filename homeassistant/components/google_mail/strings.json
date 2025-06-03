@@ -1,0 +1,84 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Google Mail integration needs to re-authenticate your account"
+      },
+      "auth": {
+        "title": "Link Google Account"
+      }
+    },
+    "abort": {
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "Wrong account: Please authenticate with {email}."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "application_credentials": {
+    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Mail. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
+  },
+  "entity": {
+    "sensor": {
+      "vacation_end_date": {
+        "name": "Vacation end date"
+      }
+    }
+  },
+  "services": {
+    "set_vacation": {
+      "name": "Set vacation",
+      "description": "Sets vacation responder settings for Google Mail.",
+      "fields": {
+        "enabled": {
+          "name": "[%key:common::state::enabled%]",
+          "description": "Turn this off to end vacation responses."
+        },
+        "title": {
+          "name": "Title",
+          "description": "The subject for the email."
+        },
+        "message": {
+          "name": "Message",
+          "description": "Body of the email."
+        },
+        "plain_text": {
+          "name": "Plain text",
+          "description": "Choose to send message in plain text or HTML."
+        },
+        "restrict_contacts": {
+          "name": "Restrict to contacts",
+          "description": "Restrict automatic reply to contacts."
+        },
+        "restrict_domain": {
+          "name": "Restrict to domain",
+          "description": "Restrict automatic reply to domain. This only affects Google Workspace accounts."
+        },
+        "start": {
+          "name": "Start",
+          "description": "First day of the vacation."
+        },
+        "end": {
+          "name": "End",
+          "description": "Last day of the vacation."
+        }
+      }
+    }
+  }
+}

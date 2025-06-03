@@ -1,404 +1,300 @@
-"""Support for Broadlink RM devices."""
-import binascii
-from datetime import timedelta
-import logging
-import socket
+"""Support for Broadlink switches."""
 
-import broadlink
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+import logging
+from typing import Any
+
+from broadlink.exceptions import BroadlinkException
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
-    SwitchDevice,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchDeviceClass,
+    SwitchEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    CONF_FRIENDLY_NAME,
     CONF_HOST,
     CONF_MAC,
+    CONF_NAME,
     CONF_SWITCHES,
     CONF_TIMEOUT,
     CONF_TYPE,
     STATE_ON,
+    Platform,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util import Throttle, slugify
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import async_setup_service, data_packet
+from . import BroadlinkDevice
+from .const import DOMAIN
+from .entity import BroadlinkEntity
+from .helpers import data_packet, import_device, mac_address
 
 _LOGGER = logging.getLogger(__name__)
 
-TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-
-DEFAULT_NAME = "Broadlink switch"
-DEFAULT_TIMEOUT = 10
-DEFAULT_RETRY = 2
 CONF_SLOTS = "slots"
-CONF_RETRY = "retry"
-
-RM_TYPES = [
-    "rm",
-    "rm2",
-    "rm_mini",
-    "rm_pro_phicomm",
-    "rm2_home_plus",
-    "rm2_home_plus_gdt",
-    "rm2_pro_plus",
-    "rm2_pro_plus2",
-    "rm2_pro_plus_bl",
-    "rm_mini_shate",
-]
-SP1_TYPES = ["sp1"]
-SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
-MP1_TYPES = ["mp1"]
-
-SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_COMMAND_OFF): data_packet,
         vol.Optional(CONF_COMMAND_ON): data_packet,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     }
 )
 
-MP1_SWITCH_SLOT_SCHEMA = vol.Schema(
-    {
-        vol.Optional("slot_1"): cv.string,
-        vol.Optional("slot_2"): cv.string,
-        vol.Optional("slot_3"): cv.string,
-        vol.Optional("slot_4"): cv.string,
-    }
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_SWITCHES, default={}): cv.schema_with_slug_keys(
-            SWITCH_SCHEMA
-        ),
-        vol.Optional(CONF_SLOTS, default={}): MP1_SWITCH_SLOT_SCHEMA,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]): vol.In(SWITCH_TYPES),
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_RETRY, default=DEFAULT_RETRY): cv.positive_int,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HOST),
+    cv.deprecated(CONF_SLOTS),
+    cv.deprecated(CONF_TIMEOUT),
+    cv.deprecated(CONF_TYPE),
+    SWITCH_PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_MAC): mac_address,
+            vol.Optional(CONF_HOST): cv.string,
+            vol.Optional(CONF_SWITCHES, default=[]): vol.All(
+                cv.ensure_list,
+                [SWITCH_SCHEMA],
+            ),
+        }
+    ),
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Broadlink switches."""
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Import the device and set up custom switches.
 
-    devices = config.get(CONF_SWITCHES)
-    slots = config.get("slots", {})
-    ip_addr = config.get(CONF_HOST)
-    friendly_name = config.get(CONF_FRIENDLY_NAME)
-    mac_addr = binascii.unhexlify(config.get(CONF_MAC).encode().replace(b":", b""))
-    switch_type = config.get(CONF_TYPE)
-    retry_times = config.get(CONF_RETRY)
+    This is for backward compatibility.
+    Do not use this method.
+    """
+    mac_addr = config[CONF_MAC]
+    host = config.get(CONF_HOST)
 
-    def _get_mp1_slot_name(switch_friendly_name, slot):
-        """Get slot name."""
-        if not slots[f"slot_{slot}"]:
-            return f"{switch_friendly_name} slot {slot}"
-        return slots[f"slot_{slot}"]
+    if switches := config.get(CONF_SWITCHES):
+        platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})
+        async_add_entities_config_entry: AddConfigEntryEntitiesCallback
+        device: BroadlinkDevice
+        async_add_entities_config_entry, device = platform_data.get(
+            mac_addr, (None, None)
+        )
+        if not async_add_entities_config_entry:
+            raise PlatformNotReady
 
-    if switch_type in RM_TYPES:
-        broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, None)
-        hass.add_job(async_setup_service, hass, ip_addr, broadlink_device)
+        async_add_entities_config_entry(
+            BroadlinkRMSwitch(device, config) for config in switches
+        )
 
-        switches = []
-        for object_id, device_config in devices.items():
-            switches.append(
-                BroadlinkRMSwitch(
-                    object_id,
-                    device_config.get(CONF_FRIENDLY_NAME, object_id),
-                    broadlink_device,
-                    device_config.get(CONF_COMMAND_ON),
-                    device_config.get(CONF_COMMAND_OFF),
-                    retry_times,
-                )
-            )
-    elif switch_type in SP1_TYPES:
-        broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr, None)
-        switches = [BroadlinkSP1Switch(friendly_name, broadlink_device, retry_times)]
-    elif switch_type in SP2_TYPES:
-        broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr, None)
-        switches = [BroadlinkSP2Switch(friendly_name, broadlink_device, retry_times)]
-    elif switch_type in MP1_TYPES:
-        switches = []
-        broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr, None)
-        parent_device = BroadlinkMP1Switch(broadlink_device, retry_times)
-        for i in range(1, 5):
-            slot = BroadlinkMP1Slot(
-                _get_mp1_slot_name(friendly_name, i),
-                broadlink_device,
-                i,
-                parent_device,
-                retry_times,
-            )
-            switches.append(slot)
+    else:
+        _LOGGER.warning(
+            "The switch platform is deprecated, except for custom IR/RF "
+            "switches. Please refer to the Broadlink documentation to "
+            "catch up"
+        )
 
-    broadlink_device.timeout = config.get(CONF_TIMEOUT)
-    try:
-        broadlink_device.auth()
-    except OSError:
-        _LOGGER.error("Failed to connect to device")
-
-    add_entities(switches)
+    if host:
+        import_device(hass, host)
 
 
-class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
-    """Representation of an Broadlink switch."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Broadlink switch."""
+    device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    switches: list[BroadlinkSwitch] = []
 
-    def __init__(
-        self, name, friendly_name, device, command_on, command_off, retry_times
-    ):
+    if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
+        platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
+        platform_data[device.api.mac] = async_add_entities, device
+    elif device.api.type == "SP1":
+        switches.append(BroadlinkSP1Switch(device))
+
+    elif device.api.type in {"SP2", "SP2S", "SP3", "SP3S", "SP4", "SP4B"}:
+        switches.append(BroadlinkSP2Switch(device))
+
+    elif device.api.type == "BG1":
+        switches.extend(BroadlinkBG1Slot(device, slot) for slot in range(1, 3))
+
+    elif device.api.type in {"MP1", "MP1S"}:
+        switches.extend(BroadlinkMP1Slot(device, slot) for slot in range(1, 5))
+
+    async_add_entities(switches)
+
+
+class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
+    """Representation of a Broadlink switch."""
+
+    _attr_assumed_state = True
+    _attr_device_class = SwitchDeviceClass.SWITCH
+
+    def __init__(self, device, command_on, command_off):
         """Initialize the switch."""
-        self.entity_id = ENTITY_ID_FORMAT.format(slugify(name))
-        self._name = friendly_name
-        self._state = False
+        super().__init__(device)
         self._command_on = command_on
         self._command_off = command_off
-        self._device = device
-        self._is_available = False
-        self._retry_times = retry_times
-        _LOGGER.debug("_retry_times : %s", self._retry_times)
 
-    async def async_added_to_hass(self):
-        """Call when entity about to be added to hass."""
-        await super().async_added_to_hass()
+    async def async_added_to_hass(self) -> None:
+        """Call when the switch is added to hass."""
         state = await self.async_get_last_state()
-        if state:
-            self._state = state.state == STATE_ON
+        self._attr_is_on = state is not None and state.state == STATE_ON
+        await super().async_added_to_hass()
 
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the switch."""
+        if await self._async_send_packet(self._command_on):
+            self._attr_is_on = True
+            self.async_write_ha_state()
 
-    @property
-    def assumed_state(self):
-        """Return true if unable to access real state of entity."""
-        return True
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the switch."""
+        if await self._async_send_packet(self._command_off):
+            self._attr_is_on = False
+            self.async_write_ha_state()
 
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return not self.should_poll or self._is_available
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        if self._sendpacket(self._command_on, self._retry_times):
-            self._state = True
-            self.schedule_update_ha_state()
-
-    def turn_off(self, **kwargs):
-        """Turn the device off."""
-        if self._sendpacket(self._command_off, self._retry_times):
-            self._state = False
-            self.schedule_update_ha_state()
-
-    def _sendpacket(self, packet, retry):
-        """Send packet to device."""
-        if packet is None:
-            _LOGGER.debug("Empty packet")
-            return True
-        try:
-            self._device.send_data(packet)
-        except (ValueError, OSError) as error:
-            if retry < 1:
-                _LOGGER.error("Error during sending a packet: %s", error)
-                return False
-            if not self._auth(self._retry_times):
-                return False
-            return self._sendpacket(packet, retry - 1)
-        return True
-
-    def _auth(self, retry):
-        _LOGGER.debug("_auth : retry=%s", retry)
-        try:
-            auth = self._device.auth()
-        except OSError:
-            auth = False
-            if retry < 1:
-                _LOGGER.error("Timeout during authorization")
-        if not auth and retry > 0:
-            return self._auth(retry - 1)
-        return auth
+    @abstractmethod
+    async def _async_send_packet(self, packet):
+        """Send a packet to the device."""
 
 
-class BroadlinkSP1Switch(BroadlinkRMSwitch):
-    """Representation of an Broadlink switch."""
+class BroadlinkRMSwitch(BroadlinkSwitch):
+    """Representation of a Broadlink RM switch."""
 
-    def __init__(self, friendly_name, device, retry_times):
+    def __init__(self, device, config):
         """Initialize the switch."""
-        super().__init__(friendly_name, friendly_name, device, None, None, retry_times)
-        self._command_on = 1
-        self._command_off = 0
-        self._load_power = None
+        super().__init__(
+            device, config.get(CONF_COMMAND_ON), config.get(CONF_COMMAND_OFF)
+        )
+        self._attr_name = config[CONF_NAME]
 
-    def _sendpacket(self, packet, retry):
-        """Send packet to device."""
+    async def _async_send_packet(self, packet):
+        """Send a packet to the device."""
+        device = self._device
+
+        if packet is None:
+            return True
+
         try:
-            self._device.set_power(packet)
-        except (socket.timeout, ValueError) as error:
-            if retry < 1:
-                _LOGGER.error("Error during sending a packet: %s", error)
-                return False
-            if not self._auth(self._retry_times):
-                return False
-            return self._sendpacket(packet, retry - 1)
+            await device.async_request(device.api.send_data, packet)
+        except (BroadlinkException, OSError) as err:
+            _LOGGER.error("Failed to send packet: %s", err)
+            return False
+        return True
+
+
+class BroadlinkSP1Switch(BroadlinkSwitch):
+    """Representation of a Broadlink SP1 switch."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, device):
+        """Initialize the switch."""
+        super().__init__(device, 1, 0)
+        self._attr_unique_id = self._device.unique_id
+
+    async def _async_send_packet(self, packet):
+        """Send a packet to the device."""
+        device = self._device
+
+        try:
+            await device.async_request(device.api.set_power, packet)
+        except (BroadlinkException, OSError) as err:
+            _LOGGER.error("Failed to send packet: %s", err)
+            return False
         return True
 
 
 class BroadlinkSP2Switch(BroadlinkSP1Switch):
-    """Representation of an Broadlink switch."""
+    """Representation of a Broadlink SP2 switch."""
 
-    @property
-    def assumed_state(self):
-        """Return true if unable to access real state of entity."""
-        return False
+    _attr_assumed_state = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in Watt."""
-        try:
-            return round(self._load_power, 2)
-        except (ValueError, TypeError):
-            return None
-
-    def update(self):
-        """Synchronize state with switch."""
-        self._update(self._retry_times)
-
-    def _update(self, retry):
-        """Update the state of the device."""
-        _LOGGER.debug("_update : retry=%s", retry)
-        try:
-            state = self._device.check_power()
-            load_power = self._device.get_energy()
-        except (socket.timeout, ValueError) as error:
-            if retry < 1:
-                _LOGGER.error("Error during updating the state: %s", error)
-                self._is_available = False
-                return
-            if not self._auth(self._retry_times):
-                return
-            return self._update(retry - 1)
-        if state is None and retry > 0:
-            return self._update(retry - 1)
-        self._state = state
-        self._load_power = load_power
-        self._is_available = True
-
-
-class BroadlinkMP1Slot(BroadlinkRMSwitch):
-    """Representation of a slot of Broadlink switch."""
-
-    def __init__(self, friendly_name, device, slot, parent_device, retry_times):
-        """Initialize the slot of switch."""
-        super().__init__(friendly_name, friendly_name, device, None, None, retry_times)
-        self._command_on = 1
-        self._command_off = 0
-        self._slot = slot
-        self._parent_device = parent_device
-
-    @property
-    def assumed_state(self):
-        """Return true if unable to access real state of entity."""
-        return False
-
-    def _sendpacket(self, packet, retry):
-        """Send packet to device."""
-        try:
-            self._device.set_power(self._slot, packet)
-        except (socket.timeout, ValueError) as error:
-            if retry < 1:
-                _LOGGER.error("Error during sending a packet: %s", error)
-                self._is_available = False
-                return False
-            if not self._auth(self._retry_times):
-                return False
-            return self._sendpacket(packet, max(0, retry - 1))
-        self._is_available = True
-        return True
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    def update(self):
-        """Trigger update for all switches on the parent device."""
-        self._parent_device.update()
-        self._state = self._parent_device.get_outlet_status(self._slot)
-        if self._state is None:
-            self._is_available = False
-        else:
-            self._is_available = True
-
-
-class BroadlinkMP1Switch:
-    """Representation of a Broadlink switch - To fetch states of all slots."""
-
-    def __init__(self, device, retry_times):
+    def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""
-        self._device = device
-        self._states = None
-        self._retry_times = retry_times
+        super().__init__(device, *args, **kwargs)
+        self._attr_is_on = self._coordinator.data["pwr"]
 
-    def get_outlet_status(self, slot):
-        """Get status of outlet from cached status list."""
-        if self._states is None:
-            return None
-        return self._states[f"s{slot}"]
+    def _update_state(self, data):
+        """Update the state of the entity."""
+        self._attr_is_on = data["pwr"]
 
-    @Throttle(TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Fetch new state data for this device."""
-        self._update(self._retry_times)
 
-    def _update(self, retry):
-        """Update the state of the device."""
+class BroadlinkMP1Slot(BroadlinkSwitch):
+    """Representation of a Broadlink MP1 slot."""
+
+    _attr_assumed_state = False
+    _attr_has_entity_name = True
+
+    def __init__(self, device, slot):
+        """Initialize the switch."""
+        super().__init__(device, 1, 0)
+        self._slot = slot
+        self._attr_is_on = self._coordinator.data[f"s{slot}"]
+        self._attr_name = f"S{slot}"
+        self._attr_unique_id = f"{device.unique_id}-s{slot}"
+
+    def _update_state(self, data):
+        """Update the state of the entity."""
+        self._attr_is_on = data[f"s{self._slot}"]
+
+    async def _async_send_packet(self, packet):
+        """Send a packet to the device."""
+        device = self._device
+
         try:
-            states = self._device.check_power()
-        except (socket.timeout, ValueError) as error:
-            if retry < 1:
-                _LOGGER.error("Error during updating the state: %s", error)
-                return
-            if not self._auth(self._retry_times):
-                return
-            return self._update(max(0, retry - 1))
-        if states is None and retry > 0:
-            return self._update(max(0, retry - 1))
-        self._states = states
+            await device.async_request(device.api.set_power, self._slot, packet)
+        except (BroadlinkException, OSError) as err:
+            _LOGGER.error("Failed to send packet: %s", err)
+            return False
+        return True
 
-    def _auth(self, retry):
-        """Authenticate the device."""
+
+class BroadlinkBG1Slot(BroadlinkSwitch):
+    """Representation of a Broadlink BG1 slot."""
+
+    _attr_assumed_state = False
+    _attr_has_entity_name = True
+
+    def __init__(self, device, slot):
+        """Initialize the switch."""
+        super().__init__(device, 1, 0)
+        self._slot = slot
+        self._attr_is_on = self._coordinator.data[f"pwr{slot}"]
+
+        self._attr_name = f"S{slot}"
+        self._attr_device_class = SwitchDeviceClass.OUTLET
+        self._attr_unique_id = f"{device.unique_id}-s{slot}"
+
+    def _update_state(self, data):
+        """Update the state of the entity."""
+        self._attr_is_on = data[f"pwr{self._slot}"]
+
+    async def _async_send_packet(self, packet):
+        """Send a packet to the device."""
+        device = self._device
+        state = {f"pwr{self._slot}": packet}
+
         try:
-            auth = self._device.auth()
-        except OSError:
-            auth = False
-        if not auth and retry > 0:
-            return self._auth(retry - 1)
-        return auth
+            await device.async_request(device.api.set_state, **state)
+        except (BroadlinkException, OSError) as err:
+            _LOGGER.error("Failed to send packet: %s", err)
+            return False
+        return True

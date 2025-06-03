@@ -1,58 +1,59 @@
 """Support for Tellstick covers using Tellstick Net."""
-import logging
 
-from homeassistant.components import cover, tellduslive
-from homeassistant.components.cover import CoverDevice
+from typing import Any
+
+from homeassistant.components import cover
+from homeassistant.components.cover import CoverEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entry import TelldusLiveEntity
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up TelldusLive.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
-    pass
+from . import TelldusLiveClient
+from .const import DOMAIN, TELLDUS_DISCOVERY_NEW
+from .entity import TelldusLiveEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up tellduslive sensors dynamically."""
 
     async def async_discover_cover(device_id):
         """Discover and add a discovered sensor."""
-        client = hass.data[tellduslive.DOMAIN]
+        client: TelldusLiveClient = hass.data[DOMAIN]
         async_add_entities([TelldusLiveCover(client, device_id)])
 
     async_dispatcher_connect(
         hass,
-        tellduslive.TELLDUS_DISCOVERY_NEW.format(cover.DOMAIN, tellduslive.DOMAIN),
+        TELLDUS_DISCOVERY_NEW.format(cover.DOMAIN, DOMAIN),
         async_discover_cover,
     )
 
 
-class TelldusLiveCover(TelldusLiveEntity, CoverDevice):
+class TelldusLiveCover(TelldusLiveEntity, CoverEntity):
     """Representation of a cover."""
 
+    _attr_name = None
+
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return the current position of the cover."""
         return self.device.is_down
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self.device.down()
-        self._update_callback()
+        self.schedule_update_ha_state()
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self.device.up()
-        self._update_callback()
+        self.schedule_update_ha_state()
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self.device.stop()
-        self._update_callback()
+        self.schedule_update_ha_state()

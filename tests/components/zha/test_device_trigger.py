@@ -1,16 +1,32 @@
 """ZHA device automation trigger tests."""
-import pytest
-import zigpy.zcl.clusters.general as general
 
-import homeassistant.components.automation as automation
-from homeassistant.components.switch import DOMAIN
-from homeassistant.components.zha.core.const import CHANNEL_ON_OFF
-from homeassistant.helpers.device_registry import async_get_registry
+from unittest.mock import patch
+
+import pytest
+from zha.application.const import ATTR_ENDPOINT_ID
+from zigpy.application import ControllerApplication
+from zigpy.device import Device as ZigpyDevice
+import zigpy.profiles.zha
+import zigpy.types
+
+from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
+from homeassistant.components.zha.helpers import get_zha_gateway
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .common import async_enable_traffic, async_init_zigpy_device
+from tests.common import MockConfigEntry, async_get_device_automations
 
-from tests.common import async_get_device_automations, async_mock_service
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
+
 
 ON = 1
 OFF = 0
@@ -26,30 +42,35 @@ LONG_PRESS = "remote_button_long_press"
 LONG_RELEASE = "remote_button_long_release"
 
 
+@pytest.fixture(autouse=True)
+def sensor_platforms_only():
+    """Only set up the sensor platform and required base platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", (Platform.SENSOR,)):
+        yield
+
+
 def _same_lists(list_a, list_b):
     if len(list_a) != len(list_b):
         return False
 
-    for item in list_a:
-        if item not in list_b:
-            return False
-    return True
+    return all(item in list_b for item in list_a)
 
 
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock serivce."""
-    return async_mock_service(hass, "test", "automation")
+async def test_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    setup_zha,
+) -> None:
+    """Test ZHA device triggers."""
 
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
 
-async def test_triggers(hass, config_entry, zha_gateway):
-    """Test zha device triggers."""
-
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass, [general.Basic.cluster_id], [general.OnOff.cluster_id], None, zha_gateway
+    zigpy_device = ZigpyDevice(
+        application=gateway.application_controller,
+        ieee=zigpy.types.EUI64.convert("aa:bb:cc:dd:11:22:33:44"),
+        nwk=0x1234,
     )
-
     zigpy_device.device_automation_triggers = {
         (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
         (DOUBLE_PRESS, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
@@ -58,25 +79,34 @@ async def test_triggers(hass, config_entry, zha_gateway):
         (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
     }
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zha_device.device)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
-    ieee_address = str(zha_device.ieee)
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.ieee))}
+    )
 
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
-
-    triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, reg_device.id
+    )
 
     expected_triggers = [
         {
             "device_id": reg_device.id,
             "domain": "zha",
             "platform": "device",
+            "type": "device_offline",
+            "subtype": "device_offline",
+            "metadata": {},
+        },
+        {
+            "device_id": reg_device.id,
+            "domain": "zha",
+            "platform": "device",
             "type": SHAKEN,
             "subtype": SHAKEN,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -84,6 +114,7 @@ async def test_triggers(hass, config_entry, zha_gateway):
             "platform": "device",
             "type": DOUBLE_PRESS,
             "subtype": DOUBLE_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -91,6 +122,7 @@ async def test_triggers(hass, config_entry, zha_gateway):
             "platform": "device",
             "type": SHORT_PRESS,
             "subtype": SHORT_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -98,6 +130,7 @@ async def test_triggers(hass, config_entry, zha_gateway):
             "platform": "device",
             "type": LONG_PRESS,
             "subtype": LONG_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -105,61 +138,84 @@ async def test_triggers(hass, config_entry, zha_gateway):
             "platform": "device",
             "type": LONG_RELEASE,
             "subtype": LONG_RELEASE,
+            "metadata": {},
         },
     ]
     assert _same_lists(triggers, expected_triggers)
 
 
-async def test_no_triggers(hass, config_entry, zha_gateway):
-    """Test zha device with no triggers."""
+async def test_no_triggers(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, setup_zha
+) -> None:
+    """Test ZHA device with no triggers."""
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass, [general.Basic.cluster_id], [general.OnOff.cluster_id], None, zha_gateway
+    zigpy_device = ZigpyDevice(
+        application=gateway.application_controller,
+        ieee=zigpy.types.EUI64.convert("aa:bb:cc:dd:11:22:33:44"),
+        nwk=0x1234,
+    )
+    zigpy_device.device_automation_triggers = {}
+
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zha_device.device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.ieee))}
     )
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, reg_device.id
+    )
+    assert triggers == [
+        {
+            "device_id": reg_device.id,
+            "domain": "zha",
+            "platform": "device",
+            "type": "device_offline",
+            "subtype": "device_offline",
+            "metadata": {},
+        }
+    ]
 
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
-    ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
-
-    triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
-    assert triggers == []
-
-
-async def test_if_fires_on_event(hass, config_entry, zha_gateway, calls):
+async def test_if_fires_on_event(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    setup_zha,
+) -> None:
     """Test for remote triggers firing."""
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass, [general.Basic.cluster_id], [general.OnOff.cluster_id], None, zha_gateway
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = ZigpyDevice(
+        application=gateway.application_controller,
+        ieee=zigpy.types.EUI64.convert("aa:bb:cc:dd:11:22:33:44"),
+        nwk=0x1234,
     )
+    ep = zigpy_device.add_endpoint(1)
+    ep.add_output_cluster(0x0006)
+    ep.profile_id = zigpy.profiles.zha.PROFILE_ID
 
     zigpy_device.device_automation_triggers = {
         (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
         (DOUBLE_PRESS, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
-        (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE},
+        (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE, ATTR_ENDPOINT_ID: 1},
         (LONG_PRESS, LONG_PRESS): {COMMAND: COMMAND_HOLD},
         (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
     }
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zha_device.device)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
-
-    # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
-
-    ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.ieee))}
+    )
 
     assert await async_setup_component(
         hass,
@@ -185,34 +241,102 @@ async def test_if_fires_on_event(hass, config_entry, zha_gateway, calls):
 
     await hass.async_block_till_done()
 
-    on_off_channel = zha_device.cluster_channels[CHANNEL_ON_OFF]
-    on_off_channel.zha_send_event(on_off_channel.cluster, COMMAND_SINGLE, [])
+    zha_device.emit_zha_event(
+        {
+            "unique_id": f"{zha_device.ieee}:1:0x0006",
+            "endpoint_id": 1,
+            "cluster_id": 0x0006,
+            "command": COMMAND_SINGLE,
+            "args": [],
+            "params": {},
+        },
+    )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["message"] == "service called"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["message"] == "service called"
 
 
-async def test_exception_no_triggers(hass, config_entry, zha_gateway, calls, caplog):
-    """Test for exception on event triggers firing."""
+async def test_device_offline_fires(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+    setup_zha,
+) -> None:
+    """Test for device offline triggers firing."""
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass, [general.Basic.cluster_id], [general.OnOff.cluster_id], None, zha_gateway
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = ZigpyDevice(
+        application=gateway.application_controller,
+        ieee=zigpy.types.EUI64.convert("aa:bb:cc:dd:11:22:33:44"),
+        nwk=0x1234,
     )
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zha_device.device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.ieee))}
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "device_id": reg_device.id,
+                        "domain": "zha",
+                        "platform": "device",
+                        "type": "device_offline",
+                        "subtype": "device_offline",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"message": "service called"},
+                    },
+                }
+            ]
+        },
+    )
+
+    assert zha_device.available is True
+    zha_device.available = False
+    zha_device.emit_zha_event({"device_event_type": "device_offline"})
     await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
 
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
+    assert len(service_calls) == 1
+    assert service_calls[0].data["message"] == "service called"
 
-    # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
 
-    ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+async def test_exception_no_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    setup_zha,
+) -> None:
+    """Test for exception when validating device triggers."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = ZigpyDevice(
+        application=gateway.application_controller,
+        ieee=zigpy.types.EUI64.convert("aa:bb:cc:dd:11:22:33:44"),
+        nwk=0x1234,
+    )
+
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zha_device.device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.ieee))}
+    )
 
     await async_setup_component(
         hass,
@@ -236,17 +360,28 @@ async def test_exception_no_triggers(hass, config_entry, zha_gateway, calls, cap
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid config for [automation]" in caplog.text
-
-
-async def test_exception_bad_trigger(hass, config_entry, zha_gateway, calls, caplog):
-    """Test for exception on event triggers firing."""
-
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass, [general.Basic.cluster_id], [general.OnOff.cluster_id], None, zha_gateway
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: "
+        "device does not have trigger ('junk', 'junk')" in caplog.text
     )
 
+
+async def test_exception_bad_trigger(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    setup_zha,
+) -> None:
+    """Test for exception when validating device triggers."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = ZigpyDevice(
+        application=gateway.application_controller,
+        ieee=zigpy.types.EUI64.convert("aa:bb:cc:dd:11:22:33:44"),
+        nwk=0x1234,
+    )
     zigpy_device.device_automation_triggers = {
         (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
         (DOUBLE_PRESS, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
@@ -255,18 +390,13 @@ async def test_exception_bad_trigger(hass, config_entry, zha_gateway, calls, cap
         (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
     }
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zha_device.device)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
-
-    # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
-
-    ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.ieee))}
+    )
 
     await async_setup_component(
         hass,
@@ -290,4 +420,144 @@ async def test_exception_bad_trigger(hass, config_entry, zha_gateway, calls, cap
         },
     )
     await hass.async_block_till_done()
-    assert "Invalid config for [automation]" in caplog.text
+    assert (
+        "Unnamed automation failed to setup triggers and has been disabled: "
+        "device does not have trigger ('junk', 'junk')" in caplog.text
+    )
+
+
+async def test_validate_trigger_config_missing_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    setup_zha,
+) -> None:
+    """Test device triggers referring to a missing device."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = ZigpyDevice(
+        application=gateway.application_controller,
+        ieee=zigpy.types.EUI64.convert("aa:bb:cc:dd:11:22:33:44"),
+        nwk=0x1234,
+    )
+    zigpy_device.device_automation_triggers = {
+        (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
+        (DOUBLE_PRESS, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
+        (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE},
+        (LONG_PRESS, LONG_PRESS): {COMMAND: COMMAND_HOLD},
+        (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
+    }
+
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zha_device.device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # After we unload the config entry, trigger info was not cached on startup, nor can
+    # it be pulled from the current device, making it impossible to validate triggers
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.ieee))}
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "device_id": reg_device.id,
+                        "domain": "zha",
+                        "platform": "device",
+                        "type": "junk",
+                        "subtype": "junk",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"message": "service called"},
+                    },
+                }
+            ]
+        },
+    )
+
+    assert "Unable to get zha device" in caplog.text
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await async_get_device_automations(
+            hass, DeviceAutomationType.TRIGGER, reg_device.id
+        )
+
+
+async def test_validate_trigger_config_unloaded_bad_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    zigpy_app_controller: ControllerApplication,
+    setup_zha,
+) -> None:
+    """Test device triggers referring to a missing device."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = ZigpyDevice(
+        application=gateway.application_controller,
+        ieee=zigpy.types.EUI64.convert("aa:bb:cc:dd:11:22:33:44"),
+        nwk=0x1234,
+    )
+    zigpy_device.device_automation_triggers = {
+        (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},
+        (DOUBLE_PRESS, DOUBLE_PRESS): {COMMAND: COMMAND_DOUBLE},
+        (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE},
+        (LONG_PRESS, LONG_PRESS): {COMMAND: COMMAND_HOLD},
+        (LONG_RELEASE, LONG_RELEASE): {COMMAND: COMMAND_HOLD},
+    }
+
+    zigpy_app_controller.devices[zigpy_device.ieee] = zigpy_device
+    zha_device = gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zha_device.device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # After we unload the config entry, trigger info was not cached on startup, nor can
+    # it be pulled from the current device, making it impossible to validate triggers
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    # Reload ZHA to persist the device info in the cache
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.ieee))}
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "device_id": reg_device.id,
+                        "domain": "zha",
+                        "platform": "device",
+                        "type": "junk",
+                        "subtype": "junk",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"message": "service called"},
+                    },
+                }
+            ]
+        },
+    )
+
+    assert "Unable to find trigger" in caplog.text

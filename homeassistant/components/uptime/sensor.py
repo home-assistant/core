@@ -1,78 +1,40 @@
 """Platform to retrieve uptime for Home Assistant."""
-import logging
 
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "Uptime"
-
-ICON = "mdi:clock"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="days"): vol.All(
-            cv.string, vol.In(["minutes", "hours", "days"])
-        ),
-    }
-)
+from .const import DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the uptime sensor platform."""
-    name = config.get(CONF_NAME)
-    units = config.get(CONF_UNIT_OF_MEASUREMENT)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the platform from config_entry."""
+    async_add_entities([UptimeSensor(entry)])
 
-    async_add_entities([UptimeSensor(name, units)], True)
 
-
-class UptimeSensor(Entity):
+class UptimeSensor(SensorEntity):
     """Representation of an uptime sensor."""
 
-    def __init__(self, name, unit):
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_should_poll = False
+
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the uptime sensor."""
-        self._name = name
-        self._unit = unit
-        self.initial = dt_util.now()
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to display in the front end."""
-        return ICON
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement the value is expressed in."""
-        return self._unit
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    async def async_update(self):
-        """Update the state of the sensor."""
-        delta = dt_util.now() - self.initial
-        div_factor = 3600
-
-        if self.unit_of_measurement == "days":
-            div_factor *= 24
-        elif self.unit_of_measurement == "minutes":
-            div_factor /= 60
-
-        delta = delta.total_seconds() / div_factor
-        self._state = round(delta, 2)
-        _LOGGER.debug("New value: %s", delta)
+        self._attr_native_value = dt_util.utcnow()
+        self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            name=entry.title,
+            identifiers={(DOMAIN, entry.entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )

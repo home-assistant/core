@@ -1,391 +1,407 @@
 """Support for interacting with Spotify Connect."""
-from datetime import timedelta
+
+from __future__ import annotations
+
+import asyncio
+from collections.abc import Awaitable, Callable, Coroutine
+import datetime as dt
 import logging
-import random
+from typing import TYPE_CHECKING, Any, Concatenate
 
-import spotipy
-import spotipy.oauth2
-import voluptuous as vol
-
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_VOLUME_SET,
+from spotifyaio import (
+    Device,
+    Episode,
+    Item,
+    ItemType,
+    PlaybackState,
+    ProductType,
+    RepeatMode as SpotifyRepeatMode,
+    Track,
 )
-from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from yarl import URL
+
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
+    BrowseMedia,
+    MediaPlayerEnqueue,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .browse_media import async_browse_media_internal
+from .const import MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES
+from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
+from .entity import SpotifyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-AUTH_CALLBACK_NAME = "api:spotify"
-AUTH_CALLBACK_PATH = "/api/spotify"
-
-CONF_ALIASES = "aliases"
-CONF_CACHE_PATH = "cache_path"
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
-
-CONFIGURATOR_DESCRIPTION = (
-    "To link your Spotify account, click the link, login, and authorize:"
-)
-CONFIGURATOR_LINK_NAME = "Link Spotify account"
-CONFIGURATOR_SUBMIT_CAPTION = "I authorized successfully"
-
-DEFAULT_CACHE_PATH = ".spotify-token-cache"
-DEFAULT_NAME = "Spotify"
-DOMAIN = "spotify"
-
-SERVICE_PLAY_PLAYLIST = "play_playlist"
-ATTR_RANDOM_SONG = "random_song"
-
-PLAY_PLAYLIST_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-        vol.Optional(ATTR_RANDOM_SONG, default=False): cv.boolean,
-    }
-)
-
-ICON = "mdi:spotify"
-
-SCAN_INTERVAL = timedelta(seconds=30)
-
-SCOPE = "user-read-playback-state user-modify-playback-state user-read-private"
-
 SUPPORT_SPOTIFY = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_SHUFFLE_SET
+    MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.REPEAT_SET
+    | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.SHUFFLE_SET
+    | MediaPlayerEntityFeature.VOLUME_SET
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_CACHE_PATH): cv.string,
-        vol.Optional(CONF_ALIASES, default={}): {cv.string: cv.string},
-    }
-)
+REPEAT_MODE_MAPPING_TO_HA = {
+    SpotifyRepeatMode.CONTEXT: RepeatMode.ALL,
+    SpotifyRepeatMode.OFF: RepeatMode.OFF,
+    SpotifyRepeatMode.TRACK: RepeatMode.ONE,
+}
+
+REPEAT_MODE_MAPPING_TO_SPOTIFY = {
+    value: key for key, value in REPEAT_MODE_MAPPING_TO_HA.items()
+}
+AFTER_REQUEST_SLEEP = 1
 
 
-def request_configuration(hass, config, add_entities, oauth):
-    """Request Spotify authorization."""
-    configurator = hass.components.configurator
-    hass.data[DOMAIN] = configurator.request_config(
-        DEFAULT_NAME,
-        lambda _: None,
-        link_name=CONFIGURATOR_LINK_NAME,
-        link_url=oauth.get_authorize_url(),
-        description=CONFIGURATOR_DESCRIPTION,
-        submit_caption=CONFIGURATOR_SUBMIT_CAPTION,
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SpotifyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Spotify based on a config entry."""
+    data = entry.runtime_data
+    assert entry.unique_id is not None
+    spotify = SpotifyMediaPlayer(
+        data.coordinator,
+        data.devices,
     )
+    async_add_entities([spotify])
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Spotify platform."""
+def ensure_item[_R](
+    func: Callable[[SpotifyMediaPlayer, Item], _R],
+) -> Callable[[SpotifyMediaPlayer], _R | None]:
+    """Ensure that the currently playing item is available."""
 
-    callback_url = f"{hass.config.api.base_url}{AUTH_CALLBACK_PATH}"
-    cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
-    oauth = spotipy.oauth2.SpotifyOAuth(
-        config.get(CONF_CLIENT_ID),
-        config.get(CONF_CLIENT_SECRET),
-        callback_url,
-        scope=SCOPE,
-        cache_path=cache,
-    )
-    token_info = oauth.get_cached_token()
-    if not token_info:
-        _LOGGER.info("no token; requesting authorization")
-        hass.http.register_view(SpotifyAuthCallbackView(config, add_entities, oauth))
-        request_configuration(hass, config, add_entities, oauth)
-        return
-    if hass.data.get(DOMAIN):
-        configurator = hass.components.configurator
-        configurator.request_done(hass.data.get(DOMAIN))
-        del hass.data[DOMAIN]
-    player = SpotifyMediaPlayer(
-        oauth, config.get(CONF_NAME, DEFAULT_NAME), config[CONF_ALIASES]
-    )
-    add_entities([player], True)
+    def wrapper(self: SpotifyMediaPlayer) -> _R | None:
+        if not self.currently_playing or not self.currently_playing.item:
+            return None
+        return func(self, self.currently_playing.item)
 
-    def play_playlist_service(service):
-        media_content_id = service.data[ATTR_MEDIA_CONTENT_ID]
-        random_song = service.data.get(ATTR_RANDOM_SONG)
-        player.play_playlist(media_content_id, random_song)
-
-    hass.services.register(
-        DOMAIN,
-        SERVICE_PLAY_PLAYLIST,
-        play_playlist_service,
-        schema=PLAY_PLAYLIST_SCHEMA,
-    )
+    return wrapper
 
 
-class SpotifyAuthCallbackView(HomeAssistantView):
-    """Spotify Authorization Callback View."""
+def async_refresh_after[_T: SpotifyEntity, **_P](
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
+    """Define a wrapper to yield and refresh after."""
 
-    requires_auth = False
-    url = AUTH_CALLBACK_PATH
-    name = AUTH_CALLBACK_NAME
+    async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        await func(self, *args, **kwargs)
+        await asyncio.sleep(AFTER_REQUEST_SLEEP)
+        await self.coordinator.async_refresh()
 
-    def __init__(self, config, add_entities, oauth):
-        """Initialize."""
-        self.config = config
-        self.add_entities = add_entities
-        self.oauth = oauth
-
-    @callback
-    def get(self, request):
-        """Receive authorization token."""
-        hass = request.app["hass"]
-        self.oauth.get_access_token(request.query["code"])
-        hass.async_add_job(setup_platform, hass, self.config, self.add_entities)
+    return _async_wrap
 
 
-class SpotifyMediaPlayer(MediaPlayerDevice):
+class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
-    def __init__(self, oauth, name, aliases):
+    _attr_media_image_remotely_accessible = False
+    _attr_name = None
+    _attr_translation_key = "spotify"
+
+    def __init__(
+        self,
+        coordinator: SpotifyCoordinator,
+        device_coordinator: DataUpdateCoordinator[list[Device]],
+    ) -> None:
         """Initialize."""
-        self._name = name
-        self._oauth = oauth
-        self._album = None
-        self._title = None
-        self._artist = None
-        self._uri = None
-        self._image_url = None
-        self._state = None
-        self._current_device = None
-        self._devices = {}
-        self._volume = None
-        self._shuffle = False
-        self._player = None
-        self._user = None
-        self._aliases = aliases
-        self._token_info = self._oauth.get_cached_token()
+        super().__init__(coordinator)
+        self.devices = device_coordinator
+        self._attr_unique_id = coordinator.current_user.user_id
 
-    def refresh_spotify_instance(self):
-        """Fetch a new spotify instance."""
+    @property
+    def currently_playing(self) -> PlaybackState | None:
+        """Return the current playback."""
+        return self.coordinator.data.current_playback
 
-        token_refreshed = False
-        need_token = self._token_info is None or self._oauth.is_token_expired(
-            self._token_info
-        )
-        if need_token:
-            new_token = self._oauth.refresh_access_token(
-                self._token_info["refresh_token"]
-            )
-            # skip when refresh failed
-            if new_token is None:
-                return
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return the supported features."""
+        if self.coordinator.current_user.product != ProductType.PREMIUM:
+            return MediaPlayerEntityFeature(0)
+        if not self.currently_playing or self.currently_playing.device.is_restricted:
+            return MediaPlayerEntityFeature.SELECT_SOURCE
+        return SUPPORT_SPOTIFY
 
-            self._token_info = new_token
-            token_refreshed = True
-        if self._player is None or token_refreshed:
-            self._player = spotipy.Spotify(auth=self._token_info.get("access_token"))
-            self._user = self._player.me()
+    @property
+    def state(self) -> MediaPlayerState:
+        """Return the playback state."""
+        if not self.currently_playing:
+            return MediaPlayerState.IDLE
+        if self.currently_playing.is_playing:
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.PAUSED
 
-    def update(self):
-        """Update state and attributes."""
-        self.refresh_spotify_instance()
+    @property
+    def volume_level(self) -> float | None:
+        """Return the device volume."""
+        if not self.currently_playing:
+            return None
+        return self.currently_playing.device.volume_percent / 100
 
-        # Don't true update when token is expired
-        if self._oauth.is_token_expired(self._token_info):
-            _LOGGER.warning("Spotify failed to update, token expired.")
-            return
+    @property
+    @ensure_item
+    def media_content_id(self, item: Item) -> str:  # noqa: PLR0206
+        """Return the media URL."""
+        return item.uri
 
-        # Available devices
-        player_devices = self._player.devices()
-        if player_devices is not None:
-            devices = player_devices.get("devices")
-            if devices is not None:
-                old_devices = self._devices
-                self._devices = {
-                    self._aliases.get(device.get("id"), device.get("name")): device.get(
-                        "id"
-                    )
-                    for device in devices
-                }
-                device_diff = {
-                    name: id
-                    for name, id in self._devices.items()
-                    if old_devices.get(name, None) is None
-                }
-                if device_diff:
-                    _LOGGER.info("New Devices: %s", str(device_diff))
-        # Current playback state
-        current = self._player.current_playback()
-        if current is None:
-            self._state = STATE_IDLE
-            return
-        # Track metadata
-        item = current.get("item")
-        if item:
-            self._album = item.get("album").get("name")
-            self._title = item.get("name")
-            self._artist = ", ".join(
-                [artist.get("name") for artist in item.get("artists")]
-            )
-            self._uri = item.get("uri")
-            images = item.get("album").get("images")
-            self._image_url = images[0].get("url") if images else None
-        # Playing state
-        self._state = STATE_PAUSED
-        if current.get("is_playing"):
-            self._state = STATE_PLAYING
-        self._shuffle = current.get("shuffle_state")
-        device = current.get("device")
-        if device is None:
-            self._state = STATE_IDLE
-        else:
-            if device.get("volume_percent"):
-                self._volume = device.get("volume_percent") / 100
-            if device.get("name"):
-                self._current_device = device.get("name")
+    @property
+    @ensure_item
+    def media_content_type(self, item: Item) -> str:  # noqa: PLR0206
+        """Return the media type."""
+        return MediaType.PODCAST if item.type == ItemType.EPISODE else MediaType.MUSIC
 
-    def set_volume_level(self, volume):
+    @property
+    @ensure_item
+    def media_duration(self, item: Item) -> int:  # noqa: PLR0206
+        """Duration of current playing media in seconds."""
+        return round(item.duration_ms / 1000)
+
+    @property
+    def media_position(self) -> int | None:
+        """Position of current playing media in seconds."""
+        if not self.currently_playing or self.currently_playing.progress_ms is None:
+            return None
+        return round(self.currently_playing.progress_ms / 1000)
+
+    @property
+    def media_position_updated_at(self) -> dt.datetime | None:
+        """When was the position of the current playing media valid."""
+        if not self.currently_playing:
+            return None
+        return self.coordinator.data.position_updated_at
+
+    @property
+    @ensure_item
+    def media_image_url(self, item: Item) -> str | None:  # noqa: PLR0206
+        """Return the media image URL."""
+        if item.type == ItemType.EPISODE:
+            if TYPE_CHECKING:
+                assert isinstance(item, Episode)
+            if item.images:
+                return item.images[0].url
+            if item.show and item.show.images:
+                return item.show.images[0].url
+            return None
+        if TYPE_CHECKING:
+            assert isinstance(item, Track)
+        if not item.album.images:
+            return None
+        return item.album.images[0].url
+
+    @property
+    @ensure_item
+    def media_title(self, item: Item) -> str:  # noqa: PLR0206
+        """Return the media title."""
+        return item.name
+
+    @property
+    @ensure_item
+    def media_artist(self, item: Item) -> str:  # noqa: PLR0206
+        """Return the media artist."""
+        if item.type == ItemType.EPISODE:
+            if TYPE_CHECKING:
+                assert isinstance(item, Episode)
+            return item.show.publisher
+
+        if TYPE_CHECKING:
+            assert isinstance(item, Track)
+        return ", ".join(artist.name for artist in item.artists)
+
+    @property
+    @ensure_item
+    def media_album_name(self, item: Item) -> str:  # noqa: PLR0206
+        """Return the media album."""
+        if item.type == ItemType.EPISODE:
+            if TYPE_CHECKING:
+                assert isinstance(item, Episode)
+            return item.show.name
+
+        if TYPE_CHECKING:
+            assert isinstance(item, Track)
+        return item.album.name
+
+    @property
+    @ensure_item
+    def media_track(self, item: Item) -> int | None:  # noqa: PLR0206
+        """Track number of current playing media, music track only."""
+        if item.type == ItemType.EPISODE:
+            return None
+        if TYPE_CHECKING:
+            assert isinstance(item, Track)
+        return item.track_number
+
+    @property
+    def media_playlist(self) -> str | None:
+        """Title of Playlist currently playing."""
+        if self.coordinator.data.dj_playlist:
+            return "DJ"
+        if self.coordinator.data.playlist is None:
+            return None
+        return self.coordinator.data.playlist.name
+
+    @property
+    def source(self) -> str | None:
+        """Return the current playback device."""
+        if not self.currently_playing:
+            return None
+        return self.currently_playing.device.name
+
+    @property
+    def source_list(self) -> list[str] | None:
+        """Return a list of source devices."""
+        return [device.name for device in self.devices.data]
+
+    @property
+    def shuffle(self) -> bool | None:
+        """Shuffling state."""
+        if not self.currently_playing:
+            return None
+        return self.currently_playing.shuffle
+
+    @property
+    def repeat(self) -> RepeatMode | None:
+        """Return current repeat mode."""
+        if not self.currently_playing:
+            return None
+        return REPEAT_MODE_MAPPING_TO_HA.get(self.currently_playing.repeat_mode)
+
+    @async_refresh_after
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
-        self._player.volume(int(volume * 100))
+        await self.coordinator.client.set_volume(int(volume * 100))
 
-    def set_shuffle(self, shuffle):
-        """Enable/Disable shuffle mode."""
-        self._player.shuffle(shuffle)
-
-    def media_next_track(self):
-        """Skip to next track."""
-        self._player.next_track()
-
-    def media_previous_track(self):
-        """Skip to previous track."""
-        self._player.previous_track()
-
-    def media_play(self):
+    @async_refresh_after
+    async def async_media_play(self) -> None:
         """Start or resume playback."""
-        self._player.start_playback()
+        await self.coordinator.client.start_playback()
 
-    def media_pause(self):
+    @async_refresh_after
+    async def async_media_pause(self) -> None:
         """Pause playback."""
-        self._player.pause_playback()
+        await self.coordinator.client.pause_playback()
 
-    def select_source(self, source):
-        """Select playback device."""
-        if self._devices:
-            self._player.transfer_playback(
-                self._devices[source], self._state == STATE_PLAYING
-            )
+    @async_refresh_after
+    async def async_media_previous_track(self) -> None:
+        """Skip to previous track."""
+        await self.coordinator.client.previous_track()
 
-    def play_media(self, media_type, media_id, **kwargs):
+    @async_refresh_after
+    async def async_media_next_track(self) -> None:
+        """Skip to next track."""
+        await self.coordinator.client.next_track()
+
+    @async_refresh_after
+    async def async_media_seek(self, position: float) -> None:
+        """Send seek command."""
+        await self.coordinator.client.seek_track(int(position * 1000))
+
+    @async_refresh_after
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media."""
+        media_type = media_type.removeprefix(MEDIA_PLAYER_PREFIX)
+
+        enqueue: MediaPlayerEnqueue = kwargs.get(
+            ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE
+        )
+
         kwargs = {}
-        if media_type == MEDIA_TYPE_MUSIC:
+
+        # Spotify can't handle URI's with query strings or anchors
+        # Yet, they do generate those types of URI in their official clients.
+        media_id = str(URL(media_id).with_query(None).with_fragment(None))
+
+        if media_type in {MediaType.TRACK, MediaType.EPISODE, MediaType.MUSIC}:
             kwargs["uris"] = [media_id]
-        elif media_type == MEDIA_TYPE_PLAYLIST:
+        elif media_type in PLAYABLE_MEDIA_TYPES:
             kwargs["context_uri"] = media_id
         else:
-            _LOGGER.error("media type %s is not supported", media_type)
+            _LOGGER.error("Media type %s is not supported", media_type)
             return
-        if not media_id.startswith("spotify:"):
-            _LOGGER.error("media id must be spotify uri")
+
+        if not self.currently_playing and self.devices.data:
+            kwargs["device_id"] = self.devices.data[0].device_id
+
+        if enqueue == MediaPlayerEnqueue.ADD:
+            if media_type not in {
+                MediaType.TRACK,
+                MediaType.EPISODE,
+                MediaType.MUSIC,
+            }:
+                raise ValueError(
+                    f"Media type {media_type} is not supported when enqueue is ADD"
+                )
+            await self.coordinator.client.add_to_queue(
+                media_id, kwargs.get("device_id")
+            )
             return
-        self._player.start_playback(**kwargs)
 
-    def play_playlist(self, media_id, random_song):
-        """Play random music in a playlist."""
-        if not media_id.startswith("spotify:"):
-            _LOGGER.error("media id must be spotify playlist uri")
+        await self.coordinator.client.start_playback(**kwargs)
+
+    @async_refresh_after
+    async def async_select_source(self, source: str) -> None:
+        """Select playback device."""
+        for device in self.devices.data:
+            if device.name == source:
+                if TYPE_CHECKING:
+                    assert device.device_id is not None
+                await self.coordinator.client.transfer_playback(device.device_id)
+                return
+
+    @async_refresh_after
+    async def async_set_shuffle(self, shuffle: bool) -> None:
+        """Enable/Disable shuffle mode."""
+        await self.coordinator.client.set_shuffle(state=shuffle)
+
+    @async_refresh_after
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        if repeat not in REPEAT_MODE_MAPPING_TO_SPOTIFY:
+            raise ValueError(f"Unsupported repeat mode: {repeat}")
+        await self.coordinator.client.set_repeat(REPEAT_MODE_MAPPING_TO_SPOTIFY[repeat])
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+
+        return await async_browse_media_internal(
+            self.hass,
+            self.coordinator.client,
+            media_content_type,
+            media_content_id,
+        )
+
+    @callback
+    def _handle_devices_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self.enabled:
             return
-        kwargs = {"context_uri": media_id}
-        if random_song:
-            results = self._player.user_playlist_tracks("me", media_id)
-            position = random.randint(0, results["total"] - 1)
-            kwargs["offset"] = {"position": position}
-        self._player.start_playback(**kwargs)
+        self.async_write_ha_state()
 
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return ICON
-
-    @property
-    def state(self):
-        """Return the playback state."""
-        return self._state
-
-    @property
-    def volume_level(self):
-        """Return the device volume."""
-        return self._volume
-
-    @property
-    def shuffle(self):
-        """Shuffling state."""
-        return self._shuffle
-
-    @property
-    def source_list(self):
-        """Return a list of source devices."""
-        if self._devices:
-            return list(self._devices.keys())
-
-    @property
-    def source(self):
-        """Return the current playback device."""
-        return self._current_device
-
-    @property
-    def media_content_id(self):
-        """Return the media URL."""
-        return self._uri
-
-    @property
-    def media_image_url(self):
-        """Return the media image URL."""
-        return self._image_url
-
-    @property
-    def media_artist(self):
-        """Return the media artist."""
-        return self._artist
-
-    @property
-    def media_album_name(self):
-        """Return the media album."""
-        return self._album
-
-    @property
-    def media_title(self):
-        """Return the media title."""
-        return self._title
-
-    @property
-    def supported_features(self):
-        """Return the media player features that are supported."""
-        if self._user is not None and self._user["product"] == "premium":
-            return SUPPORT_SPOTIFY
-        return None
-
-    @property
-    def media_content_type(self):
-        """Return the media type."""
-        return MEDIA_TYPE_MUSIC
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.devices.async_add_listener(self._handle_devices_update)
+        )

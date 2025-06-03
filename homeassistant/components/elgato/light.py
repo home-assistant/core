@@ -1,158 +1,173 @@
-"""Support for LED lights."""
-from datetime import timedelta
-import logging
-from typing import Any, Callable, Dict, List, Optional
+"""Support for Elgato lights."""
 
-from elgato import Elgato, ElgatoError, Info, State
+from __future__ import annotations
+
+from typing import Any
+
+from elgato import ElgatoError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
-    Light,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_HS_COLOR,
+    ColorMode,
+    LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
-
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_ON,
-    ATTR_SOFTWARE_VERSION,
-    ATTR_TEMPERATURE,
-    DATA_ELGATO_CLIENT,
-    DOMAIN,
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
 )
+from homeassistant.util import color as color_util
 
-_LOGGER = logging.getLogger(__name__)
+from .const import SERVICE_IDENTIFY
+from .coordinator import ElgatoConfigEntry, ElgatoDataUpdateCoordinator
+from .entity import ElgatoEntity
 
 PARALLEL_UPDATES = 1
-SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
-    entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    hass: HomeAssistant,
+    entry: ElgatoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Elgato Key Light based on a config entry."""
-    elgato: Elgato = hass.data[DOMAIN][entry.entry_id][DATA_ELGATO_CLIENT]
-    info = await elgato.info()
-    async_add_entities([ElgatoLight(entry.entry_id, elgato, info)], True)
+    """Set up Elgato Light based on a config entry."""
+    coordinator = entry.runtime_data
+    async_add_entities([ElgatoLight(coordinator)])
+
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_IDENTIFY,
+        None,
+        ElgatoLight.async_identify.__name__,
+    )
 
 
-class ElgatoLight(Light):
-    """Defines a Elgato Key Light."""
+class ElgatoLight(ElgatoEntity, LightEntity):
+    """Defines an Elgato Light."""
 
-    def __init__(
-        self, entry_id: str, elgato: Elgato, info: Info,
-    ):
-        """Initialize Elgato Key Light."""
-        self._brightness: Optional[int] = None
-        self._info: Info = info
-        self._state: Optional[bool] = None
-        self._temperature: Optional[int] = None
-        self._available = True
-        self.elgato = elgato
+    _attr_name = None
+    _attr_min_color_temp_kelvin = 2900  # 344 Mireds
+    _attr_max_color_temp_kelvin = 7000  # 143 Mireds
+
+    def __init__(self, coordinator: ElgatoDataUpdateCoordinator) -> None:
+        """Initialize Elgato Light."""
+        super().__init__(coordinator)
+        self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+        self._attr_unique_id = coordinator.data.info.serial_number
+
+        # Elgato Light supporting color, have a different temperature range
+        if (
+            self.coordinator.data.info.product_name
+            in (
+                "Elgato Light Strip",
+                "Elgato Light Strip Pro",
+            )
+            or self.coordinator.data.settings.power_on_hue
+            or self.coordinator.data.state.hue is not None
+        ):
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+            self._attr_min_color_temp_kelvin = 3500  # 285 Mireds
+            self._attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
     @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        # Return the product name, if display name is not set
-        if not self._info.display_name:
-            return self._info.product_name
-        return self._info.display_name
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._info.serial_number
-
-    @property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
-        return self._brightness
+        return round((self.coordinator.data.state.brightness * 255) / 100)
 
     @property
-    def color_temp(self):
-        """Return the CT color value in mireds."""
-        return self._temperature
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        if (mired_temperature := self.coordinator.data.state.temperature) is None:
+            return None
+        return color_util.color_temperature_mired_to_kelvin(mired_temperature)
 
     @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        return 143
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
+        if self.coordinator.data.state.hue is not None:
+            return ColorMode.HS
+
+        return ColorMode.COLOR_TEMP
 
     @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return 344
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hue and saturation color value [float, float]."""
+        return (
+            self.coordinator.data.state.hue or 0,
+            self.coordinator.data.state.saturation or 0,
+        )
 
     @property
     def is_on(self) -> bool:
         """Return the state of the light."""
-        return bool(self._state)
+        return self.coordinator.data.state.on
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await self.async_turn_on(on=False)
+        try:
+            await self.coordinator.client.light(on=False)
+        except ElgatoError as error:
+            raise HomeAssistantError(
+                "An error occurred while updating the Elgato Light"
+            ) from error
+        finally:
+            await self.coordinator.async_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        data = {}
+        temperature_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
 
-        data[ATTR_ON] = True
-        if ATTR_ON in kwargs:
-            data[ATTR_ON] = kwargs[ATTR_ON]
+        hue = None
+        saturation = None
+        if ATTR_HS_COLOR in kwargs:
+            hue, saturation = kwargs[ATTR_HS_COLOR]
 
-        if ATTR_COLOR_TEMP in kwargs:
-            data[ATTR_TEMPERATURE] = kwargs[ATTR_COLOR_TEMP]
-
+        brightness = None
         if ATTR_BRIGHTNESS in kwargs:
-            data[ATTR_BRIGHTNESS] = round((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
+            brightness = round((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
+
+        # For Elgato lights supporting color mode, but in temperature mode;
+        # adjusting only brightness make them jump back to color mode.
+        # Resending temperature prevents that.
+        if (
+            brightness
+            and ATTR_HS_COLOR not in kwargs
+            and ATTR_COLOR_TEMP_KELVIN not in kwargs
+            and self.supported_color_modes
+            and ColorMode.HS in self.supported_color_modes
+            and self.color_mode == ColorMode.COLOR_TEMP
+        ):
+            temperature_kelvin = self.color_temp_kelvin
+
+        temperature = (
+            None
+            if temperature_kelvin is None
+            else color_util.color_temperature_kelvin_to_mired(temperature_kelvin)
+        )
 
         try:
-            await self.elgato.light(**data)
-        except ElgatoError:
-            _LOGGER.error("An error occurred while updating the Elgato Key Light")
-            self._available = False
+            await self.coordinator.client.light(
+                on=True,
+                brightness=brightness,
+                hue=hue,
+                saturation=saturation,
+                temperature=temperature,
+            )
+        except ElgatoError as error:
+            raise HomeAssistantError(
+                "An error occurred while updating the Elgato Light"
+            ) from error
+        finally:
+            await self.coordinator.async_refresh()
 
-    async def async_update(self) -> None:
-        """Update Elgato entity."""
+    async def async_identify(self) -> None:
+        """Identify the light, will make it blink."""
         try:
-            state: State = await self.elgato.state()
-        except ElgatoError:
-            if self._available:
-                _LOGGER.error("An error occurred while updating the Elgato Key Light")
-            self._available = False
-            return
-
-        self._available = True
-        self._brightness = round((state.brightness * 255) / 100)
-        self._state = state.on
-        self._temperature = state.temperature
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device information about this Elgato Key Light."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._info.serial_number)},
-            ATTR_NAME: self._info.product_name,
-            ATTR_MANUFACTURER: "Elgato",
-            ATTR_MODEL: self._info.product_name,
-            ATTR_SOFTWARE_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
-        }
+            await self.coordinator.client.identify()
+        except ElgatoError as error:
+            raise HomeAssistantError(
+                "An error occurred while identifying the Elgato Light"
+            ) from error

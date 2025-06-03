@@ -1,72 +1,175 @@
 """Config flow to configure the SimpliSafe component."""
-from collections import OrderedDict
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
 from simplipy import API
-from simplipy.errors import SimplipyError
+from simplipy.errors import InvalidCredentialsError, SimplipyError
+from simplipy.util.auth import (
+    get_auth0_code_challenge,
+    get_auth0_code_verifier,
+    get_auth_url,
+)
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
+
+CONF_AUTH_CODE = "auth_code"
+
+STEP_USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_AUTH_CODE): cv.string,
+    }
+)
+
+
+class SimpliSafeOAuthValues(NamedTuple):
+    """Define a named tuple to handle SimpliSafe OAuth strings."""
+
+    auth_url: str
+    code_verifier: str
 
 
 @callback
-def configured_instances(hass):
-    """Return a set of configured SimpliSafe instances."""
-    return set(
-        entry.data[CONF_USERNAME] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+def async_get_simplisafe_oauth_values() -> SimpliSafeOAuthValues:
+    """Get a SimpliSafe OAuth code verifier and auth URL."""
+    code_verifier = get_auth0_code_verifier()
+    code_challenge = get_auth0_code_challenge(code_verifier)
+    auth_url = get_auth_url(code_challenge)
+    return SimpliSafeOAuthValues(auth_url, code_verifier)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class SimpliSafeFlowHandler(config_entries.ConfigFlow):
+class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a SimpliSafe config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data_schema = OrderedDict()
-        self.data_schema[vol.Required(CONF_USERNAME)] = str
-        self.data_schema[vol.Required(CONF_PASSWORD)] = str
-        self.data_schema[vol.Optional(CONF_CODE)] = str
+        self._oauth_values: SimpliSafeOAuthValues = async_get_simplisafe_oauth_values()
+        self._reauth: bool = False
 
-    async def _show_form(self, errors=None):
-        """Show the form to the user."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(self.data_schema),
-            errors=errors if errors else {},
-        )
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> SimpliSafeOptionsFlowHandler:
+        """Define the config flow to handle options."""
+        return SimpliSafeOptionsFlowHandler()
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        self._reauth = True
+        return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
-
-        if not user_input:
-            return await self._show_form()
-
-        if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return await self._show_form({CONF_USERNAME: "identifier_exists"})
-
-        username = user_input[CONF_USERNAME]
-        websession = aiohttp_client.async_get_clientsession(self.hass)
-
-        try:
-            simplisafe = await API.login_via_credentials(
-                username, user_input[CONF_PASSWORD], websession
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_SCHEMA,
+                description_placeholders={CONF_URL: self._oauth_values.auth_url},
             )
-        except SimplipyError:
-            return await self._show_form({"base": "invalid_credentials"})
 
-        return self.async_create_entry(
-            title=user_input[CONF_USERNAME],
-            data={CONF_USERNAME: username, CONF_TOKEN: simplisafe.refresh_token},
+        auth_code = user_input[CONF_AUTH_CODE]
+
+        if auth_code.startswith("="):
+            # Sometimes, users may include the "=" from the URL query param; in that
+            # case, strip it off and proceed:
+            LOGGER.debug('Stripping "=" from the start of the authorization code')
+            auth_code = auth_code[1:]
+
+        if len(auth_code) != 45:
+            # SimpliSafe authorization codes are 45 characters in length; if the user
+            # provides something different, stop them here:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_SCHEMA,
+                errors={CONF_AUTH_CODE: "invalid_auth_code_length"},
+                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+            )
+
+        errors = {}
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        try:
+            simplisafe = await API.async_from_auth(
+                auth_code,
+                self._oauth_values.code_verifier,
+                session=session,
+            )
+        except InvalidCredentialsError:
+            errors = {CONF_AUTH_CODE: "invalid_auth"}
+        except SimplipyError as err:
+            LOGGER.error("Unknown error while logging into SimpliSafe: %s", err)
+            errors = {"base": "unknown"}
+
+        if errors:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_SCHEMA,
+                errors=errors,
+                description_placeholders={CONF_URL: self._oauth_values.auth_url},
+            )
+
+        simplisafe_user_id = str(simplisafe.user_id)
+        data = {CONF_USERNAME: simplisafe_user_id, CONF_TOKEN: simplisafe.refresh_token}
+
+        if self._reauth:
+            existing_entry = await self.async_set_unique_id(simplisafe_user_id)
+            if not existing_entry:
+                # If we don't have an entry that matches this user ID, the user logged
+                # in with different credentials:
+                return self.async_abort(reason="wrong_account")
+
+            self.hass.config_entries.async_update_entry(
+                existing_entry, unique_id=simplisafe_user_id, data=data
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(existing_entry.entry_id)
+            )
+            return self.async_abort(reason="reauth_successful")
+
+        await self.async_set_unique_id(simplisafe_user_id)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=simplisafe_user_id, data=data)
+
+
+class SimpliSafeOptionsFlowHandler(OptionsFlow):
+    """Handle a SimpliSafe options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_CODE,
+                        description={
+                            "suggested_value": self.config_entry.options.get(CONF_CODE)
+                        },
+                    ): str
+                }
+            ),
         )

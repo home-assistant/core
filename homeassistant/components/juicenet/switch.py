@@ -1,45 +1,49 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE switches."""
-import logging
 
-from homeassistant.components.switch import SwitchDevice
+from typing import Any
 
-from . import DOMAIN, JuicenetDevice
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-_LOGGER = logging.getLogger(__name__)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Juicenet switch."""
-    api = hass.data[DOMAIN]["api"]
-
-    devs = []
-    for device in api.get_devices():
-        devs.append(JuicenetChargeNowSwitch(device, hass))
-
-    add_entities(devs)
+from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
+from .entity import JuiceNetDevice
 
 
-class JuicenetChargeNowSwitch(JuicenetDevice, SwitchDevice):
-    """Implementation of a Juicenet switch."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the JuiceNet switches."""
+    juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = juicenet_data[JUICENET_API]
+    coordinator = juicenet_data[JUICENET_COORDINATOR]
 
-    def __init__(self, device, hass):
+    async_add_entities(
+        JuiceNetChargeNowSwitch(device, coordinator) for device in api.devices
+    )
+
+
+class JuiceNetChargeNowSwitch(JuiceNetDevice, SwitchEntity):
+    """Implementation of a JuiceNet switch."""
+
+    _attr_translation_key = "charge_now"
+
+    def __init__(self, device, coordinator):
         """Initialise the switch."""
-        super().__init__(device, "charge_now", hass)
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"{self.device.name()} Charge Now"
+        super().__init__(device, "charge_now", coordinator)
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.device.getOverrideTime() != 0
+        return self.device.override_time != 0
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Charge now."""
-        self.device.setOverride(True)
+        await self.device.set_override(True)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Don't charge now."""
-        self.device.setOverride(False)
+        await self.device.set_override(False)

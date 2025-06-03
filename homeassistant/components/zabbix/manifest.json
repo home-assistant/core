@@ -1,8 +1,10 @@
 {
   "domain": "zabbix",
   "name": "Zabbix",
+  "codeowners": ["@kruton"],
   "documentation": "https://www.home-assistant.io/integrations/zabbix",
-  "requirements": ["pyzabbix==0.7.4"],
-  "dependencies": [],
-  "codeowners": []
+  "iot_class": "local_polling",
+  "loggers": ["zabbix_utils"],
+  "quality_scale": "legacy",
+  "requirements": ["zabbix-utils==2.0.2"]
 }

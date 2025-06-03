@@ -1,0 +1,22 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'api_key': '**REDACTED**',
+    }),
+    'options': dict({
+      'chat_model': 'models/gemini-2.0-flash',
+      'dangerous_block_threshold': 'BLOCK_MEDIUM_AND_ABOVE',
+      'harassment_block_threshold': 'BLOCK_MEDIUM_AND_ABOVE',
+      'hate_block_threshold': 'BLOCK_MEDIUM_AND_ABOVE',
+      'max_tokens': 1500,
+      'prompt': 'Speak like a pirate',
+      'recommended': False,
+      'sexual_block_threshold': 'BLOCK_MEDIUM_AND_ABOVE',
+      'temperature': 1.0,
+      'top_k': 64,
+      'top_p': 0.95,
+    }),
+    'title': 'Google Generative AI Conversation',
+  })
+# ---

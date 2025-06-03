@@ -1,40 +1,20 @@
-"""This component provides basic support for Foscam IP cameras."""
-import asyncio
-import logging
+"""Component providing basic support for Foscam IP cameras."""
 
-from libpyfoscam import FoscamCamera
+from __future__ import annotations
+
+import asyncio
+
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_extract_entity_ids
+from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DATA as FOSCAM_DATA,
-    DOMAIN as FOSCAM_DOMAIN,
-    ENTITIES as FOSCAM_ENTITIES,
-)
-
-_LOGGER = logging.getLogger(__name__)
-
-CONF_IP = "ip"
-CONF_RTSP_PORT = "rtsp_port"
-
-DEFAULT_NAME = "Foscam Camera"
-DEFAULT_PORT = 88
-
-SERVICE_PTZ = "ptz"
-ATTR_MOVEMENT = "movement"
-ATTR_TRAVELTIME = "travel_time"
-
-DEFAULT_TRAVELTIME = 0.125
+from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
+from .coordinator import FoscamConfigEntry, FoscamCoordinator
+from .entity import FoscamEntity
 
 DIR_UP = "up"
 DIR_DOWN = "down"
@@ -57,120 +37,109 @@ MOVEMENT_ATTRS = {
     DIR_BOTTOMRIGHT: "ptz_move_bottom_right",
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_IP): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_RTSP_PORT): cv.port,
-    }
-)
+DEFAULT_TRAVELTIME = 0.125
 
-SERVICE_PTZ_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_MOVEMENT): vol.In(
-            [
-                DIR_UP,
-                DIR_DOWN,
-                DIR_LEFT,
-                DIR_RIGHT,
-                DIR_TOPLEFT,
-                DIR_TOPRIGHT,
-                DIR_BOTTOMLEFT,
-                DIR_BOTTOMRIGHT,
-            ]
-        ),
-        vol.Optional(ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME): cv.small_float,
-    }
-)
+ATTR_MOVEMENT = "movement"
+ATTR_TRAVELTIME = "travel_time"
+ATTR_PRESET_NAME = "preset_name"
+
+PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up a Foscam IP Camera."""
-
-    async def async_handle_ptz(service):
-        """Handle PTZ service call."""
-        movement = service.data[ATTR_MOVEMENT]
-        travel_time = service.data[ATTR_TRAVELTIME]
-        entity_ids = await async_extract_entity_ids(hass, service)
-
-        if not entity_ids:
-            return
-
-        _LOGGER.debug("Moving '%s' camera(s): %s", movement, entity_ids)
-
-        all_cameras = hass.data[FOSCAM_DATA][FOSCAM_ENTITIES]
-        target_cameras = [
-            camera for camera in all_cameras if camera.entity_id in entity_ids
-        ]
-
-        for camera in target_cameras:
-            await camera.async_perform_ptz(movement, travel_time)
-
-    hass.services.async_register(
-        FOSCAM_DOMAIN, SERVICE_PTZ, async_handle_ptz, schema=SERVICE_PTZ_SCHEMA
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: FoscamConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add a Foscam IP camera from a config entry."""
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_PTZ,
+        {
+            vol.Required(ATTR_MOVEMENT): vol.In(
+                [
+                    DIR_UP,
+                    DIR_DOWN,
+                    DIR_LEFT,
+                    DIR_RIGHT,
+                    DIR_TOPLEFT,
+                    DIR_TOPRIGHT,
+                    DIR_BOTTOMLEFT,
+                    DIR_BOTTOMRIGHT,
+                ]
+            ),
+            vol.Optional(ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME): cv.small_float,
+        },
+        "async_perform_ptz",
     )
 
-    camera = FoscamCamera(
-        config[CONF_IP],
-        config[CONF_PORT],
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
-        verbose=False,
+    platform.async_register_entity_service(
+        SERVICE_PTZ_PRESET,
+        {
+            vol.Required(ATTR_PRESET_NAME): cv.string,
+        },
+        "async_perform_ptz_preset",
     )
 
-    rtsp_port = config.get(CONF_RTSP_PORT)
-    if not rtsp_port:
-        ret, response = await hass.async_add_executor_job(camera.get_port_info)
+    coordinator = config_entry.runtime_data
 
-        if ret == 0:
-            rtsp_port = response.get("rtspPort") or response.get("mediaPort")
-
-    ret, response = await hass.async_add_executor_job(camera.get_motion_detect_config)
-
-    motion_status = False
-    if ret != 0 and response == 1:
-        motion_status = True
-
-    async_add_entities(
-        [
-            HassFoscamCamera(
-                camera,
-                config[CONF_NAME],
-                config[CONF_USERNAME],
-                config[CONF_PASSWORD],
-                rtsp_port,
-                motion_status,
-            )
-        ]
-    )
+    async_add_entities([HassFoscamCamera(coordinator, config_entry)])
 
 
-class HassFoscamCamera(Camera):
+class HassFoscamCamera(FoscamEntity, Camera):
     """An implementation of a Foscam IP camera."""
 
-    def __init__(self, camera, name, username, password, rtsp_port, motion_status):
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(
+        self,
+        coordinator: FoscamCoordinator,
+        config_entry: FoscamConfigEntry,
+    ) -> None:
         """Initialize a Foscam camera."""
-        super().__init__()
+        super().__init__(coordinator, config_entry.entry_id)
+        Camera.__init__(self)
 
-        self._foscam_session = camera
-        self._name = name
-        self._username = username
-        self._password = password
-        self._rtsp_port = rtsp_port
-        self._motion_status = motion_status
+        self._foscam_session = coordinator.session
+        self._username = config_entry.data[CONF_USERNAME]
+        self._password = config_entry.data[CONF_PASSWORD]
+        self._stream = config_entry.data[CONF_STREAM]
+        self._attr_unique_id = config_entry.entry_id
+        self._rtsp_port = config_entry.data[CONF_RTSP_PORT]
+        if self._rtsp_port:
+            self._attr_supported_features = CameraEntityFeature.STREAM
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity addition to hass."""
-        entities = self.hass.data.setdefault(FOSCAM_DATA, {}).setdefault(
-            FOSCAM_ENTITIES, []
-        )
-        entities.append(self)
+        # Get motion detection status
 
-    def camera_image(self):
+        await super().async_added_to_hass()
+
+        ret, response = await self.hass.async_add_executor_job(
+            self._foscam_session.get_motion_detect_config
+        )
+
+        if ret == -3:
+            LOGGER.warning(
+                (
+                    "Can't get motion detection status, camera %s configured with"
+                    " non-admin user"
+                ),
+                self.name,
+            )
+
+        elif ret != 0:
+            LOGGER.error(
+                "Error getting motion detection status of %s: %s", self.name, ret
+            )
+
+        else:
+            self._attr_motion_detection_enabled = response == 1
+
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         # Send the request to snap a picture and return raw jpg data
         # Handle exception if host is not reachable or url failed
@@ -180,63 +149,75 @@ class HassFoscamCamera(Camera):
 
         return response
 
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        if self._rtsp_port:
-            return SUPPORT_STREAM
-        return 0
-
-    async def stream_source(self):
+    async def stream_source(self) -> str | None:
         """Return the stream source."""
         if self._rtsp_port:
-            return "rtsp://{}:{}@{}:{}/videoMain".format(
-                self._username,
-                self._password,
-                self._foscam_session.host,
-                self._rtsp_port,
-            )
+            return f"rtsp://{self._username}:{self._password}@{self._foscam_session.host}:{self._rtsp_port}/video{self._stream}"
+
         return None
 
-    @property
-    def motion_detection_enabled(self):
-        """Camera Motion Detection Status."""
-        return self._motion_status
-
-    def enable_motion_detection(self):
+    def enable_motion_detection(self) -> None:
         """Enable motion detection in camera."""
         try:
             ret = self._foscam_session.enable_motion_detection()
 
             if ret != 0:
+                if ret == -3:
+                    LOGGER.warning(
+                        (
+                            "Can't set motion detection status, camera %s configured"
+                            " with non-admin user"
+                        ),
+                        self.name,
+                    )
                 return
 
-            self._motion_status = True
+            self._attr_motion_detection_enabled = True
         except TypeError:
-            _LOGGER.debug("Communication problem")
+            LOGGER.debug(
+                (
+                    "Failed enabling motion detection on '%s'. Is it supported by the"
+                    " device?"
+                ),
+                self.name,
+            )
 
-    def disable_motion_detection(self):
+    def disable_motion_detection(self) -> None:
         """Disable motion detection."""
         try:
             ret = self._foscam_session.disable_motion_detection()
 
             if ret != 0:
+                if ret == -3:
+                    LOGGER.warning(
+                        (
+                            "Can't set motion detection status, camera %s configured"
+                            " with non-admin user"
+                        ),
+                        self.name,
+                    )
                 return
 
-            self._motion_status = False
+            self._attr_motion_detection_enabled = False
         except TypeError:
-            _LOGGER.debug("Communication problem")
+            LOGGER.debug(
+                (
+                    "Failed disabling motion detection on '%s'. Is it supported by the"
+                    " device?"
+                ),
+                self.name,
+            )
 
     async def async_perform_ptz(self, movement, travel_time):
         """Perform a PTZ action on the camera."""
-        _LOGGER.debug("PTZ action '%s' on %s", movement, self._name)
+        LOGGER.debug("PTZ action '%s' on %s", movement, self.name)
 
         movement_function = getattr(self._foscam_session, MOVEMENT_ATTRS[movement])
 
         ret, _ = await self.hass.async_add_executor_job(movement_function)
 
         if ret != 0:
-            _LOGGER.error("Error moving %s '%s': %s", movement, self._name, ret)
+            LOGGER.error("Error moving %s '%s': %s", movement, self.name, ret)
             return
 
         await asyncio.sleep(travel_time)
@@ -246,10 +227,19 @@ class HassFoscamCamera(Camera):
         )
 
         if ret != 0:
-            _LOGGER.error("Error stopping movement on '%s': %s", self._name, ret)
+            LOGGER.error("Error stopping movement on '%s': %s", self.name, ret)
             return
 
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
+    async def async_perform_ptz_preset(self, preset_name):
+        """Perform a PTZ preset action on the camera."""
+        LOGGER.debug("PTZ preset '%s' on %s", preset_name, self.name)
+
+        preset_function = getattr(self._foscam_session, PTZ_GOTO_PRESET_COMMAND)
+
+        ret, _ = await self.hass.async_add_executor_job(preset_function, preset_name)
+
+        if ret != 0:
+            LOGGER.error(
+                "Error moving to preset %s on '%s': %s", preset_name, self.name, ret
+            )
+            return

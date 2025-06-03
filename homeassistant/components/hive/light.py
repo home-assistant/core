@@ -1,150 +1,123 @@
-"""Support for the Hive lights."""
+"""Support for Hive light devices."""
+
+from __future__ import annotations
+
+from datetime import timedelta
+from typing import Any
+
+from apyhiveapi import Hive
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    Light,
+    ColorMode,
+    LightEntity,
 )
-import homeassistant.util.color as color_util
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
-from . import DATA_HIVE, DOMAIN, HiveEntity, refresh_system
+from . import HiveConfigEntry, refresh_system
+from .const import ATTR_MODE
+from .entity import HiveEntity
+
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Hive light devices."""
-    if discovery_info is None:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: HiveConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Hive thermostat based on a config entry."""
+
+    hive = entry.runtime_data
+    devices = hive.session.deviceList.get("light")
+    if not devices:
         return
-
-    session = hass.data.get(DATA_HIVE)
-    devs = []
-    for dev in discovery_info:
-        devs.append(HiveDeviceLight(session, dev))
-    add_entities(devs)
+    async_add_entities((HiveDeviceLight(hive, dev) for dev in devices), True)
 
 
-class HiveDeviceLight(HiveEntity, Light):
+class HiveDeviceLight(HiveEntity, LightEntity):
     """Hive Active Light Device."""
 
-    def __init__(self, hive_session, hive_device):
-        """Initialize the Light device."""
-        super().__init__(hive_session, hive_device)
-        self.light_device_type = hive_device["Hive_Light_DeviceType"]
+    _attr_min_color_temp_kelvin = 2700  # 370 Mireds
+    _attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
-    @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self.node_name
-
-    @property
-    def device_state_attributes(self):
-        """Show Device Attributes."""
-        return self.attributes
-
-    @property
-    def brightness(self):
-        """Brightness of the light (an integer in the range 1-255)."""
-        return self.session.light.get_brightness(self.node_id)
-
-    @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        if (
-            self.light_device_type == "tuneablelight"
-            or self.light_device_type == "colourtuneablelight"
-        ):
-            return self.session.light.get_min_color_temp(self.node_id)
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        if (
-            self.light_device_type == "tuneablelight"
-            or self.light_device_type == "colourtuneablelight"
-        ):
-            return self.session.light.get_max_color_temp(self.node_id)
-
-    @property
-    def color_temp(self):
-        """Return the CT color value in mireds."""
-        if (
-            self.light_device_type == "tuneablelight"
-            or self.light_device_type == "colourtuneablelight"
-        ):
-            return self.session.light.get_color_temp(self.node_id)
-
-    @property
-    def hs_color(self) -> tuple:
-        """Return the hs color value."""
-        if self.light_device_type == "colourtuneablelight":
-            rgb = self.session.light.get_color(self.node_id)
-            return color_util.color_RGB_to_hs(*rgb)
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self.session.light.get_state(self.node_id)
+    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
+        """Initialise hive light."""
+        super().__init__(hive, hive_device)
+        if self.device["hiveType"] == "warmwhitelight":
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        elif self.device["hiveType"] == "tuneablelight":
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+            self._attr_color_mode = ColorMode.COLOR_TEMP
+        elif self.device["hiveType"] == "colourtuneablelight":
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+            self._attr_color_mode = ColorMode.UNKNOWN
 
     @refresh_system
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         new_brightness = None
         new_color_temp = None
         new_color = None
         if ATTR_BRIGHTNESS in kwargs:
-            tmp_new_brightness = kwargs.get(ATTR_BRIGHTNESS)
+            tmp_new_brightness = kwargs[ATTR_BRIGHTNESS]
             percentage_brightness = (tmp_new_brightness / 255) * 100
             new_brightness = int(round(percentage_brightness / 5.0) * 5.0)
             if new_brightness == 0:
                 new_brightness = 5
-        if ATTR_COLOR_TEMP in kwargs:
-            tmp_new_color_temp = kwargs.get(ATTR_COLOR_TEMP)
-            new_color_temp = round(1000000 / tmp_new_color_temp)
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            new_color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
         if ATTR_HS_COLOR in kwargs:
-            get_new_color = kwargs.get(ATTR_HS_COLOR)
+            get_new_color = kwargs[ATTR_HS_COLOR]
             hue = int(get_new_color[0])
             saturation = int(get_new_color[1])
             new_color = (hue, saturation, 100)
 
-        self.session.light.turn_on(
-            self.node_id,
-            self.light_device_type,
-            new_brightness,
-            new_color_temp,
-            new_color,
+        await self.hive.light.turnOn(
+            self.device, new_brightness, new_color_temp, new_color
         )
 
     @refresh_system
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        self.session.light.turn_off(self.node_id)
+        await self.hive.light.turnOff(self.device)
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        supported_features = None
-        if self.light_device_type == "warmwhitelight":
-            supported_features = SUPPORT_BRIGHTNESS
-        elif self.light_device_type == "tuneablelight":
-            supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
-        elif self.light_device_type == "colourtuneablelight":
-            supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR
-
-        return supported_features
-
-    def update(self):
+    async def async_update(self) -> None:
         """Update all Node data from Hive."""
-        self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(self.node_id)
+        await self.hive.session.updateData(self.device)
+        self.device = await self.hive.light.getLight(self.device)
+        self.attributes.update(self.device.get("attributes", {}))
+        self._attr_extra_state_attributes = {
+            ATTR_MODE: self.attributes.get(ATTR_MODE),
+        }
+        self._attr_available = self.device["deviceData"].get("online")
+        if self._attr_available:
+            self._attr_is_on = self.device["status"]["state"]
+            self._attr_brightness = self.device["status"]["brightness"]
+            if self.device["hiveType"] == "tuneablelight":
+                color_temp = self.device["status"].get("color_temp")
+                self._attr_color_temp_kelvin = (
+                    None
+                    if color_temp is None
+                    else color_util.color_temperature_mired_to_kelvin(color_temp)
+                )
+
+            if self.device["hiveType"] == "colourtuneablelight":
+                if self.device["status"]["mode"] == "COLOUR":
+                    rgb = self.device["status"]["hs_color"]
+                    self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
+                    self._attr_color_mode = ColorMode.HS
+                else:
+                    color_temp = self.device["status"].get("color_temp")
+                    self._attr_color_temp_kelvin = (
+                        None
+                        if color_temp is None
+                        else color_util.color_temperature_mired_to_kelvin(color_temp)
+                    )
+                    self._attr_color_mode = ColorMode.COLOR_TEMP

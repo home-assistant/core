@@ -1,0 +1,96 @@
+{
+  "config": {
+    "flow_title": "MusicCast: {name}",
+    "step": {
+      "user": {
+        "description": "Set up MusicCast to integrate with Home Assistant.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Yamaha MusicCast receiver."
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "yxc_control_url_missing": "The control URL is not given in the ssdp description."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_musiccast_device": "This device seems to be no MusicCast Device.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "select": {
+      "dimmer": {
+        "state": {
+          "auto": "[%key:common::state::auto%]"
+        }
+      },
+      "zone_sleep": {
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "30_min": "30 minutes",
+          "60_min": "60 minutes",
+          "90_min": "90 minutes",
+          "120_min": "120 minutes"
+        }
+      },
+      "zone_tone_control_mode": {
+        "state": {
+          "manual": "[%key:common::state::manual%]",
+          "auto": "[%key:common::state::auto%]",
+          "bypass": "Bypass"
+        }
+      },
+      "zone_surr_decoder_type": {
+        "state": {
+          "toggle": "[%key:common::action::toggle%]",
+          "auto": "[%key:common::state::auto%]",
+          "dolby_pl": "Dolby ProLogic",
+          "dolby_pl2x_movie": "Dolby ProLogic 2x Movie",
+          "dolby_pl2x_music": "Dolby ProLogic 2x Music",
+          "dolby_pl2x_game": "Dolby ProLogic 2x Game",
+          "dolby_surround": "Dolby Surround",
+          "dts_neural_x": "DTS Neural:X",
+          "dts_neo6_cinema": "DTS Neo:6 Cinema",
+          "dts_neo6_music": "DTS Neo:6 Music"
+        }
+      },
+      "zone_equalizer_mode": {
+        "state": {
+          "manual": "[%key:common::state::manual%]",
+          "auto": "[%key:common::state::auto%]",
+          "bypass": "[%key:component::yamaha_musiccast::entity::select::zone_tone_control_mode::state::bypass%]"
+        }
+      },
+      "zone_link_audio_quality": {
+        "state": {
+          "compressed": "Compressed",
+          "uncompressed": "Uncompressed"
+        }
+      },
+      "zone_link_control": {
+        "state": {
+          "standard": "Standard",
+          "speed": "Speed",
+          "stability": "Stability"
+        }
+      },
+      "zone_link_audio_delay": {
+        "state": {
+          "audio_sync_on": "Audio synchronization on",
+          "audio_sync_off": "Audio synchronization off",
+          "balanced": "Balanced",
+          "lip_sync": "Lip synchronization",
+          "audio_sync": "Audio synchronization"
+        }
+      }
+    }
+  }
+}

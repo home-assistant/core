@@ -1,61 +1,69 @@
 """Support for Vera locks."""
-import logging
 
-from homeassistant.components.lock import ENTITY_ID_FORMAT, LockDevice
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from __future__ import annotations
 
-from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
+from typing import Any
 
-_LOGGER = logging.getLogger(__name__)
+import pyvera as veraApi
+
+from homeassistant.components.lock import ENTITY_ID_FORMAT, LockEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .common import ControllerData, get_controller_data
+from .entity import VeraEntity
 
 ATTR_LAST_USER_NAME = "changed_by_name"
 ATTR_LOW_BATTERY = "low_battery"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Find and return Vera locks."""
-    add_entities(
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the sensor config entry."""
+    controller_data = get_controller_data(hass, entry)
+    async_add_entities(
         [
-            VeraLock(device, hass.data[VERA_CONTROLLER])
-            for device in hass.data[VERA_DEVICES]["lock"]
+            VeraLock(device, controller_data)
+            for device in controller_data.devices[Platform.LOCK]
         ],
         True,
     )
 
 
-class VeraLock(VeraDevice, LockDevice):
+class VeraLock(VeraEntity[veraApi.VeraLock], LockEntity):
     """Representation of a Vera lock."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(
+        self, vera_device: veraApi.VeraLock, controller_data: ControllerData
+    ) -> None:
         """Initialize the Vera device."""
-        self._state = None
-        VeraDevice.__init__(self, vera_device, controller)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self.vera_device.lock()
-        self._state = STATE_LOCKED
+        self._attr_is_locked = True
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         self.vera_device.unlock()
-        self._state = STATE_UNLOCKED
+        self._attr_is_locked = False
 
     @property
-    def is_locked(self):
-        """Return true if device is on."""
-        return self._state == STATE_LOCKED
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Who unlocked the lock and did a low battery alert fire.
 
         Reports on the previous poll cycle.
         changed_by_name is a string like 'Bob'.
         low_battery is 1 if an alert fired, 0 otherwise.
         """
-        data = super().device_state_attributes
+        data = super().extra_state_attributes or {}
 
         last_user = self.vera_device.get_last_user_alert()
         if last_user is not None:
@@ -65,7 +73,7 @@ class VeraLock(VeraDevice, LockDevice):
         return data
 
     @property
-    def changed_by(self):
+    def changed_by(self) -> str | None:
         """Who unlocked the lock.
 
         Reports on the previous poll cycle.
@@ -76,8 +84,6 @@ class VeraLock(VeraDevice, LockDevice):
             return last_user[0]
         return None
 
-    def update(self):
+    def update(self) -> None:
         """Update state by the Vera device callback."""
-        self._state = (
-            STATE_LOCKED if self.vera_device.is_locked(True) else STATE_UNLOCKED
-        )
+        self._attr_is_locked = self.vera_device.is_locked(True)

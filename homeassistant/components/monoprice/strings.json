@@ -1,0 +1,50 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the device",
+        "data": {
+          "port": "[%key:common::config_flow::data::port%]",
+          "source_1": "Name of source #1",
+          "source_2": "Name of source #2",
+          "source_3": "Name of source #3",
+          "source_4": "Name of source #4",
+          "source_5": "Name of source #5",
+          "source_6": "Name of source #6"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure sources",
+        "data": {
+          "source_1": "[%key:component::monoprice::config::step::user::data::source_1%]",
+          "source_2": "[%key:component::monoprice::config::step::user::data::source_2%]",
+          "source_3": "[%key:component::monoprice::config::step::user::data::source_3%]",
+          "source_4": "[%key:component::monoprice::config::step::user::data::source_4%]",
+          "source_5": "[%key:component::monoprice::config::step::user::data::source_5%]",
+          "source_6": "[%key:component::monoprice::config::step::user::data::source_6%]"
+        }
+      }
+    }
+  },
+  "services": {
+    "snapshot": {
+      "name": "Snapshot",
+      "description": "Takes a snapshot of the media player zone."
+    },
+    "restore": {
+      "name": "Restore",
+      "description": "Restores a snapshot of the media player zone."
+    }
+  }
+}

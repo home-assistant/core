@@ -1,0 +1,7 @@
+{
+  "services": {
+    "show_lovelace_view": {
+      "service": "mdi:view-dashboard"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+# synology-dsm service entries description.
+
+reboot:
+  fields:
+    serial:
+      example: 1NDVC86409
+      selector:
+        text:
+
+shutdown:
+  fields:
+    serial:
+      example: 1NDVC86409
+      selector:
+        text:

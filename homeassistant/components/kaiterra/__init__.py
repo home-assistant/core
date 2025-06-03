@@ -1,4 +1,5 @@
 """Support for Kaiterra devices."""
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -9,10 +10,12 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TYPE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from .api_data import KaiterraApiData
 from .const import (
@@ -25,7 +28,7 @@ from .const import (
     DEFAULT_PREFERRED_UNIT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    KAITERRA_COMPONENTS,
+    PLATFORMS,
 )
 
 KAITERRA_DEVICE_SCHEMA = vol.Schema(
@@ -53,8 +56,8 @@ KAITERRA_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema({DOMAIN: KAITERRA_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
-    """Set up the Kaiterra components."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Kaiterra integration."""
 
     conf = config[DOMAIN]
     scan_interval = conf[CONF_SCAN_INTERVAL]
@@ -76,11 +79,11 @@ async def async_setup(hass, config):
             device.get(CONF_NAME) or device[CONF_TYPE],
             device[CONF_DEVICE_ID],
         )
-        for component in KAITERRA_COMPONENTS:
+        for platform in PLATFORMS:
             hass.async_create_task(
                 async_load_platform(
                     hass,
-                    component,
+                    platform,
                     DOMAIN,
                     {CONF_NAME: device_name, CONF_DEVICE_ID: device_id},
                     config,

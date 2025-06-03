@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "repositories": {
+        "title": "Configure repositories",
+        "data": {
+          "repositories": "Select repositories to track."
+        }
+      }
+    },
+    "progress": {
+      "wait_for_device": "Open {url}, and paste the following code to authorize the integration: \n```\n{code}\n```"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "could_not_register": "Could not register integration with GitHub"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "discussions_count": {
+        "name": "Discussions",
+        "unit_of_measurement": "discussions"
+      },
+      "stargazers_count": {
+        "name": "Stars",
+        "unit_of_measurement": "stars"
+      },
+      "subscribers_count": {
+        "name": "Watchers",
+        "unit_of_measurement": "watchers"
+      },
+      "forks_count": {
+        "name": "Forks",
+        "unit_of_measurement": "forks"
+      },
+      "issues_count": {
+        "name": "Issues",
+        "unit_of_measurement": "issues"
+      },
+      "pulls_count": {
+        "name": "Pull requests",
+        "unit_of_measurement": "pull requests"
+      },
+      "latest_commit": {
+        "name": "Latest commit"
+      },
+      "latest_discussion": {
+        "name": "Latest discussion"
+      },
+      "latest_release": {
+        "name": "Latest release"
+      },
+      "latest_issue": {
+        "name": "Latest issue"
+      },
+      "latest_pull_request": {
+        "name": "Latest pull request"
+      },
+      "latest_tag": {
+        "name": "Latest tag"
+      }
+    }
+  }
+}

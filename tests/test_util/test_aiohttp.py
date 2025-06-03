@@ -1,10 +1,11 @@
 """Tests for our aiohttp mocker."""
+
 import pytest
 
 from .aiohttp import AiohttpClientMocker
 
 
-async def test_matching_url():
+async def test_matching_url() -> None:
     """Test we can match urls."""
     mocker = AiohttpClientMocker()
     mocker.get("http://example.com")

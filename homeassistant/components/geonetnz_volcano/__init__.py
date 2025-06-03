@@ -1,36 +1,36 @@
 """The GeoNet NZ Volcano integration."""
-import asyncio
+
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Optional
 
 from aio_geojson_geonetnz_volcano import GeonetnzVolcanoFeedManager
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_MILES,
+    UnitOfLength,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .config_flow import configured_instances
 from .const import (
     DEFAULT_RADIUS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    FEED,
-    SIGNAL_NEW_SENSOR,
-    SIGNAL_UPDATE_ENTITY,
+    IMPERIAL_UNITS,
+    PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,8 +51,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+type GeonetnzVolcanoConfigEntry = ConfigEntry[GeonetnzVolcanoFeedEntityManager]
 
-async def async_setup(hass, config):
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the GeoNet NZ Volcano component."""
     if DOMAIN not in config:
         return True
@@ -83,31 +85,30 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: GeonetnzVolcanoConfigEntry
+) -> bool:
     """Set up the GeoNet NZ Volcano component as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(FEED, {})
-
     radius = config_entry.data[CONF_RADIUS]
     unit_system = config_entry.data[CONF_UNIT_SYSTEM]
-    if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-        radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
+    if unit_system == IMPERIAL_UNITS:
+        radius = DistanceConverter.convert(
+            radius, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+        )
     # Create feed entity manager for all platforms.
     manager = GeonetnzVolcanoFeedEntityManager(hass, config_entry, radius, unit_system)
-    hass.data[DOMAIN][FEED][config_entry.entry_id] = manager
+    config_entry.runtime_data = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(
+    hass: HomeAssistant, entry: GeonetnzVolcanoConfigEntry
+) -> bool:
     """Unload an GeoNet NZ Volcano component config entry."""
-    manager = hass.data[DOMAIN][FEED].pop(config_entry.entry_id)
-    await manager.async_stop()
-    await asyncio.wait(
-        [hass.config_entries.async_forward_entry_unload(config_entry, "sensor")]
-    )
-    return True
+    await entry.runtime_data.async_stop()
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class GeonetnzVolcanoFeedEntityManager:
@@ -139,10 +140,8 @@ class GeonetnzVolcanoFeedEntityManager:
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
 
-        self._hass.async_create_task(
-            self._hass.config_entries.async_forward_entry_setup(
-                self._config_entry, "sensor"
-            )
+        await self._hass.config_entries.async_forward_entry_setups(
+            self._config_entry, PLATFORMS
         )
 
         async def update(event_time):
@@ -173,17 +172,17 @@ class GeonetnzVolcanoFeedEntityManager:
     @callback
     def async_event_new_entity(self):
         """Return manager specific event to signal new entity."""
-        return SIGNAL_NEW_SENSOR.format(self._config_entry_id)
+        return f"geonetnz_volcano_new_sensor_{self._config_entry_id}"
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
-    def last_update(self) -> Optional[datetime]:
+    def last_update(self) -> datetime | None:
         """Return the last update of this feed."""
         return self._feed_manager.last_update
 
-    def last_update_successful(self) -> Optional[datetime]:
+    def last_update_successful(self) -> datetime | None:
         """Return the last successful update of this feed."""
         return self._feed_manager.last_update_successful
 
@@ -199,7 +198,7 @@ class GeonetnzVolcanoFeedEntityManager:
 
     async def _update_entity(self, external_id):
         """Update entity."""
-        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, f"geonetnz_volcano_update_{external_id}")
 
     async def _remove_entity(self, external_id):
         """Ignore removing entity."""

@@ -1,0 +1,42 @@
+{
+  "title": "NOAA Aurora Sensor",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "forecast_threshold": "Threshold (%)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "visibility_alert": {
+        "name": "Visibility alert"
+      }
+    },
+    "sensor": {
+      "visibility": {
+        "name": "Visibility"
+      }
+    }
+  }
+}

@@ -1,0 +1,244 @@
+{
+  "common": {
+    "service_config_entry_name": "Config entry",
+    "service_config_entry_description": "The config entry to use for this action.",
+    "climate_preset_solar": "Solar",
+    "climate_preset_solar_preferred": "Solar preferred",
+    "climate_preset_heater": "Heater",
+    "climate_preset_dont_change": "Don't change"
+  },
+  "config": {
+    "flow_title": "{name}",
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "gateway_entry": {
+        "title": "ScreenLogic",
+        "description": "Enter your ScreenLogic gateway information.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "gateway_select": {
+        "title": "[%key:component::screenlogic::config::step::gateway_entry::title%]",
+        "description": "The following ScreenLogic gateways were discovered. Please select one to configure, or choose to manually configure a ScreenLogic gateway.",
+        "data": {
+          "selected_gateway": "Gateway"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "[%key:component::screenlogic::config::step::gateway_entry::title%]",
+        "description": "Specify settings for {gateway_name}",
+        "data": {
+          "scan_interval": "Seconds between scans"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_color_mode": {
+      "name": "Set color mode",
+      "description": "Sets the color mode for all color-capable lights attached to this ScreenLogic gateway.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::screenlogic::common::service_config_entry_name%]",
+          "description": "[%key:component::screenlogic::common::service_config_entry_description%]"
+        },
+        "color_mode": {
+          "name": "Color mode",
+          "description": "The ScreenLogic color mode to set."
+        }
+      }
+    },
+    "start_super_chlorination": {
+      "name": "Start super chlorination",
+      "description": "Begins super chlorination, running for the specified period or 24 hours if none is specified.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::screenlogic::common::service_config_entry_name%]",
+          "description": "[%key:component::screenlogic::common::service_config_entry_description%]"
+        },
+        "runtime": {
+          "name": "Run time",
+          "description": "Number of hours for super chlorination to run."
+        }
+      }
+    },
+    "stop_super_chlorination": {
+      "name": "Stop super chlorination",
+      "description": "Stops super chlorination.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::screenlogic::common::service_config_entry_name%]",
+          "description": "[%key:component::screenlogic::common::service_config_entry_description%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "active_alert": {
+        "name": "Active alert"
+      },
+      "pool_delay": {
+        "name": "Pool delay"
+      },
+      "spa_delay": {
+        "name": "Spa delay"
+      },
+      "cleaner_delay": {
+        "name": "Cleaner delay"
+      },
+      "freeze_mode": {
+        "name": "Freeze mode"
+      },
+      "flow_alarm": {
+        "name": "Flow alarm"
+      },
+      "chem_high_alarm": {
+        "name": "{chem} high alarm"
+      },
+      "chem_low_alarm": {
+        "name": "{chem} low alarm"
+      },
+      "chem_supply_alarm": {
+        "name": "{chem} supply alarm"
+      },
+      "probe_fault_alarm": {
+        "name": "Probe fault"
+      },
+      "chem_limit": {
+        "name": "{chem} dose limit reached"
+      },
+      "ph_lockout": {
+        "name": "pH lockout"
+      },
+      "corosive": {
+        "name": "SI corrosive"
+      },
+      "scaling": {
+        "name": "SI scaling"
+      },
+      "scg_state": {
+        "name": "Chlorinator"
+      }
+    },
+    "climate": {
+      "body_0": {
+        "name": "Pool heat",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "solar": "[%key:component::screenlogic::common::climate_preset_solar%]",
+              "solar_preferred": "[%key:component::screenlogic::common::climate_preset_solar_preferred%]",
+              "heater": "[%key:component::screenlogic::common::climate_preset_heater%]",
+              "dont_change": "[%key:component::screenlogic::common::climate_preset_dont_change%]"
+            }
+          }
+        }
+      },
+      "body_1": {
+        "name": "Spa heat",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "solar": "[%key:component::screenlogic::common::climate_preset_solar%]",
+              "solar_preferred": "[%key:component::screenlogic::common::climate_preset_solar_preferred%]",
+              "heater": "[%key:component::screenlogic::common::climate_preset_heater%]",
+              "dont_change": "[%key:component::screenlogic::common::climate_preset_dont_change%]"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "calcium_hardness": {
+        "name": "Calcium hardness"
+      },
+      "cya": {
+        "name": "Cyanuric acid"
+      },
+      "total_alkalinity": {
+        "name": "Total alkalinity"
+      },
+      "salt_tds_ppm": {
+        "name": "Salt/TDS"
+      },
+      "pool_setpoint": {
+        "name": "Pool chlorinator setpoint"
+      },
+      "spa_setpoint": {
+        "name": "Spa chlorinator setpoint"
+      }
+    },
+    "sensor": {
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "controller_state": {
+        "name": "Controller state",
+        "state": {
+          "ready": "Ready",
+          "sync": "Sync",
+          "service": "Service"
+        }
+      },
+      "chem_now": {
+        "name": "{chem} now"
+      },
+      "chem_supply_level": {
+        "name": "{chem} supply level"
+      },
+      "ph_probe_water_temp": {
+        "name": "pH probe water temperature"
+      },
+      "saturation": {
+        "name": "Saturation index"
+      },
+      "chem_setpoint": {
+        "name": "{chem} setpoint"
+      },
+      "calcium_hardness": {
+        "name": "[%key:component::screenlogic::entity::number::calcium_hardness::name%]"
+      },
+      "cya": {
+        "name": "[%key:component::screenlogic::entity::number::cya::name%]"
+      },
+      "total_alkalinity": {
+        "name": "[%key:component::screenlogic::entity::number::total_alkalinity::name%]"
+      },
+      "salt_tds_ppm": {
+        "name": "[%key:component::screenlogic::entity::number::salt_tds_ppm::name%]"
+      },
+      "chem_dose_state": {
+        "name": "{chem} dosing state",
+        "state": {
+          "dosing": "Dosing",
+          "mixing": "Mixing",
+          "monitoring": "Monitoring"
+        }
+      },
+      "chem_last_dose_time": {
+        "name": "{chem} last dose time"
+      },
+      "chem_last_dose_volume": {
+        "name": "{chem} last dose volume"
+      },
+      "salt_ppm": {
+        "name": "Chlorinator salt"
+      },
+      "super_chlor_timer": {
+        "name": "Super chlorination timer"
+      }
+    }
+  }
+}

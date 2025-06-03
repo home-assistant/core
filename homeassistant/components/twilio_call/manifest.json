@@ -1,8 +1,10 @@
 {
   "domain": "twilio_call",
   "name": "Twilio Call",
-  "documentation": "https://www.home-assistant.io/integrations/twilio_call",
-  "requirements": [],
+  "codeowners": [],
   "dependencies": ["twilio"],
-  "codeowners": ["@robbiet480"]
+  "documentation": "https://www.home-assistant.io/integrations/twilio_call",
+  "iot_class": "cloud_push",
+  "loggers": ["twilio"],
+  "quality_scale": "legacy"
 }

@@ -1,8 +1,9 @@
 {
   "domain": "telegram",
   "name": "Telegram",
-  "documentation": "https://www.home-assistant.io/integrations/telegram",
-  "requirements": [],
+  "codeowners": [],
   "dependencies": ["telegram_bot"],
-  "codeowners": []
+  "documentation": "https://www.home-assistant.io/integrations/telegram",
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy"
 }

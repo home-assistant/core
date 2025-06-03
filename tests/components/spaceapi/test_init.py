@@ -1,13 +1,22 @@
 """The tests for the Home Assistant SpaceAPI component."""
-# pylint: disable=protected-access
+
+from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.components.spaceapi import DOMAIN, SPACEAPI_VERSION, URL_API_SPACEAPI
+from homeassistant.components.spaceapi import (
+    ATTR_SENSOR_LOCATION,
+    DOMAIN,
+    SPACEAPI_VERSION,
+    URL_API_SPACEAPI,
+)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from tests.typing import ClientSessionGenerator
 
 CONFIG = {
     DOMAIN: {
@@ -23,7 +32,7 @@ CONFIG = {
             "icon_closed": "https://home-assistant.io/close.png",
         },
         "sensors": {
-            "temperature": ["test.temp1", "test.temp2"],
+            "temperature": ["test.temp1", "test.temp2", "test.temp3"],
             "humidity": ["test.hum1"],
         },
         "spacefed": {"spacenet": True, "spacesaml": False, "spacephone": True},
@@ -59,30 +68,73 @@ CONFIG = {
 
 SENSOR_OUTPUT = {
     "temperature": [
-        {"location": "Home", "name": "temp1", "unit": "°C", "value": "25"},
-        {"location": "Home", "name": "temp2", "unit": "°C", "value": "23"},
+        {
+            "location": "Home",
+            "name": "temp1",
+            "unit": UnitOfTemperature.CELSIUS,
+            "value": 25.0,
+        },
+        {
+            "location": "outside",
+            "name": "temp2",
+            "unit": UnitOfTemperature.CELSIUS,
+            "value": 23.0,
+        },
+        {
+            "location": "Home",
+            "name": "temp3",
+            "unit": UnitOfTemperature.CELSIUS,
+            "value": None,
+        },
     ],
-    "humidity": [{"location": "Home", "name": "hum1", "unit": "%", "value": "88"}],
+    "humidity": [
+        {"location": "Home", "name": "hum1", "unit": PERCENTAGE, "value": 88.0}
+    ],
 }
 
 
 @pytest.fixture
-def mock_client(hass, hass_client):
+async def mock_client(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
-    with patch("homeassistant.components.spaceapi", return_value=mock_coro(True)):
-        hass.loop.run_until_complete(async_setup_component(hass, "spaceapi", CONFIG))
+    with patch("homeassistant.components.spaceapi", return_value=True):
+        await async_setup_component(hass, "spaceapi", CONFIG)
 
-    hass.states.async_set("test.temp1", 25, attributes={"unit_of_measurement": "°C"})
-    hass.states.async_set("test.temp2", 23, attributes={"unit_of_measurement": "°C"})
-    hass.states.async_set("test.hum1", 88, attributes={"unit_of_measurement": "%"})
+    hass.states.async_set(
+        "test.temp1",
+        25,
+        attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    hass.states.async_set(
+        "test.temp2",
+        23,
+        attributes={
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            ATTR_SENSOR_LOCATION: "outside",
+        },
+    )
+    hass.states.async_set(
+        "test.temp3",
+        "foo",
+        attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    hass.states.async_set(
+        "test.temp3",
+        "foo",
+        attributes={ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    hass.states.async_set(
+        "test.hum1", 88, attributes={ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
+    )
 
-    return hass.loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
-async def test_spaceapi_get(hass, mock_client):
+async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:
     """Test response after start-up Home Assistant."""
     resp = await mock_client.get(URL_API_SPACEAPI)
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     data = await resp.json()
 
@@ -94,7 +146,7 @@ async def test_spaceapi_get(hass, mock_client):
     assert data["location"]["lon"] == -117.22743
     assert data["state"]["open"] == "null"
     assert data["state"]["icon"]["open"] == "https://home-assistant.io/open.png"
-    assert data["state"]["icon"]["close"] == "https://home-assistant.io/close.png"
+    assert data["state"]["icon"]["closed"] == "https://home-assistant.io/close.png"
     assert data["spacefed"]["spacenet"] == bool(1)
     assert data["spacefed"]["spacesaml"] == bool(0)
     assert data["spacefed"]["spacephone"] == bool(1)
@@ -123,21 +175,21 @@ async def test_spaceapi_get(hass, mock_client):
     assert data["radio_show"][0]["end"] == "2019-09-02T12:00Z"
 
 
-async def test_spaceapi_state_get(hass, mock_client):
+async def test_spaceapi_state_get(hass: HomeAssistant, mock_client) -> None:
     """Test response if the state entity was set."""
     hass.states.async_set("test.test_door", True)
 
     resp = await mock_client.get(URL_API_SPACEAPI)
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     data = await resp.json()
     assert data["state"]["open"] == bool(1)
 
 
-async def test_spaceapi_sensors_get(hass, mock_client):
+async def test_spaceapi_sensors_get(hass: HomeAssistant, mock_client) -> None:
     """Test the response for the sensors."""
     resp = await mock_client.get(URL_API_SPACEAPI)
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     data = await resp.json()
     assert data["sensors"] == SENSOR_OUTPUT

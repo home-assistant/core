@@ -1,0 +1,85 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Enter your Roku information.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Roku device to control."
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to set up {name}?"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_device": "This Roku device does not match the existing device ID. Please make sure you entered the correct host information."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "play_media_app_id": "Play Media Roku Application ID"
+        },
+        "data_description": {
+          "play_media_app_id": "The application ID to use when launching media playback. Must support the PlayOnRoku API."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "headphones_connected": {
+        "name": "Headphones connected"
+      },
+      "supports_airplay": {
+        "name": "Supports AirPlay"
+      },
+      "supports_ethernet": {
+        "name": "Supports Ethernet"
+      },
+      "supports_find_remote": {
+        "name": "Supports find remote"
+      }
+    },
+    "select": {
+      "application": {
+        "name": "Application"
+      },
+      "channel": {
+        "name": "Channel"
+      }
+    },
+    "sensor": {
+      "active_app": {
+        "name": "Active app"
+      },
+      "active_app_id": {
+        "name": "Active app ID"
+      }
+    }
+  },
+  "services": {
+    "search": {
+      "name": "Search",
+      "description": "Emulates opening the search screen and entering the search keyword.",
+      "fields": {
+        "keyword": {
+          "name": "Keyword",
+          "description": "The keyword to search for."
+        }
+      }
+    }
+  }
+}

@@ -1,36 +1,47 @@
 """Support for Amcrest IP cameras."""
+
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING, Any
 
+import aiohttp
+from aiohttp import web
 from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
-from urllib3.exceptions import HTTPError
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    CAMERA_SERVICE_SCHEMA,
-    SUPPORT_ON_OFF,
-    SUPPORT_STREAM,
-    Camera,
-)
-from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CAMERA_WEB_SESSION_TIMEOUT,
     CAMERAS,
+    COMM_TIMEOUT,
     DATA_AMCREST,
     DEVICES,
+    RESOLUTION_TO_STREAM,
     SERVICE_UPDATE,
+    SNAPSHOT_TIMEOUT,
 )
 from .helpers import log_update_error, service_signal
+
+if TYPE_CHECKING:
+    from . import AmcrestDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +60,28 @@ _SRV_CBW = "set_color_bw"
 _SRV_TOUR_ON = "start_tour"
 _SRV_TOUR_OFF = "stop_tour"
 
+_SRV_PTZ_CTRL = "ptz_control"
+_ATTR_PTZ_TT = "travel_time"
+_ATTR_PTZ_MOV = "movement"
+_MOV = [
+    "zoom_out",
+    "zoom_in",
+    "right",
+    "left",
+    "up",
+    "down",
+    "right_down",
+    "right_up",
+    "left_down",
+    "left_up",
+]
+_ZOOM_ACTIONS = ["ZoomWide", "ZoomTele"]
+_MOVE_1_ACTIONS = ["Right", "Left", "Up", "Down"]
+_MOVE_2_ACTIONS = ["RightDown", "RightUp", "LeftDown", "LeftUp"]
+_ACTION = _ZOOM_ACTIONS + _MOVE_1_ACTIONS + _MOVE_2_ACTIONS
+
+_DEFAULT_TT = 0.2
+
 _ATTR_PRESET = "preset"
 _ATTR_COLOR_BW = "color_bw"
 
@@ -57,43 +90,71 @@ _CBW_AUTO = "auto"
 _CBW_BW = "bw"
 _CBW = [_CBW_COLOR, _CBW_AUTO, _CBW_BW]
 
-_SRV_GOTO_SCHEMA = CAMERA_SERVICE_SCHEMA.extend(
+_SRV_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
+_SRV_GOTO_SCHEMA = _SRV_SCHEMA.extend(
     {vol.Required(_ATTR_PRESET): vol.All(vol.Coerce(int), vol.Range(min=1))}
 )
-_SRV_CBW_SCHEMA = CAMERA_SERVICE_SCHEMA.extend(
-    {vol.Required(_ATTR_COLOR_BW): vol.In(_CBW)}
+_SRV_CBW_SCHEMA = _SRV_SCHEMA.extend({vol.Required(_ATTR_COLOR_BW): vol.In(_CBW)})
+_SRV_PTZ_SCHEMA = _SRV_SCHEMA.extend(
+    {
+        vol.Required(_ATTR_PTZ_MOV): vol.In(_MOV),
+        vol.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): cv.small_float,
+    }
 )
 
 CAMERA_SERVICES = {
-    _SRV_EN_REC: (CAMERA_SERVICE_SCHEMA, "async_enable_recording", ()),
-    _SRV_DS_REC: (CAMERA_SERVICE_SCHEMA, "async_disable_recording", ()),
-    _SRV_EN_AUD: (CAMERA_SERVICE_SCHEMA, "async_enable_audio", ()),
-    _SRV_DS_AUD: (CAMERA_SERVICE_SCHEMA, "async_disable_audio", ()),
-    _SRV_EN_MOT_REC: (CAMERA_SERVICE_SCHEMA, "async_enable_motion_recording", ()),
-    _SRV_DS_MOT_REC: (CAMERA_SERVICE_SCHEMA, "async_disable_motion_recording", ()),
+    _SRV_EN_REC: (_SRV_SCHEMA, "async_enable_recording", ()),
+    _SRV_DS_REC: (_SRV_SCHEMA, "async_disable_recording", ()),
+    _SRV_EN_AUD: (_SRV_SCHEMA, "async_enable_audio", ()),
+    _SRV_DS_AUD: (_SRV_SCHEMA, "async_disable_audio", ()),
+    _SRV_EN_MOT_REC: (_SRV_SCHEMA, "async_enable_motion_recording", ()),
+    _SRV_DS_MOT_REC: (_SRV_SCHEMA, "async_disable_motion_recording", ()),
     _SRV_GOTO: (_SRV_GOTO_SCHEMA, "async_goto_preset", (_ATTR_PRESET,)),
     _SRV_CBW: (_SRV_CBW_SCHEMA, "async_set_color_bw", (_ATTR_COLOR_BW,)),
-    _SRV_TOUR_ON: (CAMERA_SERVICE_SCHEMA, "async_start_tour", ()),
-    _SRV_TOUR_OFF: (CAMERA_SERVICE_SCHEMA, "async_stop_tour", ()),
+    _SRV_TOUR_ON: (_SRV_SCHEMA, "async_start_tour", ()),
+    _SRV_TOUR_OFF: (_SRV_SCHEMA, "async_stop_tour", ()),
+    _SRV_PTZ_CTRL: (
+        _SRV_PTZ_SCHEMA,
+        "async_ptz_control",
+        (_ATTR_PTZ_MOV, _ATTR_PTZ_TT),
+    ),
 }
 
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an Amcrest IP Camera."""
     if discovery_info is None:
         return
 
     name = discovery_info[CONF_NAME]
     device = hass.data[DATA_AMCREST][DEVICES][name]
-    async_add_entities([AmcrestCam(name, device, hass.data[DATA_FFMPEG])], True)
+    entity = AmcrestCam(name, device, get_ffmpeg_manager(hass))
+
+    async_add_entities([entity], True)
+
+
+class CannotSnapshot(Exception):
+    """Conditions are not valid for taking a snapshot."""
+
+
+class AmcrestCommandFailed(Exception):
+    """Amcrest camera command did not work."""
 
 
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
-    def __init__(self, name, device, ffmpeg):
+    _attr_should_poll = True  # Cameras default to False
+    _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
+
+    def __init__(self, name: str, device: AmcrestDevice, ffmpeg: FFmpegManager) -> None:
         """Initialize an Amcrest camera."""
         super().__init__()
         self._name = name
@@ -102,40 +163,70 @@ class AmcrestCam(Camera):
         self._ffmpeg_arguments = device.ffmpeg_arguments
         self._stream_source = device.stream_source
         self._resolution = device.resolution
+        self._channel = device.channel
         self._token = self._auth = device.authentication
         self._control_light = device.control_light
-        self._is_recording = False
-        self._motion_detection_enabled = None
-        self._brand = None
-        self._model = None
-        self._audio_enabled = None
-        self._motion_recording_enabled = None
-        self._color_bw = None
-        self._rtsp_url = None
-        self._snapshot_lock = asyncio.Lock()
-        self._unsub_dispatcher = []
-        self._update_succeeded = False
+        self._is_recording: bool = False
+        self._motion_detection_enabled: bool = False
+        self._brand: str | None = None
+        self._model: str | None = None
+        self._audio_enabled: bool | None = None
+        self._motion_recording_enabled: bool | None = None
+        self._color_bw: str | None = None
+        self._rtsp_url: str | None = None
+        self._snapshot_task: asyncio.tasks.Task | None = None
+        self._unsub_dispatcher: list[Callable[[], None]] = []
 
-    async def async_camera_image(self):
-        """Return a still image response from the camera."""
+    def _check_snapshot_ok(self) -> None:
         available = self.available
         if not available or not self.is_on:
             _LOGGER.warning(
-                "Attempt to take snaphot when %s camera is %s",
+                "Attempt to take snapshot when %s camera is %s",
                 self.name,
                 "offline" if not available else "off",
             )
-            return None
-        async with self._snapshot_lock:
-            try:
-                # Send the request to snap a picture and return raw jpg data
-                response = await self.hass.async_add_executor_job(self._api.snapshot)
-                return response.data
-            except (AmcrestError, HTTPError) as error:
-                log_update_error(_LOGGER, "get image from", self.name, "camera", error)
-                return None
+            raise CannotSnapshot
 
-    async def handle_async_mjpeg_stream(self, request):
+    async def _async_get_image(self) -> bytes | None:
+        try:
+            # Send the request to snap a picture and return raw jpg data
+            # Snapshot command needs a much longer read timeout than other commands.
+            return await self._api.async_snapshot(
+                timeout=(COMM_TIMEOUT, SNAPSHOT_TIMEOUT)
+            )
+        except AmcrestError as error:
+            log_update_error(_LOGGER, "get image from", self.name, "camera", error)
+            return None
+        finally:
+            self._snapshot_task = None
+
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return a still image response from the camera."""
+        _LOGGER.debug("Take snapshot from %s", self._name)
+        try:
+            # Amcrest cameras only support one snapshot command at a time.
+            # Hence need to wait if a previous snapshot has not yet finished.
+            # Also need to check that camera is online and turned on before each wait
+            # and before initiating snapshot.
+            while self._snapshot_task:
+                self._check_snapshot_ok()
+                _LOGGER.debug("Waiting for previous snapshot from %s", self._name)
+                await self._snapshot_task
+            self._check_snapshot_ok()
+            # Run snapshot command in separate Task that can't be cancelled so
+            # 1) it's not possible to send another snapshot command while camera is
+            #    still working on a previous one, and
+            # 2) someone will be around to catch any exceptions.
+            self._snapshot_task = self.hass.async_create_task(self._async_get_image())
+            return await asyncio.shield(self._snapshot_task)
+        except CannotSnapshot:
+            return None
+
+    async def handle_async_mjpeg_stream(
+        self, request: web.Request
+    ) -> web.StreamResponse | None:
         """Return an MJPEG stream."""
         # The snapshot implementation is handled by the parent class
         if self._stream_source == "snapshot":
@@ -154,15 +245,17 @@ class AmcrestCam(Camera):
             websession = async_get_clientsession(self.hass)
             streaming_url = self._api.mjpeg_url(typeno=self._resolution)
             stream_coro = websession.get(
-                streaming_url, auth=self._token, timeout=CAMERA_WEB_SESSION_TIMEOUT
+                streaming_url,
+                auth=self._token,
+                timeout=aiohttp.ClientTimeout(total=CAMERA_WEB_SESSION_TIMEOUT),
             )
 
             return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
         # streaming via ffmpeg
-
+        assert self._rtsp_url is not None
         streaming_url = self._rtsp_url
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(streaming_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
@@ -179,20 +272,12 @@ class AmcrestCam(Camera):
     # Entity property overrides
 
     @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return True
-
-    @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of this camera."""
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the Amcrest-specific camera state attributes."""
         attr = {}
         if self._audio_enabled is not None:
@@ -206,309 +291,353 @@ class AmcrestCam(Camera):
         return attr
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._api.available
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return SUPPORT_ON_OFF | SUPPORT_STREAM
 
     # Camera property overrides
 
     @property
-    def is_recording(self):
+    def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self._is_recording
 
     @property
-    def brand(self):
+    def brand(self) -> str | None:
         """Return the camera brand."""
         return self._brand
 
     @property
-    def motion_detection_enabled(self):
+    def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
 
     @property
-    def model(self):
+    def model(self) -> str | None:
         """Return the camera model."""
         return self._model
 
-    async def stream_source(self):
+    async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         return self._rtsp_url
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if on."""
         return self.is_streaming
 
     # Other Entity method overrides
 
-    async def async_on_demand_update(self):
+    @callback
+    def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to signals and add camera to list."""
-        for service, params in CAMERA_SERVICES.items():
-            self._unsub_dispatcher.append(
-                async_dispatcher_connect(
-                    self.hass,
-                    service_signal(service, self.entity_id),
-                    getattr(self, params[1]),
-                )
+        self._unsub_dispatcher.extend(
+            async_dispatcher_connect(
+                self.hass,
+                service_signal(service, self.entity_id),
+                getattr(self, callback_name),
             )
+            for service, (_, callback_name, _) in CAMERA_SERVICES.items()
+        )
         self._unsub_dispatcher.append(
             async_dispatcher_connect(
                 self.hass,
-                service_signal(SERVICE_UPDATE, self._name),
+                service_signal(SERVICE_UPDATE, self.name),
                 self.async_on_demand_update,
             )
         )
         self.hass.data[DATA_AMCREST][CAMERAS].append(self.entity_id)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Remove camera from list and disconnect from signals."""
         self.hass.data[DATA_AMCREST][CAMERAS].remove(self.entity_id)
         for unsub_dispatcher in self._unsub_dispatcher:
             unsub_dispatcher()
 
-    def update(self):
+    async def async_update(self) -> None:
         """Update entity status."""
-        if not self.available or self._update_succeeded:
-            if not self.available:
-                self._update_succeeded = False
+        if not self.available:
             return
         _LOGGER.debug("Updating %s camera", self.name)
         try:
             if self._brand is None:
-                resp = self._api.vendor_information.strip()
-                if resp.startswith("vendor="):
-                    self._brand = resp.split("=")[-1]
+                resp = await self._api.async_vendor_information
+                _LOGGER.debug("Assigned brand=%s", resp)
+                if resp:
+                    self._brand = resp
                 else:
                     self._brand = "unknown"
             if self._model is None:
-                resp = self._api.device_type.strip()
-                if resp.startswith("type="):
-                    self._model = resp.split("=")[-1]
+                resp = await self._api.async_device_type
+                _LOGGER.debug("Assigned model=%s", resp)
+                if resp:
+                    self._model = resp
                 else:
                     self._model = "unknown"
-            self.is_streaming = self._api.video_enabled
-            self._is_recording = self._api.record_mode == "Manual"
-            self._motion_detection_enabled = self._api.is_motion_detector_on()
-            self._audio_enabled = self._api.audio_enabled
-            self._motion_recording_enabled = self._api.is_record_on_motion_detection()
-            self._color_bw = _CBW[self._api.day_night_color]
-            self._rtsp_url = self._api.rtsp_url(typeno=self._resolution)
+            if self._attr_unique_id is None:
+                serial_number = (await self._api.async_serial_number).strip()
+                if serial_number:
+                    self._attr_unique_id = (
+                        f"{serial_number}-{self._resolution}-{self._channel}"
+                    )
+                    _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
+            if self._rtsp_url is None:
+                self._rtsp_url = await self._api.async_rtsp_url(typeno=self._resolution)
+
+            (
+                self._attr_is_streaming,
+                self._is_recording,
+                self._motion_detection_enabled,
+                self._audio_enabled,
+                self._motion_recording_enabled,
+                self._color_bw,
+            ) = await asyncio.gather(
+                self._async_get_video(),
+                self._async_get_recording(),
+                self._async_get_motion_detection(),
+                self._async_get_audio(),
+                self._async_get_motion_recording(),
+                self._async_get_color_mode(),
+            )
         except AmcrestError as error:
             log_update_error(_LOGGER, "get", self.name, "camera attributes", error)
-            self._update_succeeded = False
-        else:
-            self._update_succeeded = True
 
     # Other Camera method overrides
 
-    def turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off camera."""
-        self._enable_video_stream(False)
+        await self._async_enable_video(False)
 
-    def turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on camera."""
-        self._enable_video_stream(True)
+        await self._async_enable_video(True)
 
-    def enable_motion_detection(self):
+    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        self._enable_motion_detection(True)
+        await self._async_enable_motion_detection(True)
 
-    def disable_motion_detection(self):
+    async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        self._enable_motion_detection(False)
+        await self._async_enable_motion_detection(False)
 
     # Additional Amcrest Camera service methods
 
-    async def async_enable_recording(self):
+    async def async_enable_recording(self) -> None:
         """Call the job and enable recording."""
-        await self.hass.async_add_executor_job(self._enable_recording, True)
+        await self._async_enable_recording(True)
 
-    async def async_disable_recording(self):
+    async def async_disable_recording(self) -> None:
         """Call the job and disable recording."""
-        await self.hass.async_add_executor_job(self._enable_recording, False)
+        await self._async_enable_recording(False)
 
-    async def async_enable_audio(self):
+    async def async_enable_audio(self) -> None:
         """Call the job and enable audio."""
-        await self.hass.async_add_executor_job(self._enable_audio, True)
+        await self._async_enable_audio(True)
 
-    async def async_disable_audio(self):
+    async def async_disable_audio(self) -> None:
         """Call the job and disable audio."""
-        await self.hass.async_add_executor_job(self._enable_audio, False)
+        await self._async_enable_audio(False)
 
-    async def async_enable_motion_recording(self):
+    async def async_enable_motion_recording(self) -> None:
         """Call the job and enable motion recording."""
-        await self.hass.async_add_executor_job(self._enable_motion_recording, True)
+        await self._async_enable_motion_recording(True)
 
-    async def async_disable_motion_recording(self):
+    async def async_disable_motion_recording(self) -> None:
         """Call the job and disable motion recording."""
-        await self.hass.async_add_executor_job(self._enable_motion_recording, False)
+        await self._async_enable_motion_recording(False)
 
-    async def async_goto_preset(self, preset):
+    async def async_goto_preset(self, preset: int) -> None:
         """Call the job and move camera to preset position."""
-        await self.hass.async_add_executor_job(self._goto_preset, preset)
+        await self._async_goto_preset(preset)
 
-    async def async_set_color_bw(self, color_bw):
+    async def async_set_color_bw(self, color_bw: str) -> None:
         """Call the job and set camera color mode."""
-        await self.hass.async_add_executor_job(self._set_color_bw, color_bw)
+        await self._async_set_color_bw(color_bw)
 
-    async def async_start_tour(self):
+    async def async_start_tour(self) -> None:
         """Call the job and start camera tour."""
-        await self.hass.async_add_executor_job(self._start_tour, True)
+        await self._async_start_tour(True)
 
-    async def async_stop_tour(self):
+    async def async_stop_tour(self) -> None:
         """Call the job and stop camera tour."""
-        await self.hass.async_add_executor_job(self._start_tour, False)
+        await self._async_start_tour(False)
+
+    async def async_ptz_control(self, movement: str, travel_time: float) -> None:
+        """Move or zoom camera in specified direction."""
+        code = _ACTION[_MOV.index(movement)]
+
+        kwargs = {"code": code, "arg1": 0, "arg2": 0, "arg3": 0}
+        if code in _MOVE_1_ACTIONS:
+            kwargs["arg2"] = 1
+        elif code in _MOVE_2_ACTIONS:
+            kwargs["arg1"] = kwargs["arg2"] = 1
+
+        try:
+            await self._api.async_ptz_control_command(action="start", **kwargs)  # type: ignore[arg-type]
+            await asyncio.sleep(travel_time)
+            await self._api.async_ptz_control_command(action="stop", **kwargs)  # type: ignore[arg-type]
+        except AmcrestError as error:
+            log_update_error(
+                _LOGGER, "move", self.name, f"camera PTZ {movement}", error
+            )
 
     # Methods to send commands to Amcrest camera and handle errors
 
-    def _enable_video_stream(self, enable):
+    async def _async_change_setting(
+        self, value: str | bool, description: str, attr: str | None = None
+    ) -> None:
+        func = description.replace(" ", "_")
+        description = f"camera {description} to {value}"
+        action = "set"
+        max_tries = 3
+        for tries in range(max_tries, 0, -1):
+            try:
+                await getattr(self, f"_async_set_{func}")(value)
+                new_value = await getattr(self, f"_async_get_{func}")()
+                if new_value != value:
+                    raise AmcrestCommandFailed  # noqa: TRY301
+            except (AmcrestError, AmcrestCommandFailed) as error:
+                if tries == 1:
+                    log_update_error(_LOGGER, action, self.name, description, error)
+                    return
+                log_update_error(
+                    _LOGGER, action, self.name, description, error, logging.DEBUG
+                )
+            else:
+                if attr:
+                    setattr(self, attr, new_value)
+                    self.schedule_update_ha_state()
+                return
+
+    async def _async_get_video(self) -> bool:
+        return await self._api.async_is_video_enabled(
+            channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+        )
+
+    async def _async_set_video(self, enable: bool) -> None:
+        await self._api.async_set_video_enabled(
+            enable, channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+        )
+
+    async def _async_enable_video(self, enable: bool) -> None:
         """Enable or disable camera video stream."""
         # Given the way the camera's state is determined by
         # is_streaming and is_recording, we can't leave
         # recording on if video stream is being turned off.
         if self.is_recording and not enable:
-            self._enable_recording(False)
-        try:
-            self._api.video_enabled = enable
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "camera video stream",
-                error,
-            )
-        else:
-            self.is_streaming = enable
-            self.schedule_update_ha_state()
+            await self._async_enable_recording(False)
+        await self._async_change_setting(enable, "video", "_attr_is_streaming")
         if self._control_light:
-            self._enable_light(self._audio_enabled or self.is_streaming)
+            await self._async_change_light()
 
-    def _enable_recording(self, enable):
+    async def _async_get_recording(self) -> bool:
+        return (await self._api.async_record_mode) == "Manual"
+
+    async def _async_set_recording(self, enable: bool) -> None:
+        rec_mode = {"Automatic": 0, "Manual": 1}
+        # The property has a str type, but setter has int type, which causes mypy confusion
+        await self._api.async_set_record_mode(
+            rec_mode["Manual" if enable else "Automatic"]
+        )
+
+    async def _async_enable_recording(self, enable: bool) -> None:
         """Turn recording on or off."""
         # Given the way the camera's state is determined by
         # is_streaming and is_recording, we can't leave
         # video stream off if recording is being turned on.
         if not self.is_streaming and enable:
-            self._enable_video_stream(True)
-        rec_mode = {"Automatic": 0, "Manual": 1}
-        try:
-            self._api.record_mode = rec_mode["Manual" if enable else "Automatic"]
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "camera recording",
-                error,
-            )
-        else:
-            self._is_recording = enable
-            self.schedule_update_ha_state()
+            await self._async_enable_video(True)
+        await self._async_change_setting(enable, "recording", "_is_recording")
 
-    def _enable_motion_detection(self, enable):
+    async def _async_get_motion_detection(self) -> bool:
+        return await self._api.async_is_motion_detector_on()
+
+    async def _async_set_motion_detection(self, enable: bool) -> None:
+        # The property has a str type, but setter has bool type, which causes mypy confusion
+        await self._api.async_set_motion_detection(enable)
+
+    async def _async_enable_motion_detection(self, enable: bool) -> None:
         """Enable or disable motion detection."""
-        try:
-            self._api.motion_detection = str(enable).lower()
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "camera motion detection",
-                error,
-            )
-        else:
-            self._motion_detection_enabled = enable
-            self.schedule_update_ha_state()
+        await self._async_change_setting(
+            enable, "motion detection", "_motion_detection_enabled"
+        )
 
-    def _enable_audio(self, enable):
+    async def _async_get_audio(self) -> bool:
+        return await self._api.async_is_audio_enabled(
+            channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+        )
+
+    async def _async_set_audio(self, enable: bool) -> None:
+        await self._api.async_set_audio_enabled(
+            enable, channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+        )
+
+    async def _async_enable_audio(self, enable: bool) -> None:
         """Enable or disable audio stream."""
-        try:
-            self._api.audio_enabled = enable
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "camera audio stream",
-                error,
-            )
-        else:
-            self._audio_enabled = enable
-            self.schedule_update_ha_state()
+        await self._async_change_setting(enable, "audio", "_audio_enabled")
         if self._control_light:
-            self._enable_light(self._audio_enabled or self.is_streaming)
+            await self._async_change_light()
 
-    def _enable_light(self, enable):
-        """Enable or disable indicator light."""
-        try:
-            self._api.command(
-                "configManager.cgi?action=setConfig&LightGlobal[0].Enable={}".format(
-                    str(enable).lower()
+    async def _async_get_indicator_light(self) -> bool:
+        return (
+            "true"
+            in (
+                await self._api.async_command(
+                    "configManager.cgi?action=getConfig&name=LightGlobal"
                 )
-            )
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "indicator light",
-                error,
-            )
+            ).content.decode()
+        )
 
-    def _enable_motion_recording(self, enable):
+    async def _async_set_indicator_light(self, enable: bool) -> None:
+        await self._api.async_command(
+            f"configManager.cgi?action=setConfig&LightGlobal[0].Enable={str(enable).lower()}"
+        )
+
+    async def _async_change_light(self) -> None:
+        """Enable or disable indicator light."""
+        await self._async_change_setting(
+            self._audio_enabled or self.is_streaming, "indicator light"
+        )
+
+    async def _async_get_motion_recording(self) -> bool:
+        return await self._api.async_is_record_on_motion_detection()
+
+    async def _async_set_motion_recording(self, enable: bool) -> None:
+        await self._api.async_set_motion_recording(enable)
+
+    async def _async_enable_motion_recording(self, enable: bool) -> None:
         """Enable or disable motion recording."""
-        try:
-            self._api.motion_recording = str(enable).lower()
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER,
-                "enable" if enable else "disable",
-                self.name,
-                "camera motion recording",
-                error,
-            )
-        else:
-            self._motion_recording_enabled = enable
-            self.schedule_update_ha_state()
+        await self._async_change_setting(
+            enable, "motion recording", "_motion_recording_enabled"
+        )
 
-    def _goto_preset(self, preset):
+    async def _async_goto_preset(self, preset: int) -> None:
         """Move camera position and zoom to preset."""
         try:
-            self._api.go_to_preset(action="start", preset_point_number=preset)
+            await self._api.async_go_to_preset(preset_point_number=preset)
         except AmcrestError as error:
             log_update_error(
                 _LOGGER, "move", self.name, f"camera to preset {preset}", error
             )
 
-    def _set_color_bw(self, cbw):
-        """Set camera color mode."""
-        try:
-            self._api.day_night_color = _CBW.index(cbw)
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER, "set", self.name, f"camera color mode to {cbw}", error
-            )
-        else:
-            self._color_bw = cbw
-            self.schedule_update_ha_state()
+    async def _async_get_color_mode(self) -> str:
+        return _CBW[await self._api.async_day_night_color]
 
-    def _start_tour(self, start):
+    async def _async_set_color_mode(self, cbw: str) -> None:
+        await self._api.async_set_day_night_color(_CBW.index(cbw), channel=0)
+
+    async def _async_set_color_bw(self, cbw: str) -> None:
+        """Set camera color mode."""
+        await self._async_change_setting(cbw, "color mode", "_color_bw")
+
+    async def _async_start_tour(self, start: bool) -> None:
         """Start camera tour."""
         try:
-            self._api.tour(start=start)
+            await self._api.async_tour(start=start)
         except AmcrestError as error:
             log_update_error(
                 _LOGGER, "start" if start else "stop", self.name, "camera tour", error

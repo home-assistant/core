@@ -1,0 +1,113 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "Specify the full URL of your pyLoad web interface, including the protocol (HTTP or HTTPS), hostname or IP address, port (pyLoad uses 8000 by default), and any path prefix if applicable.\nExample: `https://example.com:8000/path`",
+          "username": "The username used to access the pyLoad instance.",
+          "password": "The password associated with the pyLoad account.",
+          "verify_ssl": "If checked, the SSL certificate will be validated to ensure a secure connection."
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "[%key:component::pyload::config::step::user::data_description::url%]",
+          "username": "[%key:component::pyload::config::step::user::data_description::username%]",
+          "password": "[%key:component::pyload::config::step::user::data_description::password%]",
+          "verify_ssl": "[%key:component::pyload::config::step::user::data_description::verify_ssl%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::pyload::config::step::user::data_description::username%]",
+          "password": "[%key:component::pyload::config::step::user::data_description::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "abort_downloads": {
+        "name": "Abort all running downloads"
+      },
+      "restart_failed": {
+        "name": "Restart all failed files"
+      },
+      "delete_finished": {
+        "name": "Delete finished files/packages"
+      },
+      "restart": {
+        "name": "Restart pyload core"
+      }
+    },
+    "sensor": {
+      "speed": {
+        "name": "Speed"
+      },
+      "active": {
+        "name": "Active downloads"
+      },
+      "queue": {
+        "name": "Downloads in queue"
+      },
+      "total": {
+        "name": "Total downloads"
+      },
+      "free_space": {
+        "name": "Free space"
+      }
+    },
+    "switch": {
+      "download": {
+        "name": "Pause/Resume queue"
+      },
+      "reconnect": {
+        "name": "Auto-Reconnect"
+      }
+    }
+  },
+  "exceptions": {
+    "setup_request_exception": {
+      "message": "Unable to connect and retrieve data from pyLoad API"
+    },
+    "setup_parse_exception": {
+      "message": "Unable to parse data from pyLoad API"
+    },
+    "setup_authentication_exception": {
+      "message": "Authentication failed for {username}, verify your login credentials"
+    },
+    "service_call_exception": {
+      "message": "Unable to send command to pyLoad due to a connection error, try again later"
+    },
+    "service_call_auth_exception": {
+      "message": "Unable to send command to pyLoad due to an authentication error, try again later"
+    }
+  }
+}

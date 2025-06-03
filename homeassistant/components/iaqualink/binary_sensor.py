@@ -1,48 +1,50 @@
 """Support for Aqualink temperature sensors."""
-import logging
+
+from __future__ import annotations
+
+from iaqualink.device import AqualinkBinarySensor
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_COLD,
-    DOMAIN,
-    BinarySensorDevice,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AqualinkEntity
-from .const import DOMAIN as AQUALINK_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from . import AqualinkConfigEntry
+from .entity import AqualinkEntity
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: AqualinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered binary sensors."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkBinarySensor(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (
+            HassAqualinkBinarySensor(dev)
+            for dev in config_entry.runtime_data.binary_sensors
+        ),
+        True,
+    )
 
 
-class HassAqualinkBinarySensor(AqualinkEntity, BinarySensorDevice):
+class HassAqualinkBinarySensor(
+    AqualinkEntity[AqualinkBinarySensor], BinarySensorEntity
+):
     """Representation of a binary sensor."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the binary sensor."""
-        return self.dev.label
+    def __init__(self, dev: AqualinkBinarySensor) -> None:
+        """Initialize AquaLink binary sensor."""
+        super().__init__(dev)
+        self._attr_name = dev.label
+        if dev.label == "Freeze Protection":
+            self._attr_device_class = BinarySensorDeviceClass.COLD
 
     @property
     def is_on(self) -> bool:
         """Return whether the binary sensor is on or not."""
         return self.dev.is_on
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of the binary sensor."""
-        if self.name == "Freeze Protection":
-            return DEVICE_CLASS_COLD
-        return None

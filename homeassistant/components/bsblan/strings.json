@@ -1,0 +1,52 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Connect to the BSB-Lan device",
+        "description": "Set up your BSB-Lan device to integrate with Home Assistant.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "passkey": "Passkey string",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your BSB-Lan device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "exceptions": {
+    "set_preset_mode_error": {
+      "message": "Can't set preset mode to {preset_mode} when HVAC mode is not set to auto"
+    },
+    "set_data_error": {
+      "message": "An error occurred while sending the data to the BSB-Lan device"
+    },
+    "set_temperature_error": {
+      "message": "An error occurred while setting the temperature"
+    },
+    "set_operation_mode_error": {
+      "message": "An error occurred while setting the operation mode"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_temperature": {
+        "name": "Current Temperature"
+      },
+      "outside_temperature": {
+        "name": "Outside Temperature"
+      }
+    }
+  }
+}

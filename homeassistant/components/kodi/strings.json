@@ -1,0 +1,96 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Kodi connection information. Please make sure to enable \"Allow control of Kodi via HTTP\" in System/Settings/Network/Services.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the system hosting your Kodi server."
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to add Kodi (`{name}`) to Home Assistant?",
+        "title": "Discovered Kodi"
+      },
+      "ws_port": {
+        "description": "The WebSocket port (sometimes called TCP port in Kodi). In order to connect over WebSocket, you need to enable \"Allow programs ... to control Kodi\" in System/Settings/Network/Services. If WebSocket is not enabled, remove the port and leave empty.",
+        "data": {
+          "ws_port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "credentials": {
+        "description": "Please enter your Kodi user name and password. These can be found in System/Settings/Network/Services.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_uuid": "Kodi instance does not have a unique ID. This is most likely due to an old Kodi version (17.x or below). You can configure the integration manually or upgrade to a more recent Kodi version."
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "turn_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "turn_off": "[%key:common::device_automation::trigger_type::turned_off%]"
+    }
+  },
+  "services": {
+    "add_to_playlist": {
+      "name": "Add to playlist",
+      "description": "Adds music to the default playlist (i.e. playlistid=0).",
+      "fields": {
+        "media_type": {
+          "name": "Media type",
+          "description": "Media type identifier. It must be one of 'SONG' or 'ALBUM'."
+        },
+        "media_id": {
+          "name": "Media ID",
+          "description": "Unique ID of the media entry to add (`songid` or albumid`). If not defined, Media name and Artist name are needed to search the Kodi music library."
+        },
+        "media_name": {
+          "name": "Media name",
+          "description": "Optional media name for filtering media. Can be 'ALL' when Media type is 'ALBUM' and Artist name is specified, to add all songs from one artist."
+        },
+        "artist_name": {
+          "name": "Artist name",
+          "description": "Optional artist name for filtering media."
+        }
+      }
+    },
+    "call_method": {
+      "name": "Call method",
+      "description": "Calls a Kodi JSONRPC API method with optional parameters. Results of the Kodi API call will be redirected in a Home Assistant event: `kodi_call_method_result`.",
+      "fields": {
+        "method": {
+          "name": "Method",
+          "description": "Name of the Kodi JSONRPC API method to be called."
+        }
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "media_player": {
+        "state_attributes": {
+          "dynamic_range": { "name": "Dynamic range" }
+        }
+      }
+    }
+  }
+}

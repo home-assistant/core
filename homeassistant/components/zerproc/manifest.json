@@ -1,0 +1,10 @@
+{
+  "domain": "zerproc",
+  "name": "Zerproc",
+  "codeowners": ["@emlove"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/zerproc",
+  "iot_class": "local_polling",
+  "loggers": ["bleak", "pyzerproc"],
+  "requirements": ["pyzerproc==0.4.8"]
+}

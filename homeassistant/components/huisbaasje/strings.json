@@ -1,0 +1,78 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_power": {
+        "name": "Current power"
+      },
+      "current_power_peak": {
+        "name": "Current power in peak"
+      },
+      "current_power_off_peak": {
+        "name": "Current power in off-peak"
+      },
+      "current_power_out_peak": {
+        "name": "Current power out peak"
+      },
+      "current_power_out_off_peak": {
+        "name": "Current power out off-peak"
+      },
+      "energy_consumption_peak_today": {
+        "name": "Energy consumption peak today"
+      },
+      "energy_consumption_off_peak_today": {
+        "name": "Energy consumption off-peak today"
+      },
+      "energy_production_peak_today": {
+        "name": "Energy production peak today"
+      },
+      "energy_production_off_peak_today": {
+        "name": "Energy production off-peak today"
+      },
+      "energy_today": {
+        "name": "Energy today"
+      },
+      "energy_week": {
+        "name": "Energy this week"
+      },
+      "energy_month": {
+        "name": "Energy this month"
+      },
+      "energy_year": {
+        "name": "Energy this year"
+      },
+      "current_gas": {
+        "name": "Current gas"
+      },
+      "gas_today": {
+        "name": "Gas today"
+      },
+      "gas_week": {
+        "name": "Gas this week"
+      },
+      "gas_month": {
+        "name": "Gas this month"
+      },
+      "gas_year": {
+        "name": "Gas this year"
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "title": "Image processing",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::image_processing::title%]",
+      "state_attributes": {
+        "faces": {
+          "name": "Faces"
+        },
+        "total_faces": {
+          "name": "Total faces"
+        }
+      }
+    }
+  },
+  "services": {
+    "scan": {
+      "name": "Scan",
+      "description": "Processes an image immediately."
+    }
+  }
+}

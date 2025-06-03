@@ -1,0 +1,10 @@
+{
+  "domain": "sms",
+  "name": "SMS notifications via GSM-modem",
+  "codeowners": ["@ocalvo"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sms",
+  "iot_class": "local_polling",
+  "loggers": ["gammu"],
+  "requirements": ["python-gammu==3.2.4"]
+}

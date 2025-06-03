@@ -1,15 +1,16 @@
 """Config flow for Tellduslive."""
+
 import asyncio
 import logging
 import os
+from typing import Any
 
-import async_timeout
 from tellduslive import Session, supports_local_api
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.util.json import load_json
+from homeassistant.util.json import load_json_object
 
 from .const import (
     APPLICATION_NAME,
@@ -29,22 +30,20 @@ KEY_TOKEN_SECRET = "token_secret"
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register("tellduslive")
-class FlowHandler(config_entries.ConfigFlow):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
+    _session: Session
+
+    def __init__(self) -> None:
         """Init config flow."""
         self._hosts = [CLOUD_NAME]
         self._host = None
-        self._session = None
         self._scan_interval = SCAN_INTERVAL
 
-    def _get_auth_url(self):
-
+    def _get_auth_url(self) -> str | None:
         self._session = Session(
             public_key=PUBLIC_KEY,
             private_key=NOT_SO_PRIVATE_KEY,
@@ -53,9 +52,11 @@ class FlowHandler(config_entries.ConfigFlow):
         )
         return self._session.authorize_url
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Let user select host or cloud."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
         if user_input is not None or len(self._hosts) == 1:
@@ -70,7 +71,9 @@ class FlowHandler(config_entries.ConfigFlow):
             ),
         )
 
-    async def async_step_auth(self, user_input=None):
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the submitted configuration."""
         errors = {}
         if user_input is not None:
@@ -87,22 +90,22 @@ class FlowHandler(config_entries.ConfigFlow):
                     title=host,
                     data={
                         CONF_HOST: host,
-                        KEY_SCAN_INTERVAL: self._scan_interval.seconds,
+                        KEY_SCAN_INTERVAL: self._scan_interval.total_seconds(),
                         KEY_SESSION: session,
                     },
                 )
-            errors["base"] = "auth_error"
+            errors["base"] = "invalid_auth"
 
         try:
-            with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 auth_url = await self.hass.async_add_executor_job(self._get_auth_url)
             if not auth_url:
-                return self.async_abort(reason="authorize_url_fail")
-        except asyncio.TimeoutError:
+                return self.async_abort(reason="unknown_authorize_url_generation")
+        except TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected error generating auth url")
-            return self.async_abort(reason="authorize_url_fail")
+            return self.async_abort(reason="unknown_authorize_url_generation")
 
         _LOGGER.debug("Got authorization URL %s", auth_url)
         return self.async_show_form(
@@ -114,24 +117,28 @@ class FlowHandler(config_entries.ConfigFlow):
             },
         )
 
-    async def async_step_discovery(self, user_input):
+    async def async_step_discovery(
+        self,
+        discovery_info: list[str],  # type: ignore[override]
+    ) -> ConfigFlowResult:
         """Run when a Tellstick is discovered."""
+        await self._async_handle_discovery_without_unique_id()
 
-        _LOGGER.info("Discovered tellstick device: %s", user_input)
-        if supports_local_api(user_input[1]):
-            _LOGGER.info("%s support local API", user_input[1])
-            self._hosts.append(user_input[0])
+        _LOGGER.debug("Discovered tellstick device: %s", discovery_info)
+        if supports_local_api(discovery_info[1]):
+            _LOGGER.debug("%s support local API", discovery_info[1])
+            self._hosts.append(discovery_info[0])
 
         return await self.async_step_user()
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
-        self._scan_interval = user_input[KEY_SCAN_INTERVAL]
-        if user_input[CONF_HOST] != DOMAIN:
-            self._hosts.append(user_input[CONF_HOST])
+        self._scan_interval = import_data[KEY_SCAN_INTERVAL]
+        if import_data[CONF_HOST] != DOMAIN:
+            self._hosts.append(import_data[CONF_HOST])
 
         if not await self.hass.async_add_executor_job(
             os.path.isfile, self.hass.config.path(TELLDUS_CONFIG_FILE)
@@ -139,11 +146,11 @@ class FlowHandler(config_entries.ConfigFlow):
             return await self.async_step_user()
 
         conf = await self.hass.async_add_executor_job(
-            load_json, self.hass.config.path(TELLDUS_CONFIG_FILE)
+            load_json_object, self.hass.config.path(TELLDUS_CONFIG_FILE)
         )
         host = next(iter(conf))
 
-        if user_input[CONF_HOST] != host:
+        if import_data[CONF_HOST] != host:
             return await self.async_step_user()
 
         host = CLOUD_NAME if host == "tellduslive" else host
@@ -151,7 +158,7 @@ class FlowHandler(config_entries.ConfigFlow):
             title=host,
             data={
                 CONF_HOST: host,
-                KEY_SCAN_INTERVAL: self._scan_interval.seconds,
+                KEY_SCAN_INTERVAL: self._scan_interval.total_seconds(),
                 KEY_SESSION: next(iter(conf.values())),
             },
         )

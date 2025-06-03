@@ -1,68 +1,93 @@
 """Support for Abode Security System switches."""
-import logging
 
-import abodepy.helpers.constants as CONST
-import abodepy.helpers.timeline as TIMELINE
+from __future__ import annotations
 
-from homeassistant.components.switch import SwitchDevice
+from typing import Any, cast
 
-from . import AbodeAutomation, AbodeDevice
+from jaraco.abode.devices.switch import Switch
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import AbodeSystem
 from .const import DOMAIN
+from .entity import AbodeAutomation, AbodeDevice
 
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
+DEVICE_TYPES = ["switch", "valve"]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up Abode switch devices."""
-    data = hass.data[DOMAIN]
+    data: AbodeSystem = hass.data[DOMAIN]
 
-    entities = []
+    entities: list[SwitchEntity] = [
+        AbodeSwitch(data, device)
+        for device_type in DEVICE_TYPES
+        for device in data.abode.get_devices(generic_type=device_type)
+    ]
 
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_SWITCH):
-        entities.append(AbodeSwitch(data, device))
-
-    for automation in data.abode.get_automations(generic_type=CONST.TYPE_AUTOMATION):
-        entities.append(
-            AbodeAutomationSwitch(data, automation, TIMELINE.AUTOMATION_EDIT_GROUP)
-        )
+    entities.extend(
+        AbodeAutomationSwitch(data, automation)
+        for automation in data.abode.get_automations()
+    )
 
     async_add_entities(entities)
 
 
-class AbodeSwitch(AbodeDevice, SwitchDevice):
+class AbodeSwitch(AbodeDevice, SwitchEntity):
     """Representation of an Abode switch."""
 
-    def turn_on(self, **kwargs):
+    _device: Switch
+    _attr_name = None
+
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         self._device.switch_on()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         self._device.switch_off()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return self._device.is_on
+        return cast(bool, self._device.is_on)
 
 
-class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
+class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     """A switch implementation for Abode automations."""
 
-    def turn_on(self, **kwargs):
-        """Turn on the device."""
-        self._automation.set_active(True)
+    _attr_translation_key = "automation"
 
-    def turn_off(self, **kwargs):
-        """Turn off the device."""
-        self._automation.set_active(False)
+    async def async_added_to_hass(self) -> None:
+        """Set up trigger automation service."""
+        await super().async_added_to_hass()
+
+        signal = f"abode_trigger_automation_{self.entity_id}"
+        self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.trigger))
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Enable the automation."""
+        if self._automation.enable(True):
+            self.schedule_update_ha_state()
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Disable the automation."""
+        if self._automation.enable(False):
+            self.schedule_update_ha_state()
+
+    def trigger(self) -> None:
+        """Trigger the automation."""
+        self._automation.trigger()
 
     @property
-    def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._automation.is_active
+    def is_on(self) -> bool:
+        """Return True if the automation is enabled."""
+        return bool(self._automation.enabled)

@@ -1,0 +1,7 @@
+{
+  "services": {
+    "reboot": {
+      "service": "mdi:restart"
+    }
+  }
+}

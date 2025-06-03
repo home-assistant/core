@@ -1,87 +1,51 @@
 """Support for ASUSWRT devices."""
-import logging
 
-from aioasuswrt.asuswrt import AsusWrt
-import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MODE,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_PROTOCOL,
-    CONF_USERNAME,
-)
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+from .router import AsusWrtRouter
 
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
-CONF_PUB_KEY = "pub_key"
-CONF_REQUIRE_IP = "require_ip"
-CONF_SENSORS = "sensors"
-CONF_SSH_KEY = "ssh_key"
-
-DOMAIN = "asuswrt"
-DATA_ASUSWRT = DOMAIN
-DEFAULT_SSH_PORT = 22
-
-SECRET_GROUP = "Password or SSH Key"
-SENSOR_TYPES = ["upload_speed", "download_speed", "download", "upload"]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_PROTOCOL, default="ssh"): vol.In(["ssh", "telnet"]),
-                vol.Optional(CONF_MODE, default="router"): vol.In(["router", "ap"]),
-                vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
-                vol.Optional(CONF_REQUIRE_IP, default=True): cv.boolean,
-                vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
-                vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
-                vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile,
-                vol.Optional(CONF_SENSORS): vol.All(
-                    cv.ensure_list, [vol.In(SENSOR_TYPES)]
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+type AsusWrtConfigEntry = ConfigEntry[AsusWrtRouter]
 
 
-async def async_setup(hass, config):
-    """Set up the asuswrt component."""
+async def async_setup_entry(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> bool:
+    """Set up AsusWrt platform."""
 
-    conf = config[DOMAIN]
+    router = AsusWrtRouter(hass, entry)
+    await router.setup()
 
-    api = AsusWrt(
-        conf[CONF_HOST],
-        conf.get(CONF_PORT),
-        conf.get(CONF_PROTOCOL) == "telnet",
-        conf[CONF_USERNAME],
-        conf.get(CONF_PASSWORD, ""),
-        conf.get("ssh_key", conf.get("pub_key", "")),
-        conf.get(CONF_MODE),
-        conf.get(CONF_REQUIRE_IP),
+    router.async_on_close(entry.add_update_listener(update_listener))
+
+    async def async_close_connection(event: Event) -> None:
+        """Close AsusWrt connection on HA Stop."""
+        await router.close()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
     )
 
-    await api.connection.async_connect()
-    if not api.is_connected:
-        _LOGGER.error("Unable to setup asuswrt component")
-        return False
+    entry.runtime_data = router
 
-    hass.data[DATA_ASUSWRT] = api
-
-    hass.async_create_task(
-        async_load_platform(
-            hass, "sensor", DOMAIN, config[DOMAIN].get(CONF_SENSORS), config
-        )
-    )
-    hass.async_create_task(
-        async_load_platform(hass, "device_tracker", DOMAIN, {}, config)
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        router = entry.runtime_data
+        await router.close()
+
+    return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: AsusWrtConfigEntry) -> None:
+    """Update when config_entry options update."""
+    router = entry.runtime_data
+
+    if router.update_options(entry.options):
+        await hass.config_entries.async_reload(entry.entry_id)

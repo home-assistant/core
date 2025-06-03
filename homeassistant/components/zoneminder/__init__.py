@@ -1,6 +1,8 @@
 """Support for ZoneMinder."""
+
 import logging
 
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 from zoneminder.zm import ZoneMinder
 
@@ -13,9 +15,12 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +55,7 @@ SET_RUN_STATE_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ZoneMinder component."""
 
     hass.data[DOMAIN] = {}
@@ -58,13 +63,10 @@ def setup(hass, config):
     success = True
 
     for conf in config[DOMAIN]:
-        if conf[CONF_SSL]:
-            schema = "https"
-        else:
-            schema = "http"
+        protocol = "https" if conf[CONF_SSL] else "http"
 
         host_name = conf[CONF_HOST]
-        server_origin = f"{schema}://{host_name}"
+        server_origin = f"{protocol}://{host_name}"
         zm_client = ZoneMinder(
             server_origin,
             conf.get(CONF_USERNAME),
@@ -75,9 +77,16 @@ def setup(hass, config):
         )
         hass.data[DOMAIN][host_name] = zm_client
 
-        success = zm_client.login() and success
+        try:
+            success = await hass.async_add_executor_job(zm_client.login) and success
+        except RequestsConnectionError as ex:
+            _LOGGER.error(
+                "ZoneMinder connection failure to %s: %s",
+                host_name,
+                ex,
+            )
 
-    def set_active_state(call):
+    def set_active_state(call: ServiceCall) -> None:
         """Set the ZoneMinder run state to the given state name."""
         zm_id = call.data[ATTR_ID]
         state_name = call.data[ATTR_NAME]
@@ -90,12 +99,12 @@ def setup(hass, config):
                 state_name,
             )
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SET_RUN_STATE, set_active_state, schema=SET_RUN_STATE_SCHEMA
     )
 
     hass.async_create_task(
-        async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+        async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
     )
 
     return success

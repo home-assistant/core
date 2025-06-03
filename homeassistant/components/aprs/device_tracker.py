@@ -1,14 +1,20 @@
 """Support for APRS device tracking."""
 
+from __future__ import annotations
+
 import logging
 import threading
+from typing import Any
 
 import aprslib
 from aprslib import ConnectionError as AprsConnectionError, LoginError
 import geopy.distance
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
+    SeeCallback,
+)
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -19,7 +25,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 DOMAIN = "aprs"
@@ -31,6 +39,7 @@ ATTR_COURSE = "course"
 ATTR_COMMENT = "comment"
 ATTR_FROM = "from"
 ATTR_FORMAT = "format"
+ATTR_OBJECT_NAME = "object_name"
 ATTR_POS_AMBIGUITY = "posambiguity"
 ATTR_SPEED = "speed"
 
@@ -42,9 +51,9 @@ DEFAULT_TIMEOUT = 30.0
 
 FILTER_PORT = 14580
 
-MSG_FORMATS = ["compressed", "uncompressed", "mic-e"]
+MSG_FORMATS = ["compressed", "uncompressed", "mic-e", "object"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_CALLSIGNS): cv.ensure_list,
         vol.Required(CONF_USERNAME): cv.string,
@@ -57,10 +66,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def make_filter(callsigns: list) -> str:
     """Make a server-side filter from a list of callsigns."""
-    return " ".join("b/{0}".format(cs.upper()) for cs in callsigns)
+    return " ".join(f"b/{sign.upper()}" for sign in callsigns)
 
 
-def gps_accuracy(gps, posambiguity: int) -> int:
+def gps_accuracy(gps: tuple[float, float], posambiguity: int) -> int:
     """Calculate the GPS accuracy based on APRS posambiguity."""
 
     pos_a_map = {0: 0, 1: 1 / 600, 2: 1 / 60, 3: 1 / 6, 4: 1}
@@ -68,7 +77,7 @@ def gps_accuracy(gps, posambiguity: int) -> int:
         degrees = pos_a_map[posambiguity]
 
         gps2 = (gps[0], gps[1] + degrees)
-        dist_m = geopy.distance.distance(gps, gps2).m
+        dist_m: float = geopy.distance.distance(gps, gps2).m
 
         accuracy = round(dist_m)
     else:
@@ -78,18 +87,23 @@ def gps_accuracy(gps, posambiguity: int) -> int:
     return accuracy
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
+def setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    see: SeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the APRS tracker."""
-    callsigns = config.get(CONF_CALLSIGNS)
+    callsigns = config[CONF_CALLSIGNS]
     server_filter = make_filter(callsigns)
 
-    callsign = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    host = config.get(CONF_HOST)
-    timeout = config.get(CONF_TIMEOUT)
+    callsign = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    host = config[CONF_HOST]
+    timeout = config[CONF_TIMEOUT]
     aprs_listener = AprsListenerThread(callsign, password, host, server_filter, see)
 
-    def aprs_disconnect(event):
+    def aprs_disconnect(event: Event) -> None:
         """Stop the APRS connection."""
         aprs_listener.stop()
 
@@ -97,12 +111,12 @@ def setup_scanner(hass, config, see, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, aprs_disconnect)
 
     if not aprs_listener.start_event.wait(timeout):
-        _LOGGER.error("Timeout waiting for APRS to connect.")
-        return
+        _LOGGER.error("Timeout waiting for APRS to connect")
+        return False
 
     if not aprs_listener.start_success:
         _LOGGER.error(aprs_listener.start_message)
-        return
+        return False
 
     _LOGGER.debug(aprs_listener.start_message)
     return True
@@ -112,8 +126,13 @@ class AprsListenerThread(threading.Thread):
     """APRS message listener."""
 
     def __init__(
-        self, callsign: str, password: str, host: str, server_filter: str, see
-    ):
+        self,
+        callsign: str,
+        password: str,
+        host: str,
+        server_filter: str,
+        see: SeeCallback,
+    ) -> None:
         """Initialize the class."""
         super().__init__()
 
@@ -129,19 +148,19 @@ class AprsListenerThread(threading.Thread):
             self.callsign, passwd=password, host=self.host, port=FILTER_PORT
         )
 
-    def start_complete(self, success: bool, message: str):
+    def start_complete(self, success: bool, message: str) -> None:
         """Complete startup process."""
         self.start_message = message
         self.start_success = success
         self.start_event.set()
 
-    def run(self):
+    def run(self) -> None:
         """Connect to APRS and listen for data."""
         self.ais.set_filter(self.server_filter)
 
         try:
-            _LOGGER.info(
-                "Opening connection to %s with callsign %s.", self.host, self.callsign
+            _LOGGER.debug(
+                "Opening connection to %s with callsign %s", self.host, self.callsign
             )
             self.ais.connect()
             self.start_complete(
@@ -151,19 +170,22 @@ class AprsListenerThread(threading.Thread):
         except (AprsConnectionError, LoginError) as err:
             self.start_complete(False, str(err))
         except OSError:
-            _LOGGER.info(
-                "Closing connection to %s with callsign %s.", self.host, self.callsign
+            _LOGGER.debug(
+                "Closing connection to %s with callsign %s", self.host, self.callsign
             )
 
-    def stop(self):
+    def stop(self) -> None:
         """Close the connection to the APRS network."""
         self.ais.close()
 
-    def rx_msg(self, msg: dict):
+    def rx_msg(self, msg: dict[str, Any]) -> None:
         """Receive message and process if position."""
         _LOGGER.debug("APRS message received: %s", str(msg))
         if msg[ATTR_FORMAT] in MSG_FORMATS:
-            dev_id = slugify(msg[ATTR_FROM])
+            if msg[ATTR_FORMAT] == "object":
+                dev_id = slugify(msg[ATTR_OBJECT_NAME])
+            else:
+                dev_id = slugify(msg[ATTR_FROM])
             lat = msg[ATTR_LATITUDE]
             lon = msg[ATTR_LONGITUDE]
 
@@ -176,7 +198,7 @@ class AprsListenerThread(threading.Thread):
                     _LOGGER.warning(
                         "APRS message contained invalid posambiguity: %s", str(pos_amb)
                     )
-            for attr in [ATTR_ALTITUDE, ATTR_COMMENT, ATTR_COURSE, ATTR_SPEED]:
+            for attr in (ATTR_ALTITUDE, ATTR_COMMENT, ATTR_COURSE, ATTR_SPEED):
                 if attr in msg:
                     attrs[attr] = msg[attr]
 

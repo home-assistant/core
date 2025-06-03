@@ -1,13 +1,22 @@
 """Sensor for checking the status of London air."""
+
+from __future__ import annotations
+
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,6 +29,7 @@ AUTHORITIES = [
     "Barking and Dagenham",
     "Bexley",
     "Brent",
+    "Bromley",
     "Camden",
     "City of London",
     "Croydon",
@@ -27,10 +37,12 @@ AUTHORITIES = [
     "Enfield",
     "Greenwich",
     "Hackney",
+    "Hammersmith and Fulham",
     "Haringey",
     "Harrow",
     "Havering",
     "Hillingdon",
+    "Hounslow",
     "Islington",
     "Kensington and Chelsea",
     "Kingston",
@@ -46,12 +58,9 @@ AUTHORITIES = [
     "Westminster",
 ]
 
-URL = (
-    "http://api.erg.kcl.ac.uk/AirQuality/Hourly/"
-    "MonitoringIndex/GroupName=London/Json"
-)
+URL = "http://api.erg.kcl.ac.uk/AirQuality/Hourly/MonitoringIndex/GroupName=London/Json"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LOCATIONS, default=AUTHORITIES): vol.All(
             cv.ensure_list, [vol.In(AUTHORITIES)]
@@ -60,21 +69,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the London Air sensor."""
     data = APIData()
     data.update()
-    sensors = []
-    for name in config.get(CONF_LOCATIONS):
-        sensors.append(AirSensor(name, data))
 
-    add_entities(sensors, True)
+    add_entities((AirSensor(name, data) for name in config[CONF_LOCATIONS]), True)
 
 
 class APIData:
     """Get the latest data for all authorities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the AirData object."""
         self.data = None
 
@@ -83,21 +94,21 @@ class APIData:
     def update(self):
         """Get the latest data from TFL."""
         response = requests.get(URL, timeout=10)
-        if response.status_code != 200:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.warning("Invalid response from API")
         else:
             self.data = parse_api_response(response.json())
 
 
-class AirSensor(Entity):
+class AirSensor(SensorEntity):
     """Single authority air sensor."""
 
     ICON = "mdi:cloud-outline"
 
-    def __init__(self, name, APIdata):
+    def __init__(self, name, api_data):
         """Initialize the sensor."""
         self._name = name
-        self._api_data = APIdata
+        self._api_data = api_data
         self._site_data = None
         self._state = None
         self._updated = None
@@ -108,7 +119,7 @@ class AirSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -123,23 +134,27 @@ class AirSensor(Entity):
         return self.ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         attrs["updated"] = self._updated
-        attrs["sites"] = len(self._site_data)
+        attrs["sites"] = len(self._site_data) if self._site_data is not None else 0
         attrs["data"] = self._site_data
         return attrs
 
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
+        sites_status: list = []
         self._api_data.update()
-        self._site_data = self._api_data.data[self._name]
-        self._updated = self._site_data[0]["updated"]
-        sites_status = []
-        for site in self._site_data:
-            if site["pollutants_status"] != "no_species_data":
-                sites_status.append(site["pollutants_status"])
+        if self._api_data.data:
+            self._site_data = self._api_data.data[self._name]
+            self._updated = self._site_data[0]["updated"]
+            sites_status.extend(
+                site["pollutants_status"]
+                for site in self._site_data
+                if site["pollutants_status"] != "no_species_data"
+            )
+
         if sites_status:
             self._state = max(set(sites_status), key=sites_status.count)
         else:
@@ -158,7 +173,7 @@ def parse_species(species_data):
             species_dict["quality"] = species["@AirQualityBand"]
             species_dict["index"] = species["@AirQualityIndex"]
             species_dict["summary"] = (
-                species_dict["code"] + " is " + species_dict["quality"]
+                f"{species_dict['code']} is {species_dict['quality']}"
             )
             parsed_species_data.append(species_dict)
             quality_list.append(species_dict["quality"])
@@ -209,11 +224,12 @@ def parse_api_response(response):
     for authority in AUTHORITIES:
         for entry in response["HourlyAirQualityIndex"]["LocalAuthority"]:
             if entry["@LocalAuthorityName"] == authority:
-
-                if isinstance(entry["Site"], dict):
-                    entry_sites_data = [entry["Site"]]
-                else:
-                    entry_sites_data = entry["Site"]
+                entry_sites_data = []
+                if "Site" in entry:
+                    if isinstance(entry["Site"], dict):
+                        entry_sites_data = [entry["Site"]]
+                    else:
+                        entry_sites_data = entry["Site"]
 
                 data[authority] = parse_site(entry_sites_data)
 

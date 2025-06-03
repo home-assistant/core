@@ -1,0 +1,11 @@
+{
+  "domain": "pegel_online",
+  "name": "PEGELONLINE",
+  "codeowners": ["@mib1185"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pegel_online",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["aiopegelonline"],
+  "requirements": ["aiopegelonline==0.1.1"]
+}

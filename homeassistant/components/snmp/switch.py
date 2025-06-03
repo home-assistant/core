@@ -1,22 +1,40 @@
 """Support for SNMP enabled switch."""
-import logging
 
-from pyasn1.type.univ import Integer
+from __future__ import annotations
+
+import logging
+from typing import Any
+
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
-    ContextData,
     ObjectIdentity,
     ObjectType,
-    SnmpEngine,
     UdpTransportTarget,
     UsmUserData,
     getCmd,
     setCmd,
 )
+from pysnmp.proto.rfc1902 import (
+    Counter32,
+    Counter64,
+    Gauge32,
+    Integer,
+    Integer32,
+    IpAddress,
+    Null,
+    ObjectIdentifier,
+    OctetString,
+    Opaque,
+    TimeTicks,
+    Unsigned32,
+)
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -25,7 +43,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_AUTH_KEY,
@@ -34,16 +55,24 @@ from .const import (
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
+    CONF_VARTYPE,
     CONF_VERSION,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_HOST,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
+    DEFAULT_VARTYPE,
     DEFAULT_VERSION,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
+)
+from .util import (
+    CommandArgsType,
+    RequestArgsType,
+    async_create_command_cmd_args,
+    async_create_request_cmd_args,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +85,23 @@ DEFAULT_COMMUNITY = "private"
 DEFAULT_PAYLOAD_OFF = 0
 DEFAULT_PAYLOAD_ON = 1
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+MAP_SNMP_VARTYPES = {
+    "Counter32": Counter32,
+    "Counter64": Counter64,
+    "Gauge32": Gauge32,
+    "Integer32": Integer32,
+    "Integer": Integer,
+    "IpAddress": IpAddress,
+    "Null": Null,
+    # some work todo to support tuple ObjectIdentifier, this just supports str
+    "ObjectIdentifier": ObjectIdentifier,
+    "OctetString": OctetString,
+    "Opaque": Opaque,
+    "TimeTicks": TimeTicks,
+    "Unsigned32": Unsigned32,
+}
+
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BASEOID): cv.string,
         vol.Optional(CONF_COMMAND_OID): cv.string,
@@ -78,28 +123,57 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
             MAP_PRIV_PROTOCOLS
         ),
+        vol.Optional(CONF_VARTYPE, default=DEFAULT_VARTYPE): cv.string,
     }
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SNMP switch."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    name: str = config[CONF_NAME]
+    host: str = config[CONF_HOST]
+    port: int = config[CONF_PORT]
     community = config.get(CONF_COMMUNITY)
-    baseoid = config.get(CONF_BASEOID)
-    command_oid = config.get(CONF_COMMAND_OID)
-    command_payload_on = config.get(CONF_COMMAND_PAYLOAD_ON)
-    command_payload_off = config.get(CONF_COMMAND_PAYLOAD_OFF)
-    version = config.get(CONF_VERSION)
+    baseoid: str = config[CONF_BASEOID]
+    command_oid: str | None = config.get(CONF_COMMAND_OID)
+    command_payload_on: str | None = config.get(CONF_COMMAND_PAYLOAD_ON)
+    command_payload_off: str | None = config.get(CONF_COMMAND_PAYLOAD_OFF)
+    version: str = config[CONF_VERSION]
     username = config.get(CONF_USERNAME)
     authkey = config.get(CONF_AUTH_KEY)
-    authproto = config.get(CONF_AUTH_PROTOCOL)
+    authproto: str = config[CONF_AUTH_PROTOCOL]
     privkey = config.get(CONF_PRIV_KEY)
-    privproto = config.get(CONF_PRIV_PROTOCOL)
-    payload_on = config.get(CONF_PAYLOAD_ON)
-    payload_off = config.get(CONF_PAYLOAD_OFF)
+    privproto: str = config[CONF_PRIV_PROTOCOL]
+    payload_on: str = config[CONF_PAYLOAD_ON]
+    payload_off: str = config[CONF_PAYLOAD_OFF]
+    vartype: str = config[CONF_VARTYPE]
+
+    if version == "3":
+        if not authkey:
+            authproto = "none"
+        if not privkey:
+            privproto = "none"
+
+        auth_data = UsmUserData(
+            username,
+            authKey=authkey or None,
+            privKey=privkey or None,
+            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
+            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
+        )
+    else:
+        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
+
+    transport = UdpTransportTarget((host, port))
+    request_args = await async_create_request_cmd_args(
+        hass, auth_data, transport, baseoid
+    )
+    command_args = await async_create_command_cmd_args(hass, auth_data, transport)
 
     async_add_entities(
         [
@@ -107,107 +181,82 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name,
                 host,
                 port,
-                community,
                 baseoid,
                 command_oid,
-                version,
-                username,
-                authkey,
-                authproto,
-                privkey,
-                privproto,
                 payload_on,
                 payload_off,
                 command_payload_on,
                 command_payload_off,
+                vartype,
+                request_args,
+                command_args,
             )
         ],
         True,
     )
 
 
-class SnmpSwitch(SwitchDevice):
+class SnmpSwitch(SwitchEntity):
     """Representation of a SNMP switch."""
 
     def __init__(
         self,
-        name,
-        host,
-        port,
-        community,
-        baseoid,
-        commandoid,
-        version,
-        username,
-        authkey,
-        authproto,
-        privkey,
-        privproto,
-        payload_on,
-        payload_off,
-        command_payload_on,
-        command_payload_off,
-    ):
+        name: str,
+        host: str,
+        port: int,
+        baseoid: str,
+        commandoid: str | None,
+        payload_on: str,
+        payload_off: str,
+        command_payload_on: str | None,
+        command_payload_off: str | None,
+        vartype: str,
+        request_args: RequestArgsType,
+        command_args: CommandArgsType,
+    ) -> None:
         """Initialize the switch."""
 
-        self._name = name
+        self._attr_name = name
         self._baseoid = baseoid
+        self._vartype = vartype
 
         # Set the command OID to the base OID if command OID is unset
         self._commandoid = commandoid or baseoid
         self._command_payload_on = command_payload_on or payload_on
         self._command_payload_off = command_payload_off or payload_off
 
-        self._state = None
+        self._state: bool | None = None
         self._payload_on = payload_on
         self._payload_off = payload_off
+        self._target = UdpTransportTarget((host, port))
+        self._request_args = request_args
+        self._command_args = command_args
 
-        if version == "3":
-
-            if not authkey:
-                authproto = "none"
-            if not privkey:
-                privproto = "none"
-
-            self._request_args = [
-                SnmpEngine(),
-                UsmUserData(
-                    username,
-                    authKey=authkey or None,
-                    privKey=privkey or None,
-                    authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-                    privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
-                ),
-                UdpTransportTarget((host, port)),
-                ContextData(),
-            ]
-        else:
-            self._request_args = [
-                SnmpEngine(),
-                CommunityData(community, mpModel=SNMP_VERSIONS[version]),
-                UdpTransportTarget((host, port)),
-                ContextData(),
-            ]
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        if self._command_payload_on.isdigit():
-            await self._set(Integer(self._command_payload_on))
-        else:
-            await self._set(self._command_payload_on)
+        # If vartype set, use it - https://www.pysnmp.com/pysnmp/docs/api-reference.html#pysnmp.smi.rfc1902.ObjectType
+        await self._execute_command(self._command_payload_on)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        if self._command_payload_on.isdigit():
-            await self._set(Integer(self._command_payload_off))
-        else:
-            await self._set(self._command_payload_off)
+        await self._execute_command(self._command_payload_off)
 
-    async def async_update(self):
+    async def _execute_command(self, command: str) -> None:
+        # User did not set vartype and command is not a digit
+        if self._vartype == "none" and not self._command_payload_on.isdigit():
+            await self._set(command)
+        # User set vartype Null, command must be an empty string
+        elif self._vartype == "Null":
+            await self._set("")
+        # user did not set vartype but command is digit: defaulting to Integer
+        # or user did set vartype
+        else:
+            await self._set(MAP_SNMP_VARTYPES.get(self._vartype, Integer)(command))
+
+    async def async_update(self) -> None:
         """Update the state."""
-        errindication, errstatus, errindex, restable = await getCmd(
-            *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
-        )
+        get_result = await getCmd(*self._request_args)
+        errindication, errstatus, errindex, restable = get_result
 
         if errindication:
             _LOGGER.error("SNMP error: %s", errindication)
@@ -215,33 +264,33 @@ class SnmpSwitch(SwitchDevice):
             _LOGGER.error(
                 "SNMP error: %s at %s",
                 errstatus.prettyPrint(),
-                errindex and restable[-1][int(errindex) - 1] or "?",
+                (errindex and restable[-1][int(errindex) - 1]) or "?",
             )
         else:
             for resrow in restable:
-                if resrow[-1] == self._payload_on:
+                if resrow[-1] == self._payload_on or resrow[-1] == Integer(
+                    self._payload_on
+                ):
                     self._state = True
-                elif resrow[-1] == Integer(self._payload_on):
-                    self._state = True
-                elif resrow[-1] == self._payload_off:
-                    self._state = False
-                elif resrow[-1] == Integer(self._payload_off):
+                elif resrow[-1] == self._payload_off or resrow[-1] == Integer(
+                    self._payload_off
+                ):
                     self._state = False
                 else:
+                    _LOGGER.warning(
+                        "Invalid payload '%s' received for entity %s, state is unknown",
+                        resrow[-1],
+                        self.entity_id,
+                    )
                     self._state = None
 
     @property
-    def name(self):
-        """Return the switch's name."""
-        return self._name
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if switch is on; False if off. None if unknown."""
         return self._state
 
-    async def _set(self, value):
-
+    async def _set(self, value: Any) -> None:
+        """Set the state of the switch."""
         await setCmd(
-            *self._request_args, ObjectType(ObjectIdentity(self._commandoid), value)
+            *self._command_args, ObjectType(ObjectIdentity(self._commandoid), value)
         )

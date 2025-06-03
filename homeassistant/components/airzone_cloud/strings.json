@@ -1,0 +1,91 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "id": "Installation",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "air_demand": {
+        "name": "Air demand"
+      },
+      "air_quality_active": {
+        "name": "Air Quality active"
+      },
+      "floor_demand": {
+        "name": "Floor demand"
+      }
+    },
+    "select": {
+      "air_quality": {
+        "name": "Air Quality mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "[%key:common::state::auto%]"
+        }
+      },
+      "modes": {
+        "name": "Mode",
+        "state": {
+          "cool": "[%key:component::climate::entity_component::_::state::cool%]",
+          "dry": "[%key:component::climate::entity_component::_::state::dry%]",
+          "fan": "[%key:component::climate::entity_component::_::state::fan_only%]",
+          "heat": "[%key:component::climate::entity_component::_::state::heat%]",
+          "heat_cool": "[%key:component::climate::entity_component::_::state::heat_cool%]",
+          "stop": "Stop"
+        }
+      }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "free_memory": {
+        "name": "Free memory"
+      },
+      "indoor_exchanger_temp": {
+        "name": "Indoor exchanger temperature"
+      },
+      "indoor_return_temp": {
+        "name": "Indoor return temperature"
+      },
+      "indoor_work_temp": {
+        "name": "Indoor working temperature"
+      },
+      "outdoor_condenser_press": {
+        "name": "Outdoor condenser pressure"
+      },
+      "outdoor_discharge_temp": {
+        "name": "Outdoor discharge temperature"
+      },
+      "outdoor_electric_current": {
+        "name": "Outdoor electric current"
+      },
+      "outdoor_evaporator_press": {
+        "name": "Outdoor evaporator pressure"
+      },
+      "outdoor_exchanger_temp": {
+        "name": "Outdoor exchanger temperature"
+      },
+      "outdoor_temp": {
+        "name": "Outdoor temperature"
+      },
+      "thermostat_coverage": {
+        "name": "Signal percentage"
+      }
+    }
+  }
+}

@@ -1,190 +1,161 @@
 """Entity for Zigbee Home Automation."""
 
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
+from functools import partial
 import logging
-import time
+from typing import Any
 
-from homeassistant.core import callback
-from homeassistant.helpers import entity
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from propcache.api import cached_property
+from zha.mixins import LogMixin
+
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
+from homeassistant.core import State, callback
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from .core.const import (
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    DATA_ZHA,
-    DATA_ZHA_BRIDGE_ID,
-    DOMAIN,
-    SIGNAL_REMOVE,
-)
-from .core.helpers import LogMixin
+from .const import DOMAIN
+from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData, convert_zha_error_to_ha_error
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_SUFFIX = "entity_suffix"
-RESTART_GRACE_PERIOD = 7200  # 2 hours
 
+class ZHAEntity(LogMixin, RestoreEntity, Entity):
+    """ZHA eitity."""
 
-class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
-    """A base class for ZHA entities."""
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+    remove_future: asyncio.Future[Any]
 
-    def __init__(self, unique_id, zha_device, channels, skip_entity_id=False, **kwargs):
+    def __init__(self, entity_data: EntityData, *args, **kwargs) -> None:
         """Init ZHA entity."""
-        self._force_update = False
-        self._should_poll = False
-        self._unique_id = unique_id
-        ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
-        ch_names = [ch.cluster.ep_attribute for ch in channels]
-        ch_names = ", ".join(sorted(ch_names))
-        self._name = f"{zha_device.name} {ieeetail} {ch_names}"
-        self._state = None
-        self._device_state_attributes = {}
-        self._zha_device = zha_device
-        self.cluster_channels = {}
-        self._available = False
-        self._component = kwargs["component"]
-        self._unsubs = []
-        self.remove_future = None
-        for channel in channels:
-            self.cluster_channels[channel.name] = channel
+        super().__init__(*args, **kwargs)
+        self.entity_data: EntityData = entity_data
+        self._unsubs: list[Callable[[], None]] = []
+
+        if self.entity_data.entity.icon is not None:
+            # Only custom quirks will realistically set an icon
+            self._attr_icon = self.entity_data.entity.icon
+
+        meta = self.entity_data.entity.info_object
+        self._attr_unique_id = meta.unique_id
+
+        if meta.entity_category is not None:
+            self._attr_entity_category = EntityCategory(meta.entity_category)
+
+        self._attr_entity_registry_enabled_default = (
+            meta.entity_registry_enabled_default
+        )
+
+        if meta.translation_key is not None:
+            self._attr_translation_key = meta.translation_key
+
+    @cached_property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity."""
+        meta = self.entity_data.entity.info_object
+        if meta.primary:
+            self._attr_name = None
+            return super().name
+
+        original_name = super().name
+
+        if original_name not in (UNDEFINED, None) or meta.fallback_name is None:
+            return original_name
+
+        # This is to allow local development and to register niche devices, since
+        # their translation_key will probably never be added to `zha/strings.json`.
+        self._attr_name = meta.fallback_name
+        return super().name
 
     @property
-    def name(self):
-        """Return Entity's default name."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def zha_device(self):
-        """Return the zha device this entity is attached to."""
-        return self._zha_device
-
-    @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        return self._device_state_attributes
-
-    @property
-    def force_update(self) -> bool:
-        """Force update this entity."""
-        return self._force_update
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll state from device."""
-        return self._should_poll
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        zha_device_info = self._zha_device.device_info
-        ieee = zha_device_info["ieee"]
-        return {
-            "connections": {(CONNECTION_ZIGBEE, ieee)},
-            "identifiers": {(DOMAIN, ieee)},
-            ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
-            ATTR_MODEL: zha_device_info[ATTR_MODEL],
-            ATTR_NAME: zha_device_info[ATTR_NAME],
-            "via_device": (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
-        }
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Return entity availability."""
-        return self._available
+        return self.entity_data.entity.available
 
-    def async_set_available(self, available):
-        """Set entity availability."""
-        self._available = available
-        self.async_schedule_update_ha_state()
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description for device registry."""
+        zha_device_info = self.entity_data.device_proxy.device_info
+        ieee = zha_device_info["ieee"]
+        zha_gateway = self.entity_data.device_proxy.gateway_proxy.gateway
 
-    def async_update_state_attribute(self, key, value):
-        """Update a single device state attribute."""
-        self._device_state_attributes.update({key: value})
-        self.async_schedule_update_ha_state()
+        return DeviceInfo(
+            connections={(CONNECTION_ZIGBEE, ieee)},
+            identifiers={(DOMAIN, ieee)},
+            manufacturer=zha_device_info[ATTR_MANUFACTURER],
+            model=zha_device_info[ATTR_MODEL],
+            name=zha_device_info[ATTR_NAME],
+            via_device=(DOMAIN, str(zha_gateway.state.node_info.ieee)),
+        )
 
-    def async_set_state(self, state):
-        """Set the entity state."""
-        pass
+    @callback
+    def _handle_entity_events(self, event: Any) -> None:
+        """Entity state changed."""
+        self.debug("Handling event from entity: %s", event)
+        self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
-        await super().async_added_to_hass()
-        self.remove_future = asyncio.Future()
-        await self.async_check_recently_seen()
-        await self.async_accept_signal(
-            None,
-            "{}_{}".format(self.zha_device.available_signal, "entity"),
-            self.async_set_available,
-            signal_override=True,
+        self.remove_future = self.hass.loop.create_future()
+        self._unsubs.append(
+            self.entity_data.entity.on_all_events(self._handle_entity_events)
         )
-        await self.async_accept_signal(
-            None,
-            "{}_{}".format(SIGNAL_REMOVE, str(self.zha_device.ieee)),
-            self.async_remove,
-            signal_override=True,
+        remove_signal = (
+            f"{SIGNAL_REMOVE_ENTITIES}_group_{self.entity_data.group_proxy.group.group_id}"
+            if self.entity_data.is_group_entity
+            and self.entity_data.group_proxy is not None
+            else f"{SIGNAL_REMOVE_ENTITIES}_{self.entity_data.device_proxy.device.ieee}"
         )
-        self._zha_device.gateway.register_entity_reference(
-            self._zha_device.ieee,
+        self._unsubs.append(
+            async_dispatcher_connect(
+                self.hass,
+                remove_signal,
+                partial(self.async_remove, force_remove=True),
+            )
+        )
+        self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
             self.entity_id,
-            self._zha_device,
-            self.cluster_channels,
+            self.entity_data,
             self.device_info,
             self.remove_future,
         )
 
-    async def async_check_recently_seen(self):
-        """Check if the device was seen within the last 2 hours."""
-        last_state = await self.async_get_last_state()
-        if (
-            last_state
-            and self._zha_device.last_seen
-            and (time.time() - self._zha_device.last_seen < RESTART_GRACE_PERIOD)
-        ):
-            self.async_set_available(True)
-            if not self.zha_device.is_mains_powered:
-                # mains powered devices will get real time state
-                self.async_restore_last_state(last_state)
-            self._zha_device.set_available(True)
+        if (state := await self.async_get_last_state()) is None:
+            return
+
+        self.restore_external_state_attributes(state)
+
+    @callback
+    def restore_external_state_attributes(self, state: State) -> None:
+        """Restore ephemeral external state from Home Assistant back into ZHA."""
+
+        # Some operations rely on extra state that is not maintained in the ZCL
+        # attribute cache. Until ZHA is able to maintain its own persistent state (or
+        # provides a more generic hook to utilize HA to do this), we directly restore
+        # them.
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
         for unsub in self._unsubs[:]:
             unsub()
             self._unsubs.remove(unsub)
-        self.zha_device.gateway.remove_entity_reference(self)
+        await super().async_will_remove_from_hass()
         self.remove_future.set_result(True)
 
-    @callback
-    def async_restore_last_state(self, last_state):
-        """Restore previous state."""
-        pass
+    @convert_zha_error_to_ha_error
+    async def async_update(self) -> None:
+        """Update the entity."""
+        await self.entity_data.entity.async_update()
+        self.async_write_ha_state()
 
-    async def async_update(self):
-        """Retrieve latest state."""
-        for channel in self.cluster_channels.values():
-            if hasattr(channel, "async_update"):
-                await channel.async_update()
-
-    async def async_accept_signal(self, channel, signal, func, signal_override=False):
-        """Accept a signal from a channel."""
-        unsub = None
-        if signal_override:
-            unsub = async_dispatcher_connect(self.hass, signal, func)
-        else:
-            unsub = async_dispatcher_connect(
-                self.hass, f"{channel.unique_id}_{signal}", func
-            )
-        self._unsubs.append(unsub)
-
-    def log(self, level, msg, *args):
+    def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
         msg = f"%s: {msg}"
-        args = (self.entity_id,) + args
-        _LOGGER.log(level, msg, *args)
+        args = (self.entity_id, *args)
+        _LOGGER.log(level, msg, *args, **kwargs)

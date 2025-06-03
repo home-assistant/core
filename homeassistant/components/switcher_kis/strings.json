@@ -1,0 +1,103 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "credentials": {
+        "description": "Found a Switcher device that requires a token\nEnter your username and token\nFor more information see https://www.home-assistant.io/integrations/switcher_kis/#prerequisites",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "username": "The email address used to sign in to the Switcher app.",
+          "token": "The local control token received from Switcher."
+        }
+      },
+      "reauth_confirm": {
+        "description": "[%key:component::switcher_kis::config::step::credentials::description%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "username": "[%key:component::switcher_kis::config::step::credentials::data_description::username%]",
+          "token": "[%key:component::switcher_kis::config::step::credentials::data_description::token%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "assume_on": {
+        "name": "Assume on"
+      },
+      "assume_off": {
+        "name": "Assume off"
+      },
+      "vertical_swing_on": {
+        "name": "Vertical swing on"
+      },
+      "vertical_swing_off": {
+        "name": "Vertical swing off"
+      }
+    },
+    "cover": {
+      "cover": {
+        "name": "Cover {cover_id}"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "Light {light_id}"
+      }
+    },
+    "sensor": {
+      "remaining_time": {
+        "name": "Remaining time"
+      },
+      "auto_shutdown": {
+        "name": "Auto shutdown"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "multi_child_lock": {
+        "name": "Child lock {cover_id}"
+      }
+    }
+  },
+  "services": {
+    "set_auto_off": {
+      "name": "Set auto-off",
+      "description": "Updates Switcher device auto-off setting.",
+      "fields": {
+        "auto_off": {
+          "name": "Auto-off",
+          "description": "Time period string containing hours and minutes."
+        }
+      }
+    },
+    "turn_on_with_timer": {
+      "name": "Turn on with timer",
+      "description": "Turns on the Switcher device with timer.",
+      "fields": {
+        "timer_minutes": {
+          "name": "Timer",
+          "description": "Duration to turn on the Switcher."
+        }
+      }
+    }
+  }
+}

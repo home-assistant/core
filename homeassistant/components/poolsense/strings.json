@@ -1,0 +1,48 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ph_status": {
+        "name": "pH status"
+      },
+      "chlorine_status": {
+        "name": "Chlorine status"
+      }
+    },
+    "sensor": {
+      "chlorine": {
+        "name": "Chlorine"
+      },
+      "last_seen": {
+        "name": "Last seen"
+      },
+      "chlorine_high": {
+        "name": "Chlorine high"
+      },
+      "chlorine_low": {
+        "name": "Chlorine low"
+      },
+      "ph_high": {
+        "name": "pH high"
+      },
+      "ph_low": {
+        "name": "pH low"
+      }
+    }
+  }
+}

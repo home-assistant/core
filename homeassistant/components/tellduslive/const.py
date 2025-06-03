@@ -1,12 +1,6 @@
 """Consts used by TelldusLive."""
-from datetime import timedelta
 
-from homeassistant.const import (  # noqa: F401 pylint: disable=unused-import
-    ATTR_BATTERY_LEVEL,
-    CONF_HOST,
-    CONF_TOKEN,
-    DEVICE_DEFAULT_NAME,
-)
+from datetime import timedelta
 
 APPLICATION_NAME = "Home Assistant"
 
@@ -30,7 +24,6 @@ SCAN_INTERVAL = timedelta(minutes=1)
 
 ATTR_LAST_UPDATED = "time_last_updated"
 
-SIGNAL_UPDATE_ENTITY = "tellduslive_update"
 TELLDUS_DISCOVERY_NEW = "telldus_new_{}_{}"
 
 CLOUD_NAME = "Cloud API"

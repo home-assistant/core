@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "model": "Model"
+        }
+      },
+      "download": {
+        "title": "Downloading model"
+      }
+    },
+    "abort": {
+      "download_failed": "Model downloading failed"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "progress": {
+      "download": "Please wait while the model is downloaded, which may take a very long time. Check your Ollama server logs for more details."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "prompt": "Instructions",
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+          "max_history": "Max history messages",
+          "num_ctx": "Context window size",
+          "keep_alive": "Keep alive"
+        },
+        "data_description": {
+          "prompt": "Instruct how the LLM should respond. This can be a template.",
+          "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never.",
+          "num_ctx": "Maximum number of text tokens the model can process. Lower to reduce Ollama RAM, or increase for a large number of exposed entities."
+        }
+      }
+    }
+  }
+}

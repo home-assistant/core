@@ -1,112 +1,117 @@
 """Pushover platform for notify component."""
-import logging
 
-from pushover import Client, InitError, RequestError
-import requests
-import voluptuous as vol
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from pushover_complete import BadAPIRequestError, PushoverAPI
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import (
+    ATTR_ATTACHMENT,
+    ATTR_CALLBACK_URL,
+    ATTR_EXPIRE,
+    ATTR_HTML,
+    ATTR_PRIORITY,
+    ATTR_RETRY,
+    ATTR_SOUND,
+    ATTR_TIMESTAMP,
+    ATTR_URL,
+    ATTR_URL_TITLE,
+    CONF_USER_KEY,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ATTACHMENT = "attachment"
 
-CONF_USER_KEY = "user_key"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USER_KEY): cv.string, vol.Required(CONF_API_KEY): cv.string}
-)
-
-
-def get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> PushoverNotificationService | None:
     """Get the Pushover notification service."""
-    try:
-        return PushoverNotificationService(
-            hass, config[CONF_USER_KEY], config[CONF_API_KEY]
-        )
-    except InitError:
-        _LOGGER.error("Wrong API key supplied")
+    if discovery_info is None:
         return None
+    pushover_api: PushoverAPI = hass.data[DOMAIN][discovery_info["entry_id"]]
+    return PushoverNotificationService(
+        hass, pushover_api, discovery_info[CONF_USER_KEY]
+    )
 
 
 class PushoverNotificationService(BaseNotificationService):
     """Implement the notification service for Pushover."""
 
-    def __init__(self, hass, user_key, api_token):
+    def __init__(
+        self, hass: HomeAssistant, pushover: PushoverAPI, user_key: str
+    ) -> None:
         """Initialize the service."""
         self._hass = hass
         self._user_key = user_key
-        self._api_token = api_token
-        self.pushover = Client(self._user_key, api_token=self._api_token)
+        self.pushover = pushover
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
-        # Make a copy and use empty dict if necessary
+
+        # Extract params from data dict
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = dict(kwargs.get(ATTR_DATA) or {})
+        url = data.get(ATTR_URL)
+        url_title = data.get(ATTR_URL_TITLE)
+        priority = data.get(ATTR_PRIORITY)
+        retry = data.get(ATTR_RETRY)
+        expire = data.get(ATTR_EXPIRE)
+        callback_url = data.get(ATTR_CALLBACK_URL)
+        timestamp = data.get(ATTR_TIMESTAMP)
+        sound = data.get(ATTR_SOUND)
+        html = 1 if data.get(ATTR_HTML, False) else 0
 
-        data["title"] = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-
-        # Check for attachment.
-        if ATTR_ATTACHMENT in data:
-            # If attachment is a URL, use requests to open it as a stream.
-            if data[ATTR_ATTACHMENT].startswith("http"):
+        # Check for attachment
+        if (image := data.get(ATTR_ATTACHMENT)) is not None:
+            # Only allow attachments from whitelisted paths, check valid path
+            if self._hass.config.is_allowed_path(data[ATTR_ATTACHMENT]):
+                # try to open it as a normal file.
                 try:
-                    response = requests.get(
-                        data[ATTR_ATTACHMENT], stream=True, timeout=5
-                    )
-                    if response.status_code == 200:
-                        # Replace the attachment identifier with file object.
-                        data[ATTR_ATTACHMENT] = response.content
-                    else:
-                        _LOGGER.error(
-                            "Failed to download image %s, response code: %d",
-                            data[ATTR_ATTACHMENT],
-                            response.status_code,
-                        )
-                        # Remove attachment key to send without attachment.
-                        del data[ATTR_ATTACHMENT]
-                except requests.exceptions.RequestException as ex_val:
+                    # pylint: disable-next=consider-using-with
+                    file_handle = open(data[ATTR_ATTACHMENT], "rb")
+                    # Replace the attachment identifier with file object.
+                    image = file_handle
+                except OSError as ex_val:
                     _LOGGER.error(ex_val)
-                    # Remove attachment key to try sending without attachment
-                    del data[ATTR_ATTACHMENT]
-            else:
-                # Not a URL, check valid path first
-                if self._hass.config.is_allowed_path(data[ATTR_ATTACHMENT]):
-                    # try to open it as a normal file.
-                    try:
-                        file_handle = open(data[ATTR_ATTACHMENT], "rb")
-                        # Replace the attachment identifier with file object.
-                        data[ATTR_ATTACHMENT] = file_handle
-                    except OSError as ex_val:
-                        _LOGGER.error(ex_val)
-                        # Remove attachment key to send without attachment.
-                        del data[ATTR_ATTACHMENT]
-                else:
-                    _LOGGER.error("Path is not whitelisted")
                     # Remove attachment key to send without attachment.
-                    del data[ATTR_ATTACHMENT]
+                    image = None
+            else:
+                _LOGGER.error("Path is not whitelisted")
+                # Remove attachment key to send without attachment.
+                image = None
 
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not isinstance(targets, list):
-            targets = [targets]
-
-        for target in targets:
-            if target is not None:
-                data["device"] = target
-
-            try:
-                self.pushover.send_message(message, **data)
-            except ValueError as val_err:
-                _LOGGER.error(val_err)
-            except RequestError:
-                _LOGGER.exception("Could not send pushover notification")
+        try:
+            self.pushover.send_message(
+                self._user_key,
+                message,
+                ",".join(kwargs.get(ATTR_TARGET, [])),
+                title,
+                url,
+                url_title,
+                image,
+                priority,
+                retry,
+                expire,
+                callback_url,
+                timestamp,
+                sound,
+                html,
+            )
+        except BadAPIRequestError as err:
+            raise HomeAssistantError(str(err)) from err

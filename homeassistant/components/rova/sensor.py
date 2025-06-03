@@ -1,151 +1,83 @@
 """Support for Rova garbage calendar."""
 
-from datetime import datetime, timedelta
-import logging
+from __future__ import annotations
 
-from requests.exceptions import ConnectTimeout, HTTPError
-from rova.rova import Rova
-import voluptuous as vol
+from datetime import datetime
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    DEVICE_CLASS_TIMESTAMP,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-# Config for rova requests.
-CONF_ZIP_CODE = "zip_code"
-CONF_HOUSE_NUMBER = "house_number"
-CONF_HOUSE_NUMBER_SUFFIX = "house_number_suffix"
+from .const import DOMAIN
+from .coordinator import RovaCoordinator
 
-UPDATE_DELAY = timedelta(hours=12)
-SCAN_INTERVAL = timedelta(hours=12)
+ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=rova"}
 
-# Supported sensor types:
-# Key: [json_key, name, icon]
-SENSOR_TYPES = {
-    "bio": ["gft", "Biowaste", "mdi:recycle"],
-    "paper": ["papier", "Paper", "mdi:recycle"],
-    "plastic": ["pmd", "PET", "mdi:recycle"],
-    "residual": ["restafval", "Residual", "mdi:recycle"],
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ZIP_CODE): cv.string,
-        vol.Required(CONF_HOUSE_NUMBER): cv.string,
-        vol.Optional(CONF_HOUSE_NUMBER_SUFFIX, default=""): cv.string,
-        vol.Optional(CONF_NAME, default="Rova"): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=["bio"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-    }
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="gft",
+        translation_key="bio",
+    ),
+    SensorEntityDescription(
+        key="papier",
+        translation_key="paper",
+    ),
+    SensorEntityDescription(
+        key="pmd",
+        translation_key="plastic",
+    ),
+    SensorEntityDescription(
+        key="restafval",
+        translation_key="residual",
+    ),
 )
 
-_LOGGER = logging.getLogger(__name__)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add Rova entry."""
+    coordinator: RovaCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    assert entry.unique_id
+    unique_id = entry.unique_id
+
+    async_add_entities(
+        RovaSensor(unique_id, description, coordinator) for description in SENSOR_TYPES
+    )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Create the Rova data service and sensors."""
-
-    zip_code = config[CONF_ZIP_CODE]
-    house_number = config[CONF_HOUSE_NUMBER]
-    house_number_suffix = config[CONF_HOUSE_NUMBER_SUFFIX]
-    platform_name = config[CONF_NAME]
-
-    # Create new Rova object to  retrieve data
-    api = Rova(zip_code, house_number, house_number_suffix)
-
-    try:
-        if not api.is_rova_area():
-            _LOGGER.error("ROVA does not collect garbage in this area")
-            return
-    except (ConnectTimeout, HTTPError):
-        _LOGGER.error("Could not retrieve details from ROVA API")
-        return
-
-    # Create rova data service which will retrieve and update the data.
-    data_service = RovaData(api)
-
-    # Create a new sensor for each garbage type.
-    entities = []
-    for sensor_key in config[CONF_MONITORED_CONDITIONS]:
-        sensor = RovaSensor(platform_name, sensor_key, data_service)
-        entities.append(sensor)
-
-    add_entities(entities, True)
-
-
-class RovaSensor(Entity):
+class RovaSensor(CoordinatorEntity[RovaCoordinator], SensorEntity):
     """Representation of a Rova sensor."""
 
-    def __init__(self, platform_name, sensor_key, data_service):
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        unique_id: str,
+        description: SensorEntityDescription,
+        coordinator: RovaCoordinator,
+    ) -> None:
         """Initialize the sensor."""
-        self.sensor_key = sensor_key
-        self.platform_name = platform_name
-        self.data_service = data_service
-
-        self._state = None
-
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
-
-    @property
-    def name(self):
-        """Return the name."""
-        return f"{self.platform_name}_{self.sensor_key}"
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{unique_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
-    def icon(self):
-        """Return the sensor icon."""
-        return SENSOR_TYPES[self.sensor_key][2]
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_TIMESTAMP
-
-    @property
-    def state(self):
+    def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
-        return self._state
-
-    def update(self):
-        """Get the latest data from the sensor and update the state."""
-        self.data_service.update()
-        pickup_date = self.data_service.data.get(self._json_key)
-        if pickup_date is not None:
-            self._state = pickup_date.isoformat()
-
-
-class RovaData:
-    """Get and update the latest data from the Rova API."""
-
-    def __init__(self, api):
-        """Initialize the data object."""
-        self.api = api
-        self.data = {}
-
-    @Throttle(UPDATE_DELAY)
-    def update(self):
-        """Update the data from the Rova API."""
-
-        try:
-            items = self.api.get_calendar_items()
-        except (ConnectTimeout, HTTPError):
-            _LOGGER.error("Could not retrieve data, retry again later")
-            return
-
-        self.data = {}
-
-        for item in items:
-            date = datetime.strptime(item["Date"], "%Y-%m-%dT%H:%M:%S")
-            code = item["GarbageTypeCode"].lower()
-
-            if code not in self.data and date > datetime.now():
-                self.data[code] = date
-
-        _LOGGER.debug("Updated Rova calendar: %s", self.data)
+        return self.coordinator.data.get(self.entity_description.key)

@@ -1,0 +1,10 @@
+{
+  "domain": "flo",
+  "name": "Flo",
+  "codeowners": ["@dmulcahey"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/flo",
+  "iot_class": "cloud_polling",
+  "loggers": ["aioflo"],
+  "requirements": ["aioflo==2021.11.0"]
+}

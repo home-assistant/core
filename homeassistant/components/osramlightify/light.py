@@ -1,29 +1,33 @@
 """Support for Osram Lightify."""
+
+from __future__ import annotations
+
 import logging
 import random
-import socket
+from typing import Any
 
 from lightify import Lightify
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     EFFECT_RANDOM,
-    PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
-    Light,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
+    ColorMode,
+    LightEntity,
+    LightEntityFeature,
+    brightness_supported,
 )
 from homeassistant.const import CONF_HOST
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +45,7 @@ DEFAULT_ALLOW_LIGHTIFY_SWITCHES = True
 DEFAULT_INTERVAL_LIGHTIFY_STATUS = 5
 DEFAULT_INTERVAL_LIGHTIFY_CONF = 3600
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(
@@ -69,14 +73,18 @@ DEFAULT_BRIGHTNESS = 2
 DEFAULT_KELVIN = 2700
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Osram Lightify lights."""
     host = config[CONF_HOST]
     try:
         bridge = Lightify(host, log_level=logging.NOTSET)
-    except socket.error as err:
-        msg = "Error connecting to bridge: {} due to: {}".format(host, str(err))
-        _LOGGER.exception(msg)
+    except OSError:
+        _LOGGER.exception("Error connecting to bridge %s", host)
         return
 
     setup_bridge(bridge, add_entities, config)
@@ -170,7 +178,7 @@ def setup_bridge(bridge, add_entities, config):
         update_groups()
 
 
-class Luminary(Light):
+class Luminary(LightEntity):
     """Representation of Luminary Lights and Groups."""
 
     def __init__(self, luminary, update_func, changed):
@@ -180,14 +188,10 @@ class Luminary(Light):
         self._changed = changed
 
         self._unique_id = None
-        self._supported_features = []
         self._effect_list = []
         self._is_on = False
         self._available = True
-        self._min_mireds = None
-        self._max_mireds = None
         self._brightness = None
-        self._color_temp = None
         self._rgb_color = None
         self._device_attributes = None
 
@@ -198,17 +202,36 @@ class Luminary(Light):
         """Get a unique ID (not implemented)."""
         raise NotImplementedError
 
-    def _get_supported_features(self):
-        """Get list of supported features."""
-        features = 0
-        if "lum" in self._luminary.supported_features():
-            features = features | SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
-
+    def _get_supported_color_modes(self) -> set[ColorMode]:
+        """Get supported color modes."""
+        color_modes: set[ColorMode] = set()
         if "temp" in self._luminary.supported_features():
-            features = features | SUPPORT_COLOR_TEMP | SUPPORT_TRANSITION
+            color_modes.add(ColorMode.COLOR_TEMP)
 
         if "rgb" in self._luminary.supported_features():
-            features = features | SUPPORT_COLOR | SUPPORT_TRANSITION | SUPPORT_EFFECT
+            color_modes.add(ColorMode.HS)
+
+        if not color_modes and "lum" in self._luminary.supported_features():
+            color_modes.add(ColorMode.BRIGHTNESS)
+
+        if not color_modes:
+            color_modes.add(ColorMode.ONOFF)
+
+        return color_modes
+
+    def _get_supported_features(self) -> LightEntityFeature:
+        """Get list of supported features."""
+        features = LightEntityFeature(0)
+        if "lum" in self._luminary.supported_features():
+            features = features | LightEntityFeature.TRANSITION
+
+        if "temp" in self._luminary.supported_features():
+            features = features | LightEntityFeature.TRANSITION
+
+        if "rgb" in self._luminary.supported_features():
+            features = (
+                features | LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
+            )
 
         return features
 
@@ -231,11 +254,6 @@ class Luminary(Light):
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
     @property
-    def color_temp(self):
-        """Return the color temperature."""
-        return self._color_temp
-
-    @property
     def brightness(self):
         """Return brightness of the luminary (0..255)."""
         return self._brightness
@@ -246,24 +264,9 @@ class Luminary(Light):
         return self._is_on
 
     @property
-    def supported_features(self):
-        """List of supported features."""
-        return self._supported_features
-
-    @property
     def effect_list(self):
         """List of supported effects."""
         return self._effect_list
-
-    @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        return self._min_mireds
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return self._max_mireds
 
     @property
     def unique_id(self):
@@ -271,12 +274,12 @@ class Luminary(Light):
         return self._unique_id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return self._device_attributes
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
@@ -294,7 +297,7 @@ class Luminary(Light):
 
         return False
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         transition = int(kwargs.get(ATTR_TRANSITION, 0) * 10)
         if ATTR_EFFECT in kwargs:
@@ -305,12 +308,10 @@ class Luminary(Light):
             self._rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             self._luminary.set_rgb(*self._rgb_color, transition)
 
-        if ATTR_COLOR_TEMP in kwargs:
-            self._color_temp = kwargs[ATTR_COLOR_TEMP]
-            self._luminary.set_temperature(
-                int(color_util.color_temperature_mired_to_kelvin(self._color_temp)),
-                transition,
-            )
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            self._attr_color_temp_kelvin = color_temp_kelvin
+            self._luminary.set_temperature(color_temp_kelvin, transition)
 
         self._is_on = True
         if ATTR_BRIGHTNESS in kwargs:
@@ -319,7 +320,7 @@ class Luminary(Light):
         else:
             self._luminary.set_onoff(True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._is_on = False
         if ATTR_TRANSITION in kwargs:
@@ -334,35 +335,44 @@ class Luminary(Light):
         self._luminary = luminary
         self.update_static_attributes()
 
-    def update_static_attributes(self):
+    def update_static_attributes(self) -> None:
         """Update static attributes of the luminary."""
         self._unique_id = self._get_unique_id()
-        self._supported_features = self._get_supported_features()
+        self._attr_supported_color_modes = self._get_supported_color_modes()
+        self._attr_supported_features = self._get_supported_features()
         self._effect_list = self._get_effect_list()
-        if self._supported_features & SUPPORT_COLOR_TEMP:
-            self._min_mireds = color_util.color_temperature_kelvin_to_mired(
+        if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
+            self._attr_max_color_temp_kelvin = (
                 self._luminary.max_temp() or DEFAULT_KELVIN
             )
-            self._max_mireds = color_util.color_temperature_kelvin_to_mired(
+            self._attr_min_color_temp_kelvin = (
                 self._luminary.min_temp() or DEFAULT_KELVIN
             )
+        if len(self._attr_supported_color_modes) == 1:
+            # The light supports only a single color mode
+            self._attr_color_mode = list(self._attr_supported_color_modes)[0]
 
     def update_dynamic_attributes(self):
         """Update dynamic attributes of the luminary."""
         self._is_on = self._luminary.on()
         self._available = self._luminary.reachable() and not self._luminary.deleted()
-        if self._supported_features & SUPPORT_BRIGHTNESS:
+        if brightness_supported(self._attr_supported_color_modes):
             self._brightness = int(self._luminary.lum() * 2.55)
 
-        if self._supported_features & SUPPORT_COLOR_TEMP:
-            self._color_temp = color_util.color_temperature_kelvin_to_mired(
-                self._luminary.temp() or DEFAULT_KELVIN
-            )
+        if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
+            self._attr_color_temp_kelvin = self._luminary.temp() or DEFAULT_KELVIN
 
-        if self._supported_features & SUPPORT_COLOR:
+        if ColorMode.HS in self._attr_supported_color_modes:
             self._rgb_color = self._luminary.rgb()
 
-    def update(self):
+        if len(self._attr_supported_color_modes) > 1:
+            # The light supports hs + color temp, determine which one it is
+            if self._rgb_color == (0, 0, 0):
+                self._attr_color_mode = ColorMode.COLOR_TEMP
+            else:
+                self._attr_color_mode = ColorMode.HS
+
+    def update(self) -> None:
         """Synchronize state with bridge."""
         changed = self.update_func()
         if changed > self._changed:
@@ -381,8 +391,8 @@ class OsramLightifyLight(Luminary):
         """Update static attributes of the luminary."""
         super().update_static_attributes()
         attrs = {
-            "device_type": "{} ({})".format(
-                self._luminary.type_id(), self._luminary.devicename()
+            "device_type": (
+                f"{self._luminary.type_id()} ({self._luminary.devicename()})"
             ),
             "firmware_version": self._luminary.version(),
         }
@@ -404,13 +414,13 @@ class OsramLightifyGroup(Luminary):
         #       It should be something like "<gateway host>-<group.idx()>"
         #       For now keeping it as is for backward compatibility with existing
         #       users.
-        return "{}".format(self._luminary.lights())
+        return f"{self._luminary.lights()}"
 
-    def _get_supported_features(self):
+    def _get_supported_features(self) -> LightEntityFeature:
         """Get list of supported features."""
         features = super()._get_supported_features()
         if self._luminary.scenes():
-            features = features | SUPPORT_EFFECT
+            features |= LightEntityFeature.EFFECT
 
         return features
 

@@ -1,38 +1,32 @@
-"""CoolMasterNet platform to control of CoolMasteNet Climate Devices."""
+"""CoolMasterNet platform to control of CoolMasterNet Climate Devices."""
+
+from __future__ import annotations
 
 import logging
+from typing import Any
 
-from pycoolmasternet import CoolMasterNet
+from pycoolmasternet_async import SWING_MODES
 
-from homeassistant.components.climate import ClimateDevice
-from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_HOST,
-    CONF_PORT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SUPPORTED_MODES, DOMAIN
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+from .const import CONF_SUPPORTED_MODES
+from .coordinator import CoolmasterConfigEntry, CoolmasterDataUpdateCoordinator
+from .entity import CoolmasterEntity
 
 CM_TO_HA_STATE = {
-    "heat": HVAC_MODE_HEAT,
-    "cool": HVAC_MODE_COOL,
-    "auto": HVAC_MODE_HEAT_COOL,
-    "dry": HVAC_MODE_DRY,
-    "fan": HVAC_MODE_FAN_ONLY,
+    "heat": HVACMode.HEAT,
+    "cool": HVACMode.COOL,
+    "auto": HVACMode.HEAT_COOL,
+    "dry": HVACMode.DRY,
+    "fan": HVACMode.FAN_ONLY,
 }
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
@@ -42,147 +36,138 @@ FAN_MODES = ["low", "med", "high", "auto"]
 _LOGGER = logging.getLogger(__name__)
 
 
-def _build_entity(device, supported_modes):
-    _LOGGER.debug("Found device %s", device.uid)
-    return CoolmasterClimate(device, supported_modes)
-
-
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: CoolmasterConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the CoolMasterNet climate platform."""
-    supported_modes = config_entry.data.get(CONF_SUPPORTED_MODES)
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
-    cool = CoolMasterNet(host, port=port)
-    devices = await hass.async_add_executor_job(cool.devices)
+    coordinator = config_entry.runtime_data
+    supported_modes: list[str] = config_entry.data[CONF_SUPPORTED_MODES]
+    async_add_entities(
+        CoolmasterClimate(
+            coordinator, unit_id, [HVACMode(mode) for mode in supported_modes]
+        )
+        for unit_id in coordinator.data
+    )
 
-    all_devices = [_build_entity(device, supported_modes) for device in devices]
 
-    async_add_devices(all_devices, True)
-
-
-class CoolmasterClimate(ClimateDevice):
+class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     """Representation of a coolmaster climate device."""
 
-    def __init__(self, device, supported_modes):
+    _attr_name = None
+
+    def __init__(
+        self,
+        coordinator: CoolmasterDataUpdateCoordinator,
+        unit_id: str,
+        supported_modes: list[HVACMode],
+    ) -> None:
         """Initialize the climate device."""
-        self._device = device
-        self._uid = device.uid
-        self._hvac_modes = supported_modes
-        self._hvac_mode = None
-        self._target_temperature = None
-        self._current_temperature = None
-        self._current_fan_mode = None
-        self._current_operation = None
-        self._on = None
-        self._unit = None
-
-    def update(self):
-        """Pull state from CoolMasterNet."""
-        status = self._device.status
-        self._target_temperature = status["thermostat"]
-        self._current_temperature = status["temperature"]
-        self._current_fan_mode = status["fan_speed"]
-        self._on = status["is_on"]
-
-        device_mode = status["mode"]
-        if self._on:
-            self._hvac_mode = CM_TO_HA_STATE[device_mode]
-        else:
-            self._hvac_mode = HVAC_MODE_OFF
-
-        if status["unit"] == "celsius":
-            self._unit = TEMP_CELSIUS
-        else:
-            self._unit = TEMP_FAHRENHEIT
+        super().__init__(coordinator, unit_id)
+        self._attr_hvac_modes = supported_modes
+        self._attr_unique_id = unit_id
 
     @property
-    def device_info(self):
-        """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "CoolAutomation",
-            "model": "CoolMasterNet",
-        }
-
-    @property
-    def unique_id(self):
-        """Return unique ID for this device."""
-        return self._uid
-
-    @property
-    def supported_features(self):
+    def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
+        if self.swing_mode:
+            supported_features |= ClimateEntityFeature.SWING_MODE
+        return supported_features
 
     @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self.unique_id
-
-    @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return self._unit
+        if self._unit.temperature_unit == "celsius":
+            return UnitOfTemperature.CELSIUS
+
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._current_temperature
+        return self._unit.temperature
 
     @property
     def target_temperature(self):
         """Return the temperature we are trying to reach."""
-        return self._target_temperature
+        return self._unit.thermostat
 
     @property
     def hvac_mode(self):
         """Return hvac target hvac state."""
-        return self._hvac_mode
+        mode = self._unit.mode
+        if not self._unit.is_on:
+            return HVACMode.OFF
 
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return self._hvac_modes
+        return CM_TO_HA_STATE[mode]
 
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        return self._current_fan_mode
+        return self._unit.fan_speed
 
     @property
     def fan_modes(self):
         """Return the list of available fan modes."""
         return FAN_MODES
 
-    def set_temperature(self, **kwargs):
-        """Set new target temperatures."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
-            _LOGGER.debug("Setting temp of %s to %s", self.unique_id, str(temp))
-            self._device.set_thermostat(str(temp))
+    @property
+    def swing_mode(self) -> str | None:
+        """Return the swing mode setting."""
+        return self._unit.swing
 
-    def set_fan_mode(self, fan_mode):
+    @property
+    def swing_modes(self) -> list[str] | None:
+        """Return swing modes if supported."""
+        return SWING_MODES if self.swing_mode is not None else None
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperatures."""
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            _LOGGER.debug("Setting temp of %s to %s", self.unique_id, str(temp))
+            self._unit = await self._unit.set_thermostat(temp)
+            self.async_write_ha_state()
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id, fan_mode)
-        self._device.set_fan_speed(fan_mode)
+        self._unit = await self._unit.set_fan_speed(fan_mode)
+        self.async_write_ha_state()
 
-    def set_hvac_mode(self, hvac_mode):
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set new swing mode."""
+        _LOGGER.debug("Setting swing mode of %s to %s", self.unique_id, swing_mode)
+        try:
+            self._unit = await self._unit.set_swing(swing_mode)
+        except ValueError as error:
+            raise HomeAssistantError(error) from error
+        self.async_write_ha_state()
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         _LOGGER.debug("Setting operation mode of %s to %s", self.unique_id, hvac_mode)
 
-        if hvac_mode == HVAC_MODE_OFF:
-            self.turn_off()
+        if hvac_mode == HVACMode.OFF:
+            await self.async_turn_off()
         else:
-            self._device.set_mode(HA_STATE_TO_CM[hvac_mode])
-            self.turn_on()
+            self._unit = await self._unit.set_mode(HA_STATE_TO_CM[hvac_mode])
+            await self.async_turn_on()
 
-    def turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on."""
         _LOGGER.debug("Turning %s on", self.unique_id)
-        self._device.turn_on()
+        self._unit = await self._unit.turn_on()
+        self.async_write_ha_state()
 
-    def turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off."""
         _LOGGER.debug("Turning %s off", self.unique_id)
-        self._device.turn_off()
+        self._unit = await self._unit.turn_off()
+        self.async_write_ha_state()

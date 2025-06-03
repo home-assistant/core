@@ -1,0 +1,10 @@
+{
+  "domain": "rdw",
+  "name": "RDW",
+  "codeowners": ["@frenck", "@joostlek"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rdw",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["vehicle==2.2.2"]
+}

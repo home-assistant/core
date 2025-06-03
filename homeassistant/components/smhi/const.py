@@ -1,15 +1,21 @@
 """Constants in smhi component."""
+
+from datetime import timedelta
 import logging
+from typing import Final
 
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 
-ATTR_SMHI_CLOUDINESS = "cloudiness"
+ATTR_SMHI_THUNDER_PROBABILITY: Final = "thunder_probability"
 
 DOMAIN = "smhi"
 
 HOME_LOCATION_NAME = "Home"
+DEFAULT_NAME = "Weather"
 
 ENTITY_ID_SENSOR_FORMAT = WEATHER_DOMAIN + ".smhi_{}"
-ENTITY_ID_SENSOR_FORMAT_HOME = ENTITY_ID_SENSOR_FORMAT.format(HOME_LOCATION_NAME)
 
 LOGGER = logging.getLogger(__package__)
+
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=31)
+TIMEOUT = 10

@@ -1,16 +1,22 @@
 """Support for Irish Rail RTPI information."""
+
+from __future__ import annotations
+
 from datetime import timedelta
-import logging
+from typing import Any
 
 from pyirishrail.pyirishrail import IrishRailRTPI
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME, UnitOfTime
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_STATION = "Station"
 ATTR_ORIGIN = "Origin"
@@ -22,7 +28,6 @@ ATTR_DUE_AT = "Due at"
 ATTR_EXPECT_AT = "Expected at"
 ATTR_NEXT_UP = "Later Train"
 ATTR_TRAIN_TYPE = "Train type"
-ATTRIBUTION = "Data provided by Irish Rail"
 
 CONF_STATION = "station"
 CONF_DESTINATION = "destination"
@@ -30,12 +35,12 @@ CONF_DIRECTION = "direction"
 CONF_STOPS_AT = "stops_at"
 
 DEFAULT_NAME = "Next Train"
-ICON = "mdi:train"
+
 
 SCAN_INTERVAL = timedelta(minutes=2)
 TIME_STR_FORMAT = "%H:%M"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATION): cv.string,
         vol.Optional(CONF_DIRECTION): cv.string,
@@ -46,7 +51,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Irish Rail transport sensor."""
 
     station = config.get(CONF_STATION)
@@ -67,8 +77,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class IrishRailTransportSensor(Entity):
+class IrishRailTransportSensor(SensorEntity):
     """Implementation of an irish rail public transport sensor."""
+
+    _attr_attribution = "Data provided by Irish Rail"
+    _attr_icon = "mdi:train"
 
     def __init__(self, data, station, direction, destination, stops_at, name):
         """Initialize the sensor."""
@@ -87,22 +100,23 @@ class IrishRailTransportSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times:
             next_up = "None"
             if len(self._times) > 1:
-                next_up = self._times[1][ATTR_ORIGIN] + " to "
-                next_up += self._times[1][ATTR_DESTINATION] + " in "
-                next_up += self._times[1][ATTR_DUE_IN]
+                next_up = (
+                    f"{self._times[1][ATTR_ORIGIN]} to "
+                    f"{self._times[1][ATTR_DESTINATION]} in "
+                    f"{self._times[1][ATTR_DUE_IN]}"
+                )
 
             return {
-                ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_STATION: self._station,
                 ATTR_ORIGIN: self._times[0][ATTR_ORIGIN],
                 ATTR_DESTINATION: self._times[0][ATTR_DESTINATION],
@@ -114,18 +128,14 @@ class IrishRailTransportSensor(Entity):
                 ATTR_NEXT_UP: next_up,
                 ATTR_TRAIN_TYPE: self._times[0][ATTR_TRAIN_TYPE],
             }
+        return None
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return UnitOfTime.MINUTES
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the states."""
         self.data.update()
         self._times = self.data.info
@@ -184,9 +194,9 @@ class IrishRailTransportData:
                 ATTR_STATION: self.station,
                 ATTR_ORIGIN: "",
                 ATTR_DESTINATION: dest,
-                ATTR_DUE_IN: "n/a",
-                ATTR_DUE_AT: "n/a",
-                ATTR_EXPECT_AT: "n/a",
+                ATTR_DUE_IN: None,
+                ATTR_DUE_AT: None,
+                ATTR_EXPECT_AT: None,
                 ATTR_DIRECTION: direction,
                 ATTR_STOPS_AT: stops_at,
                 ATTR_TRAIN_TYPE: "",

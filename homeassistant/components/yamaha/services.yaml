@@ -1,12 +1,36 @@
 enable_output:
-  description: Enable or disable an output port
+  target:
+    entity:
+      integration: yamaha
+      domain: media_player
   fields:
-    entity_id:
-      description: Name(s) of entites to enable/disable port on.
-      example: 'media_player.yamaha'
     port:
-      description: Name of port to enable/disable.
-      example: 'hdmi1'
+      required: true
+      example: "hdmi1"
+      selector:
+        text:
     enabled:
-      description: Boolean indicating if port should be enabled or not.
-      example: true
+      required: true
+      selector:
+        boolean:
+menu_cursor:
+  target:
+    entity:
+      integration: yamaha
+      domain: media_player
+  fields:
+    cursor:
+      example: down
+      selector:
+        text:
+select_scene:
+  target:
+    entity:
+      integration: yamaha
+      domain: media_player
+  fields:
+    scene:
+      required: true
+      example: "TV Viewing"
+      selector:
+        text:

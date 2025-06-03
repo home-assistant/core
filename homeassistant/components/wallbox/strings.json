@@ -1,0 +1,117 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "station": "Station Serial Number",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "reauth_invalid": "Re-authentication failed; Serial Number does not match original"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "number": {
+      "maximum_charging_current": {
+        "name": "Maximum charging current"
+      },
+      "energy_price": {
+        "name": "Energy price"
+      },
+      "maximum_icp_current": {
+        "name": "Maximum ICP current"
+      }
+    },
+    "sensor": {
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "max_available_power": {
+        "name": "Max available power"
+      },
+      "charging_speed": {
+        "name": "Charging speed"
+      },
+      "added_range": {
+        "name": "Added range"
+      },
+      "added_energy": {
+        "name": "Added energy"
+      },
+      "added_green_energy": {
+        "name": "Added green energy"
+      },
+      "added_grid_energy": {
+        "name": "Added grid energy"
+      },
+      "added_discharged_energy": {
+        "name": "Discharged energy"
+      },
+      "cost": {
+        "name": "Cost"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "current_mode": {
+        "name": "Current mode"
+      },
+      "depot_price": {
+        "name": "Depot price"
+      },
+      "energy_price": {
+        "name": "Energy price"
+      },
+      "status_description": {
+        "name": "Status description"
+      },
+      "max_charging_current": {
+        "name": "Max charging current"
+      },
+      "icp_max_current": {
+        "name": "Max ICP current"
+      }
+    },
+    "switch": {
+      "pause_resume": {
+        "name": "Pause/resume"
+      }
+    },
+    "select": {
+      "ecosmart": {
+        "name": "Solar charging",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "eco_mode": "Eco mode",
+          "full_solar": "Full solar"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_failed": {
+      "message": "Error communicating with Wallbox API"
+    }
+  }
+}

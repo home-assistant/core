@@ -1,25 +1,84 @@
 new_task:
-  description: Create a new task and add it to a project.
   fields:
     content:
-      description: The name of the task.
+      required: true
       example: Pick up the mail.
+      selector:
+        text:
+    description:
+      selector:
+        text:
     project:
-      description: The name of the project this task should belong to. Defaults to Inbox.
       example: Errands
+      default: Inbox
+      selector:
+        text:
+    section:
+      example: Deliveries
+      selector:
+        text:
     labels:
-      description: Any labels that you want to apply to this task, separated by a comma.
       example: Chores,Delivieries
+      selector:
+        text:
+    assignee:
+      example: username
+      selector:
+        text:
     priority:
-      description: The priority of this task, from 1 (normal) to 4 (urgent).
-      example: 2
+      selector:
+        number:
+          min: 1
+          max: 4
     due_date_string:
-      description: The day this task is due, in natural language.
       example: Tomorrow
+      selector:
+        text:
     due_date_lang:
-      description: The language of due_date_string.
-      example: en
+      selector:
+        select:
+          options:
+            - "da"
+            - "de"
+            - "en"
+            - "es"
+            - "fr"
+            - "it"
+            - "ja"
+            - "ko"
+            - "nl"
+            - "pl"
+            - "pt"
+            - "ru"
+            - "sv"
+            - "zh"
     due_date:
-      description: The day this task is due, in format YYYY-MM-DD.
       example: "2019-10-22"
-
+      selector:
+        text:
+    reminder_date_string:
+      example: Tomorrow
+      selector:
+        text:
+    reminder_date_lang:
+      selector:
+        select:
+          options:
+            - "da"
+            - "de"
+            - "en"
+            - "es"
+            - "fr"
+            - "it"
+            - "ja"
+            - "ko"
+            - "nl"
+            - "pl"
+            - "pt"
+            - "ru"
+            - "sv"
+            - "zh"
+    reminder_date:
+      example: "2019-10-22T10:30:00"
+      selector:
+        text:

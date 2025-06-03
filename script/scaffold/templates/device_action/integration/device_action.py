@@ -1,5 +1,6 @@
-"""Provides device automations for NEW_NAME."""
-from typing import List, Optional
+"""Provides device actions for NEW_NAME."""
+
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -13,8 +14,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import entity_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 from . import DOMAIN
 
@@ -29,9 +29,11 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions for NEW_NAME devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     actions = []
 
     # TODO Read this comment and remove it.
@@ -42,38 +44,28 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
     # return zha_device.device_actions
 
     # Get all the integrations entities for this device
-    for entry in entity_registry.async_entries_for_device(registry, device_id):
+    for entry in er.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
 
         # Add actions for each entity that belongs to this integration
         # TODO add your own actions.
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turn_on",
-            }
-        )
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turn_off",
-            }
-        )
+        base_action = {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
+        actions.append({**base_action, CONF_TYPE: "turn_on"})
+        actions.append({**base_action, CONF_TYPE: "turn_off"})
 
     return actions
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Optional[Context]
+    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
-    config = ACTION_SCHEMA(config)
-
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "turn_on":

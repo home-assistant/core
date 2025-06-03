@@ -1,0 +1,161 @@
+{
+  "actionRules": [],
+  "battery": {
+    "level": 100,
+    "updated": "2021-03-01T12:05:00Z"
+  },
+  "connectivity": {
+    "ssid": "SOMESSID"
+  },
+  "deviceModel": "puck_v1",
+  "deviceType": "puck_oem",
+  "fwProperties": {
+    "alert_battery_active": false,
+    "alert_humidity_high_active": false,
+    "alert_humidity_high_count": 0,
+    "alert_humidity_low_active": false,
+    "alert_humidity_low_count": 1,
+    "alert_state": "inactive",
+    "alert_temperature_high_active": false,
+    "alert_temperature_high_count": 0,
+    "alert_temperature_low_active": false,
+    "alert_temperature_low_count": 0,
+    "alert_water_active": false,
+    "alert_water_count": 0,
+    "ap_mode_count": 1,
+    "beep_pattern": "off",
+    "button_click_count": 1,
+    "date": "2021-03-07T14:00:05.054Z",
+    "deep_sleep_count": 8229,
+    "device_boot_count": 25,
+    "device_boot_reason": "wakeup_timer",
+    "device_count": 8230,
+    "device_failed_count": 36,
+    "device_id": "1a2b3c4d5e6f",
+    "device_time_total": 405336,
+    "device_time_up": 1502,
+    "device_uuid": "32839",
+    "device_wakeup_count": 8254,
+    "flosense_shut_off_level": 2,
+    "fw_name": "1.1.15",
+    "fw_version": 10115,
+    "led_pattern": "led_blue_solid",
+    "limit_ota_battery_min": 30,
+    "pairing_state": "configured",
+    "reason": "heartbeat",
+    "serial_number": "111111111112",
+    "telemetry_battery_percent": 100,
+    "telemetry_battery_voltage": 2.9896278381347656,
+    "telemetry_count": 8224,
+    "telemetry_failed_count": 27,
+    "telemetry_humidity": 43.21965408325195,
+    "telemetry_rssi": 100,
+    "telemetry_temperature": 61.43144607543945,
+    "telemetry_water": false,
+    "timer_alarm_active": 10,
+    "timer_heartbeat_battery_low": 3600,
+    "timer_heartbeat_battery_ok": 1740,
+    "timer_heartbeat_last": 1740,
+    "timer_heartbeat_not_configured": 10,
+    "timer_heartbeat_retry_attempts": 3,
+    "timer_heartbeat_retry_delay": 600,
+    "timer_water_debounce": 2000,
+    "timer_wifi_ap_timeout": 600000,
+    "wifi_ap_ssid": "FloDetector-a123",
+    "wifi_sta_enc": "wpa2-psk",
+    "wifi_sta_failed_count": 21,
+    "wifi_sta_mac": "50:01:01:01:01:44",
+    "wifi_sta_ssid": "SOMESSID"
+  },
+  "fwVersion": "1.1.15",
+  "hardwareThresholds": {
+    "battery": {
+      "maxValue": 100,
+      "minValue": 0,
+      "okMax": 100,
+      "okMin": 20
+    },
+    "batteryEnabled": true,
+    "humidity": {
+      "maxValue": 100,
+      "minValue": 0,
+      "okMax": 85,
+      "okMin": 15
+    },
+    "humidityEnabled": true,
+    "tempC": {
+      "maxValue": 60,
+      "minValue": -17.77777777777778,
+      "okMax": 37.77777777777778,
+      "okMin": 0
+    },
+    "tempEnabled": true,
+    "tempF": {
+      "maxValue": 140,
+      "minValue": 0,
+      "okMax": 100,
+      "okMin": 32
+    }
+  },
+  "id": "32839",
+  "installStatus": {
+    "isInstalled": false
+  },
+  "isConnected": true,
+  "isPaired": true,
+  "lastHeardFromTime": "2021-03-07T14:05:00Z",
+  "location": {
+    "id": "mmnnoopp"
+  },
+  "macAddress": "1a2b3c4d5e6f",
+  "nickname": "Kitchen Sink",
+  "notifications": {
+    "pending": {
+      "alarmCount": [],
+      "critical": {
+        "count": 0,
+        "devices": {
+          "absolute": 0,
+          "count": 0
+        }
+      },
+      "criticalCount": 0,
+      "info": {
+        "count": 0,
+        "devices": {
+          "absolute": 0,
+          "count": 0
+        }
+      },
+      "infoCount": 0,
+      "warning": {
+        "count": 0,
+        "devices": {
+          "absolute": 0,
+          "count": 0
+        }
+      },
+      "warningCount": 0
+    }
+  },
+  "puckConfig": {
+    "configuredAt": "2020-09-01T18:15:12.216Z",
+    "isConfigured": true
+  },
+  "serialNumber": "111111111112",
+  "shutoff": {
+    "scheduledAt": "1970-01-01T00:00:00.000Z"
+  },
+  "systemMode": {
+    "isLocked": false,
+    "shouldInherit": true
+  },
+  "telemetry": {
+    "current": {
+      "humidity": 43,
+      "tempF": 61,
+      "updated": "2021-03-07T14:05:00Z"
+    }
+  },
+  "valve": {}
+}

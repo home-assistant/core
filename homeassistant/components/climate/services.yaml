@@ -1,93 +1,159 @@
 # Describes the format for available climate services
 
-set_aux_heat:
-  description: Turn auxiliary heater on/off for climate device.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-    aux_heat:
-      description: New value of axillary heater.
-      example: true
-
 set_preset_mode:
-  description: Set preset mode for climate device.
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.PRESET_MODE
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
     preset_mode:
-      description: New value of preset mode
-      example: 'away'
+      required: true
+      example: "away"
+      selector:
+        text:
 
 set_temperature:
-  description: Set target temperature of climate device.
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
     temperature:
-      description: New target temperature for HVAC.
-      example: 25
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
     target_temp_high:
-      description: New target high tempereature for HVAC.
-      example: 26
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
     target_temp_low:
-      description: New target low temperature for HVAC.
-      example: 20
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
     hvac_mode:
-      description: HVAC operation mode to set temperature to.
-      example: 'heat'
-
+      selector:
+        select:
+          options:
+            - "off"
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan_only"
+            - "heat_cool"
+            - "heat"
+          translation_key: hvac_mode
 set_humidity:
-  description: Set target humidity of climate device.
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_HUMIDITY
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
     humidity:
-      description: New target humidity for climate device.
-      example: 60
+      required: true
+      selector:
+        number:
+          min: 30
+          max: 99
+          unit_of_measurement: "%"
 
 set_fan_mode:
-  description: Set fan operation for climate device.
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.FAN_MODE
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.nest'
     fan_mode:
-      description: New value of fan mode.
-      example: On Low
+      required: true
+      example: "low"
+      selector:
+        text:
 
 set_hvac_mode:
-  description: Set HVAC operation mode for climate device.
+  target:
+    entity:
+      domain: climate
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.nest'
     hvac_mode:
-      description: New value of operation mode.
-      example: heat
-
+      selector:
+        select:
+          options:
+            - "off"
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan_only"
+            - "heat_cool"
+            - "heat"
+          translation_key: hvac_mode
 set_swing_mode:
-  description: Set swing operation for climate device.
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.SWING_MODE
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.nest'
     swing_mode:
-      description: New value of swing mode.
+      required: true
+      example: "on"
+      selector:
+        text:
+
+set_swing_horizontal_mode:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.SWING_HORIZONTAL_MODE
+  fields:
+    swing_horizontal_mode:
+      required: true
+      example: "on"
+      selector:
+        text:
 
 turn_on:
-  description: Turn climate device on.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TURN_ON
 
 turn_off:
-  description: Turn climate device off.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TURN_OFF
+
+toggle:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TURN_OFF
+        - climate.ClimateEntityFeature.TURN_ON

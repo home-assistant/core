@@ -1,0 +1,11 @@
+{
+  "domain": "ovo_energy",
+  "name": "OVO Energy",
+  "codeowners": ["@timmo001"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ovo_energy",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["ovoenergy"],
+  "requirements": ["ovoenergy==2.0.0"]
+}

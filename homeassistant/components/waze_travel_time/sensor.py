@@ -1,163 +1,123 @@
 """Support for Waze travel time sensor."""
+
+from __future__ import annotations
+
+import asyncio
 from datetime import timedelta
 import logging
-import re
+from typing import Any
 
-import WazeRouteCalculator
-import voluptuous as vol
+import httpx
+from pywaze.route_calculator import WazeRouteCalculator
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_NAME,
     CONF_REGION,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
+    UnitOfTime,
 )
-from homeassistant.helpers import location
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.location import find_coordinates
+
+from . import async_get_travel_times
+from .const import (
+    CONF_AVOID_FERRIES,
+    CONF_AVOID_SUBSCRIPTION_ROADS,
+    CONF_AVOID_TOLL_ROADS,
+    CONF_DESTINATION,
+    CONF_EXCL_FILTER,
+    CONF_INCL_FILTER,
+    CONF_ORIGIN,
+    CONF_REALTIME,
+    CONF_UNITS,
+    CONF_VEHICLE_TYPE,
+    DEFAULT_NAME,
+    DOMAIN,
+    SEMAPHORE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DESTINATION = "destination"
-ATTR_DURATION = "duration"
-ATTR_DISTANCE = "distance"
-ATTR_ORIGIN = "origin"
-ATTR_ROUTE = "route"
-
-ATTRIBUTION = "Powered by Waze"
-
-CONF_DESTINATION = "destination"
-CONF_ORIGIN = "origin"
-CONF_INCL_FILTER = "incl_filter"
-CONF_EXCL_FILTER = "excl_filter"
-CONF_REALTIME = "realtime"
-CONF_UNITS = "units"
-CONF_VEHICLE_TYPE = "vehicle_type"
-CONF_AVOID_TOLL_ROADS = "avoid_toll_roads"
-CONF_AVOID_SUBSCRIPTION_ROADS = "avoid_subscription_roads"
-CONF_AVOID_FERRIES = "avoid_ferries"
-
-DEFAULT_NAME = "Waze Travel Time"
-DEFAULT_REALTIME = True
-DEFAULT_VEHICLE_TYPE = "car"
-DEFAULT_AVOID_TOLL_ROADS = False
-DEFAULT_AVOID_SUBSCRIPTION_ROADS = False
-DEFAULT_AVOID_FERRIES = False
-
-ICON = "mdi:car"
-
-UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
-
-REGIONS = ["US", "NA", "EU", "IL", "AU"]
-VEHICLE_TYPES = ["car", "taxi", "motorcycle"]
-
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ORIGIN): cv.string,
-        vol.Required(CONF_DESTINATION): cv.string,
-        vol.Required(CONF_REGION): vol.In(REGIONS),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_INCL_FILTER): cv.string,
-        vol.Optional(CONF_EXCL_FILTER): cv.string,
-        vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
-        vol.Optional(CONF_VEHICLE_TYPE, default=DEFAULT_VEHICLE_TYPE): vol.In(
-            VEHICLE_TYPES
-        ),
-        vol.Optional(CONF_UNITS): vol.In(UNITS),
-        vol.Optional(
-            CONF_AVOID_TOLL_ROADS, default=DEFAULT_AVOID_TOLL_ROADS
-        ): cv.boolean,
-        vol.Optional(
-            CONF_AVOID_SUBSCRIPTION_ROADS, default=DEFAULT_AVOID_SUBSCRIPTION_ROADS
-        ): cv.boolean,
-        vol.Optional(CONF_AVOID_FERRIES, default=DEFAULT_AVOID_FERRIES): cv.boolean,
-    }
-)
+PARALLEL_UPDATES = 1
+
+SECONDS_BETWEEN_API_CALLS = 0.5
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Waze travel time sensor platform."""
-    destination = config.get(CONF_DESTINATION)
-    name = config.get(CONF_NAME)
-    origin = config.get(CONF_ORIGIN)
-    region = config.get(CONF_REGION)
-    incl_filter = config.get(CONF_INCL_FILTER)
-    excl_filter = config.get(CONF_EXCL_FILTER)
-    realtime = config.get(CONF_REALTIME)
-    vehicle_type = config.get(CONF_VEHICLE_TYPE)
-    avoid_toll_roads = config.get(CONF_AVOID_TOLL_ROADS)
-    avoid_subscription_roads = config.get(CONF_AVOID_SUBSCRIPTION_ROADS)
-    avoid_ferries = config.get(CONF_AVOID_FERRIES)
-    units = config.get(CONF_UNITS, hass.config.units.name)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up a Waze travel time sensor entry."""
+    destination = config_entry.data[CONF_DESTINATION]
+    origin = config_entry.data[CONF_ORIGIN]
+    region = config_entry.data[CONF_REGION]
+    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
 
     data = WazeTravelTimeData(
-        None,
-        None,
         region,
-        incl_filter,
-        excl_filter,
-        realtime,
-        units,
-        vehicle_type,
-        avoid_toll_roads,
-        avoid_subscription_roads,
-        avoid_ferries,
+        get_async_client(hass),
+        config_entry,
     )
 
-    sensor = WazeTravelTime(name, origin, destination, data)
+    sensor = WazeTravelTime(config_entry.entry_id, name, origin, destination, data)
 
-    add_entities([sensor])
-
-    # Wait until start event is sent to load this component.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, lambda _: sensor.update())
+    async_add_entities([sensor], False)
 
 
-def _get_location_from_attributes(state):
-    """Get the lat/long string from an states attributes."""
-    attr = state.attributes
-    return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
-
-
-class WazeTravelTime(Entity):
+class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
-    def __init__(self, name, origin, destination, waze_data):
+    _attr_attribution = "Powered by Waze"
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_device_info = DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        name="Waze",
+        identifiers={(DOMAIN, DOMAIN)},
+        configuration_url="https://www.waze.com",
+    )
+    _attr_translation_key = "waze_travel_time"
+
+    def __init__(
+        self,
+        unique_id: str,
+        name: str,
+        origin: str,
+        destination: str,
+        waze_data: WazeTravelTimeData,
+    ) -> None:
         """Initialize the Waze travel time sensor."""
-        self._name = name
+        self._attr_unique_id = unique_id
         self._waze_data = waze_data
+        self._attr_name = name
+        self._origin = origin
+        self._destination = destination
         self._state = None
-        self._origin_entity_id = None
-        self._destination_entity_id = None
 
-        # Attempt to find entity_id without finding address with period.
-        pattern = "(?<![a-zA-Z0-9 ])[a-z_]+[.][a-zA-Z0-9_]+"
-
-        if re.fullmatch(pattern, origin):
-            _LOGGER.debug("Found origin source entity %s", origin)
-            self._origin_entity_id = origin
+    async def async_added_to_hass(self) -> None:
+        """Handle when entity is added."""
+        if self.hass.state is not CoreState.running:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, self.first_update
+            )
         else:
-            self._waze_data.origin = origin
-
-        if re.fullmatch(pattern, destination):
-            _LOGGER.debug("Found destination source entity %s", destination)
-            self._destination_entity_id = destination
-        else:
-            self._waze_data.destination = destination
+            await self.first_update()
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if self._waze_data.duration is not None:
             return round(self._waze_data.duration)
@@ -165,175 +125,89 @@ class WazeTravelTime(Entity):
         return None
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return "min"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the last update."""
         if self._waze_data.duration is None:
             return None
 
-        res = {ATTR_ATTRIBUTION: ATTRIBUTION}
-        res[ATTR_DURATION] = self._waze_data.duration
-        res[ATTR_DISTANCE] = self._waze_data.distance
-        res[ATTR_ROUTE] = self._waze_data.route
-        res[ATTR_ORIGIN] = self._waze_data.origin
-        res[ATTR_DESTINATION] = self._waze_data.destination
-        return res
+        return {
+            "duration": self._waze_data.duration,
+            "distance": self._waze_data.distance,
+            "route": self._waze_data.route,
+            "origin": self._waze_data.origin,
+            "destination": self._waze_data.destination,
+        }
 
-    def _get_location_from_entity(self, entity_id):
-        """Get the location from the entity_id."""
-        state = self.hass.states.get(entity_id)
+    async def first_update(self, _=None) -> None:
+        """Run first update and write state."""
+        await self.async_update()
+        self.async_write_ha_state()
 
-        if state is None:
-            _LOGGER.error("Unable to find entity %s", entity_id)
-            return None
-
-        # Check if the entity has location attributes.
-        if location.has_location(state):
-            _LOGGER.debug("Getting %s location", entity_id)
-            return _get_location_from_attributes(state)
-
-        # Check if device is inside a zone.
-        zone_state = self.hass.states.get(f"zone.{state.state}")
-        if location.has_location(zone_state):
-            _LOGGER.debug(
-                "%s is in %s, getting zone location", entity_id, zone_state.entity_id
-            )
-            return _get_location_from_attributes(zone_state)
-
-        # If zone was not found in state then use the state as the location.
-        if entity_id.startswith("sensor."):
-            return state.state
-
-        # When everything fails just return nothing.
-        return None
-
-    def _resolve_zone(self, friendly_name):
-        """Get a lat/long from a zones friendly_name."""
-        states = self.hass.states.all()
-        for state in states:
-            if state.domain == "zone" and state.name == friendly_name:
-                return _get_location_from_attributes(state)
-
-        return friendly_name
-
-    def update(self):
+    async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
-        _LOGGER.debug("Fetching Route for %s", self._name)
-        # Get origin latitude and longitude from entity_id.
-        if self._origin_entity_id is not None:
-            self._waze_data.origin = self._get_location_from_entity(
-                self._origin_entity_id
-            )
-
-        # Get destination latitude and longitude from entity_id.
-        if self._destination_entity_id is not None:
-            self._waze_data.destination = self._get_location_from_entity(
-                self._destination_entity_id
-            )
-
-        # Get origin from zone name.
-        self._waze_data.origin = self._resolve_zone(self._waze_data.origin)
-
-        # Get destination from zone name.
-        self._waze_data.destination = self._resolve_zone(self._waze_data.destination)
-
-        self._waze_data.update()
+        _LOGGER.debug("Fetching Route for %s", self._attr_name)
+        self._waze_data.origin = find_coordinates(self.hass, self._origin)
+        self._waze_data.destination = find_coordinates(self.hass, self._destination)
+        await self.hass.data[DOMAIN][SEMAPHORE].acquire()
+        try:
+            await self._waze_data.async_update()
+            await asyncio.sleep(SECONDS_BETWEEN_API_CALLS)
+        finally:
+            self.hass.data[DOMAIN][SEMAPHORE].release()
 
 
 class WazeTravelTimeData:
     """WazeTravelTime Data object."""
 
     def __init__(
-        self,
-        origin,
-        destination,
-        region,
-        include,
-        exclude,
-        realtime,
-        units,
-        vehicle_type,
-        avoid_toll_roads,
-        avoid_subscription_roads,
-        avoid_ferries,
-    ):
+        self, region: str, client: httpx.AsyncClient, config_entry: ConfigEntry
+    ) -> None:
         """Set up WazeRouteCalculator."""
-
-        self._calc = WazeRouteCalculator
-
-        self.origin = origin
-        self.destination = destination
-        self.region = region
-        self.include = include
-        self.exclude = exclude
-        self.realtime = realtime
-        self.units = units
+        self.config_entry = config_entry
+        self.client = WazeRouteCalculator(region=region, client=client)
+        self.origin: str | None = None
+        self.destination: str | None = None
         self.duration = None
         self.distance = None
         self.route = None
-        self.avoid_toll_roads = avoid_toll_roads
-        self.avoid_subscription_roads = avoid_subscription_roads
-        self.avoid_ferries = avoid_ferries
 
-        # Currently WazeRouteCalc only supports PRIVATE, TAXI, MOTORCYCLE.
-        if vehicle_type.upper() == "CAR":
-            # Empty means PRIVATE for waze which translates to car.
-            self.vehicle_type = ""
-        else:
-            self.vehicle_type = vehicle_type.upper()
-
-    def update(self):
+    async def async_update(self):
         """Update WazeRouteCalculator Sensor."""
+        _LOGGER.debug(
+            "Getting update for origin: %s destination: %s",
+            self.origin,
+            self.destination,
+        )
         if self.origin is not None and self.destination is not None:
-            try:
-                params = self._calc.WazeRouteCalculator(
-                    self.origin,
-                    self.destination,
-                    self.region,
-                    self.vehicle_type,
-                    self.avoid_toll_roads,
-                    self.avoid_subscription_roads,
-                    self.avoid_ferries,
-                )
-                routes = params.calc_all_routes_info(real_time=self.realtime)
-
-                if self.include is not None:
-                    routes = {
-                        k: v
-                        for k, v in routes.items()
-                        if self.include.lower() in k.lower()
-                    }
-
-                if self.exclude is not None:
-                    routes = {
-                        k: v
-                        for k, v in routes.items()
-                        if self.exclude.lower() not in k.lower()
-                    }
-
-                route = list(routes)[0]
-
-                self.duration, distance = routes[route]
-
-                if self.units == CONF_UNIT_SYSTEM_IMPERIAL:
-                    # Convert to miles.
-                    self.distance = distance / 1.609
-                else:
-                    self.distance = distance
-
-                self.route = route
-            except self._calc.WRCError as exp:
-                _LOGGER.warning("Error on retrieving data: %s", exp)
+            # Grab options on every update
+            incl_filter = self.config_entry.options[CONF_INCL_FILTER]
+            excl_filter = self.config_entry.options[CONF_EXCL_FILTER]
+            realtime = self.config_entry.options[CONF_REALTIME]
+            vehicle_type = self.config_entry.options[CONF_VEHICLE_TYPE]
+            avoid_toll_roads = self.config_entry.options[CONF_AVOID_TOLL_ROADS]
+            avoid_subscription_roads = self.config_entry.options[
+                CONF_AVOID_SUBSCRIPTION_ROADS
+            ]
+            avoid_ferries = self.config_entry.options[CONF_AVOID_FERRIES]
+            routes = await async_get_travel_times(
+                self.client,
+                self.origin,
+                self.destination,
+                vehicle_type,
+                avoid_toll_roads,
+                avoid_subscription_roads,
+                avoid_ferries,
+                realtime,
+                self.config_entry.options[CONF_UNITS],
+                incl_filter,
+                excl_filter,
+            )
+            if routes:
+                route = routes[0]
+            else:
+                _LOGGER.warning("No routes found")
                 return
-            except KeyError:
-                _LOGGER.error("Error retrieving data from server")
-                return
+
+            self.duration = route.duration
+            self.distance = route.distance
+            self.route = route.name

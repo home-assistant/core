@@ -1,0 +1,32 @@
+test_service_1:
+  fields:
+    field_1:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: seconds
+    field_2:
+      required: true
+      selector:
+        select:
+          options:
+            - "off"
+            - "auto"
+            - "cool"
+    advanced_fields:
+      collapsed: true
+      fields:
+        field_3:
+          selector:
+            number:
+              min: 0
+              max: 24
+              unit_of_measurement: hours
+        field_4:
+          selector:
+            select:
+              options:
+                - "forward"
+                - "reverse"

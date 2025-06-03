@@ -1,0 +1,7 @@
+send:
+  fields:
+    event:
+      required: true
+      example: "0b11009e00e6116202020070"
+      selector:
+        text:

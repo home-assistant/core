@@ -1,45 +1,69 @@
 """Tests for the cloud binary sensor."""
-from unittest.mock import Mock
 
-from homeassistant.components.cloud.const import DISPATCHER_REMOTE_UPDATE
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
+
+from hass_nabucasa.const import DISPATCH_REMOTE_CONNECT, DISPATCH_REMOTE_DISCONNECT
+import pytest
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 
-async def test_remote_connection_sensor(hass):
-    """Test the remote connection sensor."""
-    from homeassistant.components.cloud import binary_sensor as bin_sensor
+@pytest.fixture(autouse=True)
+def mock_wait_until() -> Generator[None]:
+    """Mock WAIT_UNTIL_CHANGE to execute callback immediately."""
+    with patch("homeassistant.components.cloud.binary_sensor.WAIT_UNTIL_CHANGE", 0):
+        yield
 
-    bin_sensor.WAIT_UNTIL_CHANGE = 0
+
+async def test_remote_connection_sensor(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test the remote connection sensor."""
+    entity_id = "binary_sensor.remote_ui"
+    cloud.remote.certificate = None
 
     assert await async_setup_component(hass, "cloud", {"cloud": {}})
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.remote_ui") is None
+    assert hass.states.get(entity_id) is None
 
-    # Fake connection/discovery
-    org_cloud = hass.data["cloud"]
-    await org_cloud.iot._on_connect[-1]()
+    on_start_callback = cloud.register_on_start.call_args[0][0]
+    await on_start_callback()
 
-    # Mock test env
-    cloud = hass.data["cloud"] = Mock()
-    cloud.remote.certificate = None
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.remote_ui")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unavailable"
 
     cloud.remote.is_connected = False
     cloud.remote.certificate = object()
-    hass.helpers.dispatcher.async_dispatcher_send(DISPATCHER_REMOTE_UPDATE, {})
+    cloud.client.dispatcher_message(DISPATCH_REMOTE_DISCONNECT)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.remote_ui")
+    state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == "off"
 
     cloud.remote.is_connected = True
-    hass.helpers.dispatcher.async_dispatcher_send(DISPATCHER_REMOTE_UPDATE, {})
+    cloud.client.dispatcher_message(DISPATCH_REMOTE_CONNECT)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.remote_ui")
+    state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == "on"
+
+    # Test that a state is not set if the entity is removed.
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+
+    cloud.remote.is_connected = False
+    cloud.client.dispatcher_message(DISPATCH_REMOTE_DISCONNECT)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None

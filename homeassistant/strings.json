@@ -1,0 +1,164 @@
+{
+  "common": {
+    "action": {
+      "close": "Close",
+      "connect": "Connect",
+      "disable": "Disable",
+      "disconnect": "Disconnect",
+      "enable": "Enable",
+      "open": "Open",
+      "pause": "Pause",
+      "reload": "Reload",
+      "restart": "Restart",
+      "start": "Start",
+      "stop": "Stop",
+      "toggle": "Toggle",
+      "turn_off": "Turn off",
+      "turn_on": "Turn on"
+    },
+    "config_flow": {
+      "abort": {
+        "already_configured_account": "Account is already configured",
+        "already_configured_device": "Device is already configured",
+        "already_configured_location": "Location is already configured",
+        "already_configured_service": "Service is already configured",
+        "already_in_progress": "Configuration flow is already in progress",
+        "cloud_not_connected": "Not connected to Home Assistant Cloud.",
+        "no_devices_found": "No devices found on the network",
+        "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",
+        "oauth2_error": "Received invalid token data.",
+        "oauth2_failed": "Error while obtaining access token.",
+        "oauth2_missing_configuration": "The component is not configured. Please follow the documentation.",
+        "oauth2_missing_credentials": "The integration requires application credentials.",
+        "oauth2_no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+        "oauth2_timeout": "Timeout resolving OAuth token.",
+        "oauth2_unauthorized": "OAuth authorization error while obtaining access token.",
+        "oauth2_user_rejected_authorize": "Account linking rejected: {error}",
+        "reauth_successful": "Re-authentication was successful",
+        "reconfigure_successful": "Re-configuration was successful",
+        "single_instance_allowed": "Already configured. Only a single configuration possible.",
+        "unknown_authorize_url_generation": "Unknown error generating an authorize URL.",
+        "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages."
+      },
+      "create_entry": {
+        "authenticated": "Successfully authenticated"
+      },
+      "data": {
+        "access_token": "Access token",
+        "api_key": "API key",
+        "api_token": "API token",
+        "country": "Country",
+        "device": "Device",
+        "elevation": "Elevation",
+        "email": "Email",
+        "host": "Host",
+        "ip": "IP address",
+        "language": "Language",
+        "latitude": "Latitude",
+        "llm_hass_api": "Control Home Assistant",
+        "location": "Location",
+        "longitude": "Longitude",
+        "mode": "Mode",
+        "name": "Name",
+        "password": "Password",
+        "path": "Path",
+        "pin": "PIN code",
+        "port": "Port",
+        "ssl": "Uses an SSL certificate",
+        "url": "URL",
+        "usb_path": "USB device path",
+        "username": "Username",
+        "verify_ssl": "Verify SSL certificate"
+      },
+      "description": {
+        "confirm_setup": "Do you want to start setup?"
+      },
+      "error": {
+        "cannot_connect": "Failed to connect",
+        "invalid_access_token": "Invalid access token",
+        "invalid_api_key": "Invalid API key",
+        "invalid_auth": "Invalid authentication",
+        "invalid_host": "Invalid hostname or IP address",
+        "timeout_connect": "Timeout establishing connection",
+        "unknown": "Unexpected error"
+      },
+      "title": {
+        "oauth2_pick_implementation": "Pick authentication method",
+        "reauth": "Authentication expired for {name}",
+        "via_hassio_addon": "{name} via Home Assistant add-on"
+      }
+    },
+    "device_automation": {
+      "action_type": {
+        "toggle": "Toggle {entity_name}",
+        "turn_off": "Turn off {entity_name}",
+        "turn_on": "Turn on {entity_name}"
+      },
+      "condition_type": {
+        "is_off": "{entity_name} is off",
+        "is_on": "{entity_name} is on"
+      },
+      "extra_fields": {
+        "above": "Above",
+        "below": "Below",
+        "for": "Duration",
+        "to": "To",
+        "value": "Value",
+        "zone": "Zone"
+      },
+      "trigger_type": {
+        "changed_states": "{entity_name} turned on or off",
+        "turned_off": "{entity_name} turned off",
+        "turned_on": "{entity_name} turned on"
+      }
+    },
+    "generic": {
+      "model": "Model",
+      "ui_managed": "Managed via UI"
+    },
+    "state": {
+      "active": "Active",
+      "auto": "Auto",
+      "charging": "Charging",
+      "closed": "Closed",
+      "closing": "Closing",
+      "connected": "Connected",
+      "disabled": "Disabled",
+      "discharging": "Discharging",
+      "disconnected": "Disconnected",
+      "enabled": "Enabled",
+      "error": "Error",
+      "fault": "Fault",
+      "high": "High",
+      "home": "Home",
+      "idle": "Idle",
+      "locked": "Locked",
+      "low": "Low",
+      "manual": "Manual",
+      "medium": "Medium",
+      "no": "No",
+      "normal": "Normal",
+      "not_home": "Away",
+      "off": "Off",
+      "on": "On",
+      "open": "Open",
+      "opening": "Opening",
+      "paused": "Paused",
+      "standby": "Standby",
+      "stopped": "Stopped",
+      "unlocked": "Unlocked",
+      "very_high": "Very high",
+      "very_low": "Very low",
+      "yes": "Yes"
+    },
+    "time": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    }
+  }
+}

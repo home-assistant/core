@@ -1,58 +1,56 @@
 """Support for ESPHome binary sensors."""
-from typing import Optional
 
-from aioesphomeapi import BinarySensorInfo, BinarySensorState
+from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from functools import partial
 
-from . import EsphomeEntity, platform_async_setup_entry
+from aioesphomeapi import BinarySensorInfo, BinarySensorState, EntityInfo
 
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.core import callback
+from homeassistant.util.enum import try_parse_enum
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up ESPHome binary sensors based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        component_key="binary_sensor",
-        info_type=BinarySensorInfo,
-        entity_type=EsphomeBinarySensor,
-        state_type=BinarySensorState,
-    )
+from .entity import EsphomeEntity, platform_async_setup_entry
+
+PARALLEL_UPDATES = 0
 
 
-class EsphomeBinarySensor(EsphomeEntity, BinarySensorDevice):
+class EsphomeBinarySensor(
+    EsphomeEntity[BinarySensorInfo, BinarySensorState], BinarySensorEntity
+):
     """A binary sensor implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> BinarySensorInfo:
-        return super()._static_info
-
-    @property
-    def _state(self) -> Optional[BinarySensorState]:
-        return super()._state
-
-    @property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if self._static_info.is_status_binary_sensor:
             # Status binary sensors indicated connected state.
             # So in their case what's usually _availability_ is now state
             return self._entry_data.available
-        if self._state is None:
-            return None
-        if self._state.missing_state:
+        if not self._has_state or self._state.missing_state:
             return None
         return self._state.state
 
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._static_info.device_class
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        self._attr_device_class = try_parse_enum(
+            BinarySensorDeviceClass, self._static_info.device_class
+        )
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self._static_info.is_status_binary_sensor:
-            return True
-        return super().available
+        return self._static_info.is_status_binary_sensor or super().available
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=BinarySensorInfo,
+    entity_type=EsphomeBinarySensor,
+    state_type=BinarySensorState,
+)

@@ -1,0 +1,13 @@
+{
+  "accessCardId": "0021-1495-6572",
+  "receiverId": "0288 7745 5858",
+  "status": {
+    "code": 200,
+    "commandResult": 0,
+    "msg": "OK",
+    "query": "/info/getVersion"
+  },
+  "stbSoftwareVersion": "0x4ed7",
+  "systemTime": 1281625203,
+  "version": "1.2"
+}

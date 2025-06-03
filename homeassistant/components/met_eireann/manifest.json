@@ -1,0 +1,10 @@
+{
+  "domain": "met_eireann",
+  "name": "Met \u00c9ireann",
+  "codeowners": ["@DylanGore"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/met_eireann",
+  "iot_class": "cloud_polling",
+  "loggers": ["meteireann"],
+  "requirements": ["PyMetEireann==2024.11.0"]
+}

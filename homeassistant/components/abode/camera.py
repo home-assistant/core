@@ -1,87 +1,98 @@
 """Support for Abode Security System cameras."""
-from datetime import timedelta
-import logging
 
-import abodepy.helpers.constants as CONST
-import abodepy.helpers.timeline as TIMELINE
+from __future__ import annotations
+
+from datetime import timedelta
+from typing import Any, cast
+
+from jaraco.abode.devices.base import Device
+from jaraco.abode.devices.camera import Camera as AbodeCam
+from jaraco.abode.helpers import timeline
 import requests
+from requests.models import Response
 
 from homeassistant.components.camera import Camera
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle
 
-from . import AbodeDevice
-from .const import DOMAIN, SIGNAL_CAPTURE_IMAGE
+from . import AbodeSystem
+from .const import DOMAIN, LOGGER
+from .entity import AbodeDevice
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up Abode camera devices."""
-    data = hass.data[DOMAIN]
+    data: AbodeSystem = hass.data[DOMAIN]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA):
-        entities.append(AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeCamera(data, device, timeline.CAPTURE_IMAGE)
+        for device in data.abode.get_devices(generic_type="camera")
+    )
 
 
 class AbodeCamera(AbodeDevice, Camera):
     """Representation of an Abode camera."""
 
-    def __init__(self, data, device, event):
+    _device: AbodeCam
+    _attr_name = None
+
+    def __init__(self, data: AbodeSystem, device: Device, event: Event) -> None:
         """Initialize the Abode device."""
         AbodeDevice.__init__(self, data, device)
         Camera.__init__(self)
         self._event = event
-        self._response = None
+        self._response: Response | None = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe Abode events."""
         await super().async_added_to_hass()
 
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._data.abode.events.add_timeline_callback,
             self._event,
             self._capture_callback,
         )
 
-        signal = SIGNAL_CAPTURE_IMAGE.format(self.entity_id)
-        async_dispatcher_connect(self.hass, signal, self.capture)
+        signal = f"abode_camera_capture_{self.entity_id}"
+        self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.capture))
 
-    def capture(self):
+    def capture(self) -> bool:
         """Request a new image capture."""
-        return self._device.capture()
+        return cast(bool, self._device.capture())
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def refresh_image(self):
+    def refresh_image(self) -> None:
         """Find a new image on the timeline."""
         if self._device.refresh_image():
             self.get_image()
 
-    def get_image(self):
+    def get_image(self) -> None:
         """Attempt to download the most recent capture."""
         if self._device.image_url:
             try:
-                self._response = requests.get(self._device.image_url, stream=True)
+                self._response = requests.get(
+                    self._device.image_url, stream=True, timeout=10
+                )
 
                 self._response.raise_for_status()
             except requests.HTTPError as err:
-                _LOGGER.warning("Failed to get camera image: %s", err)
+                LOGGER.warning("Failed to get camera image: %s", err)
                 self._response = None
         else:
             self._response = None
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Get a camera image."""
         self.refresh_image()
 
@@ -90,8 +101,21 @@ class AbodeCamera(AbodeDevice, Camera):
 
         return None
 
-    def _capture_callback(self, capture):
+    def turn_on(self) -> None:
+        """Turn on camera."""
+        self._device.privacy_mode(False)
+
+    def turn_off(self) -> None:
+        """Turn off camera."""
+        self._device.privacy_mode(True)
+
+    def _capture_callback(self, capture: Any) -> None:
         """Update the image with the device then refresh device."""
         self._device.update_image_location(capture)
         self.get_image()
         self.schedule_update_ha_state()
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if on."""
+        return cast(bool, self._device.is_on)

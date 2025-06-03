@@ -1,0 +1,23 @@
+{
+  "errors": [
+    {
+      "message": "CatalogQuery/searchStore: Request failed with status code 400",
+      "locations": [
+        {
+          "line": 18,
+          "column": 9
+        }
+      ],
+      "correlationId": "e10ad58e-a4f9-4097-af5d-cafdbe0d8bbd",
+      "serviceResponse": "{\"errorCode\":\"errors.com.epicgames.catalog.invalid_country_code\",\"errorMessage\":\"Sorry the value you entered: en-US, does not appear to be a valid ISO country code.\",\"messageVars\":[\"en-US\"],\"numericErrorCode\":5222,\"originatingService\":\"com.epicgames.catalog.public\",\"intent\":\"prod\",\"errorStatus\":400}",
+      "stack": null,
+      "path": ["Catalog", "searchStore"]
+    }
+  ],
+  "data": {
+    "Catalog": {
+      "searchStore": null
+    }
+  },
+  "extensions": {}
+}

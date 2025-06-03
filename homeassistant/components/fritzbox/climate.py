@@ -1,209 +1,237 @@
-"""Support for AVM Fritz!Box smarthome thermostate devices."""
-import logging
+"""Support for AVM FRITZ!SmartHome thermostat devices."""
 
-import requests
+from __future__ import annotations
 
-from homeassistant.components.climate import ClimateDevice
-from homeassistant.components.climate.const import (
+from typing import Any
+
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+    PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import (
+from .const import (
     ATTR_STATE_BATTERY_LOW,
-    ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_HOLIDAY_MODE,
-    ATTR_STATE_LOCKED,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
-    DOMAIN as FRITZBOX_DOMAIN,
+    DOMAIN,
+    LOGGER,
 )
+from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
+from .entity import FritzBoxDeviceEntity
+from .model import ClimateExtraAttributes
+from .sensor import value_scheduled_preset
 
-_LOGGER = logging.getLogger(__name__)
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
-OPERATION_LIST = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
+PRESET_HOLIDAY = "holiday"
+PRESET_SUMMER = "summer"
+PRESET_MODES = [PRESET_ECO, PRESET_COMFORT, PRESET_BOOST]
+SUPPORTED_FEATURES = (
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
+)
 
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
 
-PRESET_MANUAL = "manual"
-
 # special temperatures for on/off in Fritz!Box API (modified by pyfritzhome)
 ON_API_TEMPERATURE = 127.0
 OFF_API_TEMPERATURE = 126.5
-ON_REPORT_SET_TEMPERATURE = 30.0
-OFF_REPORT_SET_TEMPERATURE = 0.0
+PRESET_API_HKR_STATE_MAPPING = {
+    PRESET_COMFORT: "comfort",
+    PRESET_BOOST: "on",
+    PRESET_ECO: "eco",
+}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Fritzbox smarthome thermostat platform."""
-    devices = []
-    fritz_list = hass.data[FRITZBOX_DOMAIN]
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: FritzboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
+    coordinator = entry.runtime_data
 
-    for fritz in fritz_list:
-        device_list = fritz.get_devices()
-        for device in device_list:
-            if device.has_thermostat:
-                devices.append(FritzboxThermostat(device, fritz))
+    @callback
+    def _add_entities(devices: set[str] | None = None) -> None:
+        """Add devices."""
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
+            return
+        async_add_entities(
+            FritzboxThermostat(coordinator, ain)
+            for ain in devices
+            if coordinator.data.devices[ain].has_thermostat
+        )
 
-    add_entities(devices)
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities(set(coordinator.data.devices))
 
 
-class FritzboxThermostat(ClimateDevice):
-    """The thermostat class for Fritzbox smarthome thermostates."""
+class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
+    """The thermostat class for FRITZ!SmartHome thermostats."""
 
-    def __init__(self, device, fritz):
+    _attr_max_temp = MAX_TEMPERATURE
+    _attr_min_temp = MIN_TEMPERATURE
+    _attr_precision = PRECISION_HALVES
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "thermostat"
+
+    def __init__(
+        self,
+        coordinator: FritzboxDataUpdateCoordinator,
+        ain: str,
+    ) -> None:
         """Initialize the thermostat."""
-        self._device = device
-        self._fritz = fritz
-        self._current_temperature = self._device.actual_temperature
-        self._target_temperature = self._device.target_temperature
-        self._comfort_temperature = self._device.comfort_temperature
-        self._eco_temperature = self._device.eco_temperature
+        self._attr_supported_features = SUPPORTED_FEATURES
+        self._attr_hvac_modes = HVAC_MODES
+        self._attr_preset_modes = PRESET_MODES
+        super().__init__(coordinator, ain)
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    @property
-    def available(self):
-        """Return if thermostat is available."""
-        return self._device.present
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device.name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement that is used."""
-        return TEMP_CELSIUS
-
-    @property
-    def precision(self):
-        """Return precision 0.5."""
-        return PRECISION_HALVES
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._current_temperature
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        if self._target_temperature == ON_API_TEMPERATURE:
-            return ON_REPORT_SET_TEMPERATURE
-        if self._target_temperature == OFF_API_TEMPERATURE:
-            return OFF_REPORT_SET_TEMPERATURE
-        return self._target_temperature
-
-    def set_temperature(self, **kwargs):
-        """Set new target temperature."""
-        if ATTR_HVAC_MODE in kwargs:
-            hvac_mode = kwargs.get(ATTR_HVAC_MODE)
-            self.set_hvac_mode(hvac_mode)
-        elif ATTR_TEMPERATURE in kwargs:
-            temperature = kwargs.get(ATTR_TEMPERATURE)
-            self._device.set_target_temperature(temperature)
-
-    @property
-    def hvac_mode(self):
-        """Return the current operation mode."""
-        if (
-            self._target_temperature == OFF_REPORT_SET_TEMPERATURE
-            or self._target_temperature == OFF_API_TEMPERATURE
-        ):
-            return HVAC_MODE_OFF
-
-        return HVAC_MODE_HEAT
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return OPERATION_LIST
-
-    def set_hvac_mode(self, hvac_mode):
-        """Set new operation mode."""
-        if hvac_mode == HVAC_MODE_OFF:
-            self.set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the HASS state machine."""
+        if self.data.holiday_active:
+            self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
+            self._attr_preset_modes = [PRESET_HOLIDAY]
+        elif self.data.summer_active:
+            self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
+            self._attr_preset_modes = [PRESET_SUMMER]
         else:
-            self.set_temperature(temperature=self._comfort_temperature)
+            self._attr_supported_features = SUPPORTED_FEATURES
+            self._attr_hvac_modes = HVAC_MODES
+            self._attr_preset_modes = PRESET_MODES
+        return super().async_write_ha_state()
 
     @property
-    def preset_mode(self):
+    def current_temperature(self) -> float:
+        """Return the current temperature."""
+        if self.data.has_temperature_sensor and self.data.temperature is not None:
+            return self.data.temperature  # type: ignore [no-any-return]
+        return self.data.actual_temperature  # type: ignore [no-any-return]
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the temperature we try to reach."""
+        if self.data.target_temperature in [ON_API_TEMPERATURE, OFF_API_TEMPERATURE]:
+            return None
+        return self.data.target_temperature  # type: ignore [no-any-return]
+
+    async def async_set_hkr_state(self, hkr_state: str) -> None:
+        """Set the state of the climate."""
+        await self.hass.async_add_executor_job(self.data.set_hkr_state, hkr_state, True)
+        await self.coordinator.async_refresh()
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        self.check_active_or_lock_mode()
+        if kwargs.get(ATTR_HVAC_MODE) is HVACMode.OFF:
+            await self.async_set_hkr_state("off")
+        elif (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            await self.hass.async_add_executor_job(
+                self.data.set_target_temperature, target_temp, True
+            )
+            await self.coordinator.async_refresh()
+        else:
+            return
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return the current operation mode."""
+        if self.data.holiday_active:
+            return HVACMode.HEAT
+        if self.data.summer_active:
+            return HVACMode.OFF
+        if self.data.target_temperature == OFF_API_TEMPERATURE:
+            return HVACMode.OFF
+
+        return HVACMode.HEAT
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new operation mode."""
+        self.check_active_or_lock_mode()
+        if self.hvac_mode is hvac_mode:
+            LOGGER.debug(
+                "%s is already in requested hvac mode %s", self.name, hvac_mode
+            )
+            return
+        if hvac_mode is HVACMode.OFF:
+            await self.async_set_hkr_state("off")
+        else:
+            if value_scheduled_preset(self.data) == PRESET_ECO:
+                target_temp = self.data.eco_temperature
+            else:
+                target_temp = self.data.comfort_temperature
+            await self.async_set_temperature(temperature=target_temp)
+
+    @property
+    def preset_mode(self) -> str | None:
         """Return current preset mode."""
-        if self._target_temperature == self._comfort_temperature:
+        if self.data.holiday_active:
+            return PRESET_HOLIDAY
+        if self.data.summer_active:
+            return PRESET_SUMMER
+        if self.data.target_temperature == ON_API_TEMPERATURE:
+            return PRESET_BOOST
+        if self.data.target_temperature == self.data.comfort_temperature:
             return PRESET_COMFORT
-        if self._target_temperature == self._eco_temperature:
+        if self.data.target_temperature == self.data.eco_temperature:
             return PRESET_ECO
+        return None
 
-    @property
-    def preset_modes(self):
-        """Return supported preset modes."""
-        return [PRESET_ECO, PRESET_COMFORT]
-
-    def set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        if preset_mode == PRESET_COMFORT:
-            self.set_temperature(temperature=self._comfort_temperature)
-        elif preset_mode == PRESET_ECO:
-            self.set_temperature(temperature=self._eco_temperature)
+        self.check_active_or_lock_mode()
+        await self.async_set_hkr_state(PRESET_API_HKR_STATE_MAPPING[preset_mode])
 
     @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return MIN_TEMPERATURE
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return MAX_TEMPERATURE
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> ClimateExtraAttributes:
         """Return the device specific state attributes."""
-        attrs = {
-            ATTR_STATE_BATTERY_LOW: self._device.battery_low,
-            ATTR_STATE_DEVICE_LOCKED: self._device.device_lock,
-            ATTR_STATE_LOCKED: self._device.lock,
+        # deprecated with #143394, can be removed in 2025.11
+        attrs: ClimateExtraAttributes = {
+            ATTR_STATE_BATTERY_LOW: self.data.battery_low,
         }
 
         # the following attributes are available since fritzos 7
-        if self._device.battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = self._device.battery_level
-        if self._device.holiday_active is not None:
-            attrs[ATTR_STATE_HOLIDAY_MODE] = self._device.holiday_active
-        if self._device.summer_active is not None:
-            attrs[ATTR_STATE_SUMMER_MODE] = self._device.summer_active
-        if ATTR_STATE_WINDOW_OPEN is not None:
-            attrs[ATTR_STATE_WINDOW_OPEN] = self._device.window_open
+        if self.data.battery_level is not None:
+            attrs[ATTR_BATTERY_LEVEL] = self.data.battery_level
+        if self.data.holiday_active is not None:
+            attrs[ATTR_STATE_HOLIDAY_MODE] = self.data.holiday_active
+        if self.data.summer_active is not None:
+            attrs[ATTR_STATE_SUMMER_MODE] = self.data.summer_active
+        if self.data.window_open is not None:
+            attrs[ATTR_STATE_WINDOW_OPEN] = self.data.window_open
 
         return attrs
 
-    def update(self):
-        """Update the data from the thermostat."""
-        try:
-            self._device.update()
-            self._current_temperature = self._device.actual_temperature
-            self._target_temperature = self._device.target_temperature
-            self._comfort_temperature = self._device.comfort_temperature
-            self._eco_temperature = self._device.eco_temperature
-        except requests.exceptions.HTTPError as ex:
-            _LOGGER.warning("Fritzbox connection error: %s", ex)
-            self._fritz.login()
+    def check_active_or_lock_mode(self) -> None:
+        """Check if in summer/vacation mode or lock enabled."""
+        if self.data.holiday_active or self.data.summer_active:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_settings_while_active_mode",
+            )
+
+        if self.data.lock:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="change_settings_while_lock_enabled",
+            )

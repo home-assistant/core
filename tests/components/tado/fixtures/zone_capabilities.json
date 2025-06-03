@@ -1,0 +1,36 @@
+{
+  "type": "AIR_CONDITIONING",
+  "HEAT": {
+    "fanSpeeds": ["AUTO", "HIGH", "MIDDLE", "LOW"],
+    "temperatures": {
+      "celsius": {
+        "max": 31,
+        "step": 1,
+        "min": 16
+      },
+      "fahrenheit": {
+        "step": 1,
+        "max": 88,
+        "min": 61
+      }
+    }
+  },
+  "AUTO": {},
+  "DRY": {},
+  "FAN": {},
+  "COOL": {
+    "temperatures": {
+      "celsius": {
+        "min": 16,
+        "step": 1,
+        "max": 31
+      },
+      "fahrenheit": {
+        "min": 61,
+        "max": 88,
+        "step": 1
+      }
+    },
+    "fanSpeeds": ["AUTO", "HIGH", "MIDDLE", "LOW"]
+  }
+}

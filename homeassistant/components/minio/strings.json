@@ -1,0 +1,54 @@
+{
+  "services": {
+    "get": {
+      "name": "Get",
+      "description": "Downloads file from Minio.",
+      "fields": {
+        "bucket": {
+          "name": "Bucket",
+          "description": "Bucket to use."
+        },
+        "key": {
+          "name": "Key",
+          "description": "Object key of the file."
+        },
+        "file_path": {
+          "name": "File path",
+          "description": "File path on local filesystem."
+        }
+      }
+    },
+    "put": {
+      "name": "Put",
+      "description": "Uploads file to Minio.",
+      "fields": {
+        "bucket": {
+          "name": "[%key:component::minio::services::get::fields::bucket::name%]",
+          "description": "[%key:component::minio::services::get::fields::bucket::description%]"
+        },
+        "key": {
+          "name": "Key",
+          "description": "[%key:component::minio::services::get::fields::key::description%]"
+        },
+        "file_path": {
+          "name": "File path",
+          "description": "[%key:component::minio::services::get::fields::file_path::description%]"
+        }
+      }
+    },
+    "remove": {
+      "name": "Remove",
+      "description": "Deletes file from Minio.",
+      "fields": {
+        "bucket": {
+          "name": "[%key:component::minio::services::get::fields::bucket::name%]",
+          "description": "[%key:component::minio::services::get::fields::bucket::description%]"
+        },
+        "key": {
+          "name": "Key",
+          "description": "[%key:component::minio::services::get::fields::key::description%]"
+        }
+      }
+    }
+  }
+}

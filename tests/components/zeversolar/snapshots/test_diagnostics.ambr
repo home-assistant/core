@@ -1,0 +1,26 @@
+# serializer version: 1
+# name: test_device_diagnostics
+  dict({
+    'always_update': True,
+    'last_update_success': True,
+    'name': 'zeversolar',
+    'update_interval': 60.0,
+  })
+# ---
+# name: test_entry_diagnostics
+  dict({
+    'communication_status': 'OK',
+    'energy_today': 123.4,
+    'hardware_version': 'M10',
+    'meter_status': 'OK',
+    'num_inverters': 1,
+    'pac': 1234,
+    'registry_key': 'WSMQKHTQ3JVYQWA9',
+    'reported_datetime': '19900101 23:01:45',
+    'serial_number': '123456778',
+    'serial_or_registry_id': 'EAB9615C0001',
+    'software_version': '19703-826R+17511-707R',
+    'status': 'OK',
+    'wifi_enabled': False,
+  })
+# ---

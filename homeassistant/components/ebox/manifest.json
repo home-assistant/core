@@ -1,8 +1,10 @@
 {
   "domain": "ebox",
   "name": "EBox",
+  "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/ebox",
-  "requirements": ["pyebox==1.1.4"],
-  "dependencies": [],
-  "codeowners": []
+  "iot_class": "cloud_polling",
+  "loggers": ["pyebox"],
+  "quality_scale": "legacy",
+  "requirements": ["pyebox==1.1.4"]
 }

@@ -1,0 +1,3757 @@
+{
+  "nodeId": 2,
+  "index": 0,
+  "installerIcon": 8704,
+  "userIcon": 8704,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "isSecure": false,
+  "manufacturerId": 881,
+  "productId": 164,
+  "productType": 259,
+  "firmwareVersion": "1.3",
+  "zwavePlusVersion": 1,
+  "deviceConfig": {
+    "filename": "/usr/src/app/node_modules/@zwave-js/config/config/devices/0x0371/zw164.json",
+    "manufacturer": "Aeotec Ltd.",
+    "manufacturerId": 881,
+    "label": "ZW164",
+    "description": "Indoor Siren 6",
+    "devices": [
+      {
+        "productType": 3,
+        "productId": 164
+      },
+      {
+        "productType": 259,
+        "productId": 164
+      },
+      {
+        "productType": 515,
+        "productId": 164
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "paramInformation": {
+      "_map": {}
+    },
+    "metadata": {
+      "inclusion": "This product supports Security 2 Command Class. While a Security S2 enabled Controller is needed in order to fully use the security feature. This product can be included and operated in any Z-Wave network with other Z-Wave certified devices from other manufacturers and/or other applications. All non-battery operated nodes within the network will\nact as repeaters regardless of vendor to increase reliability of the network.\n\n1. Set your Z-Wave Controller into its 'Add Device' mode in order to add Chime into your Z-Wave system. Refer to the Controller's manual if you are unsure of how to perform this step.\n\n2. Power on Chime via the provided power adapter; its LED will be breathing white light all the time.\n\n3. Click Chime Action Button once, it will quickly flash white light for 30 seconds until Chime is added into the network. It will become constantly bright white light after being assigned a NodeID.\n\n4. If your Z-Wave Controller supports S2 encryption, enter the first 5 digits of DSK into your Controller's interface if/when requested. The DSK is printed on Chime's housing.\n\n5. If Adding fails, it will slowly flash white light 3 times and then become breathing white light; repeat steps 1 to 4. Contact us for further support if needed.\n\n6. If Adding succeeds, it will quickly flash white light 3 times and then become off. Now, Chime is a part of your Z-Wave home control system. You can configure it and its automations via your Z-Wave system; please refer to your software's user guide for precise instructions.\n\nNote:\nIf Action Button is clicked again during the Learn Mode, the Learn Mode will exit. At the same time, Indicator Light will extinguish immediately, and then become breathing white light",
+      "exclusion": "1. Set your Z-Wave Controller into its ' Remove Device' mode in order to remove Chime from your Z-Wave system. Refer to the Controller's manual if you are unsure of how to perform this step.\n\n2. Power on Chime via the provided power adapter; its LED will be off.\n\n3. Click Chime Action Button 6 times quickly; it will bright white light, up to 2s.\n\n4. If Removing fails, it will keep off; repeat steps 1 to 3. Contact us for further support if needed.\n\n5. If Removing succeeds, it will quickly flash white light 3 times and then become breathing white light. Now, Chime is removed from Z-Wave network successfully",
+      "reset": "If the primary controller is missing or inoperable, you may need to reset the device to factory settings.\n\nMake sure the Chime is powered. To complete the reset process manually, press and hold the Action Button for at least 20s. The LED indicator will quickly flash white light 3 times and then become breathing white light, which indicates the reset operation is successful. Otherwise, please try again. Contact us for further support if needed.\n\nNote:\n1. This procedure should only be used when the primary controller is missing or inoperable.\n2. Factory Reset Chime will:\n(a) Remove Chime from Z-Wave network;\n(b) Delete the Association setting;\n(c) Restore the configuration settings to the default.(Except configuration parameter 51/52/53/54)",
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/3301/Indoor%20Siren%206%20product%20manual.pdf"
+    },
+    "isEmbedded": true
+  },
+  "label": "ZW164",
+  "endpointCountIsDynamic": false,
+  "endpointsHaveIdenticalCapabilities": true,
+  "individualEndpointCount": 8,
+  "aggregatedEndpointCount": 0,
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 2,
+      "index": 0,
+      "installerIcon": 8704,
+      "userIcon": 8704,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 3,
+          "label": "AV Control Point"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Sound Switch"
+        },
+        "mandatorySupportedCCs": [
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
+        ],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 121,
+          "name": "Sound Switch",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": false
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 152,
+          "name": "Security",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": false
+        }
+      ]
+    },
+    {
+      "nodeId": 2,
+      "index": 1,
+      "installerIcon": 8704,
+      "userIcon": 8704,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 3,
+          "label": "AV Control Point"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Sound Switch"
+        },
+        "mandatorySupportedCCs": [
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
+        ],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 2,
+      "index": 2,
+      "installerIcon": 8704,
+      "userIcon": 8704,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 3,
+          "label": "AV Control Point"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Sound Switch"
+        },
+        "mandatorySupportedCCs": [
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
+        ],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 2,
+      "index": 3,
+      "installerIcon": 8704,
+      "userIcon": 8704,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 3,
+          "label": "AV Control Point"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Sound Switch"
+        },
+        "mandatorySupportedCCs": [
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
+        ],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 2,
+      "index": 4,
+      "installerIcon": 8704,
+      "userIcon": 8704,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 3,
+          "label": "AV Control Point"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Sound Switch"
+        },
+        "mandatorySupportedCCs": [
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
+        ],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 2,
+      "index": 5,
+      "installerIcon": 8704,
+      "userIcon": 8704,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 3,
+          "label": "AV Control Point"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Sound Switch"
+        },
+        "mandatorySupportedCCs": [
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
+        ],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 2,
+      "index": 6,
+      "installerIcon": 8704,
+      "userIcon": 8704,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 3,
+          "label": "AV Control Point"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Sound Switch"
+        },
+        "mandatorySupportedCCs": [
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
+        ],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 2,
+      "index": 7,
+      "installerIcon": 8704,
+      "userIcon": 8704,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 3,
+          "label": "AV Control Point"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Sound Switch"
+        },
+        "mandatorySupportedCCs": [
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
+        ],
+        "mandatoryControlledCCs": []
+      }
+    },
+    {
+      "nodeId": 2,
+      "index": 8,
+      "installerIcon": 8704,
+      "userIcon": 8704,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 3,
+          "label": "AV Control Point"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Sound Switch"
+        },
+        "mandatorySupportedCCs": [
+          32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
+        ],
+        "mandatoryControlledCCs": []
+      }
+    }
+  ],
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 881
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 259
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535
+      },
+      "value": 164
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "5.3"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["1.3"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      },
+      "value": 164
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 32,
+      "propertyName": "Group 2 Basic Set Command (Browse)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 2 Basic Set Command (Browse)",
+        "default": 3,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Disable",
+          "1": "Start playing -> On; Stop playing -> None",
+          "2": "Start playing -> Off; Stop playing -> None",
+          "3": "Start playing -> On; Stop playing -> Off",
+          "4": "Start playing -> Off; Stop playing -> On"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 33,
+      "propertyName": "Group 3 Basic Set Command (Tampering)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 3 Basic Set Command (Tampering)",
+        "default": 3,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Disable",
+          "1": "Start playing -> On; Stop playing -> None",
+          "2": "Start playing -> Off; Stop playing -> None",
+          "3": "Start playing -> On; Stop playing -> Off",
+          "4": "Start playing -> Off; Stop playing -> On"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 34,
+      "propertyName": "Group 4 Basic Set Command (Doorbell 1)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 4 Basic Set Command (Doorbell 1)",
+        "default": 3,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Disable",
+          "1": "Start playing -> On; Stop playing -> None",
+          "2": "Start playing -> Off; Stop playing -> None",
+          "3": "Start playing -> On; Stop playing -> Off",
+          "4": "Start playing -> Off; Stop playing -> On"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 35,
+      "propertyName": "Group 5 Basic Set Command (Doorbell 2)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 5 Basic Set Command (Doorbell 2)",
+        "default": 3,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Disable",
+          "1": "Start playing -> On; Stop playing -> None",
+          "2": "Start playing -> Off; Stop playing -> None",
+          "3": "Start playing -> On; Stop playing -> Off",
+          "4": "Start playing -> Off; Stop playing -> On"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 36,
+      "propertyName": "Group 6 Basic Set Command (Doorbell 3)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 6 Basic Set Command (Doorbell 3)",
+        "default": 3,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Disable",
+          "1": "Start playing -> On; Stop playing -> None",
+          "2": "Start playing -> Off; Stop playing -> None",
+          "3": "Start playing -> On; Stop playing -> Off",
+          "4": "Start playing -> Off; Stop playing -> On"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 37,
+      "propertyName": "Group 7 Basic Set Command (Environment)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 7 Basic Set Command (Environment)",
+        "default": 3,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Disable",
+          "1": "Start playing -> On; Stop playing -> None",
+          "2": "Start playing -> Off; Stop playing -> None",
+          "3": "Start playing -> On; Stop playing -> Off",
+          "4": "Start playing -> Off; Stop playing -> On"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 38,
+      "propertyName": "Group 8 Basic Set Command (Security)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 8 Basic Set Command (Security)",
+        "default": 3,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Disable",
+          "1": "Start playing -> On; Stop playing -> None",
+          "2": "Start playing -> Off; Stop playing -> None",
+          "3": "Start playing -> On; Stop playing -> Off",
+          "4": "Start playing -> Off; Stop playing -> On"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 39,
+      "propertyName": "Group 9 Basic Set Command (Emergency)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Group 9 Basic Set Command (Emergency)",
+        "default": 3,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Disable",
+          "1": "Start playing -> On; Stop playing -> None",
+          "2": "Start playing -> Off; Stop playing -> None",
+          "3": "Start playing -> On; Stop playing -> Off",
+          "4": "Start playing -> Off; Stop playing -> On"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 50,
+      "propertyName": "Pairing Mode Status",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Pairing Mode Status",
+        "default": 0,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Not pairing",
+          "1": "Pairing Button No. 1",
+          "2": "Pairing Button No. 1",
+          "4": "Pairing Button No. 1"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect Index (Browse)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect Index (Browse)",
+        "default": 1,
+        "min": 1,
+        "max": 127,
+        "states": {
+          "1": "Light effect #1",
+          "2": "Light effect #2",
+          "4": "Light effect #3",
+          "8": "Light effect #4",
+          "16": "Light effect #5",
+          "32": "Light effect #6",
+          "64": "Light effect #7",
+          "127": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyKey": 16711680,
+      "propertyName": "Tone Play Mode (Browse)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Play Mode (Browse)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Single playback",
+          "1": "Single loop playback",
+          "2": "Loop playback tones",
+          "3": "Random playback tones",
+          "255": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect Index (Tamper)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect Index (Tamper)",
+        "default": 1,
+        "min": 1,
+        "max": 127,
+        "states": {
+          "1": "Light effect #1",
+          "2": "Light effect #2",
+          "4": "Light effect #3",
+          "8": "Light effect #4",
+          "16": "Light effect #5",
+          "32": "Light effect #6",
+          "64": "Light effect #7",
+          "127": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyKey": 16711680,
+      "propertyName": "Tone Duration (Tamper)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Duration (Tamper)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Original tone length",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyKey": 65280,
+      "propertyName": "Interval Between Tones (Tamper)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Interval Between Tones (Tamper)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "No interval",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyKey": 255,
+      "propertyName": "Tone Play Count (Tamper)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Play Count (Tamper)",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Unlimited",
+          "255": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect Index (Doorbell 1)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect Index (Doorbell 1)",
+        "default": 1,
+        "min": 1,
+        "max": 127,
+        "states": {
+          "1": "Light effect #1",
+          "2": "Light effect #2",
+          "4": "Light effect #3",
+          "8": "Light effect #4",
+          "16": "Light effect #5",
+          "32": "Light effect #6",
+          "64": "Light effect #7",
+          "127": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyKey": 16711680,
+      "propertyName": "Tone Duration (Doorbell 1)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Duration (Doorbell 1)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Original tone length",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyKey": 65280,
+      "propertyName": "Interval Between Tones (Doorbell 1)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Interval Between Tones (Doorbell 1)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "No interval",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyKey": 255,
+      "propertyName": "Tone Play Count (Doorbell 1)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Play Count (Doorbell 1)",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Unlimited",
+          "255": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 4,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect Index (Doorbell 2)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect Index (Doorbell 2)",
+        "default": 1,
+        "min": 1,
+        "max": 127,
+        "states": {
+          "1": "Light effect #1",
+          "2": "Light effect #2",
+          "4": "Light effect #3",
+          "8": "Light effect #4",
+          "16": "Light effect #5",
+          "32": "Light effect #6",
+          "64": "Light effect #7",
+          "127": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 4,
+      "propertyKey": 16711680,
+      "propertyName": "Tone Duration (Doorbell 2)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Duration (Doorbell 2)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Original tone length",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 4,
+      "propertyKey": 65280,
+      "propertyName": "Interval Between Tones (Doorbell 2)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Interval Between Tones (Doorbell 2)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "No interval",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 4,
+      "propertyKey": 255,
+      "propertyName": "Tone Play Count (Doorbell 2)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Play Count (Doorbell 2)",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Unlimited",
+          "255": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 5,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect Index (Doorbell 3)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect Index (Doorbell 3)",
+        "default": 1,
+        "min": 1,
+        "max": 127,
+        "states": {
+          "1": "Light effect #1",
+          "2": "Light effect #2",
+          "4": "Light effect #3",
+          "8": "Light effect #4",
+          "16": "Light effect #5",
+          "32": "Light effect #6",
+          "64": "Light effect #7",
+          "127": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 5,
+      "propertyKey": 16711680,
+      "propertyName": "Tone Duration (Doorbell 3)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Duration (Doorbell 3)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Original tone length",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 5,
+      "propertyKey": 65280,
+      "propertyName": "Interval Between Tones (Doorbell 3)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Interval Between Tones (Doorbell 3)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "No interval",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 5,
+      "propertyKey": 255,
+      "propertyName": "Tone Play Count (Doorbell 3)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Play Count (Doorbell 3)",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Unlimited",
+          "255": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 6,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect Index (Environment)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect Index (Environment)",
+        "default": 1,
+        "min": 1,
+        "max": 127,
+        "states": {
+          "1": "Light effect #1",
+          "2": "Light effect #2",
+          "4": "Light effect #3",
+          "8": "Light effect #4",
+          "16": "Light effect #5",
+          "32": "Light effect #6",
+          "64": "Light effect #7",
+          "127": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 6,
+      "propertyKey": 16711680,
+      "propertyName": "Tone Duration (Environment)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Duration (Environment)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Original tone length",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 6,
+      "propertyKey": 65280,
+      "propertyName": "Interval Between Tones (Environment)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Interval Between Tones (Environment)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "No interval",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 6,
+      "propertyKey": 255,
+      "propertyName": "Tone Play Count (Environment)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Play Count (Environment)",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Unlimited",
+          "255": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 7,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect Index (Security)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect Index (Security)",
+        "default": 1,
+        "min": 1,
+        "max": 127,
+        "states": {
+          "1": "Light effect #1",
+          "2": "Light effect #2",
+          "4": "Light effect #3",
+          "8": "Light effect #4",
+          "16": "Light effect #5",
+          "32": "Light effect #6",
+          "64": "Light effect #7",
+          "127": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 7,
+      "propertyKey": 16711680,
+      "propertyName": "Tone Duration (Security)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Duration (Security)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Original tone length",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 7,
+      "propertyKey": 65280,
+      "propertyName": "Interval Between Tones (Security)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Interval Between Tones (Security)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "No interval",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 7,
+      "propertyKey": 255,
+      "propertyName": "Tone Play Count (Security)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Play Count (Security)",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Unlimited",
+          "255": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 8,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect Index (Emergency)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect Index (Emergency)",
+        "default": 1,
+        "min": 1,
+        "max": 127,
+        "states": {
+          "1": "Light effect #1",
+          "2": "Light effect #2",
+          "4": "Light effect #3",
+          "8": "Light effect #4",
+          "16": "Light effect #5",
+          "32": "Light effect #6",
+          "64": "Light effect #7",
+          "127": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 4
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 8,
+      "propertyKey": 16711680,
+      "propertyName": "Tone Duration (Emergency)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Duration (Emergency)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Original tone length",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 8,
+      "propertyKey": 65280,
+      "propertyName": "Interval Between Tones (Emergency)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Interval Between Tones (Emergency)",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "No interval",
+          "255": "Last configuration value"
+        },
+        "unit": "seconds",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 8,
+      "propertyKey": 255,
+      "propertyName": "Tone Play Count (Emergency)",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone Play Count (Emergency)",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Unlimited",
+          "255": "Last configuration value"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 16,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect No. 1: Dim On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 1: Dim On Duration",
+        "default": 75,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 75
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 16,
+      "propertyKey": 16711680,
+      "propertyName": "Light Effect No. 1: Dim Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 1: Dim Off Duration",
+        "default": 25,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 25
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 16,
+      "propertyKey": 65280,
+      "propertyName": "Light Effect No. 1: LED Indicator On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 1: LED Indicator On Duration",
+        "default": 20,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 20
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 16,
+      "propertyKey": 255,
+      "propertyName": "Light Effect No. 1: LED Indicator Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 1: LED Indicator Off Duration",
+        "default": 3,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 17,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect No. 2: Dim On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 2: Dim On Duration",
+        "default": 50,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 50
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 17,
+      "propertyKey": 16711680,
+      "propertyName": "Light Effect No. 2: Dim Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 2: Dim Off Duration",
+        "default": 50,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 50
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 17,
+      "propertyKey": 65280,
+      "propertyName": "Light Effect No. 2: LED Indicator On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 2: LED Indicator On Duration",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 17,
+      "propertyKey": 255,
+      "propertyName": "Light Effect No. 2: LED Indicator Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 2: LED Indicator Off Duration",
+        "default": 3,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 18,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect No. 3: Dim On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 3: Dim On Duration",
+        "default": 0,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 18,
+      "propertyKey": 16711680,
+      "propertyName": "Light Effect No. 3: Dim Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 3: Dim Off Duration",
+        "default": 33,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 33
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 18,
+      "propertyKey": 65280,
+      "propertyName": "Light Effect No. 3: LED Indicator On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 3: LED Indicator On Duration",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 18,
+      "propertyKey": 255,
+      "propertyName": "Light Effect No. 3: LED Indicator Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 3: LED Indicator Off Duration",
+        "default": 3,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 19,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect No. 4: Dim On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 4: Dim On Duration",
+        "default": 33,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 33
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 19,
+      "propertyKey": 16711680,
+      "propertyName": "Light Effect No. 4: Dim Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 4: Dim Off Duration",
+        "default": 0,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 19,
+      "propertyKey": 65280,
+      "propertyName": "Light Effect No. 4: LED Indicator On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 4: LED Indicator On Duration",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 19,
+      "propertyKey": 255,
+      "propertyName": "Light Effect No. 4: LED Indicator Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 4: LED Indicator Off Duration",
+        "default": 3,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 20,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect No. 5: Dim On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 5: Dim On Duration",
+        "default": 33,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 20,
+      "propertyKey": 16711680,
+      "propertyName": "Light Effect No. 5: Dim Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 5: Dim Off Duration",
+        "default": 0,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 20,
+      "propertyKey": 65280,
+      "propertyName": "Light Effect No. 5: LED Indicator On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 5: LED Indicator On Duration",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 20,
+      "propertyKey": 255,
+      "propertyName": "Light Effect No. 5: LED Indicator Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 5: LED Indicator Off Duration",
+        "default": 3,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 21,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect No. 6: Dim On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 6: Dim On Duration",
+        "default": 0,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 21,
+      "propertyKey": 16711680,
+      "propertyName": "Light Effect No. 6: Dim Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 6: Dim Off Duration",
+        "default": 0,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 21,
+      "propertyKey": 65280,
+      "propertyName": "Light Effect No. 6: LED Indicator On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 6: LED Indicator On Duration",
+        "default": 10,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 21,
+      "propertyKey": 255,
+      "propertyName": "Light Effect No. 6: LED Indicator Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 6: LED Indicator Off Duration",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 22,
+      "propertyKey": 4278190080,
+      "propertyName": "Light Effect No. 7: Dim On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 7: Dim On Duration",
+        "default": 0,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 33
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 22,
+      "propertyKey": 16711680,
+      "propertyName": "Light Effect No. 7: Dim Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 7: Dim Off Duration",
+        "default": 0,
+        "min": 0,
+        "max": 127,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 22,
+      "propertyKey": 65280,
+      "propertyName": "Light Effect No. 7: LED Indicator On Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 7: LED Indicator On Duration",
+        "default": 0,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 22,
+      "propertyKey": 255,
+      "propertyName": "Light Effect No. 7: LED Indicator Off Duration",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Light Effect No. 7: LED Indicator Off Duration",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "unit": "ms",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 51,
+      "propertyKey": 1,
+      "propertyName": "Status: Button 1",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Status: Button 1",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not paired",
+          "1": "Paired"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 51,
+      "propertyKey": 2,
+      "propertyName": "Status: Button 2",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Status: Button 2",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not paired",
+          "1": "Paired"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 51,
+      "propertyKey": 4,
+      "propertyName": "Status: Button 3",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Status: Button 3",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Not paired",
+          "1": "Paired"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 52,
+      "propertyKey": 4294901760,
+      "propertyName": "Button 1: Battery Voltage",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Button 1: Battery Voltage",
+        "default": 0,
+        "min": 0,
+        "max": 32767,
+        "states": {
+          "0": "Not paired"
+        },
+        "unit": "mV",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 52,
+      "propertyKey": 65535,
+      "propertyName": "Button 1: Software Version",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Button 1: Software Version",
+        "default": 0,
+        "min": 0,
+        "max": 65535,
+        "states": {
+          "0": "Not paired"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 53,
+      "propertyKey": 4294901760,
+      "propertyName": "Button 2: Battery Voltage",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Button 2: Battery Voltage",
+        "default": 0,
+        "min": 0,
+        "max": 32767,
+        "states": {
+          "0": "Not paired"
+        },
+        "unit": "mV",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 53,
+      "propertyKey": 65535,
+      "propertyName": "Button 2: Software Version",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Button 2: Software Version",
+        "default": 0,
+        "min": 0,
+        "max": 65535,
+        "states": {
+          "0": "Not paired"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 54,
+      "propertyKey": 4294901760,
+      "propertyName": "Button 3: Battery Voltage",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Button 3: Battery Voltage",
+        "default": 0,
+        "min": 0,
+        "max": 32767,
+        "states": {
+          "0": "Not paired"
+        },
+        "unit": "mV",
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 54,
+      "propertyKey": 65535,
+      "propertyName": "Button 3: Software Version",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Button 3: Software Version",
+        "default": 0,
+        "min": 0,
+        "max": 65535,
+        "states": {
+          "0": "Not paired"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 48,
+      "propertyName": "Button Unpairing",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "label": "Button Unpairing",
+        "default": 0,
+        "min": 0,
+        "max": 7,
+        "states": {
+          "0": "Normal Operation",
+          "1": "Unpair Button No. 1",
+          "2": "Unpair Button No. 2",
+          "4": "Unpair Button No. 3"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 49,
+      "propertyName": "Button Pairing",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "label": "Button Pairing",
+        "default": 0,
+        "min": 0,
+        "max": 4,
+        "states": {
+          "0": "Stop pairing",
+          "1": "Pair Button No. 1",
+          "2": "Pair Button No. 2",
+          "4": "Pair Button No. 3"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 96,
+      "propertyName": "Stop Playing Tone on Action Button",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Stop Playing Tone on Action Button",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 255,
+      "propertyName": "Reset to Factory Default Setting",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "label": "Reset to Factory Default Setting",
+        "default": 0,
+        "min": 0,
+        "max": 1431655765,
+        "states": {
+          "1": "Resets all configuration parameters to default setting",
+          "1431655765": "Reset the product to factory default setting and exclude from Z-Wave network"
+        },
+        "valueSize": 4,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      }
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 96,
+      "commandClassName": "Multi Channel",
+      "property": "endpointIndizes",
+      "propertyName": "endpointIndizes",
+      "ccVersion": 4,
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true
+      },
+      "value": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultVolume",
+      "propertyName": "defaultVolume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default volume",
+        "min": 0,
+        "max": 100,
+        "unit": "%"
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultToneId",
+      "propertyName": "defaultToneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default tone ID",
+        "min": 0,
+        "max": 254
+      },
+      "value": 6
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "toneId",
+      "propertyName": "toneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Tone ID",
+        "min": 0,
+        "max": 255,
+        "valueChangeOptions": ["volume"]
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "volume",
+      "propertyName": "volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Volume",
+        "min": 0,
+        "max": 100,
+        "states": {
+          "0": "default"
+        },
+        "unit": "%"
+      }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Siren",
+      "propertyKey": "Siren status",
+      "propertyName": "Siren",
+      "propertyKeyName": "Siren status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Siren status",
+        "ccSpecific": {
+          "notificationType": 14
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "Siren active"
+        }
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultVolume",
+      "propertyName": "defaultVolume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default volume",
+        "min": 0,
+        "max": 100,
+        "unit": "%"
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultToneId",
+      "propertyName": "defaultToneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default tone ID",
+        "min": 0,
+        "max": 254
+      },
+      "value": 17
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "toneId",
+      "propertyName": "toneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Play Tone",
+        "min": 0,
+        "max": 30,
+        "states": {
+          "0": "off",
+          "1": "01DING~1 (5 sec)",
+          "2": "02DING~1 (9 sec)",
+          "3": "03TRAD~1 (11 sec)",
+          "4": "04ELEC~1 (2 sec)",
+          "5": "05WEST~1 (13 sec)",
+          "6": "06CHIM~1 (7 sec)",
+          "7": "07CUCK~1 (31 sec)",
+          "8": "08TRAD~1 (6 sec)",
+          "9": "09SMOK~1 (11 sec)",
+          "10": "10SMOK~1 (6 sec)",
+          "11": "11FIRE~1 (35 sec)",
+          "12": "12COSE~1 (5 sec)",
+          "13": "13KLAX~1 (38 sec)",
+          "14": "14DEEP~1 (41 sec)",
+          "15": "15WARN~1 (37 sec)",
+          "16": "16TORN~1 (46 sec)",
+          "17": "17ALAR~1 (35 sec)",
+          "18": "18DEEP~1 (62 sec)",
+          "19": "19ALAR~1 (15 sec)",
+          "20": "20ALAR~1 (7 sec)",
+          "21": "21DIGI~1 (8 sec)",
+          "22": "22ALER~1 (64 sec)",
+          "23": "23SHIP~1 (4 sec)",
+          "25": "25CHRI~1 (4 sec)",
+          "26": "26GONG~1 (12 sec)",
+          "27": "27SING~1 (1 sec)",
+          "28": "28TONA~1 (5 sec)",
+          "29": "29UPWA~1 (2 sec)",
+          "30": "30DOOR~1 (27 sec)",
+          "255": "default"
+        },
+        "valueChangeOptions": ["volume"]
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "volume",
+      "propertyName": "volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Volume",
+        "min": 0,
+        "max": 100,
+        "states": {
+          "0": "default"
+        },
+        "unit": "%"
+      }
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Siren",
+      "propertyKey": "Siren status",
+      "propertyName": "Siren",
+      "propertyKeyName": "Siren status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Siren status",
+        "ccSpecific": {
+          "notificationType": 14
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "Siren active"
+        }
+      }
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultVolume",
+      "propertyName": "defaultVolume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default volume",
+        "min": 0,
+        "max": 100,
+        "unit": "%"
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultToneId",
+      "propertyName": "defaultToneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default tone ID",
+        "min": 0,
+        "max": 254
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "toneId",
+      "propertyName": "toneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Play Tone",
+        "min": 0,
+        "max": 30,
+        "states": {
+          "0": "off",
+          "1": "01DING~1 (5 sec)",
+          "2": "02DING~1 (9 sec)",
+          "3": "03TRAD~1 (11 sec)",
+          "4": "04ELEC~1 (2 sec)",
+          "5": "05WEST~1 (13 sec)",
+          "6": "06CHIM~1 (7 sec)",
+          "7": "07CUCK~1 (31 sec)",
+          "8": "08TRAD~1 (6 sec)",
+          "9": "09SMOK~1 (11 sec)",
+          "10": "10SMOK~1 (6 sec)",
+          "11": "11FIRE~1 (35 sec)",
+          "12": "12COSE~1 (5 sec)",
+          "13": "13KLAX~1 (38 sec)",
+          "14": "14DEEP~1 (41 sec)",
+          "15": "15WARN~1 (37 sec)",
+          "16": "16TORN~1 (46 sec)",
+          "17": "17ALAR~1 (35 sec)",
+          "18": "18DEEP~1 (62 sec)",
+          "19": "19ALAR~1 (15 sec)",
+          "20": "20ALAR~1 (7 sec)",
+          "21": "21DIGI~1 (8 sec)",
+          "22": "22ALER~1 (64 sec)",
+          "23": "23SHIP~1 (4 sec)",
+          "24": "24CLOC~1 (10 sec)",
+          "25": "25CHRI~1 (4 sec)",
+          "26": "26GONG~1 (12 sec)",
+          "27": "27SING~1 (1 sec)",
+          "28": "28TONA~1 (5 sec)",
+          "29": "29UPWA~1 (2 sec)",
+          "30": "30DOOR~1 (27 sec)",
+          "255": "default"
+        },
+        "valueChangeOptions": ["volume"]
+      }
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "volume",
+      "propertyName": "volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Volume",
+        "min": 0,
+        "max": 100,
+        "states": {
+          "0": "default"
+        },
+        "unit": "%"
+      }
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Battery maintenance status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Battery maintenance status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Battery maintenance status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "10": "Replace battery soon"
+        }
+      }
+    },
+    {
+      "endpoint": 3,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Siren",
+      "propertyKey": "Siren status",
+      "propertyName": "Siren",
+      "propertyKeyName": "Siren status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Siren status",
+        "ccSpecific": {
+          "notificationType": 14
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "Siren active"
+        }
+      }
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultVolume",
+      "propertyName": "defaultVolume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default volume",
+        "min": 0,
+        "max": 100,
+        "unit": "%"
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultToneId",
+      "propertyName": "defaultToneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default tone ID",
+        "min": 0,
+        "max": 254
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "toneId",
+      "propertyName": "toneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Play Tone",
+        "min": 0,
+        "max": 30,
+        "states": {
+          "0": "off",
+          "1": "01DING~1 (5 sec)",
+          "2": "02DING~1 (9 sec)",
+          "3": "03TRAD~1 (11 sec)",
+          "4": "04ELEC~1 (2 sec)",
+          "5": "05WEST~1 (13 sec)",
+          "6": "06CHIM~1 (7 sec)",
+          "7": "07CUCK~1 (31 sec)",
+          "8": "08TRAD~1 (6 sec)",
+          "9": "09SMOK~1 (11 sec)",
+          "10": "10SMOK~1 (6 sec)",
+          "11": "11FIRE~1 (35 sec)",
+          "12": "12COSE~1 (5 sec)",
+          "13": "13KLAX~1 (38 sec)",
+          "14": "14DEEP~1 (41 sec)",
+          "15": "15WARN~1 (37 sec)",
+          "16": "16TORN~1 (46 sec)",
+          "17": "17ALAR~1 (35 sec)",
+          "18": "18DEEP~1 (62 sec)",
+          "19": "19ALAR~1 (15 sec)",
+          "20": "20ALAR~1 (7 sec)",
+          "21": "21DIGI~1 (8 sec)",
+          "22": "22ALER~1 (64 sec)",
+          "23": "23SHIP~1 (4 sec)",
+          "24": "24CLOC~1 (10 sec)",
+          "25": "25CHRI~1 (4 sec)",
+          "26": "26GONG~1 (12 sec)",
+          "27": "27SING~1 (1 sec)",
+          "28": "28TONA~1 (5 sec)",
+          "29": "29UPWA~1 (2 sec)",
+          "30": "30DOOR~1 (27 sec)",
+          "255": "default"
+        },
+        "valueChangeOptions": ["volume"]
+      }
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "volume",
+      "propertyName": "volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Volume",
+        "min": 0,
+        "max": 100,
+        "states": {
+          "0": "default"
+        },
+        "unit": "%"
+      }
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Battery maintenance status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Battery maintenance status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Battery maintenance status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "10": "Replace battery soon"
+        }
+      }
+    },
+    {
+      "endpoint": 4,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Siren",
+      "propertyKey": "Siren status",
+      "propertyName": "Siren",
+      "propertyKeyName": "Siren status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Siren status",
+        "ccSpecific": {
+          "notificationType": 14
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "Siren active"
+        }
+      }
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultVolume",
+      "propertyName": "defaultVolume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default volume",
+        "min": 0,
+        "max": 100,
+        "unit": "%"
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultToneId",
+      "propertyName": "defaultToneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default tone ID",
+        "min": 0,
+        "max": 254
+      },
+      "value": 5
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "toneId",
+      "propertyName": "toneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Play Tone",
+        "min": 0,
+        "max": 30,
+        "states": {
+          "0": "off",
+          "1": "01DING~1 (5 sec)",
+          "2": "02DING~1 (9 sec)",
+          "3": "03TRAD~1 (11 sec)",
+          "4": "04ELEC~1 (2 sec)",
+          "5": "05WEST~1 (13 sec)",
+          "6": "06CHIM~1 (7 sec)",
+          "7": "07CUCK~1 (31 sec)",
+          "8": "08TRAD~1 (6 sec)",
+          "9": "09SMOK~1 (11 sec)",
+          "10": "10SMOK~1 (6 sec)",
+          "11": "11FIRE~1 (35 sec)",
+          "12": "12COSE~1 (5 sec)",
+          "13": "13KLAX~1 (38 sec)",
+          "14": "14DEEP~1 (41 sec)",
+          "15": "15WARN~1 (37 sec)",
+          "16": "16TORN~1 (46 sec)",
+          "17": "17ALAR~1 (35 sec)",
+          "18": "18DEEP~1 (62 sec)",
+          "19": "19ALAR~1 (15 sec)",
+          "20": "20ALAR~1 (7 sec)",
+          "21": "21DIGI~1 (8 sec)",
+          "22": "22ALER~1 (64 sec)",
+          "23": "23SHIP~1 (4 sec)",
+          "24": "24CLOC~1 (10 sec)",
+          "25": "25CHRI~1 (4 sec)",
+          "26": "26GONG~1 (12 sec)",
+          "27": "27SING~1 (1 sec)",
+          "28": "28TONA~1 (5 sec)",
+          "29": "29UPWA~1 (2 sec)",
+          "30": "30DOOR~1 (27 sec)",
+          "255": "default"
+        },
+        "valueChangeOptions": ["volume"]
+      }
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "volume",
+      "propertyName": "volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Volume",
+        "min": 0,
+        "max": 100,
+        "states": {
+          "0": "default"
+        },
+        "unit": "%"
+      }
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Power Management",
+      "propertyKey": "Battery maintenance status",
+      "propertyName": "Power Management",
+      "propertyKeyName": "Battery maintenance status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Battery maintenance status",
+        "ccSpecific": {
+          "notificationType": 8
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "10": "Replace battery soon"
+        }
+      }
+    },
+    {
+      "endpoint": 5,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Siren",
+      "propertyKey": "Siren status",
+      "propertyName": "Siren",
+      "propertyKeyName": "Siren status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Siren status",
+        "ccSpecific": {
+          "notificationType": 14
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "Siren active"
+        }
+      }
+    },
+    {
+      "endpoint": 6,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultVolume",
+      "propertyName": "defaultVolume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default volume",
+        "min": 0,
+        "max": 100,
+        "unit": "%"
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 6,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultToneId",
+      "propertyName": "defaultToneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default tone ID",
+        "min": 0,
+        "max": 254
+      },
+      "value": 9
+    },
+    {
+      "endpoint": 6,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "toneId",
+      "propertyName": "toneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Play Tone",
+        "min": 0,
+        "max": 30,
+        "states": {
+          "0": "off",
+          "1": "01DING~1 (5 sec)",
+          "2": "02DING~1 (9 sec)",
+          "3": "03TRAD~1 (11 sec)",
+          "4": "04ELEC~1 (2 sec)",
+          "5": "05WEST~1 (13 sec)",
+          "6": "06CHIM~1 (7 sec)",
+          "7": "07CUCK~1 (31 sec)",
+          "8": "08TRAD~1 (6 sec)",
+          "9": "09SMOK~1 (11 sec)",
+          "10": "10SMOK~1 (6 sec)",
+          "11": "11FIRE~1 (35 sec)",
+          "12": "12COSE~1 (5 sec)",
+          "13": "13KLAX~1 (38 sec)",
+          "14": "14DEEP~1 (41 sec)",
+          "15": "15WARN~1 (37 sec)",
+          "16": "16TORN~1 (46 sec)",
+          "17": "17ALAR~1 (35 sec)",
+          "18": "18DEEP~1 (62 sec)",
+          "19": "19ALAR~1 (15 sec)",
+          "20": "20ALAR~1 (7 sec)",
+          "21": "21DIGI~1 (8 sec)",
+          "22": "22ALER~1 (64 sec)",
+          "23": "23SHIP~1 (4 sec)",
+          "24": "24CLOC~1 (10 sec)",
+          "25": "25CHRI~1 (4 sec)",
+          "26": "26GONG~1 (12 sec)",
+          "27": "27SING~1 (1 sec)",
+          "28": "28TONA~1 (5 sec)",
+          "29": "29UPWA~1 (2 sec)",
+          "30": "30DOOR~1 (27 sec)",
+          "255": "default"
+        },
+        "valueChangeOptions": ["volume"]
+      }
+    },
+    {
+      "endpoint": 6,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "volume",
+      "propertyName": "volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Volume",
+        "min": 0,
+        "max": 100,
+        "states": {
+          "0": "default"
+        },
+        "unit": "%"
+      }
+    },
+    {
+      "endpoint": 6,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Siren",
+      "propertyKey": "Siren status",
+      "propertyName": "Siren",
+      "propertyKeyName": "Siren status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Siren status",
+        "ccSpecific": {
+          "notificationType": 14
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "Siren active"
+        }
+      }
+    },
+    {
+      "endpoint": 7,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultVolume",
+      "propertyName": "defaultVolume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default volume",
+        "min": 0,
+        "max": 100,
+        "unit": "%"
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 7,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultToneId",
+      "propertyName": "defaultToneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default tone ID",
+        "min": 0,
+        "max": 254
+      },
+      "value": 18
+    },
+    {
+      "endpoint": 7,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "toneId",
+      "propertyName": "toneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Play Tone",
+        "min": 0,
+        "max": 30,
+        "states": {
+          "0": "off",
+          "1": "01DING~1 (5 sec)",
+          "2": "02DING~1 (9 sec)",
+          "3": "03TRAD~1 (11 sec)",
+          "4": "04ELEC~1 (2 sec)",
+          "5": "05WEST~1 (13 sec)",
+          "6": "06CHIM~1 (7 sec)",
+          "7": "07CUCK~1 (31 sec)",
+          "8": "08TRAD~1 (6 sec)",
+          "9": "09SMOK~1 (11 sec)",
+          "10": "10SMOK~1 (6 sec)",
+          "11": "11FIRE~1 (35 sec)",
+          "12": "12COSE~1 (5 sec)",
+          "13": "13KLAX~1 (38 sec)",
+          "14": "14DEEP~1 (41 sec)",
+          "15": "15WARN~1 (37 sec)",
+          "16": "16TORN~1 (46 sec)",
+          "17": "17ALAR~1 (35 sec)",
+          "18": "18DEEP~1 (62 sec)",
+          "19": "19ALAR~1 (15 sec)",
+          "20": "20ALAR~1 (7 sec)",
+          "21": "21DIGI~1 (8 sec)",
+          "22": "22ALER~1 (64 sec)",
+          "23": "23SHIP~1 (4 sec)",
+          "24": "24CLOC~1 (10 sec)",
+          "25": "25CHRI~1 (4 sec)",
+          "26": "26GONG~1 (12 sec)",
+          "27": "27SING~1 (1 sec)",
+          "28": "28TONA~1 (5 sec)",
+          "29": "29UPWA~1 (2 sec)",
+          "30": "30DOOR~1 (27 sec)",
+          "255": "default"
+        },
+        "valueChangeOptions": ["volume"]
+      }
+    },
+    {
+      "endpoint": 7,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "volume",
+      "propertyName": "volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Volume",
+        "min": 0,
+        "max": 100,
+        "states": {
+          "0": "default"
+        },
+        "unit": "%"
+      }
+    },
+    {
+      "endpoint": 7,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Siren",
+      "propertyKey": "Siren status",
+      "propertyName": "Siren",
+      "propertyKeyName": "Siren status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Siren status",
+        "ccSpecific": {
+          "notificationType": 14
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "Siren active"
+        }
+      }
+    },
+    {
+      "endpoint": 8,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultVolume",
+      "propertyName": "defaultVolume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default volume",
+        "min": 0,
+        "max": 100,
+        "unit": "%"
+      },
+      "value": 100
+    },
+    {
+      "endpoint": 8,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "defaultToneId",
+      "propertyName": "defaultToneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default tone ID",
+        "min": 0,
+        "max": 254
+      },
+      "value": 11
+    },
+    {
+      "endpoint": 8,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "toneId",
+      "propertyName": "toneId",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Play Tone",
+        "min": 0,
+        "max": 30,
+        "states": {
+          "0": "off",
+          "1": "01DING~1 (5 sec)",
+          "2": "02DING~1 (9 sec)",
+          "3": "03TRAD~1 (11 sec)",
+          "4": "04ELEC~1 (2 sec)",
+          "5": "05WEST~1 (13 sec)",
+          "6": "06CHIM~1 (7 sec)",
+          "7": "07CUCK~1 (31 sec)",
+          "8": "08TRAD~1 (6 sec)",
+          "9": "09SMOK~1 (11 sec)",
+          "10": "10SMOK~1 (6 sec)",
+          "11": "11FIRE~1 (35 sec)",
+          "12": "12COSE~1 (5 sec)",
+          "13": "13KLAX~1 (38 sec)",
+          "14": "14DEEP~1 (41 sec)",
+          "15": "15WARN~1 (37 sec)",
+          "16": "16TORN~1 (46 sec)",
+          "17": "17ALAR~1 (35 sec)",
+          "18": "18DEEP~1 (62 sec)",
+          "19": "19ALAR~1 (15 sec)",
+          "20": "20ALAR~1 (7 sec)",
+          "21": "21DIGI~1 (8 sec)",
+          "22": "22ALER~1 (64 sec)",
+          "23": "23SHIP~1 (4 sec)",
+          "24": "24CLOC~1 (10 sec)",
+          "25": "25CHRI~1 (4 sec)",
+          "26": "26GONG~1 (12 sec)",
+          "27": "27SING~1 (1 sec)",
+          "28": "28TONA~1 (5 sec)",
+          "29": "29UPWA~1 (2 sec)",
+          "30": "30DOOR~1 (27 sec)",
+          "255": "default"
+        },
+        "valueChangeOptions": ["volume"]
+      }
+    },
+    {
+      "endpoint": 8,
+      "commandClass": 121,
+      "commandClassName": "Sound Switch",
+      "property": "volume",
+      "propertyName": "volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Volume",
+        "min": 0,
+        "max": 100,
+        "states": {
+          "0": "default"
+        },
+        "unit": "%"
+      }
+    },
+    {
+      "endpoint": 8,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Siren",
+      "propertyKey": "Siren status",
+      "propertyName": "Siren",
+      "propertyKeyName": "Siren status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Siren status",
+        "ccSpecific": {
+          "notificationType": 14
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "Siren active"
+        }
+      }
+    }
+  ],
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 5,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing Slave"
+    },
+    "generic": {
+      "key": 3,
+      "label": "AV Control Point"
+    },
+    "specific": {
+      "key": 1,
+      "label": "Sound Switch"
+    },
+    "mandatorySupportedCCs": [
+      32, 133, 89, 128, 121, 114, 115, 159, 108, 85, 134, 94
+    ],
+    "mandatoryControlledCCs": []
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0371:0x0103:0x00a4:1.3",
+  "isControllerNode": false
+}

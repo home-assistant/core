@@ -1,99 +1,133 @@
-"""Support for Etekcity VeSync switches."""
+"""Support for VeSync switches."""
+
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+from typing import Any, Final
 
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.core import callback
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_SWITCHES
+from .common import is_outlet, is_wall_switch, rgetattr
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
+from .coordinator import VeSyncDataCoordinator
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEV_TYPE_TO_HA = {
-    "wifi-switch-1.3": "outlet",
-    "ESW03-USA": "outlet",
-    "ESW01-EU": "outlet",
-    "ESW15-USA": "outlet",
-    "ESWL01": "switch",
-    "ESWL03": "switch",
-    "ESO15-TB": "outlet",
-}
+
+@dataclass(frozen=True, kw_only=True)
+class VeSyncSwitchEntityDescription(SwitchEntityDescription):
+    """A class that describes custom switch entities."""
+
+    is_on: Callable[[VeSyncBaseDevice], bool]
+    exists_fn: Callable[[VeSyncBaseDevice], bool]
+    on_fn: Callable[[VeSyncBaseDevice], bool]
+    off_fn: Callable[[VeSyncBaseDevice], bool]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up switches."""
+SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
+    VeSyncSwitchEntityDescription(
+        key="device_status",
+        is_on=lambda device: device.device_status == "on",
+        # Other types of wall switches support dimming.  Those use light.py platform.
+        exists_fn=lambda device: is_wall_switch(device) or is_outlet(device),
+        name=None,
+        on_fn=lambda device: device.turn_on(),
+        off_fn=lambda device: device.turn_off(),
+    ),
+    VeSyncSwitchEntityDescription(
+        key="display",
+        is_on=lambda device: device.display_state,
+        exists_fn=lambda device: rgetattr(device, "display_state") is not None,
+        translation_key="display",
+        on_fn=lambda device: device.turn_on_display(),
+        off_fn=lambda device: device.turn_off_display(),
+    ),
+)
 
-    async def async_discover(devices):
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up switch platform."""
+
+    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+
+    @callback
+    def discover(devices):
         """Add new devices to platform."""
-        _async_setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities, coordinator)
 
-    disp = async_dispatcher_connect(
-        hass, VS_DISCOVERY.format(VS_SWITCHES), async_discover
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
-    hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
-    _async_setup_entities(hass.data[DOMAIN][VS_SWITCHES], async_add_entities)
-    return True
+    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
 
 
 @callback
-def _async_setup_entities(devices, async_add_entities):
+def _setup_entities(
+    devices: list[VeSyncBaseDevice],
+    async_add_entities,
+    coordinator: VeSyncDataCoordinator,
+):
     """Check if device is online and add entity."""
-    dev_list = []
-    for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) == "outlet":
-            dev_list.append(VeSyncSwitchHA(dev))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) == "switch":
-            dev_list.append(VeSyncLightSwitch(dev))
-        else:
-            _LOGGER.warning(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
-            )
-            continue
-
-    async_add_entities(dev_list, update_before_add=True)
+    async_add_entities(
+        VeSyncSwitchEntity(dev, description, coordinator)
+        for dev in devices
+        for description in SENSOR_DESCRIPTIONS
+        if description.exists_fn(dev)
+    )
 
 
-class VeSyncSwitchHA(VeSyncDevice, SwitchDevice):
-    """Representation of a VeSync switch."""
+class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
+    """VeSync switch entity class."""
 
-    def __init__(self, plug):
-        """Initialize the VeSync switch device."""
-        super().__init__(plug)
-        self.smartplug = plug
+    entity_description: VeSyncSwitchEntityDescription
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = {}
-        if hasattr(self.smartplug, "weekly_energy_total"):
-            attr["voltage"] = self.smartplug.voltage
-            attr["weekly_energy_total"] = self.smartplug.weekly_energy_total
-            attr["monthly_energy_total"] = self.smartplug.monthly_energy_total
-            attr["yearly_energy_total"] = self.smartplug.yearly_energy_total
-        return attr
+    def __init__(
+        self,
+        device: VeSyncBaseDevice,
+        description: VeSyncSwitchEntityDescription,
+        coordinator: VeSyncDataCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(device, coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{super().unique_id}-{description.key}"
+        if is_outlet(self.device):
+            self._attr_device_class = SwitchDeviceClass.OUTLET
+        elif is_wall_switch(self.device):
+            self._attr_device_class = SwitchDeviceClass.SWITCH
 
     @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return self.smartplug.power
+    def is_on(self) -> bool | None:
+        """Return the entity value to represent the entity state."""
+        return self.entity_description.is_on(self.device)
 
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        return self.smartplug.energy_today
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        if not self.entity_description.off_fn(self.device):
+            raise HomeAssistantError("An error occurred while turning off.")
 
-    def update(self):
-        """Update outlet details and energy usage."""
-        self.smartplug.update()
-        self.smartplug.update_energy()
+        self.schedule_update_ha_state()
 
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        if not self.entity_description.on_fn(self.device):
+            raise HomeAssistantError("An error occurred while turning on.")
 
-class VeSyncLightSwitch(VeSyncDevice, SwitchDevice):
-    """Handle representation of VeSync Light Switch."""
-
-    def __init__(self, switch):
-        """Initialize Light Switch device class."""
-        super().__init__(switch)
-        self.switch = switch
+        self.schedule_update_ha_state()

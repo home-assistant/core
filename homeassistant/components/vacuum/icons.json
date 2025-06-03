@@ -1,0 +1,45 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:robot-vacuum"
+    }
+  },
+  "services": {
+    "clean_spot": {
+      "service": "mdi:target-variant"
+    },
+    "locate": {
+      "service": "mdi:map-marker"
+    },
+    "pause": {
+      "service": "mdi:pause"
+    },
+    "return_to_base": {
+      "service": "mdi:home-import-outline"
+    },
+    "send_command": {
+      "service": "mdi:send"
+    },
+    "set_fan_speed": {
+      "service": "mdi:fan"
+    },
+    "start": {
+      "service": "mdi:play"
+    },
+    "start_pause": {
+      "service": "mdi:play-pause"
+    },
+    "stop": {
+      "service": "mdi:stop"
+    },
+    "toggle": {
+      "service": "mdi:play-pause"
+    },
+    "turn_off": {
+      "service": "mdi:stop"
+    },
+    "turn_on": {
+      "service": "mdi:play"
+    }
+  }
+}

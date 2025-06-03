@@ -1,1208 +1,918 @@
 """Support to interface with Sonos players."""
-import asyncio
+
+from __future__ import annotations
+
 import datetime
-import functools as ft
+from functools import partial
 import logging
-import socket
-import urllib
+from typing import Any
 
-import async_timeout
-import pysonos
-from pysonos import alarms
-from pysonos.exceptions import SoCoException, SoCoUPnPException
-import pysonos.snapshot
+from soco import SoCo, alarms
+from soco.core import (
+    MUSIC_SRC_LINE_IN,
+    MUSIC_SRC_RADIO,
+    PLAY_MODE_BY_MEANING,
+    PLAY_MODES,
+)
+from soco.data_structures import DidlFavorite, DidlMusicTrack
+from soco.ms_data_structures import MusicServiceItem
+from sonos_websocket.exception import SonosWebsocketError
+import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice
-from homeassistant.components.media_player.const import (
+from homeassistant.components import media_source, spotify
+from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_ENQUEUE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+    ATTR_MEDIA_TITLE,
+    BrowseMedia,
+    MediaPlayerDeviceClass,
+    MediaPlayerEnqueue,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
+    async_process_play_media_url,
 )
-from homeassistant.const import (
-    ENTITY_MATCH_ALL,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
-from homeassistant.core import callback
+from homeassistant.components.plex import PLEX_URI_SCHEME
+from homeassistant.components.plex.services import process_plex_payload
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TIME
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
-from . import (
-    ATTR_ALARM_ID,
-    ATTR_ENABLED,
-    ATTR_INCLUDE_LINKED_ZONES,
-    ATTR_MASTER,
-    ATTR_NIGHT_SOUND,
-    ATTR_QUEUE_POSITION,
-    ATTR_SLEEP_TIME,
-    ATTR_SPEECH_ENHANCE,
-    ATTR_TIME,
-    ATTR_VOLUME,
-    ATTR_WITH_GROUP,
-    CONF_ADVERTISE_ADDR,
-    CONF_HOSTS,
-    CONF_INTERFACE_ADDR,
-    DATA_SERVICE_EVENT,
-    DOMAIN as SONOS_DOMAIN,
-    SERVICE_CLEAR_TIMER,
-    SERVICE_JOIN,
-    SERVICE_PLAY_QUEUE,
-    SERVICE_RESTORE,
-    SERVICE_SET_OPTION,
-    SERVICE_SET_TIMER,
-    SERVICE_SNAPSHOT,
-    SERVICE_UNJOIN,
-    SERVICE_UPDATE_ALARM,
+from . import UnjoinData, media_browser
+from .const import (
+    DATA_SONOS,
+    DOMAIN,
+    MEDIA_TYPE_DIRECTORY,
+    MEDIA_TYPES_TO_SONOS,
+    MODELS_LINEIN_AND_TV,
+    MODELS_LINEIN_ONLY,
+    MODELS_TV_ONLY,
+    PLAYABLE_MEDIA_TYPES,
+    SONOS_CREATE_MEDIA_PLAYER,
+    SONOS_MEDIA_UPDATED,
+    SONOS_STATE_PLAYING,
+    SONOS_STATE_TRANSITIONING,
+    SOURCE_LINEIN,
+    SOURCE_TV,
 )
+from .entity import SonosEntity
+from .helpers import soco_error
+from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = 10
-DISCOVERY_INTERVAL = 60
+LONG_SERVICE_TIMEOUT = 30.0
+UNJOIN_SERVICE_TIMEOUT = 0.1
+VOLUME_INCREMENT = 2
 
-SUPPORT_SONOS = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_CLEAR_PLAYLIST
-)
+REPEAT_TO_SONOS = {
+    RepeatMode.OFF: False,
+    RepeatMode.ALL: True,
+    RepeatMode.ONE: "ONE",
+}
 
-DATA_SONOS = "sonos_media_player"
-
-SOURCE_LINEIN = "Line-in"
-SOURCE_TV = "TV"
-
-ATTR_SONOS_GROUP = "sonos_group"
+SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
+ANNOUNCE_NOT_SUPPORTED_ERRORS: list[str] = ["globalError"]
+
+SERVICE_SNAPSHOT = "snapshot"
+SERVICE_RESTORE = "restore"
+SERVICE_SET_TIMER = "set_sleep_timer"
+SERVICE_CLEAR_TIMER = "clear_sleep_timer"
+SERVICE_UPDATE_ALARM = "update_alarm"
+SERVICE_PLAY_QUEUE = "play_queue"
+SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
+SERVICE_GET_QUEUE = "get_queue"
+
+ATTR_SLEEP_TIME = "sleep_time"
+ATTR_ALARM_ID = "alarm_id"
+ATTR_VOLUME = "volume"
+ATTR_ENABLED = "enabled"
+ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
+ATTR_MASTER = "master"
+ATTR_WITH_GROUP = "with_group"
+ATTR_QUEUE_POSITION = "queue_position"
 
 
-class SonosData:
-    """Storage class for platform global data."""
-
-    def __init__(self, hass):
-        """Initialize the data."""
-        self.entities = []
-        self.discovered = []
-        self.topology_condition = asyncio.Condition()
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Sonos platform. Obsolete."""
-    _LOGGER.error(
-        "Loading Sonos by media_player platform config is no longer supported"
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up Sonos from a config entry."""
-    if DATA_SONOS not in hass.data:
-        hass.data[DATA_SONOS] = SonosData(hass)
+    platform = entity_platform.async_get_current_platform()
 
-    config = hass.data[SONOS_DOMAIN].get("media_player", {})
-    _LOGGER.debug("Reached async_setup_entry, config=%s", config)
+    @callback
+    def async_create_entities(speaker: SonosSpeaker) -> None:
+        """Handle device discovery and create entities."""
+        _LOGGER.debug("Creating media_player on %s", speaker.zone_name)
+        async_add_entities([SonosMediaPlayerEntity(speaker)])
 
-    advertise_addr = config.get(CONF_ADVERTISE_ADDR)
-    if advertise_addr:
-        pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
+    @service.verify_domain_control(hass, DOMAIN)
+    async def async_service_handle(service_call: ServiceCall) -> None:
+        """Handle dispatched services."""
+        assert platform is not None
+        entities = await platform.async_extract_from_service(service_call)
 
-    def _discovery(now=None):
-        """Discover players from network or configuration."""
-        hosts = config.get(CONF_HOSTS)
+        if not entities:
+            return
 
-        def _discovered_player(soco):
-            """Handle a (re)discovered player."""
-            try:
-                _LOGGER.debug("Reached _discovered_player, soco=%s", soco)
+        speakers = []
+        for entity in entities:
+            assert isinstance(entity, SonosMediaPlayerEntity)
+            speakers.append(entity.speaker)
 
-                if soco not in hass.data[DATA_SONOS].discovered:
-                    _LOGGER.debug("Adding new entity")
-                    hass.data[DATA_SONOS].discovered.append(soco)
-                    hass.add_job(async_add_entities, [SonosEntity(soco)])
-                else:
-                    entity = _get_entity_from_soco_uid(hass, soco.uid)
-                    if entity:
-                        _LOGGER.debug("Seen %s", entity)
-                        hass.add_job(entity.async_seen())
-            except SoCoException as ex:
-                _LOGGER.debug("SoCoException, ex=%s", ex)
-
-        if hosts:
-            for host in hosts:
-                try:
-                    _LOGGER.debug("Testing %s", host)
-                    player = pysonos.SoCo(socket.gethostbyname(host))
-                    if player.is_visible:
-                        # Make sure that the player is available
-                        _ = player.volume
-
-                        _discovered_player(player)
-                except (OSError, SoCoException) as ex:
-                    _LOGGER.debug("Exception %s", ex)
-                    if now is None:
-                        _LOGGER.warning("Failed to initialize '%s'", host)
-
-            _LOGGER.debug("Tested all hosts")
-            hass.helpers.event.call_later(DISCOVERY_INTERVAL, _discovery)
-        else:
-            _LOGGER.debug("Starting discovery thread")
-            pysonos.discover_thread(
-                _discovered_player,
-                interval=DISCOVERY_INTERVAL,
-                interface_addr=config.get(CONF_INTERFACE_ADDR),
+        if service_call.service == SERVICE_SNAPSHOT:
+            await SonosSpeaker.snapshot_multi(
+                hass, speakers, service_call.data[ATTR_WITH_GROUP]
+            )
+        elif service_call.service == SERVICE_RESTORE:
+            await SonosSpeaker.restore_multi(
+                hass, speakers, service_call.data[ATTR_WITH_GROUP]
             )
 
-    _LOGGER.debug("Adding discovery job")
-    hass.async_add_executor_job(_discovery)
-
-    async def async_service_handle(service, data):
-        """Handle dispatched services."""
-        entity_ids = data.get("entity_id")
-        entities = hass.data[DATA_SONOS].entities
-        if entity_ids and entity_ids != ENTITY_MATCH_ALL:
-            entities = [e for e in entities if e.entity_id in entity_ids]
-
-        if service == SERVICE_JOIN:
-            master = [
-                e
-                for e in hass.data[DATA_SONOS].entities
-                if e.entity_id == data[ATTR_MASTER]
-            ]
-            if master:
-                await SonosEntity.join_multi(hass, master[0], entities)
-        elif service == SERVICE_UNJOIN:
-            await SonosEntity.unjoin_multi(hass, entities)
-        elif service == SERVICE_SNAPSHOT:
-            await SonosEntity.snapshot_multi(hass, entities, data[ATTR_WITH_GROUP])
-        elif service == SERVICE_RESTORE:
-            await SonosEntity.restore_multi(hass, entities, data[ATTR_WITH_GROUP])
-        else:
-            for entity in entities:
-                if service == SERVICE_SET_TIMER:
-                    call = entity.set_sleep_timer
-                elif service == SERVICE_CLEAR_TIMER:
-                    call = entity.clear_sleep_timer
-                elif service == SERVICE_UPDATE_ALARM:
-                    call = entity.set_alarm
-                elif service == SERVICE_SET_OPTION:
-                    call = entity.set_option
-                elif service == SERVICE_PLAY_QUEUE:
-                    call = entity.play_queue
-
-                hass.async_add_executor_job(call, data)
-
-        # We are ready for the next service call
-        hass.data[DATA_SERVICE_EVENT].set()
-
-    async_dispatcher_connect(hass, SONOS_DOMAIN, async_service_handle)
-
-
-class _ProcessSonosEventQueue:
-    """Queue like object for dispatching sonos events."""
-
-    def __init__(self, handler):
-        """Initialize Sonos event queue."""
-        self._handler = handler
-
-    def put(self, item, block=True, timeout=None):
-        """Process event."""
-        try:
-            self._handler(item)
-        except SoCoException as ex:
-            _LOGGER.warning("Error calling %s: %s", self._handler, ex)
-
-
-def _get_entity_from_soco_uid(hass, uid):
-    """Return SonosEntity from SoCo uid."""
-    for entity in hass.data[DATA_SONOS].entities:
-        if uid == entity.unique_id:
-            return entity
-    return None
-
-
-def soco_error(errorcodes=None):
-    """Filter out specified UPnP errors from logs and avoid exceptions."""
-
-    def decorator(funct):
-        """Decorate functions."""
-
-        @ft.wraps(funct)
-        def wrapper(*args, **kwargs):
-            """Wrap for all soco UPnP exception."""
-            try:
-                return funct(*args, **kwargs)
-            except SoCoUPnPException as err:
-                if errorcodes and err.error_code in errorcodes:
-                    pass
-                else:
-                    _LOGGER.error("Error on %s with %s", funct.__name__, err)
-            except SoCoException as err:
-                _LOGGER.error("Error on %s with %s", funct.__name__, err)
-
-        return wrapper
-
-    return decorator
-
-
-def soco_coordinator(funct):
-    """Call function on coordinator."""
-
-    @ft.wraps(funct)
-    def wrapper(entity, *args, **kwargs):
-        """Wrap for call to coordinator."""
-        if entity.is_coordinator:
-            return funct(entity, *args, **kwargs)
-        return funct(entity.coordinator, *args, **kwargs)
-
-    return wrapper
-
-
-def _timespan_secs(timespan):
-    """Parse a time-span into number of seconds."""
-    if timespan in ("", "NOT_IMPLEMENTED", None):
-        return None
-
-    return sum(60 ** x[0] * int(x[1]) for x in enumerate(reversed(timespan.split(":"))))
-
-
-def _is_radio_uri(uri):
-    """Return whether the URI is a stream (not a playlist)."""
-    radio_schemes = (
-        "x-rincon-mp3radio:",
-        "x-sonosapi-stream:",
-        "x-sonosapi-radio:",
-        "x-sonosapi-hls:",
-        "hls-radio:",
-        "x-rincon-stream:",
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SONOS_CREATE_MEDIA_PLAYER, async_create_entities)
     )
-    return uri.startswith(radio_schemes)
+
+    join_unjoin_schema = cv.make_entity_service_schema(
+        {vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean}
+    )
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SNAPSHOT, async_service_handle, join_unjoin_schema
+    )
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_RESTORE, async_service_handle, join_unjoin_schema
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_TIMER,
+        {
+            vol.Required(ATTR_SLEEP_TIME): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=86399)
+            )
+        },
+        "set_sleep_timer",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_CLEAR_TIMER, None, "clear_sleep_timer"
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_ALARM,
+        {
+            vol.Required(ATTR_ALARM_ID): cv.positive_int,
+            vol.Optional(ATTR_TIME): cv.time,
+            vol.Optional(ATTR_VOLUME): cv.small_float,
+            vol.Optional(ATTR_ENABLED): cv.boolean,
+            vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
+        },
+        "set_alarm",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_PLAY_QUEUE,
+        {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
+        "play_queue",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_REMOVE_FROM_QUEUE,
+        {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
+        "remove_from_queue",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_GET_QUEUE,
+        None,
+        "get_queue",
+        supports_response=SupportsResponse.ONLY,
+    )
 
 
-class SonosEntity(MediaPlayerDevice):
+class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
-    def __init__(self, player):
-        """Initialize the Sonos entity."""
-        self._subscriptions = []
-        self._poll_timer = None
-        self._seen_timer = None
-        self._volume_increment = 2
-        self._unique_id = player.uid
-        self._player = player
-        self._player_volume = None
-        self._player_muted = None
-        self._shuffle = None
-        self._coordinator = None
-        self._sonos_group = [self]
-        self._status = None
-        self._media_duration = None
-        self._media_position = None
-        self._media_position_updated_at = None
-        self._media_image_url = None
-        self._media_artist = None
-        self._media_album_name = None
-        self._media_title = None
-        self._night_sound = None
-        self._speech_enhance = None
-        self._source_name = None
-        self._favorites = []
-        self._soco_snapshot = None
-        self._snapshot_group = None
+    _attr_name = None
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+    )
+    _attr_media_content_type = MediaType.MUSIC
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
-        # Set these early since device_info() needs them
-        speaker_info = self.soco.get_speaker_info(True)
-        self._name = speaker_info["zone_name"]
-        self._model = speaker_info["model_name"]
+    def __init__(self, speaker: SonosSpeaker) -> None:
+        """Initialize the media player entity."""
+        super().__init__(speaker)
+        self._attr_unique_id = self.soco.uid
 
-    async def async_added_to_hass(self):
-        """Subscribe sonos events."""
-        await self.async_seen()
+    async def async_added_to_hass(self) -> None:
+        """Handle common setup when added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SONOS_MEDIA_UPDATED,
+                self.async_write_media_state,
+            )
+        )
 
-        self.hass.data[DATA_SONOS].entities.append(self)
-
-        def _rebuild_groups():
-            """Build the current group topology."""
-            for entity in self.hass.data[DATA_SONOS].entities:
-                entity.update_groups()
-
-        self.hass.async_add_executor_job(_rebuild_groups)
+    @callback
+    def async_write_media_state(self, uid: str) -> None:
+        """Write media state if the provided UID is coordinator of this speaker."""
+        if self.coordinator.uid == uid:
+            self.async_write_ha_state()
 
     @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
+    def available(self) -> bool:
+        """Return if the media_player is available."""
+        return (
+            self.speaker.available
+            and bool(self.speaker.sonos_group_entities)
+            and self.media.playback_status is not None
+        )
 
-    def __hash__(self):
+    @property
+    def coordinator(self) -> SonosSpeaker:
+        """Return the current coordinator SonosSpeaker."""
+        return self.speaker.coordinator or self.speaker
+
+    @property
+    def group_members(self) -> list[str] | None:
+        """List of entity_ids which are currently grouped together."""
+        return self.speaker.sonos_group_entities
+
+    def __hash__(self) -> int:
         """Return a hash of self."""
         return hash(self.unique_id)
 
     @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def device_info(self):
-        """Return information about the device."""
-        return {
-            "identifiers": {(SONOS_DOMAIN, self._unique_id)},
-            "name": self._name,
-            "model": self._model.replace("Sonos ", ""),
-            "manufacturer": "Sonos",
-        }
-
-    @property
-    @soco_coordinator
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the entity."""
-        if self._status in ("PAUSED_PLAYBACK", "STOPPED"):
-            return STATE_PAUSED
-        if self._status in ("PLAYING", "TRANSITIONING"):
-            return STATE_PLAYING
-        return STATE_IDLE
-
-    @property
-    def is_coordinator(self):
-        """Return true if player is a coordinator."""
-        return self._coordinator is None
-
-    @property
-    def soco(self):
-        """Return soco object."""
-        return self._player
-
-    @property
-    def coordinator(self):
-        """Return coordinator of this player."""
-        return self._coordinator
-
-    async def async_seen(self):
-        """Record that this player was seen right now."""
-        was_available = self.available
-
-        if self._seen_timer:
-            self._seen_timer()
-
-        self._seen_timer = self.hass.helpers.event.async_call_later(
-            2.5 * DISCOVERY_INTERVAL, self.async_unseen
-        )
-
-        if was_available:
-            return
-
-        self._poll_timer = self.hass.helpers.event.async_track_time_interval(
-            self.update, datetime.timedelta(seconds=SCAN_INTERVAL)
-        )
-
-        done = await self.hass.async_add_executor_job(self._attach_player)
-        if not done:
-            self._seen_timer()
-            self.async_unseen()
-
-        self.async_schedule_update_ha_state()
-
-    @callback
-    def async_unseen(self, now=None):
-        """Make this player unavailable when it was not seen recently."""
-        self._seen_timer = None
-
-        if self._poll_timer:
-            self._poll_timer()
-            self._poll_timer = None
-
-        def _unsub(subscriptions):
-            for subscription in subscriptions:
-                subscription.unsubscribe()
-
-        self.hass.async_add_executor_job(_unsub, self._subscriptions)
-
-        self._subscriptions = []
-
-        self.async_schedule_update_ha_state()
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._seen_timer is not None
-
-    def _set_favorites(self):
-        """Set available favorites."""
-        self._favorites = []
-        for fav in self.soco.music_library.get_sonos_favorites():
-            try:
-                # Exclude non-playable favorites with no linked resources
-                if fav.reference.resources:
-                    self._favorites.append(fav)
-            except SoCoException as ex:
-                # Skip unknown types
-                _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
-
-    def _radio_artwork(self, url):
-        """Return the private URL with artwork for a radio stream."""
-        if url not in ("", "NOT_IMPLEMENTED", None):
-            if url.find("tts_proxy") > 0:
-                # If the content is a tts don't try to fetch an image from it.
-                return None
-            url = "http://{host}:{port}/getaa?s=1&u={uri}".format(
-                host=self.soco.ip_address,
-                port=1400,
-                uri=urllib.parse.quote(url, safe=""),
-            )
-        return url
-
-    def _attach_player(self):
-        """Get basic information and add event subscriptions."""
-        try:
-            self._shuffle = self.soco.shuffle
-            self.update_volume()
-            self._set_favorites()
-
-            player = self.soco
-
-            def subscribe(service, action):
-                """Add a subscription to a pysonos service."""
-                queue = _ProcessSonosEventQueue(action)
-                sub = service.subscribe(auto_renew=True, event_queue=queue)
-                self._subscriptions.append(sub)
-
-            subscribe(player.avTransport, self.update_media)
-            subscribe(player.renderingControl, self.update_volume)
-            subscribe(player.zoneGroupTopology, self.update_groups)
-            subscribe(player.contentDirectory, self.update_content)
-            return True
-        except SoCoException as ex:
-            _LOGGER.warning("Could not connect %s: %s", self.entity_id, ex)
-            return False
-
-    @property
-    def should_poll(self):
-        """Return that we should not be polled (we handle that internally)."""
-        return False
-
-    def update(self, now=None):
-        """Retrieve latest state."""
-        try:
-            self.update_groups()
-            self.update_volume()
-            if self.is_coordinator:
-                self.update_media()
-        except SoCoException:
-            pass
-
-    def update_media(self, event=None):
-        """Update information about currently playing media."""
-        transport_info = self.soco.get_current_transport_info()
-        new_status = transport_info.get("current_transport_state")
-
-        # Ignore transitions, we should get the target state soon
-        if new_status == "TRANSITIONING":
-            return
-
-        self._shuffle = self.soco.shuffle
-
-        update_position = new_status != self._status
-        self._status = new_status
-
-        if self.soco.is_playing_tv:
-            self.update_media_linein(SOURCE_TV)
-        elif self.soco.is_playing_line_in:
-            self.update_media_linein(SOURCE_LINEIN)
-        else:
-            track_info = self.soco.get_current_track_info()
-
-            if _is_radio_uri(track_info["uri"]):
-                variables = event and event.variables
-                self.update_media_radio(variables, track_info)
-            else:
-                self.update_media_music(update_position, track_info)
-
-        self.schedule_update_ha_state()
-
-        # Also update slaves
-        for entity in self.hass.data[DATA_SONOS].entities:
-            coordinator = entity.coordinator
-            if coordinator and coordinator.unique_id == self.unique_id:
-                entity.schedule_update_ha_state()
-
-    def update_media_linein(self, source):
-        """Update state when playing from line-in/tv."""
-        self._media_duration = None
-        self._media_position = None
-        self._media_position_updated_at = None
-
-        self._media_image_url = None
-
-        self._media_artist = source
-        self._media_album_name = None
-        self._media_title = None
-
-        self._source_name = source
-
-    def update_media_radio(self, variables, track_info):
-        """Update state when streaming radio."""
-        self._media_duration = None
-        self._media_position = None
-        self._media_position_updated_at = None
-
-        media_info = self.soco.avTransport.GetMediaInfo([("InstanceID", 0)])
-        self._media_image_url = self._radio_artwork(media_info["CurrentURI"])
-
-        self._media_artist = track_info.get("artist")
-        self._media_album_name = None
-        self._media_title = track_info.get("title")
-
-        if self._media_artist and self._media_title:
-            # artist and album name are in the data, concatenate
-            # that do display as artist.
-            # "Information" field in the sonos pc app
-            self._media_artist = "{artist} - {title}".format(
-                artist=self._media_artist, title=self._media_title
-            )
-        elif variables:
-            # "On Now" field in the sonos pc app
-            current_track_metadata = variables.get("current_track_meta_data")
-            if current_track_metadata:
-                self._media_artist = current_track_metadata.radio_show.split(",")[0]
-
-        # For radio streams we set the radio station name as the title.
-        current_uri_metadata = media_info["CurrentURIMetaData"]
-        if current_uri_metadata not in ("", "NOT_IMPLEMENTED", None):
-            # currently soco does not have an API for this
-            current_uri_metadata = pysonos.xml.XML.fromstring(
-                pysonos.utils.really_utf8(current_uri_metadata)
-            )
-
-            md_title = current_uri_metadata.findtext(
-                ".//{http://purl.org/dc/elements/1.1/}title"
-            )
-
-            if md_title not in ("", "NOT_IMPLEMENTED", None):
-                self._media_title = md_title
-
-        if self._media_artist and self._media_title:
-            # some radio stations put their name into the artist
-            # name, e.g.:
-            #   media_title = "Station"
-            #   media_artist = "Station - Artist - Title"
-            # detect this case and trim from the front of
-            # media_artist for cosmetics
-            trim = f"{self._media_title} - "
-            chars = min(len(self._media_artist), len(trim))
-
-            if self._media_artist[:chars].upper() == trim[:chars].upper():
-                self._media_artist = self._media_artist[chars:]
-
-        # Check if currently playing radio station is in favorites
-        self._source_name = None
-        for fav in self._favorites:
-            if fav.reference.get_uri() == media_info["CurrentURI"]:
-                self._source_name = fav.title
-
-    def update_media_music(self, update_media_position, track_info):
-        """Update state when playing music tracks."""
-        self._media_duration = _timespan_secs(track_info.get("duration"))
-
-        position_info = self.soco.avTransport.GetPositionInfo(
-            [("InstanceID", 0), ("Channel", "Master")]
-        )
-        rel_time = _timespan_secs(position_info.get("RelTime"))
-
-        # player no longer reports position?
-        update_media_position |= rel_time is None and self._media_position is not None
-
-        # player started reporting position?
-        update_media_position |= rel_time is not None and self._media_position is None
-
-        # position jumped?
-        if (
-            self.state == STATE_PLAYING
-            and rel_time is not None
-            and self._media_position is not None
+        if self.media.playback_status in (
+            "PAUSED_PLAYBACK",
+            "STOPPED",
         ):
-            time_diff = utcnow() - self._media_position_updated_at
-            time_diff = time_diff.total_seconds()
+            # Sonos can consider itself "paused" but without having media loaded
+            # (happens if playing Spotify and via Spotify app
+            # you pick another device to play on)
+            if self.media.title is None:
+                return MediaPlayerState.IDLE
+            return MediaPlayerState.PAUSED
+        if self.media.playback_status in (
+            SONOS_STATE_PLAYING,
+            SONOS_STATE_TRANSITIONING,
+        ):
+            return MediaPlayerState.PLAYING
+        return MediaPlayerState.IDLE
 
-            calculated_position = self._media_position + time_diff
+    async def _async_fallback_poll(self) -> None:
+        """Retrieve latest state by polling."""
+        await (
+            self.hass.data[DATA_SONOS].favorites[self.speaker.household_id].async_poll()
+        )
+        await self.hass.async_add_executor_job(self._update)
 
-            update_media_position |= abs(calculated_position - rel_time) > 1.5
-
-        if update_media_position:
-            self._media_position = rel_time
-            self._media_position_updated_at = utcnow()
-
-        self._media_image_url = track_info.get("album_art")
-
-        self._media_artist = track_info.get("artist")
-        self._media_album_name = track_info.get("album")
-        self._media_title = track_info.get("title")
-
-        self._source_name = None
-
-    def update_volume(self, event=None):
-        """Update information about currently volume settings."""
-        if event:
-            variables = event.variables
-
-            if "volume" in variables:
-                self._player_volume = int(variables["volume"]["Master"])
-
-            if "mute" in variables:
-                self._player_muted = variables["mute"]["Master"] == "1"
-
-            if "night_mode" in variables:
-                self._night_sound = variables["night_mode"] == "1"
-
-            if "dialog_level" in variables:
-                self._speech_enhance = variables["dialog_level"] == "1"
-
-            self.schedule_update_ha_state()
-        else:
-            self._player_volume = self.soco.volume
-            self._player_muted = self.soco.mute
-            self._night_sound = self.soco.night_mode
-            self._speech_enhance = self.soco.dialog_mode
-
-    def update_groups(self, event=None):
-        """Handle callback for topology change event."""
-
-        def _get_soco_group():
-            """Ask SoCo cache for existing topology."""
-            coordinator_uid = self.unique_id
-            slave_uids = []
-
-            try:
-                if self.soco.group and self.soco.group.coordinator:
-                    coordinator_uid = self.soco.group.coordinator.uid
-                    slave_uids = [
-                        p.uid
-                        for p in self.soco.group.members
-                        if p.uid != coordinator_uid
-                    ]
-            except SoCoException:
-                pass
-
-            return [coordinator_uid] + slave_uids
-
-        async def _async_extract_group(event):
-            """Extract group layout from a topology event."""
-            group = event and event.zone_player_uui_ds_in_group
-            if group:
-                return group.split(",")
-
-            return await self.hass.async_add_executor_job(_get_soco_group)
-
-        def _async_regroup(group):
-            """Rebuild internal group layout."""
-            sonos_group = []
-            for uid in group:
-                entity = _get_entity_from_soco_uid(self.hass, uid)
-                if entity:
-                    sonos_group.append(entity)
-
-            self._coordinator = None
-            self._sonos_group = sonos_group
-            self.async_schedule_update_ha_state()
-
-            for slave_uid in group[1:]:
-                slave = _get_entity_from_soco_uid(self.hass, slave_uid)
-                if slave:
-                    # pylint: disable=protected-access
-                    slave._coordinator = self
-                    slave._sonos_group = sonos_group
-                    slave.async_schedule_update_ha_state()
-
-        async def _async_handle_group_event(event):
-            """Get async lock and handle event."""
-            if event and self._poll_timer:
-                # Cancel poll timer since we do receive events
-                self._poll_timer()
-                self._poll_timer = None
-
-            async with self.hass.data[DATA_SONOS].topology_condition:
-                group = await _async_extract_group(event)
-
-                if self.unique_id == group[0]:
-                    _async_regroup(group)
-
-                    self.hass.data[DATA_SONOS].topology_condition.notify_all()
-
-        if event and not hasattr(event, "zone_player_uui_ds_in_group"):
-            return
-
-        self.hass.add_job(_async_handle_group_event(event))
-
-    def update_content(self, event=None):
-        """Update information about available content."""
-        self._set_favorites()
-        self.schedule_update_ha_state()
+    def _update(self) -> None:
+        """Retrieve latest state by polling."""
+        self.speaker.update_groups()
+        self.speaker.update_volume()
+        if self.speaker.is_coordinator:
+            self.media.poll_media()
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if self._player_volume is None:
-            return None
-        return self._player_volume / 100
+        return self.speaker.volume and self.speaker.volume / 100
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Return true if volume is muted."""
-        return self._player_muted
+        return self.speaker.muted
 
     @property
-    @soco_coordinator
-    def shuffle(self):
+    def shuffle(self) -> bool | None:
         """Shuffling state."""
-        return self._shuffle
+        return PLAY_MODES[self.media.play_mode][0]
 
     @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
+    def repeat(self) -> RepeatMode | None:
+        """Return current repeat mode."""
+        sonos_repeat = PLAY_MODES[self.media.play_mode][1]
+        return SONOS_TO_REPEAT[sonos_repeat]
 
     @property
-    @soco_coordinator
-    def media_duration(self):
+    def media(self) -> SonosMedia:
+        """Return the SonosMedia object from the coordinator speaker."""
+        return self.coordinator.media
+
+    @property
+    def media_content_id(self) -> str | None:
+        """Content id of current playing media."""
+        return self.media.uri
+
+    @property
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        return self._media_duration
+        return int(self.media.duration) if self.media.duration else None
 
     @property
-    @soco_coordinator
-    def media_position(self):
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        return self._media_position
+        return self.media.position
 
     @property
-    @soco_coordinator
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> datetime.datetime | None:
         """When was the position of the current playing media valid."""
-        return self._media_position_updated_at
+        return self.media.position_updated_at
 
     @property
-    @soco_coordinator
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        return self._media_image_url or None
+        return self.media.image_url or None
 
     @property
-    @soco_coordinator
-    def media_artist(self):
+    def media_channel(self) -> str | None:
+        """Channel currently playing."""
+        return self.media.channel or None
+
+    @property
+    def media_playlist(self) -> str | None:
+        """Title of playlist currently playing."""
+        return self.media.playlist_name
+
+    @property
+    def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        return self._media_artist
+        return self.media.artist or None
 
     @property
-    @soco_coordinator
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
-        return self._media_album_name
+        return self.media.album_name or None
 
     @property
-    @soco_coordinator
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
-        return self._media_title
+        return self.media.title or None
 
     @property
-    @soco_coordinator
-    def source(self):
+    def source(self) -> str | None:
         """Name of the current input source."""
-        return self._source_name
-
-    @property
-    @soco_coordinator
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_SONOS
+        return self.media.source_name or None
 
     @soco_error()
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up media player."""
-        self._player.volume += self._volume_increment
+        self.soco.volume += VOLUME_INCREMENT
 
     @soco_error()
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
-        self._player.volume -= self._volume_increment
+        self.soco.volume -= VOLUME_INCREMENT
 
     @soco_error()
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self.soco.volume = str(int(volume * 100))
+        self.soco.volume = int(volume * 100)
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    @soco_coordinator
-    def set_shuffle(self, shuffle):
+    def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
-        self.soco.shuffle = shuffle
+        sonos_shuffle = shuffle
+        sonos_repeat = PLAY_MODES[self.media.play_mode][1]
+        self.coordinator.soco.play_mode = PLAY_MODE_BY_MEANING[
+            (sonos_shuffle, sonos_repeat)
+        ]
+
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
+    def set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        sonos_shuffle = PLAY_MODES[self.media.play_mode][0]
+        sonos_repeat = REPEAT_TO_SONOS[repeat]
+        self.coordinator.soco.play_mode = PLAY_MODE_BY_MEANING[
+            (sonos_shuffle, sonos_repeat)
+        ]
 
     @soco_error()
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self.soco.mute = mute
 
     @soco_error()
-    @soco_coordinator
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
+        soco = self.coordinator.soco
         if source == SOURCE_LINEIN:
-            self.soco.switch_to_line_in()
-        elif source == SOURCE_TV:
-            self.soco.switch_to_tv()
+            soco.switch_to_line_in()
+            return
+
+        if source == SOURCE_TV:
+            soco.switch_to_tv()
+            return
+
+        self._play_favorite_by_name(source)
+
+    def _play_favorite_by_name(self, name: str) -> None:
+        """Play a favorite by name."""
+        fav = [fav for fav in self.speaker.favorites if fav.title == name]
+
+        if len(fav) != 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_favorite",
+                translation_placeholders={
+                    "name": name,
+                },
+            )
+
+        src = fav.pop()
+        self._play_favorite(src)
+
+    def _play_favorite(self, favorite: DidlFavorite) -> None:
+        """Play a favorite."""
+        uri = favorite.reference.get_uri()
+        soco = self.coordinator.soco
+        if (
+            soco.music_source_from_uri(uri)
+            in [
+                MUSIC_SRC_RADIO,
+                MUSIC_SRC_LINE_IN,
+            ]
+            or favorite.reference.item_class == "object.item.audioItem.audioBook"
+        ):
+            soco.play_uri(
+                uri,
+                title=favorite.title,
+                meta=favorite.resource_meta_data,
+                timeout=LONG_SERVICE_TIMEOUT,
+            )
         else:
-            fav = [fav for fav in self._favorites if fav.title == source]
-            if len(fav) == 1:
-                src = fav.pop()
-                uri = src.reference.get_uri()
-                if _is_radio_uri(uri):
-                    self.soco.play_uri(uri, title=source)
-                else:
-                    self.soco.clear_queue()
-                    self.soco.add_to_queue(src.reference)
-                    self.soco.play_from_queue(0)
+            soco.clear_queue()
+            soco.add_to_queue(favorite.reference, timeout=LONG_SERVICE_TIMEOUT)
+            soco.play_from_queue(0)
 
     @property
-    @soco_coordinator
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """List of available input sources."""
-        sources = [fav.title for fav in self._favorites]
-
-        model = self._model.upper()
-        if "PLAY:5" in model or "CONNECT" in model:
-            sources += [SOURCE_LINEIN]
-        elif "PLAYBAR" in model:
-            sources += [SOURCE_LINEIN, SOURCE_TV]
-        elif "BEAM" in model:
-            sources += [SOURCE_TV]
-
-        return sources
+        model = self.coordinator.model_name.split()[-1].upper()
+        if model in MODELS_LINEIN_ONLY:
+            return [SOURCE_LINEIN]
+        if model in MODELS_TV_ONLY:
+            return [SOURCE_TV]
+        if model in MODELS_LINEIN_AND_TV:
+            return [SOURCE_LINEIN, SOURCE_TV]
+        return []
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    @soco_coordinator
-    def media_play(self):
+    def media_play(self) -> None:
         """Send play command."""
-        self.soco.play()
+        self.coordinator.soco.play()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    @soco_coordinator
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Send stop command."""
-        self.soco.stop()
+        self.coordinator.soco.stop()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    @soco_coordinator
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send pause command."""
-        self.soco.pause()
+        self.coordinator.soco.pause()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    @soco_coordinator
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send next track command."""
-        self.soco.next()
+        self.coordinator.soco.next()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    @soco_coordinator
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send next track command."""
-        self.soco.previous()
+        self.coordinator.soco.previous()
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    @soco_coordinator
-    def media_seek(self, position):
+    def media_seek(self, position: float) -> None:
         """Send seek command."""
-        self.soco.seek(str(datetime.timedelta(seconds=int(position))))
+        self.coordinator.soco.seek(str(datetime.timedelta(seconds=int(position))))
 
     @soco_error()
-    @soco_coordinator
-    def clear_playlist(self):
+    def clear_playlist(self) -> None:
         """Clear players playlist."""
-        self.soco.clear_queue()
+        self.coordinator.soco.clear_queue()
 
-    @soco_error()
-    @soco_coordinator
-    def play_media(self, media_type, media_id, **kwargs):
-        """
-        Send the play_media command to the media player.
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Send the play_media command to the media player.
+
+        If media_id is a Plex payload, attempt Plex->Sonos playback.
+
+        If media_id is an Apple Music, Deezer, Sonos, or Tidal share link,
+        attempt playback using the respective service.
 
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
-
-        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if media_type == MEDIA_TYPE_MUSIC:
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
-                try:
-                    self.soco.add_uri_to_queue(media_id)
-                except SoCoUPnPException:
-                    _LOGGER.error(
-                        'Error parsing media uri "%s", '
-                        "please check it's a valid media resource "
-                        "supported by Sonos",
-                        media_id,
-                    )
-            else:
-                self.soco.play_uri(media_id)
-        elif media_type == MEDIA_TYPE_PLAYLIST:
+        is_radio = False
+
+        if media_source.is_media_source_id(media_id):
+            is_radio = media_id.startswith("media-source://radio_browser/")
+            media_type = MediaType.MUSIC
+            media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = async_process_play_media_url(self.hass, media.url)
+
+        if kwargs.get(ATTR_MEDIA_ANNOUNCE):
+            volume = kwargs.get("extra", {}).get("volume")
+            _LOGGER.debug("Playing %s using websocket audioclip", media_id)
             try:
-                playlists = self.soco.get_sonos_playlists()
-                playlist = next(p for p in playlists if p.title == media_id)
-                self.soco.clear_queue()
-                self.soco.add_to_queue(playlist)
-                self.soco.play_from_queue(0)
-            except StopIteration:
-                _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
+                assert self.speaker.websocket
+                response, _ = await self.speaker.websocket.play_clip(
+                    async_process_play_media_url(self.hass, media_id),
+                    volume=volume,
+                )
+            except SonosWebsocketError as exc:
+                raise HomeAssistantError(
+                    f"Error when calling Sonos websocket: {exc}"
+                ) from exc
+            if response.get("success"):
+                return
+            if response.get("type") in ANNOUNCE_NOT_SUPPORTED_ERRORS:
+                # If the speaker does not support announce do not raise and
+                # fall through to_play_media to play the clip directly.
+                _LOGGER.debug(
+                    "Speaker %s does not support announce, media_id %s response %s",
+                    self.speaker.zone_name,
+                    media_id,
+                    response,
+                )
+            else:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="announce_media_error",
+                    translation_placeholders={
+                        "media_id": media_id,
+                        "response": response,
+                    },
+                )
+
+        if spotify.is_spotify_media_type(media_type):
+            media_type = spotify.resolve_spotify_media_type(media_type)
+            media_id = spotify.spotify_uri_from_media_browser_url(media_id)
+
+        await self.hass.async_add_executor_job(
+            partial(self._play_media, media_type, media_id, is_radio, **kwargs)
+        )
+
+    @soco_error()
+    def _play_media(
+        self, media_type: MediaType | str, media_id: str, is_radio: bool, **kwargs: Any
+    ) -> None:
+        """Wrap sync calls to async_play_media."""
+        _LOGGER.debug("_play_media media_type %s media_id %s", media_type, media_id)
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
+
+        if media_type == "favorite_item_id":
+            favorite = self.speaker.favorites.lookup_by_item_id(media_id)
+            if favorite is None:
+                raise ValueError(f"Missing favorite for media_id: {media_id}")
+            self._play_favorite(favorite)
+            return
+
+        soco = self.coordinator.soco
+        if media_id and media_id.startswith(PLEX_URI_SCHEME):
+            plex_plugin = self.speaker.plex_plugin
+            result = process_plex_payload(
+                self.hass, media_type, media_id, supports_playqueues=False
+            )
+            if result.shuffle:
+                self.set_shuffle(True)
+            if enqueue == MediaPlayerEnqueue.ADD:
+                plex_plugin.add_to_queue(result.media, timeout=LONG_SERVICE_TIMEOUT)
+            elif enqueue in (
+                MediaPlayerEnqueue.NEXT,
+                MediaPlayerEnqueue.PLAY,
+            ):
+                pos = (self.media.queue_position or 0) + 1
+                new_pos = plex_plugin.add_to_queue(
+                    result.media, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                )
+                if enqueue == MediaPlayerEnqueue.PLAY:
+                    soco.play_from_queue(new_pos - 1)
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
+                soco.clear_queue()
+                plex_plugin.add_to_queue(result.media, timeout=LONG_SERVICE_TIMEOUT)
+                soco.play_from_queue(0)
+            return
+
+        share_link = self.coordinator.share_link
+        if share_link.is_share_link(media_id):
+            if enqueue == MediaPlayerEnqueue.ADD:
+                share_link.add_share_link_to_queue(
+                    media_id, timeout=LONG_SERVICE_TIMEOUT
+                )
+            elif enqueue in (
+                MediaPlayerEnqueue.NEXT,
+                MediaPlayerEnqueue.PLAY,
+            ):
+                pos = (self.media.queue_position or 0) + 1
+                new_pos = share_link.add_share_link_to_queue(
+                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                )
+                if enqueue == MediaPlayerEnqueue.PLAY:
+                    soco.play_from_queue(new_pos - 1)
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
+                soco.clear_queue()
+                share_link.add_share_link_to_queue(
+                    media_id, timeout=LONG_SERVICE_TIMEOUT
+                )
+                soco.play_from_queue(0)
+        elif media_type == MEDIA_TYPE_DIRECTORY:
+            self._play_media_directory(
+                soco=soco, media_type=media_type, media_id=media_id, enqueue=enqueue
+            )
+        elif media_type in {MediaType.MUSIC, MediaType.TRACK}:
+            # If media ID is a relative URL, we serve it from HA.
+            media_id = async_process_play_media_url(self.hass, media_id)
+
+            if enqueue == MediaPlayerEnqueue.ADD:
+                soco.add_uri_to_queue(media_id, timeout=LONG_SERVICE_TIMEOUT)
+            elif enqueue in (
+                MediaPlayerEnqueue.NEXT,
+                MediaPlayerEnqueue.PLAY,
+            ):
+                pos = (self.media.queue_position or 0) + 1
+                new_pos = soco.add_uri_to_queue(
+                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                )
+                if enqueue == MediaPlayerEnqueue.PLAY:
+                    soco.play_from_queue(new_pos - 1)
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
+                soco.play_uri(media_id, force_radio=is_radio)
+        elif media_type == MediaType.PLAYLIST:
+            if media_id.startswith("S:"):
+                playlist = media_browser.get_media(
+                    self.media.library, media_id, media_type
+                )
+            else:
+                playlists = soco.get_sonos_playlists(complete_result=True)
+                playlist = next((p for p in playlists if p.title == media_id), None)
+            if not playlist:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_sonos_playlist",
+                    translation_placeholders={
+                        "name": media_id,
+                    },
+                )
+            soco.clear_queue()
+            soco.add_to_queue(playlist, timeout=LONG_SERVICE_TIMEOUT)
+            soco.play_from_queue(0)
+        elif media_type in PLAYABLE_MEDIA_TYPES:
+            item = media_browser.get_media(self.media.library, media_id, media_type)
+            if not item:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_media",
+                    translation_placeholders={
+                        "media_id": media_id,
+                    },
+                )
+            self._play_media_queue(soco, item, enqueue)
         else:
-            _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
-
-    @soco_error()
-    def join(self, slaves):
-        """Form a group with other players."""
-        if self._coordinator:
-            self.unjoin()
-            group = [self]
-        else:
-            group = self._sonos_group.copy()
-
-        for slave in slaves:
-            if slave.unique_id != self.unique_id:
-                slave.soco.join(self.soco)
-                # pylint: disable=protected-access
-                slave._coordinator = self
-                if slave not in group:
-                    group.append(slave)
-
-        return group
-
-    @staticmethod
-    async def join_multi(hass, master, entities):
-        """Form a group with other players."""
-        async with hass.data[DATA_SONOS].topology_condition:
-            group = await hass.async_add_executor_job(master.join, entities)
-            await SonosEntity.wait_for_groups(hass, [group])
-
-    @soco_error()
-    def unjoin(self):
-        """Unjoin the player from a group."""
-        self.soco.unjoin()
-        self._coordinator = None
-
-    @staticmethod
-    async def unjoin_multi(hass, entities):
-        """Unjoin several players from their group."""
-
-        def _unjoin_all(entities):
-            """Sync helper."""
-            # Unjoin slaves first to prevent inheritance of queues
-            coordinators = [e for e in entities if e.is_coordinator]
-            slaves = [e for e in entities if not e.is_coordinator]
-
-            for entity in slaves + coordinators:
-                entity.unjoin()
-
-        async with hass.data[DATA_SONOS].topology_condition:
-            await hass.async_add_executor_job(_unjoin_all, entities)
-            await SonosEntity.wait_for_groups(hass, [[e] for e in entities])
-
-    @soco_error()
-    def snapshot(self, with_group):
-        """Snapshot the state of a player."""
-        self._soco_snapshot = pysonos.snapshot.Snapshot(self.soco)
-        self._soco_snapshot.snapshot()
-        if with_group:
-            self._snapshot_group = self._sonos_group.copy()
-        else:
-            self._snapshot_group = None
-
-    @staticmethod
-    async def snapshot_multi(hass, entities, with_group):
-        """Snapshot all the entities and optionally their groups."""
-        # pylint: disable=protected-access
-
-        def _snapshot_all(entities):
-            """Sync helper."""
-            for entity in entities:
-                entity.snapshot(with_group)
-
-        # Find all affected players
-        entities = set(entities)
-        if with_group:
-            for entity in list(entities):
-                entities.update(entity._sonos_group)
-
-        async with hass.data[DATA_SONOS].topology_condition:
-            await hass.async_add_executor_job(_snapshot_all, entities)
-
-    @soco_error()
-    def restore(self):
-        """Restore a snapshotted state to a player."""
-        try:
-            self._soco_snapshot.restore()
-        except (TypeError, AttributeError, SoCoException) as ex:
-            # Can happen if restoring a coordinator onto a current slave
-            _LOGGER.warning("Error on restore %s: %s", self.entity_id, ex)
-
-        self._soco_snapshot = None
-        self._snapshot_group = None
-
-    @staticmethod
-    async def restore_multi(hass, entities, with_group):
-        """Restore snapshots for all the entities."""
-        # pylint: disable=protected-access
-
-        def _restore_groups(entities, with_group):
-            """Pause all current coordinators and restore groups."""
-            for entity in (e for e in entities if e.is_coordinator):
-                if entity.state == STATE_PLAYING:
-                    entity.media_pause()
-
-            groups = []
-
-            if with_group:
-                # Unjoin slaves first to prevent inheritance of queues
-                for entity in [e for e in entities if not e.is_coordinator]:
-                    if entity._snapshot_group != entity._sonos_group:
-                        entity.unjoin()
-
-                # Bring back the original group topology
-                for entity in (e for e in entities if e._snapshot_group):
-                    if entity._snapshot_group[0] == entity:
-                        entity.join(entity._snapshot_group)
-                        groups.append(entity._snapshot_group.copy())
-
-            return groups
-
-        def _restore_players(entities):
-            """Restore state of all players."""
-            for entity in (e for e in entities if not e.is_coordinator):
-                entity.restore()
-
-            for entity in (e for e in entities if e.is_coordinator):
-                entity.restore()
-
-        # Find all affected players
-        entities = set(e for e in entities if e._soco_snapshot)
-        if with_group:
-            for entity in [e for e in entities if e._snapshot_group]:
-                entities.update(entity._snapshot_group)
-
-        async with hass.data[DATA_SONOS].topology_condition:
-            groups = await hass.async_add_executor_job(
-                _restore_groups, entities, with_group
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_content_type",
+                translation_placeholders={
+                    "media_type": media_type,
+                },
             )
 
-            await SonosEntity.wait_for_groups(hass, groups)
+    def _play_media_queue(
+        self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
+    ):
+        """Manage adding, replacing, playing items onto the sonos queue."""
+        _LOGGER.debug(
+            "_play_media_queue item_id [%s] title [%s] enqueue [%s]",
+            item.item_id,
+            item.title,
+            enqueue,
+        )
+        if enqueue == MediaPlayerEnqueue.REPLACE:
+            soco.clear_queue()
 
-            await hass.async_add_executor_job(_restore_players, entities)
+        if enqueue in (MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE):
+            soco.add_to_queue(item, timeout=LONG_SERVICE_TIMEOUT)
+            if enqueue == MediaPlayerEnqueue.REPLACE:
+                soco.play_from_queue(0)
+        else:
+            pos = (self.media.queue_position or 0) + 1
+            new_pos = soco.add_to_queue(
+                item, position=pos, timeout=LONG_SERVICE_TIMEOUT
+            )
+            if enqueue == MediaPlayerEnqueue.PLAY:
+                soco.play_from_queue(new_pos - 1)
 
-    @staticmethod
-    async def wait_for_groups(hass, groups):
-        """Wait until all groups are present, or timeout."""
-        # pylint: disable=protected-access
-
-        def _test_groups(groups):
-            """Return whether all groups exist now."""
-            for group in groups:
-                coordinator = group[0]
-
-                # Test that coordinator is coordinating
-                current_group = coordinator._sonos_group
-                if coordinator != current_group[0]:
-                    return False
-
-                # Test that slaves match
-                if set(group[1:]) != set(current_group[1:]):
-                    return False
-
-            return True
-
-        try:
-            with async_timeout.timeout(5):
-                while not _test_groups(groups):
-                    await hass.data[DATA_SONOS].topology_condition.wait()
-        except asyncio.TimeoutError:
-            _LOGGER.warning("Timeout waiting for target groups %s", groups)
-
-        for entity in hass.data[DATA_SONOS].entities:
-            entity.soco._zgs_cache.clear()
+    def _play_media_directory(
+        self,
+        soco: SoCo,
+        media_type: MediaType | str,
+        media_id: str,
+        enqueue: MediaPlayerEnqueue,
+    ):
+        """Play a directory from a music library share."""
+        item = media_browser.get_media(self.media.library, media_id, media_type)
+        if not item:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_media",
+                translation_placeholders={
+                    "media_id": media_id,
+                },
+            )
+        self._play_media_queue(soco, item, enqueue)
 
     @soco_error()
-    @soco_coordinator
-    def set_sleep_timer(self, data):
+    def set_sleep_timer(self, sleep_time: int) -> None:
         """Set the timer on the player."""
-        self.soco.set_sleep_timer(data[ATTR_SLEEP_TIME])
+        self.coordinator.soco.set_sleep_timer(sleep_time)
 
     @soco_error()
-    @soco_coordinator
-    def clear_sleep_timer(self, data):
+    def clear_sleep_timer(self) -> None:
         """Clear the timer on the player."""
-        self.soco.set_sleep_timer(None)
+        self.coordinator.soco.set_sleep_timer(None)
 
     @soco_error()
-    @soco_coordinator
-    def set_alarm(self, data):
+    def set_alarm(
+        self,
+        alarm_id: int,
+        time: datetime.datetime | None = None,
+        volume: float | None = None,
+        enabled: bool | None = None,
+        include_linked_zones: bool | None = None,
+    ) -> None:
         """Set the alarm clock on the player."""
-
-        alarm = None
-        for one_alarm in alarms.get_alarms(self.soco):
-            # pylint: disable=protected-access
-            if one_alarm._alarm_id == str(data[ATTR_ALARM_ID]):
+        alarm: alarms.Alarm | None = None
+        for one_alarm in alarms.get_alarms(self.coordinator.soco):
+            if one_alarm.alarm_id == str(alarm_id):
                 alarm = one_alarm
         if alarm is None:
-            _LOGGER.warning("did not find alarm with id %s", data[ATTR_ALARM_ID])
+            _LOGGER.warning("Did not find alarm with id %s", alarm_id)
             return
-        if ATTR_TIME in data:
-            alarm.start_time = data[ATTR_TIME]
-        if ATTR_VOLUME in data:
-            alarm.volume = int(data[ATTR_VOLUME] * 100)
-        if ATTR_ENABLED in data:
-            alarm.enabled = data[ATTR_ENABLED]
-        if ATTR_INCLUDE_LINKED_ZONES in data:
-            alarm.include_linked_zones = data[ATTR_INCLUDE_LINKED_ZONES]
+        if time is not None:
+            alarm.start_time = time
+        if volume is not None:
+            alarm.volume = int(volume * 100)
+        if enabled is not None:
+            alarm.enabled = enabled
+        if include_linked_zones is not None:
+            alarm.include_linked_zones = include_linked_zones
         alarm.save()
 
     @soco_error()
-    def set_option(self, data):
-        """Modify playback options."""
-        if ATTR_NIGHT_SOUND in data and self._night_sound is not None:
-            self.soco.night_mode = data[ATTR_NIGHT_SOUND]
-
-        if ATTR_SPEECH_ENHANCE in data and self._speech_enhance is not None:
-            self.soco.dialog_mode = data[ATTR_SPEECH_ENHANCE]
+    def play_queue(self, queue_position: int = 0) -> None:
+        """Start playing the queue."""
+        self.soco.play_from_queue(queue_position)
 
     @soco_error()
-    def play_queue(self, data):
-        """Start playing the queue."""
-        self.soco.play_from_queue(data[ATTR_QUEUE_POSITION])
+    def remove_from_queue(self, queue_position: int = 0) -> None:
+        """Remove item from the queue."""
+        self.coordinator.soco.remove_from_queue(queue_position)
+
+    @soco_error()
+    def get_queue(self) -> list[dict]:
+        """Get the queue."""
+        queue: list[DidlMusicTrack] = self.coordinator.soco.get_queue(max_items=0)
+        return [
+            {
+                ATTR_MEDIA_TITLE: getattr(track, "title", None),
+                ATTR_MEDIA_ALBUM_NAME: getattr(track, "album", None),
+                ATTR_MEDIA_ARTIST: getattr(track, "creator", None),
+                ATTR_MEDIA_CONTENT_ID: track.get_uri(),
+            }
+            for track in queue
+        ]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        attributes = {ATTR_SONOS_GROUP: [e.entity_id for e in self._sonos_group]}
+        attributes: dict[str, Any] = {}
 
-        if self._night_sound is not None:
-            attributes[ATTR_NIGHT_SOUND] = self._night_sound
+        if self.media.queue_position is not None:
+            attributes[ATTR_QUEUE_POSITION] = self.media.queue_position
 
-        if self._speech_enhance is not None:
-            attributes[ATTR_SPEECH_ENHANCE] = self._speech_enhance
+        if self.media.queue_size:
+            attributes["queue_size"] = self.media.queue_size
+
+        if self.source:
+            attributes[ATTR_INPUT_SOURCE] = self.source
 
         return attributes
+
+    async def async_get_browse_image(
+        self,
+        media_content_type: MediaType | str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
+        """Fetch media browser image to serve via proxy."""
+        if (
+            media_content_type in {MediaType.ALBUM, MediaType.ARTIST}
+            and media_content_id
+        ):
+            item = await self.hass.async_add_executor_job(
+                media_browser.get_media,
+                self.media.library,
+                media_content_id,
+                MEDIA_TYPES_TO_SONOS[media_content_type],
+            )
+            if image_url := getattr(item, "album_art_uri", None):
+                return await self._async_fetch_image(image_url)
+
+        return (None, None)
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return await media_browser.async_browse_media(
+            self.hass,
+            self.speaker,
+            self.media,
+            self.get_browse_image_url,
+            media_content_id,
+            media_content_type,
+        )
+
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join `group_members` as a player group with the current player."""
+        speakers = []
+        for entity_id in group_members:
+            if speaker := self.hass.data[DATA_SONOS].entity_id_mappings.get(entity_id):
+                speakers.append(speaker)
+            else:
+                raise HomeAssistantError(f"Not a known Sonos entity_id: {entity_id}")
+
+        await SonosSpeaker.join_multi(self.hass, self.speaker, speakers)
+
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from any group.
+
+        Coalesces all calls within UNJOIN_SERVICE_TIMEOUT to allow use of SonosSpeaker.unjoin_multi()
+        which optimizes the order in which speakers are removed from their groups.
+        Removing coordinators last better preserves playqueues on the speakers.
+        """
+        sonos_data = self.hass.data[DATA_SONOS]
+        household_id = self.speaker.household_id
+
+        async def async_process_unjoin(now: datetime.datetime) -> None:
+            """Process the unjoin with all remove requests within the coalescing period."""
+            unjoin_data = sonos_data.unjoin_data.pop(household_id)
+            _LOGGER.debug(
+                "Processing unjoins for %s", [x.zone_name for x in unjoin_data.speakers]
+            )
+            await SonosSpeaker.unjoin_multi(self.hass, unjoin_data.speakers)
+            unjoin_data.event.set()
+
+        if unjoin_data := sonos_data.unjoin_data.get(household_id):
+            unjoin_data.speakers.append(self.speaker)
+        else:
+            unjoin_data = sonos_data.unjoin_data[household_id] = UnjoinData(
+                speakers=[self.speaker]
+            )
+            async_call_later(self.hass, UNJOIN_SERVICE_TIMEOUT, async_process_unjoin)
+
+        _LOGGER.debug("Requesting unjoin for %s", self.speaker.zone_name)
+        await unjoin_data.event.wait()

@@ -1,13 +1,16 @@
 """Test the NamecheapDNS component."""
+
 from datetime import timedelta
 
 import pytest
 
 from homeassistant.components import namecheapdns
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 HOST = "test"
 DOMAIN = "bla"
@@ -15,7 +18,9 @@ PASSWORD = "abcdefgh"
 
 
 @pytest.fixture
-def setup_namecheapdns(hass, aioclient_mock):
+async def setup_namecheapdns(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Fixture that sets up NamecheapDNS."""
     aioclient_mock.get(
         namecheapdns.UPDATE_URL,
@@ -23,16 +28,14 @@ def setup_namecheapdns(hass, aioclient_mock):
         text="<interface-response><ErrCount>0</ErrCount></interface-response>",
     )
 
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            namecheapdns.DOMAIN,
-            {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},
-        )
+    await async_setup_component(
+        hass,
+        namecheapdns.DOMAIN,
+        {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},
     )
 
 
-async def test_setup(hass, aioclient_mock):
+async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup works if update passes."""
     aioclient_mock.get(
         namecheapdns.UPDATE_URL,
@@ -53,7 +56,9 @@ async def test_setup(hass, aioclient_mock):
     assert aioclient_mock.call_count == 2
 
 
-async def test_setup_fails_if_update_fails(hass, aioclient_mock):
+async def test_setup_fails_if_update_fails(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup fails if first update fails."""
     aioclient_mock.get(
         namecheapdns.UPDATE_URL,

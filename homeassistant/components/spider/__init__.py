@@ -1,57 +1,41 @@
-"""Support for Spider Smart devices."""
-from datetime import timedelta
-import logging
+"""The Spider integration."""
 
-from spiderpy.spiderapi import SpiderApi, UnauthorizedException
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 DOMAIN = "spider"
 
-SPIDER_COMPONENTS = ["climate", "switch"]
 
-SCAN_INTERVAL = timedelta(seconds=120)
+async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
+    """Set up Spider from a config entry."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        DOMAIN,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="integration_removed",
+        translation_placeholders={
+            "link": "https://www.ithodaalderop.nl/additionelespiderproducten",
+            "entries": "/config/integrations/integration/spider",
+        },
+    )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+    return True
 
 
-def setup(hass, config):
-    """Set up Spider Component."""
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return True
 
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
-    refresh_rate = config[DOMAIN][CONF_SCAN_INTERVAL]
 
-    try:
-        api = SpiderApi(username, password, refresh_rate.total_seconds())
-
-        hass.data[DOMAIN] = {
-            "controller": api,
-            "thermostats": api.get_thermostats(),
-            "power_plugs": api.get_power_plugs(),
-        }
-
-        for component in SPIDER_COMPONENTS:
-            load_platform(hass, component, DOMAIN, {}, config)
-
-        _LOGGER.debug("Connection with Spider API succeeded")
-        return True
-    except UnauthorizedException:
-        _LOGGER.error("Can't connect to the Spider API")
-        return False
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        ir.async_delete_issue(hass, DOMAIN, DOMAIN)
+        # Remove any remaining disabled or ignored entries
+        for _entry in hass.config_entries.async_entries(DOMAIN):
+            hass.async_create_task(hass.config_entries.async_remove(_entry.entry_id))

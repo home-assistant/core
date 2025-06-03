@@ -1,17 +1,24 @@
 """Basic checks for entity map storage."""
-from homeassistant import config_entries
-from homeassistant.components.homekit_controller import async_remove_entry
+
+from collections.abc import Callable
+from typing import Any
+
+from aiohomekit.model import Accessory
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
+
 from homeassistant.components.homekit_controller.const import ENTITY_MAP
+from homeassistant.components.homekit_controller.storage import EntityMapStorage
+from homeassistant.core import HomeAssistant
+
+from .common import setup_platform, setup_test_component
 
 from tests.common import flush_store
-from tests.components.homekit_controller.common import (
-    FakeService,
-    setup_platform,
-    setup_test_component,
-)
 
 
-async def test_load_from_storage(hass, hass_storage):
+async def test_load_from_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test that entity map can be correctly loaded from cache."""
     hkid = "00:00:00:00:00:00"
 
@@ -24,7 +31,9 @@ async def test_load_from_storage(hass, hass_storage):
     assert hkid in hass.data[ENTITY_MAP].storage_data
 
 
-async def test_storage_is_removed(hass, hass_storage):
+async def test_storage_is_removed(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test entity map storage removal is idempotent."""
     await setup_platform(hass)
 
@@ -43,7 +52,7 @@ async def test_storage_is_removed(hass, hass_storage):
     assert hass_storage[ENTITY_MAP]["data"]["pairings"] == {}
 
 
-async def test_storage_is_removed_idempotent(hass):
+async def test_storage_is_removed_idempotent(hass: HomeAssistant) -> None:
     """Test entity map storage removal is idempotent."""
     await setup_platform(hass)
 
@@ -57,20 +66,20 @@ async def test_storage_is_removed_idempotent(hass):
     assert hkid not in entity_map.storage_data
 
 
-def create_lightbulb_service():
+def create_lightbulb_service(accessory: Accessory) -> None:
     """Define lightbulb characteristics."""
-    service = FakeService("public.hap.service.lightbulb")
-    on_char = service.add_characteristic("on")
+    service = accessory.add_service(ServicesTypes.LIGHTBULB)
+    on_char = service.add_char(CharacteristicsTypes.ON)
     on_char.value = 0
-    return service
 
 
-async def test_storage_is_updated_on_add(hass, hass_storage, utcnow):
+async def test_storage_is_updated_on_add(
+    hass: HomeAssistant, hass_storage: dict[str, Any], get_next_aid: Callable[[], int]
+) -> None:
     """Test entity map storage is cleaned up on adding an accessory."""
-    bulb = create_lightbulb_service()
-    await setup_test_component(hass, [bulb])
+    await setup_test_component(hass, get_next_aid(), create_lightbulb_service)
 
-    entity_map = hass.data[ENTITY_MAP]
+    entity_map: EntityMapStorage = hass.data[ENTITY_MAP]
     hkid = "00:00:00:00:00:00"
 
     # Is in memory store updated?
@@ -79,29 +88,3 @@ async def test_storage_is_updated_on_add(hass, hass_storage, utcnow):
     # Is saved out to store?
     await flush_store(entity_map.store)
     assert hkid in hass_storage[ENTITY_MAP]["data"]["pairings"]
-
-
-async def test_storage_is_removed_on_config_entry_removal(hass, utcnow):
-    """Test entity map storage is cleaned up on config entry removal."""
-    bulb = create_lightbulb_service()
-    await setup_test_component(hass, [bulb])
-
-    hkid = "00:00:00:00:00:00"
-
-    pairing_data = {"AccessoryPairingID": hkid}
-
-    entry = config_entries.ConfigEntry(
-        1,
-        "homekit_controller",
-        "TestData",
-        pairing_data,
-        "test",
-        config_entries.CONN_CLASS_LOCAL_PUSH,
-        system_options={},
-    )
-
-    assert hkid in hass.data[ENTITY_MAP].storage_data
-
-    await async_remove_entry(hass, entry)
-
-    assert hkid not in hass.data[ENTITY_MAP].storage_data

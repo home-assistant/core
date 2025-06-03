@@ -1,0 +1,80 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:component::bluetooth::config::step::user::description%]",
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect: {error}"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "valve_connected_state": {
+        "name": "Valve connection"
+      },
+      "sensor_connected_state": {
+        "name": "Sensor connection"
+      }
+    },
+    "button": {
+      "factory_reset": {
+        "name": "Factory reset"
+      }
+    },
+    "number": {
+      "remaining_open_time": {
+        "name": "Remaining open time"
+      },
+      "remaining_open_set": {
+        "name": "Open for"
+      },
+      "manual_watering_time": {
+        "name": "Manual watering time"
+      },
+      "rain_pause": {
+        "name": "Rain pause"
+      },
+      "seasonal_adjust": {
+        "name": "Seasonal adjust"
+      },
+      "sensor_threshold": {
+        "name": "Sensor threshold"
+      }
+    },
+    "sensor": {
+      "activation_reason": {
+        "name": "Activation reason"
+      },
+      "sensor_battery_level": {
+        "name": "Sensor battery"
+      },
+      "sensor_type": {
+        "name": "Sensor type"
+      },
+      "sensor_measurement_timestamp": {
+        "name": "Sensor timestamp"
+      },
+      "remaining_open_timestamp": {
+        "name": "Valve closing"
+      }
+    },
+    "switch": {
+      "state": {
+        "name": "[%key:common::state::open%]"
+      }
+    }
+  }
+}

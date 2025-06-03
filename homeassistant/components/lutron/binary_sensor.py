@@ -1,27 +1,48 @@
 """Support for Lutron Powr Savr occupancy sensors."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+import logging
+from typing import Any
+
 from pylutron import OccupancyGroup
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OCCUPANCY,
-    BinarySensorDevice,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
+from . import DOMAIN, LutronData
+from .entity import LutronDevice
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Lutron occupancy sensors."""
-    if discovery_info is None:
-        return
-    devs = []
-    for (area_name, device) in hass.data[LUTRON_DEVICES]["binary_sensor"]:
-        dev = LutronOccupancySensor(area_name, device, hass.data[LUTRON_CONTROLLER])
-        devs.append(dev)
-
-    add_entities(devs)
+_LOGGER = logging.getLogger(__name__)
 
 
-class LutronOccupancySensor(LutronDevice, BinarySensorDevice):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Lutron binary_sensor platform.
+
+    Adds occupancy groups from the Main Repeater associated with the
+    config_entry as binary_sensor entities.
+    """
+    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        [
+            LutronOccupancySensor(area_name, device, entry_data.client)
+            for area_name, device in entry_data.binary_sensors
+        ],
+        True,
+    )
+
+
+class LutronOccupancySensor(LutronDevice, BinarySensorEntity):
     """Representation of a Lutron Occupancy Group.
 
     The Lutron integration API reports "occupancy groups" rather than
@@ -29,28 +50,14 @@ class LutronOccupancySensor(LutronDevice, BinarySensorDevice):
     reported as a single occupancy group.
     """
 
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        # Error cases will end up treated as unoccupied.
-        return self._lutron_device.state == OccupancyGroup.State.OCCUPIED
+    _lutron_device: OccupancyGroup
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
     @property
-    def device_class(self):
-        """Return that this is an occupancy sensor."""
-        return DEVICE_CLASS_OCCUPANCY
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        # The default LutronDevice naming would create 'Kitchen Occ Kitchen',
-        # but since there can only be one OccupancyGroup per area we go
-        # with something shorter.
-        return f"{self._area_name} Occupancy"
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
-        attr = {}
-        attr["lutron_integration_id"] = self._lutron_device.id
-        return attr
+        return {"lutron_integration_id": self._lutron_device.id}
+
+    def _update_attrs(self) -> None:
+        """Update the state attributes."""
+        self._attr_is_on = self._lutron_device.state == OccupancyGroup.State.OCCUPIED

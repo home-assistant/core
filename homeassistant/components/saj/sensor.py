@@ -1,53 +1,59 @@
 """SAJ solar inverter interface."""
-import asyncio
-from datetime import date
+
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
+from datetime import date, datetime
 import logging
+from typing import Any
 
 import pysaj
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    ENERGY_KILO_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    MASS_KILOGRAMS,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfEnergy,
+    UnitOfMass,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 MIN_INTERVAL = 5
 MAX_INTERVAL = 300
 
-UNIT_OF_MEASUREMENT_HOURS = "h"
-
 INVERTER_TYPES = ["ethernet", "wifi"]
 
 SAJ_UNIT_MAPPINGS = {
     "": None,
-    "h": UNIT_OF_MEASUREMENT_HOURS,
-    "kg": MASS_KILOGRAMS,
-    "kWh": ENERGY_KILO_WATT_HOUR,
-    "W": POWER_WATT,
-    "°C": TEMP_CELSIUS,
+    "h": UnitOfTime.HOURS,
+    "kg": UnitOfMass.KILOGRAMS,
+    "kWh": UnitOfEnergy.KILO_WATT_HOUR,
+    "W": UnitOfPower.WATT,
+    "°C": UnitOfTemperature.CELSIUS,
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
@@ -58,7 +64,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SAJ sensors."""
 
     remove_interval_update = None
@@ -68,7 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensor_def = pysaj.Sensors(wifi)
 
     # Use all sensors by default
-    hass_sensors = []
+    hass_sensors: list[SAJsensor] = []
 
     kwargs = {}
     if wifi:
@@ -92,60 +103,60 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if not done:
         raise PlatformNotReady
 
-    for sensor in sensor_def:
-        hass_sensors.append(
-            SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
-        )
+    hass_sensors.extend(
+        SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
+        for sensor in sensor_def
+        if sensor.enabled
+    )
 
     async_add_entities(hass_sensors)
 
-    async def async_saj():
+    async def async_saj() -> bool:
         """Update all the SAJ sensors."""
-        tasks = []
-
-        values = await saj.read(sensor_def)
+        success = await saj.read(sensor_def)
 
         for sensor in hass_sensors:
             state_unknown = False
-            if not values:
-                # SAJ inverters are powered by DC via solar panels and thus are
-                # offline after the sun has set. If a sensor resets on a daily
-                # basis like "today_yield", this reset won't happen automatically.
-                # Code below checks if today > day when sensor was last updated
-                # and if so: set state to None.
-                # Sensors with live values like "temperature" or "current_power"
-                # will also be reset to None.
-                if (sensor.per_day_basis and date.today() > sensor.date_updated) or (
-                    not sensor.per_day_basis and not sensor.per_total_basis
-                ):
-                    state_unknown = True
-            task = sensor.async_update_values(unknown_state=state_unknown)
-            if task:
-                tasks.append(task)
-        if tasks:
-            await asyncio.wait(tasks)
-        return values
+            # SAJ inverters are powered by DC via solar panels and thus are
+            # offline after the sun has set. If a sensor resets on a daily
+            # basis like "today_yield", this reset won't happen automatically.
+            # Code below checks if today > day when sensor was last updated
+            # and if so: set state to None.
+            # Sensors with live values like "temperature" or "current_power"
+            # will also be reset to None.
+            if not success and (
+                (sensor.per_day_basis and date.today() > sensor.date_updated)
+                or (not sensor.per_day_basis and not sensor.per_total_basis)
+            ):
+                state_unknown = True
+            sensor.async_update_values(unknown_state=state_unknown)
 
-    def start_update_interval(event):
+        return success
+
+    @callback
+    def start_update_interval(hass: HomeAssistant) -> None:
         """Start the update interval scheduling."""
         nonlocal remove_interval_update
         remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
 
+    @callback
     def stop_update_interval(event):
         """Properly cancel the scheduled update."""
-        remove_interval_update()  # pylint: disable=not-callable
+        remove_interval_update()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
+    async_at_start(hass, start_update_interval)
 
 
 @callback
-def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
+def async_track_time_interval_backoff(
+    hass: HomeAssistant, action: Callable[[], Coroutine[Any, Any, bool]]
+) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively and increases the interval when failed."""
     remove = None
     interval = MIN_INTERVAL
 
-    async def interval_listener(now=None):
+    async def interval_listener(now: datetime | None = None) -> None:
         """Handle elapsed interval with backoff."""
         nonlocal interval, remove
         try:
@@ -158,57 +169,57 @@ def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
 
     hass.async_create_task(interval_listener())
 
-    def remove_listener():
+    def remove_listener() -> None:
         """Remove interval listener."""
         if remove:
-            remove()  # pylint: disable=not-callable
+            remove()
 
     return remove_listener
 
 
-class SAJsensor(Entity):
+class SAJsensor(SensorEntity):
     """Representation of a SAJ sensor."""
 
-    def __init__(self, serialnumber, pysaj_sensor, inverter_name=None):
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        serialnumber: str | None,
+        pysaj_sensor: pysaj.Sensor,
+        inverter_name: str | None = None,
+    ) -> None:
         """Initialize the SAJ sensor."""
         self._sensor = pysaj_sensor
         self._inverter_name = inverter_name
         self._serialnumber = serialnumber
         self._state = self._sensor.value
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
+        if pysaj_sensor.name in ("current_power", "temperature"):
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        if pysaj_sensor.name == "total_yield":
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+        self._attr_unique_id = f"{serialnumber}_{pysaj_sensor.name}"
+        native_uom = SAJ_UNIT_MAPPINGS[pysaj_sensor.unit]
+        self._attr_native_unit_of_measurement = native_uom
         if self._inverter_name:
-            return f"saj_{self._inverter_name}_{self._sensor.name}"
-
-        return f"saj_{self._sensor.name}"
+            self._attr_name = f"saj_{self._inverter_name}_{pysaj_sensor.name}"
+        else:
+            self._attr_name = f"saj_{pysaj_sensor.name}"
+        if native_uom == UnitOfPower.WATT:
+            self._attr_device_class = SensorDeviceClass.POWER
+        if native_uom == UnitOfEnergy.KILO_WATT_HOUR:
+            self._attr_device_class = SensorDeviceClass.ENERGY
+        if native_uom in (
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+        ):
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SAJ_UNIT_MAPPINGS[self._sensor.unit]
-
-    @property
-    def device_class(self):
-        """Return the device class the sensor belongs to."""
-        if self.unit_of_measurement == POWER_WATT:
-            return DEVICE_CLASS_POWER
-        if (
-            self.unit_of_measurement == TEMP_CELSIUS
-            or self._sensor.unit == TEMP_FAHRENHEIT
-        ):
-            return DEVICE_CLASS_TEMPERATURE
-
-    @property
-    def should_poll(self) -> bool:
-        """SAJ sensors are updated & don't poll."""
-        return False
 
     @property
     def per_day_basis(self) -> bool:
@@ -217,7 +228,7 @@ class SAJsensor(Entity):
 
     @property
     def per_total_basis(self) -> bool:
-        """Return if the sensors value is cummulative or not."""
+        """Return if the sensors value is cumulative or not."""
         return self._sensor.per_total_basis
 
     @property
@@ -225,6 +236,7 @@ class SAJsensor(Entity):
         """Return the date when the sensor was last updated."""
         return self._sensor.date
 
+    @callback
     def async_update_values(self, unknown_state=False):
         """Update this sensor."""
         update = False
@@ -237,9 +249,5 @@ class SAJsensor(Entity):
             update = True
             self._state = None
 
-        return self.async_update_ha_state() if update else None
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this sensor."""
-        return f"{self._serialnumber}_{self._sensor.name}"
+        if update:
+            self.async_write_ha_state()

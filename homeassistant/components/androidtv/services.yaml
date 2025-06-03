@@ -1,35 +1,50 @@
-# Describes the format for available Android TV and Fire TV services
+# Describes the format for available Android and Fire TV services
 
 adb_command:
-  description: Send an ADB command to an Android TV / Fire TV device.
+  target:
+    entity:
+      integration: androidtv
+      domain: media_player
   fields:
-    entity_id:
-      description: Name(s) of Android TV / Fire TV entities.
-      example: 'media_player.android_tv_living_room'
     command:
-      description: Either a key command or an ADB shell command.
-      example: 'HOME'
+      required: true
+      example: "HOME"
+      selector:
+        text:
 download:
-  description: Download a file from your Android TV / Fire TV device to your Home Assistant instance.
+  target:
+    entity:
+      integration: androidtv
+      domain: media_player
   fields:
-    entity_id:
-      description: Name of Android TV / Fire TV entity.
-      example: 'media_player.android_tv_living_room'
     device_path:
-      description: The filepath on the Android TV / Fire TV device.
-      example: '/storage/emulated/0/Download/example.txt'
+      required: true
+      example: "/storage/emulated/0/Download/example.txt"
+      selector:
+        text:
     local_path:
-      description: The filepath on your Home Assistant instance.
-      example: '/config/example.txt'
+      required: true
+      example: "/config/www/example.txt"
+      selector:
+        text:
 upload:
-  description: Upload a file from your Home Assistant instance to an Android TV / Fire TV device.
+  target:
+    entity:
+      integration: androidtv
+      domain: media_player
   fields:
-    entity_id:
-      description: Name(s) of Android TV / Fire TV entities.
-      example: 'media_player.android_tv_living_room'
     device_path:
-      description: The filepath on the Android TV / Fire TV device.
-      example: '/storage/emulated/0/Download/example.txt'
+      required: true
+      example: "/storage/emulated/0/Download/example.txt"
+      selector:
+        text:
     local_path:
-      description: The filepath on your Home Assistant instance.
-      example: '/config/example.txt'
+      required: true
+      example: "/config/www/example.txt"
+      selector:
+        text:
+learn_sendevent:
+  target:
+    entity:
+      integration: androidtv
+      domain: media_player

@@ -1,93 +1,105 @@
 """Support for Blink Alarm Control Panel."""
+
+from __future__ import annotations
+
 import logging
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.alarm_control_panel.const import SUPPORT_ALARM_ARM_AWAY
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_DISARMED,
-)
+from blinkpy.blinkpy import Blink, BlinkSyncModule
 
-from . import BLINK_DATA, DEFAULT_ATTRIBUTION
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
+from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
+from .coordinator import BlinkConfigEntry, BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:security"
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Arlo Alarm Control Panels."""
-    if discovery_info is None:
-        return
-    data = hass.data[BLINK_DATA]
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: BlinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Blink Alarm Control Panels."""
+    coordinator = config_entry.runtime_data
 
     sync_modules = []
-    for sync_name, sync_module in data.sync.items():
-        sync_modules.append(BlinkSyncModule(data, sync_name, sync_module))
-    add_entities(sync_modules, True)
+    for sync_name, sync_module in coordinator.api.sync.items():
+        sync_modules.append(BlinkSyncModuleHA(coordinator, sync_name, sync_module))
+    async_add_entities(sync_modules)
 
 
-class BlinkSyncModule(AlarmControlPanel):
+class BlinkSyncModuleHA(
+    CoordinatorEntity[BlinkUpdateCoordinator], AlarmControlPanelEntity
+):
     """Representation of a Blink Alarm Control Panel."""
 
-    def __init__(self, data, name, sync):
+    _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+    _attr_code_arm_required = False
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(
+        self, coordinator: BlinkUpdateCoordinator, name: str, sync: BlinkSyncModule
+    ) -> None:
         """Initialize the alarm control panel."""
-        self.data = data
+        super().__init__(coordinator)
+        self.api: Blink = coordinator.api
         self.sync = sync
-        self._name = name
-        self._state = None
+        self._attr_unique_id: str = sync.serial
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, sync.serial)},
+            name=f"{DOMAIN} {name}",
+            manufacturer=DEFAULT_BRAND,
+            serial_number=sync.serial,
+            sw_version=sync.version,
+        )
+        self._update_attr()
 
-    @property
-    def unique_id(self):
-        """Return the unique id for the sync module."""
-        return self.sync.serial
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle coordinator update."""
+        self._update_attr()
+        super()._handle_coordinator_update()
 
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
+    @callback
+    def _update_attr(self) -> None:
+        """Update attributes for alarm control panel."""
+        self.sync.attributes["network_info"] = self.api.networks
+        self.sync.attributes["associated_cameras"] = list(self.sync.cameras)
+        self.sync.attributes[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
+        self._attr_extra_state_attributes = self.sync.attributes
+        self._attr_alarm_state = (
+            AlarmControlPanelState.ARMED_AWAY
+            if self.sync.arm
+            else AlarmControlPanelState.DISARMED
+        )
 
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_AWAY
-
-    @property
-    def name(self):
-        """Return the name of the panel."""
-        return f"{BLINK_DATA} {self._name}"
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attr = self.sync.attributes
-        attr["network_info"] = self.data.networks
-        attr["associated_cameras"] = list(self.sync.cameras.keys())
-        attr[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
-        return attr
-
-    def update(self):
-        """Update the state of the device."""
-        _LOGGER.debug("Updating Blink Alarm Control Panel %s", self._name)
-        self.data.refresh()
-        mode = self.sync.arm
-        if mode:
-            self._state = STATE_ALARM_ARMED_AWAY
-        else:
-            self._state = STATE_ALARM_DISARMED
-
-    def alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self.sync.arm = False
-        self.sync.refresh()
+        try:
+            await self.sync.async_arm(False)
 
-    def alarm_arm_away(self, code=None):
+        except TimeoutError as er:
+            raise HomeAssistantError("Blink failed to disarm camera") from er
+
+        await self.coordinator.async_refresh()
+
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
-        self.sync.arm = True
-        self.sync.refresh()
+        try:
+            await self.sync.async_arm(True)
+
+        except TimeoutError as er:
+            raise HomeAssistantError("Blink failed to arm camera away") from er
+
+        await self.coordinator.async_refresh()

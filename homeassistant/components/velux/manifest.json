@@ -1,8 +1,16 @@
 {
   "domain": "velux",
   "name": "Velux",
+  "codeowners": ["@Julius2342", "@DeerMaximum", "@pawlizio"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "velux_klf*",
+      "macaddress": "646184*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/velux",
-  "requirements": ["pyvlx==0.2.12"],
-  "dependencies": [],
-  "codeowners": ["@Julius2342"]
+  "iot_class": "local_polling",
+  "loggers": ["pyvlx"],
+  "requirements": ["pyvlx==0.2.26"]
 }

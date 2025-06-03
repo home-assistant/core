@@ -1,10 +1,19 @@
 """Platform for the Garadget cover component."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
+from homeassistant.components.cover import (
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
+    CoverDeviceClass,
+    CoverEntity,
+    CoverState,
+)
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_COVERS,
@@ -12,11 +21,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    STATE_CLOSED,
-    STATE_OPEN,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,16 +37,14 @@ ATTR_TIME_IN_STATE = "time_in_state"
 
 DEFAULT_NAME = "Garadget"
 
-STATE_CLOSING = "closing"
 STATE_OFFLINE = "offline"
-STATE_OPENING = "opening"
 STATE_STOPPED = "stopped"
 
 STATES_MAP = {
-    "open": STATE_OPEN,
-    "opening": STATE_OPENING,
-    "closed": STATE_CLOSED,
-    "closing": STATE_CLOSING,
+    "open": CoverState.OPEN,
+    "opening": CoverState.OPENING,
+    "closed": CoverState.CLOSED,
+    "closing": CoverState.CLOSING,
     "stopped": STATE_STOPPED,
 }
 
@@ -50,15 +58,20 @@ COVER_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Garadget covers."""
     covers = []
-    devices = config.get(CONF_COVERS)
+    devices = config[CONF_COVERS]
 
     for device_id, device_config in devices.items():
         args = {
@@ -74,8 +87,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(covers)
 
 
-class GaradgetCover(CoverDevice):
+class GaradgetCover(CoverEntity):
     """Representation of a Garadget cover."""
+
+    _attr_device_class = CoverDeviceClass.GARAGE
 
     def __init__(self, hass, args):
         """Initialize the cover."""
@@ -105,14 +120,14 @@ class GaradgetCover(CoverDevice):
                     self._name = doorconfig["nme"]
             self.update()
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to server: %(reason)s", dict(reason=ex))
+            _LOGGER.error("Unable to connect to server: %(reason)s", {"reason": ex})
             self._state = STATE_OFFLINE
             self._available = False
             self._name = DEFAULT_NAME
         except KeyError:
             _LOGGER.warning(
                 "Garadget device %(device)s seems to be offline",
-                dict(device=self.device_id),
+                {"device": self.device_id},
             )
             self._name = DEFAULT_NAME
             self._state = STATE_OFFLINE
@@ -120,27 +135,21 @@ class GaradgetCover(CoverDevice):
 
     def __del__(self):
         """Try to remove token."""
-        if self._obtained_token is True:
-            if self.access_token is not None:
-                self.remove_token()
+        if self._obtained_token is True and self.access_token is not None:
+            self.remove_token()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the cover."""
         return self._name
 
     @property
-    def should_poll(self):
-        """No polling needed for a demo cover."""
-        return True
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         data = {}
 
@@ -159,16 +168,11 @@ class GaradgetCover(CoverDevice):
         return data
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._state is None:
             return None
-        return self._state == STATE_CLOSED
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return "garage"
+        return self._state == CoverState.CLOSED
 
     def get_token(self):
         """Get new token for usage during this session."""
@@ -203,57 +207,54 @@ class GaradgetCover(CoverDevice):
         """Check the state of the service during an operation."""
         self.schedule_update_ha_state(True)
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._state not in ["close", "closing"]:
-            ret = self._put_command("setState", "close")
+            self._put_command("setState", "close")
             self._start_watcher("close")
-            return ret.get("return_value") == 1
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._state not in ["open", "opening"]:
-            ret = self._put_command("setState", "open")
+            self._put_command("setState", "open")
             self._start_watcher("open")
-            return ret.get("return_value") == 1
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the door where it is."""
         if self._state not in ["stopped"]:
-            ret = self._put_command("setState", "stop")
+            self._put_command("setState", "stop")
             self._start_watcher("stop")
-            return ret["return_value"] == 1
 
-    def update(self):
+    def update(self) -> None:
         """Get updated status from API."""
         try:
             status = self._get_variable("doorStatus")
             _LOGGER.debug("Current Status: %s", status["status"])
-            self._state = STATES_MAP.get(status["status"], None)
+            self._state = STATES_MAP.get(status["status"])
             self.time_in_state = status["time"]
             self.signal = status["signal"]
             self.sensor = status["sensor"]
             self._available = True
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to server: %(reason)s", dict(reason=ex))
+            _LOGGER.error("Unable to connect to server: %(reason)s", {"reason": ex})
             self._state = STATE_OFFLINE
         except KeyError:
             _LOGGER.warning(
                 "Garadget device %(device)s seems to be offline",
-                dict(device=self.device_id),
+                {"device": self.device_id},
             )
             self._state = STATE_OFFLINE
 
-        if self._state not in [STATE_CLOSING, STATE_OPENING]:
-            if self._unsub_listener_cover is not None:
-                self._unsub_listener_cover()
-                self._unsub_listener_cover = None
+        if (
+            self._state not in [CoverState.CLOSING, CoverState.OPENING]
+            and self._unsub_listener_cover is not None
+        ):
+            self._unsub_listener_cover()
+            self._unsub_listener_cover = None
 
     def _get_variable(self, var):
         """Get latest status."""
-        url = "{}/v1/devices/{}/{}?access_token={}".format(
-            self.particle_url, self.device_id, var, self.access_token
-        )
+        url = f"{self.particle_url}/v1/devices/{self.device_id}/{var}?access_token={self.access_token}"
         ret = requests.get(url, timeout=10)
         result = {}
         for pairs in ret.json()["result"].split("|"):

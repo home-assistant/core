@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "entity": {
+    "switch": {
+      "light": {
+        "name": "Panel light"
+      },
+      "quiet": {
+        "name": "Quiet mode"
+      },
+      "fresh_air": {
+        "name": "Fresh air"
+      },
+      "xfan": {
+        "name": "Xtra fan"
+      },
+      "health_mode": {
+        "name": "Health mode"
+      }
+    }
+  }
+}

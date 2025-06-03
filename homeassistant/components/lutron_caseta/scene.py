@@ -1,39 +1,49 @@
 """Support for Lutron Caseta scenes."""
-import logging
+
+from typing import Any
+
+from pylutron_caseta.smartbridge import Smartbridge
 
 from homeassistant.components.scene import Scene
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LUTRON_CASETA_SMARTBRIDGE
+from .const import DOMAIN
+from .util import serial_to_unique_id
 
-_LOGGER = logging.getLogger(__name__)
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Lutron Caseta scene platform.
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Lutron Caseta lights."""
-    devs = []
-    bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
+    Adds scenes from the Caseta bridge associated with the config_entry as
+    scene entities.
+    """
+    data = config_entry.runtime_data
+    bridge = data.bridge
     scenes = bridge.get_scenes()
-    for scene in scenes:
-        dev = LutronCasetaScene(scenes[scene], bridge)
-        devs.append(dev)
-
-    async_add_entities(devs, True)
+    async_add_entities(LutronCasetaScene(scenes[scene], data) for scene in scenes)
 
 
 class LutronCasetaScene(Scene):
     """Representation of a Lutron Caseta scene."""
 
-    def __init__(self, scene, bridge):
+    def __init__(self, scene, data):
         """Initialize the Lutron Caseta scene."""
-        self._scene_name = scene["name"]
         self._scene_id = scene["scene_id"]
-        self._bridge = bridge
+        self._bridge: Smartbridge = data.bridge
+        bridge_unique_id = serial_to_unique_id(data.bridge_device["serial"])
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, data.bridge_device["serial"])},
+        )
+        self._attr_name = scene["name"]
+        self._attr_unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"
 
-    @property
-    def name(self):
-        """Return the name of the scene."""
-        return self._scene_name
-
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        self._bridge.activate_scene(self._scene_id)
+        await self._bridge.activate_scene(self._scene_id)

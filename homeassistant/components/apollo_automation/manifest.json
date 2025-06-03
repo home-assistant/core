@@ -1,0 +1,6 @@
+{
+  "domain": "apollo_automation",
+  "name": "Apollo Automation",
+  "integration_type": "virtual",
+  "supported_by": "esphome"
+}

@@ -1,548 +1,753 @@
-"""Support for interfacing to the Logitech SqueezeBox API."""
-import asyncio
+"""Support for interfacing to the SqueezeBox API."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from datetime import datetime
 import json
 import logging
-import socket
-import urllib.parse
+from typing import TYPE_CHECKING, Any, cast
 
-import aiohttp
-import async_timeout
+from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
-from homeassistant.components.media_player.const import (
+from homeassistant.components import media_source
+from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+    ATTR_MEDIA_EXTRA,
+    BrowseError,
+    BrowseMedia,
+    MediaPlayerEnqueue,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
+    RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
+    async_process_play_media_url,
 )
-from homeassistant.const import (
-    ATTR_COMMAND,
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
+from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    entity_platform,
+    entity_registry as er,
 )
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.start import async_at_start
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, SERVICE_CALL_METHOD
+from .browse_media import (
+    BrowseData,
+    build_item_response,
+    generate_playlist,
+    library_payload,
+    media_source_content_filter,
+)
+from .const import (
+    ATTR_ANNOUNCE_TIMEOUT,
+    ATTR_ANNOUNCE_VOLUME,
+    CONF_BROWSE_LIMIT,
+    CONF_VOLUME_STEP,
+    DEFAULT_BROWSE_LIMIT,
+    DEFAULT_VOLUME_STEP,
+    DISCOVERY_TASK,
+    DOMAIN,
+    KNOWN_PLAYERS,
+    KNOWN_SERVERS,
+    SIGNAL_PLAYER_DISCOVERED,
+    SQUEEZEBOX_SOURCE_STRINGS,
+)
+from .coordinator import SqueezeBoxPlayerUpdateCoordinator
+from .entity import SqueezeboxEntity
+
+if TYPE_CHECKING:
+    from . import SqueezeboxConfigEntry
+
+SERVICE_CALL_METHOD = "call_method"
+SERVICE_CALL_QUERY = "call_query"
+
+ATTR_QUERY_RESULT = "query_result"
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_PORT = 9000
-TIMEOUT = 10
-
-SUPPORT_SQUEEZEBOX = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PLAY
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_CLEAR_PLAYLIST
-)
-
-MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME): cv.string,
-    }
-)
-
-DATA_SQUEEZEBOX = "squeezebox"
-
-KNOWN_SERVERS = "squeezebox_known_servers"
+PARALLEL_UPDATES = 1
 
 ATTR_PARAMETERS = "parameters"
+ATTR_OTHER_PLAYER = "other_player"
 
-SQUEEZEBOX_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {
-        vol.Required(ATTR_COMMAND): cv.string,
-        vol.Optional(ATTR_PARAMETERS): vol.All(
-            cv.ensure_list, vol.Length(min=1), [cv.string]
-        ),
-    }
-)
+ATTR_TO_PROPERTY = [
+    ATTR_QUERY_RESULT,
+]
 
-SERVICE_TO_METHOD = {
-    SERVICE_CALL_METHOD: {
-        "method": "async_call_method",
-        "schema": SQUEEZEBOX_CALL_METHOD_SCHEMA,
-    }
+SQUEEZEBOX_MODE = {
+    "pause": MediaPlayerState.PAUSED,
+    "play": MediaPlayerState.PLAYING,
+    "stop": MediaPlayerState.IDLE,
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the squeezebox platform."""
+async def start_server_discovery(hass: HomeAssistant) -> None:
+    """Start a server discovery task."""
 
-    known_servers = hass.data.get(KNOWN_SERVERS)
-    if known_servers is None:
-        hass.data[KNOWN_SERVERS] = known_servers = set()
-
-    if DATA_SQUEEZEBOX not in hass.data:
-        hass.data[DATA_SQUEEZEBOX] = []
-
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-
-    if discovery_info is not None:
-        host = discovery_info.get("host")
-        port = discovery_info.get("port")
-    else:
-        host = config.get(CONF_HOST)
-        port = config.get(CONF_PORT)
-
-    # In case the port is not discovered
-    if port is None:
-        port = DEFAULT_PORT
-
-    # Get IP of host, to prevent duplication of same host (different DNS names)
-    try:
-        ipaddr = socket.gethostbyname(host)
-    except OSError as error:
-        _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
-        raise PlatformNotReady from error
-
-    if ipaddr in known_servers:
-        return
-
-    _LOGGER.debug("Creating LMS object for %s", ipaddr)
-    lms = LogitechMediaServer(hass, host, port, username, password)
-
-    players = await lms.create_players()
-    if players is None:
-        raise PlatformNotReady
-
-    known_servers.add(ipaddr)
-
-    hass.data[DATA_SQUEEZEBOX].extend(players)
-    async_add_entities(players)
-
-    async def async_service_handler(service):
-        """Map services to methods on MediaPlayerDevice."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        if not method:
-            return
-
-        params = {
-            key: value for key, value in service.data.items() if key != "entity_id"
-        }
-        entity_ids = service.data.get("entity_id")
-        if entity_ids:
-            target_players = [
-                player
-                for player in hass.data[DATA_SQUEEZEBOX]
-                if player.entity_id in entity_ids
-            ]
-        else:
-            target_players = hass.data[DATA_SQUEEZEBOX]
-
-        update_tasks = []
-        for player in target_players:
-            await getattr(player, method["method"])(**params)
-            update_tasks.append(player.async_update_ha_state(True))
-
-        if update_tasks:
-            await asyncio.wait(update_tasks)
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
+    def _discovered_server(server: Server) -> None:
+        discovery_flow.async_create_flow(
+            hass,
+            DOMAIN,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data={
+                CONF_HOST: server.host,
+                CONF_PORT: int(server.port),
+                "uuid": server.uuid,
+            },
         )
 
-    return True
-
-
-class LogitechMediaServer:
-    """Representation of a Logitech media server."""
-
-    def __init__(self, hass, host, port, username, password):
-        """Initialize the Logitech device."""
-        self.hass = hass
-        self.host = host
-        self.port = port
-        self._username = username
-        self._password = password
-
-    async def create_players(self):
-        """Create a list of devices connected to LMS."""
-        result = []
-        data = await self.async_query("players", "status")
-        if data is False:
-            return None
-        for players in data.get("players_loop", []):
-            player = SqueezeBoxDevice(self, players["playerid"], players["name"])
-            await player.async_update()
-            result.append(player)
-        return result
-
-    async def async_query(self, *command, player=""):
-        """Abstract out the JSON-RPC connection."""
-        auth = (
-            None
-            if self._username is None
-            else aiohttp.BasicAuth(self._username, self._password)
-        )
-        url = f"http://{self.host}:{self.port}/jsonrpc.js"
-        data = json.dumps(
-            {"id": "1", "method": "slim.request", "params": [player, command]}
+    hass.data.setdefault(DOMAIN, {})
+    if DISCOVERY_TASK not in hass.data[DOMAIN]:
+        _LOGGER.debug("Adding server discovery task for squeezebox")
+        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_background_task(
+            async_discover(_discovered_server),
+            name="squeezebox server discovery",
         )
 
-        _LOGGER.debug("URL: %s Data: %s", url, data)
 
-        try:
-            websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(TIMEOUT):
-                response = await websession.post(url, data=data, auth=auth)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SqueezeboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Squeezebox media_player platform from a server config entry."""
 
-                if response.status != 200:
-                    _LOGGER.error(
-                        "Query failed, response code: %s Full message: %s",
-                        response.status,
-                        response,
-                    )
-                    return False
+    # Add media player entities when discovered
+    async def _player_discovered(player: SqueezeBoxPlayerUpdateCoordinator) -> None:
+        _LOGGER.debug("Setting up media_player entity for player %s", player)
+        async_add_entities([SqueezeBoxMediaPlayerEntity(player)])
 
-                data = await response.json()
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
+    )
 
-        except (asyncio.TimeoutError, aiohttp.ClientError) as error:
-            _LOGGER.error("Failed communicating with LMS: %s", type(error))
-            return False
+    # Register entity services
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_CALL_METHOD,
+        {
+            vol.Required(ATTR_COMMAND): cv.string,
+            vol.Optional(ATTR_PARAMETERS): vol.All(
+                cv.ensure_list, vol.Length(min=1), [cv.string]
+            ),
+        },
+        "async_call_method",
+    )
+    platform.async_register_entity_service(
+        SERVICE_CALL_QUERY,
+        {
+            vol.Required(ATTR_COMMAND): cv.string,
+            vol.Optional(ATTR_PARAMETERS): vol.All(
+                cv.ensure_list, vol.Length(min=1), [cv.string]
+            ),
+        },
+        "async_call_query",
+    )
 
-        try:
-            return data["result"]
-        except AttributeError:
-            _LOGGER.error("Received invalid response: %s", data)
-            return False
+    # Start server discovery task if not already running
+    entry.async_on_unload(async_at_start(hass, start_server_discovery))
 
 
-class SqueezeBoxDevice(MediaPlayerDevice):
-    """Representation of a SqueezeBox device."""
+def get_announce_volume(extra: dict) -> float | None:
+    """Get announce volume from extra service data."""
+    if ATTR_ANNOUNCE_VOLUME not in extra:
+        return None
+    announce_volume = float(extra[ATTR_ANNOUNCE_VOLUME])
+    if not (0 < announce_volume <= 1):
+        raise ValueError
+    return announce_volume * 100
 
-    def __init__(self, lms, player_id, name):
+
+def get_announce_timeout(extra: dict) -> int | None:
+    """Get announce volume from extra service data."""
+    if ATTR_ANNOUNCE_TIMEOUT not in extra:
+        return None
+    announce_timeout = int(extra[ATTR_ANNOUNCE_TIMEOUT])
+    if announce_timeout < 1:
+        raise ValueError
+    return announce_timeout
+
+
+class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
+    """Representation of the media player features of a SqueezeBox device.
+
+    Wraps a pysqueezebox.Player() object.
+    """
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
+    )
+    _attr_has_entity_name = True
+    _attr_name = None
+    _last_update: datetime | None = None
+
+    def __init__(self, coordinator: SqueezeBoxPlayerUpdateCoordinator) -> None:
         """Initialize the SqueezeBox device."""
-        super().__init__()
-        self._lms = lms
-        self._id = player_id
-        self._status = {}
-        self._name = name
-        self._last_update = None
-        _LOGGER.debug("Creating SqueezeBox object: %s, %s", name, player_id)
+        super().__init__(coordinator)
+        self._query_result: bool | dict = {}
+        self._remove_dispatcher: Callable | None = None
+        self._previous_media_position = 0
+        self._attr_unique_id = format_mac(self._player.player_id)
+        self._browse_data = BrowseData()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self._previous_media_position != self.media_position:
+            self._previous_media_position = self.media_position
+            self._last_update = utcnow()
+        self.async_write_ha_state()
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
+    def volume_step(self) -> float:
+        """Return the step to be used for volume up down."""
+        return float(
+            self.coordinator.config_entry.options.get(
+                CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
+            )
+            / 100
+        )
 
     @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._id
+    def browse_limit(self) -> int:
+        """Return the step to be used for volume up down."""
+        return self.coordinator.config_entry.options.get(
+            CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+        )
 
     @property
-    def state(self):
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.available and super().available
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return device-specific attributes."""
+        return {
+            attr: getattr(self, attr)
+            for attr in ATTR_TO_PROPERTY
+            if getattr(self, attr) is not None
+        }
+
+    @property
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        if "power" in self._status and self._status["power"] == 0:
-            return STATE_OFF
-        if "mode" in self._status:
-            if self._status["mode"] == "pause":
-                return STATE_PAUSED
-            if self._status["mode"] == "play":
-                return STATE_PLAYING
-            if self._status["mode"] == "stop":
-                return STATE_IDLE
+        if not self._player.power:
+            return MediaPlayerState.OFF
+        if self._player.mode and self._player.mode in SQUEEZEBOX_MODE:
+            return SQUEEZEBOX_MODE[self._player.mode]
+        _LOGGER.error(
+            "Received unknown mode %s from player %s", self._player.mode, self.name
+        )
         return None
 
-    def async_query(self, *parameters):
-        """Send a command to the LMS.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._lms.async_query(*parameters, player=self._id)
-
-    async def async_update(self):
-        """Retrieve the current state of the player."""
-        tags = "adKl"
-        response = await self.async_query("status", "-", "1", f"tags:{tags}")
-
-        if response is False:
-            return
-
-        last_media_position = self.media_position
-
-        self._status = {}
-
-        try:
-            self._status.update(response["playlist_loop"][0])
-        except KeyError:
-            pass
-        try:
-            self._status.update(response["remoteMeta"])
-        except KeyError:
-            pass
-
-        self._status.update(response)
-
-        if self.media_position != last_media_position:
-            _LOGGER.debug(
-                "Media position updated for %s: %s", self, self.media_position
-            )
-            self._last_update = utcnow()
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove from list of known players when removed from hass."""
+        known_servers = self.hass.data[DOMAIN][KNOWN_SERVERS]
+        known_players = known_servers[self.coordinator.server_uuid][KNOWN_PLAYERS]
+        known_players.remove(self.coordinator.player.player_id)
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if "mixer volume" in self._status:
-            return int(float(self._status["mixer volume"])) / 100.0
+        if self._player.volume:
+            return int(float(self._player.volume)) / 100.0
+
+        return None
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool:
         """Return true if volume is muted."""
-        if "mixer volume" in self._status:
-            return str(self._status["mixer volume"]).startswith("-")
+        return bool(self._player.muting)
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        if "current_title" in self._status:
-            return self._status["current_title"]
+        if not self._player.playlist:
+            return None
+        if len(self._player.playlist) > 1:
+            urls = [{"url": track["url"]} for track in self._player.playlist]
+            return json.dumps({"index": self._player.current_index, "urls": urls})
+        return str(self._player.url)
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
+        if not self._player.playlist:
+            return None
+        if len(self._player.playlist) > 1:
+            return MediaType.PLAYLIST
+        return MediaType.MUSIC
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int:
         """Duration of current playing media in seconds."""
-        if "duration" in self._status:
-            return int(float(self._status["duration"]))
+        return int(self._player.duration) if self._player.duration else 0
 
     @property
-    def media_position(self):
-        """Duration of current playing media in seconds."""
-        if "time" in self._status:
-            return int(float(self._status["time"]))
+    def media_position(self) -> int:
+        """Position of current playing media in seconds."""
+        return int(self._player.time) if self._player.time else 0
 
     @property
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> datetime | None:
         """Last time status was updated."""
         return self._last_update
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        if "artwork_url" in self._status:
-            media_url = self._status["artwork_url"]
-        elif "id" in self._status:
-            media_url = ("/music/{track_id}/cover.jpg").format(
-                track_id=self._status["id"]
-            )
-        else:
-            media_url = ("/music/current/cover.jpg?player={player}").format(
-                player=self._id
-            )
-
-        # pylint: disable=protected-access
-        if self._lms._username:
-            base_url = "http://{username}:{password}@{server}:{port}/".format(
-                username=self._lms._username,
-                password=self._lms._password,
-                server=self._lms.host,
-                port=self._lms.port,
-            )
-        else:
-            base_url = "http://{server}:{port}/".format(
-                server=self._lms.host, port=self._lms.port
-            )
-
-        url = urllib.parse.urljoin(base_url, media_url)
-
-        return url
+        return str(self._player.image_url) if self._player.image_url else None
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
-        if "title" in self._status:
-            return self._status["title"]
-
-        if "current_title" in self._status:
-            return self._status["current_title"]
+        return cast(str | None, self._player.title)
 
     @property
-    def media_artist(self):
+    def media_channel(self) -> str | None:
+        """Channel (e.g. webradio name) of current playing media."""
+        return cast(str | None, self._player.remote_title)
+
+    @property
+    def media_artist(self) -> str | None:
         """Artist of current playing media."""
-        if "artist" in self._status:
-            return self._status["artist"]
+        return cast(str | None, self._player.artist)
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album of current playing media."""
-        if "album" in self._status:
-            return self._status["album"]
+        return cast(str | None, self._player.album)
 
     @property
-    def shuffle(self):
+    def repeat(self) -> RepeatMode:
+        """Repeat setting."""
+        if self._player.repeat == "song":
+            return RepeatMode.ONE
+        if self._player.repeat == "playlist":
+            return RepeatMode.ALL
+        return RepeatMode.OFF
+
+    @property
+    def shuffle(self) -> bool:
         """Boolean if shuffle is enabled."""
-        if "playlist_shuffle" in self._status:
-            return self._status["playlist_shuffle"] == 1
+        # Squeezebox has a third shuffle mode (album) not recognized by Home Assistant
+        return bool(self._player.shuffle == "song")
 
     @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_SQUEEZEBOX
+    def group_members(self) -> list[str]:
+        """List players we are synced with."""
+        ent_reg = er.async_get(self.hass)
+        return [
+            entity_id
+            for player in self._player.sync_group
+            if (
+                entity_id := ent_reg.async_get_entity_id(
+                    Platform.MEDIA_PLAYER, DOMAIN, player
+                )
+            )
+        ]
 
-    def async_turn_off(self):
-        """Turn off media player.
+    @property
+    def query_result(self) -> dict | bool:
+        """Return the result from the call_query service."""
+        return self._query_result
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("power", "0")
+    async def async_turn_off(self) -> None:
+        """Turn off media player."""
+        await self._player.async_set_power(False)
+        await self.coordinator.async_refresh()
 
-    def async_volume_up(self):
-        """Volume up media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("mixer", "volume", "+5")
-
-    def async_volume_down(self):
-        """Volume down media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("mixer", "volume", "-5")
-
-    def async_set_volume_level(self, volume):
-        """Set volume level, range 0..1.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set volume level, range 0..1."""
         volume_percent = str(int(volume * 100))
-        return self.async_query("mixer", "volume", volume_percent)
+        await self._player.async_set_volume(volume_percent)
+        await self.coordinator.async_refresh()
 
-    def async_mute_volume(self, mute):
-        """Mute (true) or unmute (false) media player.
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Mute (true) or unmute (false) media player."""
+        await self._player.async_set_muting(mute)
+        await self.coordinator.async_refresh()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        mute_numeric = "1" if mute else "0"
-        return self.async_query("mixer", "muting", mute_numeric)
+    async def async_media_stop(self) -> None:
+        """Send stop command to media player."""
+        await self._player.async_stop()
+        await self.coordinator.async_refresh()
 
-    def async_media_play_pause(self):
-        """Send pause command to media player.
+    async def async_media_play_pause(self) -> None:
+        """Send pause command to media player."""
+        await self._player.async_toggle_pause()
+        await self.coordinator.async_refresh()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("pause")
+    async def async_media_play(self) -> None:
+        """Send play command to media player."""
+        await self._player.async_play()
+        await self.coordinator.async_refresh()
 
-    def async_media_play(self):
-        """Send play command to media player.
+    async def async_media_pause(self) -> None:
+        """Send pause command to media player."""
+        await self._player.async_pause()
+        await self.coordinator.async_refresh()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("play")
+    async def async_media_next_track(self) -> None:
+        """Send next track command."""
+        await self._player.async_index("+1")
+        await self.coordinator.async_refresh()
 
-    def async_media_pause(self):
-        """Send pause command to media player.
+    async def async_media_previous_track(self) -> None:
+        """Send next track command."""
+        await self._player.async_index("-1")
+        await self.coordinator.async_refresh()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("pause", "1")
+    async def async_media_seek(self, position: float) -> None:
+        """Send seek command."""
+        await self._player.async_time(position)
+        await self.coordinator.async_refresh()
 
-    def async_media_next_track(self):
-        """Send next track command.
+    async def async_turn_on(self) -> None:
+        """Turn the media player on."""
+        await self._player.async_set_power(True)
+        await self.coordinator.async_refresh()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("playlist", "index", "+1")
+    async def async_play_media(
+        self,
+        media_type: MediaType | str,
+        media_id: str,
+        announce: bool | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Send the play_media command to the media player."""
+        index = None
 
-    def async_media_previous_track(self):
-        """Send next track command.
+        if media_type:
+            media_type = media_type.lower()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("playlist", "index", "-1")
+        enqueue: MediaPlayerEnqueue | None = kwargs.get(ATTR_MEDIA_ENQUEUE)
 
-    def async_media_seek(self, position):
-        """Send seek command.
+        if enqueue == MediaPlayerEnqueue.ADD:
+            cmd = "add"
+        elif enqueue == MediaPlayerEnqueue.NEXT:
+            cmd = "insert"
+        elif enqueue == MediaPlayerEnqueue.PLAY:
+            cmd = "play_now"
+        else:
+            cmd = "play"
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("time", position)
+        if media_source.is_media_source_id(media_id):
+            media_type = MediaType.MUSIC
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = play_item.url
 
-    def async_turn_on(self):
-        """Turn the media player on.
+        if announce:
+            if media_type not in MediaType.MUSIC:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_media_type",
+                    translation_placeholders={
+                        "media_type": str(media_type),
+                    },
+                )
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("power", "1")
+            extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
+            cmd = "announce"
+            try:
+                announce_volume = get_announce_volume(extra)
+            except ValueError:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_volume",
+                    translation_placeholders={
+                        "announce_volume": ATTR_ANNOUNCE_VOLUME,
+                    },
+                ) from None
+            else:
+                self._player.set_announce_volume(announce_volume)
 
-    def async_play_media(self, media_type, media_id, **kwargs):
-        """
-        Send the play_media command to the media player.
+            try:
+                announce_timeout = get_announce_timeout(extra)
+            except ValueError:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_announce_timeout",
+                    translation_placeholders={
+                        "announce_timeout": ATTR_ANNOUNCE_TIMEOUT,
+                    },
+                ) from None
+            else:
+                self._player.set_announce_timeout(announce_timeout)
 
-        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the current playlist.
-        This method must be run in the event loop and returns a coroutine.
-        """
-        if kwargs.get(ATTR_MEDIA_ENQUEUE):
-            return self._add_uri_to_playlist(media_id)
+        if media_type in MediaType.MUSIC:
+            if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
+                # do not process special squeezebox "source" media ids
+                media_id = async_process_play_media_url(self.hass, media_id)
 
-        return self._play_uri(media_id)
+            await self._player.async_load_url(media_id, cmd)
+            return
 
-    def _play_uri(self, media_id):
-        """Replace the current play list with the uri."""
-        return self.async_query("playlist", "play", media_id)
+        if media_type == MediaType.PLAYLIST:
+            try:
+                # a saved playlist by number
+                payload = {
+                    "search_id": media_id,
+                    "search_type": MediaType.PLAYLIST,
+                }
+                playlist = await generate_playlist(
+                    self._player, payload, self.browse_limit, self._browse_data
+                )
+            except BrowseError:
+                # a list of urls
+                content = json.loads(media_id)
+                playlist = content["urls"]
+                index = content["index"]
+        else:
+            payload = {
+                "search_id": media_id,
+                "search_type": media_type,
+            }
+            playlist = await generate_playlist(
+                self._player, payload, self.browse_limit, self._browse_data
+            )
 
-    def _add_uri_to_playlist(self, media_id):
-        """Add an item to the existing playlist."""
-        return self.async_query("playlist", "add", media_id)
+            _LOGGER.debug("Generated playlist: %s", playlist)
 
-    def async_set_shuffle(self, shuffle):
+        await self._player.async_load_playlist(playlist, cmd)
+        if index is not None:
+            await self._player.async_index(index)
+        await self.coordinator.async_refresh()
+
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the media player."""
+
+        _valid_type_list = [
+            key
+            for key in self._browse_data.content_type_media_class
+            if key not in ["apps", "app", "radios", "radio"]
+        ]
+
+        _media_content_type_list = (
+            query.media_content_type.lower().replace(", ", ",").split(",")
+            if query.media_content_type
+            else ["albums", "tracks", "artists", "genres"]
+        )
+
+        if query.media_content_type and set(_media_content_type_list).difference(
+            _valid_type_list
+        ):
+            _LOGGER.debug("Invalid Media Content Type: %s", query.media_content_type)
+
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_search_media_content_type",
+                translation_placeholders={
+                    "media_content_type": ", ".join(_valid_type_list)
+                },
+            )
+
+        search_response_list: list[BrowseMedia] = []
+
+        for _content_type in _media_content_type_list:
+            payload = {
+                "search_type": _content_type,
+                "search_id": query.media_content_id,
+                "search_query": query.search_query,
+            }
+
+            try:
+                search_response_list.append(
+                    await build_item_response(
+                        self,
+                        self._player,
+                        payload,
+                        self.browse_limit,
+                        self._browse_data,
+                    )
+                )
+            except BrowseError:
+                _LOGGER.debug("Search Failure: Payload %s", payload)
+
+        result: list[BrowseMedia] = []
+
+        for search_response in search_response_list:
+            # Apply the media_filter_classes to the result if specified
+            if query.media_filter_classes and search_response.children:
+                search_response.children = [
+                    child
+                    for child in search_response.children
+                    if child.media_content_type in query.media_filter_classes
+                ]
+            if search_response.children:
+                result.extend(list(search_response.children))
+
+        return SearchMedia(result=result)
+
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set the repeat mode."""
+        if repeat == RepeatMode.ALL:
+            repeat_mode = "playlist"
+        elif repeat == RepeatMode.ONE:
+            repeat_mode = "song"
+        else:
+            repeat_mode = "none"
+
+        await self._player.async_set_repeat(repeat_mode)
+        await self.coordinator.async_refresh()
+
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
-        return self.async_query("playlist", "shuffle", int(shuffle))
+        shuffle_mode = "song" if shuffle else "none"
+        await self._player.async_set_shuffle(shuffle_mode)
+        await self.coordinator.async_refresh()
 
-    def async_clear_playlist(self):
+    async def async_clear_playlist(self) -> None:
         """Send the media player the command for clear playlist."""
-        return self.async_query("playlist", "clear")
+        await self._player.async_clear_playlist()
+        await self.coordinator.async_refresh()
 
-    def async_call_method(self, command, parameters=None):
-        """
-        Call Squeezebox JSON/RPC method.
+    async def async_call_method(
+        self, command: str, parameters: list[str] | None = None
+    ) -> None:
+        """Call Squeezebox JSON/RPC method.
 
         Additional parameters are added to the command to form the list of
         positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
         """
         all_params = [command]
         if parameters:
-            for parameter in parameters:
-                all_params.append(parameter)
-        return self.async_query(*all_params)
+            all_params.extend(parameters)
+        await self._player.async_query(*all_params)
+
+    async def async_call_query(
+        self, command: str, parameters: list[str] | None = None
+    ) -> None:
+        """Call Squeezebox JSON/RPC method where we care about the result.
+
+        Additional parameters are added to the command to form the list of
+        positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
+        """
+        all_params = [command]
+        if parameters:
+            all_params.extend(parameters)
+        self._query_result = await self._player.async_query(*all_params)
+        _LOGGER.debug("call_query got result %s", self._query_result)
+        self.async_write_ha_state()
+
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Add other Squeezebox players to this player's sync group.
+
+        If the other player is a member of a sync group, it will leave the current sync group
+        without asking.
+        """
+        ent_reg = er.async_get(self.hass)
+        for other_player_entity_id in group_members:
+            other_player = ent_reg.async_get(other_player_entity_id)
+            if other_player is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="join_cannot_find_other_player",
+                    translation_placeholders={
+                        "other_player_entity_id": str(other_player_entity_id)
+                    },
+                )
+            if other_player_id := other_player.unique_id:
+                await self._player.async_sync(other_player_id)
+            else:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="join_cannot_join_unknown_player",
+                    translation_placeholders={
+                        "other_player_entity_id": str(other_player_entity_id)
+                    },
+                )
+
+    async def async_unjoin_player(self) -> None:
+        """Unsync this Squeezebox player."""
+        await self._player.async_unsync()
+        await self.coordinator.async_refresh()
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        _LOGGER.debug(
+            "Reached async_browse_media with content_type %s and content_id %s",
+            media_content_type,
+            media_content_id,
+        )
+
+        if media_content_type:
+            media_content_type = media_content_type.lower()
+
+        if media_content_type in [None, "library"]:
+            return await library_payload(self.hass, self._player, self._browse_data)
+
+        if media_content_id and media_source.is_media_source_id(media_content_id):
+            return await media_source.async_browse_media(
+                self.hass, media_content_id, content_filter=media_source_content_filter
+            )
+
+        payload = {
+            "search_type": media_content_type,
+            "search_id": media_content_id,
+        }
+
+        return await build_item_response(
+            self,
+            self._player,
+            payload,
+            self.browse_limit,
+            self._browse_data,
+        )
+
+    async def async_get_browse_image(
+        self,
+        media_content_type: MediaType | str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
+        """Get album art from Squeezebox server."""
+        if media_image_id:
+            image_url = self._player.generate_image_url_from_track_id(media_image_id)
+            result = await self._async_fetch_image(image_url)
+            if result == (None, None):
+                _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
+            return result
+
+        return (None, None)

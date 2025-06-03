@@ -1,8 +1,11 @@
 {
   "domain": "dominos",
   "name": "Dominos Pizza",
-  "documentation": "https://www.home-assistant.io/integrations/dominos",
-  "requirements": ["pizzapi==0.0.3"],
+  "codeowners": [],
   "dependencies": ["http"],
-  "codeowners": []
+  "documentation": "https://www.home-assistant.io/integrations/dominos",
+  "iot_class": "cloud_polling",
+  "loggers": ["pizzapi"],
+  "quality_scale": "legacy",
+  "requirements": ["pizzapi==0.0.6"]
 }

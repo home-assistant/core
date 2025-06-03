@@ -1,360 +1,293 @@
-"""Support for interface with a Sony Bravia TV."""
-import ipaddress
-import logging
+"""Media player support for Bravia TV integration."""
 
-from braviarc.braviarc import BraviaRC
-from getmac import get_mac_address
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from datetime import datetime
+from typing import Any
+
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util.json import load_json, save_json
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-BRAVIA_CONFIG_FILE = "bravia.conf"
-
-CLIENTID_PREFIX = "HomeAssistant"
-
-DEFAULT_NAME = "Sony Bravia TV"
-
-NICKNAME = "Home Assistant"
-
-# Map ip to request id for configuring
-_CONFIGURING = {}
-
-_LOGGER = logging.getLogger(__name__)
-
-SUPPORT_BRAVIA = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+from .const import SourceType
+from .coordinator import BraviaTVConfigEntry
+from .entity import BraviaTVEntity
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Sony Bravia TV platform."""
-    host = config.get(CONF_HOST)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: BraviaTVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Bravia TV Media Player from a config_entry."""
 
-    if host is None:
-        return
+    coordinator = config_entry.runtime_data
+    unique_id = config_entry.unique_id
+    assert unique_id is not None
 
-    pin = None
-    bravia_config = load_json(hass.config.path(BRAVIA_CONFIG_FILE))
-    while bravia_config:
-        # Set up a configured TV
-        host_ip, host_config = bravia_config.popitem()
-        if host_ip == host:
-            pin = host_config["pin"]
-            mac = host_config["mac"]
-            name = config.get(CONF_NAME)
-            add_entities([BraviaTVDevice(host, mac, name, pin)])
-            return
-
-    setup_bravia(config, pin, hass, add_entities)
-
-
-def setup_bravia(config, pin, hass, add_entities):
-    """Set up a Sony Bravia TV based on host parameter."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-
-    if pin is None:
-        request_configuration(config, hass, add_entities)
-        return
-
-    try:
-        if ipaddress.ip_address(host).version == 6:
-            mode = "ip6"
-        else:
-            mode = "ip"
-    except ValueError:
-        mode = "hostname"
-    mac = get_mac_address(**{mode: host})
-
-    # If we came here and configuring this host, mark as done
-    if host in _CONFIGURING:
-        request_id = _CONFIGURING.pop(host)
-        configurator = hass.components.configurator
-        configurator.request_done(request_id)
-        _LOGGER.info("Discovery configuration done")
-
-    # Save config
-    save_json(
-        hass.config.path(BRAVIA_CONFIG_FILE),
-        {host: {"pin": pin, "host": host, "mac": mac}},
-    )
-
-    add_entities([BraviaTVDevice(host, mac, name, pin)])
-
-
-def request_configuration(config, hass, add_entities):
-    """Request configuration steps from the user."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-
-    configurator = hass.components.configurator
-
-    # We got an error if this method is called while we are configuring
-    if host in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[host], "Failed to register, please try again."
-        )
-        return
-
-    def bravia_configuration_callback(data):
-        """Handle the entry of user PIN."""
-
-        pin = data.get("pin")
-        _braviarc = BraviaRC(host)
-        _braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-        if _braviarc.is_connected():
-            setup_bravia(config, pin, hass, add_entities)
-        else:
-            request_configuration(config, hass, add_entities)
-
-    _CONFIGURING[host] = configurator.request_config(
-        name,
-        bravia_configuration_callback,
-        description="Enter the Pin shown on your Sony Bravia TV."
-        + "If no Pin is shown, enter 0000 to let TV show you a Pin.",
-        description_image="/static/images/smart-tv.png",
-        submit_caption="Confirm",
-        fields=[{"id": "pin", "name": "Enter the pin", "type": ""}],
+    async_add_entities(
+        [BraviaTVMediaPlayer(coordinator, unique_id, config_entry.title)]
     )
 
 
-class BraviaTVDevice(MediaPlayerDevice):
-    """Representation of a Sony Bravia TV."""
+class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
+    """Representation of a Bravia TV Media Player."""
 
-    def __init__(self, host, mac, name, pin):
-        """Initialize the Sony Bravia device."""
-
-        self._pin = pin
-        self._braviarc = BraviaRC(host, mac)
-        self._name = name
-        self._state = STATE_OFF
-        self._muted = False
-        self._program_name = None
-        self._channel_name = None
-        self._channel_number = None
-        self._source = None
-        self._source_list = []
-        self._original_content_list = []
-        self._content_mapping = {}
-        self._duration = None
-        self._content_uri = None
-        self._id = None
-        self._playing = False
-        self._start_date_time = None
-        self._program_media_type = None
-        self._min_volume = None
-        self._max_volume = None
-        self._volume = None
-
-        self._braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-        if self._braviarc.is_connected():
-            self.update()
-        else:
-            self._state = STATE_OFF
-
-    def update(self):
-        """Update TV info."""
-        if not self._braviarc.is_connected():
-            if self._braviarc.get_power_status() != "off":
-                self._braviarc.connect(self._pin, CLIENTID_PREFIX, NICKNAME)
-            if not self._braviarc.is_connected():
-                return
-
-        # Retrieve the latest data.
-        try:
-            if self._state == STATE_ON:
-                # refresh volume info:
-                self._refresh_volume()
-                self._refresh_channels()
-
-            power_status = self._braviarc.get_power_status()
-            if power_status == "active":
-                self._state = STATE_ON
-                playing_info = self._braviarc.get_playing_info()
-                self._reset_playing_info()
-                if playing_info is None or not playing_info:
-                    self._channel_name = "App"
-                else:
-                    self._program_name = playing_info.get("programTitle")
-                    self._channel_name = playing_info.get("title")
-                    self._program_media_type = playing_info.get("programMediaType")
-                    self._channel_number = playing_info.get("dispNum")
-                    self._source = playing_info.get("source")
-                    self._content_uri = playing_info.get("uri")
-                    self._duration = playing_info.get("durationSec")
-                    self._start_date_time = playing_info.get("startDateTime")
-            else:
-                self._state = STATE_OFF
-
-        except Exception as exception_instance:  # pylint: disable=broad-except
-            _LOGGER.error(exception_instance)
-            self._state = STATE_OFF
-
-    def _reset_playing_info(self):
-        self._program_name = None
-        self._channel_name = None
-        self._program_media_type = None
-        self._channel_number = None
-        self._source = None
-        self._content_uri = None
-        self._duration = None
-        self._start_date_time = None
-
-    def _refresh_volume(self):
-        """Refresh volume information."""
-        volume_info = self._braviarc.get_volume_info()
-        if volume_info is not None:
-            self._volume = volume_info.get("volume")
-            self._min_volume = volume_info.get("minVolume")
-            self._max_volume = volume_info.get("maxVolume")
-            self._muted = volume_info.get("mute")
-
-    def _refresh_channels(self):
-        if not self._source_list:
-            self._content_mapping = self._braviarc.load_source_list()
-            self._source_list = []
-            for key in self._content_mapping:
-                self._source_list.append(key)
+    _attr_name = None
+    _attr_assumed_state = True
+    _attr_device_class = MediaPlayerDeviceClass.TV
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+    )
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
-        return self._state
+        if self.coordinator.is_on:
+            return MediaPlayerState.ON
+        return MediaPlayerState.OFF
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
-        return self._source
+        return self.coordinator.source
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """List of available input sources."""
-        return self._source_list
+        return self.coordinator.source_list
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if self._volume is not None:
-            return self._volume / 100
-        return None
+        return self.coordinator.volume_level
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
-        return self._muted
+        return self.coordinator.volume_muted
 
     @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_BRAVIA
-
-    @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
-        return_value = None
-        if self._channel_name is not None:
-            return_value = self._channel_name
-            if self._program_name is not None:
-                return_value = f"{return_value}: {self._program_name}"
-        return return_value
+        return self.coordinator.media_title
 
     @property
-    def media_content_id(self):
+    def media_channel(self) -> str | None:
+        """Channel currently playing."""
+        return self.coordinator.media_channel
+
+    @property
+    def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
-        return self._channel_name
+        return self.coordinator.media_content_id
 
     @property
-    def media_duration(self):
+    def media_content_type(self) -> MediaType | None:
+        """Content type of current playing media."""
+        return self.coordinator.media_content_type
+
+    @property
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        return self._duration
+        return self.coordinator.media_duration
 
-    def set_volume_level(self, volume):
+    @property
+    def media_position(self) -> int | None:
+        """Position of current playing media in seconds."""
+        return self.coordinator.media_position
+
+    @property
+    def media_position_updated_at(self) -> datetime | None:
+        """When was the position of the current playing media valid."""
+        return self.coordinator.media_position_updated_at
+
+    async def async_turn_on(self) -> None:
+        """Turn the device on."""
+        await self.coordinator.async_turn_on()
+
+    async def async_turn_off(self) -> None:
+        """Turn the device off."""
+        await self.coordinator.async_turn_off()
+
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._braviarc.set_volume_level(volume)
+        await self.coordinator.async_set_volume_level(volume)
 
-    def turn_on(self):
-        """Turn the media player on."""
-        self._braviarc.turn_on()
+    async def async_volume_up(self) -> None:
+        """Send volume up command."""
+        await self.coordinator.async_volume_up()
 
-    def turn_off(self):
-        """Turn off media player."""
-        self._braviarc.turn_off()
+    async def async_volume_down(self) -> None:
+        """Send volume down command."""
+        await self.coordinator.async_volume_down()
 
-    def volume_up(self):
-        """Volume up the media player."""
-        self._braviarc.volume_up()
-
-    def volume_down(self):
-        """Volume down media player."""
-        self._braviarc.volume_down()
-
-    def mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        self._braviarc.mute_volume(mute)
+        await self.coordinator.async_volume_mute(mute)
 
-    def select_source(self, source):
-        """Set the input source."""
-        if source in self._content_mapping:
-            uri = self._content_mapping[source]
-            self._braviarc.play_content(uri)
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Browse apps and channels."""
+        if not media_content_id:
+            await self.coordinator.async_update_sources()
+            return await self.async_browse_media_root()
 
-    def media_play_pause(self):
-        """Simulate play pause media player."""
-        if self._playing:
-            self.media_pause()
+        path = media_content_id.partition("/")
+        if path[0] == "apps":
+            return await self.async_browse_media_apps(True)
+        if path[0] == "channels":
+            return await self.async_browse_media_channels(True)
+
+        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+
+    async def async_browse_media_root(self) -> BrowseMedia:
+        """Return root media objects."""
+
+        return BrowseMedia(
+            title="Sony TV",
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="",
+            media_content_type="",
+            can_play=False,
+            can_expand=True,
+            children=[
+                await self.async_browse_media_apps(),
+                await self.async_browse_media_channels(),
+            ],
+        )
+
+    async def async_browse_media_apps(self, expanded: bool = False) -> BrowseMedia:
+        """Return apps media objects."""
+        if expanded:
+            children = [
+                BrowseMedia(
+                    title=item["title"],
+                    media_class=MediaClass.APP,
+                    media_content_id=uri,
+                    media_content_type=MediaType.APP,
+                    can_play=False,
+                    can_expand=False,
+                    thumbnail=self.get_browse_image_url(
+                        MediaType.APP, uri, media_image_id=None
+                    ),
+                )
+                for uri, item in self.coordinator.source_map.items()
+                if item["type"] == SourceType.APP
+            ]
         else:
-            self.media_play()
+            children = None
 
-    def media_play(self):
+        return BrowseMedia(
+            title="Applications",
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="apps",
+            media_content_type=MediaType.APPS,
+            children_media_class=MediaClass.APP,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
+    async def async_browse_media_channels(self, expanded: bool = False) -> BrowseMedia:
+        """Return channels media objects."""
+        if expanded:
+            children = [
+                BrowseMedia(
+                    title=item["title"],
+                    media_class=MediaClass.CHANNEL,
+                    media_content_id=uri,
+                    media_content_type=MediaType.CHANNEL,
+                    can_play=False,
+                    can_expand=False,
+                )
+                for uri, item in self.coordinator.source_map.items()
+                if item["type"] == SourceType.CHANNEL
+            ]
+        else:
+            children = None
+
+        return BrowseMedia(
+            title="Channels",
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="channels",
+            media_content_type=MediaType.CHANNELS,
+            children_media_class=MediaClass.CHANNEL,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
+    async def async_get_browse_image(
+        self,
+        media_content_type: MediaType | str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
+        """Serve album art. Returns (content, content_type)."""
+        if media_content_type == MediaType.APP and media_content_id:
+            if icon := self.coordinator.source_map[media_content_id].get("icon"):
+                (content, content_type) = await self._async_fetch_image(icon)
+                if content_type:
+                    # Fix invalid Content-Type header returned by Bravia
+                    content_type = content_type.replace("Content-Type: ", "")
+                return (content, content_type)
+        return None, None
+
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Play a piece of media."""
+        await self.coordinator.async_play_media(media_type, media_id, **kwargs)
+
+    async def async_select_source(self, source: str) -> None:
+        """Set the input source."""
+        await self.coordinator.async_select_source(source)
+
+    async def async_media_play(self) -> None:
         """Send play command."""
-        self._playing = True
-        self._braviarc.media_play()
+        await self.coordinator.async_media_play()
 
-    def media_pause(self):
-        """Send media pause command to media player."""
-        self._playing = False
-        self._braviarc.media_pause()
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        await self.coordinator.async_media_pause()
 
-    def media_next_track(self):
+    async def async_media_play_pause(self) -> None:
+        """Send pause command that toggle play/pause."""
+        await self.coordinator.async_media_pause()
+
+    async def async_media_stop(self) -> None:
+        """Send media stop command to media player."""
+        await self.coordinator.async_media_stop()
+
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
-        self._braviarc.media_next_track()
+        await self.coordinator.async_media_next_track()
 
-    def media_previous_track(self):
-        """Send the previous track command."""
-        self._braviarc.media_previous_track()
+    async def async_media_previous_track(self) -> None:
+        """Send previous track command."""
+        await self.coordinator.async_media_previous_track()

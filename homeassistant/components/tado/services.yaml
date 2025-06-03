@@ -1,0 +1,78 @@
+set_climate_timer:
+  target:
+    entity:
+      integration: tado
+      domain: climate
+  fields:
+    temperature:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.5
+          unit_of_measurement: "°"
+    time_period:
+      required: false
+      example: "01:30:00"
+      selector:
+        text:
+    requested_overlay:
+      required: false
+      example: "MANUAL"
+      selector:
+        select:
+          options:
+            - "NEXT_TIME_BLOCK"
+            - "MANUAL"
+            - "TADO_DEFAULT"
+
+set_water_heater_timer:
+  target:
+    entity:
+      integration: tado
+      domain: water_heater
+  fields:
+    time_period:
+      required: true
+      example: "01:30:00"
+      default: "01:00:00"
+      selector:
+        text:
+    temperature:
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 0.5
+          unit_of_measurement: "°"
+
+set_climate_temperature_offset:
+  target:
+    entity:
+      integration: tado
+      domain: climate
+  fields:
+    offset:
+      default: 0
+      selector:
+        number:
+          min: -10
+          max: 10
+          step: 0.01
+          unit_of_measurement: "°"
+
+add_meter_reading:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: tado
+    reading:
+      required: true
+      selector:
+        number:
+          mode: box
+          min: 0
+          step: 1

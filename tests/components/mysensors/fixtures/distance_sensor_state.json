@@ -1,0 +1,22 @@
+{
+  "1": {
+    "sensor_id": 1,
+    "children": {
+      "1": {
+        "id": 1,
+        "type": 15,
+        "description": "",
+        "values": {
+          "13": "15",
+          "43": "cm"
+        }
+      }
+    },
+    "type": 17,
+    "sketch_name": "Distance Sensor",
+    "sketch_version": "1.0",
+    "battery_level": 0,
+    "protocol_version": "2.3.2",
+    "heartbeat": 0
+  }
+}

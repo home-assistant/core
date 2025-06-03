@@ -1,16 +1,28 @@
 """Expose regular shell commands as services."""
+
+from __future__ import annotations
+
 import asyncio
+from contextlib import suppress
 import logging
 import shlex
 
 import voluptuous as vol
 
-from homeassistant.core import ServiceCall
-from homeassistant.exceptions import TemplateError
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.json import JsonObjectType
 
 DOMAIN = "shell_command"
+
+COMMAND_TIMEOUT = 60
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,13 +31,13 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the shell_command component."""
     conf = config.get(DOMAIN, {})
 
-    cache = {}
+    cache: dict[str, tuple[str, str | None, template.Template | None]] = {}
 
-    async def async_service_handler(service: ServiceCall) -> None:
+    async def async_service_handler(service: ServiceCall) -> ServiceResponse:
         """Execute a shell command service."""
         cmd = conf[service.service]
 
@@ -38,45 +50,66 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             cache[cmd] = prog, args, args_compiled
         else:
             prog, args = cmd.split(" ", 1)
-            args_compiled = template.Template(args, hass)
+            args_compiled = template.Template(str(args), hass)
             cache[cmd] = prog, args, args_compiled
 
         if args_compiled:
             try:
-                rendered_args = args_compiled.async_render(service.data)
-            except TemplateError as ex:
-                _LOGGER.exception("Error rendering command template: %s", ex)
-                return
+                rendered_args = args_compiled.async_render(
+                    variables=service.data, parse_result=False
+                )
+            except TemplateError:
+                _LOGGER.exception("Error rendering command template")
+                raise
         else:
             rendered_args = None
 
         if rendered_args == args:
             # No template used. default behavior
 
-            # pylint: disable=no-member
-            create_process = asyncio.subprocess.create_subprocess_shell(
+            create_process = asyncio.create_subprocess_shell(
                 cmd,
-                loop=hass.loop,
                 stdin=None,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                close_fds=False,  # required for posix_spawn
             )
         else:
             # Template used. Break into list and use create_subprocess_exec
             # (which uses shell=False) for security
-            shlexed_cmd = [prog] + shlex.split(rendered_args)
+            shlexed_cmd = [prog, *shlex.split(rendered_args)]
 
-            # pylint: disable=no-member
-            create_process = asyncio.subprocess.create_subprocess_exec(
+            create_process = asyncio.create_subprocess_exec(
                 *shlexed_cmd,
-                loop=hass.loop,
                 stdin=None,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                close_fds=False,  # required for posix_spawn
             )
 
         process = await create_process
-        stdout_data, stderr_data = await process.communicate()
+        try:
+            async with asyncio.timeout(COMMAND_TIMEOUT):
+                stdout_data, stderr_data = await process.communicate()
+        except TimeoutError as err:
+            _LOGGER.error(
+                "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
+            )
+            if process:
+                with suppress(TypeError):
+                    process.kill()
+                    # https://bugs.python.org/issue43884
+                    process._transport.close()  # type: ignore[attr-defined]  # noqa: SLF001
+                del process
+
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+                translation_placeholders={
+                    "command": cmd,
+                    "timeout": str(COMMAND_TIMEOUT),
+                },
+            ) from err
 
         if stdout_data:
             _LOGGER.debug(
@@ -97,6 +130,34 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 "Error running command: `%s`, return code: %s", cmd, process.returncode
             )
 
-    for name in conf.keys():
-        hass.services.async_register(DOMAIN, name, async_service_handler)
+        if service.return_response:
+            service_response: JsonObjectType = {
+                "stdout": "",
+                "stderr": "",
+                "returncode": process.returncode,
+            }
+            try:
+                if stdout_data:
+                    service_response["stdout"] = stdout_data.decode("utf-8").strip()
+                if stderr_data:
+                    service_response["stderr"] = stderr_data.decode("utf-8").strip()
+            except UnicodeDecodeError as err:
+                _LOGGER.exception(
+                    "Unable to handle non-utf8 output of command: `%s`", cmd
+                )
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="non_utf8_output",
+                    translation_placeholders={"command": cmd},
+                ) from err
+            return service_response
+        return None
+
+    for name in conf:
+        hass.services.async_register(
+            DOMAIN,
+            name,
+            async_service_handler,
+            supports_response=SupportsResponse.OPTIONAL,
+        )
     return True

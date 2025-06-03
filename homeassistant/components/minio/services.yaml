@@ -1,35 +1,48 @@
 get:
-  description: Download file from Minio.
   fields:
     bucket:
-      description: Bucket to use.
+      required: true
       example: camera-files
+      selector:
+        text:
     key:
-      description: Object key of the file.
+      required: true
       example: front_camera/2018/01/02/snapshot_12512514.jpg
+      selector:
+        text:
     file_path:
-      description: File path on local filesystem.
+      required: true
       example: /data/camera_files/snapshot.jpg
+      selector:
+        text:
 
 put:
-  description: Upload file to Minio.
   fields:
     bucket:
-      description: Bucket to use.
+      required: true
       example: camera-files
+      selector:
+        text:
     key:
-      description: Object key of the file.
+      required: true
       example: front_camera/2018/01/02/snapshot_12512514.jpg
+      selector:
+        text:
     file_path:
-      description: File path on local filesystem.
+      required: true
       example: /data/camera_files/snapshot.jpg
+      selector:
+        text:
 
 remove:
-  description: Delete file from Minio.
   fields:
     bucket:
-      description: Bucket to use.
+      required: true
       example: camera-files
+      selector:
+        text:
     key:
-      description: Object key of the file.
+      required: true
       example: front_camera/2018/01/02/snapshot_12512514.jpg
+      selector:
+        text:

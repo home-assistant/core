@@ -1,0 +1,10 @@
+{
+  "domain": "poolsense",
+  "name": "PoolSense",
+  "codeowners": ["@haemishkyd"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/poolsense",
+  "iot_class": "cloud_polling",
+  "loggers": ["poolsense"],
+  "requirements": ["poolsense==0.0.8"]
+}

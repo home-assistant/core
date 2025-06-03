@@ -1,51 +1,86 @@
-"""Device tracker for BMW Connected Drive vehicles."""
+"""Device tracker for MyBMW vehicles."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
-from homeassistant.util import slugify
+from bimmer_connected.vehicle import MyBMWVehicle
 
-from . import DOMAIN as BMW_DOMAIN
+from homeassistant.components.device_tracker import TrackerEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import BMWConfigEntry
+from .const import ATTR_DIRECTION
+from .coordinator import BMWDataUpdateCoordinator
+from .entity import BMWBaseEntity
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
-    """Set up the BMW tracker."""
-    accounts = hass.data[BMW_DOMAIN]
-    _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
-    for account in accounts:
-        for vehicle in account.account.vehicles:
-            tracker = BMWDeviceTracker(see, vehicle)
-            account.add_update_listener(tracker.update)
-            tracker.update()
-    return True
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: BMWConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the MyBMW tracker from config entry."""
+    coordinator = config_entry.runtime_data
+    entities: list[BMWDeviceTracker] = []
+
+    for vehicle in coordinator.account.vehicles:
+        entities.append(BMWDeviceTracker(coordinator, vehicle))
+        if not vehicle.is_vehicle_tracking_enabled:
+            _LOGGER.info(
+                (
+                    "Tracking is (currently) disabled for vehicle %s (%s), defaulting"
+                    " to unknown"
+                ),
+                vehicle.name,
+                vehicle.vin,
+            )
+    async_add_entities(entities)
 
 
-class BMWDeviceTracker:
-    """BMW Connected Drive device tracker."""
+class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
+    """MyBMW device tracker."""
 
-    def __init__(self, see, vehicle):
+    _attr_force_update = False
+    _attr_translation_key = "car"
+    _attr_name = None
+
+    def __init__(
+        self,
+        coordinator: BMWDataUpdateCoordinator,
+        vehicle: MyBMWVehicle,
+    ) -> None:
         """Initialize the Tracker."""
-        self._see = see
-        self.vehicle = vehicle
+        super().__init__(coordinator, vehicle)
+        self._attr_unique_id = vehicle.vin
 
-    def update(self) -> None:
-        """Update the device info.
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return entity specific state attributes."""
+        return {ATTR_DIRECTION: self.vehicle.vehicle_location.heading}
 
-        Only update the state in Home Assistant if tracking in
-        the car is enabled.
-        """
-        dev_id = slugify(self.vehicle.name)
+    @property
+    def latitude(self) -> float | None:
+        """Return latitude value of the device."""
+        return (
+            self.vehicle.vehicle_location.location[0]
+            if self.vehicle.is_vehicle_tracking_enabled
+            and self.vehicle.vehicle_location.location
+            else None
+        )
 
-        if not self.vehicle.state.is_vehicle_tracking_enabled:
-            _LOGGER.debug("Tracking is disabled for vehicle %s", dev_id)
-            return
-
-        _LOGGER.debug("Updating %s", dev_id)
-        attrs = {"vin": self.vehicle.vin}
-        self._see(
-            dev_id=dev_id,
-            host_name=self.vehicle.name,
-            gps=self.vehicle.state.gps_position,
-            attributes=attrs,
-            icon="mdi:car",
+    @property
+    def longitude(self) -> float | None:
+        """Return longitude value of the device."""
+        return (
+            self.vehicle.vehicle_location.location[1]
+            if self.vehicle.is_vehicle_tracking_enabled
+            and self.vehicle.vehicle_location.location
+            else None
         )

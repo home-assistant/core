@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "import_confirm": {
+        "title": "Import Konnected device",
+        "description": "A Konnected alarm panel with ID {id} has been discovered in configuration.yaml. This flow will allow you to import it into a config entry."
+      },
+      "user": {
+        "description": "Please enter the host information for your Konnected panel.",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "confirm": {
+        "title": "Konnected device ready",
+        "description": "Model: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nYou can configure the IO and panel behavior in the Konnected alarm panel settings."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "not_konn_panel": "Not a recognized Konnected.io device",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "options": {
+    "step": {
+      "options_io": {
+        "title": "Configure I/O",
+        "description": "Discovered a {model} at {host}. Select the base configuration of each I/O below - depending on the I/O it may allow for binary sensors (open/close contacts), digital sensors (dht and ds18b20), or switchable outputs. You'll be able to configure detailed options in the next steps.",
+        "data": {
+          "1": "Zone 1",
+          "2": "Zone 2",
+          "3": "Zone 3",
+          "4": "Zone 4",
+          "5": "Zone 5",
+          "6": "Zone 6",
+          "7": "Zone 7",
+          "out": "OUT"
+        }
+      },
+      "options_io_ext": {
+        "title": "Configure extended I/O",
+        "description": "Select the configuration of the remaining I/O below. You'll be able to configure detailed options in the next steps.",
+        "data": {
+          "8": "Zone 8",
+          "9": "Zone 9",
+          "10": "Zone 10",
+          "11": "Zone 11",
+          "12": "Zone 12",
+          "out1": "OUT1",
+          "alarm1": "ALARM1",
+          "alarm2_out2": "OUT2/ALARM2"
+        }
+      },
+      "options_binary": {
+        "title": "Configure binary sensor",
+        "description": "{zone} options",
+        "data": {
+          "type": "Binary sensor type",
+          "name": "[%key:common::config_flow::data::name%]",
+          "inverse": "Invert the open/close state"
+        }
+      },
+      "options_digital": {
+        "title": "Configure digital sensor",
+        "description": "[%key:component::konnected::options::step::options_binary::description%]",
+        "data": {
+          "type": "Sensor type",
+          "name": "[%key:common::config_flow::data::name%]",
+          "poll_interval": "Poll interval (minutes)"
+        }
+      },
+      "options_switch": {
+        "title": "Configure switchable output",
+        "description": "{zone} options: state {state}",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "activation": "Output when on",
+          "momentary": "Pulse duration (ms)",
+          "pause": "Pause between pulses (ms)",
+          "repeat": "Times to repeat (-1=infinite)",
+          "more_states": "Configure additional states for this zone"
+        }
+      },
+      "options_misc": {
+        "title": "Configure misc",
+        "description": "Please select the desired behavior for your panel",
+        "data": {
+          "discovery": "Respond to discovery requests on your network",
+          "blink": "Blink panel LED on when sending state change",
+          "override_api_host": "Override default Home Assistant API host URL",
+          "api_host": "Custom API host URL"
+        }
+      }
+    },
+    "error": {
+      "bad_host": "Invalid custom API host URL"
+    },
+    "abort": {
+      "not_konn_panel": "[%key:component::konnected::config::abort::not_konn_panel%]"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "subaru",
+  "name": "Subaru",
+  "codeowners": ["@G-Two"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/subaru",
+  "iot_class": "cloud_polling",
+  "loggers": ["stdiomask", "subarulink"],
+  "requirements": ["subarulink==0.7.13"]
+}

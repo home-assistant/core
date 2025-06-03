@@ -1,0 +1,71 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Login",
+        "description": "Enter your SmartTub email address and password to log in",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The SmartTub integration needs to re-authenticate your account"
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "services": {
+    "set_primary_filtration": {
+      "name": "Update primary filtration settings",
+      "description": "Updates the primary filtration settings.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "The desired duration of the primary filtration cycle."
+        },
+        "start_hour": {
+          "name": "Start hour",
+          "description": "The hour of the day at which to begin the primary filtration cycle."
+        }
+      }
+    },
+    "set_secondary_filtration": {
+      "name": "Update secondary filtration settings",
+      "description": "Updates the secondary filtration settings.",
+      "fields": {
+        "mode": {
+          "name": "[%key:common::config_flow::data::mode%]",
+          "description": "The secondary filtration mode."
+        }
+      }
+    },
+    "snooze_reminder": {
+      "name": "Snooze a reminder",
+      "description": "Temporarily suppresses the maintenance reminder on a hot tub.",
+      "fields": {
+        "days": {
+          "name": "Days",
+          "description": "The number of days to snooze the reminder."
+        }
+      }
+    },
+    "reset_reminder": {
+      "name": "Reset a reminder",
+      "description": "Resets the maintenance reminder on a hot tub.",
+      "fields": {
+        "days": {
+          "name": "[%key:component::smarttub::services::snooze_reminder::fields::days::name%]",
+          "description": "The number of days when the next reminder should trigger."
+        }
+      }
+    }
+  }
+}

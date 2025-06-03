@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "ring_action": {
+        "default": "mdi:bell-ring"
+      }
+    }
+  },
+  "services": {
+    "lock_n_go": {
+      "service": "mdi:lock-clock"
+    },
+    "set_continuous_mode": {
+      "service": "mdi:bell-cog"
+    }
+  }
+}

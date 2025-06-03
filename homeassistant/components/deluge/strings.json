@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To be able to use this integration, you have to enable the following option in Deluge settings: Daemon > Allow remote controls",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "web_port": "Web port (for visiting service)"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Deluge device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "seeding_and_downloading": "Up/Down",
+          "seeding": "Seeding",
+          "downloading": "Downloading",
+          "idle": "[%key:common::state::idle%]"
+        }
+      },
+      "download_speed": {
+        "name": "Download speed"
+      },
+      "protocol_traffic_download_speed": {
+        "name": "Protocol traffic download speed"
+      },
+      "protocol_traffic_upload_speed": {
+        "name": "Protocol traffic upload speed"
+      },
+      "upload_speed": {
+        "name": "Upload speed"
+      }
+    }
+  }
+}

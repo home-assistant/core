@@ -1,7 +1,12 @@
 """Helpers for interacting with pynws."""
-from homeassistant.components.nws.weather import ATTR_FORECAST_PRECIP_PROB
+
+from homeassistant.components.nws.const import CONF_STATION
 from homeassistant.components.weather import (
+    ATTR_CONDITION_LIGHTNING_RAINY,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_DEW_POINT,
+    ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
@@ -14,24 +19,34 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
 )
 from homeassistant.const import (
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
-    LENGTH_MILES,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    PRESSURE_PA,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_conversion import (
+    DistanceConverter,
+    PressureConverter,
+    SpeedConverter,
+    TemperatureConverter,
+)
+
+NWS_CONFIG = {
+    CONF_API_KEY: "test",
+    CONF_LATITUDE: 35,
+    CONF_LONGITUDE: -75,
+    CONF_STATION: "ABC",
+}
 
 DEFAULT_STATIONS = ["ABC", "XYZ"]
 
 DEFAULT_OBSERVATION = {
     "temperature": 10,
     "seaLevelPressure": 100000,
+    "barometricPressure": 100000,
     "relativeHumidity": 10,
     "windSpeed": 10,
     "windDirection": 180,
@@ -41,39 +56,131 @@ DEFAULT_OBSERVATION = {
     "timestamp": "2019-08-12T23:53:00+00:00",
     "iconTime": "day",
     "iconWeather": (("Fair/clear", None),),
+    "dewpoint": 5,
+    "windChill": 5,
+    "heatIndex": 15,
+    "windGust": 20,
 }
 
-EXPECTED_OBSERVATION_IMPERIAL = {
+CLEAR_NIGHT_OBSERVATION = DEFAULT_OBSERVATION.copy()
+CLEAR_NIGHT_OBSERVATION["iconTime"] = "night"
+
+SENSOR_EXPECTED_OBSERVATION_METRIC = {
+    "timestamp": "2019-08-12T23:53:00+00:00",
+    "dewpoint": "5",
+    "temperature": "10",
+    "windChill": "5",
+    "heatIndex": "15",
+    "relativeHumidity": "10",
+    "windSpeed": "10",
+    "windGust": "20",
+    "windDirection": "180",
+    "barometricPressure": "100000",
+    "seaLevelPressure": "100000",
+    "visibility": "10000",
+}
+
+SENSOR_EXPECTED_OBSERVATION_IMPERIAL = {
+    "timestamp": "2019-08-12T23:53:00+00:00",
+    "dewpoint": str(
+        round(
+            TemperatureConverter.convert(
+                5, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            ),
+            1,
+        )
+    ),
+    "temperature": str(
+        round(
+            TemperatureConverter.convert(
+                10, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            ),
+            1,
+        )
+    ),
+    "windChill": str(
+        round(
+            TemperatureConverter.convert(
+                5, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            ),
+            1,
+        )
+    ),
+    "heatIndex": str(
+        round(
+            TemperatureConverter.convert(
+                15, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            ),
+            1,
+        )
+    ),
+    "relativeHumidity": "10",
+    "windSpeed": str(
+        round(
+            SpeedConverter.convert(
+                10, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
+            ),
+        )
+    ),
+    "windGust": str(
+        round(
+            SpeedConverter.convert(
+                20, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
+            ),
+        )
+    ),
+    "windDirection": "180",
+    "barometricPressure": str(
+        round(
+            PressureConverter.convert(100000, UnitOfPressure.PA, UnitOfPressure.INHG), 2
+        )
+    ),
+    "seaLevelPressure": str(
+        round(
+            PressureConverter.convert(100000, UnitOfPressure.PA, UnitOfPressure.INHG), 2
+        )
+    ),
+    "visibility": str(
+        round(DistanceConverter.convert(10000, UnitOfLength.METERS, UnitOfLength.MILES))
+    ),
+}
+
+WEATHER_EXPECTED_OBSERVATION_IMPERIAL = {
     ATTR_WEATHER_TEMPERATURE: round(
-        convert_temperature(10, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+        TemperatureConverter.convert(
+            10, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+        )
     ),
     ATTR_WEATHER_WIND_BEARING: 180,
     ATTR_WEATHER_WIND_SPEED: round(
-        convert_distance(10, LENGTH_METERS, LENGTH_MILES) * 3600
+        SpeedConverter.convert(
+            10, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
+        ),
+        2,
     ),
     ATTR_WEATHER_PRESSURE: round(
-        convert_pressure(100000, PRESSURE_PA, PRESSURE_INHG), 2
+        PressureConverter.convert(100000, UnitOfPressure.PA, UnitOfPressure.INHG), 2
     ),
     ATTR_WEATHER_VISIBILITY: round(
-        convert_distance(10000, LENGTH_METERS, LENGTH_MILES)
+        DistanceConverter.convert(10000, UnitOfLength.METERS, UnitOfLength.MILES), 2
     ),
     ATTR_WEATHER_HUMIDITY: 10,
 }
 
-EXPECTED_OBSERVATION_METRIC = {
+WEATHER_EXPECTED_OBSERVATION_METRIC = {
     ATTR_WEATHER_TEMPERATURE: 10,
     ATTR_WEATHER_WIND_BEARING: 180,
-    ATTR_WEATHER_WIND_SPEED: round(
-        convert_distance(10, LENGTH_METERS, LENGTH_KILOMETERS) * 3600
+    ATTR_WEATHER_WIND_SPEED: 10,
+    ATTR_WEATHER_PRESSURE: round(
+        PressureConverter.convert(100000, UnitOfPressure.PA, UnitOfPressure.HPA)
     ),
-    ATTR_WEATHER_PRESSURE: round(convert_pressure(100000, PRESSURE_PA, PRESSURE_HPA)),
     ATTR_WEATHER_VISIBILITY: round(
-        convert_distance(10000, LENGTH_METERS, LENGTH_KILOMETERS)
+        DistanceConverter.convert(10000, UnitOfLength.METERS, UnitOfLength.KILOMETERS)
     ),
     ATTR_WEATHER_HUMIDITY: 10,
 }
 
-NONE_OBSERVATION = {key: None for key in DEFAULT_OBSERVATION}
+NONE_OBSERVATION = dict.fromkeys(DEFAULT_OBSERVATION)
 
 DEFAULT_FORECAST = [
     {
@@ -84,31 +191,51 @@ DEFAULT_FORECAST = [
         "temperature": 10,
         "windSpeedAvg": 10,
         "windBearing": 180,
+        "shortForecast": "A short forecast.",
         "detailedForecast": "A detailed forecast.",
         "timestamp": "2019-08-12T23:53:00+00:00",
         "iconTime": "night",
         "iconWeather": (("lightning-rainy", 40), ("lightning-rainy", 90)),
+        "probabilityOfPrecipitation": 89,
+        "dewpoint": 4,
+        "relativeHumidity": 75,
     },
 ]
 
 EXPECTED_FORECAST_IMPERIAL = {
-    ATTR_FORECAST_CONDITION: "lightning-rainy",
+    ATTR_FORECAST_CONDITION: ATTR_CONDITION_LIGHTNING_RAINY,
     ATTR_FORECAST_TIME: "2019-08-12T20:00:00-04:00",
     ATTR_FORECAST_TEMP: 10,
     ATTR_FORECAST_WIND_SPEED: 10,
     ATTR_FORECAST_WIND_BEARING: 180,
-    ATTR_FORECAST_PRECIP_PROB: 90,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY: 89,
+    ATTR_FORECAST_DEW_POINT: 4,
+    ATTR_FORECAST_HUMIDITY: 75,
 }
 
 EXPECTED_FORECAST_METRIC = {
-    ATTR_FORECAST_CONDITION: "lightning-rainy",
+    ATTR_FORECAST_CONDITION: ATTR_CONDITION_LIGHTNING_RAINY,
     ATTR_FORECAST_TIME: "2019-08-12T20:00:00-04:00",
-    ATTR_FORECAST_TEMP: round(convert_temperature(10, TEMP_FAHRENHEIT, TEMP_CELSIUS)),
+    ATTR_FORECAST_TEMP: round(
+        TemperatureConverter.convert(
+            10, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+        ),
+        1,
+    ),
     ATTR_FORECAST_WIND_SPEED: round(
-        convert_distance(10, LENGTH_MILES, LENGTH_KILOMETERS)
+        SpeedConverter.convert(
+            10, UnitOfSpeed.MILES_PER_HOUR, UnitOfSpeed.KILOMETERS_PER_HOUR
+        ),
+        2,
     ),
     ATTR_FORECAST_WIND_BEARING: 180,
-    ATTR_FORECAST_PRECIP_PROB: 90,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY: 89,
+    ATTR_FORECAST_DEW_POINT: round(
+        TemperatureConverter.convert(
+            4, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+        ),
+        1,
+    ),
+    ATTR_FORECAST_HUMIDITY: 75,
 }
-
-NONE_FORECAST = [{key: None for key in DEFAULT_FORECAST[0]}]
+NONE_FORECAST = [dict.fromkeys(DEFAULT_FORECAST[0])]

@@ -1,44 +1,43 @@
 """Config flow to configure emulated_roku component."""
+
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_LISTEN_PORT, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 
 @callback
-def configured_servers(hass):
+def configured_servers(hass: HomeAssistant) -> set[str]:
     """Return a set of the configured servers."""
-    return set(
+    return {
         entry.data[CONF_NAME] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class EmulatedRokuFlowHandler(config_entries.ConfigFlow):
+class EmulatedRokuFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an emulated_roku config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            name = user_input[CONF_NAME]
-
-            if name in configured_servers(self.hass):
-                return self.async_abort(reason="name_exists")
-
-            return self.async_create_entry(title=name, data=user_input)
+            self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
+            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         servers_num = len(configured_servers(self.hass))
 
         if servers_num:
-            default_name = "{} {}".format(DEFAULT_NAME, servers_num + 1)
+            default_name = f"{DEFAULT_NAME} {servers_num + 1}"
             default_port = DEFAULT_PORT + servers_num
         else:
             default_name = DEFAULT_NAME
@@ -57,6 +56,6 @@ class EmulatedRokuFlowHandler(config_entries.ConfigFlow):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow import."""
-        return await self.async_step_user(import_config)
+        return await self.async_step_user(import_data)

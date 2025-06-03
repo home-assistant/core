@@ -1,0 +1,71 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "sleeping": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode": {
+        "default": "mdi:sleep"
+      },
+      "hopper_connected": {
+        "default": "mdi:filter-check"
+      }
+    },
+    "button": {
+      "reset_waste_drawer": {
+        "default": "mdi:delete-variant"
+      },
+      "give_snack": {
+        "default": "mdi:candy-outline"
+      }
+    },
+    "select": {
+      "brightness_level": {
+        "default": "mdi:lightbulb-question",
+        "state": {
+          "low": "mdi:lightbulb-on-30",
+          "medium": "mdi:lightbulb-on-50",
+          "high": "mdi:lightbulb-on"
+        }
+      },
+      "cycle_delay": {
+        "default": "mdi:timer-outline"
+      },
+      "meal_insert_size": {
+        "default": "mdi:scale"
+      }
+    },
+    "sensor": {
+      "hopper_status": {
+        "default": "mdi:filter",
+        "state": {
+          "disabled": "mdi:filter-remove",
+          "empty": "mdi:filter-minus-outline",
+          "enabled": "mdi:filter-check",
+          "motor_disconnected": "mdi:engine-off",
+          "motor_fault_short": "mdi:flash-off",
+          "motor_ot_amps": "mdi:flash-alert"
+        }
+      }
+    },
+    "switch": {
+      "night_light_mode": {
+        "default": "mdi:lightbulb-off",
+        "state": {
+          "on": "mdi:lightbulb-on"
+        }
+      },
+      "panel_lockout": {
+        "default": "mdi:lock-open",
+        "state": {
+          "on": "mdi:lock"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_sleep_mode": {
+      "service": "mdi:sleep"
+    }
+  }
+}

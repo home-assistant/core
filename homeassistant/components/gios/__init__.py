@@ -1,78 +1,77 @@
 """The GIOS component."""
-import asyncio
+
+from __future__ import annotations
+
 import logging
 
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
-from gios import ApiError, Gios, NoStationError
+from gios import Gios
+from gios.exceptions import GiosError
 
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import Throttle
 
-from .const import CONF_STATION_ID, DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_STATION_ID, DOMAIN
+from .coordinator import GiosConfigEntry, GiosData, GiosDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured GIOS."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
-    return True
+PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool:
     """Set up GIOS as config entry."""
-    station_id = config_entry.data[CONF_STATION_ID]
-    _LOGGER.debug("Using station_id: %s", station_id)
+    station_id: int = entry.data[CONF_STATION_ID]
+    _LOGGER.debug("Using station_id: %d", station_id)
+
+    # We used to use int as config_entry unique_id, convert this to str.
+    if isinstance(entry.unique_id, int):
+        hass.config_entries.async_update_entry(entry, unique_id=str(station_id))  # type: ignore[unreachable]
+
+    # We used to use int in device_entry identifiers, convert this to str.
+    device_registry = dr.async_get(hass)
+    old_ids = (DOMAIN, station_id)
+    device_entry = device_registry.async_get_device(identifiers={old_ids})  # type: ignore[arg-type]
+    if device_entry and entry.entry_id in device_entry.config_entries:
+        new_ids = (DOMAIN, str(station_id))
+        device_registry.async_update_device(device_entry.id, new_identifiers={new_ids})
 
     websession = async_get_clientsession(hass)
+    try:
+        gios = await Gios.create(websession, station_id)
+    except (GiosError, ConnectionError, ClientConnectorError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={
+                "entry": entry.title,
+                "error": repr(err),
+            },
+        ) from err
 
-    gios = GiosData(websession, station_id)
+    coordinator = GiosDataUpdateCoordinator(hass, entry, gios)
+    await coordinator.async_config_entry_first_refresh()
 
-    await gios.async_update()
+    entry.runtime_data = GiosData(coordinator)
 
-    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = gios
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "air_quality")
-    )
+    # Remove air_quality entities from registry if they exist
+    ent_reg = er.async_get(hass)
+    unique_id = str(coordinator.gios.station_id)
+    if entity_id := ent_reg.async_get_entity_id(
+        AIR_QUALITY_PLATFORM, DOMAIN, unique_id
+    ):
+        _LOGGER.debug("Removing deprecated air_quality entity %s", entity_id)
+        ent_reg.async_remove(entity_id)
+
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, entry: GiosConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
-    await hass.config_entries.async_forward_entry_unload(config_entry, "air_quality")
-    return True
-
-
-class GiosData:
-    """Define an object to hold GIOS data."""
-
-    def __init__(self, session, station_id):
-        """Initialize."""
-        self._gios = Gios(station_id, session)
-        self.station_id = station_id
-        self.sensors = {}
-        self.latitude = None
-        self.longitude = None
-        self.station_name = None
-        self.available = True
-
-    @Throttle(DEFAULT_SCAN_INTERVAL)
-    async def async_update(self):
-        """Update GIOS data."""
-        try:
-            with timeout(30):
-                await self._gios.update()
-        except asyncio.TimeoutError:
-            _LOGGER.error("Asyncio Timeout Error")
-        except (ApiError, NoStationError, ClientConnectorError) as error:
-            _LOGGER.error("GIOS data update failed: %s", error)
-        self.available = self._gios.available
-        self.latitude = self._gios.latitude
-        self.longitude = self._gios.longitude
-        self.station_name = self._gios.station_name
-        self.sensors = self._gios.data
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

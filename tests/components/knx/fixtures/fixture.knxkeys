@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Keyring Project="Fixture" CreatedBy="ETS 5.7.7 (Build 1428)" Created="2022-12-25T21:51:38" Signature="D8Ba/jmH4UHQuJLw53OdpQ==" xmlns="http://knx.org/xml/keyring/1">
+  <Backbone MulticastAddress="224.0.23.12" Latency="2000" Key="xcV3R7WALk0eQ6HSI+ncfQ==" />
+  <Interface IndividualAddress="1.0.1" Type="Tunneling" Host="1.0.0" UserID="2" Password="N0HFn4s9NHsAK6xp63mD3Wr0y8iBpPVHtX5FZeVFWw4=" Authentication="qnfMZYp2fkUdc2YUBueD6xmYJ0z7ieBFiUK50LMnbm8=">
+    <Group Address="258" Senders="1.1.6 2.0.15" />
+  </Interface>
+  <Interface IndividualAddress="1.0.2" Type="Tunneling" Host="1.0.0" UserID="3" Password="N7Jk0/i/TAR2+4ox8JGdV//OVtGSbxyRKQB6CndWDVU=" Authentication="yhzBk/+Lxxqof6zGiOvfzqNuLVYZYmmBu4SN4Ipypkw=" />
+  <Interface IndividualAddress="1.0.3" Type="Tunneling" Host="1.0.0" UserID="4" Password="5KlUWTpmK3djAR2Fl7YuUfAJOorImmyxnQ43AOPCmlI=" Authentication="/5K2ZLNOC53LCnnMGgyX6SEkfB8k0/H3Pt7MpHtJEzY=" />
+  <Interface IndividualAddress="1.0.4" Type="Tunneling" Host="1.0.0" UserID="5" Password="5BzzkJEL8vE1CM4AldjpjRW6b+zuRSIG8uxCUvxTroY=" Authentication="GBcR0tVvq3qnZ92WNA9O1/N3cTmWf2GruQCJU+fkkyQ=" />
+  <Interface IndividualAddress="1.0.5" Type="Tunneling" Host="1.0.0" UserID="6" Password="sYTj/8WoEnLHQq5r79Cf/KnPqvqqxn6m0n//WOl+EgY=" Authentication="wkxfoYopUEEB8WkBa2Bb4qzvlXDD3I57Y5SXBJV0cdU=" />
+  <Interface IndividualAddress="1.0.6" Type="Tunneling" Host="1.0.0" UserID="7" Password="4lkU7sLlgq6d9qKFg3YEwOPcJQhoRGM+t9CCVcrPHOs=" Authentication="k4ALDpPFm2xOXSt8SJBG8vhRWCeNs/FpKk9B7WifzQk=" />
+  <Interface IndividualAddress="1.0.7" Type="Tunneling" Host="1.0.0" UserID="8" Password="4p6RMLAH+sI8mZJPxi+zX3GGnKlR54NMVj2jcKcRfK0=" Authentication="ZB+iC7vgmM1ycl3oSofh/zTyVLJrobyGVwgG2Kyt5Ms=" />
+  <Interface IndividualAddress="1.0.8" Type="Tunneling" Host="1.0.0" UserID="9" Password="IicVcQJOxCsdsRAu9RrPz9gwEp+Jkk2LQEOCov86lzo=" Authentication="HtrGUq2RDjf5rMuALQ/ZpqdthOpSKfj7hLXCac/fHd8=" />
+  <GroupAddresses>
+    <Group Address="256" Key="KiYcgBVMtwrtCRvz3u/vMg==" />
+    <Group Address="258" Key="eUybuo35i89BcR68CFomhQ==" />
+  </GroupAddresses>
+  <Devices>
+    <Device IndividualAddress="1.0.0" ToolKey="mjMZLrvZx1J0Z+QACuV7yA==" ManagementPassword="AsKTjFqd9RmP+OWarzz0PnD1Xd7P+ITC6lMEHEoijYo=" Authentication="vExfS/5D+tSOhd3hyC1lU7UsV1Nxh05ylWnPbYYvI8o=" />
+    <Device IndividualAddress="1.1.1" ToolKey="ZX3n7DioND4tg4jFn1BJzw==" ManagementPassword="FBrVvTIYuWMXW3+iRFA2XGh7sgMEjV/lRzpuOsubiWQ=" Authentication="h0TtsiDS3Fvz0KikbDukvV/DEF49sr8yk86Og0/AZX4=" />
+    <Device IndividualAddress="1.1.6" ToolKey="B/vHKFcP1CfbkrcWOuF3Ug==" />
+    <Device IndividualAddress="2.0.0" ToolKey="ucwHonh1NHzZBvjHRcgmzQ==" ManagementPassword="yRj53fmVApvZv//enaGzkEUAoNT7AeSOwFRVgZ8LjJA=" Authentication="wYyzgnSnP+VifVg5mcugfoGFfO1W7iCIy/xR5AXYHp4=" />
+    <Device IndividualAddress="2.0.6" ToolKey="RSgmgmTfbJoKAyx8DF2bpA==" ManagementPassword="mv2G10VM7iMf5NLJLJSjw6VFRyNXA+WwmfhsrJhDP9g=" Authentication="uMMm8eoNIkRoGB/W76pdBNR1iic9Mlp1px4Asm5u0T0=" />
+    <Device IndividualAddress="2.0.15" ToolKey="9xe7vNIyJD25ulbXMSRSLw==" />
+  </Devices>
+</Keyring>

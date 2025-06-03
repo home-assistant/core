@@ -1,0 +1,8 @@
+{
+  "domain": "tag",
+  "name": "Tags",
+  "codeowners": ["@balloob", "@dmulcahey"],
+  "documentation": "https://www.home-assistant.io/integrations/tag",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

@@ -1,94 +1,75 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
-from datetime import timedelta
-import logging
-import subprocess
-import sys
 
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant import const, util
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
-from homeassistant.components.device_tracker.const import (
-    CONF_SCAN_INTERVAL,
-    SCAN_INTERVAL,
-    SOURCE_TYPE_ROUTER,
+from datetime import datetime, timedelta
+
+from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+    ScannerEntity,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_PING_COUNT = "count"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(const.CONF_HOSTS): {cv.string: cv.string},
-        vol.Optional(CONF_PING_COUNT, default=1): cv.positive_int,
-    }
-)
+from .const import CONF_IMPORTED_BY
+from .coordinator import PingConfigEntry, PingUpdateCoordinator
 
 
-class Host:
-    """Host object with ping detection."""
-
-    def __init__(self, ip_address, dev_id, hass, config):
-        """Initialize the Host pinger."""
-        self.hass = hass
-        self.ip_address = ip_address
-        self.dev_id = dev_id
-        self._count = config[CONF_PING_COUNT]
-        if sys.platform == "win32":
-            self._ping_cmd = ["ping", "-n", "1", "-w", "1000", self.ip_address]
-        else:
-            self._ping_cmd = ["ping", "-n", "-q", "-c1", "-W1", self.ip_address]
-
-    def ping(self):
-        """Send an ICMP echo request and return True if success."""
-        pinger = subprocess.Popen(
-            self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-        )
-        try:
-            pinger.communicate()
-            return pinger.returncode == 0
-        except subprocess.CalledProcessError:
-            return False
-
-    def update(self, see):
-        """Update device state by sending one or more ping messages."""
-        failed = 0
-        while failed < self._count:  # check more times if host is unreachable
-            if self.ping():
-                see(dev_id=self.dev_id, source_type=SOURCE_TYPE_ROUTER)
-                return True
-            failed += 1
-
-        _LOGGER.debug("No response from %s failed=%d", self.ip_address, failed)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: PingConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up a Ping config entry."""
+    async_add_entities([PingDeviceTracker(entry, entry.runtime_data)])
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
-    """Set up the Host objects and return the update function."""
-    hosts = [
-        Host(ip, dev_id, hass, config)
-        for (dev_id, ip) in config[const.CONF_HOSTS].items()
-    ]
-    interval = config.get(
-        CONF_SCAN_INTERVAL,
-        timedelta(seconds=len(hosts) * config[CONF_PING_COUNT]) + SCAN_INTERVAL,
-    )
-    _LOGGER.debug(
-        "Started ping tracker with interval=%s on hosts: %s",
-        interval,
-        ",".join([host.ip_address for host in hosts]),
-    )
+class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity):
+    """Representation of a Ping device tracker."""
 
-    def update_interval(now):
-        """Update all the hosts on every interval time."""
-        try:
-            for host in hosts:
-                host.update(see)
-        finally:
-            hass.helpers.event.track_point_in_utc_time(
-                update_interval, util.dt.utcnow() + interval
+    _last_seen: datetime | None = None
+
+    def __init__(
+        self, config_entry: PingConfigEntry, coordinator: PingUpdateCoordinator
+    ) -> None:
+        """Initialize the Ping device tracker."""
+        super().__init__(coordinator)
+
+        self._attr_name = config_entry.title
+        self.config_entry = config_entry
+        self._consider_home_interval = timedelta(
+            seconds=config_entry.options.get(
+                CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.seconds
             )
+        )
 
-    update_interval(None)
-    return True
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self.coordinator.data.ip_address
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self.config_entry.entry_id
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if ping returns is_alive or considered home."""
+        if self.coordinator.data.is_alive:
+            self._last_seen = dt_util.utcnow()
+
+        return (
+            self._last_seen is not None
+            and (dt_util.utcnow() - self._last_seen) < self._consider_home_interval
+        )
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if entity is enabled by default."""
+        if CONF_IMPORTED_BY in self.config_entry.data:
+            return bool(self.config_entry.data[CONF_IMPORTED_BY] == "device_tracker")
+        return False

@@ -1,0 +1,10 @@
+{
+  "domain": "leaone",
+  "name": "LeaOne",
+  "codeowners": ["@bdraco"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/leaone",
+  "iot_class": "local_push",
+  "requirements": ["leaone-ble==0.3.0"]
+}

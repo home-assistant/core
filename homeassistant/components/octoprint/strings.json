@@ -1,0 +1,68 @@
+{
+  "config": {
+    "flow_title": "OctoPrint printer: {host}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "path": "Application path",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your printer."
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "auth_failed": "Failed to retrieve API key",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "progress": {
+      "get_api_key": "Open the OctoPrint UI and select **Allow** on the Access Request for **Home Assistant**."
+    }
+  },
+  "exceptions": {
+    "missing_client": {
+      "message": "No client for device ID: {device_id}"
+    }
+  },
+  "services": {
+    "printer_connect": {
+      "name": "Connect to a printer",
+      "description": "Instructs the OctoPrint server to connect to a printer.",
+      "fields": {
+        "device_id": {
+          "name": "Server",
+          "description": "The server that should connect."
+        },
+        "profile_name": {
+          "name": "Profile name",
+          "description": "Printer profile to connect with."
+        },
+        "port": {
+          "name": "Serial port",
+          "description": "Port name to connect on."
+        },
+        "baudrate": {
+          "name": "Baudrate",
+          "description": "Baud rate."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,166 @@
+# Defines a list of files that are part of main core of Home Assistant.
+# Changes to these files/filters define how our CI test suite is ran.
+core: &core
+  - homeassistant/*.py
+  - homeassistant/auth/**
+  - homeassistant/helpers/**
+  - homeassistant/package_constraints.txt
+  - homeassistant/util/**
+  - mypy.ini
+  - pyproject.toml
+  - requirements.txt
+  - setup.cfg
+
+# Our base platforms, that are used by other integrations
+base_platforms: &base_platforms
+  - homeassistant/components/air_quality/**
+  - homeassistant/components/alarm_control_panel/**
+  - homeassistant/components/assist_satellite/**
+  - homeassistant/components/binary_sensor/**
+  - homeassistant/components/button/**
+  - homeassistant/components/calendar/**
+  - homeassistant/components/camera/**
+  - homeassistant/components/climate/**
+  - homeassistant/components/cover/**
+  - homeassistant/components/date/**
+  - homeassistant/components/datetime/**
+  - homeassistant/components/device_tracker/**
+  - homeassistant/components/diagnostics/**
+  - homeassistant/components/event/**
+  - homeassistant/components/fan/**
+  - homeassistant/components/geo_location/**
+  - homeassistant/components/humidifier/**
+  - homeassistant/components/image/**
+  - homeassistant/components/image_processing/**
+  - homeassistant/components/lawn_mower/**
+  - homeassistant/components/light/**
+  - homeassistant/components/lock/**
+  - homeassistant/components/media_player/**
+  - homeassistant/components/notify/**
+  - homeassistant/components/number/**
+  - homeassistant/components/remote/**
+  - homeassistant/components/scene/**
+  - homeassistant/components/select/**
+  - homeassistant/components/sensor/**
+  - homeassistant/components/siren/**
+  - homeassistant/components/stt/**
+  - homeassistant/components/switch/**
+  - homeassistant/components/text/**
+  - homeassistant/components/time/**
+  - homeassistant/components/todo/**
+  - homeassistant/components/tts/**
+  - homeassistant/components/update/**
+  - homeassistant/components/vacuum/**
+  - homeassistant/components/valve/**
+  - homeassistant/components/water_heater/**
+  - homeassistant/components/weather/**
+
+# Extra components that trigger the full suite
+components: &components
+  - homeassistant/components/alexa/**
+  - homeassistant/components/application_credentials/**
+  - homeassistant/components/assist_pipeline/**
+  - homeassistant/components/auth/**
+  - homeassistant/components/automation/**
+  - homeassistant/components/backup/**
+  - homeassistant/components/blueprint/**
+  - homeassistant/components/bluetooth/**
+  - homeassistant/components/cloud/**
+  - homeassistant/components/config/**
+  - homeassistant/components/configurator/**
+  - homeassistant/components/conversation/**
+  - homeassistant/components/demo/**
+  - homeassistant/components/device_automation/**
+  - homeassistant/components/dhcp/**
+  - homeassistant/components/discovery/**
+  - homeassistant/components/energy/**
+  - homeassistant/components/ffmpeg/**
+  - homeassistant/components/frontend/**
+  - homeassistant/components/google_assistant/**
+  - homeassistant/components/group/**
+  - homeassistant/components/hassio/**
+  - homeassistant/components/homeassistant/**
+  - homeassistant/components/homeassistant_hardware/**
+  - homeassistant/components/http/**
+  - homeassistant/components/image/**
+  - homeassistant/components/input_boolean/**
+  - homeassistant/components/input_button/**
+  - homeassistant/components/input_datetime/**
+  - homeassistant/components/input_number/**
+  - homeassistant/components/input_select/**
+  - homeassistant/components/input_text/**
+  - homeassistant/components/logbook/**
+  - homeassistant/components/logger/**
+  - homeassistant/components/lovelace/**
+  - homeassistant/components/media_source/**
+  - homeassistant/components/mjpeg/**
+  - homeassistant/components/modbus/**
+  - homeassistant/components/mqtt/**
+  - homeassistant/components/network/**
+  - homeassistant/components/onboarding/**
+  - homeassistant/components/otp/**
+  - homeassistant/components/persistent_notification/**
+  - homeassistant/components/person/**
+  - homeassistant/components/recorder/**
+  - homeassistant/components/recovery_mode/**
+  - homeassistant/components/repairs/**
+  - homeassistant/components/script/**
+  - homeassistant/components/shopping_list/**
+  - homeassistant/components/ssdp/**
+  - homeassistant/components/stream/**
+  - homeassistant/components/sun/**
+  - homeassistant/components/system_health/**
+  - homeassistant/components/tag/**
+  - homeassistant/components/template/**
+  - homeassistant/components/timer/**
+  - homeassistant/components/trace/**
+  - homeassistant/components/usb/**
+  - homeassistant/components/webhook/**
+  - homeassistant/components/websocket_api/**
+  - homeassistant/components/zeroconf/**
+  - homeassistant/components/zone/**
+
+# Testing related files that affect the whole test/linting suite
+tests: &tests
+  - codecov.yaml
+  - pylint/**
+  - requirements_test_pre_commit.txt
+  - requirements_test.txt
+  - tests/*.py
+  - tests/auth/**
+  - tests/backports/**
+  - tests/components/conftest.py
+  - tests/components/diagnostics/**
+  - tests/components/history/**
+  - tests/components/light/common.py
+  - tests/components/logbook/**
+  - tests/components/recorder/**
+  - tests/components/repairs/**
+  - tests/components/sensor/**
+  - tests/hassfest/**
+  - tests/helpers/**
+  - tests/mock/**
+  - tests/pylint/**
+  - tests/scripts/**
+  - tests/test_util/**
+  - tests/testing_config/**
+  - tests/util/**
+
+other: &other
+  - .github/workflows/**
+  - homeassistant/scripts/**
+
+requirements: &requirements
+  - .github/workflows/**
+  - homeassistant/package_constraints.txt
+  - requirements*.txt
+  - pyproject.toml
+  - script/licenses.py
+
+any:
+  - *base_platforms
+  - *components
+  - *core
+  - *other
+  - *requirements
+  - *tests

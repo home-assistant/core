@@ -1,39 +1,78 @@
 """Test SMHI component setup process."""
-from unittest.mock import Mock
 
-from homeassistant.components import smhi
+from pysmhi import SMHIPointForecast
 
-from .common import AsyncMock
+from homeassistant.components.smhi.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-TEST_CONFIG = {
-    "config": {
-        "name": "0123456789ABCDEF",
-        "longitude": "62.0022",
-        "latitude": "17.0022",
-    }
-}
+from . import ENTITY_ID, TEST_CONFIG, TEST_CONFIG_MIGRATE
 
-
-async def test_setup_always_return_true() -> None:
-    """Test async_setup always returns True."""
-    hass = Mock()
-    # Returns true with empty config
-    assert await smhi.async_setup(hass, {}) is True
-
-    # Returns true with a config provided
-    assert await smhi.async_setup(hass, TEST_CONFIG) is True
+from tests.common import MockConfigEntry
 
 
-async def test_forward_async_setup_entry() -> None:
-    """Test that it will forward setup entry."""
-    hass = Mock()
+async def test_load_and_unload_config_entry(
+    hass: HomeAssistant, load_int: MockConfigEntry
+) -> None:
+    """Test remove entry."""
 
-    assert await smhi.async_setup_entry(hass, {}) is True
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 1
+    assert load_int.state is ConfigEntryState.LOADED
+    state = hass.states.get(ENTITY_ID)
+    assert state
+
+    await hass.config_entries.async_unload(load_int.entry_id)
+    await hass.async_block_till_done()
+
+    assert load_int.state is ConfigEntryState.NOT_LOADED
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNAVAILABLE
 
 
-async def test_forward_async_unload_entry() -> None:
-    """Test that it will forward unload entry."""
-    hass = AsyncMock()
-    assert await smhi.async_unload_entry(hass, {}) is True
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 1
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: SMHIPointForecast,
+) -> None:
+    """Test migrate entry data."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG_MIGRATE)
+    entry.add_to_hass(hass)
+    assert entry.version == 1
+
+    entity = entity_registry.async_get_or_create(
+        domain="weather",
+        config_entry=entry,
+        original_name="Weather",
+        platform="smhi",
+        supported_features=0,
+        unique_id="59.32624, 17.84197",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state
+
+    assert entry.version == 3
+    assert entry.unique_id == "59.32624-17.84197"
+    assert entry.data == TEST_CONFIG
+
+    entity_get = entity_registry.async_get(entity.entity_id)
+    assert entity_get.unique_id == "59.32624, 17.84197"
+
+
+async def test_migrate_from_future_version(
+    hass: HomeAssistant, mock_client: SMHIPointForecast
+) -> None:
+    """Test migrate entry not possible from future version."""
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG_MIGRATE, version=4)
+    entry.add_to_hass(hass)
+    assert entry.version == 4
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.MIGRATION_ERROR

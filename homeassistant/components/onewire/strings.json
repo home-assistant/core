@@ -1,0 +1,154 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up OWServer from {host}?"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::onewire::config::step::user::data_description::host%]",
+          "port": "[%key:component::onewire::config::step::user::data_description::port%]"
+        },
+        "description": "Update OWServer configuration for {name}"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your OWServer instance.",
+          "port": "The port of your OWServer instance (default is 4304)."
+        },
+        "title": "Set OWServer instance details"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "sensed_id": {
+        "name": "Sensed {id}"
+      },
+      "hub_short_id": {
+        "name": "Hub short on branch {id}"
+      }
+    },
+    "select": {
+      "tempres": {
+        "name": "Temperature resolution",
+        "state": {
+          "9": "9 bits (0.5°C, fastest, up to 93.75ms)",
+          "10": "10 bits (0.25°C, up to 187.5ms)",
+          "11": "11 bits (0.125°C, up to 375ms)",
+          "12": "12 bits (0.0625°C, slowest, up to 750ms)"
+        }
+      }
+    },
+    "sensor": {
+      "counter_id": {
+        "name": "Counter {id}"
+      },
+      "humidity_hih3600": {
+        "name": "HIH3600 humidity"
+      },
+      "humidity_hih4000": {
+        "name": "HIH4000 humidity"
+      },
+      "humidity_hih5030": {
+        "name": "HIH5030 humidity"
+      },
+      "humidity_htm1735": {
+        "name": "HTM1735 humidity"
+      },
+      "humidity_raw": {
+        "name": "Raw humidity"
+      },
+      "latest_voltage_id": {
+        "name": "Latest voltage {id}"
+      },
+      "moisture_id": {
+        "name": "Moisture {id}"
+      },
+      "thermocouple_temperature_k": {
+        "name": "Thermocouple K temperature"
+      },
+      "voltage_id": {
+        "name": "Voltage {id}"
+      },
+      "voltage_vad": {
+        "name": "VAD voltage"
+      },
+      "voltage_vdd": {
+        "name": "VDD voltage"
+      },
+      "voltage_vis": {
+        "name": "VIS voltage difference"
+      },
+      "voltage_vis_gradient": {
+        "name": "VIS voltage gradient"
+      },
+      "wetness_id": {
+        "name": "Wetness {id}"
+      }
+    },
+    "switch": {
+      "hub_branch_id": {
+        "name": "Hub branch {id}"
+      },
+      "iad": {
+        "name": "Current A/D control"
+      },
+      "latch_id": {
+        "name": "Latch {id}"
+      },
+      "leaf_sensor_id": {
+        "name": "Leaf sensor {id}"
+      },
+      "moisture_sensor_id": {
+        "name": "Moisture sensor {id}"
+      },
+      "pio": {
+        "name": "Programmed input-output"
+      },
+      "pio_id": {
+        "name": "Programmed input-output {id}"
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "no_configurable_devices": "No configurable devices found"
+    },
+    "error": {
+      "device_not_selected": "Select devices to configure"
+    },
+    "step": {
+      "device_selection": {
+        "data": {
+          "clear_device_options": "Clear all device configurations",
+          "device_selection": "[%key:component::onewire::options::error::device_not_selected%]"
+        },
+        "description": "Select what configuration steps to process",
+        "title": "1-Wire device options"
+      },
+      "configure_device": {
+        "data": {
+          "precision": "Sensor precision"
+        },
+        "description": "Select sensor precision for {sensor_id}",
+        "title": "1-Wire sensor precision"
+      }
+    }
+  }
+}

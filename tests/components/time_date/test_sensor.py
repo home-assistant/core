@@ -1,171 +1,263 @@
 """The tests for time_date sensor platform."""
-import unittest
-from unittest.mock import patch
 
-import homeassistant.components.time_date.sensor as time_date
-import homeassistant.util.dt as dt_util
+from unittest.mock import ANY, Mock, patch
 
-from tests.common import get_test_home_assistant
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+
+from homeassistant.components.time_date.const import OPTION_TYPES
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import event
+from homeassistant.util import dt as dt_util
+
+from . import load_int
+
+from tests.common import async_fire_time_changed
 
 
-class TestTimeDateSensor(unittest.TestCase):
-    """Tests the time_date Sensor platform."""
+@patch("homeassistant.components.time_date.sensor.async_track_point_in_utc_time")
+@pytest.mark.parametrize(
+    ("display_option", "start_time", "tracked_time"),
+    [
+        (
+            "time",
+            dt_util.utc_from_timestamp(45.5),
+            dt_util.utc_from_timestamp(60),
+        ),
+        (
+            "date_time",
+            dt_util.utc_from_timestamp(1495068899),
+            dt_util.utc_from_timestamp(1495068900),
+        ),
+        (
+            "time_date",
+            dt_util.utc_from_timestamp(1495068899),
+            dt_util.utc_from_timestamp(1495068900),
+        ),
+    ],
+)
+async def test_intervals(
+    mock_track_interval: Mock,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    display_option: str,
+    start_time,
+    tracked_time,
+) -> None:
+    """Test timing intervals of sensors when time zone is UTC."""
+    await hass.config.async_set_time_zone("UTC")
+    freezer.move_to(start_time)
 
-    # pylint: disable=invalid-name
-    DEVICES = []
+    await load_int(hass, display_option)
 
-    def add_entities(self, devices):
-        """Mock add devices."""
-        for device in devices:
-            self.DEVICES.append(device)
+    mock_track_interval.assert_called_once_with(hass, ANY, tracked_time)
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
-        self.DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        dt_util.set_default_time_zone(self.DEFAULT_TIME_ZONE)
-        self.hass.stop()
+async def test_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Test states of sensors."""
+    await hass.config.async_set_time_zone("UTC")
+    now = dt_util.utc_from_timestamp(1495068856)
+    freezer.move_to(now)
 
-    # pylint: disable=protected-access
-    def test_intervals(self):
-        """Test timing intervals of sensors."""
-        device = time_date.TimeDateSensor(self.hass, "time")
-        now = dt_util.utc_from_timestamp(45)
-        next_time = device.get_next_interval(now)
-        assert next_time == dt_util.utc_from_timestamp(60)
+    for option in OPTION_TYPES:
+        await load_int(hass, option)
 
-        device = time_date.TimeDateSensor(self.hass, "beat")
-        now = dt_util.utc_from_timestamp(29)
-        next_time = device.get_next_interval(now)
-        assert next_time == dt_util.utc_from_timestamp(86.4)
+    state = hass.states.get("sensor.time")
+    assert state.state == "00:54"
 
-        device = time_date.TimeDateSensor(self.hass, "date_time")
-        now = dt_util.utc_from_timestamp(1495068899)
-        next_time = device.get_next_interval(now)
-        assert next_time == dt_util.utc_from_timestamp(1495068900)
+    state = hass.states.get("sensor.date")
+    assert state.state == "2017-05-18"
 
-        now = dt_util.utcnow()
-        device = time_date.TimeDateSensor(self.hass, "time_date")
-        next_time = device.get_next_interval()
-        assert next_time > now
+    state = hass.states.get("sensor.time_utc")
+    assert state.state == "00:54"
 
-    def test_states(self):
-        """Test states of sensors."""
-        now = dt_util.utc_from_timestamp(1495068856)
-        device = time_date.TimeDateSensor(self.hass, "time")
-        device._update_internal_state(now)
-        assert device.state == "00:54"
+    state = hass.states.get("sensor.date_time")
+    assert state.state == "2017-05-18, 00:54"
 
-        device = time_date.TimeDateSensor(self.hass, "date")
-        device._update_internal_state(now)
-        assert device.state == "2017-05-18"
+    state = hass.states.get("sensor.date_time_utc")
+    assert state.state == "2017-05-18, 00:54"
 
-        device = time_date.TimeDateSensor(self.hass, "time_utc")
-        device._update_internal_state(now)
-        assert device.state == "00:54"
+    state = hass.states.get("sensor.date_time_iso")
+    assert state.state == "2017-05-18T00:54:00"
 
-        device = time_date.TimeDateSensor(self.hass, "date_time")
-        device._update_internal_state(now)
-        assert device.state == "2017-05-18, 00:54"
+    # Time travel
+    now = dt_util.utc_from_timestamp(1602952963.2)
+    freezer.move_to(now)
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
 
-        device = time_date.TimeDateSensor(self.hass, "date_time_utc")
-        device._update_internal_state(now)
-        assert device.state == "2017-05-18, 00:54"
+    state = hass.states.get("sensor.time")
+    assert state.state == "16:42"
 
-        device = time_date.TimeDateSensor(self.hass, "beat")
-        device._update_internal_state(now)
-        assert device.state == "@079"
+    state = hass.states.get("sensor.date")
+    assert state.state == "2020-10-17"
 
-        device = time_date.TimeDateSensor(self.hass, "date_time_iso")
-        device._update_internal_state(now)
-        assert device.state == "2017-05-18T00:54:00"
+    state = hass.states.get("sensor.time_utc")
+    assert state.state == "16:42"
 
-    def test_states_non_default_timezone(self):
-        """Test states of sensors in a timezone other than UTC."""
-        new_tz = dt_util.get_time_zone("America/New_York")
-        assert new_tz is not None
-        dt_util.set_default_time_zone(new_tz)
+    state = hass.states.get("sensor.date_time")
+    assert state.state == "2020-10-17, 16:42"
 
-        now = dt_util.utc_from_timestamp(1495068856)
-        device = time_date.TimeDateSensor(self.hass, "time")
-        device._update_internal_state(now)
-        assert device.state == "20:54"
+    state = hass.states.get("sensor.date_time_utc")
+    assert state.state == "2020-10-17, 16:42"
 
-        device = time_date.TimeDateSensor(self.hass, "date")
-        device._update_internal_state(now)
-        assert device.state == "2017-05-17"
+    state = hass.states.get("sensor.date_time_iso")
+    assert state.state == "2020-10-17T16:42:00"
 
-        device = time_date.TimeDateSensor(self.hass, "time_utc")
-        device._update_internal_state(now)
-        assert device.state == "00:54"
 
-        device = time_date.TimeDateSensor(self.hass, "date_time")
-        device._update_internal_state(now)
-        assert device.state == "2017-05-17, 20:54"
+async def test_states_non_default_timezone(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test states of sensors in a timezone other than UTC."""
+    await hass.config.async_set_time_zone("America/New_York")
+    now = dt_util.utc_from_timestamp(1495068856)
+    freezer.move_to(now)
 
-        device = time_date.TimeDateSensor(self.hass, "date_time_utc")
-        device._update_internal_state(now)
-        assert device.state == "2017-05-18, 00:54"
+    for option in OPTION_TYPES:
+        await load_int(hass, option)
 
-        device = time_date.TimeDateSensor(self.hass, "beat")
-        device._update_internal_state(now)
-        assert device.state == "@079"
+    state = hass.states.get("sensor.time")
+    assert state.state == "20:54"
 
-        device = time_date.TimeDateSensor(self.hass, "date_time_iso")
-        device._update_internal_state(now)
-        assert device.state == "2017-05-17T20:54:00"
+    state = hass.states.get("sensor.date")
+    assert state.state == "2017-05-17"
 
-    # pylint: disable=no-member
-    def test_timezone_intervals(self):
-        """Test date sensor behavior in a timezone besides UTC."""
-        new_tz = dt_util.get_time_zone("America/New_York")
-        assert new_tz is not None
-        dt_util.set_default_time_zone(new_tz)
+    state = hass.states.get("sensor.time_utc")
+    assert state.state == "00:54"
 
-        device = time_date.TimeDateSensor(self.hass, "date")
-        now = dt_util.utc_from_timestamp(50000)
-        next_time = device.get_next_interval(now)
-        # start of local day in EST was 18000.0
-        # so the second day was 18000 + 86400
-        assert next_time.timestamp() == 104400
+    state = hass.states.get("sensor.date_time")
+    assert state.state == "2017-05-17, 20:54"
 
-        new_tz = dt_util.get_time_zone("America/Edmonton")
-        assert new_tz is not None
-        dt_util.set_default_time_zone(new_tz)
-        now = dt_util.parse_datetime("2017-11-13 19:47:19-07:00")
-        device = time_date.TimeDateSensor(self.hass, "date")
-        next_time = device.get_next_interval(now)
-        assert next_time.timestamp() == dt_util.as_timestamp(
-            "2017-11-14 00:00:00-07:00"
-        )
+    state = hass.states.get("sensor.date_time_utc")
+    assert state.state == "2017-05-18, 00:54"
 
-    @patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.parse_datetime("2017-11-14 02:47:19-00:00"),
-    )
-    def test_timezone_intervals_empty_parameter(self, _):
-        """Test get_interval() without parameters."""
-        new_tz = dt_util.get_time_zone("America/Edmonton")
-        assert new_tz is not None
-        dt_util.set_default_time_zone(new_tz)
-        device = time_date.TimeDateSensor(self.hass, "date")
-        next_time = device.get_next_interval()
-        assert next_time.timestamp() == dt_util.as_timestamp(
-            "2017-11-14 00:00:00-07:00"
-        )
+    state = hass.states.get("sensor.date_time_iso")
+    assert state.state == "2017-05-17T20:54:00"
 
-    def test_icons(self):
-        """Test attributes of sensors."""
-        device = time_date.TimeDateSensor(self.hass, "time")
-        assert device.icon == "mdi:clock"
-        device = time_date.TimeDateSensor(self.hass, "date")
-        assert device.icon == "mdi:calendar"
-        device = time_date.TimeDateSensor(self.hass, "date_time")
-        assert device.icon == "mdi:calendar-clock"
-        device = time_date.TimeDateSensor(self.hass, "date_time_utc")
-        assert device.icon == "mdi:calendar-clock"
-        device = time_date.TimeDateSensor(self.hass, "date_time_iso")
-        assert device.icon == "mdi:calendar-clock"
+    # Time travel
+    now = dt_util.utc_from_timestamp(1602952963.2)
+    freezer.move_to(now)
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.time")
+    assert state.state == "12:42"
+
+    state = hass.states.get("sensor.date")
+    assert state.state == "2020-10-17"
+
+    state = hass.states.get("sensor.time_utc")
+    assert state.state == "16:42"
+
+    state = hass.states.get("sensor.date_time")
+    assert state.state == "2020-10-17, 12:42"
+
+    state = hass.states.get("sensor.date_time_utc")
+    assert state.state == "2020-10-17, 16:42"
+
+    state = hass.states.get("sensor.date_time_iso")
+    assert state.state == "2020-10-17T12:42:00"
+
+    # Change time zone
+    await hass.config.async_update(time_zone="Europe/Prague")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.time")
+    assert state.state == "18:42"
+
+    state = hass.states.get("sensor.date")
+    assert state.state == "2020-10-17"
+
+    state = hass.states.get("sensor.time_utc")
+    assert state.state == "16:42"
+
+    state = hass.states.get("sensor.date_time")
+    assert state.state == "2020-10-17, 18:42"
+
+    state = hass.states.get("sensor.date_time_utc")
+    assert state.state == "2020-10-17, 16:42"
+
+    state = hass.states.get("sensor.date_time_iso")
+    assert state.state == "2020-10-17T18:42:00"
+
+
+@patch(
+    "homeassistant.components.time_date.sensor.async_track_point_in_utc_time",
+    side_effect=event.async_track_point_in_utc_time,
+)
+@pytest.mark.parametrize(
+    ("time_zone", "start_time", "tracked_time"),
+    [
+        (
+            "America/New_York",
+            dt_util.utc_from_timestamp(50000),
+            # start of local day in EST was 18000.0
+            # so the second day was 18000 + 86400
+            104400,
+        ),
+        (
+            "America/Edmonton",
+            dt_util.parse_datetime("2017-11-13 19:47:19-07:00"),
+            dt_util.as_timestamp("2017-11-14 00:00:00-07:00"),
+        ),
+        # Entering DST
+        (
+            "Europe/Prague",
+            dt_util.parse_datetime("2020-03-29 00:00+01:00"),
+            dt_util.as_timestamp("2020-03-30 00:00+02:00"),
+        ),
+        (
+            "Europe/Prague",
+            dt_util.parse_datetime("2020-03-29 03:00+02:00"),
+            dt_util.as_timestamp("2020-03-30 00:00+02:00"),
+        ),
+        # Leaving DST
+        (
+            "Europe/Prague",
+            dt_util.parse_datetime("2020-10-25 00:00+02:00"),
+            dt_util.as_timestamp("2020-10-26 00:00+01:00"),
+        ),
+        (
+            "Europe/Prague",
+            dt_util.parse_datetime("2020-10-25 23:59+01:00"),
+            dt_util.as_timestamp("2020-10-26 00:00+01:00"),
+        ),
+    ],
+)
+async def test_timezone_intervals(
+    mock_track_interval: Mock,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    time_zone: str,
+    start_time,
+    tracked_time,
+) -> None:
+    """Test timing intervals of sensors in timezone other than UTC."""
+    await hass.config.async_set_time_zone(time_zone)
+    freezer.move_to(start_time)
+
+    await load_int(hass, "date")
+
+    mock_track_interval.assert_called_once()
+    next_time = mock_track_interval.mock_calls[0][1][2]
+
+    assert next_time.timestamp() == tracked_time
+
+
+async def test_icons(hass: HomeAssistant) -> None:
+    """Test attributes of sensors."""
+    for option in OPTION_TYPES:
+        await load_int(hass, option)
+
+    state = hass.states.get("sensor.time")
+    assert state.attributes["icon"] == "mdi:clock"
+    state = hass.states.get("sensor.date")
+    assert state.attributes["icon"] == "mdi:calendar"
+    state = hass.states.get("sensor.time_utc")
+    assert state.attributes["icon"] == "mdi:clock"
+    state = hass.states.get("sensor.date_time")
+    assert state.attributes["icon"] == "mdi:calendar-clock"
+    state = hass.states.get("sensor.date_time_utc")
+    assert state.attributes["icon"] == "mdi:calendar-clock"
+    state = hass.states.get("sensor.date_time_iso")
+    assert state.attributes["icon"] == "mdi:calendar-clock"

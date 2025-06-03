@@ -1,85 +1,61 @@
 """Support for testing internet speed via Speedtest.net."""
-from datetime import timedelta
-import logging
+
+from __future__ import annotations
+
+from functools import partial
 
 import speedtest
-import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.start import async_at_started
 
-from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
+from .coordinator import SpeedTestConfigEntry, SpeedTestDataCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_SERVER_ID = "server_id"
-CONF_MANUAL = "manual"
-
-DEFAULT_INTERVAL = timedelta(hours=1)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_SERVER_ID): cv.positive_int,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-                vol.Optional(CONF_MANUAL, default=False): cv.boolean,
-                vol.Optional(
-                    CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-                ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup(hass, config):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: SpeedTestConfigEntry
+) -> bool:
     """Set up the Speedtest.net component."""
-    conf = config[DOMAIN]
-    data = hass.data[DOMAIN] = SpeedtestData(hass, conf.get(CONF_SERVER_ID))
-
-    if not conf[CONF_MANUAL]:
-        async_track_time_interval(hass, data.update, conf[CONF_SCAN_INTERVAL])
-
-    def update(call=None):
-        """Service call to manually update the data."""
-        data.update()
-
-    hass.services.async_register(DOMAIN, "speedtest", update)
-
-    hass.async_create_task(
-        async_load_platform(
-            hass, SENSOR_DOMAIN, DOMAIN, conf[CONF_MONITORED_CONDITIONS], config
+    try:
+        api = await hass.async_add_executor_job(
+            partial(speedtest.Speedtest, secure=True)
         )
-    )
+        coordinator = SpeedTestDataCoordinator(hass, config_entry, api)
+    except speedtest.SpeedtestException as err:
+        raise ConfigEntryNotReady from err
+
+    config_entry.runtime_data = coordinator
+
+    async def _async_finish_startup(hass: HomeAssistant) -> None:
+        """Run this only when HA has finished its startup."""
+        if config_entry.state is ConfigEntryState.LOADED:
+            await coordinator.async_refresh()
+        else:
+            await coordinator.async_config_entry_first_refresh()
+
+    # Don't start a speedtest during startup
+    async_at_started(hass, _async_finish_startup)
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     return True
 
 
-class SpeedtestData:
-    """Get the latest data from speedtest.net."""
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: SpeedTestConfigEntry
+) -> bool:
+    """Unload SpeedTest Entry from config_entry."""
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
-    def __init__(self, hass, server_id):
-        """Initialize the data object."""
-        self.data = None
-        self._hass = hass
-        self._servers = [] if server_id is None else [server_id]
 
-    def update(self, now=None):
-        """Get the latest data from speedtest.net."""
-
-        _LOGGER.debug("Executing speedtest.net speed test")
-        speed = speedtest.Speedtest()
-        speed.get_servers(self._servers)
-        speed.get_best_server()
-        speed.download()
-        speed.upload()
-        self.data = speed.results.dict()
-        dispatcher_send(self._hass, DATA_UPDATED)
+async def update_listener(
+    hass: HomeAssistant, config_entry: SpeedTestConfigEntry
+) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)

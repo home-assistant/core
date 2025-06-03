@@ -1,172 +1,213 @@
-"""Test UniFi setup process."""
-from unittest.mock import Mock, patch
+"""Test UniFi Network integration setup process."""
+
+from typing import Any
+from unittest.mock import patch
+
+from aiounifi.models.message import MessageKey
+import pytest
 
 from homeassistant.components import unifi
+from homeassistant.components.unifi.const import (
+    CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_ALLOW_UPTIME_SENSORS,
+    CONF_TRACK_CLIENTS,
+    CONF_TRACK_DEVICES,
+)
+from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_coro
+from .conftest import (
+    DEFAULT_CONFIG_ENTRY_ID,
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+)
+
+from tests.common import flush_store
+from tests.typing import WebSocketGenerator
 
 
-async def test_setup_with_no_config(hass):
-    """Test that we do not discover anything or try to set up a bridge."""
-    assert await async_setup_component(hass, unifi.DOMAIN, {}) is True
-    assert unifi.DOMAIN not in hass.data
-    assert hass.data[unifi.UNIFI_CONFIG] == []
+async def test_setup_entry_fails_config_entry_not_ready(
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
+) -> None:
+    """Failed authentication trigger a reauthentication flow."""
+    with patch(
+        "homeassistant.components.unifi.get_unifi_api",
+        side_effect=CannotConnect,
+    ):
+        config_entry = await config_entry_factory()
+
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_with_config(hass):
-    """Test that we do not discover anything or try to set up a bridge."""
-    config = {
-        unifi.DOMAIN: {
-            unifi.CONF_CONTROLLERS: {
-                unifi.CONF_HOST: "1.2.3.4",
-                unifi.CONF_SITE_ID: "My site",
-                unifi.CONF_BLOCK_CLIENT: ["12:34:56:78:90:AB"],
-                unifi.CONF_DETECTION_TIME: 3,
-                unifi.CONF_SSID_FILTER: ["ssid"],
+async def test_setup_entry_fails_trigger_reauth_flow(
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
+) -> None:
+    """Failed authentication trigger a reauthentication flow."""
+    with (
+        patch(
+            "homeassistant.components.unifi.get_unifi_api",
+            side_effect=AuthenticationRequired,
+        ),
+        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
+    ):
+        config_entry = await config_entry_factory()
+        mock_flow_init.assert_called_once()
+
+    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "client_1",
+                "ip": "10.0.0.1",
+                "is_wired": False,
+                "mac": "00:00:00:00:00:01",
+            },
+            {
+                "hostname": "client_2",
+                "ip": "10.0.0.2",
+                "is_wired": False,
+                "mac": "00:00:00:00:00:02",
+            },
+        ]
+    ],
+)
+async def test_wireless_clients(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Verify wireless clients class."""
+    hass_storage[unifi.STORAGE_KEY] = {
+        "version": unifi.STORAGE_VERSION,
+        "data": {
+            DEFAULT_CONFIG_ENTRY_ID: {
+                "wireless_devices": ["00:00:00:00:00:00", "00:00:00:00:00:01"]
             }
-        }
+        },
     }
-    assert await async_setup_component(hass, unifi.DOMAIN, config) is True
-    assert unifi.DOMAIN not in hass.data
-    assert hass.data[unifi.UNIFI_CONFIG] == [
-        {
-            unifi.CONF_HOST: "1.2.3.4",
-            unifi.CONF_SITE_ID: "My site",
-            unifi.CONF_BLOCK_CLIENT: ["12:34:56:78:90:AB"],
-            unifi.CONF_DETECTION_TIME: 3,
-            unifi.CONF_SSID_FILTER: ["ssid"],
-        }
+
+    await config_entry_factory()
+    await flush_store(hass.data[unifi.UNIFI_WIRELESS_CLIENTS]._store)
+
+    assert sorted(hass_storage[unifi.STORAGE_KEY]["data"]["wireless_clients"]) == [
+        "00:00:00:00:00:00",
+        "00:00:00:00:00:01",
+        "00:00:00:00:00:02",
     ]
 
 
-async def test_successful_config_entry(hass):
-    """Test that configured options for a host are loaded via config entry."""
-    entry = MockConfigEntry(
-        domain=unifi.DOMAIN,
-        data={
-            "controller": {
-                "host": "0.0.0.0",
-                "username": "user",
-                "password": "pass",
-                "port": 80,
-                "site": "default",
-                "verify_ssl": True,
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "Wired client",
+                "is_wired": True,
+                "mac": "00:00:00:00:00:01",
+                "oui": "Producer",
+                "wired-rx_bytes": 1234000000,
+                "wired-tx_bytes": 5678000000,
+                "uptime": 1600094505,
             },
-            "poe_control": True,
-        },
-    )
-    entry.add_to_hass(hass)
-    mock_registry = Mock()
-    with patch.object(unifi, "UniFiController") as mock_controller, patch(
-        "homeassistant.helpers.device_registry.async_get_registry",
-        return_value=mock_coro(mock_registry),
-    ):
-        mock_controller.return_value.async_setup.return_value = mock_coro(True)
-        mock_controller.return_value.mac = "00:11:22:33:44:55"
-        assert await unifi.async_setup_entry(hass, entry) is True
-
-    assert len(mock_controller.mock_calls) == 2
-    p_hass, p_entry = mock_controller.mock_calls[0][1]
-
-    assert p_hass is hass
-    assert p_entry is entry
-
-    assert len(mock_registry.mock_calls) == 1
-    assert mock_registry.mock_calls[0][2] == {
-        "config_entry_id": entry.entry_id,
-        "connections": {("mac", "00:11:22:33:44:55")},
-        "manufacturer": unifi.ATTR_MANUFACTURER,
-        "model": "UniFi Controller",
-        "name": "UniFi Controller",
-    }
-
-
-async def test_controller_fail_setup(hass):
-    """Test that a failed setup still stores controller."""
-    entry = MockConfigEntry(
-        domain=unifi.DOMAIN,
-        data={
-            "controller": {
-                "host": "0.0.0.0",
-                "username": "user",
-                "password": "pass",
-                "port": 80,
-                "site": "default",
-                "verify_ssl": True,
+            {
+                "is_wired": False,
+                "mac": "00:00:00:00:00:02",
+                "name": "Wireless client",
+                "oui": "Producer",
+                "rx_bytes": 2345000000,
+                "tx_bytes": 6789000000,
+                "uptime": 60,
             },
-            "poe_control": True,
-        },
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 3,
+                "device_id": "mock-id",
+                "has_fan": True,
+                "fan_level": 0,
+                "ip": "10.0.1.1",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device 1",
+                "next_interval": 20,
+                "overheating": True,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: True,
+            CONF_TRACK_CLIENTS: True,
+            CONF_TRACK_DEVICES: True,
+        }
+    ],
+)
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    client_payload: list[dict[str, Any]],
+    device_payload: list[dict[str, Any]],
+    mock_websocket_message: WebsocketMessageMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Verify removing a device manually."""
+    config_entry = await config_entry_factory()
+
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    # Try to remove an active client from UI: not allowed
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
     )
-    entry.add_to_hass(hass)
-
-    with patch.object(unifi, "UniFiController") as mock_cntrlr:
-        mock_cntrlr.return_value.async_setup.return_value = mock_coro(False)
-        assert await unifi.async_setup_entry(hass, entry) is False
-
-    assert hass.data[unifi.DOMAIN] == {}
-
-
-async def test_controller_no_mac(hass):
-    """Test that configured options for a host are loaded via config entry."""
-    entry = MockConfigEntry(
-        domain=unifi.DOMAIN,
-        data={
-            "controller": {
-                "host": "0.0.0.0",
-                "username": "user",
-                "password": "pass",
-                "port": 80,
-                "site": "default",
-                "verify_ssl": True,
-            },
-            "poe_control": True,
-        },
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+    assert device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
     )
-    entry.add_to_hass(hass)
-    mock_registry = Mock()
-    with patch.object(unifi, "UniFiController") as mock_controller, patch(
-        "homeassistant.helpers.device_registry.async_get_registry",
-        return_value=mock_coro(mock_registry),
-    ):
-        mock_controller.return_value.async_setup.return_value = mock_coro(True)
-        mock_controller.return_value.mac = None
-        assert await unifi.async_setup_entry(hass, entry) is True
 
-    assert len(mock_controller.mock_calls) == 2
-
-    assert len(mock_registry.mock_calls) == 0
-
-
-async def test_unload_entry(hass):
-    """Test being able to unload an entry."""
-    entry = MockConfigEntry(
-        domain=unifi.DOMAIN,
-        data={
-            "controller": {
-                "host": "0.0.0.0",
-                "username": "user",
-                "password": "pass",
-                "port": 80,
-                "site": "default",
-                "verify_ssl": True,
-            },
-            "poe_control": True,
-        },
+    # Try to remove an active device from UI: not allowed
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"])}
     )
-    entry.add_to_hass(hass)
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+    assert device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"])}
+    )
 
-    with patch.object(unifi, "UniFiController") as mock_controller, patch(
-        "homeassistant.helpers.device_registry.async_get_registry",
-        return_value=mock_coro(Mock()),
-    ):
-        mock_controller.return_value.async_setup.return_value = mock_coro(True)
-        mock_controller.return_value.mac = "00:11:22:33:44:55"
-        assert await unifi.async_setup_entry(hass, entry) is True
+    # Remove a client from Unifi API
+    mock_websocket_message(message=MessageKey.CLIENT_REMOVED, data=[client_payload[1]])
+    await hass.async_block_till_done()
 
-    assert len(mock_controller.return_value.mock_calls) == 1
-
-    mock_controller.return_value.async_reset.return_value = mock_coro(True)
-    assert await unifi.async_unload_entry(hass, entry)
-    assert len(mock_controller.return_value.async_reset.mock_calls) == 1
-    assert hass.data[unifi.DOMAIN] == {}
+    # Try to remove an inactive client from UI: allowed
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"])}
+    )
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert response["success"]
+    assert not device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"])}
+    )

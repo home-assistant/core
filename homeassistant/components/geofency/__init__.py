@@ -1,27 +1,32 @@
 """Support for Geofency."""
-import logging
+
+from http import HTTPStatus
 
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
+from homeassistant.components import webhook
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_WEBHOOK_ID,
-    HTTP_OK,
-    HTTP_UNPROCESSABLE_ENTITY,
     STATE_NOT_HOME,
+    Platform,
 )
-from homeassistant.helpers import config_entry_flow
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+type GeofencyConfigEntry = ConfigEntry[set[str]]
+
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 CONF_MOBILE_BEACONS = "mobile_beacons"
 
@@ -73,27 +78,28 @@ WEBHOOK_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+_DATA_GEOFENCY: HassKey[list[str]] = HassKey(DOMAIN)
 
-async def async_setup(hass, hass_config):
+
+async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Geofency component."""
-    config = hass_config.get(DOMAIN, {})
-    mobile_beacons = config.get(CONF_MOBILE_BEACONS, [])
-    hass.data[DOMAIN] = {
-        "beacons": [slugify(beacon) for beacon in mobile_beacons],
-        "devices": set(),
-        "unsub_device_tracker": {},
-    }
+    mobile_beacons = hass_config.get(DOMAIN, {}).get(CONF_MOBILE_BEACONS, [])
+    hass.data[_DATA_GEOFENCY] = [slugify(beacon) for beacon in mobile_beacons]
     return True
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response:
     """Handle incoming webhook from Geofency."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
-        return web.Response(text=error.error_message, status=HTTP_UNPROCESSABLE_ENTITY)
+        return web.Response(
+            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
+        )
 
-    if _is_mobile_beacon(data, hass.data[DOMAIN]["beacons"]):
+    if _is_mobile_beacon(data, hass.data[_DATA_GEOFENCY]):
         return _set_location(hass, data, None)
     if data["entry"] == LOCATION_ENTRY:
         location_name = data["name"]
@@ -114,7 +120,7 @@ def _is_mobile_beacon(data, mobile_beacons):
 def _device_name(data):
     """Return name of device tracker."""
     if ATTR_BEACON_ID in data:
-        return "{}_{}".format(BEACON_DEV_PREFIX, data["name"])
+        return f"{BEACON_DEV_PREFIX}_{data['name']}"
     return data["device"]
 
 
@@ -131,28 +137,24 @@ def _set_location(hass, data, location_name):
         data,
     )
 
-    return web.Response(text=f"Setting location for {device}", status=HTTP_OK)
+    return web.Response(text=f"Setting location for {device}")
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: GeofencyConfigEntry) -> bool:
     """Configure based on config entry."""
-    hass.components.webhook.async_register(
-        DOMAIN, "Geofency", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    entry.runtime_data = set()
+    webhook.async_register(
+        hass, DOMAIN, "Geofency", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, DEVICE_TRACKER)
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: GeofencyConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-    hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
-    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
-    return True
+    webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

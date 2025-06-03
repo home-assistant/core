@@ -1,243 +1,283 @@
 """Test for the smhi weather entity."""
-import asyncio
-from datetime import datetime
-import logging
-from unittest.mock import Mock, patch
 
-from homeassistant.components.smhi import weather as weather_smhi
-from homeassistant.components.smhi.const import ATTR_SMHI_CLOUDINESS
-from homeassistant.components.weather import (
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
-    ATTR_WEATHER_ATTRIBUTION,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_VISIBILITY,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED,
-    DOMAIN as WEATHER_DOMAIN,
+from datetime import datetime, timedelta
+from unittest.mock import MagicMock
+
+from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
+from pysmhi import SMHIForecast, SmhiForecastException, SMHIPointForecast
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.smhi.const import DOMAIN
+from homeassistant.components.smhi.weather import (
+    ATTR_SMHI_THUNDER_PROBABILITY,
+    CONDITION_CLASSES,
 )
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_FORECAST_CONDITION,
+    ATTR_WEATHER_WIND_GUST_SPEED,
+    ATTR_WEATHER_WIND_SPEED_UNIT,
+    DOMAIN as WEATHER_DOMAIN,
+    SERVICE_GET_FORECASTS,
+)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfSpeed,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, load_fixture
+from . import ENTITY_ID, TEST_CONFIG
 
-_LOGGER = logging.getLogger(__name__)
-
-TEST_CONFIG = {"name": "test", "longitude": "17.84197", "latitude": "59.32624"}
-
-
-async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
-    """Test for successfully setting up the smhi platform.
-
-    This test are deeper integrated with the core. Since only
-    config_flow is used the component are setup with
-    "async_forward_entry_setup". The actual result are tested
-    with the entity state rather than "per function" unity tests
-    """
-    from smhi.smhi_lib import APIURL_TEMPLATE
-
-    uri = APIURL_TEMPLATE.format(TEST_CONFIG["longitude"], TEST_CONFIG["latitude"])
-    api_response = load_fixture("smhi.json")
-    aioclient_mock.get(uri, text=api_response)
-
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
-
-    await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
-    assert aioclient_mock.call_count == 1
-
-    #  Testing the actual entity state for
-    #  deeper testing than normal unity test
-    state = hass.states.get("weather.smhi_test")
-
-    assert state.state == "sunny"
-    assert state.attributes[ATTR_SMHI_CLOUDINESS] == 50
-    assert state.attributes[ATTR_WEATHER_ATTRIBUTION].find("SMHI") >= 0
-    assert state.attributes[ATTR_WEATHER_HUMIDITY] == 55
-    assert state.attributes[ATTR_WEATHER_PRESSURE] == 1024
-    assert state.attributes[ATTR_WEATHER_TEMPERATURE] == 17
-    assert state.attributes[ATTR_WEATHER_VISIBILITY] == 50
-    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 7
-    assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 134
-    _LOGGER.error(state.attributes)
-    assert len(state.attributes["forecast"]) == 4
-
-    forecast = state.attributes["forecast"][1]
-    assert forecast[ATTR_FORECAST_TIME] == "2018-09-02T12:00:00"
-    assert forecast[ATTR_FORECAST_TEMP] == 21
-    assert forecast[ATTR_FORECAST_TEMP_LOW] == 6
-    assert forecast[ATTR_FORECAST_PRECIPITATION] == 0
-    assert forecast[ATTR_FORECAST_CONDITION] == "partlycloudy"
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 
-async def test_setup_plattform(hass):
-    """Test that setup plattform does nothing."""
-    assert await weather_smhi.async_setup_platform(hass, None, None) is None
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.WEATHER]],
+)
+async def test_setup_hass(
+    hass: HomeAssistant,
+    load_int: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for successfully setting up the smhi integration."""
+
+    state = hass.states.get(ENTITY_ID)
+
+    assert state
+    assert state.state == "fog"
+    assert state.attributes == snapshot
 
 
-def test_properties_no_data(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "to_load",
+    [1],
+)
+@freeze_time(datetime(2023, 8, 7, 1, tzinfo=dt_util.UTC))
+async def test_clear_night(
+    hass: HomeAssistant,
+    mock_client: SMHIPointForecast,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for successfully setting up the smhi integration."""
+    hass.config.latitude = "59.32624"
+    hass.config.longitude = "17.84197"
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=TEST_CONFIG,
+        entry_id="01JMZDH8N5PFHGJNYKKYCSCWER",
+        unique_id="59.32624-17.84197",
+        version=3,
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+
+    assert state
+    assert state.state == ATTR_CONDITION_CLEAR_NIGHT
+    assert state.attributes == snapshot(name="clear_night")
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": ENTITY_ID, "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot(name="clear-night_forecast")
+
+
+async def test_properties_no_data(
+    hass: HomeAssistant,
+    load_int: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test properties when no API data available."""
-    weather = weather_smhi.SmhiWeather("name", "10", "10")
-    weather.hass = hass
 
-    assert weather.name == "name"
-    assert weather.should_poll is True
-    assert weather.temperature is None
-    assert weather.humidity is None
-    assert weather.wind_speed is None
-    assert weather.wind_bearing is None
-    assert weather.visibility is None
-    assert weather.pressure is None
-    assert weather.cloudiness is None
-    assert weather.condition is None
-    assert weather.forecast is None
-    assert weather.temperature_unit == TEMP_CELSIUS
+    mock_client.async_get_daily_forecast.side_effect = SmhiForecastException("boom")
+    freezer.tick(timedelta(minutes=35))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+
+    assert state
+    assert state.name == "Test"
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes[ATTR_ATTRIBUTION] == "Swedish weather institute (SMHI)"
+
+    mock_client.async_get_daily_forecast.side_effect = None
+    mock_client.async_get_daily_forecast.return_value = None
+    freezer.tick(timedelta(minutes=35))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+
+    assert state
+    assert state.name == "Test"
+    assert state.state == "fog"
+    assert ATTR_SMHI_THUNDER_PROBABILITY not in state.attributes
+    assert state.attributes[ATTR_ATTRIBUTION] == "Swedish weather institute (SMHI)"
 
 
-# pylint: disable=protected-access
-def test_properties_unknown_symbol() -> None:
+async def test_properties_unknown_symbol(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+) -> None:
     """Test behaviour when unknown symbol from API."""
-    hass = Mock()
-    data = Mock()
-    data.temperature = 5
-    data.mean_precipitation = 0.5
-    data.total_precipitation = 1
-    data.humidity = 5
-    data.wind_speed = 10
-    data.wind_direction = 180
-    data.horizontal_visibility = 6
-    data.pressure = 1008
-    data.cloudiness = 52
-    data.symbol = 100  # Faulty symbol
-    data.valid_time = datetime(2018, 1, 1, 0, 1, 2)
-
-    data2 = Mock()
-    data2.temperature = 5
-    data2.mean_precipitation = 0.5
-    data2.total_precipitation = 1
-    data2.humidity = 5
-    data2.wind_speed = 10
-    data2.wind_direction = 180
-    data2.horizontal_visibility = 6
-    data2.pressure = 1008
-    data2.cloudiness = 52
-    data2.symbol = 100  # Faulty symbol
-    data2.valid_time = datetime(2018, 1, 1, 12, 1, 2)
-
-    data3 = Mock()
-    data3.temperature = 5
-    data3.mean_precipitation = 0.5
-    data3.total_precipitation = 1
-    data3.humidity = 5
-    data3.wind_speed = 10
-    data3.wind_direction = 180
-    data3.horizontal_visibility = 6
-    data3.pressure = 1008
-    data3.cloudiness = 52
-    data3.symbol = 100  # Faulty symbol
-    data3.valid_time = datetime(2018, 1, 2, 12, 1, 2)
+    data = SMHIForecast(
+        frozen_precipitation=0,
+        high_cloud=100,
+        humidity=96,
+        low_cloud=100,
+        max_precipitation=0.0,
+        mean_precipitation=0.0,
+        median_precipitation=0.0,
+        medium_cloud=75,
+        min_precipitation=0.0,
+        precipitation_category=0,
+        pressure=1018.9,
+        symbol=100,  # Faulty symbol
+        temperature=1.0,
+        temperature_max=1.0,
+        temperature_min=1.0,
+        thunder=0,
+        total_cloud=100,
+        valid_time=datetime(2018, 1, 1, 0, 0, 0),
+        visibility=8.8,
+        wind_direction=114,
+        wind_gust=5.8,
+        wind_speed=2.5,
+    )
+    data2 = SMHIForecast(
+        frozen_precipitation=0,
+        high_cloud=100,
+        humidity=96,
+        low_cloud=100,
+        max_precipitation=0.0,
+        mean_precipitation=0.0,
+        median_precipitation=0.0,
+        medium_cloud=75,
+        min_precipitation=0.0,
+        precipitation_category=0,
+        pressure=1018.9,
+        symbol=100,  # Faulty symbol
+        temperature=1.0,
+        temperature_max=1.0,
+        temperature_min=1.0,
+        thunder=0,
+        total_cloud=100,
+        valid_time=datetime(2018, 1, 1, 12, 0, 0),
+        visibility=8.8,
+        wind_direction=114,
+        wind_gust=5.8,
+        wind_speed=2.5,
+    )
+    data3 = SMHIForecast(
+        frozen_precipitation=0,
+        high_cloud=100,
+        humidity=96,
+        low_cloud=100,
+        max_precipitation=0.0,
+        mean_precipitation=0.0,
+        median_precipitation=0.0,
+        medium_cloud=75,
+        min_precipitation=0.0,
+        precipitation_category=0,
+        pressure=1018.9,
+        symbol=100,  # Faulty symbol
+        temperature=1.0,
+        temperature_max=1.0,
+        temperature_min=1.0,
+        thunder=0,
+        total_cloud=100,
+        valid_time=datetime(2018, 1, 2, 0, 0, 0),
+        visibility=8.8,
+        wind_direction=114,
+        wind_gust=5.8,
+        wind_speed=2.5,
+    )
 
     testdata = [data, data2, data3]
 
-    weather = weather_smhi.SmhiWeather("name", "10", "10")
-    weather.hass = hass
-    weather._forecasts = testdata
-    assert weather.condition is None
-    forecast = weather.forecast[0]
-    assert forecast[ATTR_FORECAST_CONDITION] is None
+    mock_client.async_get_daily_forecast.return_value = testdata
+
+    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+
+    assert state
+    assert state.name == "test"
+    assert state.state == STATE_UNKNOWN
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": ENTITY_ID, "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    assert all(
+        forecast[ATTR_FORECAST_CONDITION] is None
+        for forecast in response[ENTITY_ID]["forecast"]
+    )
 
 
-# pylint: disable=protected-access
-async def test_refresh_weather_forecast_exceeds_retries(hass) -> None:
+@pytest.mark.parametrize("error", [SmhiForecastException(), TimeoutError()])
+async def test_refresh_weather_forecast_retry(
+    hass: HomeAssistant,
+    error: Exception,
+    load_int: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test the refresh weather forecast function."""
-    from smhi.smhi_lib import SmhiForecastException
 
-    with patch.object(
-        hass.helpers.event, "async_call_later"
-    ) as call_later, patch.object(
-        weather_smhi.SmhiWeather,
-        "get_weather_forecast",
-        side_effect=SmhiForecastException(),
-    ):
+    mock_client.async_get_daily_forecast.side_effect = error
 
-        weather = weather_smhi.SmhiWeather("name", "17.0022", "62.0022")
-        weather.hass = hass
-        weather._fail_count = 2
+    freezer.tick(timedelta(minutes=35))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        await weather.async_update()
-        assert weather._forecasts is None
-        assert not call_later.mock_calls
+    state = hass.states.get(ENTITY_ID)
 
+    assert state
+    assert state.name == "Test"
+    assert state.state == STATE_UNAVAILABLE
+    assert mock_client.async_get_daily_forecast.call_count == 2
 
-async def test_refresh_weather_forecast_timeout(hass) -> None:
-    """Test timeout exception."""
-    weather = weather_smhi.SmhiWeather("name", "17.0022", "62.0022")
-    weather.hass = hass
+    freezer.tick(timedelta(minutes=35))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    with patch.object(
-        hass.helpers.event, "async_call_later"
-    ) as call_later, patch.object(
-        weather_smhi.SmhiWeather, "retry_update"
-    ), patch.object(
-        weather_smhi.SmhiWeather,
-        "get_weather_forecast",
-        side_effect=asyncio.TimeoutError,
-    ):
-
-        await weather.async_update()
-        assert len(call_later.mock_calls) == 1
-        # Assert we are going to wait RETRY_TIMEOUT seconds
-        assert call_later.mock_calls[0][1][0] == weather_smhi.RETRY_TIMEOUT
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+    assert mock_client.async_get_daily_forecast.call_count == 3
 
 
-async def test_refresh_weather_forecast_exception() -> None:
-    """Test any exception."""
-    from smhi.smhi_lib import SmhiForecastException
-
-    hass = Mock()
-    weather = weather_smhi.SmhiWeather("name", "17.0022", "62.0022")
-    weather.hass = hass
-
-    with patch.object(
-        hass.helpers.event, "async_call_later"
-    ) as call_later, patch.object(weather_smhi, "async_timeout"), patch.object(
-        weather_smhi.SmhiWeather, "retry_update"
-    ), patch.object(
-        weather_smhi.SmhiWeather,
-        "get_weather_forecast",
-        side_effect=SmhiForecastException(),
-    ):
-
-        hass.async_add_job = Mock()
-        call_later = hass.helpers.event.async_call_later
-
-        await weather.async_update()
-        assert len(call_later.mock_calls) == 1
-        # Assert we are going to wait RETRY_TIMEOUT seconds
-        assert call_later.mock_calls[0][1][0] == weather_smhi.RETRY_TIMEOUT
-
-
-async def test_retry_update():
-    """Test retry function of refresh forecast."""
-    hass = Mock()
-    weather = weather_smhi.SmhiWeather("name", "17.0022", "62.0022")
-    weather.hass = hass
-
-    with patch.object(weather_smhi.SmhiWeather, "async_update") as update:
-        await weather.retry_update()
-        assert len(update.mock_calls) == 1
-
-
-def test_condition_class():
+def test_condition_class() -> None:
     """Test condition class."""
 
     def get_condition(index: int) -> str:
         """Return condition given index."""
-        return [k for k, v in weather_smhi.CONDITION_CLASSES.items() if index in v][0]
+        return [k for k, v in CONDITION_CLASSES.items() if index in v][0]
 
     # SMHI definitions as follows, see
     # http://opendata.smhi.se/apidocs/metfcst/parameters.html
@@ -296,3 +336,140 @@ def test_condition_class():
     assert get_condition(23) == "snowy-rainy"
     # 24. Heavy sleet
     assert get_condition(24) == "snowy-rainy"
+
+
+async def test_custom_speed_unit(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    load_int: MockConfigEntry,
+) -> None:
+    """Test Wind Gust speed with custom unit."""
+    state = hass.states.get(ENTITY_ID)
+
+    assert state
+    assert state.name == "Test"
+    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 22.32
+
+    entity_registry.async_update_entity_options(
+        state.entity_id,
+        WEATHER_DOMAIN,
+        {ATTR_WEATHER_WIND_SPEED_UNIT: UnitOfSpeed.METERS_PER_SECOND},
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 6.2
+
+
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.WEATHER]],
+)
+async def test_forecast_services(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    load_int: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test multiple forecast."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "weather/subscribe_forecast",
+            "forecast_type": "daily",
+            "entity_id": ENTITY_ID,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    forecast1 = msg["event"]["forecast"]
+
+    assert len(forecast1) == 10
+    assert forecast1[0] == snapshot
+    assert forecast1[6] == snapshot
+
+    await client.send_json_auto_id(
+        {
+            "type": "weather/subscribe_forecast",
+            "forecast_type": "hourly",
+            "entity_id": ENTITY_ID,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    forecast1 = msg["event"]["forecast"]
+
+    assert len(forecast1) == 52
+    assert forecast1[0] == snapshot
+    assert forecast1[6] == snapshot
+
+
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.WEATHER]],
+)
+@pytest.mark.parametrize(
+    "to_load",
+    [2],
+)
+async def test_forecast_services_lack_of_data(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    load_int: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test forecast lacking data."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "weather/subscribe_forecast",
+            "forecast_type": "daily",
+            "entity_id": ENTITY_ID,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    forecast1 = msg["event"]["forecast"]
+
+    assert forecast1 is None
+
+
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.WEATHER]],
+)
+async def test_forecast_service(
+    hass: HomeAssistant,
+    load_int: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test forecast service."""
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": ENTITY_ID, "type": "daily"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot

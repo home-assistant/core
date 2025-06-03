@@ -1,0 +1,89 @@
+{
+  "id": "mmnnoopp",
+  "users": [
+    {
+      "id": "12345abcde"
+    }
+  ],
+  "devices": [
+    {
+      "id": "98765",
+      "macAddress": "123456abcdef"
+    },
+    {
+      "id": "32839",
+      "macAddress": "1a2b3c4d5e6f"
+    }
+  ],
+  "userRoles": [
+    {
+      "userId": "12345abcde",
+      "roles": ["owner"]
+    }
+  ],
+  "address": "123 Main Street",
+  "city": "Boston",
+  "state": "MA",
+  "country": "us",
+  "postalCode": "12345",
+  "timezone": "US/Easter",
+  "gallonsPerDayGoal": 240,
+  "occupants": 2,
+  "stories": 2,
+  "isProfileComplete": true,
+  "nickname": "Home",
+  "irrigationSchedule": {
+    "isEnabled": false
+  },
+  "systemMode": {
+    "target": "home"
+  },
+  "locationType": "sfh",
+  "locationSize": "lte_4000_sq_ft",
+  "waterShutoffKnown": "unsure",
+  "indoorAmenities": [],
+  "outdoorAmenities": [],
+  "plumbingAppliances": ["exp_tank"],
+  "notifications": {
+    "pending": {
+      "infoCount": 0,
+      "warningCount": 1,
+      "criticalCount": 0,
+      "alarmCount": [
+        {
+          "id": 57,
+          "severity": "warning",
+          "count": 1
+        }
+      ]
+    }
+  },
+  "areas": {
+    "default": [
+      {
+        "id": "xxxxx",
+        "name": "Attic"
+      },
+      {
+        "id": "xxxxx",
+        "name": "Basement"
+      },
+      {
+        "id": "xxxxx",
+        "name": "Garage"
+      },
+      {
+        "id": "xxxxx",
+        "name": "Main Floor"
+      },
+      {
+        "id": "xxxxx",
+        "name": "Upstairs"
+      }
+    ],
+    "custom": []
+  },
+  "account": {
+    "id": "aabbccdd"
+  }
+}

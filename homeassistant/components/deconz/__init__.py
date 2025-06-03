@@ -1,86 +1,109 @@
 """Support for deCONZ devices."""
-import voluptuous as vol
 
-from homeassistant.config_entries import _UNDEF
+from __future__ import annotations
+
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import get_master_gateway
-from .const import CONF_BRIDGE_ID, CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN
-from .gateway import DeconzGateway
-from .services import async_setup_services, async_unload_services
+from .const import CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
+from .deconz_event import async_setup_events, async_unload_events
+from .errors import AuthenticationRequired, CannotConnect
+from .hub import DeconzHub, get_deconz_api
+from .services import async_setup_services
+from .util import get_master_hub
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({}, extra=vol.ALLOW_EXTRA)}, extra=vol.ALLOW_EXTRA
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+type DeconzConfigEntry = ConfigEntry[DeconzHub]
 
 
-async def async_setup(hass, config):
-    """Old way of setting up deCONZ integrations."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up services."""
+    async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: DeconzConfigEntry
+) -> bool:
     """Set up a deCONZ bridge for a config entry.
 
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
     if not config_entry.options:
-        await async_update_master_gateway(hass, config_entry)
+        await async_update_master_hub(hass, config_entry)
 
-    gateway = DeconzGateway(hass, config_entry)
+    try:
+        api = await get_deconz_api(hass, config_entry)
+    except CannotConnect as err:
+        raise ConfigEntryNotReady from err
+    except AuthenticationRequired as err:
+        raise ConfigEntryAuthFailed from err
 
-    if not await gateway.async_setup():
-        return False
+    hub = DeconzHub(hass, config_entry, api)
+    config_entry.runtime_data = hub
+    await hub.async_update_device_registry()
 
-    # 0.104 introduced config entry unique id, this makes upgrading possible
-    if config_entry.unique_id is None:
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(hub.async_config_entry_updated)
+    )
 
-        new_data = _UNDEF
-        if CONF_BRIDGE_ID in config_entry.data:
-            new_data = dict(config_entry.data)
-            new_data[CONF_GROUP_ID_BASE] = config_entry.data[CONF_BRIDGE_ID]
+    await async_setup_events(hub)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-        hass.config_entries.async_update_entry(
-            config_entry, unique_id=gateway.api.config.bridgeid, data=new_data
-        )
+    api.start()
 
-    hass.data[DOMAIN][config_entry.unique_id] = gateway
-
-    await gateway.async_update_device_registry()
-
-    await async_setup_services(hass)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)
+    )
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: DeconzConfigEntry
+) -> bool:
     """Unload deCONZ config entry."""
-    gateway = hass.data[DOMAIN].pop(config_entry.unique_id)
+    hub = config_entry.runtime_data
+    async_unload_events(hub)
 
-    if not hass.data[DOMAIN]:
-        await async_unload_services(hass)
+    other_loaded_entries: list[DeconzConfigEntry] = [
+        e
+        for e in hass.config_entries.async_loaded_entries(DOMAIN)
+        # exclude the config entry being unloaded
+        if e.entry_id != config_entry.entry_id
+    ]
+    if other_loaded_entries and hub.master:
+        await async_update_master_hub(hass, config_entry, master=False)
+        new_master_hub = next(iter(other_loaded_entries)).runtime_data
+        await async_update_master_hub(hass, new_master_hub.config_entry, master=True)
 
-    elif gateway.master:
-        await async_update_master_gateway(hass, config_entry)
-        new_master_gateway = next(iter(hass.data[DOMAIN].values()))
-        await async_update_master_gateway(hass, new_master_gateway.config_entry)
-
-    return await gateway.async_reset()
+    return await hub.async_reset()
 
 
-async def async_update_master_gateway(hass, config_entry):
-    """Update master gateway boolean.
+async def async_update_master_hub(
+    hass: HomeAssistant,
+    config_entry: DeconzConfigEntry,
+    *,
+    master: bool | None = None,
+) -> None:
+    """Update master hub boolean.
 
     Called by setup_entry and unload_entry.
     Makes sure there is always one master available.
     """
-    master = not get_master_gateway(hass)
+    if master is None:
+        try:
+            master_hub = get_master_hub(hass)
+            master = master_hub.config_entry == config_entry
+        except ValueError:
+            master = True
+
     options = {**config_entry.options, CONF_MASTER_GATEWAY: master}
 
     hass.config_entries.async_update_entry(config_entry, options=options)

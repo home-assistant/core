@@ -1,0 +1,72 @@
+{
+  "title": "Timer",
+  "entity_component": {
+    "_": {
+      "name": "Timer",
+      "state": {
+        "active": "[%key:common::state::active%]",
+        "idle": "[%key:common::state::idle%]",
+        "paused": "[%key:common::state::paused%]"
+      },
+      "state_attributes": {
+        "duration": {
+          "name": "Duration"
+        },
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        },
+        "finishes_at": {
+          "name": "Finishes at"
+        },
+        "remaining": {
+          "name": "Remaining"
+        },
+        "restore": {
+          "name": "Restore"
+        }
+      }
+    }
+  },
+  "services": {
+    "start": {
+      "name": "[%key:common::action::start%]",
+      "description": "Starts a timer or restarts it with a provided duration.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Custom duration to restart the timer with."
+        }
+      }
+    },
+    "pause": {
+      "name": "[%key:common::action::pause%]",
+      "description": "Pauses a running timer, retaining the remaining duration for later continuation."
+    },
+    "cancel": {
+      "name": "Cancel",
+      "description": "Resets a timer's duration to the last known initial value without firing the timer finished event."
+    },
+    "finish": {
+      "name": "Finish",
+      "description": "Finishes a running timer earlier than scheduled."
+    },
+    "change": {
+      "name": "Change",
+      "description": "Changes a timer by adding or subtracting a given duration.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Duration to add to or subtract from the running timer."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads timers from the YAML-configuration."
+    }
+  }
+}

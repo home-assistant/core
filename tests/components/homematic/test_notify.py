@@ -1,76 +1,66 @@
 """The tests for the Homematic notification platform."""
 
-import unittest
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-import homeassistant.components.notify as notify_comp
-from homeassistant.setup import setup_component
-
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import assert_setup_component
 
 
-class TestHomematicNotify(unittest.TestCase):
-    """Test the Homematic notifications."""
-
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop down everything that was started."""
-        self.hass.stop()
-
-    def test_setup_full(self):
-        """Test valid configuration."""
-        setup_component(
-            self.hass,
-            "homematic",
-            {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
+async def test_setup_full(hass: HomeAssistant) -> None:
+    """Test valid configuration."""
+    await async_setup_component(
+        hass,
+        "homematic",
+        {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
+    )
+    with assert_setup_component(1, domain="notify") as handle_config:
+        assert await async_setup_component(
+            hass,
+            "notify",
+            {
+                "notify": {
+                    "name": "test",
+                    "platform": "homematic",
+                    "address": "NEQXXXXXXX",
+                    "channel": 2,
+                    "param": "SUBMIT",
+                    "value": "1,1,108000,2",
+                    "interface": "my-interface",
+                }
+            },
         )
-        with assert_setup_component(1) as handle_config:
-            assert setup_component(
-                self.hass,
-                "notify",
-                {
-                    "notify": {
-                        "name": "test",
-                        "platform": "homematic",
-                        "address": "NEQXXXXXXX",
-                        "channel": 2,
-                        "param": "SUBMIT",
-                        "value": "1,1,108000,2",
-                        "interface": "my-interface",
-                    }
-                },
-            )
-        assert handle_config[notify_comp.DOMAIN]
+    assert handle_config[NOTIFY_DOMAIN]
 
-    def test_setup_without_optional(self):
-        """Test valid configuration without optional."""
-        setup_component(
-            self.hass,
-            "homematic",
-            {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
+
+async def test_setup_without_optional(hass: HomeAssistant) -> None:
+    """Test valid configuration without optional."""
+    await async_setup_component(
+        hass,
+        "homematic",
+        {"homematic": {"hosts": {"ccu2": {"host": "127.0.0.1"}}}},
+    )
+    with assert_setup_component(1, domain="notify") as handle_config:
+        assert await async_setup_component(
+            hass,
+            "notify",
+            {
+                "notify": {
+                    "name": "test",
+                    "platform": "homematic",
+                    "address": "NEQXXXXXXX",
+                    "channel": 2,
+                    "param": "SUBMIT",
+                    "value": "1,1,108000,2",
+                }
+            },
         )
-        with assert_setup_component(1) as handle_config:
-            assert setup_component(
-                self.hass,
-                "notify",
-                {
-                    "notify": {
-                        "name": "test",
-                        "platform": "homematic",
-                        "address": "NEQXXXXXXX",
-                        "channel": 2,
-                        "param": "SUBMIT",
-                        "value": "1,1,108000,2",
-                    }
-                },
-            )
-        assert handle_config[notify_comp.DOMAIN]
+    assert handle_config[NOTIFY_DOMAIN]
 
-    def test_bad_config(self):
-        """Test invalid configuration."""
-        config = {notify_comp.DOMAIN: {"name": "test", "platform": "homematic"}}
-        with assert_setup_component(0) as handle_config:
-            assert setup_component(self.hass, notify_comp.DOMAIN, config)
-        assert not handle_config[notify_comp.DOMAIN]
+
+async def test_bad_config(hass: HomeAssistant) -> None:
+    """Test invalid configuration."""
+    config = {NOTIFY_DOMAIN: {"name": "test", "platform": "homematic"}}
+    with assert_setup_component(0, domain="notify") as handle_config:
+        assert await async_setup_component(hass, NOTIFY_DOMAIN, config)
+    assert not handle_config[NOTIFY_DOMAIN]

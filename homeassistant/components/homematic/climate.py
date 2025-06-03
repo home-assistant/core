@@ -1,23 +1,25 @@
 """Support for Homematic thermostats."""
-import logging
 
-from homeassistant.components.climate import ClimateDevice
-from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+from __future__ import annotations
+
+from typing import Any
+
+from homeassistant.components.climate import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    PRESET_NONE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT
 from .entity import HMDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 HM_TEMP_MAP = ["ACTUAL_TEMPERATURE", "TEMPERATURE"]
 
@@ -32,10 +34,13 @@ HM_PRESET_MAP = {
 HM_CONTROL_MODE = "CONTROL_MODE"
 HMIP_CONTROL_MODE = "SET_POINT_MODE"
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Homematic thermostat platform."""
     if discovery_info is None:
         return
@@ -48,107 +53,111 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HMThermostat(HMDevice, ClimateDevice):
+class HMThermostat(HMDevice, ClimateEntity):
     """Representation of a Homematic thermostat."""
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = 4.5
+    _attr_max_temp = 30.5
+    _attr_target_temperature_step = 0.5
+
+    _state: str
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement that is used."""
-        return TEMP_CELSIUS
-
-    @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
         if self.target_temperature <= self._hmdevice.OFF_VALUE + 0.5:
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
         if "MANU_MODE" in self._hmdevice.ACTIONNODE:
             if self._hm_control_mode == self._hmdevice.MANU_MODE:
-                return HVAC_MODE_HEAT
-            return HVAC_MODE_AUTO
+                return HVACMode.HEAT
+            return HVACMode.AUTO
 
         # Simple devices
         if self._data.get("BOOST_MODE"):
-            return HVAC_MODE_AUTO
-        return HVAC_MODE_HEAT
+            return HVACMode.AUTO
+        return HVACMode.HEAT
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
         """
         if "AUTO_MODE" in self._hmdevice.ACTIONNODE:
-            return [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
-        return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+            return [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
+        return [HVACMode.HEAT, HVACMode.OFF]
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return the current preset mode, e.g., home, away, temp."""
         if self._data.get("BOOST_MODE", False):
             return "boost"
 
         if not self._hm_control_mode:
-            return None
+            return PRESET_NONE
 
         mode = HM_ATTRIBUTE_SUPPORT[HM_CONTROL_MODE][1][self._hm_control_mode]
         mode = mode.lower()
 
         # Filter HVAC states
-        if mode not in (HVAC_MODE_AUTO, HVAC_MODE_HEAT):
-            return None
+        if mode not in (HVACMode.AUTO, HVACMode.HEAT):
+            return PRESET_NONE
         return mode
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Return a list of available preset modes."""
-        preset_modes = []
-        for mode in self._hmdevice.ACTIONNODE:
-            if mode in HM_PRESET_MAP:
-                preset_modes.append(HM_PRESET_MAP[mode])
-        return preset_modes
+        return [
+            HM_PRESET_MAP[mode]
+            for mode in self._hmdevice.ACTIONNODE
+            if mode in HM_PRESET_MAP
+        ]
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         for node in HM_HUMI_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         for node in HM_TEMP_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._data.get(self._state)
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return None
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
 
         self._hmdevice.writeNodeData(self._state, float(temperature))
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVAC_MODE_AUTO:
+        if hvac_mode == HVACMode.AUTO:
             self._hmdevice.MODE = self._hmdevice.AUTO_MODE
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode == HVACMode.HEAT:
             self._hmdevice.MODE = self._hmdevice.MANU_MODE
-        elif hvac_mode == HVAC_MODE_OFF:
+        elif hvac_mode == HVACMode.OFF:
             self._hmdevice.turnoff()
 
     def set_preset_mode(self, preset_mode: str) -> None:
@@ -159,21 +168,6 @@ class HMThermostat(HMDevice, ClimateDevice):
             self._hmdevice.MODE = self._hmdevice.COMFORT_MODE
         elif preset_mode == PRESET_ECO:
             self._hmdevice.MODE = self._hmdevice.LOWERING_MODE
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return 4.5
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return 30.5
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 0.5
 
     @property
     def _hm_control_mode(self):
@@ -195,5 +189,5 @@ class HMThermostat(HMDevice, ClimateDevice):
         ):
             self._data[HM_CONTROL_MODE] = None
 
-        for node in self._hmdevice.SENSORNODE.keys():
+        for node in self._hmdevice.SENSORNODE:
             self._data[node] = None

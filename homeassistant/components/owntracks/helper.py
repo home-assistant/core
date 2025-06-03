@@ -1,8 +1,9 @@
 """Helper for OwnTracks."""
+
 try:
     import nacl
 except ImportError:
-    nacl = None
+    nacl = None  # type: ignore[assignment]
 
 
 def supports_encryption() -> bool:

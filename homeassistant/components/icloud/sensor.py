@@ -1,67 +1,83 @@
 """Support for iCloud sensors."""
-import logging
-from typing import Dict
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME, DEVICE_CLASS_BATTERY
+from __future__ import annotations
+
+from typing import Any
+
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.typing import HomeAssistantType
 
-from . import IcloudDevice
-from .const import DOMAIN, SERVICE_UPDATE
-
-_LOGGER = logging.getLogger(__name__)
+from .account import IcloudAccount, IcloudConfigEntry, IcloudDevice
+from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    entry: IcloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up iCloud devices sensors based on a config entry."""
-    username = entry.data[CONF_USERNAME]
+    """Set up device tracker for iCloud component."""
+    account = entry.runtime_data
+    tracked = set[str]()
 
-    entities = []
-    for device in hass.data[DOMAIN][username].devices.values():
-        if device.battery_level is not None:
-            _LOGGER.debug("Adding battery sensor for %s", device.name)
-            entities.append(IcloudDeviceBatterySensor(device))
+    @callback
+    def update_account():
+        """Update the values of the account."""
+        add_entities(account, async_add_entities, tracked)
 
-    async_add_entities(entities, True)
+    account.listeners.append(
+        async_dispatcher_connect(hass, account.signal_device_new, update_account)
+    )
+
+    update_account()
 
 
-class IcloudDeviceBatterySensor(Entity):
+@callback
+def add_entities(account, async_add_entities, tracked):
+    """Add new tracker entities from the account."""
+    new_tracked = []
+
+    for dev_id, device in account.devices.items():
+        if dev_id in tracked or device.battery_level is None:
+            continue
+
+        new_tracked.append(IcloudDeviceBatterySensor(account, device))
+        tracked.add(dev_id)
+
+    async_add_entities(new_tracked, True)
+
+
+class IcloudDeviceBatterySensor(SensorEntity):
     """Representation of a iCloud device battery sensor."""
 
-    def __init__(self, device: IcloudDevice):
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+
+    def __init__(self, account: IcloudAccount, device: IcloudDevice) -> None:
         """Initialize the battery sensor."""
+        self._account = account
         self._device = device
-        self._unsub_dispatcher = None
+        self._unsub_dispatcher: CALLBACK_TYPE | None = None
+        self._attr_unique_id = f"{device.unique_id}_battery"
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://icloud.com/",
+            identifiers={(DOMAIN, device.unique_id)},
+            manufacturer="Apple",
+            model=device.device_model,
+            name=device.name,
+        )
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self._device.unique_id}_battery"
-
-    @property
-    def name(self) -> str:
-        """Sensor name."""
-        return f"{self._device.name} battery state"
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def state(self) -> int:
+    def native_value(self) -> int | None:
         """Battery state percentage."""
         return self._device.battery_level
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Battery state measured in percentage."""
-        return "%"
 
     @property
     def icon(self) -> str:
@@ -72,31 +88,17 @@ class IcloudDeviceBatterySensor(Entity):
         )
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return default attributes for the iCloud device entity."""
-        return self._device.state_attributes
+        return self._device.extra_state_attributes
 
-    @property
-    def device_info(self) -> Dict[str, any]:
-        """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._device.unique_id)},
-            "name": self._device.name,
-            "manufacturer": "Apple",
-            "model": self._device.device_model,
-        }
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, SERVICE_UPDATE, self.async_write_ha_state
+            self.hass, self._account.signal_device_update, self.async_write_ha_state
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
-        self._unsub_dispatcher()
+        if self._unsub_dispatcher:
+            self._unsub_dispatcher()

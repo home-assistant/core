@@ -1,313 +1,174 @@
 """Support for the DirecTV receivers."""
+
+from __future__ import annotations
+
 import logging
+from typing import Any
 
-from DirectPy import DIRECTV
-import requests
-import voluptuous as vol
+from directv import DIRECTV
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_TVSHOW,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
+
+from . import DirecTVConfigEntry
+from .const import (
+    ATTR_MEDIA_CURRENTLY_RECORDING,
+    ATTR_MEDIA_RATING,
+    ATTR_MEDIA_RECORDED,
+    ATTR_MEDIA_START_TIME,
 )
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
+from .entity import DIRECTVEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
-ATTR_MEDIA_RATING = "media_rating"
-ATTR_MEDIA_RECORDED = "media_recorded"
-ATTR_MEDIA_START_TIME = "media_start_time"
-
-DEFAULT_DEVICE = "0"
-DEFAULT_NAME = "DirecTV Receiver"
-DEFAULT_PORT = 8080
+KNOWN_MEDIA_TYPES = {MediaType.MOVIE, MediaType.MUSIC, MediaType.TVSHOW}
 
 SUPPORT_DTV = (
-    SUPPORT_PAUSE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_PLAY
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.PLAY
 )
 
 SUPPORT_DTV_CLIENT = (
-    SUPPORT_PAUSE
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_PLAY
-)
-
-DATA_DIRECTV = "data_directv"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-    }
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.PLAY
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the DirecTV platform."""
-    known_devices = hass.data.get(DATA_DIRECTV, set())
-    hosts = []
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: DirecTVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the DirecTV config entry."""
+    dtv = entry.runtime_data
 
-    if CONF_HOST in config:
-        _LOGGER.debug(
-            "Adding configured device %s with client address %s ",
-            config.get(CONF_NAME),
-            config.get(CONF_DEVICE),
-        )
-        hosts.append(
-            [
-                config.get(CONF_NAME),
-                config.get(CONF_HOST),
-                config.get(CONF_PORT),
-                config.get(CONF_DEVICE),
-            ]
-        )
-
-    elif discovery_info:
-        host = discovery_info.get("host")
-        name = "DirecTV_{}".format(discovery_info.get("serial", ""))
-
-        # Attempt to discover additional RVU units
-        _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
-
-        dtv = DIRECTV(host, DEFAULT_PORT)
-        try:
-            resp = dtv.get_locations()
-        except requests.exceptions.RequestException as ex:
-            # Bail out and just go forward with uPnP data
-            # Make sure that this device is not already configured
-            # Comparing based on host (IP) and clientAddr.
-            _LOGGER.debug("Request exception %s trying to get locations", ex)
-            resp = {"locations": [{"locationName": name, "clientAddr": DEFAULT_DEVICE}]}
-
-        _LOGGER.debug("Known devices: %s", known_devices)
-        for loc in resp.get("locations") or []:
-            if "locationName" not in loc or "clientAddr" not in loc:
-                continue
-
-            # Make sure that this device is not already configured
-            # Comparing based on host (IP) and clientAddr.
-            if (host, loc["clientAddr"]) in known_devices:
-                _LOGGER.debug(
-                    "Discovered device %s on host %s with "
-                    "client address %s is already "
-                    "configured",
-                    str.title(loc["locationName"]),
-                    host,
-                    loc["clientAddr"],
-                )
-            else:
-                _LOGGER.debug(
-                    "Adding discovered device %s with client address %s",
-                    str.title(loc["locationName"]),
-                    loc["clientAddr"],
-                )
-                hosts.append(
-                    [
-                        str.title(loc["locationName"]),
-                        host,
-                        DEFAULT_PORT,
-                        loc["clientAddr"],
-                    ]
-                )
-
-    dtvs = []
-
-    for host in hosts:
-        dtvs.append(DirecTvDevice(*host))
-        hass.data.setdefault(DATA_DIRECTV, set()).add((host[1], host[3]))
-
-    add_entities(dtvs)
+    async_add_entities(
+        (
+            DIRECTVMediaPlayer(
+                dtv=dtv,
+                name=str.title(location.name),
+                address=location.address,
+            )
+            for location in dtv.device.locations
+        ),
+        True,
+    )
 
 
-class DirecTvDevice(MediaPlayerDevice):
+class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
     """Representation of a DirecTV receiver on the network."""
 
-    def __init__(self, name, host, port, device):
-        """Initialize the device."""
+    def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
+        """Initialize DirecTV media player."""
+        super().__init__(
+            dtv=dtv,
+            name=name,
+            address=address,
+        )
 
-        self.dtv = DIRECTV(host, port, device)
-        self._name = name
+        self._attr_unique_id = self._device_id
+        self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
+        self._attr_available = False
+
+        self._is_recorded = None
         self._is_standby = True
-        self._current = None
+        self._last_position = None
         self._last_update = None
         self._paused = None
-        self._last_position = None
-        self._is_recorded = None
-        self._is_client = device != "0"
-        self._assumed_state = None
-        self._available = False
-        self._first_error_timestamp = None
+        self._program = None
 
-        if self._is_client:
-            _LOGGER.debug("Created DirecTV client %s for device %s", self._name, device)
-        else:
-            _LOGGER.debug("Created DirecTV device for %s", self._name)
-
-    def update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        _LOGGER.debug("%s: Updating status", self.entity_id)
-        try:
-            self._available = True
-            self._is_standby = self.dtv.get_standby()
-            if self._is_standby:
-                self._current = None
-                self._is_recorded = None
-                self._paused = None
-                self._assumed_state = False
-                self._last_position = None
-                self._last_update = None
-            else:
-                self._current = self.dtv.get_tuned()
-                if self._current["status"]["code"] == 200:
-                    self._first_error_timestamp = None
-                    self._is_recorded = self._current.get("uniqueId") is not None
-                    self._paused = self._last_position == self._current["offset"]
-                    self._assumed_state = self._is_recorded
-                    self._last_position = self._current["offset"]
-                    self._last_update = (
-                        dt_util.utcnow()
-                        if not self._paused or self._last_update is None
-                        else self._last_update
-                    )
-                else:
-                    # If an error is received then only set to unavailable if
-                    # this started at least 1 minute ago.
-                    log_message = "{}: Invalid status {} received".format(
-                        self.entity_id, self._current["status"]["code"]
-                    )
-                    if self._check_state_available():
-                        _LOGGER.debug(log_message)
-                    else:
-                        _LOGGER.error(log_message)
+        state = await self.dtv.state(self._address)
+        self._attr_available = state.available
+        self._is_standby = state.standby
+        self._program = state.program
 
-        except requests.RequestException as ex:
-            _LOGGER.error(
-                "%s: Request error trying to update current status: %s",
-                self.entity_id,
-                ex,
-            )
-            self._check_state_available()
-
-        except Exception as ex:
-            _LOGGER.error(
-                "%s: Exception trying to update current status: %s", self.entity_id, ex
-            )
-            self._available = False
-            if not self._first_error_timestamp:
-                self._first_error_timestamp = dt_util.utcnow()
-            raise
-
-    def _check_state_available(self):
-        """Set to unavailable if issue been occurring over 1 minute."""
-        if not self._first_error_timestamp:
-            self._first_error_timestamp = dt_util.utcnow()
-        else:
-            tdelta = dt_util.utcnow() - self._first_error_timestamp
-            if tdelta.total_seconds() >= 60:
-                self._available = False
-
-        return self._available
+        if self._is_standby:
+            self._attr_assumed_state = False
+            self._is_recorded = None
+            self._last_position = None
+            self._last_update = None
+            self._paused = None
+        elif self._program is not None:
+            self._paused = self._last_position == self._program.position
+            self._is_recorded = self._program.recorded
+            self._last_position = self._program.position
+            if not self._paused:
+                self._last_update = dt_util.utcnow()
+            self._attr_assumed_state = self._is_recorded
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
-        attributes = {}
-        if not self._is_standby:
-            attributes[ATTR_MEDIA_CURRENTLY_RECORDING] = self.media_currently_recording
-            attributes[ATTR_MEDIA_RATING] = self.media_rating
-            attributes[ATTR_MEDIA_RECORDED] = self.media_recorded
-            attributes[ATTR_MEDIA_START_TIME] = self.media_start_time
+        if self._is_standby:
+            return {}
+        return {
+            ATTR_MEDIA_CURRENTLY_RECORDING: self.media_currently_recording,
+            ATTR_MEDIA_RATING: self.media_rating,
+            ATTR_MEDIA_RECORDED: self.media_recorded,
+            ATTR_MEDIA_START_TIME: self.media_start_time,
+        }
 
-        return attributes
-
+    # MediaPlayerEntity properties and methods
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    # MediaPlayerDevice properties and methods
-    @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._is_standby:
-            return STATE_OFF
+            return MediaPlayerState.OFF
 
         # For recorded media we can determine if it is paused or not.
         # For live media we're unable to determine and will always return
         # playing instead.
         if self._paused:
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
 
-        return STATE_PLAYING
-
-    @property
-    def available(self):
-        """Return if able to retrieve information from DVR or not."""
-        return self._available
-
-    @property
-    def assumed_state(self):
-        """Return if we assume the state or not."""
-        return self._assumed_state
+        return MediaPlayerState.PLAYING
 
     @property
     def media_content_id(self):
         """Return the content ID of current playing media."""
-        if self._is_standby:
+        if self._is_standby or self._program is None:
             return None
 
-        return self._current["programId"]
+        return self._program.program_id
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Return the content type of current playing media."""
-        if self._is_standby:
+        if self._is_standby or self._program is None:
             return None
 
-        if "episodeTitle" in self._current:
-            return MEDIA_TYPE_TVSHOW
+        if self._program.program_type in KNOWN_MEDIA_TYPES:
+            return self._program.program_type
 
-        return MEDIA_TYPE_MOVIE
+        return MediaType.MOVIE
 
     @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
-        if self._is_standby:
+        if self._is_standby or self._program is None:
             return None
 
-        return self._current["duration"]
+        return self._program.duration
 
     @property
     def media_position(self):
@@ -319,10 +180,7 @@ class DirecTvDevice(MediaPlayerDevice):
 
     @property
     def media_position_updated_at(self):
-        """When was the position of the current playing media valid.
-
-        Returns value from homeassistant.util.dt.utcnow().
-        """
+        """When was the position of the current playing media valid."""
         if self._is_standby:
             return None
 
@@ -331,55 +189,74 @@ class DirecTvDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        if self._is_standby:
+        if self._is_standby or self._program is None:
             return None
 
-        return self._current["title"]
+        if self.media_content_type == MediaType.MUSIC:
+            return self._program.music_title
+
+        return self._program.title
+
+    @property
+    def media_artist(self):
+        """Artist of current playing media, music track only."""
+        if self._is_standby or self._program is None:
+            return None
+
+        return self._program.music_artist
+
+    @property
+    def media_album_name(self):
+        """Album name of current playing media, music track only."""
+        if self._is_standby or self._program is None:
+            return None
+
+        return self._program.music_album
 
     @property
     def media_series_title(self):
         """Return the title of current episode of TV show."""
-        if self._is_standby:
+        if self._is_standby or self._program is None:
             return None
 
-        return self._current.get("episodeTitle")
+        return self._program.episode_title
 
     @property
     def media_channel(self):
         """Return the channel current playing media."""
-        if self._is_standby:
+        if self._is_standby or self._program is None:
             return None
 
-        return "{} ({})".format(self._current["callsign"], self._current["major"])
+        return f"{self._program.channel_name} ({self._program.channel})"
 
     @property
     def source(self):
         """Name of the current input source."""
-        if self._is_standby:
+        if self._is_standby or self._program is None:
             return None
 
-        return self._current["major"]
+        return self._program.channel
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return SUPPORT_DTV_CLIENT if self._is_client else SUPPORT_DTV
 
     @property
     def media_currently_recording(self):
         """If the media is currently being recorded or not."""
-        if self._is_standby:
+        if self._is_standby or self._program is None:
             return None
 
-        return self._current["isRecording"]
+        return self._program.recording
 
     @property
     def media_rating(self):
         """TV Rating of the current playing media."""
-        if self._is_standby:
+        if self._is_standby or self._program is None:
             return None
 
-        return self._current["rating"]
+        return self._program.rating
 
     @property
     def media_recorded(self):
@@ -392,61 +269,63 @@ class DirecTvDevice(MediaPlayerDevice):
     @property
     def media_start_time(self):
         """Start time the program aired."""
-        if self._is_standby:
+        if self._is_standby or self._program is None:
             return None
 
-        return dt_util.as_local(dt_util.utc_from_timestamp(self._current["startTime"]))
+        return dt_util.as_local(self._program.start_time)
 
-    def turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn on the receiver."""
         if self._is_client:
-            raise NotImplementedError()
+            raise NotImplementedError
 
-        _LOGGER.debug("Turn on %s", self._name)
-        self.dtv.key_press("poweron")
+        _LOGGER.debug("Turn on %s", self.name)
+        await self.dtv.remote("poweron", self._address)
 
-    def turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off the receiver."""
         if self._is_client:
-            raise NotImplementedError()
+            raise NotImplementedError
 
-        _LOGGER.debug("Turn off %s", self._name)
-        self.dtv.key_press("poweroff")
+        _LOGGER.debug("Turn off %s", self.name)
+        await self.dtv.remote("poweroff", self._address)
 
-    def media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
-        _LOGGER.debug("Play on %s", self._name)
-        self.dtv.key_press("play")
+        _LOGGER.debug("Play on %s", self.name)
+        await self.dtv.remote("play", self._address)
 
-    def media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
-        _LOGGER.debug("Pause on %s", self._name)
-        self.dtv.key_press("pause")
+        _LOGGER.debug("Pause on %s", self.name)
+        await self.dtv.remote("pause", self._address)
 
-    def media_stop(self):
+    async def async_media_stop(self) -> None:
         """Send stop command."""
-        _LOGGER.debug("Stop on %s", self._name)
-        self.dtv.key_press("stop")
+        _LOGGER.debug("Stop on %s", self.name)
+        await self.dtv.remote("stop", self._address)
 
-    def media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send rewind command."""
-        _LOGGER.debug("Rewind on %s", self._name)
-        self.dtv.key_press("rew")
+        _LOGGER.debug("Rewind on %s", self.name)
+        await self.dtv.remote("rew", self._address)
 
-    def media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send fast forward command."""
-        _LOGGER.debug("Fast forward on %s", self._name)
-        self.dtv.key_press("ffwd")
+        _LOGGER.debug("Fast forward on %s", self.name)
+        await self.dtv.remote("ffwd", self._address)
 
-    def play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Select input source."""
-        if media_type != MEDIA_TYPE_CHANNEL:
+        if media_type != MediaType.CHANNEL:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,
-                MEDIA_TYPE_CHANNEL,
+                MediaType.CHANNEL,
             )
             return
 
-        _LOGGER.debug("Changing channel on %s to %s", self._name, media_id)
-        self.dtv.tune_channel(media_id)
+        _LOGGER.debug("Changing channel on %s to %s", self.name, media_id)
+        await self.dtv.tune(media_id, self._address)

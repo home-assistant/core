@@ -1,171 +1,180 @@
 """Each ElkM1 area will be created as a separate alarm_control_panel."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from elkm1_lib.areas import Area
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
+from elkm1_lib.elements import Element
+from elkm1_lib.elk import Elk
+from elkm1_lib.keypads import Keypad
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
-    AlarmControlPanel,
+    ATTR_CHANGED_BY,
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+    CodeFormat,
 )
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-)
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
-)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import VolDictType
 
-from . import (
-    DOMAIN,
-    SERVICE_ALARM_ARM_HOME_INSTANT,
-    SERVICE_ALARM_ARM_NIGHT_INSTANT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISPLAY_MESSAGE,
-    ElkEntity,
-    create_elk_entities,
+from . import ElkM1ConfigEntry
+from .const import (
+    ATTR_CHANGED_BY_ID,
+    ATTR_CHANGED_BY_KEYPAD,
+    ATTR_CHANGED_BY_TIME,
+    ELK_USER_CODE_SERVICE_SCHEMA,
 )
+from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
+from .models import ELKM1Data
 
-SIGNAL_ARM_ENTITY = "elkm1_arm"
-SIGNAL_DISPLAY_MESSAGE = "elkm1_display_message"
+DISPLAY_MESSAGE_SERVICE_SCHEMA: VolDictType = {
+    vol.Optional("clear", default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
+    vol.Optional("beep", default=False): cv.boolean,
+    vol.Optional("timeout", default=0): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=65535)
+    ),
+    vol.Optional("line1", default=""): cv.string,
+    vol.Optional("line2", default=""): cv.string,
+}
 
-ELK_ALARM_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-        vol.Required(ATTR_CODE): vol.All(vol.Coerce(int), vol.Range(0, 999999)),
-    }
-)
-
-DISPLAY_MESSAGE_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
-        vol.Optional("clear", default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
-        vol.Optional("beep", default=False): cv.boolean,
-        vol.Optional("timeout", default=0): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=65535)
-        ),
-        vol.Optional("line1", default=""): cv.string,
-        vol.Optional("line2", default=""): cv.string,
-    }
-)
+SERVICE_ALARM_DISPLAY_MESSAGE = "alarm_display_message"
+SERVICE_ALARM_ARM_VACATION = "alarm_arm_vacation"
+SERVICE_ALARM_ARM_HOME_INSTANT = "alarm_arm_home_instant"
+SERVICE_ALARM_ARM_NIGHT_INSTANT = "alarm_arm_night_instant"
+SERVICE_ALARM_BYPASS = "alarm_bypass"
+SERVICE_ALARM_CLEAR_BYPASS = "alarm_clear_bypass"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ElkM1ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the ElkM1 alarm platform."""
-    if discovery_info is None:
-        return
+    elk_data = config_entry.runtime_data
+    elk = elk_data.elk
+    entities: list[ElkEntity] = []
+    create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
+    async_add_entities(entities)
 
-    elk_datas = hass.data[DOMAIN]
-    entities = []
-    for elk_data in elk_datas.values():
-        elk = elk_data["elk"]
-        entities = create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
-    async_add_entities(entities, True)
+    platform = entity_platform.async_get_current_platform()
 
-    def _dispatch(signal, entity_ids, *args):
-        for entity_id in entity_ids:
-            async_dispatcher_send(hass, f"{signal}_{entity_id}", *args)
-
-    def _arm_service(service):
-        entity_ids = service.data.get(ATTR_ENTITY_ID, [])
-        arm_level = _arm_services().get(service.service)
-        args = (arm_level, service.data.get(ATTR_CODE))
-        _dispatch(SIGNAL_ARM_ENTITY, entity_ids, *args)
-
-    for service in _arm_services():
-        hass.services.async_register(
-            DOMAIN, service, _arm_service, ELK_ALARM_SERVICE_SCHEMA
-        )
-
-    def _display_message_service(service):
-        entity_ids = service.data.get(ATTR_ENTITY_ID, [])
-        data = service.data
-        args = (
-            data["clear"],
-            data["beep"],
-            data["timeout"],
-            data["line1"],
-            data["line2"],
-        )
-        _dispatch(SIGNAL_DISPLAY_MESSAGE, entity_ids, *args)
-
-    hass.services.async_register(
-        DOMAIN,
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_VACATION,
+        ELK_USER_CODE_SERVICE_SCHEMA,
+        "async_alarm_arm_vacation",
+    )
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_HOME_INSTANT,
+        ELK_USER_CODE_SERVICE_SCHEMA,
+        "async_alarm_arm_home_instant",
+    )
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_NIGHT_INSTANT,
+        ELK_USER_CODE_SERVICE_SCHEMA,
+        "async_alarm_arm_night_instant",
+    )
+    platform.async_register_entity_service(
         SERVICE_ALARM_DISPLAY_MESSAGE,
-        _display_message_service,
         DISPLAY_MESSAGE_SERVICE_SCHEMA,
+        "async_display_message",
+    )
+    platform.async_register_entity_service(
+        SERVICE_ALARM_BYPASS,
+        ELK_USER_CODE_SERVICE_SCHEMA,
+        "async_bypass",
+    )
+    platform.async_register_entity_service(
+        SERVICE_ALARM_CLEAR_BYPASS,
+        ELK_USER_CODE_SERVICE_SCHEMA,
+        "async_clear_bypass",
     )
 
 
-def _arm_services():
-    return {
-        SERVICE_ALARM_ARM_VACATION: ArmLevel.ARMED_VACATION.value,
-        SERVICE_ALARM_ARM_HOME_INSTANT: ArmLevel.ARMED_STAY_INSTANT.value,
-        SERVICE_ALARM_ARM_NIGHT_INSTANT: ArmLevel.ARMED_NIGHT_INSTANT.value,
-    }
-
-
-class ElkArea(ElkEntity, AlarmControlPanel):
+class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     """Representation of an Area / Partition within the ElkM1 alarm panel."""
 
-    def __init__(self, element, elk, elk_data):
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.ARM_VACATION
+    )
+    _element: Area
+
+    def __init__(self, element: Element, elk: Elk, elk_data: ELKM1Data) -> None:
         """Initialize Area as Alarm Control Panel."""
         super().__init__(element, elk, elk_data)
-        self._changed_by_entity_id = ""
-        self._state = None
+        self._elk = elk
+        self._changed_by_keypad: str | None = None
+        self._changed_by_time: str | None = None
+        self._changed_by_id: int | None = None
+        self._changed_by: str | None = None
+        self._state: AlarmControlPanelState | None = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callback for ElkM1 changes."""
         await super().async_added_to_hass()
-        for keypad in self._elk.keypads:
-            keypad.add_callback(self._watch_keypad)
-        async_dispatcher_connect(
-            self.hass, f"{SIGNAL_ARM_ENTITY}_{self.entity_id}", self._arm_service
-        )
-        async_dispatcher_connect(
-            self.hass,
-            f"{SIGNAL_DISPLAY_MESSAGE}_{self.entity_id}",
-            self._display_message,
-        )
+        if len(self._elk.areas.elements) == 1:
+            for keypad in self._elk.keypads:
+                keypad.add_callback(self._watch_keypad)
+        self._element.add_callback(self._watch_area)
 
-    def _watch_keypad(self, keypad, changeset):
+        # We do not get changed_by back from resync.
+        if not (last_state := await self.async_get_last_state()):
+            return
+
+        if ATTR_CHANGED_BY_KEYPAD in last_state.attributes:
+            self._changed_by_keypad = last_state.attributes[ATTR_CHANGED_BY_KEYPAD]
+        if ATTR_CHANGED_BY_TIME in last_state.attributes:
+            self._changed_by_time = last_state.attributes[ATTR_CHANGED_BY_TIME]
+        if ATTR_CHANGED_BY_ID in last_state.attributes:
+            self._changed_by_id = last_state.attributes[ATTR_CHANGED_BY_ID]
+        if ATTR_CHANGED_BY in last_state.attributes:
+            self._changed_by = last_state.attributes[ATTR_CHANGED_BY]
+
+    def _watch_keypad(self, keypad: Element, changeset: dict[str, Any]) -> None:
+        assert isinstance(keypad, Keypad)
         if keypad.area != self._element.index:
             return
         if changeset.get("last_user") is not None:
-            self._changed_by_entity_id = self.hass.data[DOMAIN][self._prefix][
-                "keypads"
-            ].get(keypad.index, "")
-            self.async_schedule_update_ha_state(True)
+            self._changed_by_keypad = keypad.name
+            self._changed_by_time = keypad.last_user_time.isoformat()
+            self._changed_by_id = keypad.last_user + 1
+            self._changed_by = self._elk.users.username(keypad.last_user)
+            self.async_write_ha_state()
+
+    def _watch_area(self, area: Element, changeset: dict[str, Any]) -> None:
+        if not (last_log := changeset.get("last_log")):
+            return
+        # user_number only set for arm/disarm logs
+        if (user_number := last_log.get("user_number")) is None:
+            return
+        self._changed_by_keypad = None
+        self._changed_by_id = user_number
+        self._changed_by = self._elk.users.username(user_number - 1)
+        self._changed_by_time = last_log["timestamp"]
+        self.async_write_ha_state()
 
     @property
-    def code_format(self):
+    def code_format(self) -> CodeFormat | None:
         """Return the alarm code format."""
-        return FORMAT_NUMBER
+        return CodeFormat.NUMBER
 
     @property
-    def state(self):
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the element."""
         return self._state
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Attributes of the area."""
         attrs = self.initial_attrs()
         elmt = self._element
@@ -178,56 +187,93 @@ class ElkArea(ElkEntity, AlarmControlPanel):
             attrs["arm_up_state"] = ArmUpState(elmt.arm_up_state).name.lower()
         if elmt.alarm_state is not None:
             attrs["alarm_state"] = AlarmState(elmt.alarm_state).name.lower()
-        attrs["changed_by_entity_id"] = self._changed_by_entity_id
+        attrs[ATTR_CHANGED_BY_KEYPAD] = self._changed_by_keypad
+        attrs[ATTR_CHANGED_BY_TIME] = self._changed_by_time
+        attrs[ATTR_CHANGED_BY_ID] = self._changed_by_id
         return attrs
 
-    def _element_changed(self, element, changeset):
+    @property
+    def changed_by(self) -> str | None:
+        """Last change triggered by."""
+        return self._changed_by
+
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         elk_state_to_hass_state = {
-            ArmedStatus.DISARMED.value: STATE_ALARM_DISARMED,
-            ArmedStatus.ARMED_AWAY.value: STATE_ALARM_ARMED_AWAY,
-            ArmedStatus.ARMED_STAY.value: STATE_ALARM_ARMED_HOME,
-            ArmedStatus.ARMED_STAY_INSTANT.value: STATE_ALARM_ARMED_HOME,
-            ArmedStatus.ARMED_TO_NIGHT.value: STATE_ALARM_ARMED_NIGHT,
-            ArmedStatus.ARMED_TO_NIGHT_INSTANT.value: STATE_ALARM_ARMED_NIGHT,
-            ArmedStatus.ARMED_TO_VACATION.value: STATE_ALARM_ARMED_AWAY,
+            ArmedStatus.DISARMED: AlarmControlPanelState.DISARMED,
+            ArmedStatus.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
+            ArmedStatus.ARMED_STAY: AlarmControlPanelState.ARMED_HOME,
+            ArmedStatus.ARMED_STAY_INSTANT: AlarmControlPanelState.ARMED_HOME,
+            ArmedStatus.ARMED_TO_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
+            ArmedStatus.ARMED_TO_NIGHT_INSTANT: AlarmControlPanelState.ARMED_NIGHT,
+            ArmedStatus.ARMED_TO_VACATION: AlarmControlPanelState.ARMED_VACATION,
         }
 
         if self._element.alarm_state is None:
             self._state = None
-        elif self._area_is_in_alarm_state():
-            self._state = STATE_ALARM_TRIGGERED
+        elif self._element.in_alarm_state():
+            # Area is in alarm state
+            self._state = AlarmControlPanelState.TRIGGERED
         elif self._entry_exit_timer_is_running():
             self._state = (
-                STATE_ALARM_ARMING if self._element.is_exit else STATE_ALARM_PENDING
+                AlarmControlPanelState.ARMING
+                if self._element.is_exit
+                else AlarmControlPanelState.PENDING
             )
-        else:
+        elif self._element.armed_status is not None:
             self._state = elk_state_to_hass_state[self._element.armed_status]
+        else:
+            self._state = None
 
-    def _entry_exit_timer_is_running(self):
+    def _entry_exit_timer_is_running(self) -> bool:
         return self._element.timer1 > 0 or self._element.timer2 > 0
 
-    def _area_is_in_alarm_state(self):
-        return self._element.alarm_state >= AlarmState.FIRE_ALARM.value
-
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self._element.disarm(int(code))
+        if code is not None:
+            self._element.disarm(int(code))
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        self._element.arm(ArmLevel.ARMED_STAY.value, int(code))
+        if code is not None:
+            self._element.arm(ArmLevel.ARMED_STAY, int(code))
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        self._element.arm(ArmLevel.ARMED_AWAY.value, int(code))
+        if code is not None:
+            self._element.arm(ArmLevel.ARMED_AWAY, int(code))
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        self._element.arm(ArmLevel.ARMED_NIGHT.value, int(code))
+        if code is not None:
+            self._element.arm(ArmLevel.ARMED_NIGHT, int(code))
 
-    async def _arm_service(self, arm_level, code):
-        self._element.arm(arm_level, code)
+    async def async_alarm_arm_home_instant(self, code: str | None = None) -> None:
+        """Send arm stay instant command."""
+        if code is not None:
+            self._element.arm(ArmLevel.ARMED_STAY_INSTANT, int(code))
 
-    async def _display_message(self, clear, beep, timeout, line1, line2):
+    async def async_alarm_arm_night_instant(self, code: str | None = None) -> None:
+        """Send arm night instant command."""
+        if code is not None:
+            self._element.arm(ArmLevel.ARMED_NIGHT_INSTANT, int(code))
+
+    async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
+        """Send arm vacation command."""
+        if code is not None:
+            self._element.arm(ArmLevel.ARMED_VACATION, int(code))
+
+    async def async_display_message(
+        self, clear: int, beep: bool, timeout: int, line1: str, line2: str
+    ) -> None:
         """Display a message on all keypads for the area."""
         self._element.display_message(clear, beep, timeout, line1, line2)
+
+    async def async_bypass(self, code: str | None = None) -> None:
+        """Bypass all zones in area."""
+        if code is not None:
+            self._element.bypass(int(code))
+
+    async def async_clear_bypass(self, code: str | None = None) -> None:
+        """Clear bypass for all zones in area."""
+        if code is not None:
+            self._element.clear_bypass(int(code))
