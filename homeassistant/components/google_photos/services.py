@@ -152,11 +152,10 @@ def async_register_services(hass: HomeAssistant) -> None:
             }
         return None
 
-    if not hass.services.has_service(DOMAIN, UPLOAD_SERVICE):
-        hass.services.async_register(
-            DOMAIN,
-            UPLOAD_SERVICE,
-            async_handle_upload,
-            schema=UPLOAD_SERVICE_SCHEMA,
-            supports_response=SupportsResponse.OPTIONAL,
-        )
+    hass.services.async_register(
+        DOMAIN,
+        UPLOAD_SERVICE,
+        async_handle_upload,
+        schema=UPLOAD_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
