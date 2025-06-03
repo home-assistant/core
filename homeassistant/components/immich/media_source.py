@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from logging import getLogger
-import mimetypes
 
 from aiohttp.web import HTTPNotFound, Request, Response, StreamResponse
 from aioimmich.exceptions import ImmichError
@@ -39,13 +38,14 @@ class ImmichMediaSourceIdentifier:
 
     def __init__(self, identifier: str) -> None:
         """Split identifier into parts."""
-        parts = identifier.split("/")
-        # config_entry.unique_id/collection/collection_id/asset_id/file_name
+        parts = identifier.split("|")
+        # config_entry.unique_id|collection|collection_id|asset_id|file_name|mime_type
         self.unique_id = parts[0]
         self.collection = parts[1] if len(parts) > 1 else None
         self.collection_id = parts[2] if len(parts) > 2 else None
         self.asset_id = parts[3] if len(parts) > 3 else None
         self.file_name = parts[4] if len(parts) > 3 else None
+        self.mime_type = parts[5] if len(parts) > 3 else None
 
 
 class ImmichMediaSource(MediaSource):
@@ -111,7 +111,7 @@ class ImmichMediaSource(MediaSource):
             return [
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=f"{identifier.unique_id}/albums",
+                    identifier=f"{identifier.unique_id}|albums",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaClass.IMAGE,
                     title="albums",
@@ -130,13 +130,13 @@ class ImmichMediaSource(MediaSource):
             return [
                 BrowseMediaSource(
                     domain=DOMAIN,
-                    identifier=f"{identifier.unique_id}/albums/{album.album_id}",
+                    identifier=f"{identifier.unique_id}|albums|{album.album_id}",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaClass.IMAGE,
-                    title=album.name,
+                    title=album.album_name,
                     can_play=False,
                     can_expand=True,
-                    thumbnail=f"/immich/{identifier.unique_id}/{album.thumbnail_asset_id}/thumb.jpg/thumbnail",
+                    thumbnail=f"/immich/{identifier.unique_id}/{album.album_thumbnail_asset_id}/thumbnail/image/jpg",
                 )
                 for album in albums
             ]
@@ -153,61 +153,62 @@ class ImmichMediaSource(MediaSource):
         except ImmichError:
             return []
 
-        ret = [
-            BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=(
-                    f"{identifier.unique_id}/albums/"
-                    f"{identifier.collection_id}/"
-                    f"{asset.asset_id}/"
-                    f"{asset.file_name}"
-                ),
-                media_class=MediaClass.IMAGE,
-                media_content_type=asset.mime_type,
-                title=asset.file_name,
-                can_play=False,
-                can_expand=False,
-                thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/{asset.file_name}/thumbnail",
-            )
-            for asset in album_info.assets
-            if asset.mime_type.startswith("image/")
-        ]
+        ret: list[BrowseMediaSource] = []
+        for asset in album_info.assets:
+            if not (mime_type := asset.original_mime_type) or not mime_type.startswith(
+                ("image/", "video/")
+            ):
+                continue
 
-        ret.extend(
-            BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=(
-                    f"{identifier.unique_id}/albums/"
-                    f"{identifier.collection_id}/"
-                    f"{asset.asset_id}/"
-                    f"{asset.file_name}"
-                ),
-                media_class=MediaClass.VIDEO,
-                media_content_type=asset.mime_type,
-                title=asset.file_name,
-                can_play=True,
-                can_expand=False,
-                thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/thumbnail.jpg/thumbnail",
+            if mime_type.startswith("image/"):
+                media_class = MediaClass.IMAGE
+                can_play = False
+                thumb_mime_type = mime_type
+            else:
+                media_class = MediaClass.VIDEO
+                can_play = True
+                thumb_mime_type = "image/jpeg"
+
+            ret.append(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=(
+                        f"{identifier.unique_id}|albums|"
+                        f"{identifier.collection_id}|"
+                        f"{asset.asset_id}|"
+                        f"{asset.original_file_name}|"
+                        f"{mime_type}"
+                    ),
+                    media_class=media_class,
+                    media_content_type=mime_type,
+                    title=asset.original_file_name,
+                    can_play=can_play,
+                    can_expand=False,
+                    thumbnail=f"/immich/{identifier.unique_id}/{asset.asset_id}/thumbnail/{thumb_mime_type}",
+                )
             )
-            for asset in album_info.assets
-            if asset.mime_type.startswith("video/")
-        )
 
         return ret
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        identifier = ImmichMediaSourceIdentifier(item.identifier)
-        if identifier.file_name is None:
-            raise Unresolvable("No file name")
-        mime_type, _ = mimetypes.guess_type(identifier.file_name)
-        if not isinstance(mime_type, str):
-            raise Unresolvable("No file extension")
+        try:
+            identifier = ImmichMediaSourceIdentifier(item.identifier)
+        except IndexError as err:
+            raise Unresolvable(
+                f"Could not parse identifier: {item.identifier}"
+            ) from err
+
+        if identifier.mime_type is None:
+            raise Unresolvable(
+                f"Could not resolve identifier that has no mime-type: {item.identifier}"
+            )
+
         return PlayMedia(
             (
-                f"/immich/{identifier.unique_id}/{identifier.asset_id}/{identifier.file_name}/fullsize"
+                f"/immich/{identifier.unique_id}/{identifier.asset_id}/fullsize/{identifier.mime_type}"
             ),
-            mime_type,
+            identifier.mime_type,
         )
 
 
@@ -228,10 +229,10 @@ class ImmichMediaView(HomeAssistantView):
         if not self.hass.config_entries.async_loaded_entries(DOMAIN):
             raise HTTPNotFound
 
-        asset_id, file_name, size = location.split("/")
-        mime_type, _ = mimetypes.guess_type(file_name)
-        if not isinstance(mime_type, str):
-            raise HTTPNotFound
+        try:
+            asset_id, size, mime_type_base, mime_type_format = location.split("/")
+        except ValueError as err:
+            raise HTTPNotFound from err
 
         entry: ImmichConfigEntry | None = (
             self.hass.config_entries.async_entry_for_domain_unique_id(
@@ -242,7 +243,7 @@ class ImmichMediaView(HomeAssistantView):
         immich_api = entry.runtime_data.api
 
         # stream response for videos
-        if mime_type.startswith("video/"):
+        if mime_type_base == "video":
             try:
                 resp = await immich_api.assets.async_play_video_stream(asset_id)
             except ImmichError as exc:
@@ -259,4 +260,4 @@ class ImmichMediaView(HomeAssistantView):
             image = await immich_api.assets.async_view_asset(asset_id, size)
         except ImmichError as exc:
             raise HTTPNotFound from exc
-        return Response(body=image, content_type=mime_type)
+        return Response(body=image, content_type=f"{mime_type_base}/{mime_type_format}")
