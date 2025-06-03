@@ -37,7 +37,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No configuration options.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable:
     status: exempt
     comment: No entities.
@@ -56,15 +56,17 @@ rules:
     status: exempt
     comment: No devices.
   diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  discovery-update-info:
+    status: exempt
+    comment: No discovery.
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: No devices.

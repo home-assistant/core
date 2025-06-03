@@ -11,6 +11,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/solaredge_modules",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["solaredge_web"],
   "quality_scale": "bronze",
