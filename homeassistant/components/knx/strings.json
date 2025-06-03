@@ -143,6 +143,20 @@
       "unsupported_tunnel_type": "Selected tunneling type not supported by gateway."
     }
   },
+  "exceptions": {
+    "integration_not_loaded": {
+      "message": "KNX integration is not loaded."
+    },
+    "service_exposure_remove_not_found": {
+      "message": "Could not find exposure for `{group_address}` to remove."
+    },
+    "service_send_invalid_payload": {
+      "message": "Invalid payload for `knx.send` service. {error}"
+    },
+    "service_send_invalid_type": {
+      "message": "Invalid type for `knx.send` service: {type}"
+    }
+  },
   "options": {
     "step": {
       "init": {

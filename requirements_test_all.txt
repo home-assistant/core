@@ -170,7 +170,7 @@ aioairzone-cloud==0.6.12
 aioairzone==1.0.0
 
 # homeassistant.components.amazon_devices
-aioamazondevices==3.0.4
+aioamazondevices==3.0.5
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -271,7 +271,7 @@ aioimmich==0.8.0
 aiokafka==0.10.0
 
 # homeassistant.components.rehlko
-aiokem==0.5.12
+aiokem==1.0.1
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
@@ -541,7 +541,7 @@ bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.15.1
+bleak-esphome==2.16.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.9.0
@@ -1482,7 +1482,7 @@ py-madvr2==1.6.32
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==2.1.2
+py-nextbusnext==2.2.0
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -1540,7 +1540,7 @@ pyasuswrt==0.1.21
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==9.2.0
+pyatmo==9.2.1
 
 # homeassistant.components.apple_tv
 pyatv==0.16.0
@@ -2007,7 +2007,7 @@ python-google-drive-api==0.1.0
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.3.2
+python-homewizard-energy==8.3.3
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2053,7 +2053,7 @@ python-otbr-api==2.7.0
 python-overseerr==0.7.1
 
 # homeassistant.components.picnic
-python-picnic-api2==1.2.4
+python-picnic-api2==1.3.1
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
