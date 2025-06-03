@@ -118,7 +118,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(self.homee.settings.uid)
                 self._abort_if_unique_id_mismatch(reason="wrong_hub")
 
-                _LOGGER.info("Updated homee entry with ID %s", self.homee.settings.uid)
+                _LOGGER.debug("Updated homee entry with ID %s", self.homee.settings.uid)
                 return self.async_update_reload_and_abort(
                     self._get_reconfigure_entry(), data_updates=user_input
                 )

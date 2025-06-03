@@ -160,6 +160,8 @@ async def test_reconfigure_success(
 
     # Confirm that the config entry has been updated
     assert mock_config_entry.data[CONF_HOST] == NEW_HOMEE_IP
+    assert mock_config_entry.data[CONF_USERNAME] == TESTUSER
+    assert mock_config_entry.data[CONF_PASSWORD] == TESTPASS
 
 
 @pytest.mark.parametrize(
@@ -202,11 +204,27 @@ async def test_reconfigure_errors(
         },
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == error
 
     # Confirm that the config entry is unchanged
     assert mock_config_entry.data[CONF_HOST] == HOMEE_IP
+
+    mock_homee.get_access_token.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: NEW_HOMEE_IP,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    # Confirm that the config entry has been updated
+    assert mock_config_entry.data[CONF_HOST] == NEW_HOMEE_IP
+    assert mock_config_entry.data[CONF_USERNAME] == TESTUSER
+    assert mock_config_entry.data[CONF_PASSWORD] == TESTPASS
 
 
 async def test_reconfigure_wrong_uid(
