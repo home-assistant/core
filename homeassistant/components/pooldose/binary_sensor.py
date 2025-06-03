@@ -1,4 +1,4 @@
-"""The Seko Pooldose API Binary Sensors."""
+"""Pooldose binary sensors."""
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -6,12 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-BINARY_SENSOR_MAP = {
-    "pool_dosierung_stop_status": [
-        "Pool Dosierung Stop Status",
-        "PDPR1H1HAW100_FW539187_w_1emtltkel",
-    ]
-}
+from .const import BINARY_SENSOR_MAP
 
 
 async def async_setup_entry(

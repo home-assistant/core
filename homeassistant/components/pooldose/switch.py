@@ -8,14 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-SWITCHES = {
-    "pool_dosierung_aussetzen": [
-        "Dosierung stoppen",
-        "PDPR1H1HAW100_FW539187_w_1emtltkel",
-        "F",
-        "O",
-    ]
-}
+from .const import SWITCHES
 
 
 async def async_setup_entry(

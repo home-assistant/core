@@ -8,42 +8,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import SENSOR_MAP
 from .coordinator import PooldoseCoordinator
 from .pooldose_api import PooldoseAPIClient
-
-SENSOR_MAP: dict[str, tuple[str, str | None, str | None, str]] = {
-    "pool_temp_ist": (
-        "Pool Temperature Actual",
-        "°C",
-        "temperature",
-        "PDPR1H1HAW100_FW539187_w_1eommf39k",
-    ),
-    "pool_ph_ist": ("Pool pH Actual", "pH", None, "PDPR1H1HAW100_FW539187_w_1ekeigkin"),
-    "pool_ph_soll": (
-        "Pool pH Target",
-        "pH",
-        None,
-        "PDPR1H1HAW100_FW539187_w_1ekeiqfat",
-    ),
-    "pool_orp_ist": (
-        "Pool ORP Actual",
-        "mV",
-        None,
-        "PDPR1H1HAW100_FW539187_w_1eklenb23",
-    ),
-    "pool_orp_soll": (
-        "Pool ORP Target",
-        "mV",
-        None,
-        "PDPR1H1HAW100_FW539187_w_1eklgnjk2",
-    ),
-    "pool_zirkulation_raw": (
-        "Pool Circulation Pump raw",
-        None,
-        None,
-        "PDPR1H1HAW100_FW539187_w_1ekga097n",
-    ),
-}
 
 
 async def async_setup_entry(
@@ -95,5 +62,4 @@ class PooldoseSensor(CoordinatorEntity, SensorEntity):
             ]["current"]
         except (KeyError, TypeError):
             return None
-        # Optionally, cast to float/int if appropriate for your sensors
         return value

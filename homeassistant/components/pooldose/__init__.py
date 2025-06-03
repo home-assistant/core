@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_TIMEOUT
 from .coordinator import PooldoseCoordinator
 from .pooldose_api import PooldoseAPIClient
 
@@ -25,8 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = entry.data
     host = config["host"]
     serial = config["serialnumber"]
-    scan_interval = config.get("scan_interval", 600)
-    timeout = config.get("timeout", 30)
+    scan_interval = config.get("scan_interval", DEFAULT_SCAN_INTERVAL)
+    timeout = config.get("timeout", DEFAULT_TIMEOUT)
 
     api = PooldoseAPIClient(
         host=host,
