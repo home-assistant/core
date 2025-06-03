@@ -41,17 +41,9 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
-    "homewizard": {
-        # https://github.com/homewizard/python-homewizard-energy/pull/545
-        "python-homewizard-energy": {"awesomeversion"}
-    },
     "mealie": {
         # https://github.com/joostlek/python-mealie/pull/490
         "aiomealie": {"awesomeversion"}
-    },
-    "ollama": {
-        # https://github.com/ollama/ollama-python/pull/445 (not yet released)
-        "ollama": {"httpx"}
     },
 }
 
@@ -337,10 +329,6 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "eq3btsmart": {
         # https://github.com/EuleMitKeule/eq3btsmart/releases/tag/2.0.0
         "homeassistant": {"eq3btsmart"}
-    },
-    "netatmo": {
-        # https://github.com/jabesq-org/pyatmo/pull/533 (not yet released)
-        "homeassistant": {"pyatmo"}
     },
     "python_script": {
         # Security audits are needed for each Python version
