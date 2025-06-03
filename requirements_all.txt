@@ -289,7 +289,7 @@ aiokafka==0.10.0
 aiokef==0.2.16
 
 # homeassistant.components.rehlko
-aiokem==0.5.12
+aiokem==1.0.1
 
 # homeassistant.components.lifx
 aiolifx-effects==0.3.2
@@ -610,7 +610,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.15.1
+bleak-esphome==2.16.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.9.0
@@ -1121,7 +1121,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.0
 
 # homeassistant.components.bluetooth
-habluetooth==3.48.2
+habluetooth==3.49.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.101.0
@@ -1762,7 +1762,7 @@ py-madvr2==1.6.32
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==2.1.2
+py-nextbusnext==2.2.0
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -2486,7 +2486,7 @@ python-otbr-api==2.7.0
 python-overseerr==0.7.1
 
 # homeassistant.components.picnic
-python-picnic-api2==1.2.4
+python-picnic-api2==1.3.1
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -2556,7 +2556,7 @@ pyuptimerobot==22.2.0
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.15
+pyvera==0.3.16
 
 # homeassistant.components.versasense
 pyversasense==0.0.6
