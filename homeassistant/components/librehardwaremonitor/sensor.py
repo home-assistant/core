@@ -30,10 +30,8 @@ async def async_setup_entry(
     lhm_coordinator = config_entry.runtime_data
 
     async_add_entities(
-        [
-            LibreHardwareMonitorSensor(lhm_coordinator, sensor_data)
-            for sensor_data in lhm_coordinator.data.sensor_data.values()
-        ]
+        LibreHardwareMonitorSensor(lhm_coordinator, sensor_data)
+        for sensor_data in lhm_coordinator.data.sensor_data.values()
     )
 
 
