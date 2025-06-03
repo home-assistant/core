@@ -6,7 +6,7 @@ import logging
 from typing import Any, cast
 
 import switchbot
-from switchbot import ColorMode as SwitchBotColorMode
+from switchbot import BulbColorMode, CeilingLightColorMode, StripLightColorMode
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -24,8 +24,11 @@ from .coordinator import SwitchbotConfigEntry
 from .entity import SwitchbotEntity, exception_handler
 
 SWITCHBOT_COLOR_MODE_TO_HASS = {
-    SwitchBotColorMode.RGB: ColorMode.RGB,
-    SwitchBotColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
+    StripLightColorMode.RGB: ColorMode.RGB,
+    StripLightColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
+    BulbColorMode.RGB: ColorMode.RGB,
+    BulbColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
+    CeilingLightColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,20 +99,12 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the RGB color of the light."""
-        return (
-            (self._device.rgb)
-            if self._device.color_mode == SwitchBotColorMode.RGB
-            else None
-        )
+        return self._device.rgb
 
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature of the light."""
-        return (
-            self._device.color_temp
-            if self._device.color_mode == SwitchBotColorMode.COLOR_TEMP
-            else None
-        )
+        return self._device.color_temp
 
     @property
     def is_on(self) -> bool:
@@ -119,7 +114,7 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        _LOGGER.info("Turning on light %s", kwargs)
+        _LOGGER.info("Turning on light %s, address %s", kwargs, self._address)
         brightness = round(
             cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness)) / 255 * 100
         )
@@ -148,4 +143,5 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
     @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
+        _LOGGER.debug("Turning off light %s, address %s", kwargs, self._address)
         await self._device.turn_off()
