@@ -75,7 +75,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_hvac_modes = []
+    _attr_hvac_modes = [HVACMode.HEAT]
     _attr_name = None
     _attr_preset_modes = []
     _attr_min_temp = 1
@@ -129,9 +129,11 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         if ch_active and flame_on:
             self._attr_hvac_action = HVACAction.HEATING
             self._attr_hvac_mode = HVACMode.HEAT
+            self._attr_hvac_modes = [HVACMode.HEAT]
         elif cooling_active:
             self._attr_hvac_action = HVACAction.COOLING
             self._attr_hvac_mode = HVACMode.COOL
+            self._attr_hvac_modes = [HVACMode.COOL]
         else:
             self._attr_hvac_action = HVACAction.IDLE
 
@@ -181,6 +183,10 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
         if self._away_state_a or self._away_state_b:
             return PRESET_AWAY
         return PRESET_NONE
+
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        _LOGGER.warning("Changing HVAC mode is not supported")
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
