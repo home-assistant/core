@@ -35,7 +35,7 @@
       },
       "discovery_confirm": {
         "title": "[%key:component::sma::config::step::user::title%]",
-        "description": "Do you want to setup the discovered SMA ({host})?",
+        "description": "Do you want to set up the discovered SMA device ({host})?",
         "data": {
           "group": "[%key:component::sma::config::step::user::data::group%]",
           "password": "[%key:common::config_flow::data::password%]",
