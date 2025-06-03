@@ -1,0 +1,15 @@
+{
+    "domain": "mill_wifi",
+    "name": "Mill WiFi Official",
+    "version": "0.1.0",
+    "config_flow": true,
+    "documentation": "https://github.com/PolivkaArsen/home-assistant-mill",
+    "issue_tracker": "https://github.com/PolivkaArsen/home-assistant-mill/issues",
+    "requirements": ["httpx>=0.26.0"],
+    "dependencies": [],
+    "codeowners": ["@PolivkaArsen"],
+    "iot_class": "cloud_polling",
+    "quality_scale": "bronze",
+    "translations": "translations",
+    "integration_type": "hub"
+}
