@@ -11,7 +11,10 @@ from tests.common import MockConfigEntry
 
 
 async def test_init_invalid_auth(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connection: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connection: MagicMock,
+    mock_federwiege: MagicMock,
 ) -> None:
     """Test init invalid authentication behavior."""
     mock_connection.refresh_token.return_value = False
