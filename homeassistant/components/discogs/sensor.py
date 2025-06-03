@@ -1,4 +1,4 @@
-"""Show the amount of records in a user's Discogs collection."""
+"""Show the amount of records in a user's Discogs collection and its value."""
 from datetime import timedelta
 import logging
 import random
@@ -27,13 +27,18 @@ DEFAULT_NAME = "Discogs"
 
 ICON_RECORD = "mdi:album"
 ICON_PLAYER = "mdi:record-player"
+ICON_CASH = "mdi:cash" # New icon for monetary values
 UNIT_RECORDS = "records"
+UNIT_CURRENCY = "$" # Assuming USD based on example, Discogs API typically returns currency with value
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
 SENSOR_COLLECTION_TYPE = "collection"
 SENSOR_WANTLIST_TYPE = "wantlist"
 SENSOR_RANDOM_RECORD_TYPE = "random_record"
+SENSOR_COLLECTION_VALUE_MIN_TYPE = "collection_value_min" # New sensor type
+SENSOR_COLLECTION_VALUE_MEDIAN_TYPE = "collection_value_median" # New sensor type
+SENSOR_COLLECTION_VALUE_MAX_TYPE = "collection_value_max" # New sensor type
 
 SENSORS = {
     SENSOR_COLLECTION_TYPE: {
@@ -50,6 +55,21 @@ SENSORS = {
         "name": "Random Record",
         "icon": ICON_PLAYER,
         "unit_of_measurement": None,
+    },
+    SENSOR_COLLECTION_VALUE_MIN_TYPE: { # New sensor definition
+        "name": "Collection Value (Min)",
+        "icon": ICON_CASH,
+        "unit_of_measurement": UNIT_CURRENCY,
+    },
+    SENSOR_COLLECTION_VALUE_MEDIAN_TYPE: { # New sensor definition
+        "name": "Collection Value (Median)",
+        "icon": ICON_CASH,
+        "unit_of_measurement": UNIT_CURRENCY,
+    },
+    SENSOR_COLLECTION_VALUE_MAX_TYPE: { # New sensor definition
+        "name": "Collection Value (Max)",
+        "icon": ICON_CASH,
+        "unit_of_measurement": UNIT_CURRENCY,
     },
 }
 
@@ -72,14 +92,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         _discogs_client = discogs_client.Client(SERVER_SOFTWARE, user_token=token)
 
+        # Fetch collection value data
+        collection_value = _discogs_client.identity().collection_value
+
         discogs_data = {
             "user": _discogs_client.identity().name,
             "folders": _discogs_client.identity().collection_folders,
             "collection_count": _discogs_client.identity().num_collection,
             "wantlist_count": _discogs_client.identity().num_wantlist,
+            "collection_value_min": collection_value["minimum"], # Store min value
+            "collection_value_median": collection_value["median"], # Store median value
+            "collection_value_max": collection_value["maximum"], # Store max value
         }
-    except discogs_client.exceptions.HTTPError:
-        _LOGGER.error("API token is not valid")
+    except discogs_client.exceptions.HTTPError as err:
+        _LOGGER.error("API token is not valid or Discogs API error: %s", err)
         return
 
     sensors = []
@@ -126,18 +152,29 @@ class DiscogsSensor(Entity):
         if self._state is None or self._attrs is None:
             return None
 
-        if self._type != SENSOR_RANDOM_RECORD_TYPE:
+        # Attributes for random record type
+        if self._type == SENSOR_RANDOM_RECORD_TYPE:
+            return {
+                "cat_no": self._attrs["labels"][0]["catno"],
+                "cover_image": self._attrs["cover_image"],
+                "format": f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})",
+                "label": self._attrs["labels"][0]["name"],
+                "released": self._attrs["year"],
+                ATTR_ATTRIBUTION: ATTRIBUTION,
+                ATTR_IDENTITY: self._discogs_data["user"],
+            }
+        # Attributes for collection value sensors
+        if self._type in [
+            SENSOR_COLLECTION_VALUE_MIN_TYPE,
+            SENSOR_COLLECTION_VALUE_MEDIAN_TYPE,
+            SENSOR_COLLECTION_VALUE_MAX_TYPE,
+        ]:
             return {
                 ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_IDENTITY: self._discogs_data["user"],
             }
-
+        # Attributes for collection/wantlist count
         return {
-            "cat_no": self._attrs["labels"][0]["catno"],
-            "cover_image": self._attrs["cover_image"],
-            "format": f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})",
-            "label": self._attrs["labels"][0]["name"],
-            "released": self._attrs["year"],
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_IDENTITY: self._discogs_data["user"],
         }
@@ -146,6 +183,8 @@ class DiscogsSensor(Entity):
         """Get a random record suggestion from the user's collection."""
         # Index 0 in the folders is the 'All' folder
         collection = self._discogs_data["folders"][0]
+        if collection.count == 0: # Handle empty collection
+            return "No records in collection"
         random_index = random.randrange(collection.count)
         random_record = collection.releases[random_index].release
 
@@ -153,10 +192,17 @@ class DiscogsSensor(Entity):
         return f"{random_record.data['artists'][0]['name']} - {random_record.data['title']}"
 
     def update(self):
-        """Set state to the amount of records in user's collection."""
+        """Set state to the amount of records or collection value."""
         if self._type == SENSOR_COLLECTION_TYPE:
             self._state = self._discogs_data["collection_count"]
         elif self._type == SENSOR_WANTLIST_TYPE:
             self._state = self._discogs_data["wantlist_count"]
-        else:
+        elif self._type == SENSOR_COLLECTION_VALUE_MIN_TYPE:
+            # Remove the currency symbol '$' and convert to float for proper numeric representation
+            self._state = float(self._discogs_data["collection_value_min"].replace(UNIT_CURRENCY, ''))
+        elif self._type == SENSOR_COLLECTION_VALUE_MEDIAN_TYPE:
+            self._state = float(self._discogs_data["collection_value_median"].replace(UNIT_CURRENCY, ''))
+        elif self._type == SENSOR_COLLECTION_VALUE_MAX_TYPE:
+            self._state = float(self._discogs_data["collection_value_max"].replace(UNIT_CURRENCY, ''))
+        else: # SENSOR_RANDOM_RECORD_TYPE
             self._state = self.get_random_record()
