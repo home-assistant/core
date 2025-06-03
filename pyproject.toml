@@ -492,6 +492,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
   "error::sqlalchemy.exc.SAWarning",
+  "error:usefixtures\\(\\) in .* without arguments has no effect:UserWarning",  # pytest
 
   # -- HomeAssistant - aiohttp
   # Overwrite web.Application to pass a custom default argument to _make_request
