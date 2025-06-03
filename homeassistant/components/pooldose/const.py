@@ -7,32 +7,37 @@ DEFAULT_TIMEOUT = 30  # seconds
 DEFAULT_SCAN_INTERVAL = 600  # seconds
 
 SENSOR_MAP: dict[str, tuple[str, str | None, str | None, str]] = {
-    "pool_temp_ist": (
+    "pool_temp_actual": (
         "Pool Temperature Actual",
         "°C",
         "temperature",
         "PDPR1H1HAW100_FW539187_w_1eommf39k",
     ),
-    "pool_ph_ist": ("Pool pH Actual", "pH", None, "PDPR1H1HAW100_FW539187_w_1ekeigkin"),
-    "pool_ph_soll": (
+    "pool_ph_actual": (
+        "Pool pH Actual",
+        "pH",
+        None,
+        "PDPR1H1HAW100_FW539187_w_1ekeigkin",
+    ),
+    "pool_ph_target": (
         "Pool pH Target",
         "pH",
         None,
         "PDPR1H1HAW100_FW539187_w_1ekeiqfat",
     ),
-    "pool_orp_ist": (
+    "pool_orp_actual": (
         "Pool ORP Actual",
         "mV",
         None,
         "PDPR1H1HAW100_FW539187_w_1eklenb23",
     ),
-    "pool_orp_soll": (
+    "pool_orp_target": (
         "Pool ORP Target",
         "mV",
         None,
         "PDPR1H1HAW100_FW539187_w_1eklgnjk2",
     ),
-    "pool_zirkulation_raw": (
+    "pool_circulation_raw": (
         "Pool Circulation Pump raw",
         None,
         None,
@@ -52,8 +57,8 @@ SWITCHES: dict[str, tuple[str, str, str, str]] = {
 }
 
 BINARY_SENSOR_MAP: dict[str, tuple[str, str]] = {
-    "pool_dosierung_stop_status": (
-        "Stop Pool Dosing Status",
+    "stop_pool_dosing_state": (
+        "Stop Dosing State",
         "PDPR1H1HAW100_FW539187_w_1emtltkel",
     ),
     # Add more binary sensors here as needed
