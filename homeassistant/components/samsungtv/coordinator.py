@@ -52,7 +52,7 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         else:
             self.is_on = await self.bridge.async_is_on()
         if self.is_on != old_state:
-            LOGGER.info(
+            LOGGER.debug(
                 "TV %s state updated from %s to %s",
                 self.bridge.host,
                 old_state,
