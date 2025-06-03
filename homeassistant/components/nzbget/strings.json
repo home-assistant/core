@@ -64,6 +64,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_config_entry": {
+      "message": "Config entry not found or not loaded!"
+    }
+  },
   "services": {
     "pause": {
       "name": "[%key:common::action::pause%]",
