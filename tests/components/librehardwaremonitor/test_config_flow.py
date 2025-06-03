@@ -13,62 +13,14 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import VALID_CONFIG, init_integration
+from .conftest import VALID_CONFIG
+
+from tests.common import MockConfigEntry
 
 
-async def test_show_configuration_form(hass: HomeAssistant) -> None:
-    """Test that the configuration form is shown."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
-async def test_connection_error(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock
+async def test_create_entry(
+    hass: HomeAssistant, mock_lhm_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test that the no connection error is shown."""
-    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorConnectionError()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
-    )
-
-    assert result
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_no_devices_error(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock
-) -> None:
-    """Test that the no devices error is shown."""
-    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorNoDevicesError()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
-    )
-
-    assert result
-    assert result["errors"] == {"base": "no_devices"}
-
-
-async def test_lhm_server_already_exists(hass: HomeAssistant) -> None:
-    """Test we only allow a single entry per server."""
-    await init_integration(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
-    )
-
-    assert result
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_create_entry(hass: HomeAssistant, mock_lhm_client: AsyncMock) -> None:
     """Test that a complete config entry is created."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
@@ -77,9 +29,61 @@ async def test_create_entry(hass: HomeAssistant, mock_lhm_client: AsyncMock) -> 
     assert result
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    config_entry = result["result"]
-    assert config_entry.title == f"{VALID_CONFIG[CONF_HOST]}:{VALID_CONFIG[CONF_PORT]}"
-    assert config_entry.data == {
+    mock_config_entry = result["result"]
+    assert (
+        mock_config_entry.title
+        == f"{VALID_CONFIG[CONF_HOST]}:{VALID_CONFIG[CONF_PORT]}"
+    )
+    assert mock_config_entry.data == {
         CONF_HOST: VALID_CONFIG[CONF_HOST],
         CONF_PORT: VALID_CONFIG[CONF_PORT],
     }
+
+
+async def test_errors_and_flow_recovery(
+    hass: HomeAssistant, mock_lhm_client: AsyncMock
+) -> None:
+    """Test that errors are shown as expected."""
+    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorConnectionError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+    )
+
+    assert result
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["step_id"] == "user"
+
+    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorNoDevicesError()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+    )
+
+    assert result
+    assert result["errors"] == {"base": "no_devices"}
+    assert result["step_id"] == "user"
+
+    mock_lhm_client.get_data.side_effect = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+    )
+
+    assert result
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_lhm_server_already_exists(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test we only allow a single entry per server."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=VALID_CONFIG
+    )
+
+    assert result
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
