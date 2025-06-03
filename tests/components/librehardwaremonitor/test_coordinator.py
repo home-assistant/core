@@ -17,41 +17,41 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import init_integration
+from tests.common import MockConfigEntry
 
 
 async def test_connection_error_raises_update_failed(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock
+    hass: HomeAssistant, mock_lhm_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that UpdateFailed error is raised if connection to LibreHardwareMonitor fails."""
-    mock_entry = await init_integration(hass)
+    mock_config_entry.add_to_hass(hass)
     mock_lhm_client.get_data.side_effect = LibreHardwareMonitorConnectionError()
 
-    coordinator = LibreHardwareMonitorCoordinator(hass, mock_entry)
+    coordinator = LibreHardwareMonitorCoordinator(hass, mock_config_entry)
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
 
 async def test_no_devices_error_raises_update_failed(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock
+    hass: HomeAssistant, mock_lhm_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that NoDevices error is raised if LibreHardwareMonitor does not return sensor data."""
-    mock_entry = await init_integration(hass)
+    mock_config_entry.add_to_hass(hass)
     mock_lhm_client.get_data.side_effect = LibreHardwareMonitorNoDevicesError()
 
-    coordinator = LibreHardwareMonitorCoordinator(hass, mock_entry)
+    coordinator = LibreHardwareMonitorCoordinator(hass, mock_config_entry)
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
 
 async def test_refresh_updates_data(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock
+    hass: HomeAssistant, mock_lhm_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that sensor data is updated with LibreHardwareMonitor data."""
-    mock_entry = await init_integration(hass)
-    coordinator = LibreHardwareMonitorCoordinator(hass, mock_entry)
+    mock_config_entry.add_to_hass(hass)
+    coordinator = LibreHardwareMonitorCoordinator(hass, mock_config_entry)
 
     await coordinator._async_refresh()
 
@@ -75,11 +75,11 @@ async def test_refresh_updates_data(
 
 
 async def test_orphaned_devices_are_removed(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock
+    hass: HomeAssistant, mock_lhm_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that devices in HA that do not receive updates are removed."""
-    mock_entry = await init_integration(hass)
-    coordinator = LibreHardwareMonitorCoordinator(hass, mock_entry)
+    mock_config_entry.add_to_hass(hass)
+    coordinator = LibreHardwareMonitorCoordinator(hass, mock_config_entry)
 
     await coordinator._async_refresh()
 
@@ -90,7 +90,7 @@ async def test_orphaned_devices_are_removed(
 
     device_registry = dr.async_get(hass)
     orphaned_device = device_registry.async_get_or_create(
-        config_entry_id=mock_entry.entry_id,
+        config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "MSI MAG B650M MORTAR WIFI (MS-7D76)")},
     )
 
@@ -104,11 +104,11 @@ async def test_orphaned_devices_are_removed(
 
 
 async def test_new_devices_are_added_and_integration_reloaded(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock
+    hass: HomeAssistant, mock_lhm_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that devices not yet in HA are added to the integration."""
-    mock_entry = await init_integration(hass)
-    coordinator = LibreHardwareMonitorCoordinator(hass, mock_entry)
+    mock_config_entry.add_to_hass(hass)
+    coordinator = LibreHardwareMonitorCoordinator(hass, mock_config_entry)
 
     await coordinator._async_refresh()
 
@@ -124,15 +124,15 @@ async def test_new_devices_are_added_and_integration_reloaded(
         "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
     ) as async_schedule_reload:
         await coordinator._async_refresh()
-        async_schedule_reload.assert_called_once_with(mock_entry.entry_id)
+        async_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 async def test_integration_is_not_reloaded_on_first_refresh(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock
+    hass: HomeAssistant, mock_lhm_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that initial coordinator update does not cause integration to reload."""
-    mock_entry = await init_integration(hass)
-    coordinator = LibreHardwareMonitorCoordinator(hass, mock_entry)
+    mock_config_entry.add_to_hass(hass)
+    coordinator = LibreHardwareMonitorCoordinator(hass, mock_config_entry)
 
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
         main_device_names=[

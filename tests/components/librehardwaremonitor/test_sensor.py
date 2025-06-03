@@ -11,19 +11,21 @@ from homeassistant.components.librehardwaremonitor.const import DEFAULT_SCAN_INT
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
-
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensors_are_created(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors are created."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     entity_id = "sensor.amd_ryzen_7_7800x3d_package_temperature"
-    await init_integration(hass)
 
     state = hass.states.get(entity_id)
 
@@ -62,11 +64,15 @@ async def test_sensors_are_created(
 async def test_sensors_are_updated(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors are updated."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     entity_id = "sensor.amd_ryzen_7_7800x3d_package_temperature"
-    await init_integration(hass)
 
     state = hass.states.get(entity_id)
 
@@ -94,11 +100,14 @@ async def test_sensors_are_updated(
 
 
 async def test_sensor_state_is_unknown_when_lhm_indicates_missing_value(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock
+    hass: HomeAssistant, mock_lhm_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test sensor state is unknown when no value is present."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     entity_id = "sensor.msi_mag_b650m_mortar_wifi_ms_7d76_system_fan_1_fan"
-    await init_integration(hass)
 
     state = hass.states.get(entity_id)
 
@@ -110,11 +119,15 @@ async def test_sensor_state_is_unknown_when_lhm_indicates_missing_value(
 async def test_sensor_state_is_unknown_when_no_sensor_data_is_provided(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor state is unknown when sensor data is missing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     entity_id = "sensor.amd_ryzen_7_7800x3d_package_temperature"
-    await init_integration(hass)
 
     state = hass.states.get(entity_id)
 
