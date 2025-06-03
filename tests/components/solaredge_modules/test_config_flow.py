@@ -12,6 +12,8 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(
     recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
@@ -113,3 +115,66 @@ async def test_form_exceptions(
         CONF_SITE_ID: "test-site-id",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_already_configured(
+    recorder_mock: Recorder, hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test user input for config_entry that already exists."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.solaredge_modules.config_flow.SolarEdgeWeb.async_get_equipment",
+    ) as mock_get_equipment:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "test-name",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_SITE_ID: mock_config_entry.data[CONF_SITE_ID],
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_get_equipment.call_count == 0
+
+
+async def test_form_not_already_configured(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test user input for config_entry different than the existing one."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.solaredge_modules.config_flow.SolarEdgeWeb.async_get_equipment",
+    ) as mock_get_equipment:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "test-name",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+                CONF_SITE_ID: "test-site-id-new",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-name"
+    assert result["data"] == {
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+        CONF_SITE_ID: "test-site-id-new",
+    }
+    assert len(mock_setup_entry.mock_calls) == 2
+    assert mock_get_equipment.call_count == 1
