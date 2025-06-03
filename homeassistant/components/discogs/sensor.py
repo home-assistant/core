@@ -1,6 +1,6 @@
 """Show the amount of records in a user's Discogs collection and its value."""
 
-from __future__ import annotations # Keep this for modern Python syntax
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
