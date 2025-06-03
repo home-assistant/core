@@ -14,6 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.setup import async_setup_component
@@ -124,6 +125,7 @@ async def test_calendars_http_api(
     assert data == [
         {"entity_id": "calendar.calendar_1", "name": "Calendar 1"},
         {"entity_id": "calendar.calendar_2", "name": "Calendar 2"},
+        {"entity_id": "calendar.calendar_3", "name": "Calendar 3"},
     ]
 
 
@@ -627,3 +629,18 @@ async def test_calendar_color_attribute(
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert "color" not in state.attributes
+
+
+async def test_calendar_color_with_no_events(
+    hass: HomeAssistant, test_entities: list[MockCalendarEntity]
+) -> None:
+    """Test calendar with color but no upcoming events."""
+    entity = test_entities[2]
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes["color"] == "#ff0000"
+    assert "message" not in state.attributes
+    assert "start_time" not in state.attributes
+    assert "end_time" not in state.attributes
