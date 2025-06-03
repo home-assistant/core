@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -10,11 +12,9 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_federwiege")
 async def test_init_invalid_auth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_connection: MagicMock,
-    mock_federwiege: MagicMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connection: MagicMock
 ) -> None:
     """Test init invalid authentication behavior."""
     mock_connection.refresh_token.return_value = False
