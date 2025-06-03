@@ -9,6 +9,24 @@ from librehardwaremonitor_api.model import (
 )
 import pytest
 
+from homeassistant.components.librehardwaremonitor.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PORT
+
+from tests.common import MockConfigEntry
+
+VALID_CONFIG = {CONF_HOST: "192.168.0.20", CONF_PORT: 8085}
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Config entry fixture."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.0.20:8085",
+        unique_id="192.168.0.20:8085",
+        data=VALID_CONFIG,
+    )
+
 
 @pytest.fixture
 def mock_lhm_client() -> Generator[AsyncMock]:
