@@ -1166,6 +1166,8 @@ build.json @home-assistant/supervisor
 /tests/components/plum_lightpad/ @ColinHarrington @prystupa
 /homeassistant/components/point/ @fredrike
 /tests/components/point/ @fredrike
+/homeassistant/components/pooldose/ @lmaertin
+/tests/components/pooldose/ @lmaertin
 /homeassistant/components/poolsense/ @haemishkyd
 /tests/components/poolsense/ @haemishkyd
 /homeassistant/components/powerfox/ @klaasnicolaas
