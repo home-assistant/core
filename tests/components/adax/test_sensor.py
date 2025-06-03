@@ -34,7 +34,7 @@ async def test_sensor_cloud(
 async def test_sensor_local_not_created(
     hass: HomeAssistant,
     mock_adax_local: AsyncMock,
-    mock_local_config_entry,
+    mock_local_config_entry: MockConfigEntry,
 ) -> None:
     """Test that sensors are not created for local connection."""
     with patch("homeassistant.components.adax.PLATFORMS", [Platform.SENSOR]):
