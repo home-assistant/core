@@ -533,9 +533,7 @@ class CalendarEntity(Entity):
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the entity state attributes."""
-        color_hex_val = (
-            f"#{color_rgb_to_hex(*self._attr_color)}" if self._attr_color else None
-        )
+        color_hex_val = f"#{color_rgb_to_hex(*self.color)}" if self.color else None
         if (event := self.event) is None:
             if color_hex_val is None:
                 return None
