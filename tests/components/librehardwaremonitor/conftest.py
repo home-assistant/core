@@ -18,6 +18,16 @@ VALID_CONFIG = {CONF_HOST: "192.168.0.20", CONF_PORT: 8085}
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.librehardwaremonitor.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Config entry fixture."""
     return MockConfigEntry(
