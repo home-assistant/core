@@ -17,6 +17,7 @@ from .coordinator import HusqvarnaCoordinator
 
 PLATFORMS = [
     Platform.LAWN_MOWER,
+    Platform.SENSOR,
 ]
 
 
