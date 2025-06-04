@@ -161,7 +161,7 @@ async def test_fan_set_percentage(
             {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 3},
             blocking=True,
         )
-
+        mock_send_command.assert_any_await()
     state = hass.states.get(entity_id)
     assert state.attributes.get("percentage") == 0
     assert state.attributes.get("preset_mode") == BatteryCirculatorFanMode.BABY.value
@@ -196,32 +196,34 @@ async def test_fan_set_preset_mode(
         state.attributes.get(ATTR_PRESET_MODE) == BatteryCirculatorFanMode.DIRECT.value
     )
 
-    # with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: BatteryCirculatorFanMode.NATURAL.value,
-        },
-        blocking=True,
-    )
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_PRESET_MODE: BatteryCirculatorFanMode.NATURAL.value,
+            },
+            blocking=True,
+        )
+        mock_send_command.assert_any_await()
     state = hass.states.get(entity_id)
     assert (
         state.attributes.get(ATTR_PRESET_MODE) == BatteryCirculatorFanMode.NATURAL.value
     )
     assert state.attributes.get(ATTR_PERCENTAGE) == 0
 
-    # with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_PRESET_MODE: BatteryCirculatorFanMode.DIRECT.value,
-        },
-        blocking=True,
-    )
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_PRESET_MODE: BatteryCirculatorFanMode.DIRECT.value,
+            },
+            blocking=True,
+        )
+        mock_send_command.assert_any_await()
     state = hass.states.get(entity_id)
     assert (
         state.attributes.get(ATTR_PRESET_MODE) == BatteryCirculatorFanMode.DIRECT.value
