@@ -32,7 +32,9 @@ class DreoData:
     coordinators: dict[str, DreoDataUpdateCoordinator]
 
 
-async def async_login(hass: HomeAssistant, username: str, password: str) -> DreoData:
+async def async_login(
+    hass: HomeAssistant, username: str, password: str
+) -> tuple[HsCloud, list[dict[str, Any]]]:
     """Log into Dreo and return client and device data."""
     client = HsCloud(username, password)
 
@@ -43,11 +45,11 @@ async def async_login(hass: HomeAssistant, username: str, password: str) -> Dreo
     try:
         devices = await hass.async_add_executor_job(setup_client)
     except HsCloudBusinessException as ex:
-        raise ConfigEntryNotReady("invalid username or password") from ex
+        raise ConfigEntryNotReady("Invalid username or password") from ex
     except HsCloudException as ex:
         raise ConfigEntryNotReady(f"Error communicating with Dreo API: {ex}") from ex
 
-    return DreoData(client, devices, {})
+    return client, devices
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) -> bool:
@@ -55,19 +57,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
 
-    config_entry.runtime_data = await async_login(hass, username, password)
+    client, devices = await async_login(hass, username, password)
+    coordinators: dict[str, DreoDataUpdateCoordinator] = {}
 
-    for device in config_entry.runtime_data.devices:
+    for device in devices:
         if DEVICE_TYPE.get(device.get("model")) is None:
             continue
-        await async_setup_device(hass, config_entry, device)
+        await async_setup_device_coordinator(hass, client, device, coordinators)
+
+    config_entry.runtime_data = DreoData(client, devices, coordinators)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
-async def async_setup_device(
-    hass: HomeAssistant, config_entry: DreoConfigEntry, device: dict[str, Any]
+async def async_setup_device_coordinator(
+    hass: HomeAssistant,
+    client: HsCloud,
+    device: dict[str, Any],
+    coordinators: dict[str, DreoDataUpdateCoordinator],
 ) -> None:
     """Set up coordinator for a single device."""
 
@@ -77,24 +85,16 @@ async def async_setup_device(
     if not device_id:
         return
 
-    if device_id in config_entry.runtime_data.coordinators:
+    if device_id in coordinators:
         return
 
-    coordinator = DreoDataUpdateCoordinator(
-        hass, config_entry.runtime_data.client, device_id, device_model or ""
-    )
+    coordinator = DreoDataUpdateCoordinator(hass, client, device_id, device_model or "")
 
     await coordinator.async_config_entry_first_refresh()
 
-    config_entry.runtime_data.coordinators[device_id] = coordinator
+    coordinators[device_id] = coordinator
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Reload the config entry."""
-    await async_unload_entry(hass, config_entry)
-    await async_setup_entry(hass, config_entry)

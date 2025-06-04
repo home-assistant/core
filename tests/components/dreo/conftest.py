@@ -324,5 +324,5 @@ def mock_fan_device_data():
 def mock_coordinator(
     hass: HomeAssistant, mock_dreo_client: HsCloud
 ) -> MockDreoCoordinator:
-    """Return a mock coordinator."""
+    """Mock coordinator fixture."""
     return MockDreoCoordinator(hass, mock_dreo_client, MOCK_DEVICE_ID1, "DR-HTF001S")

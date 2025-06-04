@@ -110,7 +110,7 @@ class DeviceDataFactory:
         return None
 
 
-class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData]):
+class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
     """Class to manage fetching Dreo data."""
 
     def __init__(
@@ -132,7 +132,7 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData]):
         self.device_model = model
         self.device_type = DEVICE_TYPE.get(model) if model else None
 
-    async def _async_update_data(self) -> DreoDeviceData:
+    async def _async_update_data(self) -> DreoDeviceData | None:
         """Get device status from Dreo API and process it."""
         try:
             status = await self.hass.async_add_executor_job(
@@ -140,7 +140,7 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData]):
             )
 
             if status is None:
-                return DreoGenericDeviceData()
+                return None
 
             device_data = DeviceDataFactory.create_data(self, status)
             return device_data if device_data is not None else DreoGenericDeviceData()
