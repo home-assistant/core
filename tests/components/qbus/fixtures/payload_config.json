@@ -99,6 +99,19 @@
               "write": true
             }
           }
+        },
+        {
+          "id": "UL25",
+          "location": "Living",
+          "locationId": 0,
+          "name": "Watching TV",
+          "originalName": "Watching TV",
+          "refId": "000001/105/3",
+          "type": "scene",
+          "actions": {
+            "active": null
+          },
+          "properties": {}
         }
       ]
     }

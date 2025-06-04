@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 from contextlib import suppress
 from datetime import datetime
 import logging
@@ -55,6 +56,7 @@ from .const import (
     CONF_ADDON_S2_AUTHENTICATED_KEY,
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
     CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_S0_LEGACY_KEY,
@@ -169,8 +171,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _title: str
-
     def __init__(self) -> None:
         """Set up flow instance."""
         self.s0_legacy_key: str | None = None
@@ -192,7 +192,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.backup_task: asyncio.Task | None = None
         self.restore_backup_task: asyncio.Task | None = None
         self.backup_data: bytes | None = None
-        self.backup_filepath: str | None = None
+        self.backup_filepath: Path | None = None
         self.use_addon = False
         self._migrating = False
         self._reconfigure_config_entry: ConfigEntry | None = None
@@ -445,7 +445,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # at least for a short time.
             return self.async_abort(reason="already_in_progress")
         if current_config_entries := self._async_current_entries(include_ignore=False):
-            config_entry = next(
+            self._reconfigure_config_entry = next(
                 (
                     entry
                     for entry in current_config_entries
@@ -453,7 +453,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 None,
             )
-            if not config_entry:
+            if not self._reconfigure_config_entry:
                 return self.async_abort(reason="addon_required")
 
         vid = discovery_info.vid
@@ -502,31 +502,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             title = human_name.split(" - ")[0].strip()
         self.context["title_placeholders"] = {CONF_NAME: title}
-        self._title = title
-        return await self.async_step_usb_confirm()
-
-    async def async_step_usb_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle USB Discovery confirmation."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="usb_confirm",
-                description_placeholders={CONF_NAME: self._title},
-            )
 
         self._usb_discovery = True
-        if current_config_entries := self._async_current_entries(include_ignore=False):
-            self._reconfigure_config_entry = next(
-                (
-                    entry
-                    for entry in current_config_entries
-                    if entry.data.get(CONF_USE_ADDON)
-                ),
-                None,
-            )
-            if not self._reconfigure_config_entry:
-                return self.async_abort(reason="addon_required")
+        if current_config_entries:
             return await self.async_step_intent_migrate()
 
         return await self.async_step_installation_type()
@@ -1241,11 +1219,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Restore failed."""
         if user_input is not None:
             return await self.async_step_restore_nvm()
+        assert self.backup_filepath is not None
+        assert self.backup_data is not None
 
         return self.async_show_form(
             step_id="restore_failed",
             description_placeholders={
                 "file_path": str(self.backup_filepath),
+                "file_url": f"data:application/octet-stream;base64,{base64.b64encode(self.backup_data).decode('ascii')}",
+                "file_name": self.backup_filepath.name,
             },
         )
 
@@ -1383,12 +1365,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             unsub()
 
         # save the backup to a file just in case
-        self.backup_filepath = self.hass.config.path(
-            f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
+        self.backup_filepath = Path(
+            self.hass.config.path(
+                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
+            )
         )
         try:
             await self.hass.async_add_executor_job(
-                Path(self.backup_filepath).write_bytes,
+                self.backup_filepath.write_bytes,
                 self.backup_data,
             )
         except OSError as err:
@@ -1400,8 +1384,19 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
 
+        # Make sure we keep the old devices
+        # so that user customizations are not lost,
+        # when loading the config entry.
+        self.hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data | {CONF_KEEP_OLD_DEVICES: True}
+        )
+
         # Reload the config entry to reconnect the client after the addon restart
         await self.hass.config_entries.async_reload(config_entry.entry_id)
+
+        data = config_entry.data.copy()
+        data.pop(CONF_KEEP_OLD_DEVICES, None)
+        self.hass.config_entries.async_update_entry(config_entry, data=data)
 
         @callback
         def forward_progress(event: dict) -> None:
@@ -1453,6 +1448,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     config_entry, unique_id=str(version_info.home_id)
                 )
             await self.hass.config_entries.async_reload(config_entry.entry_id)
+
+            # Reload the config entry two times to clean up
+            # the stale device entry.
+            # Since both the old and the new controller have the same node id,
+            # but different hardware identifiers, the integration
+            # will create a new device for the new controller, on the first reload,
+            # but not immediately remove the old device.
+            await self.hass.config_entries.async_reload(config_entry.entry_id)
+
         finally:
             for unsub in unsubs:
                 unsub()

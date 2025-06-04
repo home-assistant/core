@@ -239,6 +239,15 @@
       "laundry_washer_spin_speed": {
         "name": "Spin speed"
       },
+      "pump_operation_mode": {
+        "name": "mode",
+        "state": {
+          "local": "Local",
+          "maximum": "Maximum",
+          "minimum": "Minimum",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
       "water_heater_mode": {
         "name": "Water heater mode"
       },
@@ -352,6 +361,20 @@
           "other": "Other fault"
         }
       },
+      "pump_control_mode": {
+        "name": "Control mode",
+        "state": {
+          "constant_flow": "Constant flow",
+          "constant_pressure": "Constant pressure",
+          "constant_speed": "Constant speed",
+          "constant_temperature": "Constant temp",
+          "proportional_pressure": "Proportional pressure",
+          "automatic": "Automatic"
+        }
+      },
+      "pump_speed": {
+        "name": "Rotation speed"
+      },
       "evse_circuit_capacity": {
         "name": "Circuit capacity"
       },
@@ -366,12 +389,6 @@
       },
       "evse_user_max_charge_current": {
         "name": "User max charge current"
-      },
-      "min_pin_code_length": {
-        "name": "Min PIN code length"
-      },
-      "max_pin_code_length": {
-        "name": "Max PIN code length"
       },
       "window_covering_target_position": {
         "name": "Target opening position"

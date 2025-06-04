@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -61,7 +61,9 @@ async def test_full_map_flow(
         patch(
             "aiowaqi.WAQIClient.get_by_ip",
             return_value=WAQIAirQuality.from_dict(
-                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+                json.loads(
+                    await async_load_fixture(hass, "air_quality_sensor.json", DOMAIN)
+                )
             ),
         ),
     ):
@@ -81,13 +83,17 @@ async def test_full_map_flow(
         patch(
             "aiowaqi.WAQIClient.get_by_coordinates",
             return_value=WAQIAirQuality.from_dict(
-                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+                json.loads(
+                    await async_load_fixture(hass, "air_quality_sensor.json", DOMAIN)
+                )
             ),
         ),
         patch(
             "aiowaqi.WAQIClient.get_by_station_number",
             return_value=WAQIAirQuality.from_dict(
-                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+                json.loads(
+                    await async_load_fixture(hass, "air_quality_sensor.json", DOMAIN)
+                )
             ),
         ),
     ):
@@ -147,7 +153,9 @@ async def test_flow_errors(
         patch(
             "aiowaqi.WAQIClient.get_by_ip",
             return_value=WAQIAirQuality.from_dict(
-                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+                json.loads(
+                    await async_load_fixture(hass, "air_quality_sensor.json", DOMAIN)
+                )
             ),
         ),
     ):
@@ -167,7 +175,9 @@ async def test_flow_errors(
         patch(
             "aiowaqi.WAQIClient.get_by_coordinates",
             return_value=WAQIAirQuality.from_dict(
-                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+                json.loads(
+                    await async_load_fixture(hass, "air_quality_sensor.json", DOMAIN)
+                )
             ),
         ),
     ):
@@ -240,7 +250,9 @@ async def test_error_in_second_step(
         patch(
             "aiowaqi.WAQIClient.get_by_ip",
             return_value=WAQIAirQuality.from_dict(
-                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+                json.loads(
+                    await async_load_fixture(hass, "air_quality_sensor.json", DOMAIN)
+                )
             ),
         ),
     ):
@@ -276,13 +288,17 @@ async def test_error_in_second_step(
         patch(
             "aiowaqi.WAQIClient.get_by_coordinates",
             return_value=WAQIAirQuality.from_dict(
-                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+                json.loads(
+                    await async_load_fixture(hass, "air_quality_sensor.json", DOMAIN)
+                )
             ),
         ),
         patch(
             "aiowaqi.WAQIClient.get_by_station_number",
             return_value=WAQIAirQuality.from_dict(
-                json.loads(load_fixture("waqi/air_quality_sensor.json"))
+                json.loads(
+                    await async_load_fixture(hass, "air_quality_sensor.json", DOMAIN)
+                )
             ),
         ),
     ):
