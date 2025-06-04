@@ -13,7 +13,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import AirQConfigEntry, AirQCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-BRIGHTNESS_DEFAULT = 60.0
 
 
 AIRQ_LED_BRIGHTNESS = NumberEntityDescription(
@@ -59,7 +58,7 @@ class AirQLEDBrightness(CoordinatorEntity[AirQCoordinator], NumberEntity):
     @property
     def native_value(self) -> float:
         """Return the brightness of the LEDs in %."""
-        return float(self.coordinator.data.get("brightness", BRIGHTNESS_DEFAULT))
+        return float(self.coordinator.data["brightness"])
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the brightness of the LEDs to the value in %."""

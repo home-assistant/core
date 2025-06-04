@@ -6,7 +6,7 @@ from aioairq import AirQ, DeviceInfo
 import pytest
 
 from homeassistant.components.airq import AirQCoordinator
-from homeassistant.components.airq.number import BRIGHTNESS_DEFAULT, AirQLEDBrightness
+from homeassistant.components.airq.number import AirQLEDBrightness
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
@@ -96,10 +96,3 @@ async def test_set_native_value_calls_api_and_updates_state(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert float(state.state) == new_brightness_percent
-
-
-def test_default_brightness_fallback(number_entity: AirQLEDBrightness) -> None:
-    """If coordinator.data has no 'brightness', native_value falls back to the default."""
-    coord: AirQCoordinator = number_entity.coordinator  # type: ignore[assignment]
-    coord.data.pop("brightness", None)
-    assert number_entity.native_value == BRIGHTNESS_DEFAULT
