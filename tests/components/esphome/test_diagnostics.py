@@ -5,7 +5,7 @@ from unittest.mock import ANY
 
 from aioesphomeapi import APIClient
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components import bluetooth
@@ -95,6 +95,7 @@ async def test_diagnostics_with_bluetooth(
                 "scanning": True,
                 "source": "AA:BB:CC:DD:EE:FC",
                 "start_time": ANY,
+                "raw_advertisement_data": {},
                 "time_since_last_device_detection": {},
                 "type": "ESPHomeScanner",
             },

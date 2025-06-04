@@ -31,7 +31,11 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_STATE_OFF,
+    CONF_STATE_ON,
     CONF_STATE_TOPIC,
+    DEFAULT_PAYLOAD_OFF,
+    DEFAULT_PAYLOAD_ON,
     PAYLOAD_NONE,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
@@ -46,10 +50,6 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Switch"
-DEFAULT_PAYLOAD_ON = "ON"
-DEFAULT_PAYLOAD_OFF = "OFF"
-CONF_STATE_ON = "state_on"
-CONF_STATE_OFF = "state_off"
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {

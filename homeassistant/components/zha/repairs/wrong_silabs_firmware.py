@@ -37,16 +37,6 @@ class HardwareType(enum.StrEnum):
     OTHER = "other"
 
 
-DISABLE_MULTIPAN_URL = {
-    HardwareType.YELLOW: (
-        "https://yellow.home-assistant.io/guides/disable-multiprotocol/#flash-the-silicon-labs-radio-firmware"
-    ),
-    HardwareType.SKYCONNECT: (
-        "https://skyconnect.home-assistant.io/procedures/disable-multiprotocol/#step-flash-the-silicon-labs-radio-firmware"
-    ),
-    HardwareType.OTHER: None,
-}
-
 ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED = "wrong_silabs_firmware_installed"
 
 
@@ -99,7 +89,6 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
         issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
         is_fixable=False,
         is_persistent=True,
-        learn_more_url=DISABLE_MULTIPAN_URL[hardware_type],
         severity=ir.IssueSeverity.ERROR,
         translation_key=(
             ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED

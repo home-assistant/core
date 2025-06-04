@@ -13,6 +13,7 @@ extend-ignore = [
 [lint.flake8-tidy-imports.banned-api]
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
+"syrupy.SnapshotAssertion".msg = "use syrupy.assertion.SnapshotAssertion instead"
 
 [lint.isort]
 known-first-party = [

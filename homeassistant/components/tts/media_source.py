@@ -19,7 +19,7 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DATA_COMPONENT, DATA_TTS_MANAGER, DOMAIN
+from .const import DATA_COMPONENT, DATA_TTS_MANAGER, DOMAIN, MEDIA_SOURCE_STREAM_PATH
 from .helper import get_engine_instance
 
 URL_QUERY_TTS_OPTIONS = "tts_options"
@@ -81,10 +81,22 @@ class ParsedMediaSourceId(TypedDict):
     message: str
 
 
+class ParsedMediaSourceStreamId(TypedDict):
+    """Parsed media source ID for a stream."""
+
+    stream: str
+
+
 @callback
-def parse_media_source_id(media_source_id: str) -> ParsedMediaSourceId:
+def parse_media_source_id(
+    media_source_id: str,
+) -> ParsedMediaSourceId | ParsedMediaSourceStreamId:
     """Turn a media source ID into options."""
     parsed = URL(media_source_id)
+
+    if parsed.path.startswith(f"{MEDIA_SOURCE_STREAM_PATH}/"):
+        return {"stream": parsed.path[len(MEDIA_SOURCE_STREAM_PATH) + 1 :]}
+
     if URL_QUERY_TTS_OPTIONS in parsed.query:
         try:
             options = json.loads(parsed.query[URL_QUERY_TTS_OPTIONS])
@@ -122,16 +134,23 @@ class TTSMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
+        manager = self.hass.data[DATA_TTS_MANAGER]
         try:
             parsed = parse_media_source_id(item.identifier)
-            stream = self.hass.data[DATA_TTS_MANAGER].async_create_result_stream(
-                **parsed["options"]
-            )
-            stream.async_set_message(parsed["message"])
+            if "stream" in parsed:
+                stream = manager.async_get_result_stream(
+                    parsed["stream"],  # type: ignore[typeddict-item]
+                )
+            else:
+                stream = manager.async_create_result_stream(**parsed["options"])
+                stream.async_set_message(parsed["message"])
         except Unresolvable:
             raise
         except HomeAssistantError as err:
             raise Unresolvable(str(err)) from err
+
+        if stream is None:
+            raise Unresolvable("Stream not found")
 
         return PlayMedia(stream.url, stream.content_type)
 

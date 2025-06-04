@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from pybalboa import SpaControl
 from pybalboa.enums import HeatMode, OffLowMediumHighState
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,

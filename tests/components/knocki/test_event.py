@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 from knocki import Event, EventType, Trigger, TriggerDetails
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.knocki.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN

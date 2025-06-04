@@ -134,6 +134,22 @@ def esphome_state_property[_R, _EntityT: EsphomeEntity[Any, Any]](
     return _wrapper
 
 
+def async_esphome_state_property[_R, _EntityT: EsphomeEntity[Any, Any]](
+    func: Callable[[_EntityT], Awaitable[_R | None]],
+) -> Callable[[_EntityT], Coroutine[Any, Any, _R | None]]:
+    """Wrap a state property of an esphome entity.
+
+    This checks if the state object in the entity is set
+    and returns None if it is not set.
+    """
+
+    @functools.wraps(func)
+    async def _wrapper(self: _EntityT) -> _R | None:
+        return await func(self) if self._has_state else None
+
+    return _wrapper
+
+
 def esphome_float_state_property[_EntityT: EsphomeEntity[Any, Any]](
     func: Callable[[_EntityT], float | None],
 ) -> Callable[[_EntityT], float | None]:

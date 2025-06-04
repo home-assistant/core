@@ -596,6 +596,48 @@ async def test_function_call(
     assert mock_chat_log.content[1:] == snapshot
 
 
+async def test_function_call_without_reasoning(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test function call from the assistant."""
+    mock_create_stream.return_value = [
+        # Initial conversation
+        (
+            *create_function_tool_call_item(
+                id="fc_1",
+                arguments=['{"para', 'm1":"call1"}'],
+                call_id="call_call_1",
+                name="test_tool",
+                output_index=1,
+            ),
+        ),
+        # Response after tool responses
+        create_message_item(id="msg_A", text="Cool", output_index=0),
+    ]
+    mock_chat_log.mock_tool_results(
+        {
+            "call_call_1": "value1",
+        }
+    )
+
+    result = await conversation.async_converse(
+        hass,
+        "Please call the test function",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai",
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    # Don't test the prompt, as it's not deterministic
+    assert mock_chat_log.content[1:] == snapshot
+
+
 @pytest.mark.parametrize(
     ("description", "messages"),
     [

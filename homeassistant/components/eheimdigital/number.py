@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
-from .entity import EheimDigitalEntity
+from .entity import EheimDigitalEntity, exception_handler
 
 PARALLEL_UPDATES = 0
 
@@ -109,6 +109,20 @@ HEATER_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalHeater], ..
     ),
 )
 
+GENERAL_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalDevice], ...] = (
+    EheimDigitalNumberDescription[EheimDigitalDevice](
+        key="system_led",
+        translation_key="system_led",
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0,
+        native_max_value=100,
+        native_step=PRECISION_WHOLE,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda device: device.sys_led,
+        set_value_fn=lambda device, value: device.set_sys_led(int(value)),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -138,6 +152,10 @@ async def async_setup_entry(
                     )
                     for description in HEATER_DESCRIPTIONS
                 )
+            entities.extend(
+                EheimDigitalNumber[EheimDigitalDevice](coordinator, device, description)
+                for description in GENERAL_DESCRIPTIONS
+            )
 
         async_add_entities(entities)
 
@@ -164,6 +182,7 @@ class EheimDigitalNumber(
         self._attr_unique_id = f"{self._device_address}_{description.key}"
 
     @override
+    @exception_handler
     async def async_set_native_value(self, value: float) -> None:
         return await self.entity_description.set_value_fn(self._device, value)
 

@@ -514,9 +514,12 @@ async def test_call_service_schema_validation_error(
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_call_service_error(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    websocket_client: MockHAClientWebSocket,
 ) -> None:
     """Test call service command with error."""
+    caplog.set_level(logging.ERROR)
 
     @callback
     def ha_error_call(_):
@@ -561,6 +564,7 @@ async def test_call_service_error(
     assert msg["error"]["translation_placeholders"] == {"option": "bla"}
     assert msg["error"]["translation_key"] == "custom_error"
     assert msg["error"]["translation_domain"] == "test"
+    assert "Traceback" not in caplog.text
 
     await websocket_client.send_json_auto_id(
         {
@@ -578,6 +582,7 @@ async def test_call_service_error(
     assert msg["error"]["translation_placeholders"] == {"option": "bla"}
     assert msg["error"]["translation_key"] == "custom_error"
     assert msg["error"]["translation_domain"] == "test"
+    assert "Traceback" not in caplog.text
 
     await websocket_client.send_json_auto_id(
         {
@@ -592,6 +597,7 @@ async def test_call_service_error(
     assert msg["success"] is False
     assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "value_error"
+    assert "Traceback" in caplog.text
 
 
 async def test_subscribe_unsubscribe_events(
@@ -2529,9 +2535,8 @@ async def test_validate_config_works(
                 "state": "paulus",
             },
             (
-                "Unexpected value for condition: 'non_existing'. Expected and, device,"
-                " not, numeric_state, or, state, sun, template, time, trigger, zone "
-                "@ data[0]"
+                "Invalid condition \"non_existing\" specified {'condition': "
+                "'non_existing', 'entity_id': 'hello.world', 'state': 'paulus'}"
             ),
         ),
         # Raises HomeAssistantError

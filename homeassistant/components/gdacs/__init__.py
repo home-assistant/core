@@ -25,22 +25,17 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import (  # noqa: F401
-    CONF_CATEGORIES,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    FEED,
-    PLATFORMS,
-)
+from .const import CONF_CATEGORIES, DEFAULT_SCAN_INTERVAL, PLATFORMS  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+type GdacsConfigEntry = ConfigEntry[GdacsFeedEntityManager]
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: GdacsConfigEntry
+) -> bool:
     """Set up the GDACS component as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    feeds = hass.data[DOMAIN].setdefault(FEED, {})
-
     radius = config_entry.data[CONF_RADIUS]
     if hass.config.units is US_CUSTOMARY_SYSTEM:
         radius = DistanceConverter.convert(
@@ -48,16 +43,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
     # Create feed entity manager for all platforms.
     manager = GdacsFeedEntityManager(hass, config_entry, radius)
-    feeds[config_entry.entry_id] = manager
+    config_entry.runtime_data = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GdacsConfigEntry) -> bool:
     """Unload an GDACS component config entry."""
-    manager: GdacsFeedEntityManager = hass.data[DOMAIN][FEED].pop(entry.entry_id)
-    await manager.async_stop()
+    await entry.runtime_data.async_stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -65,7 +59,7 @@ class GdacsFeedEntityManager:
     """Feed Entity Manager for GDACS feed."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, radius_in_km: float
+        self, hass: HomeAssistant, config_entry: GdacsConfigEntry, radius_in_km: float
     ) -> None:
         """Initialize the Feed Entity Manager."""
         self._hass = hass

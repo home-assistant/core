@@ -5,12 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
-from . import GuardianData
-from .const import CONF_UID, DOMAIN
+from . import GuardianConfigEntry
+from .const import CONF_UID
 
 CONF_BSSID = "bssid"
 CONF_PAIRED_UIDS = "paired_uids"
@@ -29,10 +28,10 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: GuardianConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: GuardianData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),

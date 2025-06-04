@@ -27,6 +27,7 @@
     'original_name': 'Current speed',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_speed',
     'unique_id': '00:00:00:00:00:03_current_speed',
@@ -81,6 +82,7 @@
     'original_name': 'Error code',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_code',
     'unique_id': '00:00:00:00:00:03_error_code',
@@ -128,6 +130,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
       }),
@@ -137,6 +142,7 @@
     'original_name': 'Remaining hours until service',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'service_hours',
     'unique_id': '00:00:00:00:00:03_service_hours',

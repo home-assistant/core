@@ -13,7 +13,6 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -24,7 +23,9 @@ from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .utils import (
     async_remove_shelly_entity,
+    get_block_device_info,
     get_block_entity_name,
+    get_rpc_device_info,
     get_rpc_entity_name,
     get_rpc_key_instances,
 )
@@ -353,13 +354,15 @@ def rpc_call[_T: ShellyRpcEntity, **_P](
 class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Helper class to represent a block entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.block = block
         self._attr_name = get_block_entity_name(coordinator.device, block)
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
+        self._attr_device_info = get_block_device_info(
+            coordinator.device, coordinator.mac, block
         )
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
 
@@ -395,12 +398,14 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
 class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
     """Helper class to represent a rpc entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: ShellyRpcCoordinator, key: str) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
+        self._attr_device_info = get_rpc_device_info(
+            coordinator.device, coordinator.mac, key
         )
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
@@ -497,6 +502,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
 class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     """Class to load info from REST."""
 
+    _attr_has_entity_name = True
     entity_description: RestEntityDescription
 
     def __init__(
@@ -514,8 +520,8 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
             coordinator.device, None, description.name
         )
         self._attr_unique_id = f"{coordinator.mac}-{attribute}"
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
+        self._attr_device_info = get_block_device_info(
+            coordinator.device, coordinator.mac
         )
         self._last_value = None
 
@@ -623,8 +629,8 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         self.block: Block | None = block  # type: ignore[assignment]
         self.entity_description = description
 
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
+        self._attr_device_info = get_block_device_info(
+            coordinator.device, coordinator.mac, block
         )
 
         if block is not None:
@@ -632,7 +638,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
                 f"{self.coordinator.mac}-{block.description}-{attribute}"
             )
             self._attr_name = get_block_entity_name(
-                self.coordinator.device, block, self.entity_description.name
+                coordinator.device, block, description.name
             )
         elif entry is not None:
             self._attr_unique_id = entry.unique_id
@@ -691,8 +697,8 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self.attribute = attribute
         self.entity_description = description
 
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
+        self._attr_device_info = get_rpc_device_info(
+            coordinator.device, coordinator.mac, key
         )
         self._attr_unique_id = self._attr_unique_id = (
             f"{coordinator.mac}-{key}-{attribute}"

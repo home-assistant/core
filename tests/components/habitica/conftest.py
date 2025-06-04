@@ -155,18 +155,6 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
         client.create_task.return_value = HabiticaTaskResponse.from_json(
             load_fixture("task.json", DOMAIN)
         )
-        client.habitipy.return_value = {
-            "tasks": {
-                "user": {
-                    "post": AsyncMock(
-                        return_value={
-                            "text": "Use API from Home Assistant",
-                            "type": "todo",
-                        }
-                    )
-                }
-            }
-        }
         yield client
 
 

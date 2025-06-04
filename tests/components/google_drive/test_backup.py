@@ -49,11 +49,13 @@ TEST_AGENT_BACKUP_RESULT = {
     "database_included": True,
     "date": "2025-01-01T01:23:45.678Z",
     "extra_metadata": {"with_automatic_settings": False},
+    "failed_addons": [],
+    "failed_agent_ids": [],
+    "failed_folders": [],
     "folders": [],
     "homeassistant_included": True,
     "homeassistant_version": "2024.12.0",
     "name": "Test",
-    "failed_agent_ids": [],
     "with_automatic_settings": None,
 }
 

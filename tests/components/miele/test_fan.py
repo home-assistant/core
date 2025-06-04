@@ -5,9 +5,13 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientResponseError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fan import ATTR_PERCENTAGE, DOMAIN as FAN_DOMAIN
+from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -25,14 +29,27 @@ ENTITY_ID = "fan.hood_fan"
 async def test_fan_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
 ) -> None:
     """Test fan entity state."""
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_fan_states_api_push(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+    push_data_and_actions: None,
+) -> None:
+    """Test fan state when the API pushes data via SSE."""
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
 @pytest.mark.parametrize("load_device_file", ["fan_devices.json"])
@@ -46,7 +63,7 @@ async def test_fan_states(
 async def test_fan_control(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
     service: str,
     expected_argument: dict[str, Any],
 ) -> None:
@@ -74,12 +91,12 @@ async def test_fan_control(
 async def test_fan_set_speed(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
     service: str,
     percentage: int,
     expected_argument: dict[str, Any],
 ) -> None:
-    """Test the fan can be turned on/off."""
+    """Test the fan can set percentage."""
 
     await hass.services.async_call(
         TEST_PLATFORM,
@@ -89,6 +106,24 @@ async def test_fan_set_speed(
     )
     mock_miele_client.send_action.assert_called_once_with(
         "DummyAppliance_18", expected_argument
+    )
+
+
+async def test_fan_turn_on_w_percentage(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: None,
+) -> None:
+    """Test the fan can turn on with percentage."""
+
+    await hass.services.async_call(
+        TEST_PLATFORM,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        blocking=True,
+    )
+    mock_miele_client.send_action.assert_called_with(
+        "DummyAppliance_18", {"ventilationStep": 2}
     )
 
 
@@ -102,7 +137,7 @@ async def test_fan_set_speed(
 async def test_api_failure(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
     service: str,
 ) -> None:
     """Test handling of exception from API."""
@@ -111,5 +146,25 @@ async def test_api_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    mock_miele_client.send_action.assert_called_once()
+
+
+async def test_set_percentage(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: None,
+) -> None:
+    """Test handling of exception at set_percentage."""
+    mock_miele_client.send_action.side_effect = ClientResponseError("test", "Test")
+
+    with pytest.raises(
+        HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
+    ):
+        await hass.services.async_call(
+            TEST_PLATFORM,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+            blocking=True,
         )
     mock_miele_client.send_action.assert_called_once()

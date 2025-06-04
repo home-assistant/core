@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from pyatmo.const import ALL_SCOPES
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud
 from homeassistant.components.netatmo import DOMAIN

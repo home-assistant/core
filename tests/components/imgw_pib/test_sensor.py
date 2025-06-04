@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from imgw_pib import ApiError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imgw_pib.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM

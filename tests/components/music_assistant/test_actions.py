@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from music_assistant_models.media_items import SearchResults
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.actions import (
     SERVICE_GET_LIBRARY,

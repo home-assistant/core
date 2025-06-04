@@ -1,6 +1,6 @@
 """Constants for the habitica integration."""
 
-from homeassistant.const import APPLICATION_NAME, CONF_PATH, __version__
+from homeassistant.const import APPLICATION_NAME, __version__
 
 CONF_API_USER = "api_user"
 
@@ -12,15 +12,6 @@ SIGN_UP_URL = "https://habitica.com/register"
 HABITICANS_URL = "https://habitica.com/static/img/home-main@3x.ffc32b12.png"
 
 DOMAIN = "habitica"
-
-# service constants
-SERVICE_API_CALL = "api_call"
-ATTR_PATH = CONF_PATH
-ATTR_ARGS = "args"
-
-# event constants
-EVENT_API_CALL_SUCCESS = f"{DOMAIN}_{SERVICE_API_CALL}_success"
-ATTR_DATA = "data"
 
 MANUFACTURER = "HabitRPG, Inc."
 NAME = "Habitica"
