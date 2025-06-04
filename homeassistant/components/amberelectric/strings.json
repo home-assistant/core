@@ -15,7 +15,7 @@
       },
       "user": {
         "data": {
-          "api_token": "API token",
+          "api_token": "[%key:common::config_flow::data::api_token%]",
           "site_id": "Site ID"
         },
         "description": "Go to {api_url} to generate an API key"
