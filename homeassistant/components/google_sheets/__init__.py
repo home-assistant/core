@@ -12,11 +12,20 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_ACCESS, DOMAIN
 from .services import register_services
 
 type GoogleSheetsConfigEntry = ConfigEntry[OAuth2Session]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Activate the Google Sheets component."""
+
+    register_services(hass)
+
+    return True
 
 
 async def async_setup_entry(
@@ -39,8 +48,6 @@ async def async_setup_entry(
     if not async_entry_has_scopes(hass, entry):
         raise ConfigEntryAuthFailed("Required scopes are not present, reauth required")
     entry.runtime_data = session
-
-    register_services(hass)
 
     return True
 
