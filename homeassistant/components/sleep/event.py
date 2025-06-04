@@ -32,8 +32,9 @@ class SleepAsAndroidEvent(StrEnum):
     """Sleep as Android events."""
 
     ALARM_CLOCK = "alarm_clock"
-    ANTI_SNORING = "antisnoring"
-    APNEA_ALARM = "apnea_alarm"
+    USER_NOTIFICATION = "user_notification"
+    SMART_WAKEUP = "smart_wakeup"
+    SLEEP_HEALTH = "sleep_health"
     LULLABY = "lullaby"
     SLEEP_PHASE = "sleep_phase"
     SLEEP_TRACKING = "sleep_tracking"
@@ -62,10 +63,22 @@ EVENT_DESCRIPTIONS: tuple[SleepAsAndroidEventEntityDescription, ...] = (
             "alarm_skip_next",
             "alarm_snooze_canceled",
             "alarm_snooze_clicked",
-            "alarm_wake_up_check",
+        ],
+    ),
+    SleepAsAndroidEventEntityDescription(
+        key=SleepAsAndroidEvent.SMART_WAKEUP,
+        translation_key=SleepAsAndroidEvent.SMART_WAKEUP,
+        event_types=[
             "before_smart_period",
-            "show_skip_next_alarm",
             "smart_period",
+        ],
+    ),
+    SleepAsAndroidEventEntityDescription(
+        key=SleepAsAndroidEvent.USER_NOTIFICATION,
+        translation_key=SleepAsAndroidEvent.USER_NOTIFICATION,
+        event_types=[
+            "alarm_wake_up_check",
+            "show_skip_next_alarm",
             "time_to_bed_alarm_alert",
         ],
     ),
@@ -101,20 +114,12 @@ EVENT_DESCRIPTIONS: tuple[SleepAsAndroidEventEntityDescription, ...] = (
         ],
     ),
     SleepAsAndroidEventEntityDescription(
-        key=SleepAsAndroidEvent.ANTI_SNORING,
-        translation_key=SleepAsAndroidEvent.ANTI_SNORING,
+        key=SleepAsAndroidEvent.SLEEP_HEALTH,
+        translation_key=SleepAsAndroidEvent.SLEEP_HEALTH,
         event_types=[
             "antisnoring",
-        ],
-        entity_registry_enabled_default=False,
-    ),
-    SleepAsAndroidEventEntityDescription(
-        key=SleepAsAndroidEvent.APNEA_ALARM,
-        translation_key=SleepAsAndroidEvent.APNEA_ALARM,
-        event_types=[
             "apnea_alarm",
         ],
-        entity_registry_enabled_default=False,
     ),
 )
 

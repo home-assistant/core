@@ -34,16 +34,34 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "alarm_alert_dismiss": "Alarm stopped",
+              "alarm_alert_dismiss": "Alarm dismissed",
               "alarm_alert_start": "Alarm started",
               "alarm_rescheduled": "Alarm rescheduled",
               "alarm_skip_next": "Alarm skipped",
               "alarm_snooze_canceled": "Snooze canceled",
-              "alarm_snooze_clicked": "Snoozing",
-              "alarm_wake_up_check": "Wake-up check notification",
+              "alarm_snooze_clicked": "Snoozing"
+            }
+          }
+        }
+      },
+      "smart_wakeup": {
+        "name": "Smart wake-up",
+        "state_attributes": {
+          "event_type": {
+            "state": {
               "before_smart_period": "45min before smart wake-up",
-              "show_skip_next_alarm": "1h before alarm",
-              "smart_period": "Smart wake-up started",
+              "smart_period": "Smart wake-up started"
+            }
+          }
+        }
+      },
+      "user_notification": {
+        "name": "User notification",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alarm_wake_up_check": "Wake-up check",
+              "show_skip_next_alarm": "Skip next alarm",
               "time_to_bed_alarm_alert": "Time to bed"
             }
           }
@@ -89,21 +107,12 @@
           }
         }
       },
-      "antisnoring": {
-        "name": "Anti-snoring",
+      "sleep_health": {
+        "name": "Sleep health",
         "state_attributes": {
           "event_type": {
             "state": {
-              "antisnoring": "Triggered"
-            }
-          }
-        }
-      },
-      "apnea_alarm": {
-        "name": "Sleep apnea",
-        "state_attributes": {
-          "event_type": {
-            "state": {
+              "antisnoring": "Anti-snoring triggered",
               "apnea_alarm": "Sleep apnea detected"
             }
           }
