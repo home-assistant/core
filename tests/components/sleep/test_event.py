@@ -6,6 +6,7 @@ from freezegun.api import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sleep.const import ATTR_EVENT, ATTR_VALUE1, ATTR_VALUE2
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -15,7 +16,6 @@ from tests.common import MockConfigEntry, snapshot_platform
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @freeze_time("2025-01-01T03:30:00.000Z")
 async def test_setup(
     hass: HomeAssistant,
@@ -78,27 +78,10 @@ async def test_setup(
                 "value2": "label",
             },
         ),
-        ("alarm_clock", {"event": "alarm_wake_up_check"}),
-        ("alarm_clock", {"event": "before_smart_period", "value1": "label"}),
-        (
-            "alarm_clock",
-            {
-                "event": "show_skip_next_alarm",
-                "value1": "1582719660934",
-                "value2": "label",
-            },
-        ),
-        ("alarm_clock", {"event": "smart_period"}),
-        (
-            "alarm_clock",
-            {
-                "event": "time_to_bed_alarm_alert",
-                "value1": "1582719660934",
-                "value2": "label",
-            },
-        ),
-        ("anti_snoring", {"event": "antisnoring"}),
-        ("sleep_apnea", {"event": "apnea_alarm"}),
+        ("smart_wake_up", {"event": "before_smart_period", "value1": "label"}),
+        ("smart_wake_up", {"event": "smart_period"}),
+        ("sleep_health", {"event": "antisnoring"}),
+        ("sleep_health", {"event": "apnea_alarm"}),
         ("lullaby", {"event": "lullaby_start"}),
         ("lullaby", {"event": "lullaby_stop"}),
         ("lullaby", {"event": "lullaby_volume_down"}),
@@ -112,15 +95,30 @@ async def test_setup(
         ("sound_recognition", {"event": "sound_event_laugh"}),
         ("sound_recognition", {"event": "sound_event_snore"}),
         ("sound_recognition", {"event": "sound_event_talk"}),
+        ("user_notification", {"event": "alarm_wake_up_check"}),
+        (
+            "user_notification",
+            {
+                "event": "show_skip_next_alarm",
+                "value1": "1582719660934",
+                "value2": "label",
+            },
+        ),
+        (
+            "user_notification",
+            {
+                "event": "time_to_bed_alarm_alert",
+                "value1": "1582719660934",
+                "value2": "label",
+            },
+        ),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @freeze_time("2025-01-01T03:30:00.000+00:00")
 async def test_webhook_event(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
-    snapshot: SnapshotAssertion,
     entity: str,
     payload: dict[str, str],
 ) -> None:
@@ -141,7 +139,10 @@ async def test_webhook_event(
     assert response.status == HTTPStatus.NO_CONTENT
 
     assert (state := hass.states.get(f"event.sleep_as_android_{entity}"))
-    assert state == snapshot
+    assert state.state == "2025-01-01T03:30:00.000+00:00"
+    assert state.attributes.get(ATTR_EVENT) == payload.get(ATTR_EVENT)
+    assert state.attributes.get(ATTR_VALUE1) == payload.get(ATTR_VALUE1)
+    assert state.attributes.get(ATTR_VALUE2) == payload.get(ATTR_VALUE2)
 
 
 async def test_webhook_invalid(
