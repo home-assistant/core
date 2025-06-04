@@ -14,7 +14,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_ACCESS, DOMAIN
+from .const import DEFAULT_ACCESS
 from .services import register_services
 
 type GoogleSheetsConfigEntry = ConfigEntry[OAuth2Session]
@@ -61,8 +61,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleSheetsConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        for service_name in hass.services.async_services_for_domain(DOMAIN):
-            hass.services.async_remove(DOMAIN, service_name)
-
     return True
