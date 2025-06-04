@@ -10,7 +10,7 @@ from pyHomee import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
@@ -24,8 +24,6 @@ AUTH_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-type HomeeConfigEntry = ConfigEntry[Homee]
 
 
 class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -90,8 +88,8 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the reconfigure flow."""
-        errors = {}
-        reconfigure_entry: HomeeConfigEntry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input:
             self.homee = Homee(

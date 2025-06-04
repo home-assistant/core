@@ -193,7 +193,7 @@ async def test_reconfigure_errors(
     mock_config_entry.runtime_data = mock_homee
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     mock_homee.get_access_token.side_effect = side_eff
@@ -238,7 +238,7 @@ async def test_reconfigure_wrong_uid(
     mock_config_entry.runtime_data = mock_homee
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -248,7 +248,7 @@ async def test_reconfigure_wrong_uid(
         },
     )
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "wrong_hub"
 
     # Confirm that the config entry is unchanged
