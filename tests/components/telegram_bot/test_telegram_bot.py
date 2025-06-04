@@ -35,6 +35,7 @@ from homeassistant.components.telegram_bot import (
     SERVICE_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE,
     SERVICE_EDIT_MESSAGE,
+    SERVICE_LEAVE_CHAT,
     SERVICE_SEND_ANIMATION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
@@ -707,6 +708,33 @@ async def test_answer_callback_query(
             {
                 ATTR_MESSAGE: "mock message",
                 ATTR_CALLBACK_QUERY_ID: 12345,
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once()
+
+
+async def test_leave_chat(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test answer callback query."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.leave_chat",
+        AsyncMock(return_value=True),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_LEAVE_CHAT,
+            {
+                ATTR_CHAT_ID: 12345,
             },
             blocking=True,
         )
