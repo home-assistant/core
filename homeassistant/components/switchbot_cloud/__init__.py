@@ -53,7 +53,6 @@ class SwitchbotDevices:
     vacuums: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     fans: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
-    lights: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
 
 
 @dataclass
