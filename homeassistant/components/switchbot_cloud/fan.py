@@ -127,7 +127,7 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         assert response is not None
         fan_speed: int | None = response.get("fanSpeed")
         if preset_mode in BatteryCirculatorFanMode.DIRECT.value:
-            self.percentage = fan_speed if fan_speed else 0
+            self.percentage = int(fan_speed) if fan_speed else 0
         else:
             self.percentage = 0
 
