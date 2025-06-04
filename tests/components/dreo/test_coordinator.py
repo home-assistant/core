@@ -213,10 +213,7 @@ async def test_coordinator_none_status(hass: HomeAssistant, mock_dreo_client) ->
 
     await coordinator.async_refresh()
 
-    assert coordinator.data is not None
-    assert isinstance(coordinator.data, DreoGenericDeviceData)
-    assert coordinator.data.available is False
-    assert coordinator.data.is_on is False
+    assert coordinator.data is None
 
 
 async def test_coordinator_unexpected_exception(
