@@ -232,7 +232,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==31.1.0
+aioesphomeapi==32.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -535,6 +535,9 @@ babel==2.15.0
 
 # homeassistant.components.homekit
 base36==0.1.1
+
+# homeassistant.components.eddystone_temperature
+# beacontools[scan]==2.1.0
 
 # homeassistant.components.scrape
 beautifulsoup4==4.13.3
@@ -1783,7 +1786,7 @@ pymiele==0.5.2
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.8.3
+pymodbus==3.9.2
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2114,7 +2117,7 @@ pyuptimerobot==22.2.0
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.15
+pyvera==0.3.16
 
 # homeassistant.components.vesync
 pyvesync==2.1.18
