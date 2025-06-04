@@ -43,6 +43,7 @@ CLOUD_DEVICE_DATA: dict[str, Any] = [
         "temperature": 15,
         "targetTemperature": 20,
         "heatingEnabled": True,
+        "energyWh": 1500,
     }
 ]
 
@@ -70,8 +71,16 @@ def mock_adax_cloud():
     with patch("homeassistant.components.adax.coordinator.Adax") as mock_adax:
         mock_adax_class = mock_adax.return_value
 
+        mock_adax_class.fetch_rooms_info = AsyncMock()
+        mock_adax_class.fetch_rooms_info.return_value = CLOUD_DEVICE_DATA
+
         mock_adax_class.get_rooms = AsyncMock()
         mock_adax_class.get_rooms.return_value = CLOUD_DEVICE_DATA
+
+        mock_adax_class.fetch_energy_info = AsyncMock()
+        mock_adax_class.fetch_energy_info.return_value = [
+            {"deviceId": "1", "energyWh": 1500}
+        ]
 
         mock_adax_class.update = AsyncMock()
         mock_adax_class.update.return_value = None
