@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 import logging
+
+from aioairq.core import AirQ
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE
@@ -15,13 +19,23 @@ from . import AirQConfigEntry, AirQCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-AIRQ_LED_BRIGHTNESS = NumberEntityDescription(
+@dataclass(frozen=True, kw_only=True)
+class AirQBrightnessDescription(NumberEntityDescription):
+    """Describes AirQ number entity responsible for brightness control."""
+
+    value: Callable[[dict], float]
+    set_value: Callable[[AirQ, float], Awaitable[None]]
+
+
+AIRQ_LED_BRIGHTNESS = AirQBrightnessDescription(
     key="airq_led_brightness",
     translation_key="airq_led_brightness",
     native_min_value=0.0,
     native_max_value=100.0,
     native_step=1.0,
     native_unit_of_measurement=PERCENTAGE,
+    value=lambda data: data["brightness"],
+    set_value=lambda device, value: device.set_current_brightness(value),
 )
 
 
@@ -46,11 +60,11 @@ class AirQLEDBrightness(CoordinatorEntity[AirQCoordinator], NumberEntity):
     def __init__(
         self,
         coordinator: AirQCoordinator,
-        description: NumberEntityDescription,
+        description: AirQBrightnessDescription,
     ) -> None:
         """Initialize a single sensor."""
         super().__init__(coordinator)
-        self.entity_description = description
+        self.entity_description: AirQBrightnessDescription = description
 
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
@@ -58,7 +72,7 @@ class AirQLEDBrightness(CoordinatorEntity[AirQCoordinator], NumberEntity):
     @property
     def native_value(self) -> float:
         """Return the brightness of the LEDs in %."""
-        return float(self.coordinator.data["brightness"])
+        return float(self.entity_description.value(self.coordinator.data))
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the brightness of the LEDs to the value in %."""
@@ -69,4 +83,4 @@ class AirQLEDBrightness(CoordinatorEntity[AirQCoordinator], NumberEntity):
         )
         self.coordinator.data["brightness"] = value
         self.async_write_ha_state()
-        await self.coordinator.airq.set_current_brightness(value)
+        await self.entity_description.set_value(self.coordinator.airq, value)
