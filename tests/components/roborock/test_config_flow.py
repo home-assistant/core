@@ -19,11 +19,11 @@ from homeassistant.components.roborock.const import CONF_ENTRY_CODE, DOMAIN, DRA
 from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .mock_data import MOCK_CONFIG, NETWORK_INFO, ROBOROCK_RRUID, USER_DATA, USER_EMAIL
 
 from tests.common import MockConfigEntry
+from tests.service_info import MockDhcpServiceInfo
 
 
 @pytest.fixture
@@ -349,9 +349,9 @@ async def test_discovery_not_setup(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=DhcpServiceInfo(
+            data=MockDhcpServiceInfo(
                 ip=NETWORK_INFO.ip,
-                macaddress=NETWORK_INFO.mac.replace(":", ""),
+                macaddress=NETWORK_INFO.mac,
                 hostname="roborock-vacuum-a72",
             ),
         )
@@ -394,9 +394,9 @@ async def test_discovery_already_setup(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=DhcpServiceInfo(
+        data=MockDhcpServiceInfo(
             ip=NETWORK_INFO.ip,
-            macaddress=NETWORK_INFO.mac.replace(":", ""),
+            macaddress=NETWORK_INFO.mac,
             hostname="roborock-vacuum-a72",
         ),
     )
