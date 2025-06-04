@@ -1,0 +1,29 @@
+{
+  "config": {
+    "flow_title": "{name} {ip_address}",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to start setup {model}?"
+      },
+      "user": {
+        "data": {
+          "ip_address": "IP Address"
+        },
+        "data_description": {
+          "ip_address": "Altruist Sensor IP address in the local network"
+        },
+        "description": "Fill in Altruist Sensor IP address in your local network"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "invalid_ip": "Invalid IP address",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "invalid_ip": "Invalid IP address",
+      "no_device_found": "Can't connect to device on {ip_address}"
+    }
+  }
+}
