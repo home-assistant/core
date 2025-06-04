@@ -12,6 +12,7 @@ from tests.common import MockConfigEntry
 
 HOMEE_ID = "00055511EECC"
 HOMEE_IP = "192.168.1.11"
+NEW_HOMEE_IP = "192.168.1.12"
 HOMEE_NAME = "TestHomee"
 TESTUSER = "testuser"
 TESTPASS = "testpass"
