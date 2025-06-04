@@ -4,6 +4,12 @@
       "alarm_clock": {
         "default": "mdi:alarm"
       },
+      "user_notification": {
+        "default": "mdi:cellphone-message"
+      },
+      "smart_wakeup": {
+        "default": "mdi:brain"
+      },
       "sleep_phase": {
         "default": "mdi:bed"
       },
@@ -16,10 +22,7 @@
       "lullaby": {
         "default": "mdi:cradle-outline"
       },
-      "antisnoring": {
-        "default": "mdi:ear-hearing-off"
-      },
-      "apnea_alarm": {
+      "sleep_health": {
         "default": "mdi:heart-pulse"
       }
     }
