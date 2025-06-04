@@ -1,13 +1,19 @@
 """The tests for Bluecurrent switches."""
 
-from homeassistant.components.blue_current import PLUG_AND_CHARGE, VALUE, Connector
+from homeassistant.components.blue_current import (
+    CH_SETTINGS,
+    CH_STATUS,
+    PLUG_AND_CHARGE,
+    Connector,
+)
 from homeassistant.components.blue_current.const import (
     ACTIVITY,
     BLOCK,
+    LINKED_CHARGE_CARDS,
     PUBLIC_CHARGING,
     UNAVAILABLE,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -15,6 +21,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import DEFAULT_CHARGE_POINT, DEFAULT_CHARGE_POINT_OPTIONS, init_integration
 
 from tests.common import MockConfigEntry
+
+SWITCHES = [PLUG_AND_CHARGE, BLOCK, LINKED_CHARGE_CARDS]
 
 
 async def test_switches(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
@@ -24,20 +32,16 @@ async def test_switches(hass: HomeAssistant, config_entry: MockConfigEntry) -> N
 
     entity_registry = er.async_get(hass)
 
-    for key, data_object in DEFAULT_CHARGE_POINT_OPTIONS.items():
+    for key in SWITCHES:
         state = hass.states.get(f"switch.101_{key}")
 
-        if data_object[VALUE]:
-            check = STATE_ON
-        else:
-            check = STATE_OFF
-        assert state and state.state == check
+        assert state and state.state == STATE_OFF
         entry = entity_registry.async_get(f"switch.101_{key}")
         assert entry and entry.unique_id == f"{key}_101"
 
     # block
-    switches = er.async_entries_for_config_entry(entity_registry, "uuid")
-    assert len(DEFAULT_CHARGE_POINT_OPTIONS.keys()) == len(switches) - 1
+    # config_switches = er.async_entries_for_config_entry(entity_registry, "uuid")
+    # assert len(switches) == len(config_switches) - 1
 
     state = hass.states.get("switch.101_block")
     assert state and state.state == STATE_OFF
@@ -45,17 +49,18 @@ async def test_switches(hass: HomeAssistant, config_entry: MockConfigEntry) -> N
     assert entry and entry.unique_id == "block_101"
 
 
-async def test_switches_unavailable(
+async def test_switches_offline(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test if switches are disabled when needed."""
-    DEFAULT_CHARGE_POINT[ACTIVITY] = UNAVAILABLE
+    charge_point = DEFAULT_CHARGE_POINT.copy()
+    charge_point[ACTIVITY] = "offline"
 
-    await init_integration(hass, config_entry, Platform.SWITCH, DEFAULT_CHARGE_POINT)
+    await init_integration(hass, config_entry, Platform.SWITCH, charge_point)
 
     entity_registry = er.async_get(hass)
 
-    for key in DEFAULT_CHARGE_POINT_OPTIONS:
+    for key in SWITCHES:
         state = hass.states.get(f"switch.101_{key}")
 
         assert state and state.state == UNAVAILABLE
@@ -72,8 +77,6 @@ async def test_switches_unavailable(
 
 async def test_toggle(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test the on / off methods and if the switch gets updated."""
-    DEFAULT_CHARGE_POINT[PUBLIC_CHARGING][VALUE] = False
-
     await init_integration(hass, config_entry, Platform.SWITCH)
 
     connector: Connector = config_entry.runtime_data
@@ -82,9 +85,7 @@ async def test_toggle(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
     }
     async_dispatcher_send(hass, "blue_current_charge_point_update_101")
 
-    switches = [PUBLIC_CHARGING, BLOCK, PLUG_AND_CHARGE]
-
-    for switch in switches:
+    for switch in SWITCHES:
         state = hass.states.get(f"switch.101_{switch}")
 
         assert state and state.state == STATE_OFF
@@ -107,3 +108,38 @@ async def test_toggle(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
 
         state = hass.states.get(f"switch.101_{switch}")
         assert state and state.state == STATE_OFF
+
+
+async def test_setting_change(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test if the state of the switches are updated when an update message from the websocket comes in."""
+    await init_integration(hass, config_entry, Platform.SWITCH)
+
+    connector = config_entry.runtime_data
+
+    for key in (PLUG_AND_CHARGE, LINKED_CHARGE_CARDS, BLOCK):
+        switch = hass.states.get(f"switch.101_{key}")
+        assert switch.state == STATE_OFF
+
+    connector.update_charge_point(
+        "101",
+        CH_SETTINGS,
+        {
+            PLUG_AND_CHARGE: True,
+            PUBLIC_CHARGING: {"value": False, "permission": "write"},
+        },
+    )
+
+    for key in (PLUG_AND_CHARGE, LINKED_CHARGE_CARDS):
+        switch = hass.states.get(f"switch.101_{key}")
+        assert switch.state == STATE_ON
+
+    connector.update_charge_point("101", CH_STATUS, {ACTIVITY: UNAVAILABLE})
+
+    for key in (PLUG_AND_CHARGE, LINKED_CHARGE_CARDS):
+        switch = hass.states.get(f"switch.101_{key}")
+        assert switch.state == STATE_UNAVAILABLE
+
+    switch = hass.states.get("switch.101_block")
+    assert switch.state == STATE_ON

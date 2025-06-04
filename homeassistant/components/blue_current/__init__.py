@@ -134,13 +134,16 @@ class Connector:
     def update_charge_point(self, evse_id: str, update_type: str, data: dict) -> None:
         """Update the charge point data."""
         charge_point = self.charge_points[evse_id]
-        if update_type == CH_STATUS:
-            charge_point.update(data)
-
-        elif update_type == CH_SETTINGS:
+        if update_type == CH_SETTINGS:
+            # Update the plug and charge object. The library parses this object to a bool instead of an object.
             plug_and_charge = charge_point.get(PLUG_AND_CHARGE)
             if plug_and_charge is not None:
                 plug_and_charge[VALUE] = data[PLUG_AND_CHARGE]
+
+            # Remove the plug and charge object from the data list before updating.
+            del data[PLUG_AND_CHARGE]
+
+        charge_point.update(data)
 
         self.dispatch_charge_point_update_signal(evse_id)
 
