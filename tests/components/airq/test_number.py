@@ -71,7 +71,7 @@ async def test_set_native_value_calls_api_and_updates_state(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """async_set_native_value must await the API, update coordinator.data, and write state."""
-    # Check that the fixtures set the initial brightness as expected
+    # check that the fixtures set the initial brightness as expected
     assert number_entity.native_value == INIT_BRIGHTNESS
 
     # ensure that the new brightness will be different
@@ -81,9 +81,27 @@ async def test_set_native_value_calls_api_and_updates_state(
     spy = AsyncMock(return_value=None)
     monkeypatch.setattr(AirQ, "set_current_brightness", spy)
 
+    # grab the coordinator (so we can update its data later)
+    coord: AirQCoordinator = number_entity.coordinator  # type: ignore[assignment]
+
+    # monkey-patch coordinator.async_request_refresh so it “publishes” a fresh
+    # data dict via async_set_updated_data(...)
+    async def fake_async_request_refresh() -> None:
+        # This call will:
+        #  - set coord.data with an updated payload containing new_brightness_percent
+        #  - inform every CoordinatorEntity (including number_entity) that data has changed
+        coord.async_set_updated_data(
+            coord.data | {"brightness": new_brightness_percent}
+        )
+
+    monkeypatch.setattr(coord, "async_request_refresh", fake_async_request_refresh)
+
     # call the method under test
     await number_entity.async_set_native_value(new_brightness_percent)
+    # Wait for Home Assistant to finish writing states
+    await hass.async_block_till_done()
 
+    # tests themselves:
     # 1) did we call the API?
     spy.assert_awaited_once_with(new_brightness_percent)
 

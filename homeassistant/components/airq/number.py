@@ -77,10 +77,9 @@ class AirQLEDBrightness(CoordinatorEntity[AirQCoordinator], NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the brightness of the LEDs to the value in %."""
         _LOGGER.debug(
-            "Changing LED brighntess from %.1f%% to %.1f%%",
+            "Changing LED brighntess from %.0f%% to %.0f%%",
             self.coordinator.data["brightness"],
             value,
         )
-        self.coordinator.data["brightness"] = value
-        self.async_write_ha_state()
         await self.entity_description.set_value(self.coordinator.airq, value)
+        await self.coordinator.async_request_refresh()
