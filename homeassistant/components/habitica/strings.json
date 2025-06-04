@@ -426,6 +426,14 @@
       "quest_scrolls": {
         "name": "Quest scrolls",
         "unit_of_measurement": "scrolls"
+      },
+      "pending_damage": {
+        "name": "Pending damage",
+        "unit_of_measurement": "damage"
+      },
+      "pending_quest_items": {
+        "name": "Pending quest items",
+        "unit_of_measurement": "items"
       }
     },
     "switch": {

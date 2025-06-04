@@ -659,7 +659,15 @@
     },
     "fan": {
       "fan": {
-        "name": "[%key:component::fan::title%]"
+        "name": "[%key:component::fan::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "smart": "Smart"
+            }
+          }
+        }
       },
       "fan_group": {
         "name": "Fan group"
@@ -667,7 +675,14 @@
     },
     "light": {
       "light": {
-        "name": "[%key:component::light::title%]"
+        "name": "[%key:component::light::title%]",
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "colorloop": "Color loop"
+            }
+          }
+        }
       },
       "light_group": {
         "name": "Light group"
@@ -1137,6 +1152,9 @@
       },
       "external_temperature_sensor_value": {
         "name": "External temperature sensor value"
+      },
+      "update_frequency": {
+        "name": "Update frequency"
       }
     },
     "select": {
@@ -1367,6 +1385,9 @@
       },
       "alarm_sound_mode": {
         "name": "Alarm sound mode"
+      },
+      "external_switch_type": {
+        "name": "External switch type"
       }
     },
     "sensor": {

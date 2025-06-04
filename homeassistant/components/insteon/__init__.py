@@ -25,9 +25,9 @@ from .const import (
     DOMAIN,
     INSTEON_PLATFORMS,
 )
+from .services import async_register_services
 from .utils import (
     add_insteon_events,
-    async_register_services,
     get_device_platforms,
     register_new_device_callback,
 )

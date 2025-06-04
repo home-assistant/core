@@ -42,6 +42,7 @@ async def async_setup_entry(
 class QbusSwitch(QbusEntity, SwitchEntity):
     """Representation of a Qbus switch entity."""
 
+    _attr_name = None
     _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(self, mqtt_output: QbusMqttOutput) -> None:

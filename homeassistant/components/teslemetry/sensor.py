@@ -205,7 +205,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="charge_state_charging_state",
         polling=True,
         streaming_listener=lambda vehicle, callback: vehicle.listen_DetailedChargeState(
-            lambda value: None if value is None else callback(value.lower())
+            lambda value: callback(None if value is None else CHARGE_STATES.get(value))
         ),
         polling_value_fn=lambda value: CHARGE_STATES.get(str(value)),
         options=list(CHARGE_STATES.values()),
@@ -533,7 +533,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="bms_state",
         streaming_listener=lambda vehicle, callback: vehicle.listen_BMSState(
-            lambda value: None if value is None else callback(BMS_STATES.get(value))
+            lambda value: callback(None if value is None else BMS_STATES.get(value))
         ),
         device_class=SensorDeviceClass.ENUM,
         options=list(BMS_STATES.values()),

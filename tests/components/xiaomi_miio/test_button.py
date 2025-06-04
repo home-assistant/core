@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
-    DOMAIN as XIAOMI_DOMAIN,
+    DOMAIN,
     MODELS_VACUUM,
 )
 from homeassistant.const import (
@@ -84,7 +84,7 @@ async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     entity_id = f"{BUTTON_DOMAIN}.{entity_name}"
 
     config_entry = MockConfigEntry(
-        domain=XIAOMI_DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
         title=entity_name,
         data={
