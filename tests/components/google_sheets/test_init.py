@@ -200,7 +200,7 @@ async def test_append_sheet(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    with patch("homeassistant.components.google_sheets.Client") as mock_client:
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -226,7 +226,7 @@ async def test_append_sheet_multiple_rows(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    with patch("homeassistant.components.google_sheets.Client") as mock_client:
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -258,7 +258,7 @@ async def test_append_sheet_api_error(
     with (
         pytest.raises(HomeAssistantError),
         patch(
-            "homeassistant.components.google_sheets.Client.request",
+            "homeassistant.components.google_sheets.services.Client.request",
             side_effect=APIError(response),
         ),
     ):
