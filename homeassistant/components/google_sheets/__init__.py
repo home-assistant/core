@@ -8,14 +8,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_ACCESS
+from .const import DEFAULT_ACCESS, DOMAIN
 from .services import register_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type GoogleSheetsConfigEntry = ConfigEntry[OAuth2Session]
 
