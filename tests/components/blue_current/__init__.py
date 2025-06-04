@@ -12,10 +12,17 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+DEFAULT_CHARGE_POINT_OPTIONS = {
+    "plug_and_charge": {"value": False, "permission": "write"},
+    "linked_charge_cards_only": {"value": True, "permission": "write"},
+}
+
 DEFAULT_CHARGE_POINT = {
     "evse_id": "101",
     "model_type": "",
     "name": "",
+    "activity": "available",
+    **DEFAULT_CHARGE_POINT_OPTIONS,
 }
 
 

@@ -17,15 +17,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PLUG_AND_CHARGE, BlueCurrentConfigEntry, Connector
-from .const import AVAILABLE, BLOCK, LINKED_CHARGE_CARDS, LOGGER, UNAVAILABLE, VALUE
+from .const import (
+    AVAILABLE,
+    BLOCK,
+    LINKED_CHARGE_CARDS,
+    PUBLIC_CHARGING,
+    UNAVAILABLE,
+    VALUE,
+)
 from .entity import ChargepointEntity
-
-
-@dataclass(kw_only=True, frozen=True)
-class BlueCurrentSwitchEntityDescriptionMixin:
-    """Mixin for the called functions."""
-
-    function: Callable[[Client, str, bool], Any]
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -110,12 +110,9 @@ class ChargePointSwitch(ChargepointEntity, SwitchEntity):
 
     async def call_function(self, value: bool) -> None:
         """Call the function to set setting."""
-        try:
-            await self.entity_description.function(
-                self.connector.client, self.evse_id, value
-            )
-        except ConnectionError:
-            LOGGER.error("No connection")
+        await self.entity_description.function(
+            self.connector.client, self.evse_id, value
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -133,18 +130,29 @@ class ChargePointSwitch(ChargepointEntity, SwitchEntity):
     def update_from_latest_data(self) -> None:
         """Fetch new state data for the switch."""
 
+        def get_updated_switch_state(key: str = self.key) -> bool | None:
+            data_object = self.connector.charge_points[self.evse_id].get(key)
+            return data_object[VALUE] if data_object is not None else None
+
         activity = self.connector.charge_points[self.evse_id].get("activity")
 
-        if self.key in [PLUG_AND_CHARGE, LINKED_CHARGE_CARDS]:
-            data_object = self.connector.charge_points[self.evse_id].get(self.key)
-            new_value = data_object[VALUE] if data_object is not None else None
+        if self.key == PLUG_AND_CHARGE:
+            is_on = get_updated_switch_state()
 
-            if new_value is not None and activity == AVAILABLE:
-                self._attr_is_on = new_value
+            if is_on is not None and activity == AVAILABLE:
+                self._attr_is_on = is_on
                 self.has_value = True
             else:
-                self._attr_is_on = False
+                self.has_value = False
+
+        elif self.key == LINKED_CHARGE_CARDS:
+            is_on = get_updated_switch_state(PUBLIC_CHARGING)
+
+            if is_on is not None and activity == AVAILABLE:
+                self._attr_is_on = not is_on
                 self.has_value = True
+            else:
+                self.has_value = False
 
         elif self.key == BLOCK:
             self._attr_is_on = activity == UNAVAILABLE

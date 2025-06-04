@@ -15,7 +15,7 @@ from bluecurrent_api.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_API_TOKEN, Platform
+from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -25,9 +25,7 @@ from .const import (
     CH_STATUS,
     DOMAIN,
     EVSE_ID,
-    LINKED_CHARGE_CARDS,
     LOGGER,
-    MODEL_TYPE,
     PLUG_AND_CHARGE,
     VALUE,
 )
@@ -131,12 +129,7 @@ class Connector:
 
     def add_charge_point(self, evse_id: str, charge_point: dict[str, Any]) -> None:
         """Add a charge point to charge_points."""
-        self.charge_points[evse_id] = {
-            MODEL_TYPE: charge_point[MODEL_TYPE],
-            ATTR_NAME: charge_point[ATTR_NAME],
-            PLUG_AND_CHARGE: charge_point[PLUG_AND_CHARGE],
-            LINKED_CHARGE_CARDS: charge_point.get(LINKED_CHARGE_CARDS),
-        }
+        self.charge_points[evse_id] = charge_point
 
     def update_charge_point(self, evse_id: str, update_type: str, data: dict) -> None:
         """Update the charge point data."""
