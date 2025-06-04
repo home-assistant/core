@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from py_nextbus import NextBusClient
 from py_nextbus.client import NextBusFormatError, NextBusHTTPError
@@ -55,6 +55,7 @@ class NextBusDataUpdateCoordinator(
         """Check if this coordinator is tracking any routes."""
         return len(self._route_stops) > 0
 
+    @override
     async def _async_update_data(self) -> dict[RouteStop, dict[str, Any]]:
         """Fetch data from NextBus."""
 
@@ -63,6 +64,8 @@ class NextBusDataUpdateCoordinator(
             self._predictions
             # If are over our rate limit percentage, we should throttle
             and self.client.rate_limit_percent >= THROTTLE_PRECENTAGE
+            # But only if we have a reset time to unthrottle
+            and self.client.rate_limit_reset is not None
             # Unless we are after the reset time
             and datetime.now() < self.client.rate_limit_reset
         ):
