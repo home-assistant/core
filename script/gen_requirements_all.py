@@ -238,7 +238,7 @@ multidict>=6.4.2
 # rpds-py > 0.25.0 requires cargo 1.84.0
 # Stable Alpine current only ships cargo 1.83.0
 # No wheels upstream available for armhf & armv7
-rpds-py==0.24.0
+# rpds-py==0.24.0
 """
 
 GENERATED_MESSAGE = (
