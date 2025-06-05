@@ -1,6 +1,5 @@
 """Tests for miele sensor module."""
 
-from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,6 +17,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_pla
 
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("mock_now")
 async def test_sensor_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
@@ -104,6 +104,7 @@ async def test_hob_sensor_states(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_now")
 async def test_laundry_scenario(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
@@ -114,17 +115,15 @@ async def test_laundry_scenario(
     expected_sensor_states: dict[str, list[str]],
 ) -> None:
     """Parametrized test for verifying sensor state transitions for laundry devices."""
-    fixed_now = datetime(2025, 5, 31, 12, 30, tzinfo=UTC)
 
-    with patch("homeassistant.util.dt.now", return_value=fixed_now):
-        await mock_sensor_transitions(
-            hass,
-            mock_miele_client,
-            mock_config_entry,
-            device_name,
-            json_sequence,
-            expected_sensor_states,
-        )
+    await mock_sensor_transitions(
+        hass,
+        mock_miele_client,
+        mock_config_entry,
+        device_name,
+        json_sequence,
+        expected_sensor_states,
+    )
 
 
 @pytest.mark.parametrize("load_device_file", ["laundry_scenario/003_rinse_hold.json"])
