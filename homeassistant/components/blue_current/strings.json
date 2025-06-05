@@ -22,6 +22,16 @@
       "wrong_account": "Wrong account: Please authenticate with the API token for {email}."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "card": "Card"
+        },
+        "description": "Select the charge card you want to use"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "activity": {
@@ -118,11 +128,21 @@
       "stop_charge_session": {
         "name": "Stop charge session"
       },
+      "start_charge_session": {
+        "name": "Start charge session"
+      },
       "reboot": {
         "name": "Reboot"
       },
       "reset": {
         "name": "Reset"
+      }
+    }
+  },
+  "selector": {
+    "select_charge_card": {
+      "options": {
+        "without_charge_card": "Without charge card"
       }
     }
   }
