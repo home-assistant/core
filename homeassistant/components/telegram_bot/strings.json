@@ -844,16 +844,16 @@
       }
     },
     "leave_chat": {
-      "name": "Leave chat.",
-      "description": "Remove the bot from the chat.",
+      "name": "Leave chat",
+      "description": "Removes the bot from the chat.",
       "fields": {
         "config_entry_id": {
-          "name": "Config entry ID",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
           "description": "The config entry representing the Telegram bot to leave the chat."
         },
         "chat_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
-          "description": "Chat ID of the group where to remove the bot."
+          "description": "Chat ID of the group from which the bot should be removed."
         }
       }
     }
