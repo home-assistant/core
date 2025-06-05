@@ -48,7 +48,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 errors["base"] = "invalid_ip"
 
-        data_schema = vol.Schema({vol.Required("ip_address"): str})
+        data_schema = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
 
         return self.async_show_form(
             step_id="user",
