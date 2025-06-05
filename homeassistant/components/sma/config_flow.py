@@ -218,5 +218,6 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PASSWORD): cv.string,
                 }
             ),
+            description_placeholders={CONF_HOST: self._data[CONF_HOST]},
             errors=errors,
         )
