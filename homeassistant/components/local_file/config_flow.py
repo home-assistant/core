@@ -50,18 +50,12 @@ DATA_SCHEMA_SETUP = vol.Schema(
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
-        schema=DATA_SCHEMA_SETUP,
-        validate_user_input=validate_options,
-    ),
-    "import": SchemaFlowFormStep(
-        schema=DATA_SCHEMA_SETUP,
-        validate_user_input=validate_options,
-    ),
+        schema=DATA_SCHEMA_SETUP, validate_user_input=validate_options
+    )
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
-        DATA_SCHEMA_OPTIONS,
-        validate_user_input=validate_options,
+        DATA_SCHEMA_OPTIONS, validate_user_input=validate_options
     )
 }
 

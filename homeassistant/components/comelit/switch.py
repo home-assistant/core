@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
+from .utils import bridge_api_call
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -56,6 +57,7 @@ class ComelitSwitchEntity(ComelitBridgeBaseEntity, SwitchEntity):
         if device.type == OTHER:
             self._attr_device_class = SwitchDeviceClass.OUTLET
 
+    @bridge_api_call
     async def _switch_set_state(self, state: int) -> None:
         """Set desired switch state."""
         await self.coordinator.api.set_device_status(
@@ -75,4 +77,7 @@ class ComelitSwitchEntity(ComelitBridgeBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if switch is on."""
-        return self.coordinator.data[OTHER][self._device.index].status == STATE_ON
+        return (
+            self.coordinator.data[self._device.type][self._device.index].status
+            == STATE_ON
+        )

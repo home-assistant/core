@@ -1,11 +1,12 @@
 """Entity base class for the Miele integration."""
 
-from pymiele import MieleDevice
+from pymiele import MieleAction, MieleDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .api import AsyncConfigEntryAuth
 from .const import DEVICE_TYPE_TAGS, DOMAIN, MANUFACTURER, MieleAppliance, StateStatus
 from .coordinator import MieleDataUpdateCoordinator
 
@@ -44,6 +45,16 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
     def device(self) -> MieleDevice:
         """Return the device object."""
         return self.coordinator.data.devices[self._device_id]
+
+    @property
+    def action(self) -> MieleAction:
+        """Return the actions object."""
+        return self.coordinator.data.actions[self._device_id]
+
+    @property
+    def api(self) -> AsyncConfigEntryAuth:
+        """Return the api object."""
+        return self.coordinator.api
 
     @property
     def available(self) -> bool:

@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN as FLO_DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 type FloConfigEntry = ConfigEntry[FloRuntimeData]
 
@@ -55,7 +55,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=f"{FLO_DOMAIN}-{device_id}",
+            name=f"{DOMAIN}-{device_id}",
             update_interval=timedelta(seconds=60),
         )
 
