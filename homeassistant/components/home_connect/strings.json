@@ -11,16 +11,21 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Home Connect integration needs to re-authenticate your account"
+      },
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Home Connect device on your network. Press **Submit** to continue setting up Home Connect."
       }
     },
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "wrong_account": "Please ensure you reconfigure against the same account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -110,6 +115,17 @@
     }
   },
   "issues": {
+    "home_connect_too_many_connected_paired_events": {
+      "title": "{appliance_name} sent too many connected or paired events",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::home_connect_too_many_connected_paired_events::title%]",
+            "description": "The appliance \"{appliance_name}\" has been reported as connected or paired {times} times in less than {time_window} minutes, so refreshes on connected or paired events has been disabled to avoid exceeding the API rate limit.\n\nPlease refer to the [Home Connect Wi-Fi requirements and recommendations]({home_connect_resource_url}). If everything seems right with your network configuration, restart the appliance.\n\nClick \"submit\" to re-enable the updates.\nIf the issue persists, please create an issue in the [Home Assistant core repository]({home_assistant_core_new_issue_url})."
+          }
+        }
+      }
+    },
     "deprecated_time_alarm_clock_in_automations_scripts": {
       "title": "Deprecated alarm clock entity detected in some automations or scripts",
       "fix_flow": {
@@ -132,17 +148,6 @@
         }
       }
     },
-    "deprecated_binary_common_door_sensor": {
-      "title": "Deprecated binary door sensor detected in some automations or scripts",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::home_connect::issues::deprecated_binary_common_door_sensor::title%]",
-            "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
-          }
-        }
-      }
-    },
     "deprecated_command_actions": {
       "title": "The command related actions are deprecated in favor of the new buttons",
       "fix_flow": {
@@ -150,28 +155,6 @@
           "confirm": {
             "title": "[%key:component::home_connect::issues::deprecated_command_actions::title%]",
             "description": "The `pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please update your automations, scripts and panels that use this action to use the button entities instead, and press on submit to fix the issue."
-          }
-        }
-      }
-    },
-    "deprecated_program_switch_in_automations_scripts": {
-      "title": "Deprecated program switch detected in some automations or scripts",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::home_connect::issues::deprecated_program_switch_in_automations_scripts::title%]",
-            "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
-          }
-        }
-      }
-    },
-    "deprecated_program_switch": {
-      "title": "Deprecated program switch entities",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::home_connect::issues::deprecated_program_switch::title%]",
-            "description": "The switch entity `{entity_id}` and all the other program switches are deprecated.\n\nPlease use the active program select entity instead."
           }
         }
       }
@@ -232,7 +215,7 @@
         "consumer_products_coffee_maker_program_coffee_world_black_eye": "Black eye",
         "consumer_products_coffee_maker_program_coffee_world_dead_eye": "Dead eye",
         "consumer_products_coffee_maker_program_beverage_hot_water": "Hot water",
-        "dishcare_dishwasher_program_pre_rinse": "Pre_rinse",
+        "dishcare_dishwasher_program_pre_rinse": "Pre-rinse",
         "dishcare_dishwasher_program_auto_1": "Auto 1",
         "dishcare_dishwasher_program_auto_2": "Auto 2",
         "dishcare_dishwasher_program_auto_3": "Auto 3",
@@ -250,7 +233,7 @@
         "dishcare_dishwasher_program_intensiv_power": "Intensive power",
         "dishcare_dishwasher_program_magic_daily": "Magic daily",
         "dishcare_dishwasher_program_super_60": "Super 60ºC",
-        "dishcare_dishwasher_program_kurz_60": "Kurz 60ºC",
+        "dishcare_dishwasher_program_kurz_60": "Speed 60ºC",
         "dishcare_dishwasher_program_express_sparkle_65": "Express sparkle 65ºC",
         "dishcare_dishwasher_program_machine_care": "Machine care",
         "dishcare_dishwasher_program_steam_fresh": "Steam fresh",
@@ -1536,7 +1519,7 @@
           "pause": "[%key:common::state::paused%]",
           "actionrequired": "Action required",
           "finished": "Finished",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "aborting": "Aborting"
         }
       },
@@ -1549,34 +1532,39 @@
         }
       },
       "coffee_counter": {
-        "name": "Coffees"
+        "name": "Coffees",
+        "unit_of_measurement": "coffees"
       },
       "powder_coffee_counter": {
-        "name": "Powder coffees"
+        "name": "Powder coffees",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::coffee_counter::unit_of_measurement%]"
       },
       "hot_water_counter": {
         "name": "Hot water"
       },
       "hot_water_cups_counter": {
-        "name": "Hot water cups"
+        "name": "Hot water cups",
+        "unit_of_measurement": "cups"
       },
       "hot_milk_counter": {
-        "name": "Hot milk cups"
+        "name": "Hot milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "frothy_milk_counter": {
-        "name": "Frothy milk cups"
+        "name": "Frothy milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "milk_counter": {
-        "name": "Milk cups"
+        "name": "Milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "coffee_and_milk_counter": {
-        "name": "Coffee and milk cups"
+        "name": "Coffee and milk cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "ristretto_espresso_counter": {
-        "name": "Ristretto espresso cups"
-      },
-      "battery_level": {
-        "name": "Battery level"
+        "name": "Ristretto espresso cups",
+        "unit_of_measurement": "[%key:component::home_connect::entity::sensor::hot_water_cups_counter::unit_of_measurement%]"
       },
       "camera_state": {
         "name": "Camera state",
@@ -1587,7 +1575,7 @@
           "streaminglocal": "Streaming local",
           "streamingcloud": "Streaming cloud",
           "streaminglocal_and_cloud": "Streaming local and cloud",
-          "error": "Error"
+          "error": "[%key:common::state::error%]"
         }
       },
       "last_selected_map": {

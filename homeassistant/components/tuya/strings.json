@@ -101,6 +101,20 @@
         "name": "Door 3"
       }
     },
+    "event": {
+      "numbered_button": {
+        "name": "Button {button_number}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Clicked",
+              "double_click": "Double-clicked",
+              "press": "Long-pressed"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "backlight": {
         "name": "Backlight"
@@ -288,9 +302,9 @@
       "motion_sensitivity": {
         "name": "Motion detection sensitivity",
         "state": {
-          "0": "Low sensitivity",
-          "1": "Medium sensitivity",
-          "2": "High sensitivity"
+          "0": "[%key:common::state::low%]",
+          "1": "[%key:common::state::medium%]",
+          "2": "[%key:common::state::high%]"
         }
       },
       "record_mode": {
@@ -321,9 +335,9 @@
       "vacuum_cistern": {
         "name": "Water tank adjustment",
         "state": {
-          "low": "Low",
+          "low": "[%key:common::state::low%]",
           "middle": "Middle",
-          "high": "High",
+          "high": "[%key:common::state::high%]",
           "closed": "[%key:common::state::closed%]"
         }
       },
@@ -404,7 +418,7 @@
       "humidifier_spray_mode": {
         "name": "Spray mode",
         "state": {
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "health": "Health",
           "sleep": "Sleep",
           "humidity": "Humidity",
@@ -447,6 +461,20 @@
           "120h": "120h",
           "144h": "144h",
           "168h": "168h"
+        }
+      },
+      "blanket_level": {
+        "state": {
+          "level_1": "Low",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9",
+          "level_10": "High"
         }
       }
     },
@@ -640,6 +668,18 @@
           "level_5": "Level 5",
           "level_6": "Level 6"
         }
+      },
+      "uv_runtime": {
+        "name": "UV runtime"
+      },
+      "pump_time": {
+        "name": "Water pump duration"
+      },
+      "filter_duration": {
+        "name": "Filter duration"
+      },
+      "water_time": {
+        "name": "Water usage duration"
       }
     },
     "switch": {

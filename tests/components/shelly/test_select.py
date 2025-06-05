@@ -3,6 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 
 from homeassistant.components.select import (
@@ -11,8 +12,11 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_PLATFORM,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -81,7 +85,7 @@ async def test_rpc_device_virtual_enum(
         blocking=True,
     )
     # 'Title 1' corresponds to 'option 1'
-    assert mock_rpc_device.call_rpc.call_args[0][1] == {"id": 203, "value": "option 1"}
+    mock_rpc_device.enum_set.assert_called_once_with(203, "option 1")
     mock_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
@@ -149,3 +153,108 @@ async def test_rpc_remove_virtual_enum_when_orphaned(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while calling action for select.test_name_enum_203 of Test name",
+        ),
+        (
+            RpcCallError(999),
+            "RPC call error occurred while calling action for select.test_name_enum_203 of Test name",
+        ),
+    ],
+)
+async def test_select_set_exc(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test select setting with exception."""
+    config = deepcopy(mock_rpc_device.config)
+    config["enum:203"] = {
+        "name": None,
+        "options": ["option 1", "option 2", "option 3"],
+        "meta": {
+            "ui": {
+                "view": "dropdown",
+                "titles": {"option 1": "Title 1", "option 2": None},
+            }
+        },
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["enum:203"] = {"value": "option 1"}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    mock_rpc_device.enum_set.side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            SELECT_PLATFORM,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: f"{SELECT_PLATFORM}.test_name_enum_203",
+                ATTR_OPTION: "option 2",
+            },
+            blocking=True,
+        )
+
+
+async def test_select_set_reauth_error(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test select setting with authentication error."""
+    config = deepcopy(mock_rpc_device.config)
+    config["enum:203"] = {
+        "name": None,
+        "options": ["option 1", "option 2", "option 3"],
+        "meta": {
+            "ui": {
+                "view": "dropdown",
+                "titles": {"option 1": "Title 1", "option 2": None},
+            }
+        },
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["enum:203"] = {"value": "option 1"}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    entry = await init_integration(hass, 3)
+
+    mock_rpc_device.enum_set.side_effect = InvalidAuthError
+
+    await hass.services.async_call(
+        SELECT_PLATFORM,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: f"{SELECT_PLATFORM}.test_name_enum_203",
+            ATTR_OPTION: "option 2",
+        },
+        blocking=True,
+    )
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id

@@ -36,11 +36,13 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType as HAMediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.const import ATTR_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -74,7 +76,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import MusicAssistantEntity
-from .media_browser import async_browse_media
+from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
 if TYPE_CHECKING:
@@ -91,6 +93,7 @@ SUPPORTED_FEATURES_BASE = (
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
     | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.SEARCH_MEDIA
     | MediaPlayerEntityFeature.MEDIA_ENQUEUE
     | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     | MediaPlayerEntityFeature.SEEK
@@ -151,6 +154,9 @@ async def async_setup_entry(
             assert event.object_id is not None
         if event.object_id in added_ids:
             return
+        player = mass.players.get(event.object_id)
+        if TYPE_CHECKING:
+            assert player is not None
         if not player.expose_to_ha:
             return
         added_ids.add(event.object_id)
@@ -221,6 +227,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._set_supported_features()
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
         self._prev_time: float = 0
+        self._source_list_mapping: dict[str, str] = {}
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -286,6 +293,20 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState(player.state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
+        # active source and source list (translate to HA source names)
+        source_mappings: dict[str, str] = {}
+        active_source_name: str | None = None
+        for source in player.source_list:
+            if source.id == player.active_source:
+                active_source_name = source.name
+            if source.passive:
+                # ignore passive sources because HA does not differentiate between
+                # active and passive sources
+                continue
+            source_mappings[source.name] = source.id
+        self._attr_source_list = list(source_mappings.keys())
+        self._source_list_mapping = source_mappings
+        self._attr_source = active_source_name
 
         group_members: list[str] = []
         if player.group_childs:
@@ -454,6 +475,16 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         await self.mass.players.player_command_ungroup(self.player_id)
 
     @catch_musicassistant_error
+    async def async_select_source(self, source: str) -> None:
+        """Select input source."""
+        source_id = self._source_list_mapping.get(source)
+        if source_id is None:
+            raise ServiceValidationError(
+                f"Source '{source}' not found for player {self.name}"
+            )
+        await self.mass.players.player_command_select_source(self.player_id, source_id)
+
+    @catch_musicassistant_error
     async def _async_handle_play_media(
         self,
         media_id: list[str],
@@ -593,6 +624,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             media_content_type,
         )
 
+    async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
+        """Search media."""
+        return await async_search_media(
+            self.mass,
+            query,
+        )
+
     def _update_media_image_url(
         self, player: Player, queue: PlayerQueue | None
     ) -> None:
@@ -722,4 +760,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         if self.player.power_control != PLAYER_CONTROL_NONE:
             supported_features |= MediaPlayerEntityFeature.TURN_ON
             supported_features |= MediaPlayerEntityFeature.TURN_OFF
+        if PlayerFeature.SELECT_SOURCE in self.player.supported_features:
+            supported_features |= MediaPlayerEntityFeature.SELECT_SOURCE
         self._attr_supported_features = supported_features

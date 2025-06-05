@@ -1,0 +1,237 @@
+{
+  "items": [
+    {
+      "deviceId": "6a7d5349-0a66-0277-058d-000001200101",
+      "name": "Heat Pump",
+      "label": "Heat Pump Main",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-SAC-EHS-000001-SUB",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "c411c5a8-ace8-4fa8-bb60-91525ac83273",
+      "ownerId": "d1da8ead-6b9d-64a2-ca29-2a25e4c259ca",
+      "roomId": "e6fa0aa4-08e7-45f7-8ec7-35c9c60908f9",
+      "deviceTypeName": "Samsung OCF Air Conditioner",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "airConditionerMode",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "demandResponseLoadControl",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "custom.energyType",
+              "version": 1
+            },
+            {
+              "id": "custom.outingMode",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceReportStateConfiguration",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sacDisplayCondition",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sensingOnSuspendMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsBoosterHeater",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsDiverterValve",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsFsvSettings",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsCycleData",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsTemperatureReference",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsThermostat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.toggleSwitch",
+              "version": 1
+            },
+            {
+              "id": "samsungce.systemAirConditionerReservation",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "AirConditioner",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "INDOOR",
+          "label": "INDOOR",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "airConditionerMode",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsDefrostMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsTemperatureReference",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sacDisplayCondition",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsThermostat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.toggleSwitch",
+              "version": 1
+            },
+            {
+              "id": "samsungce.systemAirConditionerReservation",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2025-04-14T15:04:59.106Z",
+      "parentDeviceId": "6a7d5349-0a66-0277-058d-7c8a76501360",
+      "profile": {
+        "id": "89782721-6841-3ef6-a699-28e069d28b8b"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.airconditioner",
+        "name": "Heat Pump",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "1.2.1",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "SAC_EHS_MONO|231215|61007400001700000400000000000000",
+        "platformVersion": "4.0",
+        "platformOS": "Tizen",
+        "hwVersion": "",
+        "firmwareVersion": "20250317.1",
+        "vendorId": "DA-SAC-EHS-000001-SUB",
+        "vendorResourceClientServerVersion": "4.0.54",
+        "lastSignupTime": "2025-04-14T15:04:58.476041486Z",
+        "transferCandidate": true,
+        "additionalAuthCodeRequired": false,
+        "modelCode": ""
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}
