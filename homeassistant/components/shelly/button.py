@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any, Final
 
-from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_BLU_GATEWAY, RPC_GENERATIONS
+from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_BLU_GATEWAY_G3, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.button import (
@@ -62,7 +62,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         translation_key="self_test",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action="trigger_shelly_gas_self_test",
-        supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
+        supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="mute",
@@ -70,7 +70,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         translation_key="mute",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_mute",
-        supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
+        supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="unmute",
@@ -78,7 +78,7 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         translation_key="unmute",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_unmute",
-        supported=lambda coordinator: coordinator.device.model in SHELLY_GAS_MODELS,
+        supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
 ]
 
@@ -89,7 +89,7 @@ BLU_TRV_BUTTONS: Final[list[ShellyButtonDescription]] = [
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_blu_trv_calibration",
-        supported=lambda coordinator: coordinator.device.model == MODEL_BLU_GATEWAY,
+        supported=lambda coordinator: coordinator.model == MODEL_BLU_GATEWAY_G3,
     ),
 ]
 
@@ -160,6 +160,7 @@ async def async_setup_entry(
             ShellyBluTrvButton(coordinator, button, id_)
             for id_ in blutrv_key_ids
             for button in BLU_TRV_BUTTONS
+            if button.supported(coordinator)
         )
 
     async_add_entities(entities)

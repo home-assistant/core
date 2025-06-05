@@ -125,6 +125,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="charge_state_conn_charge_cable",
         polling=True,
         polling_value_fn=lambda x: x != "<invalid>",
+        streaming_listener=lambda vehicle, callback: vehicle.listen_ChargingCableType(
+            lambda value: callback(value != "Unknown")
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
