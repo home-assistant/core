@@ -39,10 +39,6 @@ async def test_switches(hass: HomeAssistant, config_entry: MockConfigEntry) -> N
         entry = entity_registry.async_get(f"switch.101_{key}")
         assert entry and entry.unique_id == f"{key}_101"
 
-    # block
-    # config_switches = er.async_entries_for_config_entry(entity_registry, "uuid")
-    # assert len(switches) == len(config_switches) - 1
-
     state = hass.states.get("switch.101_block")
     assert state and state.state == STATE_OFF
     entry = entity_registry.async_get("switch.101_block")
