@@ -55,7 +55,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN as GROUP_DOMAIN
+from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Sensor Group"
@@ -518,7 +518,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             return state_classes[0]
         async_create_issue(
             self.hass,
-            GROUP_DOMAIN,
+            DOMAIN,
             f"{self.entity_id}_state_classes_not_matching",
             is_fixable=False,
             is_persistent=False,
@@ -575,7 +575,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             return device_classes[0]
         async_create_issue(
             self.hass,
-            GROUP_DOMAIN,
+            DOMAIN,
             f"{self.entity_id}_device_classes_not_matching",
             is_fixable=False,
             is_persistent=False,
@@ -663,7 +663,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         if device_class:
             async_create_issue(
                 self.hass,
-                GROUP_DOMAIN,
+                DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_device_class",
                 is_fixable=False,
                 is_persistent=False,
@@ -679,7 +679,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         else:
             async_create_issue(
                 self.hass,
-                GROUP_DOMAIN,
+                DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_no_device_class",
                 is_fixable=False,
                 is_persistent=False,
