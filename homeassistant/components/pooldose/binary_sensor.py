@@ -1,4 +1,4 @@
-"""Pooldose binary sensors."""
+"""Binary sensors for Pooldose integration."""
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import BINARY_SENSOR_MAP
+from .const import BINARY_SENSOR_MAP, device_info
 
 
 async def async_setup_entry(
@@ -14,33 +14,69 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Pooldose binary sensors from a config entry."""
+    """Set up Pooldose binary sensor entities from a config entry."""
     data = hass.data["pooldose"][entry.entry_id]
     coordinator = data["coordinator"]
     api = data["api"]
+    serialnumber = entry.data["serialnumber"]
+    device_info_dict = data.get("device_info", {})
 
     entities = []
-    for uid, (name, key) in BINARY_SENSOR_MAP.items():
-        entities.append(PooldoseBinarySensor(coordinator, api, name, uid, key))
+    for uid, (
+        translation_key,
+        key,
+        entity_category,
+        device_class,
+    ) in BINARY_SENSOR_MAP.items():
+        entities.append(
+            PooldoseBinarySensor(
+                coordinator,
+                api,
+                translation_key,
+                uid,
+                key,
+                serialnumber,
+                entity_category,
+                device_class,
+                device_info_dict,
+            )
+        )
     async_add_entities(entities)
 
 
 class PooldoseBinarySensor(CoordinatorEntity, BinarySensorEntity):
-    """Representation of a Pooldose binary sensor."""
+    """Binary sensor entity for Pooldose API."""
 
-    def __init__(self, coordinator, api, name, uid, key) -> None:
-        """Initialize a Pooldose binary sensor."""
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator,
+        api,
+        translation_key,
+        uid,
+        key,
+        serialnumber,
+        entity_category,
+        device_class,
+        device_info_dict,
+    ) -> None:
+        """Initialize a PooldoseBinarySensor entity."""
         super().__init__(coordinator)
         self._api = api
-        self._attr_name = name
-        self._attr_unique_id = uid
-        self._attr_should_poll = False
+        self._attr_translation_key = translation_key
+        self._attr_unique_id = f"{serialnumber}_{key}"
         self._key = key
+        self._attr_entity_category = entity_category
+        self._attr_device_class = device_class
+        self._attr_device_info = device_info(device_info_dict)
 
     @property
     def is_on(self) -> bool | None:
-        """Return True if the binary sensor is on, False if off, or None if unknown."""
+        """Return True if the binary sensor is on."""
         try:
-            return self.coordinator.data["devicedata"][self._api.serial_key][self._key]
+            return bool(
+                self.coordinator.data["devicedata"][self._api.serial_key][self._key]
+            )
         except (KeyError, TypeError):
             return None

@@ -45,20 +45,20 @@ class PooldoseAPIClient:
             )
             if self._last_data is not None:
                 return self._last_data
-            raise RuntimeError("No cached data available from Pooldose.") from e
+            raise RuntimeError("No cached data available from Pooldose") from e
         except aiohttp.ClientError as e:
             _LOGGER.warning("Client error while fetching pool data: %s", e)
             if self._last_data is not None:
                 return self._last_data
             raise RuntimeError(f"Client error fetching pool data: {e}") from e
 
-    async def set_value(self, path, value, type_="STRING"):
+    async def set_value(self, path, value, type):
         """Set a value on the Pooldose device.
 
         Args:
             path: The API path to set the value for.
             value: The value to set.
-            type_: The type of the value (default is "STRING").
+            type: The type of the value (e.g. "STRING", "NUMBER").
 
         Returns:
             The response from the Pooldose device as a JSON object, or None if an error occurred.
@@ -70,7 +70,7 @@ class PooldoseAPIClient:
                 path: [
                     {
                         "value": value,
-                        "type": type_,
+                        "type": type,
                     }
                 ]
             }

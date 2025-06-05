@@ -24,5 +24,60 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "pool_temp_actual": {
+        "name": "Temperature"
+      },
+      "pool_ph_actual": {
+        "name": "pH"
+      },
+      "pool_orp_actual": {
+        "name": "ORP"
+      },
+      "pool_systemname": {
+        "name": "System Name"
+      },
+      "pool_ownerid": {
+        "name": "Owner ID"
+      },
+      "pool_ssid": {
+        "name": "SSID"
+      },
+      "pool_ap_ssid": {
+        "name": "AP SSID"
+      },
+      "pool_ap_key": {
+        "name": "AP KEY"
+      },
+      "pool_ip": {
+        "name": "IP"
+      },
+      "pool_mac": {
+        "name": "MAC"
+      }
+    },
+    "number": {
+      "pool_ph_target": {
+        "name": "Target pH"
+      },
+      "pool_orp_target": {
+        "name": "Target ORP"
+      }
+    },
+    "switch": {
+      "stop_pool_dosing": {
+        "name": "Stop Dosing"
+      }
+    },
+    "binary_sensor": {
+      "stop_pool_dosing_state": {
+        "name": "Stop Dosing State"
+      },
+      "pool_circulation_state": {
+        "name": "Circulation Pump Monitoring"
+      }
+    }
   }
 }
