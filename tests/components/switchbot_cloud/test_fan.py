@@ -161,7 +161,7 @@ async def test_fan_set_percentage(
             {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 3},
             blocking=True,
         )
-        mock_send_command.assert_any_await()
+        mock_send_command.assert_not_called()
     state = hass.states.get(entity_id)
     assert state.attributes.get("percentage") == 0
     assert state.attributes.get("preset_mode") == BatteryCirculatorFanMode.BABY.value
@@ -206,7 +206,7 @@ async def test_fan_set_preset_mode(
             },
             blocking=True,
         )
-        mock_send_command.assert_any_await()
+        mock_send_command.assert_awaited_once()
     state = hass.states.get(entity_id)
     assert (
         state.attributes.get(ATTR_PRESET_MODE) == BatteryCirculatorFanMode.NATURAL.value
@@ -223,7 +223,7 @@ async def test_fan_set_preset_mode(
             },
             blocking=True,
         )
-        mock_send_command.assert_any_await()
+        mock_send_command.assert_awaited_once()
     state = hass.states.get(entity_id)
     assert (
         state.attributes.get(ATTR_PRESET_MODE) == BatteryCirculatorFanMode.DIRECT.value
