@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from open_meteo import (
     AirQuality,
@@ -34,6 +34,10 @@ class OpenMeteoData(NamedTuple):
 
     forecast: Forecast
     air_quality: AirQuality
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a dict representation of this data."""
+        return {k: v.to_dict() for k, v in self._asdict().items()}
 
 
 class OpenMeteoDataUpdateCoordinator(DataUpdateCoordinator[OpenMeteoData]):
