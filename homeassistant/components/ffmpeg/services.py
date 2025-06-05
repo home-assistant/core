@@ -35,7 +35,7 @@ async def _async_service_handle(service: ServiceCall) -> None:
         async_dispatcher_send(service.hass, SIGNAL_FFMPEG_RESTART, entity_ids)
 
 
-def register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register FFmpeg services."""
 
     hass.services.async_register(

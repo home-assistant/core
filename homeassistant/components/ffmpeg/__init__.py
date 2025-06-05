@@ -29,7 +29,7 @@ from .const import (
     SIGNAL_FFMPEG_START,
     SIGNAL_FFMPEG_STOP,
 )
-from .services import register_services
+from .services import async_setup_services
 
 DATA_FFMPEG = "ffmpeg"
 
@@ -65,7 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await manager.async_get_version()
 
-    register_services(hass)
+    async_setup_services(hass)
 
     hass.data[DATA_FFMPEG] = manager
     return True
