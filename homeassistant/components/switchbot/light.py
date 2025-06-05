@@ -89,7 +89,7 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
     @property
     def effect_list(self) -> list[str] | None:
         """Return the list of effects supported by the light."""
-        return self._device.get_effect_list()
+        return self._device.get_effect_list
 
     @property
     def effect(self) -> str | None:
