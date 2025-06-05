@@ -328,7 +328,6 @@ async def test_media_player_proxy(
                 ],
             )
         ],
-        user_service=[],
         states=[
             MediaPlayerEntityState(
                 key=1, volume=50, muted=False, state=MediaPlayerState.PAUSED

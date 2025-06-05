@@ -1722,9 +1722,6 @@ async def test_option_flow_allow_service_calls(
     """Test config flow options for allow service calls."""
     entry = await mock_generic_device_entry(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
     )
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -1767,9 +1764,6 @@ async def test_option_flow_subscribe_logs(
     """Test config flow options with subscribe logs."""
     entry = await mock_generic_device_entry(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
     )
 
     result = await hass.config_entries.options.async_init(entry.entry_id)

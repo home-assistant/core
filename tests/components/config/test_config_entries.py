@@ -1526,6 +1526,88 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
     }
 
 
+async def test_subentry_flow_abort_duplicate(hass: HomeAssistant, client) -> None:
+    """Test we can handle a subentry flow raising due to unique_id collision."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_user(self, user_input=None):
+                return await self.async_step_finish()
+
+            async def async_step_finish(self, user_input=None):
+                if user_input:
+                    return self.async_create_entry(
+                        title="Mock title", data=user_input, unique_id="test"
+                    )
+
+                return self.async_show_form(
+                    step_id="finish", data_schema=vol.Schema({"enabled": bool})
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Title",
+                unique_id="test",
+            )
+        ],
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with mock_config_flow("test", TestFlow):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data.pop("flow_id")
+    assert data == {
+        "type": "form",
+        "handler": ["test1", "test"],
+        "step_id": "finish",
+        "data_schema": [{"name": "enabled", "type": "boolean"}],
+        "description_placeholders": None,
+        "errors": None,
+        "last_step": None,
+        "preview": None,
+    }
+
+    with mock_config_flow("test", TestFlow):
+        resp = await client.post(
+            f"/api/config/config_entries/subentries/flow/{flow_id}",
+            json={"enabled": True},
+        )
+    assert resp.status == HTTPStatus.OK
+
+    entries = hass.config_entries.async_entries("test")
+    assert len(entries) == 1
+
+    data = await resp.json()
+    data.pop("flow_id")
+    assert data == {
+        "handler": ["test1", "test"],
+        "reason": "already_configured",
+        "type": "abort",
+        "description_placeholders": None,
+    }
+
+
 async def test_subentry_does_not_support_reconfigure(
     hass: HomeAssistant, client: TestClient
 ) -> None:

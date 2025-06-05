@@ -18,7 +18,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
+    async_load_fixture,
     snapshot_platform,
 )
 
@@ -46,14 +46,14 @@ async def test_create_entities(
 ) -> None:
     """Test creating entities."""
     mock_airgradient_client.get_current_measures.return_value = Measures.from_json(
-        load_fixture("measures_after_boot.json", DOMAIN)
+        await async_load_fixture(hass, "measures_after_boot.json", DOMAIN)
     )
     with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     assert len(hass.states.async_all()) == 0
     mock_airgradient_client.get_current_measures.return_value = Measures.from_json(
-        load_fixture("current_measures_indoor.json", DOMAIN)
+        await async_load_fixture(hass, "current_measures_indoor.json", DOMAIN)
     )
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)

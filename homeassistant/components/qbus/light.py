@@ -43,6 +43,7 @@ async def async_setup_entry(
 class QbusLight(QbusEntity, LightEntity):
     """Representation of a Qbus light entity."""
 
+    _attr_name = None
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
 

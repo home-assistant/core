@@ -29,7 +29,9 @@ from .entity import ProtectDeviceEntity
 _LOGGER = logging.getLogger(__name__)
 
 _SPEAKER_DESCRIPTION = MediaPlayerEntityDescription(
-    key="speaker", name="Speaker", device_class=MediaPlayerDeviceClass.SPEAKER
+    key="speaker",
+    translation_key="speaker",
+    device_class=MediaPlayerDeviceClass.SPEAKER,
 )
 
 

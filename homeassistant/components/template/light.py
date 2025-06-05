@@ -50,6 +50,7 @@ from homeassistant.util import color as color_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
@@ -272,15 +273,15 @@ async def async_setup_platform(
     )
 
 
-class AbstractTemplateLight(LightEntity):
+class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     """Representation of a template lights features."""
 
-    def __init__(
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(  # pylint: disable=super-init-not-called
         self, config: dict[str, Any], initial_state: bool | None = False
     ) -> None:
         """Initialize the features."""
-
-        self._registered_scripts: list[str] = []
 
         # Template attributes
         self._template = config.get(CONF_STATE)
@@ -312,7 +313,7 @@ class AbstractTemplateLight(LightEntity):
         self._color_mode: ColorMode | None = None
         self._supported_color_modes: set[ColorMode] | None = None
 
-    def _register_scripts(
+    def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], ColorMode | None]]:
         for action_id, color_mode in (
@@ -327,7 +328,6 @@ class AbstractTemplateLight(LightEntity):
             (CONF_RGBWW_ACTION, ColorMode.RGBWW),
         ):
             if (action_config := config.get(action_id)) is not None:
-                self._registered_scripts.append(action_id)
                 yield (action_id, action_config, color_mode)
 
     @property
@@ -522,7 +522,7 @@ class AbstractTemplateLight(LightEntity):
 
         if (
             ATTR_COLOR_TEMP_KELVIN in kwargs
-            and (script := CONF_TEMPERATURE_ACTION) in self._registered_scripts
+            and (script := CONF_TEMPERATURE_ACTION) in self._action_scripts
         ):
             common_params["color_temp"] = color_util.color_temperature_kelvin_to_mired(
                 kwargs[ATTR_COLOR_TEMP_KELVIN]
@@ -532,7 +532,7 @@ class AbstractTemplateLight(LightEntity):
 
         if (
             ATTR_EFFECT in kwargs
-            and (script := CONF_EFFECT_ACTION) in self._registered_scripts
+            and (script := CONF_EFFECT_ACTION) in self._action_scripts
         ):
             assert self._effect_list is not None
             effect = kwargs[ATTR_EFFECT]
@@ -551,7 +551,7 @@ class AbstractTemplateLight(LightEntity):
 
         if (
             ATTR_HS_COLOR in kwargs
-            and (script := CONF_HS_ACTION) in self._registered_scripts
+            and (script := CONF_HS_ACTION) in self._action_scripts
         ):
             hs_value = kwargs[ATTR_HS_COLOR]
             common_params["hs"] = hs_value
@@ -562,7 +562,7 @@ class AbstractTemplateLight(LightEntity):
 
         if (
             ATTR_RGBWW_COLOR in kwargs
-            and (script := CONF_RGBWW_ACTION) in self._registered_scripts
+            and (script := CONF_RGBWW_ACTION) in self._action_scripts
         ):
             rgbww_value = kwargs[ATTR_RGBWW_COLOR]
             common_params["rgbww"] = rgbww_value
@@ -581,7 +581,7 @@ class AbstractTemplateLight(LightEntity):
 
         if (
             ATTR_RGBW_COLOR in kwargs
-            and (script := CONF_RGBW_ACTION) in self._registered_scripts
+            and (script := CONF_RGBW_ACTION) in self._action_scripts
         ):
             rgbw_value = kwargs[ATTR_RGBW_COLOR]
             common_params["rgbw"] = rgbw_value
@@ -599,7 +599,7 @@ class AbstractTemplateLight(LightEntity):
 
         if (
             ATTR_RGB_COLOR in kwargs
-            and (script := CONF_RGB_ACTION) in self._registered_scripts
+            and (script := CONF_RGB_ACTION) in self._action_scripts
         ):
             rgb_value = kwargs[ATTR_RGB_COLOR]
             common_params["rgb"] = rgb_value
@@ -611,7 +611,7 @@ class AbstractTemplateLight(LightEntity):
 
         if (
             ATTR_BRIGHTNESS in kwargs
-            and (script := CONF_LEVEL_ACTION) in self._registered_scripts
+            and (script := CONF_LEVEL_ACTION) in self._action_scripts
         ):
             return (script, common_params)
 
@@ -966,7 +966,7 @@ class LightTemplate(TemplateEntity, AbstractTemplateLight):
             assert name is not None
 
         color_modes = {ColorMode.ONOFF}
-        for action_id, action_config, color_mode in self._register_scripts(config):
+        for action_id, action_config, color_mode in self._iterate_scripts(config):
             self.add_script(action_id, action_config, name, DOMAIN)
             if color_mode:
                 color_modes.add(color_mode)
@@ -1180,7 +1180,7 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
                 self._parse_result.add(key)
 
         color_modes = {ColorMode.ONOFF}
-        for action_id, action_config, color_mode in self._register_scripts(config):
+        for action_id, action_config, color_mode in self._iterate_scripts(config):
             self.add_script(action_id, action_config, name, DOMAIN)
             if color_mode:
                 color_modes.add(color_mode)

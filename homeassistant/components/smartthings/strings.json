@@ -49,7 +49,7 @@
         "name": "Freezer door"
       },
       "cooler_door": {
-        "name": "Cooler door"
+        "name": "Fridge door"
       },
       "cool_select_plus_door": {
         "name": "CoolSelect+ door"
@@ -116,7 +116,7 @@
         "name": "Freezer temperature"
       },
       "cooler_temperature": {
-        "name": "Cooler temperature"
+        "name": "Fridge temperature"
       },
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
@@ -159,6 +159,41 @@
           "standard": "[%key:component::smartthings::entity::select::detergent_amount::state::standard%]",
           "extra": "[%key:component::smartthings::entity::select::detergent_amount::state::extra%]",
           "custom": "[%key:component::smartthings::entity::select::detergent_amount::state::custom%]"
+        }
+      },
+      "spin_level": {
+        "name": "Spin level",
+        "state": {
+          "none": "None",
+          "rinse_hold": "Rinse hold",
+          "no_spin": "No spin",
+          "low": "[%key:common::state::low%]",
+          "extra_low": "Extra low",
+          "delicate": "Delicate",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "extra_high": "Extra high",
+          "200": "200",
+          "400": "400",
+          "600": "600",
+          "800": "800",
+          "1000": "1000",
+          "1200": "1200",
+          "1400": "1400",
+          "1600": "1600"
+        }
+      },
+      "soil_level": {
+        "name": "Soil level",
+        "state": {
+          "none": "None",
+          "heavy": "Heavy",
+          "normal": "Normal",
+          "light": "Light",
+          "extra_light": "Extra light",
+          "extra_heavy": "Extra heavy",
+          "up": "Up",
+          "down": "Down"
         }
       }
     },
@@ -207,6 +242,9 @@
           "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]"
         }
       },
+      "cooler_temperature": {
+        "name": "Fridge temperature"
+      },
       "manual_level": {
         "name": "Burner {burner_id} level"
       },
@@ -249,6 +287,13 @@
       "completion_time": {
         "name": "Completion time"
       },
+      "diverter_valve_position": {
+        "name": "Valve position",
+        "state": {
+          "room": "Room",
+          "tank": "Tank"
+        }
+      },
       "dryer_mode": {
         "name": "Dryer mode"
       },
@@ -282,6 +327,9 @@
       },
       "equivalent_carbon_dioxide": {
         "name": "Equivalent carbon dioxide"
+      },
+      "freezer_temperature": {
+        "name": "Freezer temperature"
       },
       "formaldehyde": {
         "name": "Formaldehyde"
@@ -555,6 +603,12 @@
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
+      },
+      "power_cool": {
+        "name": "Power cool"
+      },
+      "power_freeze": {
+        "name": "Power freeze"
       },
       "auto_cycle_link": {
         "name": "Auto cycle link"

@@ -168,6 +168,7 @@ async def test_options(
             ollama.CONF_PROMPT: "test prompt",
             ollama.CONF_MAX_HISTORY: 100,
             ollama.CONF_NUM_CTX: 32768,
+            ollama.CONF_THINK: True,
         },
     )
     await hass.async_block_till_done()
@@ -176,6 +177,7 @@ async def test_options(
         ollama.CONF_PROMPT: "test prompt",
         ollama.CONF_MAX_HISTORY: 100,
         ollama.CONF_NUM_CTX: 32768,
+        ollama.CONF_THINK: True,
     }
 
 

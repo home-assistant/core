@@ -22,7 +22,7 @@ from .const import (
 )
 from .coordinator import RehlkoConfigEntry, RehlkoRuntimeData, RehlkoUpdateCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
