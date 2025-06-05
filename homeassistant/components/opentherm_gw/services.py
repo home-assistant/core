@@ -61,7 +61,7 @@ def _get_gateway(call: ServiceCall) -> OpenThermGatewayHub:
     return gw_hub
 
 
-def register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for the component."""
     service_reset_schema = vol.Schema({vol.Required(ATTR_GW_ID): vol.All(cv.string)})
     service_set_central_heating_ovrd_schema = vol.Schema(

@@ -30,7 +30,7 @@ from .const import (
     OpenThermDataSource,
     OpenThermDeviceIdentifier,
 )
-from .services import register_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ PLATFORMS = [
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up OpenTherm Gateway integration."""
 
-    register_services(hass)
+    async_setup_services(hass)
 
     return True
 
