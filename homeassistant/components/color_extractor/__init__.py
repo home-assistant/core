@@ -6,7 +6,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .services import register_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -14,7 +14,7 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Color extractor component."""
 
-    register_services(hass)
+    async_setup_services(hass)
 
     return True
 

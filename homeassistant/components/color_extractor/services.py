@@ -140,7 +140,7 @@ async def _async_handle_service(service_call: ServiceCall) -> None:
         )
 
 
-def register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Color extractor services."""
 
     hass.services.async_register(
