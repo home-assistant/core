@@ -1,4 +1,8 @@
-"""Constants for Pooldose integration."""
+"""Constants for Pooldose integration.
+
+All entity maps include an 'enabled_by_default' boolean as last tuple value.
+This controls if the entity is enabled by default in the entity registry.
+"""
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
@@ -38,7 +42,7 @@ def device_info(info: dict | None) -> DeviceInfo:
 
 
 SENSOR_MAP: dict[
-    str, tuple[str, str | None, str | None, str, EntityCategory | None]
+    str, tuple[str, str | None, str | None, str, EntityCategory | None, bool]
 ] = {
     "pool_temp_actual": (
         "pool_temp_actual",
@@ -46,6 +50,7 @@ SENSOR_MAP: dict[
         SensorDeviceClass.TEMPERATURE,
         "PDPR1H1HAW100_FW539187_w_1eommf39k",
         None,
+        True,
     ),
     "pool_ph_actual": (
         "pool_ph_actual",
@@ -53,6 +58,7 @@ SENSOR_MAP: dict[
         None,
         "PDPR1H1HAW100_FW539187_w_1ekeigkin",
         None,
+        True,
     ),
     "pool_orp_actual": (
         "pool_orp_actual",
@@ -60,6 +66,7 @@ SENSOR_MAP: dict[
         None,
         "PDPR1H1HAW100_FW539187_w_1eklenb23",
         None,
+        True,
     ),
     "pool_ownerid": (
         "pool_ownerid",
@@ -67,6 +74,7 @@ SENSOR_MAP: dict[
         None,
         "OWNERID",
         EntityCategory.DIAGNOSTIC,
+        False,
     ),
     "pool_ssid": (
         "pool_ssid",
@@ -74,6 +82,7 @@ SENSOR_MAP: dict[
         None,
         "SSID",
         EntityCategory.DIAGNOSTIC,
+        False,
     ),
     "pool_ap_ssid": (
         "pool_ap_ssid",
@@ -81,6 +90,7 @@ SENSOR_MAP: dict[
         None,
         "AP_SSID",
         EntityCategory.DIAGNOSTIC,
+        False,
     ),
     "pool_ap_key": (
         "pool_ap_key",
@@ -88,6 +98,7 @@ SENSOR_MAP: dict[
         None,
         "AP_KEY",
         EntityCategory.DIAGNOSTIC,
+        False,
     ),
 }
 
@@ -100,7 +111,9 @@ STATIC_SENSOR_KEYS: set[str] = {
     "AP_KEY",
 }
 
-SWITCHES: dict[str, tuple[str, str, str, str, EntityCategory | None, str | None]] = {
+SWITCHES: dict[
+    str, tuple[str, str, str, str, EntityCategory | None, str | None, bool]
+] = {
     "stop_pool_dosing": (
         "stop_pool_dosing",
         "PDPR1H1HAW100_FW539187_w_1emtltkel",
@@ -108,26 +121,43 @@ SWITCHES: dict[str, tuple[str, str, str, str, EntityCategory | None, str | None]
         "O",
         None,
         None,  # device_class
+        True,
+    ),
+    "circulation_detection": (
+        "circulation_detection",
+        "PDPR1H1HAW100_FW539187_w_1eklft47q",
+        "F",
+        "O",
+        EntityCategory.CONFIG,
+        None,  # device_class
+        True,
+    ),
+    "frequency_input": (
+        "frequency_input",
+        "PDPR1H1HAW100_FW539187_w_1eklft5qt",
+        "F",
+        "O",
+        EntityCategory.CONFIG,
+        None,  # device_class
+        False,
     ),
 }
 
-BINARY_SENSOR_MAP: dict[str, tuple[str, str, EntityCategory | None, str | None]] = {
-    "stop_pool_dosing_state": (
-        "stop_pool_dosing_state",
-        "PDPR1H1HAW100_FW539187_w_1emtltkel",
-        None,
-        BinarySensorDeviceClass.PROBLEM,
-    ),
+BINARY_SENSOR_MAP: dict[
+    str, tuple[str, str, EntityCategory | None, str | None, bool]
+] = {
     "pool_circulation_state": (
         "pool_circulation_state",
         "PDPR1H1HAW100_FW539187_w_1ekga097n",
-        EntityCategory.DIAGNOSTIC,
-        BinarySensorDeviceClass.POWER,
+        None,
+        BinarySensorDeviceClass.RUNNING,
+        True,
     ),
 }
 
 NUMBER_MAP: dict[
-    str, tuple[str, str, dict[str, float | str], EntityCategory | None, str | None]
+    str,
+    tuple[str, str, dict[str, float | str], EntityCategory | None, str | None, bool],
 ] = {
     "pool_ph_target": (
         "pool_ph_target",
@@ -135,6 +165,7 @@ NUMBER_MAP: dict[
         {"min": 6.0, "max": 8.0, "unit": "pH", "resolution": 0.1},
         EntityCategory.CONFIG,
         None,  # device_class
+        True,
     ),
     "pool_orp_target": (
         "pool_orp_target",
@@ -142,6 +173,7 @@ NUMBER_MAP: dict[
         {"min": 400, "max": 850, "unit": "mV", "resolution": 50},
         EntityCategory.CONFIG,
         None,  # device_class
+        True,
     ),
 }
 

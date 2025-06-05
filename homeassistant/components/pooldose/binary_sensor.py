@@ -27,6 +27,7 @@ async def async_setup_entry(
         key,
         entity_category,
         device_class,
+        enabled_by_default,
     ) in BINARY_SENSOR_MAP.items():
         entities.append(
             PooldoseBinarySensor(
@@ -39,6 +40,7 @@ async def async_setup_entry(
                 entity_category,
                 device_class,
                 device_info_dict,
+                enabled_by_default,
             )
         )
     async_add_entities(entities)
@@ -60,6 +62,7 @@ class PooldoseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         entity_category,
         device_class,
         device_info_dict,
+        enabled_by_default: bool = True,
     ) -> None:
         """Initialize a PooldoseBinarySensor entity."""
         super().__init__(coordinator)
@@ -70,13 +73,20 @@ class PooldoseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_entity_category = entity_category
         self._attr_device_class = device_class
         self._attr_device_info = device_info(device_info_dict)
+        self._attr_entity_registry_enabled_default = enabled_by_default
 
     @property
     def is_on(self) -> bool | None:
         """Return True if the binary sensor is on."""
         try:
-            return bool(
-                self.coordinator.data["devicedata"][self._api.serial_key][self._key]
-            )
+            value = self.coordinator.data["devicedata"][self._api.serial_key][self._key]
+            # Case 1: direct bool
+            if isinstance(value, bool):
+                return value
+            # Case 2: dict with 'current' field
+            if isinstance(value, dict) and "current" in value:
+                # Example: "F" (False), "O" (On/True)
+                return value["current"] == "F"
+            return None  # noqa: TRY300
         except (KeyError, TypeError):
             return None

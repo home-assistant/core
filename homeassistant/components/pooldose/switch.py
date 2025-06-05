@@ -1,4 +1,7 @@
-"""Switch platform for Seko Pooldose."""
+"""Switch entities for Seko Pooldose API.
+
+Entities are enabled by default unless otherwise specified in the mapping.
+"""
 
 from __future__ import annotations
 
@@ -42,6 +45,7 @@ async def async_setup_entry(
             entity_category=entity_category,
             device_class=SwitchDeviceClass(device_class) if device_class else None,
             device_info_dict=device_info_dict,
+            enabled_by_default=enabled_by_default,
         )
         for uid, (
             translation_key,
@@ -50,6 +54,7 @@ async def async_setup_entry(
             on_val,
             entity_category,
             device_class,
+            enabled_by_default,
         ) in SWITCHES.items()
     ]
     async_add_entities(entities)
@@ -73,6 +78,7 @@ class PooldoseSwitch(CoordinatorEntity, SwitchEntity):
         entity_category: EntityCategory | None,
         device_class: SwitchDeviceClass | None,
         device_info_dict: dict[str, Any],
+        enabled_by_default: bool = True,
     ) -> None:
         """Initialize the PooldoseSwitch entity."""
         super().__init__(coordinator)
@@ -85,16 +91,15 @@ class PooldoseSwitch(CoordinatorEntity, SwitchEntity):
         self._attr_entity_category = entity_category
         self._attr_device_class = device_class
         self._attr_device_info = device_info(device_info_dict)
+        self._attr_entity_registry_enabled_default = enabled_by_default
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._api.set_value(self._key, self._on_val)
-        await self.coordinator.async_request_refresh()
+        await self._api.set_value(self._key, self._on_val, "STRING")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._api.set_value(self._key, self._off_val)
-        await self.coordinator.async_request_refresh()
+        await self._api.set_value(self._key, self._off_val, "STRING")
 
     @property
     def is_on(self) -> bool | None:
@@ -103,8 +108,8 @@ class PooldoseSwitch(CoordinatorEntity, SwitchEntity):
             value = self.coordinator.data["devicedata"][self._api.serial_key][self._key]
             if isinstance(value, bool):
                 return value
-            if isinstance(value, str):
-                return value == self._on_val
+            if isinstance(value, dict) and "current" in value:
+                return value["current"] == self._on_val
             else:  # noqa: RET505
                 return None
         except (KeyError, TypeError):

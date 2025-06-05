@@ -58,15 +58,18 @@
     },
     "switch": {
       "stop_pool_dosing": {
-        "name": "Stop Dosing"
+        "name": "Pause Dosing"
+      },
+      "circulation_detection": {
+        "name": "Circulation Detection"
+      },
+      "frequency_input": {
+        "name": "Frequency Input"
       }
     },
     "binary_sensor": {
-      "stop_pool_dosing_state": {
-        "name": "Stop Dosing State"
-      },
       "pool_circulation_state": {
-        "name": "Circulation Pump Monitoring"
+        "name": "Circulation Pump"
       }
     }
   }

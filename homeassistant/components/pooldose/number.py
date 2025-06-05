@@ -1,4 +1,7 @@
-"""Number entities for Seko Pooldose API."""
+"""Number entities for Seko Pooldose API.
+
+Entities are enabled by default unless otherwise specified in the mapping.
+"""
 
 from typing import Any
 
@@ -34,6 +37,7 @@ async def async_setup_entry(
         defaults,
         entity_category,
         device_class,
+        enabled_by_default,
     ) in NUMBER_MAP.items():
         entities.append(
             PooldoseNumber(
@@ -47,6 +51,7 @@ async def async_setup_entry(
                 entity_category,
                 NumberDeviceClass(device_class) if device_class else None,
                 device_info_dict,
+                enabled_by_default,
             )
         )
     async_add_entities(entities)
@@ -69,6 +74,7 @@ class PooldoseNumber(CoordinatorEntity, NumberEntity):
         entity_category: EntityCategory | None,
         device_class: NumberDeviceClass | None,
         device_info_dict: dict[str, Any],
+        enabled_by_default: bool = True,
     ) -> None:
         """Initialize a PooldoseNumber entity."""
         super().__init__(coordinator)
@@ -83,6 +89,7 @@ class PooldoseNumber(CoordinatorEntity, NumberEntity):
         self._attr_entity_category = entity_category
         self._attr_device_class = device_class
         self._attr_device_info = device_info(device_info_dict)
+        self._attr_entity_registry_enabled_default = enabled_by_default
 
     @property
     def native_value(self) -> float | int | None:

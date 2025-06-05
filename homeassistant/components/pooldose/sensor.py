@@ -1,4 +1,7 @@
-"""Sensors for the Seko Pooldose integration."""
+"""Sensors for the Seko Pooldose integration.
+
+Entities are enabled by default unless otherwise specified in the mapping.
+"""
 
 from __future__ import annotations
 
@@ -36,6 +39,7 @@ async def async_setup_entry(
         device_class,
         key,
         entity_category,
+        enabled_by_default,
     ) in SENSOR_MAP.items():
         if key in STATIC_SENSOR_KEYS:
             entities.append(
@@ -48,6 +52,7 @@ async def async_setup_entry(
                     serialnumber,
                     entity_category,
                     device_info_dict,
+                    enabled_by_default,
                 )
             )
         else:
@@ -63,6 +68,7 @@ async def async_setup_entry(
                     serialnumber,
                     entity_category,
                     device_info_dict,
+                    enabled_by_default,
                 )
             )
     async_add_entities(entities)
@@ -85,6 +91,7 @@ class PooldoseSensor(CoordinatorEntity, SensorEntity):
         serialnumber: str,
         entity_category: EntityCategory | None,
         device_info_dict: dict[str, Any],
+        enabled_by_default: bool = True,
     ) -> None:
         """Initialize a PooldoseSensor entity."""
         super().__init__(coordinator)
@@ -96,6 +103,7 @@ class PooldoseSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_class = device_class
         self._attr_entity_category = entity_category
         self._attr_device_info = device_info(device_info_dict)
+        self._attr_entity_registry_enabled_default = enabled_by_default
 
     @property
     def native_value(self) -> float | int | str | None:
@@ -124,6 +132,7 @@ class PooldoseStaticSensor(CoordinatorEntity, SensorEntity):
         serialnumber: str,
         entity_category: EntityCategory | None,
         device_info_dict: dict[str, Any],
+        enabled_by_default: bool = True,
     ) -> None:
         """Initialize a static Pooldose sensor entity."""
         super().__init__(coordinator)
@@ -133,6 +142,7 @@ class PooldoseStaticSensor(CoordinatorEntity, SensorEntity):
         self._attr_entity_category = entity_category
         self._device_info_dict = device_info_dict
         self._attr_device_info = device_info(device_info_dict)
+        self._attr_entity_registry_enabled_default = enabled_by_default
 
     @property
     def native_value(self) -> str | None:
