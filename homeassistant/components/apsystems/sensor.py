@@ -60,7 +60,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         translation_key="lifetime_production",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.INCREASING,
         value_fn=lambda c: c.te1 + c.te2,
     ),
     ApsystemsLocalApiSensorDescription(
@@ -68,7 +68,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         translation_key="lifetime_production_p1",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.INCREASING,
         value_fn=lambda c: c.te1,
     ),
     ApsystemsLocalApiSensorDescription(
@@ -76,7 +76,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         translation_key="lifetime_production_p2",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.INCREASING,
         value_fn=lambda c: c.te2,
     ),
     ApsystemsLocalApiSensorDescription(
@@ -84,7 +84,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         translation_key="today_production",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.INCREASING,
         value_fn=lambda c: c.e1 + c.e2,
     ),
     ApsystemsLocalApiSensorDescription(
@@ -92,7 +92,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         translation_key="today_production_p1",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.INCREASING,
         value_fn=lambda c: c.e1,
     ),
     ApsystemsLocalApiSensorDescription(
@@ -100,7 +100,7 @@ SENSORS: tuple[ApsystemsLocalApiSensorDescription, ...] = (
         translation_key="today_production_p2",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.INCREASING,
         value_fn=lambda c: c.e2,
     ),
 )
