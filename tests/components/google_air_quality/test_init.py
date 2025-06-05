@@ -81,12 +81,6 @@ async def test_expired_token_refresh_success(
     [
         (
             time.time() - 3600,
-            http.HTTPStatus.UNAUTHORIZED,
-            None,
-            ConfigEntryState.SETUP_ERROR,  # Reauth will be implemented later
-        ),
-        (
-            time.time() - 3600,
             http.HTTPStatus.INTERNAL_SERVER_ERROR,
             None,
             ConfigEntryState.SETUP_RETRY,
@@ -98,7 +92,7 @@ async def test_expired_token_refresh_success(
             ConfigEntryState.SETUP_RETRY,
         ),
     ],
-    ids=["unauthorized", "internal_server_error", "client_error"],
+    ids=["internal_server_error", "client_error"],
 )
 async def test_expired_token_refresh_failure(
     hass: HomeAssistant,

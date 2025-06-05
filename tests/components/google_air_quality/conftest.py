@@ -146,22 +146,29 @@ def mock_api_error() -> Exception | None:
     return None
 
 
+@pytest.fixture(name="api_error_user_info")
+def mock_api_error_user_info() -> Exception | None:
+    """Provide a json fixture file to load air quality data."""
+    return None
+
+
 @pytest.fixture(name="mock_api")
 def mock_client_api(
     fixture_name: str,
     user_identifier: str,
     api_error: Exception,
+    api_error_user_info: Exception,
 ) -> Generator[Mock]:
     """Set up fake Google Air Quality API responses from fixtures."""
     mock_api = AsyncMock(GoogleAirQualityApi, autospec=True)
     responses = load_json_object_fixture("air_quality_data.json", DOMAIN)
     mock_api.async_air_quality.return_value = AirQualityData.from_dict(responses)
-
     mock_api.async_air_quality.side_effect = api_error
     mock_api.get_user_info.return_value = UserInfoResult(
         id=user_identifier,
         name="Test Name",
     )
+    mock_api.get_user_info.side_effect = api_error_user_info
     return mock_api
 
 

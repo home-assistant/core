@@ -136,6 +136,56 @@ async def test_add_location_flow(
     assert subentry.title == "Coordinates 50.0, 10.0"
 
 
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "setup_credentials",
+    "mock_api",
+)
+@pytest.mark.parametrize(
+    ("api_error_user_info", "reason"),
+    [
+        (GoogleAirQualityApiError("some error"), "access_not_configured"),
+        (Exception("some error"), "unknown"),
+    ],
+)
+async def test_oauth_fail(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    reason: str,
+    mock_api: Mock,
+) -> None:
+    """Check flow aborts if api is not enabled."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        "&scope=https://www.googleapis.com/auth/cloud-platform"
+        "+https://www.googleapis.com/auth/userinfo.profile"
+        "&access_type=offline&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.usefixtures(
     "current_request_with_host",
@@ -244,3 +294,49 @@ async def test_no_data_for_location_shows_form(
     assert step2["type"] is FlowResultType.FORM
     assert step2["step_id"] == SOURCE_USER
     assert step2["errors"] == {"base": "no_data_for_location"}
+
+
+@pytest.mark.usefixtures("setup_integration_and_subentry")
+async def test_already_configured(
+    hass: HomeAssistant,
+    config_and_subentry: MockConfigEntry,
+) -> None:
+    """Snapshot test of the sensors."""
+    await hass.async_block_till_done()
+    assert config_and_subentry.state is ConfigEntryState.LOADED
+    result = await hass.config_entries.subentries.async_init(
+        (config_and_subentry.entry_id, "location"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_USER
+
+    step2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_LOCATION: {
+                CONF_LATITUDE: 48,
+                CONF_LONGITUDE: 9,
+            }
+        },
+    )
+    assert step2["type"] is FlowResultType.ABORT
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_and_subentry.entry_id, "location"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_USER
+
+    step2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_LOCATION: {
+                CONF_LATITUDE: 41,
+                CONF_LONGITUDE: 2,
+            }
+        },
+    )
+
+    assert step2["type"] is FlowResultType.CREATE_ENTRY
