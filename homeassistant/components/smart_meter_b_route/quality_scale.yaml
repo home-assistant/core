@@ -51,7 +51,10 @@ rules:
   devices: done
   diagnostics: todo
   discovery-update-info: done
-  discovery: done
+  discovery:
+    status: exempt
+    comment: |
+      The manufacturer does not use unique identifiers for devices.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

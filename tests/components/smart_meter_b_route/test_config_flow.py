@@ -8,11 +8,10 @@ import pytest
 from serial.tools.list_ports_linux import SysFS
 
 from homeassistant.components.smart_meter_b_route.const import DOMAIN, ENTRY_TITLE
-from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import user_input
 
@@ -96,37 +95,6 @@ async def test_step_user_form_errors(
     mock_momonga.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result_configure["flow_id"],
-        user_input,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_step_usb(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_comports: AsyncMock,
-    mock_momonga: Mock,
-) -> None:
-    """Test step usb."""
-    discovery_info = UsbServiceInfo(
-        device="/dev/ttyZIGBEE",
-        pid="AAAA",
-        vid="AAAA",
-        serial_number="1234",
-        description="zigbee radio",
-        manufacturer="test",
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
         user_input,
     )
     await hass.async_block_till_done()

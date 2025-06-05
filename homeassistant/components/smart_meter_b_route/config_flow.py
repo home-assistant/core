@@ -122,10 +122,3 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
-        """Handle a step triggered by USB device detection."""
-        self.device = discovery_info
-        await self.async_set_unique_id(_generate_unique_id(self.device))
-        self._abort_if_unique_id_configured()
-        return await self.async_step_user()
