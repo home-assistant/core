@@ -1,7 +1,6 @@
 """Common fixtures for the Immich tests."""
 
 from collections.abc import AsyncGenerator, Generator
-from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from aioimmich import ImmichAlbums, ImmichAssests, ImmichServer, ImmichUsers
@@ -10,7 +9,7 @@ from aioimmich.server.models import (
     ImmichServerStatistics,
     ImmichServerStorage,
 )
-from aioimmich.users.models import AvatarColor, ImmichUser, UserStatus
+from aioimmich.users.models import ImmichUserObject
 import pytest
 
 from homeassistant.components.immich.const import DOMAIN
@@ -78,36 +77,58 @@ def mock_immich_assets() -> AsyncMock:
 def mock_immich_server() -> AsyncMock:
     """Mock the Immich server."""
     mock = AsyncMock(spec=ImmichServer)
-    mock.async_get_about_info.return_value = ImmichServerAbout(
-        "v1.132.3",
-        "some_url",
-        False,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
+    mock.async_get_about_info.return_value = ImmichServerAbout.from_dict(
+        {
+            "version": "v1.132.3",
+            "versionUrl": "https://github.com/immich-app/immich/releases/tag/v1.132.3",
+            "licensed": False,
+            "build": "14709928600",
+            "buildUrl": "https://github.com/immich-app/immich/actions/runs/14709928600",
+            "buildImage": "v1.132.3",
+            "buildImageUrl": "https://github.com/immich-app/immich/pkgs/container/immich-server",
+            "repository": "immich-app/immich",
+            "repositoryUrl": "https://github.com/immich-app/immich",
+            "sourceRef": "v1.132.3",
+            "sourceCommit": "02994883fe3f3972323bb6759d0170a4062f5236",
+            "sourceUrl": "https://github.com/immich-app/immich/commit/02994883fe3f3972323bb6759d0170a4062f5236",
+            "nodejs": "v22.14.0",
+            "exiftool": "13.00",
+            "ffmpeg": "7.0.2-7",
+            "libvips": "8.16.1",
+            "imagemagick": "7.1.1-47",
+        }
     )
-    mock.async_get_storage_info.return_value = ImmichServerStorage(
-        "294.2 GiB",
-        "142.9 GiB",
-        "136.3 GiB",
-        315926315008,
-        153400434688,
-        146402975744,
-        48.56,
+    mock.async_get_storage_info.return_value = ImmichServerStorage.from_dict(
+        {
+            "diskSize": "294.2 GiB",
+            "diskUse": "142.9 GiB",
+            "diskAvailable": "136.3 GiB",
+            "diskSizeRaw": 315926315008,
+            "diskUseRaw": 153400406016,
+            "diskAvailableRaw": 146403004416,
+            "diskUsagePercentage": 48.56,
+        }
     )
-    mock.async_get_server_statistics.return_value = ImmichServerStatistics(
-        27038, 1836, 119525451912, 54291170551, 65234281361
+    mock.async_get_server_statistics.return_value = ImmichServerStatistics.from_dict(
+        {
+            "photos": 27038,
+            "videos": 1836,
+            "usage": 119525451912,
+            "usagePhotos": 54291170551,
+            "usageVideos": 65234281361,
+            "usageByUser": [
+                {
+                    "userId": "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
+                    "userName": "admin",
+                    "photos": 27038,
+                    "videos": 1836,
+                    "usage": 119525451912,
+                    "usagePhotos": 54291170551,
+                    "usageVideos": 65234281361,
+                    "quotaSizeInBytes": None,
+                }
+            ],
+        }
     )
     return mock
 
@@ -116,23 +137,26 @@ def mock_immich_server() -> AsyncMock:
 def mock_immich_user() -> AsyncMock:
     """Mock the Immich server."""
     mock = AsyncMock(spec=ImmichUsers)
-    mock.async_get_my_user.return_value = ImmichUser(
-        "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
-        "user@immich.local",
-        "user",
-        "",
-        AvatarColor.PRIMARY,
-        datetime.fromisoformat("2025-05-11T10:07:46.866Z"),
-        "user",
-        False,
-        True,
-        datetime.fromisoformat("2025-05-11T10:07:46.866Z"),
-        None,
-        None,
-        "",
-        None,
-        None,
-        UserStatus.ACTIVE,
+    mock.async_get_my_user.return_value = ImmichUserObject.from_dict(
+        {
+            "id": "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
+            "email": "user@immich.local",
+            "name": "user",
+            "profileImagePath": "",
+            "avatarColor": "primary",
+            "profileChangedAt": "2025-05-11T10:07:46.866Z",
+            "storageLabel": "user",
+            "shouldChangePassword": True,
+            "isAdmin": True,
+            "createdAt": "2025-05-11T10:07:46.866Z",
+            "deletedAt": None,
+            "updatedAt": "2025-05-18T00:59:55.547Z",
+            "oauthId": "",
+            "quotaSizeInBytes": None,
+            "quotaUsageInBytes": 119526467534,
+            "status": "active",
+            "license": None,
+        }
     )
     return mock
 

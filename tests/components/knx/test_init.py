@@ -41,7 +41,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
-    DOMAIN as KNX_DOMAIN,
+    DOMAIN,
     KNXConfigEntryData,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -222,17 +222,15 @@ async def test_init_connection_handling(
 
     config_entry = MockConfigEntry(
         title="KNX",
-        domain=KNX_DOMAIN,
+        domain=DOMAIN,
         data=config_entry_data,
     )
     knx.mock_config_entry = config_entry
     await knx.setup_integration()
 
-    assert hass.data.get(KNX_DOMAIN) is not None
+    assert hass.data.get(DOMAIN) is not None
 
-    original_connection_config = (
-        hass.data[KNX_DOMAIN].connection_config().__dict__.copy()
-    )
+    original_connection_config = hass.data[DOMAIN].connection_config().__dict__.copy()
     del original_connection_config["secure_config"]
 
     connection_config_dict = connection_config.__dict__.copy()
@@ -242,19 +240,19 @@ async def test_init_connection_handling(
 
     if connection_config.secure_config is not None:
         assert (
-            hass.data[KNX_DOMAIN].connection_config().secure_config.knxkeys_password
+            hass.data[DOMAIN].connection_config().secure_config.knxkeys_password
             == connection_config.secure_config.knxkeys_password
         )
         assert (
-            hass.data[KNX_DOMAIN].connection_config().secure_config.user_password
+            hass.data[DOMAIN].connection_config().secure_config.user_password
             == connection_config.secure_config.user_password
         )
         assert (
-            hass.data[KNX_DOMAIN].connection_config().secure_config.user_id
+            hass.data[DOMAIN].connection_config().secure_config.user_id
             == connection_config.secure_config.user_id
         )
         assert (
-            hass.data[KNX_DOMAIN]
+            hass.data[DOMAIN]
             .connection_config()
             .secure_config.device_authentication_password
             == connection_config.secure_config.device_authentication_password
@@ -262,9 +260,7 @@ async def test_init_connection_handling(
         if connection_config.secure_config.knxkeys_file_path is not None:
             assert (
                 connection_config.secure_config.knxkeys_file_path
-                in hass.data[KNX_DOMAIN]
-                .connection_config()
-                .secure_config.knxkeys_file_path
+                in hass.data[DOMAIN].connection_config().secure_config.knxkeys_file_path
             )
 
 
@@ -276,9 +272,7 @@ async def _init_switch_and_wait_for_first_state_updater_run(
     config_entry_data: KNXConfigEntryData,
 ) -> None:
     """Return a config entry with default data."""
-    config_entry = MockConfigEntry(
-        title="KNX", domain=KNX_DOMAIN, data=config_entry_data
-    )
+    config_entry = MockConfigEntry(title="KNX", domain=DOMAIN, data=config_entry_data)
     knx.mock_config_entry = config_entry
     await knx.setup_integration()
     await create_ui_entity(
@@ -348,7 +342,7 @@ async def test_async_remove_entry(
     """Test async_setup_entry (for coverage)."""
     config_entry = MockConfigEntry(
         title="KNX",
-        domain=KNX_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_KNX_KNXKEY_FILENAME: "knx/testcase.knxkeys",
         },

@@ -28,7 +28,7 @@ from homeassistant.components.netatmo.const import (
     ATTR_SCHEDULE_NAME,
     ATTR_TARGET_TEMPERATURE,
     ATTR_TIME_PERIOD,
-    DOMAIN as NETATMO_DOMAIN,
+    DOMAIN,
     SERVICE_CLEAR_TEMPERATURE_SETTING,
     SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
@@ -493,7 +493,7 @@ async def test_service_set_temperature_with_end_datetime(
 
     # Test service setting the temperature without an end datetime
     await hass.services.async_call(
-        NETATMO_DOMAIN,
+        DOMAIN,
         SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
         {
             ATTR_ENTITY_ID: climate_entity_livingroom,
@@ -551,7 +551,7 @@ async def test_service_set_temperature_with_time_period(
 
     # Test service setting the temperature without an end datetime
     await hass.services.async_call(
-        NETATMO_DOMAIN,
+        DOMAIN,
         SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
         {
             ATTR_ENTITY_ID: climate_entity_livingroom,
@@ -639,7 +639,7 @@ async def test_service_clear_temperature_setting(
 
     # Test service setting the temperature without an end datetime
     await hass.services.async_call(
-        NETATMO_DOMAIN,
+        DOMAIN,
         SERVICE_CLEAR_TEMPERATURE_SETTING,
         {ATTR_ENTITY_ID: climate_entity_livingroom},
         blocking=True,

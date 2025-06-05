@@ -71,6 +71,11 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _attr_name = "DHW controller"
     _attr_icon = "mdi:thermometer-lines"
     _attr_operation_list = list(HA_STATE_TO_EVO)
+    _attr_supported_features = (
+        WaterHeaterEntityFeature.AWAY_MODE
+        | WaterHeaterEntityFeature.ON_OFF
+        | WaterHeaterEntityFeature.OPERATION_MODE
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     _evo_device: evo.HotWater
@@ -90,9 +95,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
 
         self._attr_precision = (
             PRECISION_TENTHS if coordinator.client_v1 else PRECISION_WHOLE
-        )
-        self._attr_supported_features = (
-            WaterHeaterEntityFeature.AWAY_MODE | WaterHeaterEntityFeature.OPERATION_MODE
         )
 
     @property
