@@ -128,16 +128,16 @@
   },
   "device_automation": {
     "trigger_type": {
-      "available": "charge point becomes available",
-      "charging": "charge point started charging",
-      "error": "charge point has error",
-      "no_power": "vehicle has no power",
-      "offline": "charge point is offline",
-      "ready": "vehicle is ready",
-      "standby": "vehicle is in standby",
-      "unavailable": "charge point becomes unavailable",
-      "vehicle_detected": "vehicle is detected",
-      "vehicle_error": "vehicle has error"
+      "available": "Charge point becomes available",
+      "charging": "Charge point started charging",
+      "error": "Charge point has error",
+      "no_power": "Vehicle has no power",
+      "offline": "Charge point is offline",
+      "ready": "Vehicle is ready",
+      "standby": "Vehicle is in standby",
+      "unavailable": "Charge point becomes unavailable",
+      "vehicle_detected": "Vehicle is detected",
+      "vehicle_error": "Vehicle has error"
     }
   }
 }
