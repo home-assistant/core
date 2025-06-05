@@ -13,20 +13,13 @@ from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, CONF_TIMEOUT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    CONF_SERIALNUMBER,
-    DEFAULT_HOST,
-    DEFAULT_SERIAL_NUMBER,
-    DOMAIN,
-    SOFTWARE_VERSION,
-)
+from .const import CONF_SERIALNUMBER, DEFAULT_HOST, DOMAIN, SOFTWARE_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
 SCHEMA_DEVICE = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Required(CONF_SERIALNUMBER, default=DEFAULT_SERIAL_NUMBER): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,
         vol.Optional(CONF_TIMEOUT): cv.positive_int,
     }

@@ -3,7 +3,7 @@
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import EntityCategory
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 
 DOMAIN = "pooldose"
 CONF_SERIALNUMBER = "serialnumber"
@@ -28,7 +28,12 @@ def device_info(info: dict | None) -> DeviceInfo:
         name=info.get("SYSTEMNAME") or DEVICE_NAME,
         serial_number=info.get("SERIAL_NUMBER"),
         sw_version=info.get("SOFTWAREVERSION_GATEWAY"),
-        hw_version=info.get("FIRMWARECODE_DEVICE"),
+        hw_version=info.get("FIRMWARERELEASE_DEVICE"),
+        connections={
+            (CONNECTION_NETWORK_MAC, str(info.get("MAC"))),
+        },
+        configuration_url=f"http://{info.get('IP')}/index.html",
+        suggested_area=info.get("Pool"),
     )
 
 
@@ -56,13 +61,6 @@ SENSOR_MAP: dict[
         "PDPR1H1HAW100_FW539187_w_1eklenb23",
         None,
     ),
-    "pool_systemname": (
-        "pool_systemname",
-        None,
-        None,
-        "SYSTEMNAME",
-        EntityCategory.DIAGNOSTIC,
-    ),
     "pool_ownerid": (
         "pool_ownerid",
         None,
@@ -75,20 +73,6 @@ SENSOR_MAP: dict[
         None,
         None,
         "SSID",
-        EntityCategory.DIAGNOSTIC,
-    ),
-    "pool_ip": (
-        "pool_ip",
-        None,
-        None,
-        "IP",
-        EntityCategory.DIAGNOSTIC,
-    ),
-    "pool_mac": (
-        "pool_mac",
-        None,
-        None,
-        "MAC",
         EntityCategory.DIAGNOSTIC,
     ),
     "pool_ap_ssid": (
@@ -110,9 +94,6 @@ SENSOR_MAP: dict[
 # Static keys for static sensors (device info)
 STATIC_SENSOR_KEYS: set[str] = {
     "SSID",
-    "MAC",
-    "IP",
-    "SYSTEMNAME",
     "GROUPNAME",
     "OWNERID",
     "AP_SSID",
@@ -166,4 +147,4 @@ NUMBER_MAP: dict[
 
 # for testing only:
 DEFAULT_HOST = "192.168.178.137"
-DEFAULT_SERIAL_NUMBER = "01220000095B"
+# DEFAULT_SERIAL_NUMBER = "01220000095B"

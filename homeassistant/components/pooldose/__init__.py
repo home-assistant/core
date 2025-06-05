@@ -21,9 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 _PLATFORMS: list[Platform] = [
     Platform.SENSOR,
-    # Platform.BINARY_SENSOR,
-    # Platform.NUMBER,
-    # Platform.SWITCH,
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SWITCH,
 ]
 
 """Configure the Seko Pooldose entry."""
@@ -96,7 +96,9 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
                 device_info["SOFTWAREVERSION_GATEWAY"] = data.get(
                     "SOFTWAREVERSION_GATEWAY"
                 )
-                device_info["FIRMWARECODE_DEVICE"] = data.get("FIRMWARECODE_DEVICE")
+                device_info["FIRMWARERELEASE_DEVICE"] = data.get(
+                    "FIRMWARERELEASE_DEVICE"
+                )
         except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
             _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
 

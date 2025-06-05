@@ -9,8 +9,7 @@
           "timeout": "Connection timeout"
         },
         "data_description": {
-          "host": "Hostname or IP address of the PoolDose device",
-          "serialnumber": "Located under Admin: Info",
+          "host": "Host name or IP address of the PoolDose device",
           "scan_interval": "In seconds, default is 600",
           "timeout": "in seconds, default is 30"
         }
@@ -36,9 +35,6 @@
       "pool_orp_actual": {
         "name": "ORP"
       },
-      "pool_systemname": {
-        "name": "System Name"
-      },
       "pool_ownerid": {
         "name": "Owner ID"
       },
@@ -50,12 +46,6 @@
       },
       "pool_ap_key": {
         "name": "AP KEY"
-      },
-      "pool_ip": {
-        "name": "IP"
-      },
-      "pool_mac": {
-        "name": "MAC"
       }
     },
     "number": {
