@@ -31,7 +31,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_POLLING, DOMAIN, LOGGER
-from .services import register_services
+from .services import async_setup_services
 
 ATTR_DEVICE_NAME = "device_name"
 ATTR_DEVICE_TYPE = "device_type"
@@ -69,7 +69,7 @@ class AbodeSystem:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Abode component."""
-    register_services(hass)
+    async_setup_services(hass)
     return True
 
 
