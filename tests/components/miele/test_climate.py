@@ -42,6 +42,20 @@ async def test_climate_states(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_climate_states_api_push(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+    push_data_and_actions: None,
+) -> None:
+    """Test climate state when the API pushes data via SSE."""
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
 async def test_set_target(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
@@ -68,7 +82,9 @@ async def test_api_failure(
     """Test handling of exception from API."""
     mock_miele_client.set_target_temperature.side_effect = ClientError
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
+    ):
         await hass.services.async_call(
             TEST_PLATFORM,
             SERVICE_SET_TEMPERATURE,

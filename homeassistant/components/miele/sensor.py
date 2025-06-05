@@ -151,31 +151,27 @@ class MieleSensorDescription(SensorEntityDescription):
     zone: int | None = None
     unique_id_fn: Callable[[str, MieleSensorDescription], str] | None = None
 
-    def get_unique_id(self, device_id: str) -> str:
-        """Generate the unique ID for the entity."""
-        if self.unique_id_fn:
-            return self.unique_id_fn(device_id, self)
-        return f"{device_id}-{self.key}"
-
-    def get_zone_number(self) -> int:
-        """Typed get the zone for the entity."""
-        return self.zone if self.zone else 0
-
 
 class MieleSensor(MieleEntity, SensorEntity):
     """Representation of a Sensor."""
 
     entity_description: MieleSensorDescription
 
+    def __init__(
+        self,
+        coordinator: MieleDataUpdateCoordinator,
+        device_id: str,
+        description: MieleSensorDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, device_id, description)
+        if description.unique_id_fn is not None:
+            self._attr_unique_id = description.unique_id_fn(device_id, description)
+
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the entity."""
-        return self.entity_description.get_unique_id(self._device_id)
 
 
 class MielePlateSensor(MieleSensor):
@@ -189,7 +185,7 @@ class MielePlateSensor(MieleSensor):
         # state_plate_step is [] if all zones are off
         plate_power = (
             self.device.state_plate_step[
-                self.entity_description.get_zone_number() - 1
+                cast(int, self.entity_description.zone) - 1
             ].value_raw
             if self.device.state_plate_step
             else 0
@@ -775,8 +771,8 @@ async def async_setup_entry(
             return _is_entity_registered(unique_id)
         if (
             definition.description.key == "state_plate_step"
-            and definition.description.get_zone_number()
-            > _get_plate_count(device.tech_type)
+            and definition.description.zone is not None
+            and definition.description.zone > _get_plate_count(device.tech_type)
         ):
             # don't create plate entity if not expected by the appliance tech type
             return False
@@ -796,7 +792,13 @@ async def async_setup_entry(
                     continue
 
                 entity_class = definition.entity_class
-                unique_id = definition.description.get_unique_id(device_id)
+                unique_id = (
+                    definition.description.unique_id_fn(
+                        device_id, definition.description
+                    )
+                    if definition.description.unique_id_fn is not None
+                    else MieleEntity.get_unique_id(device_id, definition.description)
+                )
 
                 # entity was already added, skip
                 if device_id not in new_devices_set and unique_id in added_entities:

@@ -27,6 +27,7 @@
     'original_name': 'Location',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'location',
     'unique_id': 'LRW3F7EK4NC700000-location',
@@ -78,6 +79,7 @@
     'original_name': 'Route',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'route',
     'unique_id': 'LRW3F7EK4NC700000-route',
@@ -145,7 +147,7 @@
   'unknown'
 # ---
 # name: test_device_tracker_streaming[device_tracker.test_origin-state]
-  'unknown'
+  'unavailable'
 # ---
 # name: test_device_tracker_streaming[device_tracker.test_route-restore]
   'not_home'

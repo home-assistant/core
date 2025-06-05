@@ -147,7 +147,7 @@ async def test_rpc_config_entry_diagnostics(
                 ],
                 "last_detection": ANY,
                 "monotonic_time": ANY,
-                "name": "Mock Title (12:34:56:78:9A:BE)",
+                "name": "Test name (12:34:56:78:9A:BE)",
                 "scanning": True,
                 "start_time": ANY,
                 "source": "12:34:56:78:9A:BE",

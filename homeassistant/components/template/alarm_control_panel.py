@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator, Sequence
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -37,9 +38,11 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
@@ -264,32 +267,27 @@ async def async_setup_platform(
     )
 
 
-class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, RestoreEntity):
-    """Representation of a templated Alarm Control Panel."""
+class AbstractTemplateAlarmControlPanel(
+    AbstractTemplateEntity, AlarmControlPanelEntity, RestoreEntity
+):
+    """Representation of a templated Alarm Control Panel features."""
 
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: dict,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the panel."""
-        super().__init__(hass, config=config, fallback_name=None, unique_id=unique_id)
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
-            self.entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, object_id, hass=hass
-            )
-        name = self._attr_name
-        if TYPE_CHECKING:
-            assert name is not None
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+        """Initialize the features."""
         self._template = config.get(CONF_STATE)
 
         self._attr_code_arm_required: bool = config[CONF_CODE_ARM_REQUIRED]
         self._attr_code_format = config[CONF_CODE_FORMAT].value
 
-        self._attr_supported_features = AlarmControlPanelEntityFeature(0)
+        self._state: AlarmControlPanelState | None = None
+
+    def _register_scripts(
+        self, config: dict[str, Any]
+    ) -> Generator[
+        tuple[str, Sequence[dict[str, Any]], AlarmControlPanelEntityFeature | int]
+    ]:
         for action_id, supported_feature in (
             (CONF_DISARM_ACTION, 0),
             (CONF_ARM_AWAY_ACTION, AlarmControlPanelEntityFeature.ARM_AWAY),
@@ -302,20 +300,15 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
             ),
             (CONF_TRIGGER_ACTION, AlarmControlPanelEntityFeature.TRIGGER),
         ):
-            # Scripts can be an empty list, therefore we need to check for None
             if (action_config := config.get(action_id)) is not None:
-                self.add_script(action_id, action_config, name, DOMAIN)
-                self._attr_supported_features |= supported_feature
+                yield (action_id, action_config, supported_feature)
 
-        self._state: AlarmControlPanelState | None = None
-        self._attr_device_info = async_device_info_to_link_from_device_id(
-            hass,
-            config.get(CONF_DEVICE_ID),
-        )
+    @property
+    def alarm_state(self) -> AlarmControlPanelState | None:
+        """Return the state of the device."""
+        return self._state
 
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
+    async def _async_handle_restored_state(self) -> None:
         if (
             (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
@@ -326,17 +319,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
         ):
             self._state = AlarmControlPanelState(last_state.state)
 
-    @property
-    def alarm_state(self) -> AlarmControlPanelState | None:
-        """Return the state of the device."""
-        return self._state
-
-    @callback
-    def _update_state(self, result):
-        if isinstance(result, TemplateError):
-            self._state = None
-            return
-
+    def _handle_state(self, result: Any) -> None:
         # Validate state
         if result in _VALID_STATES:
             self._state = result
@@ -351,16 +334,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
         )
         self._state = None
 
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        if self._template:
-            self.add_template_attribute(
-                "_state", self._template, None, self._update_state
-            )
-        super()._async_setup_templates()
-
-    async def _async_alarm_arm(self, state, script, code):
+    async def _async_alarm_arm(self, state: Any, script: Script | None, code: Any):
         """Arm the panel to specified state with supplied script."""
         optimistic_set = False
 
@@ -368,9 +342,10 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
             self._state = state
             optimistic_set = True
 
-        await self.async_run_script(
-            script, run_variables={ATTR_CODE: code}, context=self._context
-        )
+        if script:
+            await self.async_run_script(
+                script, run_variables={ATTR_CODE: code}, context=self._context
+            )
 
         if optimistic_set:
             self.async_write_ha_state()
@@ -430,3 +405,62 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
             script=self._action_scripts.get(CONF_TRIGGER_ACTION),
             code=code,
         )
+
+
+class AlarmControlPanelTemplate(TemplateEntity, AbstractTemplateAlarmControlPanel):
+    """Representation of a templated Alarm Control Panel."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict,
+        unique_id: str | None,
+    ) -> None:
+        """Initialize the panel."""
+        TemplateEntity.__init__(
+            self, hass, config=config, fallback_name=None, unique_id=unique_id
+        )
+        AbstractTemplateAlarmControlPanel.__init__(self, config)
+        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+            self.entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT, object_id, hass=hass
+            )
+        name = self._attr_name
+        if TYPE_CHECKING:
+            assert name is not None
+
+        self._attr_supported_features = AlarmControlPanelEntityFeature(0)
+        for action_id, action_config, supported_feature in self._register_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+        self._attr_device_info = async_device_info_to_link_from_device_id(
+            hass,
+            config.get(CONF_DEVICE_ID),
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last state."""
+        await super().async_added_to_hass()
+        await self._async_handle_restored_state()
+
+    @callback
+    def _update_state(self, result):
+        if isinstance(result, TemplateError):
+            self._state = None
+            return
+
+        self._handle_state(result)
+
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
+        if self._template:
+            self.add_template_attribute(
+                "_state", self._template, None, self._update_state
+            )
+        super()._async_setup_templates()

@@ -114,21 +114,23 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [
         {
             "addons": test_backup.addons,
-            "backup_id": test_backup.backup_id,
-            "date": test_backup.date,
-            "database_included": test_backup.database_included,
-            "folders": test_backup.folders,
-            "homeassistant_included": test_backup.homeassistant_included,
-            "homeassistant_version": test_backup.homeassistant_version,
-            "name": test_backup.name,
-            "extra_metadata": test_backup.extra_metadata,
             "agents": {
                 f"{DOMAIN}.{mock_config_entry.entry_id}": {
                     "protected": test_backup.protected,
                     "size": test_backup.size,
                 }
             },
+            "backup_id": test_backup.backup_id,
+            "database_included": test_backup.database_included,
+            "date": test_backup.date,
+            "extra_metadata": test_backup.extra_metadata,
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
+            "folders": test_backup.folders,
+            "homeassistant_included": test_backup.homeassistant_included,
+            "homeassistant_version": test_backup.homeassistant_version,
+            "name": test_backup.name,
             "with_automatic_settings": None,
         }
     ]
@@ -152,21 +154,23 @@ async def test_agents_get_backup(
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backup"] == {
         "addons": test_backup.addons,
-        "backup_id": test_backup.backup_id,
-        "date": test_backup.date,
-        "database_included": test_backup.database_included,
-        "folders": test_backup.folders,
-        "homeassistant_included": test_backup.homeassistant_included,
-        "homeassistant_version": test_backup.homeassistant_version,
-        "name": test_backup.name,
-        "extra_metadata": test_backup.extra_metadata,
         "agents": {
             f"{DOMAIN}.{mock_config_entry.entry_id}": {
                 "protected": test_backup.protected,
                 "size": test_backup.size,
             }
         },
+        "backup_id": test_backup.backup_id,
+        "database_included": test_backup.database_included,
+        "date": test_backup.date,
+        "extra_metadata": test_backup.extra_metadata,
+        "failed_addons": [],
         "failed_agent_ids": [],
+        "failed_folders": [],
+        "folders": test_backup.folders,
+        "homeassistant_included": test_backup.homeassistant_included,
+        "homeassistant_version": test_backup.homeassistant_version,
+        "name": test_backup.name,
         "with_automatic_settings": None,
     }
 
