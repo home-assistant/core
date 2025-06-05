@@ -16,7 +16,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_ACCESS, DOMAIN
-from .services import register_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -26,7 +26,7 @@ type GoogleSheetsConfigEntry = ConfigEntry[OAuth2Session]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Google Sheets component."""
 
-    register_services(hass)
+    async_setup_services(hass)
 
     return True
 

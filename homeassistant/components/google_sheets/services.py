@@ -76,7 +76,7 @@ async def _async_append_to_sheet(call: ServiceCall) -> None:
     await call.hass.async_add_executor_job(_append_to_sheet, call, entry)
 
 
-def register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Add the services for Google Sheets."""
 
     hass.services.async_register(
