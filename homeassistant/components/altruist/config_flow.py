@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
+from .const import CONF_DEVICE_ID, CONF_IP_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,15 +21,14 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.device: AltruistDeviceModel = None
-        super().__init__()
+        self.device: AltruistDeviceModel | None = None
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         ip_address = ""
         if user_input is not None:
-            ip_address = user_input.get("ip_address", "")
+            ip_address = user_input[CONF_IP_ADDRESS]
             if self._is_valid_ip(ip_address):
                 try:
                     session = async_get_clientsession(self.hass)
@@ -41,7 +40,10 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=ip_address,
-                        data={"ip_address": ip_address, "id": client.device_id},
+                        data={
+                            CONF_IP_ADDRESS: ip_address,
+                            CONF_DEVICE_ID: client.device_id,
+                        },
                     )
             else:
                 errors["base"] = "invalid_ip"
@@ -67,7 +69,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
             session, str(discovery_info.ip_address)
         )
         self.device = client.device
-        _LOGGER.info("Zeroconf device: %s", client.device)
+        _LOGGER.debug("Zeroconf device: %s", client.device)
         await self.async_set_unique_id(client.device_id)
         self._abort_if_unique_id_configured()
         self.context.update(
@@ -84,6 +86,8 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
+        if self.device is None:
+            raise RuntimeError("Device must be set before discovery_confirm step")
         if user_input is not None:
             return self.async_create_entry(
                 title=f"{self.device.name} {self.device.id}",

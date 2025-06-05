@@ -25,5 +25,54 @@
       "invalid_ip": "Invalid IP address",
       "no_device_found": "Can't connect to device on {ip_address}"
     }
+  },
+  "entity": {
+    "sensor": {
+      "bme_humidity": {
+        "name": "BME280 humidity"
+      },
+      "bme_pressure": {
+        "name": "BME280 pressure"
+      },
+      "bme_temperature": {
+        "name": "BME280 temperature"
+      },
+      "bmp_pressure": {
+        "name": "BMP pressure"
+      },
+      "bmp_temperature": {
+        "name": "BMP temperature"
+      },
+      "bmp280_temperature": {
+        "name": "BMP280 temperature"
+      },
+      "bmp280_pressure": {
+        "name": "BMP280 pressure"
+      },
+      "htu_humidity": {
+        "name": "HTU21D humidity"
+      },
+      "htu_temperature": {
+        "name": "HTU21D temperature"
+      },
+      "sht_humidity": {
+        "name": "SHT3X humidity"
+      },
+      "sht_temperature": {
+        "name": "SHT3X temperature"
+      },
+      "noise_max": {
+        "name": "Maximum noise"
+      },
+      "noise_avg": {
+        "name": "Average noise"
+      },
+      "ccs_co2": {
+        "name": "CCS CO2"
+      },
+      "scd4x_co2": {
+        "name": "SCD4x CO2"
+      }
+    }
   }
 }

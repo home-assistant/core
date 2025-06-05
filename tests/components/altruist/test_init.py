@@ -6,6 +6,7 @@ from altruistclient import AltruistError
 import pytest
 
 from homeassistant.components.altruist.const import DOMAIN
+from homeassistant.components.altruist.coordinator import AltruistDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -18,17 +19,24 @@ async def test_setup_entry_success(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.altruist.AltruistClient.from_ip_address",
+        "homeassistant.components.altruist.coordinator.AltruistClient.from_ip_address",
         return_value=mock_altruist_client,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data == mock_altruist_client
 
-    # Check that the sensor platform was set up
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    # Confirm that the runtime_data contains a coordinator
+    coordinator = mock_config_entry.runtime_data
+    assert isinstance(coordinator, AltruistDataUpdateCoordinator)
+
+    # Confirm that coordinator.client is the mock client
+    assert coordinator.client == mock_altruist_client
+
+    # Confirm that the domain is properly set up
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
 
 
 async def test_setup_entry_client_creation_failure(
@@ -38,7 +46,7 @@ async def test_setup_entry_client_creation_failure(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.altruist.AltruistClient.from_ip_address",
+        "homeassistant.components.altruist.coordinator.AltruistClient.from_ip_address",
         side_effect=AltruistError("Connection failed"),
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -55,7 +63,7 @@ async def test_setup_entry_fetch_data_failure(
     mock_altruist_client.fetch_data.side_effect = Exception("Fetch failed")
 
     with patch(
-        "homeassistant.components.altruist.AltruistClient.from_ip_address",
+        "homeassistant.components.altruist.coordinator.AltruistClient.from_ip_address",
         return_value=mock_altruist_client,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -71,7 +79,7 @@ async def test_unload_entry(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.altruist.AltruistClient.from_ip_address",
+        "homeassistant.components.altruist.coordinator.AltruistClient.from_ip_address",
         return_value=mock_altruist_client,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -94,7 +102,7 @@ async def test_setup_entry_platforms_setup(
 
     with (
         patch(
-            "homeassistant.components.altruist.AltruistClient.from_ip_address",
+            "homeassistant.components.altruist.coordinator.AltruistClient.from_ip_address",
             return_value=mock_altruist_client,
         ),
         patch(
@@ -114,7 +122,7 @@ async def test_setup_entry_runtime_data_stored(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.altruist.AltruistClient.from_ip_address",
+        "homeassistant.components.altruist.coordinator.AltruistClient.from_ip_address",
         return_value=mock_altruist_client,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -122,7 +130,12 @@ async def test_setup_entry_runtime_data_stored(
 
     # Verify that the client is stored as runtime data
     assert hasattr(mock_config_entry, "runtime_data")
-    assert mock_config_entry.runtime_data == mock_altruist_client
+    # Confirm that the runtime_data contains a coordinator
+    coordinator = mock_config_entry.runtime_data
+    assert isinstance(coordinator, AltruistDataUpdateCoordinator)
+
+    # Confirm that coordinator.client is the mock client
+    assert coordinator.client == mock_altruist_client
 
 
 async def test_setup_entry_logging(
@@ -136,7 +149,7 @@ async def test_setup_entry_logging(
     mock_altruist_client.fetch_data.side_effect = Exception("Test error")
 
     with patch(
-        "homeassistant.components.altruist.AltruistClient.from_ip_address",
+        "homeassistant.components.altruist.coordinator.AltruistClient.from_ip_address",
         return_value=mock_altruist_client,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)

@@ -1,6 +1,6 @@
 {
   "domain": "altruist",
-  "name": "Altruist Sensor",
+  "name": "Altruist",
   "codeowners": ["@airalab", "@LoSk-p"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/altruist",
