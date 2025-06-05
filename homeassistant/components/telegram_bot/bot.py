@@ -28,6 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
     CONF_API_KEY,
+    HTTP_BASIC_AUTHENTICATION,
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
@@ -855,70 +856,119 @@ async def load_data(
     verify_ssl=None,
 ):
     """Load data into ByteIO/File container from a source."""
-    try:
-        if url is not None:
-            # Load data from URL
-            params: dict[str, Any] = {}
-            headers = {}
-            if authentication == HTTP_BEARER_AUTHENTICATION and password is not None:
-                headers = {"Authorization": f"Bearer {password}"}
-            elif username is not None and password is not None:
-                if authentication == HTTP_DIGEST_AUTHENTICATION:
-                    params["auth"] = httpx.DigestAuth(username, password)
-                else:
-                    params["auth"] = httpx.BasicAuth(username, password)
-            if verify_ssl is not None:
-                params["verify"] = verify_ssl
+    if url is not None:
+        # Load data from URL
+        params: dict[str, Any] = {}
+        headers = {}
+        _validate_credentials_input(authentication, username, password)
+        if authentication == HTTP_BEARER_AUTHENTICATION:
+            headers = {"Authorization": f"Bearer {password}"}
+        elif authentication == HTTP_DIGEST_AUTHENTICATION:
+            params["auth"] = httpx.DigestAuth(username, password)
+        elif authentication == HTTP_BASIC_AUTHENTICATION:
+            params["auth"] = httpx.BasicAuth(username, password)
 
-            retry_num = 0
-            async with httpx.AsyncClient(
-                timeout=15, headers=headers, **params
-            ) as client:
-                while retry_num < num_retries:
+        if verify_ssl is not None:
+            params["verify"] = verify_ssl
+
+        retry_num = 0
+        async with httpx.AsyncClient(timeout=15, headers=headers, **params) as client:
+            while retry_num < num_retries:
+                try:
                     req = await client.get(url)
-                    if req.status_code != 200:
-                        _LOGGER.warning(
-                            "Status code %s (retry #%s) loading %s",
-                            req.status_code,
-                            retry_num + 1,
-                            url,
-                        )
-                    else:
-                        data = io.BytesIO(req.content)
-                        if data.read():
-                            data.seek(0)
-                            data.name = url
-                            return data
-                        _LOGGER.warning(
-                            "Empty data (retry #%s) in %s)", retry_num + 1, url
-                        )
-                    retry_num += 1
-                    if retry_num < num_retries:
-                        await asyncio.sleep(
-                            1
-                        )  # Add a sleep to allow other async operations to proceed
-                _LOGGER.warning(
-                    "Can't load data in %s after %s retries", url, retry_num
-                )
-        elif filepath is not None:
-            if hass.config.is_allowed_path(filepath):
-                return await hass.async_add_executor_job(
-                    _read_file_as_bytesio, filepath
-                )
+                except (httpx.HTTPError, httpx.InvalidURL) as err:
+                    raise ServiceValidationError(
+                        f"Failed to load URL: {err!s}",
+                        translation_domain=DOMAIN,
+                        translation_key="failed_to_load_url",
+                        translation_placeholders={"error": str(err)},
+                    ) from err
 
-            _LOGGER.warning("'%s' are not secure to load data from!", filepath)
-        else:
-            _LOGGER.warning("Can't load data. No data found in params!")
+                if req.status_code != 200:
+                    _LOGGER.warning(
+                        "Status code %s (retry #%s) loading %s",
+                        req.status_code,
+                        retry_num + 1,
+                        url,
+                    )
+                else:
+                    data = io.BytesIO(req.content)
+                    if data.read():
+                        data.seek(0)
+                        data.name = url
+                        return data
+                    _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
+                retry_num += 1
+                if retry_num < num_retries:
+                    await asyncio.sleep(
+                        1
+                    )  # Add a sleep to allow other async operations to proceed
+            raise ServiceValidationError(
+                f"Failed to load URL: {req.status_code}",
+                translation_domain=DOMAIN,
+                translation_key="failed_to_load_url",
+                translation_placeholders={"error": str(req.status_code)},
+            )
+    elif filepath is not None:
+        if hass.config.is_allowed_path(filepath):
+            return await hass.async_add_executor_job(_read_file_as_bytesio, filepath)
 
-    except (OSError, TypeError) as error:
-        _LOGGER.error("Can't load data into ByteIO: %s", error)
+        raise ServiceValidationError(
+            "File path has not been configured in allowlist_external_dirs.",
+            translation_domain=DOMAIN,
+            translation_key="allowlist_external_dirs_error",
+        )
+    else:
+        raise ServiceValidationError(
+            "URL or File is required.",
+            translation_domain=DOMAIN,
+            translation_key="missing_input",
+            translation_placeholders={"field": "URL or File"},
+        )
 
-    return None
+
+def _validate_credentials_input(
+    authentication: str | None, username: str | None, password: str | None
+) -> None:
+    if (
+        authentication in (HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
+        and username is None
+    ):
+        raise ServiceValidationError(
+            "Username is required.",
+            translation_domain=DOMAIN,
+            translation_key="missing_input",
+            translation_placeholders={"field": "Username"},
+        )
+
+    if (
+        authentication
+        in (
+            HTTP_BASIC_AUTHENTICATION,
+            HTTP_BEARER_AUTHENTICATION,
+            HTTP_BEARER_AUTHENTICATION,
+        )
+        and password is None
+    ):
+        raise ServiceValidationError(
+            "Password is required.",
+            translation_domain=DOMAIN,
+            translation_key="missing_input",
+            translation_placeholders={"field": "Password"},
+        )
 
 
 def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     """Read a file and return it as a BytesIO object."""
-    with open(file_path, "rb") as file:
-        data = io.BytesIO(file.read())
-        data.name = file_path
-        return data
+    try:
+        with open(file_path, "rb") as file:
+            data = io.BytesIO(file.read())
+            data.name = file_path
+            return data
+    except (OSError, TypeError) as err:
+        raise ServiceValidationError(
+            f"Failed to load file: {err!s}",
+            translation_domain=DOMAIN,
+            translation_key="failed_to_load_file",
+            translation_placeholders={"error": str(err)},
+        ) from err
