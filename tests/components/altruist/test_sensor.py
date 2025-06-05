@@ -3,6 +3,9 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
+from homeassistant.components.altruist.config_flow import AltruistConfigFlow
 from homeassistant.components.altruist.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
@@ -231,3 +234,44 @@ async def test_missing_sensor_data(
     temp_state = hass.states.get("sensor.altruist_5366960e8b18_bme280_temperature")
 
     assert temp_state is not None
+
+
+async def test_sensor_not_in_descriptions(
+    hass: HomeAssistant, mock_config_entry, mock_altruist_client
+) -> None:
+    """Test that sensor not in SENSOR_DESCRIPTIONS is ignored."""
+
+    # Setup with unknown sensor name
+    mock_altruist_client.sensor_names = ["UNKNOWN_sensor"]
+    mock_altruist_client.fetch_data = AsyncMock(
+        return_value=[{"value_type": "UNKNOWN_sensor", "value": "123"}]
+    )
+
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.altruist.coordinator.AltruistClient.from_ip_address",
+        return_value=mock_altruist_client,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Check no entity is created
+    unknown_sensor_entity_id = "sensor.altruist_5366960e8b18_unknown_sensor"
+    assert hass.states.get(unknown_sensor_entity_id) is None
+
+    # You can also assert the entire list of registered entities is empty
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, mock_config_entry.entry_id)
+    assert len(entries) == 0
+
+
+@pytest.mark.asyncio
+async def test_discovery_confirm_without_device_raises() -> None:
+    """Test that async_step_discovery_confirm raises if device is not set."""
+    flow = AltruistConfigFlow()
+
+    with pytest.raises(
+        RuntimeError, match="Device must be set before discovery_confirm step"
+    ):
+        await flow.async_step_discovery_confirm()
