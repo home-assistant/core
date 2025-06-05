@@ -1705,7 +1705,7 @@ pyipp==0.17.0
 pyiqvia==2022.04.0
 
 # homeassistant.components.iskra
-pyiskra==0.1.19
+pyiskra==0.1.21
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -1995,7 +1995,7 @@ python-MotionMount==2.3.0
 python-awair==0.2.4
 
 # homeassistant.components.bsblan
-python-bsblan==1.2.1
+python-bsblan==2.0.1
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.20
@@ -2461,7 +2461,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.10.1
+uiprotect==7.11.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
