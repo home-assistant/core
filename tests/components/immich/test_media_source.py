@@ -43,9 +43,15 @@ async def test_get_media_source(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("identifier", "exception_msg"),
     [
-        ("unique_id", "No file name"),
-        ("unique_id/albums/album_id", "No file name"),
-        ("unique_id/albums/album_id/asset_id/filename", "No file extension"),
+        ("unique_id", "Could not resolve identifier that has no mime-type"),
+        (
+            "unique_id|albums|album_id",
+            "Could not resolve identifier that has no mime-type",
+        ),
+        (
+            "unique_id|albums|album_id|asset_id|filename",
+            "Could not parse identifier",
+        ),
     ],
 )
 async def test_resolve_media_bad_identifier(
@@ -64,14 +70,19 @@ async def test_resolve_media_bad_identifier(
     ("identifier", "url", "mime_type"),
     [
         (
-            "unique_id/albums/album_id/asset_id/filename.jpg",
-            "/immich/unique_id/asset_id/filename.jpg/fullsize",
+            "unique_id|albums|album_id|asset_id|filename.jpg|image/jpeg",
+            "/immich/unique_id/asset_id/fullsize/image/jpeg",
             "image/jpeg",
         ),
         (
-            "unique_id/albums/album_id/asset_id/filename.png",
-            "/immich/unique_id/asset_id/filename.png/fullsize",
+            "unique_id|albums|album_id|asset_id|filename.png|image/png",
+            "/immich/unique_id/asset_id/fullsize/image/png",
             "image/png",
+        ),
+        (
+            "unique_id|albums|album_id|asset_id|filename.mp4|video/mp4",
+            "/immich/unique_id/asset_id/fullsize/video/mp4",
+            "video/mp4",
         ),
     ],
 )
@@ -137,7 +148,7 @@ async def test_browse_media_get_root(
     assert isinstance(media_file, BrowseMedia)
     assert media_file.title == "albums"
     assert media_file.media_content_id == (
-        "media-source://immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e/albums"
+        "media-source://immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums"
     )
 
 
@@ -154,7 +165,7 @@ async def test_browse_media_get_albums(
 
     source = await async_get_media_source(hass)
     item = MediaSourceItem(
-        hass, DOMAIN, "e7ef5713-9dab-4bd4-b899-715b0ca4379e/albums", None
+        hass, DOMAIN, "e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums", None
     )
     result = await source.async_browse_media(item)
 
@@ -165,7 +176,7 @@ async def test_browse_media_get_albums(
     assert media_file.title == "My Album"
     assert media_file.media_content_id == (
         "media-source://immich/"
-        "e7ef5713-9dab-4bd4-b899-715b0ca4379e/albums/"
+        "e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums|"
         "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"
     )
 
@@ -193,7 +204,7 @@ async def test_browse_media_get_albums_error(
 
     source = await async_get_media_source(hass)
 
-    item = MediaSourceItem(hass, DOMAIN, f"{mock_config_entry.unique_id}/albums", None)
+    item = MediaSourceItem(hass, DOMAIN, f"{mock_config_entry.unique_id}|albums", None)
     result = await source.async_browse_media(item)
 
     assert result
@@ -219,7 +230,7 @@ async def test_browse_media_get_album_items_error(
     item = MediaSourceItem(
         hass,
         DOMAIN,
-        "e7ef5713-9dab-4bd4-b899-715b0ca4379e/albums/721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
+        "e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
         None,
     )
     result = await source.async_browse_media(item)
@@ -240,7 +251,7 @@ async def test_browse_media_get_album_items_error(
     item = MediaSourceItem(
         hass,
         DOMAIN,
-        "e7ef5713-9dab-4bd4-b899-715b0ca4379e/albums/721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
+        "e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
         None,
     )
     result = await source.async_browse_media(item)
@@ -266,7 +277,7 @@ async def test_browse_media_get_album_items(
     item = MediaSourceItem(
         hass,
         DOMAIN,
-        "e7ef5713-9dab-4bd4-b899-715b0ca4379e/albums/721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
+        "e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums|721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
         None,
     )
     result = await source.async_browse_media(item)
@@ -276,9 +287,9 @@ async def test_browse_media_get_album_items(
     media_file = result.children[0]
     assert isinstance(media_file, BrowseMedia)
     assert media_file.identifier == (
-        "e7ef5713-9dab-4bd4-b899-715b0ca4379e/albums/"
-        "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6/"
-        "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/filename.jpg"
+        "e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums|"
+        "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6|"
+        "2e94c203-50aa-4ad2-8e29-56dd74e0eff4|filename.jpg|image/jpeg"
     )
     assert media_file.title == "filename.jpg"
     assert media_file.media_class == MediaClass.IMAGE
@@ -287,15 +298,15 @@ async def test_browse_media_get_album_items(
     assert not media_file.can_expand
     assert media_file.thumbnail == (
         "/immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e/"
-        "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/filename.jpg/thumbnail"
+        "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/thumbnail/image/jpeg"
     )
 
     media_file = result.children[1]
     assert isinstance(media_file, BrowseMedia)
     assert media_file.identifier == (
-        "e7ef5713-9dab-4bd4-b899-715b0ca4379e/albums/"
-        "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6/"
-        "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/filename.mp4"
+        "e7ef5713-9dab-4bd4-b899-715b0ca4379e|albums|"
+        "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6|"
+        "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b|filename.mp4|video/mp4"
     )
     assert media_file.title == "filename.mp4"
     assert media_file.media_class == MediaClass.VIDEO
@@ -304,7 +315,7 @@ async def test_browse_media_get_album_items(
     assert not media_file.can_expand
     assert media_file.thumbnail == (
         "/immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e/"
-        "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/thumbnail.jpg/thumbnail"
+        "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/thumbnail/image/jpeg"
     )
 
 
@@ -327,12 +338,12 @@ async def test_media_view(
     with patch("homeassistant.components.immich.PLATFORMS", []):
         await setup_integration(hass, mock_config_entry)
 
-    # wrong url (without file extension)
+    # wrong url (without mime type)
     with pytest.raises(web.HTTPNotFound):
         await view.get(
             request,
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
-            "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/filename/thumbnail",
+            "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/thumbnail",
         )
 
     # exception in async_view_asset()
@@ -348,7 +359,7 @@ async def test_media_view(
         await view.get(
             request,
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
-            "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/filename.jpg/thumbnail",
+            "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/thumbnail/image/jpeg",
         )
 
     # exception in async_play_video_stream()
@@ -364,7 +375,7 @@ async def test_media_view(
         await view.get(
             request,
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
-            "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/filename.mp4/fullsize",
+            "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/fullsize/video/mp4",
         )
 
     # success
@@ -374,14 +385,14 @@ async def test_media_view(
         result = await view.get(
             request,
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
-            "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/filename.jpg/thumbnail",
+            "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/thumbnail/image/jpeg",
         )
         assert isinstance(result, web.Response)
     with patch.object(tempfile, "tempdir", tmp_path):
         result = await view.get(
             request,
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
-            "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/filename.jpg/fullsize",
+            "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/fullsize/image/jpeg",
         )
         assert isinstance(result, web.Response)
 
@@ -393,6 +404,6 @@ async def test_media_view(
         result = await view.get(
             request,
             "e7ef5713-9dab-4bd4-b899-715b0ca4379e",
-            "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/filename.mp4/fullsize",
+            "2e65a5f2-db83-44c4-81ab-f5ff20c9bd7b/fullsize/video/mp4",
         )
         assert isinstance(result, web.StreamResponse)
