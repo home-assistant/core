@@ -51,7 +51,7 @@ from .const import (
 )
 from .helpers import service_signal
 from .sensor import SENSOR_KEYS
-from .services import register_services
+from .services import async_setup_services
 from .switch import SWITCH_KEYS
 
 _LOGGER = logging.getLogger(__name__)
@@ -449,7 +449,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not hass.data[DATA_AMCREST][DEVICES]:
         return False
 
-    register_services(hass)
+    async_setup_services(hass)
 
     return True
 

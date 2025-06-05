@@ -15,7 +15,7 @@ from .const import CAMERAS, DATA_AMCREST, DOMAIN
 from .helpers import service_signal
 
 
-def register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Amcrest IP Camera services."""
 
     def have_permission(user: User | None, entity_id: str) -> bool:
