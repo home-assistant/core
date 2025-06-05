@@ -8,7 +8,7 @@ from voluptuous.error import MultipleInvalid
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.subaru.const import (
     ATTR_DOOR,
-    DOMAIN as SUBARU_DOMAIN,
+    DOMAIN,
     SERVICE_UNLOCK_SPECIFIC_DOOR,
     UNLOCK_DOOR_DRIVERS,
 )
@@ -68,7 +68,7 @@ async def test_unlock_specific_door(hass: HomeAssistant, ev_entry) -> None:
     """Test subaru unlock specific door function."""
     with patch(MOCK_API_UNLOCK) as mock_unlock:
         await hass.services.async_call(
-            SUBARU_DOMAIN,
+            DOMAIN,
             SERVICE_UNLOCK_SPECIFIC_DOOR,
             {ATTR_ENTITY_ID: DEVICE_ID, ATTR_DOOR: UNLOCK_DOOR_DRIVERS},
             blocking=True,
@@ -81,7 +81,7 @@ async def test_unlock_specific_door_invalid(hass: HomeAssistant, ev_entry) -> No
     """Test subaru unlock specific door function."""
     with patch(MOCK_API_UNLOCK) as mock_unlock, pytest.raises(MultipleInvalid):
         await hass.services.async_call(
-            SUBARU_DOMAIN,
+            DOMAIN,
             SERVICE_UNLOCK_SPECIFIC_DOOR,
             {ATTR_ENTITY_ID: DEVICE_ID, ATTR_DOOR: "bad_value"},
             blocking=True,
