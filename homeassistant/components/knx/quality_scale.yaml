@@ -99,7 +99,7 @@ rules:
     status: exempt
     comment: |
       Since all entities are configured manually, names are user-defined.
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
