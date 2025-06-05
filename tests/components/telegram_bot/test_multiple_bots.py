@@ -1,7 +1,8 @@
 """Test automatic config entry selection for multiple telegram bots."""
 
-import pytest
 from unittest.mock import AsyncMock
+
+import pytest
 
 from homeassistant.components.telegram_bot import DOMAIN, SERVICE_SEND_MESSAGE
 from homeassistant.components.telegram_bot.const import (
@@ -24,10 +25,10 @@ from tests.common import MockConfigEntry
 def mock_first_runtime_service() -> AsyncMock:
     """Mock runtime service for first telegram bot."""
     service = AsyncMock()
-    
+
     # Chat IDs that belong to this bot
     bot_chat_ids = {111111111, 222222222}
-    
+
     async def mock_send_message(target=None, **kwargs):
         if target is None:
             return {111111111: 12345}  # Default first chat
@@ -35,7 +36,7 @@ def mock_first_runtime_service() -> AsyncMock:
             target = [target]
         # Only return chat IDs that belong to this bot AND are in target
         return {chat_id: 12345 for chat_id in target if chat_id in bot_chat_ids}
-    
+
     service.send_message = AsyncMock(side_effect=mock_send_message)
     service.send_file = AsyncMock(side_effect=mock_send_message)
     service.send_sticker = AsyncMock(side_effect=mock_send_message)
@@ -51,10 +52,10 @@ def mock_first_runtime_service() -> AsyncMock:
 def mock_second_runtime_service() -> AsyncMock:
     """Mock runtime service for second telegram bot."""
     service = AsyncMock()
-    
+
     # Chat IDs that belong to this bot
     bot_chat_ids = {333333333, 444444444}
-    
+
     async def mock_send_message(target=None, **kwargs):
         if target is None:
             return {333333333: 12345}  # Default first chat
@@ -62,7 +63,7 @@ def mock_second_runtime_service() -> AsyncMock:
             target = [target]
         # Only return chat IDs that belong to this bot AND are in target
         return {chat_id: 12345 for chat_id in target if chat_id in bot_chat_ids}
-    
+
     service.send_message = AsyncMock(side_effect=mock_send_message)
     service.send_file = AsyncMock(side_effect=mock_send_message)
     service.send_sticker = AsyncMock(side_effect=mock_send_message)
@@ -97,7 +98,7 @@ def mock_first_bot_config_entry(mock_first_runtime_service: AsyncMock) -> MockCo
                 unique_id="222222222",
                 data={CONF_CHAT_ID: 222222222},
                 subentry_id="second_chat_id",
-                subentry_type="allowed_chat_ids", 
+                subentry_type="allowed_chat_ids",
                 title="First Bot Second Chat",
             ),
         ],
@@ -128,7 +129,7 @@ def mock_second_bot_config_entry(mock_second_runtime_service: AsyncMock) -> Mock
             ConfigSubentryData(
                 unique_id="444444444",
                 data={CONF_CHAT_ID: 444444444},
-                subentry_id="fourth_chat_id", 
+                subentry_id="fourth_chat_id",
                 subentry_type="allowed_chat_ids",
                 title="Second Bot Second Chat",
             ),
@@ -162,11 +163,11 @@ async def test_automatic_config_entry_selection_by_target(
         blocking=True,
         return_response=True,
     )
-    
+
     assert response["chats"][0]["message_id"] == 12345
     assert response["chats"][0]["chat_id"] == 111111111
 
-    # Test sending to second bot's chat - should use second config entry  
+    # Test sending to second bot's chat - should use second config entry
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
@@ -177,7 +178,7 @@ async def test_automatic_config_entry_selection_by_target(
         blocking=True,
         return_response=True,
     )
-    
+
     assert response["chats"][0]["message_id"] == 12345
     assert response["chats"][0]["chat_id"] == 333333333
 
@@ -206,7 +207,7 @@ async def test_automatic_config_entry_selection_multiple_targets(
         blocking=True,
         return_response=True,
     )
-    
+
     assert len(response["chats"]) == 2
     chat_ids = [chat["chat_id"] for chat in response["chats"]]
     assert 111111111 in chat_ids
@@ -238,7 +239,7 @@ async def test_no_matching_config_entry_for_target(
             blocking=True,
             return_response=True,
         )
-    
+
     assert err.value.translation_key == "no_matching_target"
 
 
@@ -266,7 +267,7 @@ async def test_mixed_targets_from_different_bots(
         blocking=True,
         return_response=True,
     )
-    
+
     # Should only send to the chat that belongs to the selected config entry (first bot)
     assert len(response["chats"]) == 1
     assert response["chats"][0]["chat_id"] == 111111111
@@ -296,7 +297,7 @@ async def test_single_target_as_int(
         blocking=True,
         return_response=True,
     )
-    
+
     assert response["chats"][0]["message_id"] == 12345
     assert response["chats"][0]["chat_id"] == 333333333
 
@@ -326,7 +327,7 @@ async def test_fallback_to_original_behavior_without_target(
             blocking=True,
             return_response=True,
         )
-    
+
     assert err.value.translation_key == "multiple_config_entry"
 
 
@@ -355,7 +356,7 @@ async def test_explicit_config_entry_id(
         blocking=True,
         return_response=True,
     )
-    
+
     assert response["chats"][0]["message_id"] == 12345
     assert response["chats"][0]["chat_id"] == 333333333
 
@@ -382,6 +383,6 @@ async def test_single_config_entry_behavior(
         blocking=True,
         return_response=True,
     )
-    
+
     assert response["chats"][0]["message_id"] == 12345
     assert response["chats"][0]["chat_id"] == 111111111

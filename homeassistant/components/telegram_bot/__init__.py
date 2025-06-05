@@ -327,7 +327,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     translation_domain=DOMAIN,
                     translation_key="no_config_entries",
                 )
-            elif len(config_entries) == 1:
+            if len(config_entries) == 1:
                 config_entry = config_entries[0]
             else:
                 # Multiple config entries: try to find matching bot
@@ -336,18 +336,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     # Convert single target to list for consistent handling
                     if isinstance(target, int):
                         target = [target]
-                    
+
                     # Find config entries that contain any of the target chat_ids
                     matching_entries = []
                     for entry in config_entries:
                         if hasattr(entry, "runtime_data") and entry.runtime_data:
                             entry_chat_ids = [
-                                subentry.data[CONF_CHAT_ID] 
+                                subentry.data[CONF_CHAT_ID]
                                 for subentry in entry.subentries.values()
                             ]
                             if any(chat_id in entry_chat_ids for chat_id in target):
                                 matching_entries.append(entry)
-                    
+
                     if len(matching_entries) >= 1:
                         # Use the first matching entry
                         config_entry = matching_entries[0]
