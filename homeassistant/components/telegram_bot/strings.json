@@ -864,7 +864,7 @@
       "message": "File path has not been configured in allowlist_external_dirs."
     },
     "failed_to_load_file": {
-      "message": "Failed to load File: {error}"
+      "message": "Failed to load file: {error}"
     }
   },
   "issues": {
