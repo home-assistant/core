@@ -30,7 +30,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import JewishCalendarConfigEntry, JewishCalendarData
-from .service import async_setup_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
