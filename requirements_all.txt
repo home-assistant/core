@@ -2398,7 +2398,7 @@ python-awair==0.2.4
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==1.2.1
+python-bsblan==2.0.1
 
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
