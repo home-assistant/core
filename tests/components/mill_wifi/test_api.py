@@ -1,51 +1,52 @@
-# tests/test_api.py
-import pytest
-from httpx import Response 
-from pytest_httpx import HTTPXMock
+"""Tests for API calls."""
 
-from custom_components.mill_wifi.api import MillApiClient, AuthenticationError, MillApiError, USER_AGENT
+from custom_components.mill_wifi.api import USER_AGENT, MillApiClient, MillApiError
 from custom_components.mill_wifi.const import (
     BASE_URL,
     ENDPOINT_AUTH_SIGN_IN,
-    ENDPOINT_AUTH_REFRESH,
-    ENDPOINT_CUSTOMER_SETTINGS
+    ENDPOINT_CUSTOMER_SETTINGS,
 )
+import pytest
+from pytest_httpx import HTTPXMock
 
-@pytest.fixture # Ensure this fixture is defined as it was missing in the error for test_token_refresh
+
+@pytest.fixture
 def mill_client():
+    """Return API client."""
+
     return MillApiClient(username="test@example.com", password="password")
+
 
 @pytest.mark.asyncio
 async def test_successful_login(mill_client: MillApiClient, httpx_mock: HTTPXMock):
-    # ... (ensure match_headers here also uses "user-agent" if it's an issue)
+    """Tests successful login."""
+
     httpx_mock.add_response(
         url=f"{BASE_URL}{ENDPOINT_AUTH_SIGN_IN}",
         method="POST",
         json={"idToken": "fake_id_token", "refreshToken": "fake_refresh_token"},
         status_code=200,
-        match_headers={"user-agent": USER_AGENT} # Ensure lowercase
+        match_headers={"user-agent": USER_AGENT},
     )
-    await mill_client.async_setup() 
+    await mill_client.async_setup()
     await mill_client.login()
     assert mill_client.access_token == "fake_id_token"
-    # ...
 
 
 @pytest.mark.asyncio
 async def test_login_failure(mill_client: MillApiClient, httpx_mock: HTTPXMock):
-    # ... (ensure match_headers here also uses "user-agent" if applicable)
+    """Tests login failure."""
+
     httpx_mock.add_response(
         url=f"{BASE_URL}{ENDPOINT_AUTH_SIGN_IN}",
         method="POST",
         json={"error": "Invalid credentials"},
         status_code=401,
-        match_headers={"user-agent": USER_AGENT} # Ensure lowercase
+        match_headers={"user-agent": USER_AGENT},
     )
     await mill_client.async_setup()
-    with pytest.raises(MillApiError): 
+    with pytest.raises(MillApiError):
         await mill_client.login()
-    # ...
-
 
 @pytest.mark.asyncio
 async def test_token_refresh(mill_client: MillApiClient, httpx_mock: HTTPXMock):
@@ -56,7 +57,7 @@ async def test_token_refresh(mill_client: MillApiClient, httpx_mock: HTTPXMock):
         method="POST",
         json={"idToken": "old_id_token", "refreshToken": "old_refresh_token"},
         status_code=200,
-        match_headers={"user-agent": USER_AGENT} # Use lowercase 'user-agent'
+        match_headers={"user-agent": USER_AGENT},
     )
     await mill_client.async_setup()
     await mill_client.login()
@@ -68,29 +69,35 @@ async def test_token_refresh(mill_client: MillApiClient, httpx_mock: HTTPXMock):
         method="GET",
         status_code=401,
         json={"error": "Token expired"},
-        match_headers={"Authorization": "Bearer old_id_token", "user-agent": USER_AGENT} # Use lowercase
+        match_headers={
+            "Authorization": "Bearer old_id_token",
+            "user-agent": USER_AGENT,
+        },
     )
 
     # 3. Mock response for the *second* login attempt (triggered by force_refresh=True)
     httpx_mock.add_response(
-        url=f"{BASE_URL}{ENDPOINT_AUTH_SIGN_IN}", 
+        url=f"{BASE_URL}{ENDPOINT_AUTH_SIGN_IN}",
         method="POST",
         json={"idToken": "new_id_token", "refreshToken": "new_refresh_token"},
         status_code=200,
-        match_headers={"user-agent": USER_AGENT} # Use lowercase
+        match_headers={"user-agent": USER_AGENT},  # Use lowercase
     )
 
     # 4. Mock response for the retried request *after* the successful "new" login
     httpx_mock.add_response(
         url=f"{BASE_URL}{ENDPOINT_CUSTOMER_SETTINGS}",
         method="GET",
-        json={"houseList": []}, 
+        json={"houseList": []},
         status_code=200,
-        match_headers={"Authorization": "Bearer new_id_token", "user-agent": USER_AGENT} # Use lowercase
+        match_headers={
+            "Authorization": "Bearer new_id_token",
+            "user-agent": USER_AGENT,
+        },
     )
-    
+
     response = await mill_client._request("GET", ENDPOINT_CUSTOMER_SETTINGS)
     assert response.status_code == 200
     assert mill_client.access_token == "new_id_token"
-    
+
     await mill_client.async_close()

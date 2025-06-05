@@ -1,16 +1,22 @@
+"""Data coordinator file."""
+
 from datetime import timedelta
-import asyncio
 import logging
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
 from .api import MillApiClient
 from .const import DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class MillDataCoordinator(DataUpdateCoordinator[dict[str, dict]]):
+    """Data coordinator class."""
+
     def __init__(self, hass: HomeAssistant, api: MillApiClient):
+        """Coordinator initialization."""
         super().__init__(
             hass,
             _LOGGER,
@@ -18,7 +24,6 @@ class MillDataCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
         self.api = api
-
 
     async def _async_update_data(self) -> dict[str, dict]:
         try:
@@ -29,8 +34,10 @@ class MillDataCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                     if device and device.get("deviceId"):
                         devices_dict[device["deviceId"]] = device
                     else:
-                        _LOGGER.warning("Found an invalid device entry in list: %s", device)
-            return devices_dict
+                        _LOGGER.warning(
+                            "Found an invalid device entry in list: %s", device
+                        )
+            return devices_dict  # noqa: TRY300
         except Exception as err:
             _LOGGER.error("Error fetching devices in coordinator: %s", err)
             raise UpdateFailed(f"Error fetching devices: {err}") from err

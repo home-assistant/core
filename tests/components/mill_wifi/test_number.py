@@ -1,192 +1,263 @@
-"""Tests for the Mill Number platform."""
-from unittest.mock import AsyncMock, patch
+"""Tests for the Mill WiFi number platform."""
 
-import pytest
-from homeassistant.core import HomeAssistant
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_DEVICE_CLASS,
-    UnitOfTemperature,
-    UnitOfPower, # If you have power limit numbers
-)
-from homeassistant.components.number import (
-    ATTR_MIN,
-    ATTR_MAX,
-    ATTR_STEP,
-    ATTR_MODE,
-    ATTR_VALUE,
-    NumberDeviceClass,
-    NumberMode,
-    SERVICE_SET_VALUE,
-)
-from homeassistant.setup import async_setup_component
-from homeassistant.helpers.entity_registry import EntityRegistry
-from homeassistant.helpers.entity import EntityCategory
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from custom_components.mill_wifi.api import MillApiClient
 from custom_components.mill_wifi.const import DOMAIN
 from custom_components.mill_wifi.coordinator import MillDataCoordinator
-from custom_components.mill_wifi.api import MillApiClient
-from custom_components.mill_wifi.number import NUMBER_TYPES # Ensure this is defined
 from custom_components.mill_wifi.device_capability import EDeviceCapability, EDeviceType
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-# Sample device data - expand to cover number scenarios
-MOCK_DEVICE_ID_HEATER_FOR_NUMBER = "heater_device_789"
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
+
+# --- MOCK DATA ---
+MOCK_HEATER_ID = "heater_789"
+MOCK_HEATER_NAME = "Bedroom Heater"
 MOCK_DEVICE_DATA_HEATER_NUMBER = {
-    MOCK_DEVICE_ID_HEATER_FOR_NUMBER: {
-        "deviceId": MOCK_DEVICE_ID_HEATER_FOR_NUMBER,
-        "deviceName": "Office Heater",
-        "houseId": "house_1",
-        "type": EDeviceType.PANEL_HEATER_GEN3.value,
+    MOCK_HEATER_ID: {
+        "deviceId": MOCK_HEATER_ID,
+        "customName": MOCK_HEATER_NAME,
+        "deviceType": {"childType": {"name": EDeviceType.PANEL_HEATER_GEN3.value}},
+        "isEnabled": True,
+        "isConnected": True,
+        "deviceSettings": {"reported": {"temperature_normal": 20.0}},
         "capabilities": [
-            EDeviceCapability.TARGET_TEMPERATURE.value, # Assuming this can be a number
-            # Add other capabilities that might result in number entities
+            EDeviceCapability.TARGET_TEMPERATURE.value
         ],
-        "deviceSettings": {"temperatureNormal": 20}, # Example for target temp
-        "lastMetrics": {"temperature": 19.5},
-        "reported": {"targetTemperature": 20.0, "powerState": "on"},
-        # Define min/max/step if available from API or constants
-        "temperatureLimits": {"min": 5, "max": 35, "step": 1}, # Hypothetical structure
     }
 }
 
-MOCK_DEVICE_ID_SOCKET_FOR_NUMBER = "socket_device_101"
-MOCK_DEVICE_DATA_SOCKET_NUMBER = {
-    MOCK_DEVICE_ID_SOCKET_FOR_NUMBER: {
-        "deviceId": MOCK_DEVICE_ID_SOCKET_FOR_NUMBER,
-        "deviceName": "Smart Socket",
-        "houseId": "house_1",
-        "type": EDeviceType.SOCKET_GEN3.value, # Or other relevant type
-        "capabilities": [
-            EDeviceCapability.ADJUST_WATTAGE.value, # Assuming this capability
-        ],
-        "deviceSettings": {"maxPowerConsumption": 1000}, # Example value
-        "reported": {"maxPowerConsumption": 1000},
-        # Define min/max/step if available
-        "maxPowerLimits": {"min": 100, "max": 2000, "step": 50}, # Hypothetical
+MOCK_SOCKET_ID = "socket_123"
+MOCK_SOCKET_NAME = "Office Socket"
+MOCK_DEVICE_DATA_SOCKET_WATTAGE = {
+    MOCK_SOCKET_ID: {
+        "deviceId": MOCK_SOCKET_ID,
+        "customName": MOCK_SOCKET_NAME,
+        "deviceType": {"childType": {"name": EDeviceType.SOCKET_GEN3.value}},
+        "isEnabled": True,
+        "isConnected": True,
+        "deviceSettings": {"reported": {"limited_heating_power": 1000}},
+        "capabilities": [EDeviceCapability.ADJUST_WATTAGE.value],
     }
 }
 
 
-@pytest.fixture # In test_number.py
-def mock_api_client():
-    client = AsyncMock(spec=MillApiClient)
-    client.connect = AsyncMock(return_value=True)
-    client.get_all_devices = AsyncMock(return_value=[]) # Default or specific mock data
-    client.set_number_control = AsyncMock(return_value=True)
+# --- PYTEST FIXTURES ---
+@pytest.fixture
+def mock_mill_api_client_fixture():
+    """Fixture for a mocked MillApiClient."""
+    client = MagicMock(spec=MillApiClient)
+    client.login = AsyncMock(return_value=None)
+    client.async_setup = AsyncMock(return_value=None)
+    client.get_all_devices = AsyncMock(
+        return_value=[MOCK_DEVICE_DATA_HEATER_NUMBER[MOCK_HEATER_ID]]
+    )
+    client.set_number_capability = AsyncMock(return_value=None)
     return client
 
-@pytest.fixture
-async def mock_coordinator(hass: HomeAssistant, mock_api_client: MillApiClient):
-    """Fixture for a mock MillDataCoordinator."""
-    coordinator = MillDataCoordinator(hass, mock_api_client)
-    coordinator.data = {}
-    return coordinator
 
 @pytest.fixture
-def mock_config_entry():
-    """Fixture for a mock ConfigEntry."""
-    return MockConfigEntry(domain=DOMAIN, data={"username": "test_user", "password": "test_password"})
-
-
-async def setup_mill_component_number(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    coordinator: MillDataCoordinator
+async def setup_integration_fixture(
+    hass: HomeAssistant, mock_mill_api_client_fixture: MagicMock
 ):
-    """Set up the Mill component for testing numbers."""
-    config_entry.add_to_hass(hass)
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    """Help fixture to set up the integration for number tests."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"username": "test@example.com", "password": "password"},
+        entry_id="test_number_entry_fixture",
+    )
+    entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    with patch(
+        "custom_components.mill_wifi.__init__.MillApiClient",
+        return_value=mock_mill_api_client_fixture,
+    ), patch.object(
+        MillDataCoordinator,
+        "async_config_entry_first_refresh",
+        AsyncMock(return_value=None),
+    ):
+        mock_mill_api_client_fixture.get_all_devices.return_value = [
+            MOCK_DEVICE_DATA_HEATER_NUMBER[MOCK_HEATER_ID]
+        ]
+
+        assert await hass.config_entries.async_setup(entry.entry_id) is True, (
+            "Failed to set up config entry"
+        )
+        await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    if not coordinator.data:
+        coordinator.data = {
+            MOCK_HEATER_ID: MOCK_DEVICE_DATA_HEATER_NUMBER[MOCK_HEATER_ID]
+        }
     await hass.async_block_till_done()
-
-    with patch("custom_components.mill_wifi.PLATFORMS", ["number"]):
-         await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    return entry
 
 
+# --- TEST CASES ---
 async def test_no_numbers_if_no_devices(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_coordinator: MillDataCoordinator
+    hass: HomeAssistant, mock_mill_api_client_fixture: MagicMock
 ):
     """Test that no number entities are created if there are no devices or no data."""
-    mock_coordinator.data = {}
-    await setup_mill_component_number(hass, mock_config_entry, mock_coordinator)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"username": "test", "password": "pwd"},
+        entry_id="no_devices_entry",
+    )
+    entry.add_to_hass(hass)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    assert len(entity_registry.entities) == 0
+    mock_mill_api_client_fixture.get_all_devices.return_value = []  # No devices
+
+    with patch(
+        "custom_components.mill_wifi.__init__.MillApiClient",
+        return_value=mock_mill_api_client_fixture,
+    ), patch.object(
+        MillDataCoordinator,
+        "async_config_entry_first_refresh",
+        AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(NUMBER_DOMAIN)) == 0
 
 
 async def test_target_temperature_number_creation(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_coordinator: MillDataCoordinator,
-    mock_api_client: MillApiClient
+    hass: HomeAssistant, setup_integration_fixture: MockConfigEntry
 ):
     """Test creation of a target temperature number entity."""
-    mock_api_client.get_all_devices.return_value = MOCK_DEVICE_DATA_HEATER_NUMBER
-    mock_coordinator.data = MOCK_DEVICE_DATA_HEATER_NUMBER
-    await setup_mill_component_number(hass, mock_config_entry, mock_coordinator)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    # Assuming unique_id convention, adjust if different
-    number_unique_id = f"{MOCK_DEVICE_ID_HEATER_FOR_NUMBER}_{EDeviceCapability.TARGET_TEMPERATURE.value}"
-    temp_number_entity_id = entity_registry.async_get_entity_id("number", DOMAIN, number_unique_id)
-
-    assert temp_number_entity_id is not None
-    state = hass.states.get(temp_number_entity_id)
-    assert state is not None
-    assert state.state == "20.0" # From 'reported' or 'deviceSettings'
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
-    assert state.attributes.get(ATTR_MIN) == 5 # From MOCK_DEVICE_DATA
-    assert state.attributes.get(ATTR_MAX) == 35
-    assert state.attributes.get(ATTR_STEP) == 1
-    assert state.attributes.get(ATTR_MODE) == NumberMode.AUTO # Or NumberMode.SLIDER / NumberMode.BOX
-    # assert state.attributes.get(ATTR_DEVICE_CLASS) == NumberDeviceClass.TEMPERATURE # If applicable
+    entity_id = f"{NUMBER_DOMAIN}.{MOCK_HEATER_NAME.lower().replace(' ', '_')}_target_temperature"
+    state = hass.states.get(entity_id)
+    assert state is not None, f"Entity {entity_id} not found"
+    assert state.state == "20.0"
+    assert state.attributes.get("min") == 5.0
+    assert state.attributes.get("max") == 35.0
+    assert state.attributes.get("step") == 0.5
+    assert state.attributes.get("mode") == "slider"
 
 
 async def test_set_target_temperature_number_value(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_coordinator: MillDataCoordinator,
-    mock_api_client: MillApiClient
+    setup_integration_fixture: MockConfigEntry,
+    mock_mill_api_client_fixture: MagicMock,
 ):
     """Test setting the value for a target temperature number entity."""
-    mock_api_client.get_all_devices.return_value = MOCK_DEVICE_DATA_HEATER_NUMBER
-    mock_coordinator.data = MOCK_DEVICE_DATA_HEATER_NUMBER
-    await setup_mill_component_number(hass, mock_config_entry, mock_coordinator)
 
-    number_unique_id = f"{MOCK_DEVICE_ID_HEATER_FOR_NUMBER}_{EDeviceCapability.TARGET_TEMPERATURE.value}"
-    entity_id = (await hass.helpers.entity_registry.async_get_registry()).async_get_entity_id(
-        "number", DOMAIN, number_unique_id
-    )
-    assert entity_id is not None
+    entity_id = f"{NUMBER_DOMAIN}.{MOCK_HEATER_NAME.lower().replace(' ', '_')}_target_temperature"
+    target_value = 23.5
 
-    new_temp_value = 23.5
     await hass.services.async_call(
-        "number",
+        NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
-        {"entity_id": entity_id, ATTR_VALUE: new_temp_value},
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: target_value},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
-    mock_api_client.set_number_control.assert_called_once_with(
-        MOCK_DEVICE_ID_HEATER_FOR_NUMBER,
-        EDeviceCapability.TARGET_TEMPERATURE.value, # or the specific key used by API
-        new_temp_value
+    mock_mill_api_client_fixture.set_number_capability.assert_called_once_with(
+        MOCK_HEATER_ID,
+        EDeviceCapability.TARGET_TEMPERATURE.value,
+        target_value,
+        MOCK_DEVICE_DATA_HEATER_NUMBER[MOCK_HEATER_ID],
     )
-    mock_coordinator.async_request_refresh.assert_called_once()
 
 
-# TODO: Add more tests:
-# - Test for each NUMBER_TYPE defined in number.py to ensure correct properties.
-# - Test number entities for other capabilities (e.g., max power limit if applicable).
-# - Test state updates when coordinator.async_update_listeners() is called.
-# - Test entities becoming unavailable if the device goes offline.
-# - Test entities not being created if specific capability is missing.
-# - Test handling of API errors during set_value service call.
-# - Test NumberMode (AUTO, SLIDER, BOX) if your entities use different modes.
-# - Test entity_category (e.g., CONFIG or DIAGNOSTIC) if applicable.
+async def test_adjust_wattage_number_creation(
+    hass: HomeAssistant, mock_mill_api_client_fixture: MagicMock
+):
+    """Test creation of an adjust wattage number entity."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"username": "test", "password": "pwd"},
+        entry_id="wattage_entry",
+    )
+    entry.add_to_hass(hass)
+
+    mock_mill_api_client_fixture.get_all_devices.return_value = [
+        MOCK_DEVICE_DATA_SOCKET_WATTAGE[MOCK_SOCKET_ID]
+    ]
+
+    with patch(
+        "custom_components.mill_wifi.__init__.MillApiClient",
+        return_value=mock_mill_api_client_fixture,
+    ), patch.object(
+        MillDataCoordinator,
+        "async_config_entry_first_refresh",
+        AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
+        await hass.async_block_till_done()
+
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    coordinator.data = {MOCK_SOCKET_ID: MOCK_DEVICE_DATA_SOCKET_WATTAGE[MOCK_SOCKET_ID]}
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    entity_id = f"{NUMBER_DOMAIN}.{MOCK_SOCKET_NAME.lower().replace(' ', '_')}_limited_heating_power"
+    state = hass.states.get(entity_id)
+    assert state is not None, f"Entity {entity_id} not found"
+    assert state.state == "1000.0"
+    assert state.attributes.get("min") == 0
+    assert state.attributes.get("max") == 2500
+    assert state.attributes.get("step") == 100
+
+
+async def test_set_adjust_wattage_number_value(
+    hass: HomeAssistant, mock_mill_api_client_fixture: MagicMock
+):
+    """Test setting the value for an adjust wattage number entity."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"username": "test", "password": "pwd"},
+        entry_id="set_wattage_entry",
+    )
+    entry.add_to_hass(hass)
+
+    mock_mill_api_client_fixture.get_all_devices.return_value = [
+        MOCK_DEVICE_DATA_SOCKET_WATTAGE[MOCK_SOCKET_ID]
+    ]
+
+    with patch(
+        "custom_components.mill_wifi.__init__.MillApiClient",
+        return_value=mock_mill_api_client_fixture,
+    ), patch.object(
+        MillDataCoordinator,
+        "async_config_entry_first_refresh",
+        AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
+        await hass.async_block_till_done()
+
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    coordinator.data = {MOCK_SOCKET_ID: MOCK_DEVICE_DATA_SOCKET_WATTAGE[MOCK_SOCKET_ID]}
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    entity_id = f"{NUMBER_DOMAIN}.{MOCK_SOCKET_NAME.lower().replace(' ', '_')}_limited_heating_power"
+    target_value = 1200.0
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: target_value},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_mill_api_client_fixture.set_number_capability.assert_called_once_with(
+        MOCK_SOCKET_ID,
+        EDeviceCapability.ADJUST_WATTAGE.value,
+        target_value,
+        MOCK_DEVICE_DATA_SOCKET_WATTAGE[MOCK_SOCKET_ID],
+    )

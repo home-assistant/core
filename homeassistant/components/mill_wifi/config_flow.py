@@ -1,19 +1,22 @@
 """Config flow for the Mill WiFi Official integration."""
 
 from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.helpers import selector
-from .const import DOMAIN, CONF_USERNAME, CONF_PASSWORD
+
 from .api import MillApiClient
+from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN
+
 
 class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Config flow class."""
+
     async def async_step_user(self, user_input=None):
+        """Initialize config flow."""
         if user_input is not None:
             api = MillApiClient(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
             await api.async_setup()
             try:
                 await api.login()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 return self.async_show_form(
                     step_id="user",
                     data_schema=self._get_schema(),
@@ -25,9 +28,11 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=self._get_schema())
 
     def _get_schema(self):
-        from homeassistant.helpers import config_validation as cv
         import voluptuous as vol
-        return vol.Schema({
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-        })
+
+        return vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        )

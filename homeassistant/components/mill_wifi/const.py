@@ -1,21 +1,22 @@
 """Constants for the Mill WiFi Official integration."""
-from .device_capability import EPurifierFanMode # ADDED
+
+from .device_capability import EPurifierFanMode  # ADDED
 
 DOMAIN = "mill_wifi"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
-CONF_ACCESS_TOKEN = "access_token" 
-CONF_REFRESH_TOKEN = "refresh_token" 
-UPDATE_INTERVAL = 300  # seconds 
+CONF_ACCESS_TOKEN = "access_token"
+CONF_REFRESH_TOKEN = "refresh_token"
+UPDATE_INTERVAL = 300  # seconds
 TOKEN_REFRESH_OFFSET = 60  # seconds
 
 BASE_URL = "https://api.millnorwaycloud.com"
 ENDPOINT_AUTH_SIGN_IN = "/customer/auth/sign-in"
 ENDPOINT_AUTH_REFRESH = "/customer/auth/refresh"
-ENDPOINT_CUSTOMER_SETTINGS = "/customer/check-setting" 
+ENDPOINT_CUSTOMER_SETTINGS = "/customer/check-setting"
 ENDPOINT_HOUSE_DEVICES_FORMAT = "/houses/{house_id}/devices"
 ENDPOINT_HOUSE_INDEPENDENT_DEVICES_FORMAT = "/houses/{house_id}/devices/independent"
-ENDPOINT_DEVICE_DATA_FORMAT = "/devices/{device_id}" 
+ENDPOINT_DEVICE_DATA_FORMAT = "/devices/{device_id}"
 ENDPOINT_DEVICE_SETTINGS_FORMAT = "/devices/{device_id}/settings"
 
 SUPPORTED_CHILD_TYPES = [
@@ -40,8 +41,8 @@ SUPPORTED_CHILD_TYPES = [
 ]
 
 PURIFIER_FAN_MODES = {
-    EPurifierFanMode.HARD_OFF.value: "Hard Off", 
-    EPurifierFanMode.SOFT_OFF.value: "Off", 
+    EPurifierFanMode.HARD_OFF.value: "Hard Off",
+    EPurifierFanMode.SOFT_OFF.value: "Off",
     EPurifierFanMode.AUTO.value: "Auto",
     EPurifierFanMode.SLEEP.value: "Night",
     EPurifierFanMode.BOOST.value: "Boost",

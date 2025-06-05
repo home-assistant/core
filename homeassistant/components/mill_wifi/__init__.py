@@ -1,15 +1,19 @@
+"""Initialization of Mill WiFi entities."""
+
 import logging
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+
+from .api import MillApiClient
 from .const import DOMAIN
 from .coordinator import MillDataCoordinator
-from .api import MillApiClient
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor", "switch", "number", "climate", "select"]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Mill WiFi from a config entry."""
@@ -21,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await api.async_setup()
     try:
         await api.login()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         _LOGGER.error("Failed to login to Mill API during setup: %s", e)
         return False
 
@@ -38,6 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""

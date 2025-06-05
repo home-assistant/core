@@ -1,29 +1,38 @@
-from .device_capability import EDeviceCapability, EDeviceType, EFilterState, EPurifierFanMode
+"""Device metrics helpers."""
+
+from .device_capability import EDeviceCapability, EDeviceType, EFilterState
+
 
 class DeviceMetric:
+    """Class for device metrics helper methods."""
 
     @staticmethod
     def get_device_type(data: dict) -> str | None:
+        """Get device type."""
         return data.get("deviceType", {}).get("childType", {}).get("name")
 
     @staticmethod
-    def get_power_state(data: dict) -> bool: 
+    def get_power_state(data: dict) -> bool:
+        """Get power state."""
         if not data:
-            return False 
+            return False
 
         device_type_name = DeviceMetric.get_device_type(data)
         if device_type_name == EDeviceType.HEATPUMP.value:
-            return data.get("pumpAdditionalItems", {}).get("state", {}).get("pow") == "on" 
-        return data.get("isEnabled", False) 
+            return (
+                data.get("pumpAdditionalItems", {}).get("state", {}).get("pow") == "on"
+            )
+        return data.get("isEnabled", False)
 
     @staticmethod
-    def get_capability_value(data: dict, capability: EDeviceCapability): 
+    def get_capability_value(data: dict, capability: EDeviceCapability):  # noqa: C901
+        """Get capability value."""
         if not data:
             return None
 
         reported = data.get("deviceSettings", {}).get("reported", {})
         metrics = data.get("lastMetrics", {})
-        air_purifier_settings = data.get("airPurifierDefaultSettings", {})
+        data.get("airPurifierDefaultSettings", {})
 
         if capability == EDeviceCapability.ONOFF:
             return DeviceMetric.get_power_state(data)
@@ -36,7 +45,12 @@ class DeviceMetric:
         if capability == EDeviceCapability.MEASURE_POWER:
             return metrics.get("currentPower") or 0
         if capability == EDeviceCapability.MEASURE_DAILY_POWER:
-            return data.get("energyUsageForCurrentDay") or data.get("getDeviceEnergyUsageDaily") or metrics.get("energyUsageForCurrentDay") or 0
+            return (
+                data.get("energyUsageForCurrentDay")
+                or data.get("getDeviceEnergyUsageDaily")
+                or metrics.get("energyUsageForCurrentDay")
+                or 0
+            )
         if capability == EDeviceCapability.INDIVIDUAL_CONTROL:
             return reported.get("operation_mode") == "control_individually"
         if capability == EDeviceCapability.CHILD_LOCK:
@@ -55,10 +69,10 @@ class DeviceMetric:
             return reported.get("additional_socket_mode") == "cooling"
         if capability == EDeviceCapability.ADJUST_WATTAGE:
             return reported.get("limited_heating_power")
-        if capability == EDeviceCapability.MEASURE_WATTAGE: 
-            return reported.get("max_heater_power") 
+        if capability == EDeviceCapability.MEASURE_WATTAGE:
+            return reported.get("max_heater_power")
 
-        if capability == EDeviceCapability.MEASURE_CO2: 
+        if capability == EDeviceCapability.MEASURE_CO2:
             return metrics.get("eco2")
         if capability == EDeviceCapability.MEASURE_TVOC:
             return metrics.get("tvoc")
@@ -88,17 +102,17 @@ class DeviceMetric:
                 except (ValueError, TypeError):
                     all_values_valid_and_present = False
                     break
-            
+
             if all_values_valid_and_present:
                 average = sum(values_for_sum) / 3.0
                 return round(average, 2)
-            else:
+            else:  # noqa: RET505
                 return 0.0
 
         if capability == EDeviceCapability.MEASURE_FILTER_STATE:
             return reported.get("filter_state") or EFilterState.UNKNOWN.value
 
-        if capability == EDeviceCapability.PURIFIER_MODE: 
+        if capability == EDeviceCapability.PURIFIER_MODE:
             return reported.get("fan_speed_mode")
 
         return None
