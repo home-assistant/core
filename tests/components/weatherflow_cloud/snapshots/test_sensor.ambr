@@ -32,6 +32,7 @@
     'original_name': 'Air density',
     'platform': 'weatherflow_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_density',
     'unique_id': '24432_air_density',
