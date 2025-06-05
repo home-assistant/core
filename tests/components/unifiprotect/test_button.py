@@ -48,7 +48,7 @@ async def test_reboot_button(
     ufp.api.reboot_device = AsyncMock()
 
     unique_id = f"{chime.mac}_reboot"
-    entity_id = "button.test_chime_reboot_device"
+    entity_id = "button.test_chime_restart"
 
     entity = entity_registry.async_get(entity_id)
     assert entity

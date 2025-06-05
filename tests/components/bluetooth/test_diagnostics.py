@@ -655,6 +655,7 @@ async def test_diagnostics_remote_adapter(
                         "source": "esp32",
                         "start_time": ANY,
                         "time_since_last_device_detection": {"44:44:33:11:23:45": ANY},
+                        "raw_advertisement_data": {"44:44:33:11:23:45": None},
                         "type": "FakeScanner",
                     },
                 ],

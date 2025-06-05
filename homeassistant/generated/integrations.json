@@ -5873,10 +5873,18 @@
       "iot_class": "local_push"
     },
     "shelly": {
-      "name": "Shelly",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_push"
+      "name": "shelly",
+      "integrations": {
+        "shelly": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Shelly"
+        }
+      },
+      "iot_standards": [
+        "zwave"
+      ]
     },
     "shodan": {
       "name": "Shodan",
@@ -6033,6 +6041,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "smarla": {
+      "name": "Swing2Sleep Smarla",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "smart_blinds": {
       "name": "Smartblinds",
@@ -6570,7 +6584,7 @@
         },
         "telegram_bot": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Telegram bot"
         }
