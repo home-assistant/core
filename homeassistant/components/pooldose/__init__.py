@@ -17,6 +17,8 @@ from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_TIMEOUT, SOFTWARE_VERSION
 from .coordinator import PooldoseCoordinator
 from .pooldose_api import PooldoseAPIClient
 
+_LOGGER = logging.getLogger(__name__)
+
 _PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     # Platform.BINARY_SENSOR,
@@ -31,16 +33,7 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
     """Fetch latest device info from all relevant endpoints."""
     device_info: dict[str, str | None] = {}
 
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json, text/javascript, */*; q=0.01",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
-        "Content-Length": "0",
-        "DNT": "1",
-        "Pragma": "no-cache",
-        "X-Requested-With": "XMLHttpRequest",
-    }
+    headers = {"Content-Type": "application/json"}
 
     async with aiohttp.ClientSession() as session:
         # Station Info
@@ -48,16 +41,18 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
             url = f"http://{host}/api/v1/network/wifi/getStation"
             timeout = aiohttp.ClientTimeout(total=5)
             async with session.post(url, headers=headers, timeout=timeout) as resp:
-                text = await resp.text()
-                json_start = text.find("{")
-                json_end = text.rfind("}") + 1
-                if json_start != -1 and json_end != -1:
-                    data = json.loads(text[json_start:json_end])
-                    device_info["SSID"] = data.get("SSID")
-                    device_info["MAC"] = data.get("MAC")
-                    device_info["IP"] = data.get("IP")
-        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError):
-            pass
+                pass
+        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
+            # server always returns bad result due to a bug, however, result can be parsed...
+            text = str(err)
+            text = text.replace("\\\\n", "").replace("\\\\t", "")
+            json_start = text.find("{")
+            json_end = text.rfind("}") + 1
+            if json_start != -1 and json_end != -1:
+                data = json.loads(text[json_start:json_end])
+                device_info["SSID"] = data.get("SSID")
+                device_info["MAC"] = data.get("MAC")
+                device_info["IP"] = data.get("IP")
 
         await asyncio.sleep(1)
         # Network Info
@@ -65,13 +60,12 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
             url = f"http://{host}/api/v1/network/info/getInfo"
             timeout = aiohttp.ClientTimeout(total=5)
             async with session.post(url, headers=headers, timeout=timeout) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    device_info["SYSTEMNAME"] = data.get("SYSTEMNAME")
-                    device_info["OWNERID"] = data.get("OWNERID")
-                    device_info["GROUPNAME"] = data.get("GROUPNAME")
-        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError):
-            pass
+                data = await resp.json()
+                device_info["SYSTEMNAME"] = data.get("SYSTEMNAME")
+                device_info["OWNERID"] = data.get("OWNERID")
+                device_info["GROUPNAME"] = data.get("GROUPNAME")
+        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
+            _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
 
         await asyncio.sleep(1)
         # Access Point Info
@@ -86,8 +80,8 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
                     data = json.loads(text[json_start:json_end])
                     device_info["AP_SSID"] = data.get("SSID")
                     device_info["AP_KEY"] = data.get("KEY")
-        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError):
-            pass
+        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
+            _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
 
         # InfoRelease
         try:
@@ -97,18 +91,14 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
             async with session.post(
                 url, json=payload, headers=headers, timeout=timeout
             ) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    device_info["SERIAL_NUMBER"] = data.get("SERIAL_NUMBER")
-                    device_info["SOFTWAREVERSION_GATEWAY"] = data.get(
-                        "SOFTWAREVERSION_GATEWAY"
-                    )
-                    device_info["FIRMWARECODE_DEVICE"] = data.get("FIRMWARECODE_DEVICE")
-
-                    _LOGGER = logging.getLogger(__name__)
-                    _LOGGER.error("#init data %s", data)
-        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError):
-            pass
+                data = await resp.json()
+                device_info["SERIAL_NUMBER"] = data.get("SERIAL_NUMBER")
+                device_info["SOFTWAREVERSION_GATEWAY"] = data.get(
+                    "SOFTWAREVERSION_GATEWAY"
+                )
+                device_info["FIRMWARECODE_DEVICE"] = data.get("FIRMWARECODE_DEVICE")
+        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
+            _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
 
     return device_info
 

@@ -50,22 +50,12 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 serial_number = info["SERIAL_NUMBER"]
-                firmware_version = info.get("SOFTWAREVERSION_GATEWAY")
-                hardware_version = info.get("FIRMWARERELEASE_DEVICE")
                 await self.async_set_unique_id(serial_number)
                 self._abort_if_unique_id_configured()
-                entry_data = {
-                    CONF_HOST: host,
-                    CONF_SERIALNUMBER: serial_number,
-                    "SOFTWAREVERSION_GATEWAY": firmware_version,
-                    "FIRMWARECODE_DEVICE": hardware_version,
-                }
-                # import logging
-
-                # _LOGGER = logging.getLogger(__name__)
-                # _LOGGER.error("config flow entry_data %s", entry_data)
-
-                return self.async_create_entry(title=serial_number, data=entry_data)
+                entry_data = {CONF_HOST: host, CONF_SERIALNUMBER: serial_number}
+                return self.async_create_entry(
+                    title="PoolDose - S/N " + serial_number, data=entry_data
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=SCHEMA_DEVICE, errors=errors
@@ -84,102 +74,10 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                     url, json=payload, headers=headers, timeout=timeout
                 ) as resp,
             ):
-                if resp.status == 200:
-                    return await resp.json()
+                return await resp.json()
         except (aiohttp.ClientError, TimeoutError, OSError) as err:
             _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
         return None
-
-    # async def _async_get_station(self, host: str) -> dict[str, str | None] | None:
-    #     """Fetch SSID, MAC, and IP from the Pooldose API."""
-    #     url = f"http://{host}/api/v1/network/wifi/getStation"
-    #     headers = {
-    #         "Content-Type": "application/json",
-    #     }
-    #     try:
-    #         async with aiohttp.ClientSession() as session:
-    #             async with session.post(url, headers=headers, timeout=5) as resp:
-    #                 text = await resp.text()
-    #     except (aiohttp.ClientError, TimeoutError, OSError) as err:
-    #         # _LOGGER.error("Failed to fetch device info from %s: %s", url, str(err))
-    #         # server always returns a 200 OK status, even on error, proceed...
-    #         text = str(err)
-    #         # Extract JSON part from the response, even on error status
-    #         text = text.replace("\\\\n", "").replace("\\\\t", "")
-    #         json_start = text.find("{")
-    #         json_end = text.rfind("}") + 1
-    #         if json_start != -1 and json_end != -1:
-    #             json_str = text[json_start:json_end]
-    #             try:
-    #                 data = json.loads(json_str)
-    #             except Exception as err2:
-    #                 _LOGGER.error(
-    #                     "Could not parse JSON from SSID response: %s (%s)",
-    #                     json_str,
-    #                     err2,
-    #                 )
-    #                 return None
-    #             return data
-    #         _LOGGER.error(
-    #             "Could not extract JSON from SSID response: %s",
-    #             text,
-    #         )
-    #     return None
-
-    # async def _async_get_network_info(self, host: str) -> dict[str, Any] | None:
-    #     """Fetch network info (SYSTEMNAME, OWNERID) from the Pooldose API."""
-    #     url = f"http://{host}/api/v1/network/info/getInfo"
-    #     headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    #     try:
-    #         async with aiohttp.ClientSession() as session:
-    #             async with session.post(url, headers=headers, timeout=5) as resp:
-    #                 if resp.status == 200:
-    #                     return await resp.json()
-    #     except (aiohttp.ClientError, TimeoutError, OSError) as err:
-    #         _LOGGER.error("Failed to fetch network info from %s: %s", url, err)
-    #     return None
-
-    # async def _async_get_access_point(self, host: str) -> dict[str, str | None] | None:
-    #     """Fetch Access Point SSID and KEY from the Pooldose API."""
-    #     url = f"http://{host}/api/v1/network/wifi/getAccessPoint"
-    #     headers = {
-    #         "Content-Type": "application/json",
-    #         "Accept": "application/json, text/javascript, */*; q=0.01",
-    #         "Cache-Control": "no-cache",
-    #         "Connection": "keep-alive",
-    #         "Content-Length": "0",
-    #         "DNT": "1",
-    #         "Pragma": "no-cache",
-    #         "X-Requested-With": "XMLHttpRequest",
-    #     }
-    #     try:
-    #         async with aiohttp.ClientSession() as session:
-    #             async with session.post(url, headers=headers, timeout=5) as resp:
-    #                 text = await resp.text()
-    #                 json_start = text.find("{")
-    #                 json_end = text.rfind("}") + 1
-    #                 if json_start != -1 and json_end != -1:
-    #                     json_str = text[json_start:json_end]
-    #                     try:
-    #                         data = json.loads(json_str)
-    #                     except Exception as err:
-    #                         _LOGGER.error(
-    #                             "Could not parse JSON from AP response: %s (%s)",
-    #                             json_str,
-    #                             err,
-    #                         )
-    #                         return None
-    #                     return {
-    #                         "AP_SSID": data.get("SSID"),
-    #                         "AP_KEY": data.get("KEY"),
-    #                     }
-    #                 _LOGGER.error(
-    #                     "Could not extract JSON from AP response: %s",
-    #                     text,
-    #                 )
-    #     except (aiohttp.ClientError, TimeoutError, OSError) as err:
-    #         _LOGGER.error("Failed to fetch AP info from %s: %s", url, str(err))
-    #     return None
 
 
 class CannotConnect(HomeAssistantError):
