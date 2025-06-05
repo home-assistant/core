@@ -15,6 +15,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteWakeWord,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
@@ -144,14 +145,18 @@ async def init_components(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [AS_DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.ASSIST_SATELLITE]
+        )
         return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Unload test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, AS_DOMAIN)
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, Platform.ASSIST_SATELLITE
+        )
         return True
 
     mock_integration(

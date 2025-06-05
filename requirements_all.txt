@@ -113,7 +113,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.40
+SQLAlchemy==2.0.41
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -2656,7 +2656,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.3
+reolink-aio==0.13.4
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
