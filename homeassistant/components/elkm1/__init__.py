@@ -61,7 +61,7 @@ from .discovery import (
     async_update_entry_from_discovery,
 )
 from .models import ELKM1Data
-from .services import register_services
+from .services import async_setup_services
 
 type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
 
@@ -166,7 +166,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
-    register_services(hass)
+    async_setup_services(hass)
 
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
