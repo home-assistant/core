@@ -25,7 +25,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
+    async_load_fixture,
     snapshot_platform,
 )
 from tests.test_config_entries import FrozenDateTimeFactory
@@ -94,7 +94,7 @@ async def test_fetching_data(
 
     # Set new data and verify it
     mock_opendata_client.connections = json.loads(
-        load_fixture("connections.json", DOMAIN)
+        await async_load_fixture(hass, "connections.json", DOMAIN)
     )[3:6]
     freezer.tick(DEFAULT_UPDATE_TIME)
     async_fire_time_changed(hass)
@@ -114,7 +114,7 @@ async def test_fetching_data(
     # Recover and fetch new data again
     mock_opendata_client.async_get_data.side_effect = None
     mock_opendata_client.connections = json.loads(
-        load_fixture("connections.json", DOMAIN)
+        await async_load_fixture(hass, "connections.json", DOMAIN)
     )[6:9]
     freezer.tick(DEFAULT_UPDATE_TIME)
     async_fire_time_changed(hass)
