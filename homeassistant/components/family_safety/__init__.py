@@ -20,6 +20,10 @@ async def async_setup_entry(
     auth = await Authenticator.create(
         entry.data[CONF_API_TOKEN], True, async_get_clientsession(hass)
     )
+    # update config entry with new refresh token
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, CONF_API_TOKEN: auth.refresh_token}
+    )
     entry.runtime_data = coordinator = FamilySafetyCoordinator(hass, entry, auth)
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

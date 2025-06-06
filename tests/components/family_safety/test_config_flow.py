@@ -1,148 +1,116 @@
 """Test the Microsoft Family Safety config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from pyfamilysafety.exceptions import Unauthorized
 
 from homeassistant import config_entries
-from homeassistant.components.family_safety.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-)
 from homeassistant.components.family_safety.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.family_safety.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+mock_config_entry = MockConfigEntry(
+    domain=DOMAIN,
+    data={CONF_API_TOKEN: "M.C560_BL2.0.U.-tokendata"},
+    unique_id="aabbccddee112233",
+)
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+async def test_full_flow(
+    hass: HomeAssistant, mock_authenticator_client: MagicMock
 ) -> None:
-    """Test we handle invalid auth."""
+    """Test full end to end config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    with patch(
-        "homeassistant.components.family_safety.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
+    assert result is not None
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["step_id"] == "user"
+    assert "link" in result["description_placeholders"]
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    with patch(
-        "homeassistant.components.family_safety.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_TOKEN: "https://login.live.com/oauth20_desktop.srf?code=M.C560_BL2.0.U.-tokendata"
+        },
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["title"] == "aabbccddee112233"
+    assert result["data"][CONF_API_TOKEN] == "refresh-token-here"
+    assert result["result"].unique_id == "aabbccddee112233"
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+async def test_already_configured(
+    hass: HomeAssistant, mock_authenticator_client: MagicMock
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Ensure only one instance of an account can be configured."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    with patch(
-        "homeassistant.components.family_safety.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
+    assert result is not None
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["step_id"] == "user"
+    assert "link" in result["description_placeholders"]
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_TOKEN: "https://login.live.com/oauth20_desktop.srf?code=M.C560_BL2.0.U.-tokendata"
+        },
+    )
 
-    with patch(
-        "homeassistant.components.family_safety.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_invalid_api_token(
+    hass: HomeAssistant,
+    mock_authenticator_client: MagicMock,
+) -> None:
+    """Test to ensure an error is shown if the API token is invalid."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert "link" in result["description_placeholders"]
+    # Patch Authenticator.create directly to raise Unauthorized
+    # This ensures the config_flow's try-except block for Unauthorized is hit.
+    with (
+        patch(
+            "homeassistant.components.family_safety.Authenticator.create",
+            new_callable=AsyncMock,
+            side_effect=Unauthorized,
+        ),
+        patch(  # Also patch the pyfamilysafety version if it's imported directly
+            "pyfamilysafety.Authenticator.create",
+            new_callable=AsyncMock,
+            side_effect=Unauthorized,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+            user_input={
+                CONF_API_TOKEN: "https://login.live.com/oauth20_desktop.srf?code=M.C560_BL2.0.U.-tokendata"
             },
         )
-        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "invalid_auth"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_TOKEN: "https://login.live.com/oauth20_desktop.srf?code=M.C560_BL2.0.U.-tokendata"
+        },
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["title"] == "aabbccddee112233"
+    assert result["data"][CONF_API_TOKEN] == "refresh-token-here"
+    assert result["result"].unique_id == "aabbccddee112233"

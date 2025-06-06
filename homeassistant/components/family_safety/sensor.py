@@ -56,16 +56,16 @@ SENSOR_DESCRIPTIONS: tuple[FamilySafetySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda device: device.account.account_balance,
         native_unit_of_measurement_fn=lambda device: device.account.account_currency,
-        suggested_display_precision=2
+        suggested_display_precision=2,
     ),
     FamilySafetySensorEntityDescription(
         key=FamilySafetySensor.PENDING_REQUESTS,
         translation_key=FamilySafetySensor.PENDING_REQUESTS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda device: len(device.coordinator.api.get_account_requests(
-            device.account.user_id
-        )),
-        suggested_display_precision=0
+        value_fn=lambda device: len(
+            device.coordinator.api.get_account_requests(device.account.user_id)
+        ),
+        suggested_display_precision=0,
     ),
 )
 
@@ -98,7 +98,7 @@ class FamilySafetySensorEntity(FamilySafetyDevice, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, account=account, key=description.key)
-        self.entity_description = description
+        self.entity_description: FamilySafetySensorEntityDescription = description
 
     @property
     def native_value(self) -> int | float | None:
@@ -108,6 +108,6 @@ class FamilySafetySensorEntity(FamilySafetyDevice, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement."""
-        if self.entity_description.native_unit_of_measurement_fn:
-            return self.entity_description.native_unit_of_measurement_fn(self)
-        return self.entity_description.native_unit_of_measurement
+        if self.entity_description.native_unit_of_measurement_fn is None:
+            return self.entity_description.native_unit_of_measurement
+        return self.entity_description.native_unit_of_measurement_fn(self)

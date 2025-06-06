@@ -2,22 +2,20 @@
   "config": {
     "step": {
       "user": {
-        "description": "To obtain your access token, click [Microsoft Login]({link}) to sign in to your Microsoft account. Once signed in, copy the link from the address bar."
-        },
+        "description": "To obtain your access token, click [Microsoft Login]({link}) to sign in to your Microsoft account. Once signed in, copy the link from the address bar.",
         "data": {
           "api_token": "Access token"
         },
         "data_description": {
           "api_token": "Paste the link copied from the address bar into this field."
         }
-      },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   },
   "entity": {

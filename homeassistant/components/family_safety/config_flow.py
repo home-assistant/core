@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from pyfamilysafety import Authenticator
-from pyfamilysafety.exceptions import HttpException
+from pyfamilysafety.exceptions import Unauthorized
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -37,7 +37,7 @@ class FamilySafetyConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 await self.async_set_unique_id(auth.user_id)
                 self._abort_if_unique_id_configured()
-            except HttpException as err:
+            except Unauthorized as err:
                 _LOGGER.error(err)
                 errors["base"] = "invalid_auth"
             else:

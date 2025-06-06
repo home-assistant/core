@@ -23,7 +23,10 @@ class FamilySafetyCoordinator(DataUpdateCoordinator[FamilySafety]):
     """Family Safety coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: FamilySafetyConfigEntry, auth: Authenticator
+        self,
+        hass: HomeAssistant,
+        config_entry: FamilySafetyConfigEntry,
+        auth: Authenticator,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -35,7 +38,3 @@ class FamilySafetyCoordinator(DataUpdateCoordinator[FamilySafety]):
         )
         self.api = FamilySafety(auth)
         self.update_method = self.api.update
-
-    async def _async_update_data(self):
-        """Update data."""
-        return await self.api.update()
