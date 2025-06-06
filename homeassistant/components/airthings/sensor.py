@@ -19,6 +19,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
     UnitOfPressure,
+    UnitOfSoundPressure,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -27,8 +28,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirthingsConfigEntry, AirthingsDataCoordinatorType
+from . import AirthingsConfigEntry
 from .const import DOMAIN
+from .coordinator import AirthingsDataUpdateCoordinator
 
 SENSORS: dict[str, SensorEntityDescription] = {
     "radonShortTermAvg": SensorEntityDescription(
@@ -52,6 +54,12 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="pressure",
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "sla": SensorEntityDescription(
+        key="sla",
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
+        native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": SensorEntityDescription(
@@ -140,7 +148,7 @@ async def async_setup_entry(
 
 
 class AirthingsHeaterEnergySensor(
-    CoordinatorEntity[AirthingsDataCoordinatorType], SensorEntity
+    CoordinatorEntity[AirthingsDataUpdateCoordinator], SensorEntity
 ):
     """Representation of a Airthings Sensor device."""
 
@@ -149,7 +157,7 @@ class AirthingsHeaterEnergySensor(
 
     def __init__(
         self,
-        coordinator: AirthingsDataCoordinatorType,
+        coordinator: AirthingsDataUpdateCoordinator,
         airthings_device: AirthingsDevice,
         entity_description: SensorEntityDescription,
     ) -> None:

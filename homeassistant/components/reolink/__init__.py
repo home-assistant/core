@@ -150,6 +150,10 @@ async def async_setup_entry(
 
         if host.api.new_devices and config_entry.state == ConfigEntryState.LOADED:
             # Their are new cameras/chimes connected, reload to add them.
+            _LOGGER.debug(
+                "Reloading Reolink %s to add new device (capabilities)",
+                host.api.nvr_name,
+            )
             hass.async_create_task(
                 hass.config_entries.async_reload(config_entry.entry_id)
             )
@@ -231,6 +235,14 @@ async def async_setup_entry(
 
     host.api.baichuan.register_callback(
         "privacy_mode_change", async_privacy_mode_change, 623
+    )
+
+    # ensure host device is setup before connected camera devices that use via_device
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, host.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -372,10 +384,38 @@ def migrate_entity_ids(
             else:
                 new_device_id = f"{host.unique_id}_{device_uid[1]}"
             _LOGGER.debug(
-                "Updating Reolink device UID from %s to %s", device_uid, new_device_id
+                "Updating Reolink device UID from %s to %s",
+                device_uid,
+                new_device_id,
             )
             new_identifiers = {(DOMAIN, new_device_id)}
             device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+
+        # Check for wrongfully combined entities in one device
+        # Can be removed in HA 2025.12
+        new_identifiers = device.identifiers.copy()
+        remove_ids = False
+        if (DOMAIN, host.unique_id) in device.identifiers:
+            remove_ids = True  # NVR/Hub in identifiers, keep that one, remove others
+        for old_id in device.identifiers:
+            (old_device_uid, old_ch, old_is_chime) = get_device_uid_and_ch(old_id, host)
+            if (
+                not old_device_uid
+                or old_device_uid[0] != host.unique_id
+                or old_id[1] == host.unique_id
+            ):
+                continue
+            if remove_ids:
+                new_identifiers.remove(old_id)
+            remove_ids = True  # after the first identifier, remove the others
+        if new_identifiers != device.identifiers:
+            _LOGGER.debug(
+                "Updating Reolink device identifiers from %s to %s",
+                device.identifiers,
+                new_identifiers,
+            )
+            device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+            break
 
         if ch is None or is_chime:
             continue  # Do not consider the NVR itself or chimes
@@ -386,6 +426,11 @@ def migrate_entity_ids(
         if host_connnection in device.connections:
             new_connections = device.connections.copy()
             new_connections.remove(host_connnection)
+            _LOGGER.debug(
+                "Updating Reolink device connections from %s to %s",
+                device.connections,
+                new_connections,
+            )
             device_reg.async_update_device(device.id, new_connections=new_connections)
 
         ch_device_ids[device.id] = ch
@@ -395,7 +440,9 @@ def migrate_entity_ids(
             else:
                 new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
             _LOGGER.debug(
-                "Updating Reolink device UID from %s to %s", device_uid, new_device_id
+                "Updating Reolink device UID from %s to %s",
+                device_uid,
+                new_device_id,
             )
             new_identifiers = {(DOMAIN, new_device_id)}
             existing_device = device_reg.async_get_device(identifiers=new_identifiers)
