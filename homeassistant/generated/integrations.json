@@ -1370,6 +1370,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "dobiss": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "dominos": {
       "name": "Dominos Pizza",
       "integration_type": "hub",
@@ -7852,6 +7857,7 @@
     "cpuspeed",
     "demo",
     "derivative",
+    "dobiss",
     "emulated_roku",
     "energenie_power_sockets",
     "filesize",

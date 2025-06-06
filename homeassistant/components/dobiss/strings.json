@@ -1,0 +1,107 @@
+{
+  "title": "Dobiss",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "invert_binary_sensor": "Invert binary sensor state",
+          "ignore_zigbee_devices": "Ignore Zigbee devices",
+          "send_end_position_cover": "Set Cover End position after move",
+          "cover_closetime": "Time it takes for covers to close completely (0 to disable)",
+          "use_timed_covers": "Configure supported covers as timed covers"
+        }
+      }
+    }
+  },
+  "services": {
+    "turn_on": {
+      "name": "Turn On Output",
+      "description": "Turn a Dobiss output on, with optional brightness or delay",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "The entity to turn on"
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Brightness level (0–255)"
+        },
+        "delayon": {
+          "name": "Delay On",
+          "description": "Delay before turning on (in seconds)"
+        },
+        "delayoff": {
+          "name": "Delay Off",
+          "description": "Delay before turning off (in seconds)"
+        },
+        "from_pir": {
+          "name": "From PIR",
+          "description": "Triggered by PIR sensor"
+        }
+      }
+    },
+    "action_request": {
+      "name": "Action Request",
+      "description": "Send a direct action command to the Dobiss NXT server",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "Device address (int)"
+        },
+        "channel": {
+          "name": "Channel",
+          "description": "Channel number (int)"
+        },
+        "action": {
+          "name": "Action",
+          "description": "Action code to perform (int)"
+        },
+        "option1": {
+          "name": "Option 1",
+          "description": "Optional extra parameter 1 (int)"
+        },
+        "option2": {
+          "name": "Option 2",
+          "description": "Optional extra parameter 2 (int)"
+        }
+      }
+    },
+    "status_request": {
+      "name": "Status Request",
+      "description": "Query current status of a Dobiss device",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "Device address (optional)"
+        },
+        "channel": {
+          "name": "Channel",
+          "description": "Channel number (optional)"
+        }
+      }
+    },
+    "force_update": {
+      "name": "Force Update",
+      "description": "Trigger a refresh of all device states"
+    }
+  }
+}
