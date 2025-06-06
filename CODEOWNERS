@@ -89,6 +89,8 @@ build.json @home-assistant/supervisor
 /tests/components/alert/ @home-assistant/core @frenck
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
+/homeassistant/components/amazon_devices/ @chemelli74
+/tests/components/amazon_devices/ @chemelli74
 /homeassistant/components/amazon_polly/ @jschlyter
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
@@ -303,6 +305,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/crownstone/ @Crownstone @RicArch97
 /tests/components/crownstone/ @Crownstone @RicArch97
 /homeassistant/components/cups/ @fabaff
+/tests/components/cups/ @fabaff
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
 /homeassistant/components/date/ @home-assistant/core
@@ -1417,6 +1420,8 @@ build.json @home-assistant/supervisor
 /tests/components/sma/ @kellerza @rklomp @erwindouna
 /homeassistant/components/smappee/ @bsmappee
 /tests/components/smappee/ @bsmappee
+/homeassistant/components/smarla/ @explicatis @rlint-explicatis
+/tests/components/smarla/ @explicatis @rlint-explicatis
 /homeassistant/components/smart_meter_texas/ @grahamwetzler
 /tests/components/smart_meter_texas/ @grahamwetzler
 /homeassistant/components/smartthings/ @joostlek
