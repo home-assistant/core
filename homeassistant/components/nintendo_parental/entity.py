@@ -27,7 +27,7 @@ class NintendoDevice(CoordinatorEntity[NintendoUpdateCoordinator]):
             identifiers={(DOMAIN, device.device_id)},
             manufacturer="Nintendo",
             name=device.name,
-            sw_version=device.extra["device"]["firmwareVersion"]["displayedVersion"],
+            sw_version=device.extra["firmwareVersion"]["displayedVersion"],
         )
 
     async def async_added_to_hass(self) -> None:
