@@ -28,7 +28,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.location import find_coordinates
 
-from . import async_get_travel_times
 from .const import (
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
@@ -44,6 +43,7 @@ from .const import (
     DOMAIN,
     SEMAPHORE,
 )
+from .services import async_get_travel_times
 
 _LOGGER = logging.getLogger(__name__)
 
