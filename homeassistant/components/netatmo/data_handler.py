@@ -361,7 +361,7 @@ class NetatmoDataHandler:
                     NetatmoDevice(
                         self,
                         module,
-                        DOOR_TAG,
+                        BINARY_SENSOR,
                         DOOR_TAG,
                     ),
                 )
