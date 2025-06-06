@@ -32,7 +32,7 @@ from .coordinator import (
 )
 from .helpers import flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
-from .services import async_register_services
+from .services import async_setup_services
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -56,7 +56,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telemetry integration."""
-    async_register_services(hass)
+    async_setup_services(hass)
     return True
 
 

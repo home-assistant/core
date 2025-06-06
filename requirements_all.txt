@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.64.1
+PySwitchbot==0.65.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -173,7 +173,7 @@ aio-georss-gdacs==0.10
 aioacaia==0.1.14
 
 # homeassistant.components.airq
-aioairq==0.4.4
+aioairq==0.4.6
 
 # homeassistant.components.airzone_cloud
 aioairzone-cloud==0.6.12
@@ -280,7 +280,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.9.0
+aioimmich==0.9.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -2398,7 +2398,7 @@ python-awair==0.2.4
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==1.2.1
+python-bsblan==2.1.0
 
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
@@ -2859,7 +2859,7 @@ surepy==0.9.0
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.4.0
+switchbot-api==2.5.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
