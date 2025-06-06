@@ -8,7 +8,13 @@ from pathlib import Path
 
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
-from google.genai.types import File, FileState
+from google.genai.types import (
+    File,
+    FileState,
+    GenerateContentConfig,
+    HarmCategory,
+    SafetySetting,
+)
 from requests.exceptions import Timeout
 import voluptuous as vol
 
@@ -33,10 +39,23 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_CHAT_MODEL,
     CONF_PROMPT,
+    CONF_TEMPERATURE,
+    CONF_TOP_P,
+    CONF_TOP_K,
+    CONF_HARASSMENT_BLOCK_THRESHOLD,
+    CONF_HATE_BLOCK_THRESHOLD,
+    CONF_SEXUAL_BLOCK_THRESHOLD,
+    CONF_DANGEROUS_BLOCK_THRESHOLD,
+    CONF_MAX_TOKENS,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_HARM_BLOCK_THRESHOLD,
+    RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TOP_P,
+    RECOMMENDED_TOP_K,
     TIMEOUT_MILLIS,
 )
 
@@ -75,6 +94,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         client = config_entry.runtime_data
+        options = config_entry.options
 
         def append_files_to_prompt():
             image_filenames = call.data[CONF_IMAGE_FILENAME]
@@ -129,9 +149,47 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async with asyncio.timeout(TIMEOUT_MILLIS / 1000):
             await asyncio.gather(*tasks)
 
+        generate_content_config = GenerateContentConfig(
+            temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+            top_k=options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
+            top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+            max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            safety_settings=[
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_HARASSMENT,
+                    threshold=options.get(
+                        CONF_HARASSMENT_BLOCK_THRESHOLD,
+                        RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                    ),
+                ),
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold=options.get(
+                        CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                    ),
+                ),
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                    threshold=options.get(
+                        CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                    ),
+                ),
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold=options.get(
+                        CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
+                    ),
+                ),
+            ],
+        )
+
+        chat_model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+
         try:
             response = await client.aio.models.generate_content(
-                model=RECOMMENDED_CHAT_MODEL, contents=prompt_parts
+                model=chat_model,
+                contents=prompt_parts,
+                config=generate_content_config,
             )
         except (
             APIError,
