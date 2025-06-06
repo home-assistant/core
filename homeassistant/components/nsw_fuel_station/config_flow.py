@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-from nsw_fuel import Station
+import nsw_fuel
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -19,8 +20,9 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import StationPriceData
+from . import SCAN_INTERVAL, StationPriceData, fetch_station_price_data
 from .const import (
     CONF_FUEL_TYPES,
     CONF_STATION_ID,
@@ -29,7 +31,8 @@ from .const import (
     INPUT_SEARCH_TERM,
     INPUT_STATION_ID,
 )
-from .coordinator import NswFuelStationDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -40,15 +43,29 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
 
     config_type: str | None
     fuel_types: list[str]
-    stations: list[Station]
-    selected_station: Station
+    stations: list[nsw_fuel.Station]
+    selected_station: nsw_fuel.Station
     data: StationPriceData
 
     async def _setup_coordinator(self):
-        coordinator = self.hass.data.get(DOMAIN, {}).get("coordinator")
-        if coordinator is None:
-            coordinator = NswFuelStationDataUpdateCoordinator(self.hass)
-            await coordinator.async_config_entry_first_refresh()
+        client = nsw_fuel.FuelCheckClient()
+
+        async def async_update_data():
+            return await self.hass.async_add_executor_job(
+                fetch_station_price_data, client
+            )
+
+        coordinator = DataUpdateCoordinator(
+            self.hass,
+            _LOGGER,
+            config_entry=None,
+            name="sensor",
+            update_interval=SCAN_INTERVAL,
+            update_method=async_update_data,
+        )
+        self.hass.data[DOMAIN] = coordinator
+
+        await coordinator.async_refresh()
         self.data = coordinator.data
 
     async def async_step_user(
@@ -97,9 +114,8 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
             self.selected_station = next(
                 station for station in self.stations if station.code == station_id
             )
-            for existing_entry in self._async_current_entries():
-                if existing_entry.data[CONF_STATION_ID] == station_id:
-                    errors["base"] = "station_exists"
+            await self.async_set_unique_id(str(station_id))
+            self._abort_if_unique_id_configured()
             if "base" not in errors:
                 return await self.async_step_select_fuel()
 
@@ -131,19 +147,13 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if (
-                INPUT_FUEL_TYPES not in user_input
-                or len(user_input[INPUT_FUEL_TYPES]) < 1
-            ):
-                errors["base"] = "missing_fuel_types"
-            else:
-                return self.async_create_entry(
-                    title=self.selected_station.name,
-                    data={
-                        CONF_STATION_ID: self.selected_station.code,
-                        CONF_FUEL_TYPES: user_input[INPUT_FUEL_TYPES],
-                    },
-                )
+            return self.async_create_entry(
+                title=self.selected_station.name,
+                data={
+                    CONF_STATION_ID: self.selected_station.code,
+                    CONF_FUEL_TYPES: user_input[INPUT_FUEL_TYPES],
+                },
+            )
 
         valid_fuel_types = {
             fuel_type: self.data.fuel_types.get(fuel_type, fuel_type)
@@ -159,7 +169,7 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Optional(INPUT_FUEL_TYPES): cv.multi_select(valid_fuel_types),
+                    vol.Required(INPUT_FUEL_TYPES): cv.multi_select(valid_fuel_types),
                 }
             ),
         )
@@ -175,18 +185,18 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_STATION_ID: station_id,
             CONF_FUEL_TYPES: user_input[INPUT_FUEL_TYPES],
         }
-        self._async_abort_entries_match({CONF_STATION_ID: station_id})
+        await self.async_set_unique_id(str(station_id))
+        self._abort_if_unique_id_configured()
 
         await self._setup_coordinator()
         if self.data is None:
             return self.async_abort(reason="fetch_failed")
 
         station = self.data.stations.get(station_id)
-        name = "Unknown"
-        if station is not None:
-            name = station.name
+        if station is None:
+            return self.async_abort(reason="no_matching_stations")
 
         return self.async_create_entry(
-            title=name,
+            title=station.name,
             data=data,
         )

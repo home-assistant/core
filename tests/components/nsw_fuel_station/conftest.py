@@ -32,7 +32,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_STATION_ID: 222,
             CONF_FUEL_TYPES: ["E10", "DL"],
         },
-        unique_id="12345",
+        unique_id="222",
     )
 
 
@@ -67,7 +67,15 @@ MOCK_STATIONS = [
         name="Bob's Servo",
         address="34 Low St, Anytown",
     ),
+    Station(
+        id="nofuel1",
+        brand="nofuel",
+        code=444,
+        name="Jim's sad servo",
+        address="34 Empty St, Emptytown",
+    ),
 ]
+
 MOCK_PRICES = [
     Price(
         fuel_type="E10",
@@ -126,7 +134,7 @@ def mock_fuelcheckclient() -> Generator[MagicMock]:
     """Return a mocked FuelCheckClient."""
     with (
         patch(
-            "homeassistant.components.nsw_fuel_station.coordinator.FuelCheckClient",
+            "nsw_fuel.FuelCheckClient",
             autospec=True,
         ) as fuelcheckclient_mock,
     ):

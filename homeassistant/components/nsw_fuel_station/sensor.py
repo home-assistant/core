@@ -38,7 +38,8 @@ async def async_setup_entry(
     station_id = entry.data[CONF_STATION_ID]
     fuel_types = entry.data[CONF_FUEL_TYPES]
 
-    coordinator = hass.data[DOMAIN]["coordinator"]
+    coordinator = hass.data[DOMAIN]
+    await coordinator.async_refresh()
 
     if coordinator.data is None:
         _LOGGER.error("Initial fuel station price data not available")
