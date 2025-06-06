@@ -18,6 +18,7 @@ from pyatmo.modules.device_types import (
 )
 
 from homeassistant.components import cloud
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
@@ -62,6 +63,7 @@ WEATHER = "weather"
 AIR_CARE = "air_care"
 PUBLIC = NetatmoDeviceType.public
 DOOR_TAG = "door_tag"
+BINARY_SENSOR = BINARY_SENSOR_DOMAIN
 EVENT = "event"
 
 PUBLISHERS = {
@@ -359,7 +361,7 @@ class NetatmoDataHandler:
                     NetatmoDevice(
                         self,
                         module,
-                        DOOR_TAG,
+                        BINARY_SENSOR,
                         DOOR_TAG,
                     ),
                 )
