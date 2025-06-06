@@ -226,14 +226,22 @@ class SoCoMockFactory:
         mock_soco.add_uri_to_queue = Mock(return_value=10)
 
         mock_soco.avTransport = SonosMockService("AVTransport", ip_address)
+        mock_soco.avTransport.GetPositionInfo = Mock(
+            return_value=self.current_track_info
+        )
         mock_soco.renderingControl = SonosMockService("RenderingControl", ip_address)
         mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology", ip_address)
         mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
         mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)
+        mock_soco.zone_group_state = Mock()
+        mock_soco.zone_group_state.processed_count = 10
+        mock_soco.zone_group_state.total_requests = 12
+
         mock_soco.alarmClock = self.alarm_clock
         mock_soco.get_battery_info.return_value = self.battery_info
         mock_soco.all_zones = {mock_soco}
         mock_soco.group.coordinator = mock_soco
+        mock_soco.household_id = "test_household_id"
         self.mock_list[ip_address] = mock_soco
         return mock_soco
 
