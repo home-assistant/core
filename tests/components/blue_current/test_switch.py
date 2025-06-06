@@ -9,7 +9,6 @@ from homeassistant.components.blue_current import (
 from homeassistant.components.blue_current.const import (
     ACTIVITY,
     BLOCK,
-    LINKED_CHARGE_CARDS,
     PUBLIC_CHARGING,
     UNAVAILABLE,
 )
@@ -22,8 +21,6 @@ from . import DEFAULT_CHARGE_POINT, DEFAULT_CHARGE_POINT_OPTIONS, init_integrati
 
 from tests.common import MockConfigEntry
 
-SWITCHES = [PLUG_AND_CHARGE, BLOCK, LINKED_CHARGE_CARDS]
-
 
 async def test_switches(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test the underlying switches."""
@@ -31,18 +28,16 @@ async def test_switches(hass: HomeAssistant, config_entry: MockConfigEntry) -> N
     await init_integration(hass, config_entry, Platform.SWITCH)
 
     entity_registry = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
 
-    for key in SWITCHES:
-        state = hass.states.get(f"switch.101_{key}")
+    for switch in entity_entries:
+        state = hass.states.get(switch.entity_id)
 
         assert state and state.state == STATE_OFF
-        entry = entity_registry.async_get(f"switch.101_{key}")
-        assert entry and entry.unique_id == f"{key}_101"
-
-    state = hass.states.get("switch.101_block")
-    assert state and state.state == STATE_OFF
-    entry = entity_registry.async_get("switch.101_block")
-    assert entry and entry.unique_id == "block_101"
+        entry = entity_registry.async_get(switch.entity_id)
+        assert entry and entry.unique_id == switch.unique_id
 
 
 async def test_switches_offline(
@@ -55,19 +50,22 @@ async def test_switches_offline(
     await init_integration(hass, config_entry, Platform.SWITCH, charge_point)
 
     entity_registry = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
 
-    for key in SWITCHES:
-        state = hass.states.get(f"switch.101_{key}")
+    for switch in entity_entries:
+        state = hass.states.get(switch.entity_id)
 
         assert state and state.state == UNAVAILABLE
-        entry = entity_registry.async_get(f"switch.101_{key}")
-        assert entry and entry.unique_id == f"{key}_101"
+        entry = entity_registry.async_get(switch.entity_id)
+        assert entry and entry.entity_id == switch.entity_id
 
     connector: Connector = config_entry.runtime_data
     connector.charge_points = {"101": {"activity": "charging"}}
     async_dispatcher_send(hass, "blue_current_charge_point_update_101")
 
-    state = hass.states.get("switch.101_block")
+    state = hass.states.get("switch.101_block_charge_point")
     assert state and state.state == UNAVAILABLE
 
 
@@ -75,34 +73,39 @@ async def test_toggle(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
     """Test the on / off methods and if the switch gets updated."""
     await init_integration(hass, config_entry, Platform.SWITCH)
 
+    entity_registry = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+
     connector: Connector = config_entry.runtime_data
     connector.charge_points = {
         "101": {"activity": "available", **DEFAULT_CHARGE_POINT_OPTIONS}
     }
     async_dispatcher_send(hass, "blue_current_charge_point_update_101")
 
-    for switch in SWITCHES:
-        state = hass.states.get(f"switch.101_{switch}")
+    for switch in entity_entries:
+        state = hass.states.get(switch.entity_id)
 
         assert state and state.state == STATE_OFF
         await hass.services.async_call(
             "switch",
             "turn_on",
-            {"entity_id": f"switch.101_{switch}"},
+            {"entity_id": switch.entity_id},
             blocking=True,
         )
 
-        state = hass.states.get(f"switch.101_{switch}")
+        state = hass.states.get(switch.entity_id)
         assert state and state.state == STATE_ON
 
         await hass.services.async_call(
             "switch",
             "turn_off",
-            {"entity_id": f"switch.101_{switch}"},
+            {"entity_id": switch.entity_id},
             blocking=True,
         )
 
-        state = hass.states.get(f"switch.101_{switch}")
+        state = hass.states.get(switch.entity_id)
         assert state and state.state == STATE_OFF
 
 
@@ -114,9 +117,14 @@ async def test_setting_change(
 
     connector = config_entry.runtime_data
 
-    for key in (PLUG_AND_CHARGE, LINKED_CHARGE_CARDS, BLOCK):
-        switch = hass.states.get(f"switch.101_{key}")
-        assert switch.state == STATE_OFF
+    entity_registry = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+
+    for switch in entity_entries:
+        state = hass.states.get(switch.entity_id)
+        assert state.state == STATE_OFF
 
     connector.update_charge_point(
         "101",
@@ -127,15 +135,17 @@ async def test_setting_change(
         },
     )
 
-    for key in (PLUG_AND_CHARGE, LINKED_CHARGE_CARDS):
-        switch = hass.states.get(f"switch.101_{key}")
-        assert switch.state == STATE_ON
+    for switch in entity_entries:
+        if switch.unique_id != f"{BLOCK}_101":
+            switch = hass.states.get(switch.entity_id)
+            assert switch.state == STATE_ON
 
     connector.update_charge_point("101", CH_STATUS, {ACTIVITY: UNAVAILABLE})
 
-    for key in (PLUG_AND_CHARGE, LINKED_CHARGE_CARDS):
-        switch = hass.states.get(f"switch.101_{key}")
-        assert switch.state == STATE_UNAVAILABLE
+    for switch in entity_entries:
+        if switch.unique_id != f"{BLOCK}_101":
+            switch = hass.states.get(switch.entity_id)
+            assert switch.state == STATE_UNAVAILABLE
 
-    switch = hass.states.get("switch.101_block")
+    switch = hass.states.get("switch.101_block_charge_point")
     assert switch.state == STATE_ON
