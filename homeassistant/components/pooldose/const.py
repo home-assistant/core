@@ -20,6 +20,7 @@ APIVERSION = "v1"  # API version supported by the integration
 
 MANUFACTURER = "SEKO"
 MODEL = "PoolDose Dual pH/ORP Wifi"
+MODELID = "PDPR1H1HAW100"
 DEVICE_NAME = "PoolDose"
 
 
@@ -30,6 +31,7 @@ def device_info(info: dict | None) -> DeviceInfo:
         identifiers={(DOMAIN, info.get("SERIAL_NUMBER", "unknown"))},
         manufacturer=MANUFACTURER,
         model=MODEL,
+        model_id=MODELID,
         name=info.get("SYSTEMNAME") or DEVICE_NAME,
         serial_number=info.get("SERIAL_NUMBER"),
         sw_version=info.get("SOFTWAREVERSION_GATEWAY"),
