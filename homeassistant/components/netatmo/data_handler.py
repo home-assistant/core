@@ -72,7 +72,7 @@ PUBLISHERS = {
     WEATHER: "async_update_weather_stations",
     AIR_CARE: "async_update_air_care",
     PUBLIC: "async_update_public_weather",
-    DOOR_TAG: "async_update_weater_stations",
+    DOOR_TAG: "async_update_weather_stations",
     EVENT: "async_update_events",
 }
 
