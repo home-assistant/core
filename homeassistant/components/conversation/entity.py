@@ -10,6 +10,7 @@ from homeassistant.util import dt as dt_util
 
 from .chat_log import ChatLog, async_get_chat_log
 from .const import ConversationEntityFeature
+from .llm_task import LLMTask, LLMTaskResult
 from .models import ConversationInput, ConversationResult
 
 
@@ -33,6 +34,13 @@ class ConversationEntity(RestoreEntity):
         if self.__last_activity is None:
             return None
         return self.__last_activity
+
+    @classmethod
+    def async_supports_llm_tasks(cls) -> bool:
+        """Return if the Conversation agent can handle core tasks."""
+        return (
+            cls._async_handle_llm_task is not ConversationEntity._async_handle_llm_task
+        )
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
@@ -73,6 +81,14 @@ class ConversationEntity(RestoreEntity):
         chat_log: ChatLog,
     ) -> ConversationResult:
         """Call the API."""
+        raise NotImplementedError
+
+    async def _async_handle_llm_task(
+        self,
+        task: LLMTask,
+        chat_log: ChatLog,
+    ) -> LLMTaskResult:
+        """Handle an LLM task."""
         raise NotImplementedError
 
     async def async_prepare(self, language: str | None = None) -> None:
