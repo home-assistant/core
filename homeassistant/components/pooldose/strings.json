@@ -17,6 +17,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "api_not_supported": "Unsupported API version {api_version_is} (shall: {api_version_should})",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -46,6 +47,103 @@
       },
       "pool_ap_key": {
         "name": "AP KEY"
+      },
+      "pool_api_version": {
+        "name": "API Version"
+      },
+      "pool_ph_type_dosing": {
+        "name": "pH Type Dosing",
+        "state": {
+          "alcalyne": "pH+",
+          "acid": "pH-"
+        }
+      },
+      "pool_peristaltic_ph_dosing": {
+        "name": "Peristaltic pH Dosing",
+        "state": {
+          "off": "Off",
+          "proportional": "Proportional",
+          "on_off": "On/Off",
+          "timed": "Timed"
+        }
+      },
+      "pool_ofa_ph_value": {
+        "name": "OFA pH Value"
+      },
+      "pool_orp_type_dosing": {
+        "name": "ORP Type Dosing",
+        "state": {
+          "low": "Low",
+          "high": "High"
+        }
+      },
+      "pool_peristaltic_orp_dosing": {
+        "name": "Peristaltic ORP Dosing",
+        "state": {
+          "off": "Off",
+          "proportional": "Proportional",
+          "on_off": "On/Off",
+          "timed": "Timed"
+        }
+      },
+      "pool_ofa_orp_value": {
+        "name": "OFA ORP Value"
+      },
+      "pool_ph_calibration_type": {
+        "name": "pH Calibration Type",
+        "state": {
+          "off": "Off",
+          "reference": "Reference",
+          "1_point": "1 Point",
+          "2_points": "2 Points"
+        }
+      },
+      "pool_ph_calibration_offset": {
+        "name": "pH Calibration Offset",
+        "state": {
+          "8_00_mv": "8.00 mV"
+        }
+      },
+      "pool_ph_calibration_slope": {
+        "name": "pH Calibration Slope",
+        "state": {
+          "57_34_mv": "57.34 mV"
+        }
+      },
+      "pool_orp_calibration_type": {
+        "name": "ORP Calibration Type",
+        "state": {
+          "off": "Off",
+          "reference": "Reference",
+          "1_point": "1 Point"
+        }
+      },
+      "pool_orp_calibration_offset": {
+        "name": "ORP Calibration Offset",
+        "state": {
+          "0_00_mv": "0.00 mV"
+        }
+      },
+      "pool_orp_calibration_slope": {
+        "name": "ORP Calibration Slope",
+        "state": {
+          "0_96_mv": "0.96 mV"
+        }
+      },
+      "pool_peristaltic_ph_dosing_alt": {
+        "name": "Peristaltic pH Dosing",
+        "state": {
+          "proportional": "Proportional"
+        }
+      },
+      "pool_peristaltic_orp_dosing_alt": {
+        "name": "Peristaltic ORP Dosing",
+        "state": {
+          "proportional": "Proportional",
+          "off": "Off",
+          "on_off": "On/Off",
+          "timed": "Timed"
+        }
       }
     },
     "number": {
@@ -61,7 +159,7 @@
         "name": "Pause Dosing"
       },
       "circulation_detection": {
-        "name": "Circulation Detection"
+        "name": "Circulation Monitoring"
       },
       "frequency_input": {
         "name": "Frequency Input"
@@ -69,7 +167,30 @@
     },
     "binary_sensor": {
       "pool_circulation_state": {
-        "name": "Circulation Pump"
+        "name": "Circulation"
+      },
+      "pool_ph_level_ok": {
+        "name": "pH Level OK"
+      },
+      "pool_orp_level_ok": {
+        "name": "ORP Level OK"
+      },
+      "pool_flow_rate_ok": {
+        "name": "Flow Rate OK"
+      },
+      "pool_alarm_relay": {
+        "name": "Alarm Relay"
+      },
+      "pool_relay_aux1_ph": {
+        "name": "Relay AUX 1 pH Measure"
+      },
+      "pool_relay_aux2_orpcl": {
+        "name": "Relay AUX 2 ORP/CL"
+      }
+    },
+    "select": {
+      "pool_water_meter_unit": {
+        "name": "Water Meter Unit"
       }
     }
   }

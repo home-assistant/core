@@ -24,6 +24,7 @@ _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.NUMBER,
     Platform.SWITCH,
+    Platform.SELECT,
 ]
 
 """Configure the Seko Pooldose entry."""
@@ -92,6 +93,7 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
                 url, json=payload, headers=headers, timeout=timeout
             ) as resp:
                 data = await resp.json()
+                device_info["APIVERSION_GATEWAY"] = data.get("APIVERSION_GATEWAY")
                 device_info["SERIAL_NUMBER"] = data.get("SERIAL_NUMBER")
                 device_info["SOFTWAREVERSION_GATEWAY"] = data.get(
                     "SOFTWAREVERSION_GATEWAY"

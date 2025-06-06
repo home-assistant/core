@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import SENSOR_MAP, STATIC_SENSOR_KEYS, device_info
+from .const import SENSOR_MAP, STATIC_SENSOR_KEYS, VALUE_CONVERSION_TABLE, device_info
 
 
 async def async_setup_entry(
@@ -107,13 +107,16 @@ class PooldoseSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | int | str | None:
-        """Return the current value of the sensor."""
+        """Return the current value of the sensor, optionally converted."""
         try:
             value = self.coordinator.data["devicedata"][self._api.serial_key][
                 self._key
             ]["current"]
         except (KeyError, TypeError):
             return None
+        # Value conversion if mapping exists
+        if self._key in VALUE_CONVERSION_TABLE:
+            return VALUE_CONVERSION_TABLE[self._key].get(str(value), value)
         return value
 
 

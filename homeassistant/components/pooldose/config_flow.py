@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, CONF_TIMEOUT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_SERIALNUMBER, DEFAULT_HOST, DOMAIN, SOFTWARE_VERSION
+from .const import APIVERSION, CONF_SERIALNUMBER, DEFAULT_HOST, DOMAIN, SOFTWARE_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,22 +36,35 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        error_placeholders = None
         if user_input is not None:
             host = user_input[CONF_HOST]
             info = await self._async_get_device_info(host)
-            if not info or "SERIAL_NUMBER" not in info:
+            if not info:
                 errors["base"] = "cannot_connect"
             else:
-                serial_number = info["SERIAL_NUMBER"]
-                await self.async_set_unique_id(serial_number)
-                self._abort_if_unique_id_configured()
-                entry_data = {CONF_HOST: host, CONF_SERIALNUMBER: serial_number}
-                return self.async_create_entry(
-                    title="PoolDose - S/N " + serial_number, data=entry_data
-                )
+                api_ver = info["APIVERSION_GATEWAY"]
+                # Stop initialization if API version is not supported
+                if api_ver != APIVERSION:
+                    errors["base"] = "api_not_supported"
+                    error_placeholders = {
+                        "api_version_is": api_ver,
+                        "api_version_should": APIVERSION,
+                    }
+                else:
+                    serial_number = info["SERIAL_NUMBER"]
+                    await self.async_set_unique_id(serial_number)
+                    self._abort_if_unique_id_configured()
+                    entry_data = {CONF_HOST: host, CONF_SERIALNUMBER: serial_number}
+                    return self.async_create_entry(
+                        title=f"PoolDose - S/N {serial_number}", data=entry_data
+                    )
 
         return self.async_show_form(
-            step_id="user", data_schema=SCHEMA_DEVICE, errors=errors
+            step_id="user",
+            data_schema=SCHEMA_DEVICE,
+            errors=errors,
+            description_placeholders=error_placeholders,
         )
 
     async def _async_get_device_info(self, host: str) -> dict[str, Any] | None:
