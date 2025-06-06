@@ -105,7 +105,7 @@ async def test_async_new_device_discovery(
 
     # Mock discovery of new fan which would get added to VS_DEVICES.
     with patch(
-        "homeassistant.components.vesync.async_generate_device_list",
+        "homeassistant.components.vesync.services.async_generate_device_list",
         return_value=[fan],
     ):
         await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
@@ -117,7 +117,7 @@ async def test_async_new_device_discovery(
     # Mock discovery of new humidifier which would invoke discovery in all platforms.
     # The mocked humidifier needs to have all properties populated for correct processing.
     with patch(
-        "homeassistant.components.vesync.async_generate_device_list",
+        "homeassistant.components.vesync.services.async_generate_device_list",
         return_value=[humidifier],
     ):
         await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
