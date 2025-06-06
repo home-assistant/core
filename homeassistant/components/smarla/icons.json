@@ -5,6 +5,11 @@
         "default": "mdi:refresh-auto"
       }
     },
+    "number": {
+      "intensity": {
+        "default": "mdi:sine-wave"
+      }
+    },
     "sensor": {
       "amplitude": {
         "default": "mdi:sine-wave"

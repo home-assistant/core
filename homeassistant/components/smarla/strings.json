@@ -24,6 +24,11 @@
         "name": "Smart Mode"
       }
     },
+    "number": {
+      "intensity": {
+        "name": "Intensity"
+      }
+    },
     "sensor": {
       "amplitude": {
         "name": "Amplitude"
