@@ -77,7 +77,7 @@ async def _handle_reload(service: ServiceCall) -> None:
 
 
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register services for YoLink integration."""
+    """Register integration services."""
     hass.services.async_register(
         DOMAIN,
         SERVICE_PROCESS,
