@@ -1,7 +1,5 @@
 """Imeon inverter base class for entities."""
 
-from dataclasses import dataclass
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
