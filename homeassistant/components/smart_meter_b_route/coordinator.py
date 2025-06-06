@@ -66,8 +66,3 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
             return await self.hass.async_add_executor_job(self._get_data)
         except MomongaError as error:
             raise UpdateFailed(error) from error
-
-    async def async_shutdown(self) -> None:
-        """Disconnect from the api."""
-        await self.api.close()
-        await super().async_shutdown()
