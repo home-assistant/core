@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from switchbot.const.air_purifier import AirQualityLevel
-
 from switchbot import HumidifierWaterLevel
+from switchbot.const.air_purifier import AirQualityLevel
 
 from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.sensor import (
