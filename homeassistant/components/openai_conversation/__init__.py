@@ -140,6 +140,9 @@ async def _render_image(call: ServiceCall) -> ServiceResponse:
                 learn_more_url="https://openai.com/index/image-generation-api/#get-started",
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="organization_verification_required",
+                translation_placeholders={
+                    "platform_settings": "https://platform.openai.com/settings/organization/general"
+                },
             )
             # Don't raise an issue about deprecated arguments
             # when there is no permissions for the new model:
