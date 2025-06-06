@@ -186,7 +186,7 @@ async def _render_image(call: ServiceCall) -> ServiceResponse:
         raise HomeAssistantError("No image data returned")
 
     if len(call.data[CONF_PROMPT]) <= 32:
-        filename = f"{call.data[CONF_PROMPT].replace(' ', '_').replace('/', '_')}_{response.created}.png"
+        filename = f"{call.data[CONF_PROMPT].replace(' ', '_').replace('/', '_').replace('.', '_')}_{response.created}.png"
     else:
         filename = f"{hashlib.md5(call.data[CONF_PROMPT].encode('utf-8')).hexdigest()}_{response.created}.png"
 
