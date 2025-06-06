@@ -40,7 +40,7 @@ async def test_async_setup_entry__no_devices(
 ) -> None:
     """Test setup connects to vesync and creates empty config when no devices."""
     with patch.object(hass.config_entries, "async_forward_entry_setups") as setups_mock:
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Assert platforms loaded
         await hass.async_block_till_done()
         assert setups_mock.call_count == 1
@@ -72,7 +72,7 @@ async def test_async_setup_entry__loads_fans(
     }
 
     with patch.object(hass.config_entries, "async_forward_entry_setups") as setups_mock:
-        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Assert platforms loaded
         await hass.async_block_till_done()
         assert setups_mock.call_count == 1
