@@ -186,16 +186,16 @@ async def test_import_flow_ok(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            "station_id": 222,
-            "fuel_types": ["E10", "DL"],
+            CONF_STATION_ID: 222,
+            CONF_FUEL_TYPES: ["E10", "DL"],
         },
     )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Joe's Servo"
     assert result.get("data") == {
-        "station_id": 222,
-        "fuel_types": ["E10", "DL"],
+        CONF_STATION_ID: 222,
+        CONF_FUEL_TYPES: ["E10", "DL"],
     }
     assert result.get("options") == {}
 
@@ -212,8 +212,8 @@ async def test_import_flow_client_error(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            "station_id": 555,
-            "fuel_types": ["E10", "DL"],
+            CONF_STATION_ID: 555,
+            CONF_FUEL_TYPES: ["E10", "DL"],
         },
     )
     assert result["type"] is FlowResultType.ABORT
@@ -228,8 +228,8 @@ async def test_import_flow_no_station_found(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            "station_id": 555,
-            "fuel_types": ["E10", "DL"],
+            CONF_STATION_ID: 555,
+            CONF_FUEL_TYPES: ["E10", "DL"],
         },
     )
 
