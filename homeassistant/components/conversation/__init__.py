@@ -11,26 +11,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .agent_manager import (
-    AgentInfo,
-    agent_id_validator,
-    async_converse,
-    async_get_agent,
-    get_agent_manager,
-)
+from .agent_manager import AgentInfo, async_converse, async_get_agent, get_agent_manager
 from .chat_log import (
     AssistantContent,
     AssistantContentDeltaDict,
@@ -43,23 +30,17 @@ from .chat_log import (
     async_get_chat_log,
 )
 from .const import (
-    ATTR_AGENT_ID,
-    ATTR_CONVERSATION_ID,
-    ATTR_LANGUAGE,
-    ATTR_TEXT,
     DATA_COMPONENT,
-    DATA_DEFAULT_ENTITY,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
     OLD_HOME_ASSISTANT_AGENT,
-    SERVICE_PROCESS,
-    SERVICE_RELOAD,
     ConversationEntityFeature,
 )
 from .default_agent import DefaultAgent, async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
+from .services import async_setup_services
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 __all__ = [
@@ -90,22 +71,6 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_PROCESS_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_TEXT): cv.string,
-        vol.Optional(ATTR_LANGUAGE): cv.string,
-        vol.Optional(ATTR_AGENT_ID): agent_id_validator,
-        vol.Optional(ATTR_CONVERSATION_ID): cv.string,
-    }
-)
-
-
-SERVICE_RELOAD_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_LANGUAGE): cv.string,
-        vol.Optional(ATTR_AGENT_ID): agent_id_validator,
-    }
-)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -279,43 +244,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, "conversation", OLD_HOME_ASSISTANT_AGENT, HOME_ASSISTANT_AGENT
     )
 
-    async def handle_process(service: ServiceCall) -> ServiceResponse:
-        """Parse text into commands."""
-        text = service.data[ATTR_TEXT]
-        _LOGGER.debug("Processing: <%s>", text)
-        try:
-            result = await async_converse(
-                hass=hass,
-                text=text,
-                conversation_id=service.data.get(ATTR_CONVERSATION_ID),
-                context=service.context,
-                language=service.data.get(ATTR_LANGUAGE),
-                agent_id=service.data.get(ATTR_AGENT_ID),
-            )
-        except intent.IntentHandleError as err:
-            raise HomeAssistantError(f"Error processing {text}: {err}") from err
+    async_setup_services(hass)
 
-        if service.return_response:
-            return result.as_dict()
-
-        return None
-
-    async def handle_reload(service: ServiceCall) -> None:
-        """Reload intents."""
-        await hass.data[DATA_DEFAULT_ENTITY].async_reload(
-            language=service.data.get(ATTR_LANGUAGE)
-        )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_PROCESS,
-        handle_process,
-        schema=SERVICE_PROCESS_SCHEMA,
-        supports_response=SupportsResponse.OPTIONAL,
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, handle_reload, schema=SERVICE_RELOAD_SCHEMA
-    )
     async_setup_conversation_http(hass)
 
     return True
