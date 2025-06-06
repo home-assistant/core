@@ -1,6 +1,7 @@
 """Configure and test MatrixBot."""
 
-from homeassistant.components.matrix import DOMAIN, SERVICE_SEND_MESSAGE, MatrixBot
+from homeassistant.components.matrix import MatrixBot
+from homeassistant.components.matrix.const import DOMAIN, SERVICE_SEND_MESSAGE
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 
