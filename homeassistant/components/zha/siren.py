@@ -35,6 +35,7 @@ from .helpers import (
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
+    migrate_entities_unique_ids,
 )
 
 
@@ -46,6 +47,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation siren from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms[Platform.SIREN]
+
+    await migrate_entities_unique_ids(hass, Platform.SIREN, entities_to_create)
 
     unsub = async_dispatcher_connect(
         hass,
