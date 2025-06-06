@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import override
 
 from whirlpool.appliance import Appliance
+from whirlpool.oven import Cavity as OvenCavity, CavityState, CookMode, Oven
 from whirlpool.washerdryer import MachineState, WasherDryer
 
 from homeassistant.components.sensor import (
@@ -13,14 +14,16 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from . import WhirlpoolConfigEntry
-from .entity import WhirlpoolEntity
+from .entity import WhirlpoolEntity, WhirlpoolOvenEntity
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -62,6 +65,24 @@ STATE_CYCLE_SOAKING = "cycle_soaking"
 STATE_CYCLE_SPINNING = "cycle_spinning"
 STATE_CYCLE_WASHING = "cycle_washing"
 STATE_DOOR_OPEN = "door_open"
+
+OVEN_CAVITY_STATE = {
+    CavityState.Standby: "standby",
+    CavityState.Preheating: "preheating",
+    CavityState.Cooking: "cooking",
+    CavityState.NotPresent: "not_present",
+}
+
+OVEN_COOK_MODE = {
+    CookMode.Standby: "standby",
+    CookMode.Bake: "bake",
+    CookMode.ConvectBake: "convection_bake",
+    CookMode.Broil: "broil",
+    CookMode.ConvectBroil: "convection_broil",
+    CookMode.ConvectRoast: "convection_roast",
+    CookMode.KeepWarm: "keep_warm",
+    CookMode.AirFry: "air_fry",
+}
 
 
 def washer_dryer_state(washer_dryer: WasherDryer) -> str | None:
@@ -145,6 +166,59 @@ WASHER_DRYER_TIME_SENSORS: tuple[SensorEntityDescription] = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class WhirlpoolOvenCavitySensorEntityDescription(SensorEntityDescription):
+    """Describes a Whirlpool oven cavity sensor entity."""
+
+    value_fn: Callable[[Oven, OvenCavity], str | int | float | None]
+
+
+OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
+    WhirlpoolOvenCavitySensorEntityDescription(
+        key="oven_state",
+        translation_key="oven_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(OVEN_CAVITY_STATE.values()),
+        value_fn=lambda oven, cavity: (
+            OVEN_CAVITY_STATE.get(state)
+            if (state := oven.get_cavity_state(cavity)) is not None
+            else None
+        ),
+    ),
+    WhirlpoolOvenCavitySensorEntityDescription(
+        key="oven_cook_mode",
+        translation_key="oven_cook_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(OVEN_COOK_MODE.values()),
+        value_fn=lambda oven, cavity: (
+            OVEN_COOK_MODE.get(cook_mode)
+            if (cook_mode := oven.get_cook_mode(cavity)) is not None
+            else None
+        ),
+    ),
+    WhirlpoolOvenCavitySensorEntityDescription(
+        key="oven_current_temperature",
+        translation_key="oven_current_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda oven, cavity: (
+            temp if (temp := oven.get_temp(cavity)) != 0 else None
+        ),
+    ),
+    WhirlpoolOvenCavitySensorEntityDescription(
+        key="oven_target_temperature",
+        translation_key="oven_target_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda oven, cavity: (
+            temp if (temp := oven.get_target_temp(cavity)) != 0 else None
+        ),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: WhirlpoolConfigEntry,
@@ -167,6 +241,17 @@ async def async_setup_entry(
         entities.extend(
             WasherDryerTimeSensor(washer_dryer, description)
             for description in WASHER_DRYER_TIME_SENSORS
+        )
+    for oven in appliances_manager.ovens:
+        cavities = []
+        if oven.get_oven_cavity_exists(OvenCavity.Upper):
+            cavities.append(OvenCavity.Upper)
+        if oven.get_oven_cavity_exists(OvenCavity.Lower):
+            cavities.append(OvenCavity.Lower)
+        entities.extend(
+            WhirlpoolOvenCavitySensor(oven, cavity, description)
+            for cavity in cavities
+            for description in OVEN_CAVITY_SENSORS
         )
     async_add_entities(entities)
 
@@ -237,3 +322,26 @@ class WasherDryerTimeSensor(WhirlpoolEntity, RestoreSensor):
             ):
                 self._value = new_timestamp
         return self._value
+
+
+class WhirlpoolOvenCavitySensor(WhirlpoolOvenEntity, SensorEntity):
+    """A class for Whirlpool oven cavity sensors."""
+
+    def __init__(
+        self,
+        oven: Oven,
+        cavity: OvenCavity,
+        description: WhirlpoolOvenCavitySensorEntityDescription,
+    ) -> None:
+        """Initialize the oven cavity sensor."""
+        translation_key_base = description.translation_key or description.key
+        super().__init__(oven, cavity, translation_key_base, f"-{description.key}")
+        self.cavity = cavity
+        self.entity_description: WhirlpoolOvenCavitySensorEntityDescription = (
+            description
+        )
+
+    @property
+    def native_value(self) -> StateType | str | int | float | None:
+        """Return native value of sensor."""
+        return self.entity_description.value_fn(self._appliance, self.cavity)

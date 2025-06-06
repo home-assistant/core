@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from whirlpool.oven import CavityState, CookMode
 from whirlpool.washerdryer import MachineState
 
 from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
@@ -303,6 +304,34 @@ async def test_washer_dryer_door_open_state(
                 (3, "50"),
                 (4, "100"),
                 (5, "active"),
+            ],
+        ),
+        (
+            "sensor.oven_upper_oven_state",
+            "mock_oven_api",
+            "get_cavity_state",
+            [
+                (CavityState.Standby, "standby"),
+                (CavityState.Preheating, "preheating"),
+                (CavityState.Cooking, "cooking"),
+                (CavityState.NotPresent, "not_present"),
+                (None, STATE_UNKNOWN),
+            ],
+        ),
+        (
+            "sensor.oven_upper_oven_cook_mode",
+            "mock_oven_api",
+            "get_cook_mode",
+            [
+                (CookMode.Standby, "standby"),
+                (CookMode.Bake, "bake"),
+                (CookMode.ConvectBake, "convection_bake"),
+                (CookMode.Broil, "broil"),
+                (CookMode.ConvectBroil, "convection_broil"),
+                (CookMode.ConvectRoast, "convection_roast"),
+                (CookMode.KeepWarm, "keep_warm"),
+                (CookMode.AirFry, "air_fry"),
+                (None, STATE_UNKNOWN),
             ],
         ),
     ],

@@ -81,6 +81,7 @@ async def test_setup_no_appliances(
     """Test setup when there are no appliances available."""
     mock_appliances_manager_api.return_value.aircons = []
     mock_appliances_manager_api.return_value.washer_dryers = []
+    mock_appliances_manager_api.return_value.ovens = []
     await init_integration(hass)
     assert len(hass.states.async_all()) == 0
 
