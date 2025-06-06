@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 from b2sdk.v2 import B2Api, Bucket, InMemoryAccountInfo, exception
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,17 +25,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
     info = InMemoryAccountInfo()
     b2_api = B2Api(info)
 
-    data = cast(dict, entry.data)
-
     try:
 
         def _authorize_and_get_bucket() -> Bucket:
             b2_api.authorize_account(
                 "production",
-                data[CONF_KEY_ID],
-                data[CONF_APPLICATION_KEY],
+                entry.data[CONF_KEY_ID],
+                entry.data[CONF_APPLICATION_KEY],
             )
-            return b2_api.get_bucket_by_name(data[CONF_BUCKET])
+            return b2_api.get_bucket_by_name(entry.data[CONF_BUCKET])
 
         bucket = await hass.async_add_executor_job(_authorize_and_get_bucket)
 
