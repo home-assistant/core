@@ -1,0 +1,7 @@
+{
+  "services": {
+    "send_text": {
+      "service": "mdi:keyboard"
+    }
+  }
+}
