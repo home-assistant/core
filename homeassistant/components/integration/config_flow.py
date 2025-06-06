@@ -108,7 +108,27 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
 
 
 async def _get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
-    return vol.Schema(await _get_options_dict(handler))
+    options = await _get_options_dict(handler)
+    return vol.Schema(
+        {
+            vol.Optional(CONF_UNIT_PREFIX): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=UNIT_PREFIXES,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    read_only=True,
+                )
+            ),
+            vol.Optional(CONF_UNIT_TIME): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=TIME_UNITS,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key=CONF_UNIT_TIME,
+                    read_only=True,
+                ),
+            ),
+            **options,
+        }
+    )
 
 
 async def _get_config_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
