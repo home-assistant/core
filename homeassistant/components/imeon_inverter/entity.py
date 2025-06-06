@@ -13,7 +13,6 @@ from .coordinator import InverterCoordinator
 type InverterConfigEntry = ConfigEntry[InverterCoordinator]
 
 
-@dataclass
 class InverterEntity(CoordinatorEntity[InverterCoordinator]):
     """Common elements for all entities."""
 
