@@ -5,7 +5,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from typing import Any, TypedDict, cast
+import re
+from typing import Any, Literal, TypedDict, cast
 from urllib.parse import urlparse
 
 from aiohttp import BasicAuth
@@ -22,6 +23,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import ATTR_ICON, CONF_PATH
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -36,11 +38,16 @@ from .const import (
     ATTR_USERNAME,
     CONF_DEFAULT_CHANNEL,
     DATA_CLIENT,
+    DOMAIN,
     SLACK_DATA,
 )
 from .utils import upload_file_to_slack
 
 _LOGGER = logging.getLogger(__name__)
+
+# Regex patterns for different Slack identifiers
+SLACK_USERID_PATTERN = re.compile(r"^[UW][A-Z0-9]{8,}$")
+SLACK_CHANNELID_PATTERN = re.compile(r"^[CGD][A-Z0-9]{8,}$")
 
 FILE_PATH_SCHEMA = vol.Schema({vol.Required(CONF_PATH): cv.isfile})
 
@@ -80,17 +87,6 @@ class AuthDictT(TypedDict, total=False):
     auth: BasicAuth
 
 
-class FormDataT(TypedDict, total=False):
-    """Type for form data, file upload."""
-
-    channels: str
-    filename: str
-    initial_comment: str
-    title: str
-    token: str
-    thread_ts: str  # Optional key
-
-
 class MessageT(TypedDict, total=False):
     """Type for message data."""
 
@@ -126,9 +122,28 @@ def _async_get_filename_from_url(url: str) -> str:
 
 
 @callback
-def _async_sanitize_channel_names(channel_list: list[str]) -> list[str]:
-    """Remove any # symbols from a channel list."""
-    return [channel.lstrip("#") for channel in channel_list]
+def _async_process_target(
+    target: str,
+) -> tuple[Literal["user_id", "channel_id", "channel_name"], str]:
+    """Process a target and determine its type.
+
+    Returns:
+        tuple: (target_type, processed_target)
+        where target_type is one of: 'user_id', 'channel_id', 'channel_name'
+
+    """
+    if not target:
+        return "channel_name", target
+
+    if isinstance(target, str):
+        target = target.lstrip("#")
+
+        if SLACK_USERID_PATTERN.match(target):
+            return "user_id", target
+        if SLACK_CHANNELID_PATTERN.match(target):
+            return "channel_id", target
+
+    return "channel_name", target
 
 
 class SlackNotificationService(BaseNotificationService):
@@ -144,6 +159,92 @@ class SlackNotificationService(BaseNotificationService):
         self._hass = hass
         self._client = client
         self._config = config
+        self._channel_id_cache: dict[str, str] = {}
+
+    async def _async_get_dm_channel_id(self, user_id: str) -> str | None:
+        """Get the DM channel ID for a user ID.
+
+        Opens a DM channel with the user if one doesn't exist.
+        """
+        try:
+            response = await self._client.conversations_open(users=[user_id])
+        except SlackApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_opening_dm",
+                translation_placeholders={
+                    "user_id": user_id,
+                    "error": str(err),
+                },
+            ) from err
+
+        if not response["ok"]:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_opening_dm",
+                translation_placeholders={
+                    "user_id": user_id,
+                    "error": response["error"],
+                },
+            )
+
+        return cast("str", response["channel"]["id"])
+
+    async def _async_get_channel_id_by_name(self, channel_name: str) -> str:
+        """Get channel ID by name, checking cache first."""
+        if channel_id := self._channel_id_cache.get(channel_name):
+            return channel_id
+
+        try:
+            channels = []
+            for channel_type in ("public_channel", "private_channel"):
+                response = await self._client.conversations_list(types=channel_type)
+                if not response["ok"]:
+                    _LOGGER.debug(
+                        "Error listing %s channels: %s",
+                        channel_type,
+                        response.get("error", "Unknown error"),
+                    )
+                    # If the API call fails, we skip this type of channel
+                    continue
+                channels.extend(response["channels"])
+        except SlackApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_getting_channel",
+                translation_placeholders={
+                    "channel_name": channel_name,
+                    "error": str(err),
+                },
+            ) from err
+
+        for channel in channels:
+            if channel["name"] == channel_name:
+                self._channel_id_cache[channel_name] = channel["id"]
+                return cast("str", channel["id"])
+
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="error_channel_not_found",
+            translation_placeholders={
+                "channel_name": channel_name,
+            },
+        )
+
+    async def _async_resolve_target(self, target: str) -> str | None:
+        """Resolve a target to its Slack channel ID.
+
+        Handles user IDs, channel IDs, and channel names.
+        """
+        target_type, processed_target = _async_process_target(target)
+
+        if target_type == "channel_id":
+            return processed_target
+
+        if target_type == "user_id":
+            return await self._async_get_dm_channel_id(processed_target)
+
+        return await self._async_get_channel_id_by_name(processed_target)
 
     async def _async_send_local_file_message(
         self,
@@ -161,16 +262,24 @@ class SlackNotificationService(BaseNotificationService):
         parsed_url = urlparse(path)
         filename = os.path.basename(parsed_url.path)
 
-        channel_ids = [await self._async_get_channel_id(target) for target in targets]
-        channel_ids = [cid for cid in channel_ids if cid]  # Remove None values
+        target_ids = [
+            channel_id
+            for target in targets
+            if (channel_id := await self._async_resolve_target(target))
+        ]
 
-        if not channel_ids:
-            _LOGGER.error("No valid channel IDs resolved for targets: %s", targets)
-            return
+        if not target_ids:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_targets_not_found",
+                translation_placeholders={
+                    "targets": ", ".join(targets),
+                },
+            )
 
         await upload_file_to_slack(
             client=self._client,
-            channel_ids=channel_ids,
+            channel_ids=target_ids,
             file_content=None,
             file_path=path,
             filename=filename,
@@ -198,7 +307,6 @@ class SlackNotificationService(BaseNotificationService):
         filename = _async_get_filename_from_url(url)
         session = aiohttp_client.async_get_clientsession(self._hass)
 
-        # Fetch the remote file
         kwargs: AuthDictT = {}
         if username and password:
             kwargs = {"auth": BasicAuth(username, password=password)}
@@ -211,16 +319,24 @@ class SlackNotificationService(BaseNotificationService):
             _LOGGER.error("Error while retrieving %s: %r", url, err)
             return
 
-        channel_ids = [await self._async_get_channel_id(target) for target in targets]
-        channel_ids = [cid for cid in channel_ids if cid]  # Remove None values
+        target_ids = [
+            channel_id
+            for target in targets
+            if (channel_id := await self._async_resolve_target(target))
+        ]
 
-        if not channel_ids:
-            _LOGGER.error("No valid channel IDs resolved for targets: %s", targets)
-            return
+        if not target_ids:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_targets_not_found",
+                translation_placeholders={
+                    "targets": ", ".join(targets),
+                },
+            )
 
         await upload_file_to_slack(
             client=self._client,
-            channel_ids=channel_ids,
+            channel_ids=target_ids,
             file_content=file_content,
             filename=filename,
             title=title,
@@ -257,13 +373,20 @@ class SlackNotificationService(BaseNotificationService):
         if thread_ts:
             message_dict["thread_ts"] = thread_ts
 
-        tasks = {
-            target: self._client.chat_postMessage(**message_dict, channel=target)
-            for target in targets
-        }
+        tasks = []
+        for target in targets:
+            if channel_id := await self._async_resolve_target(target):
+                tasks.append(
+                    self._client.chat_postMessage(**message_dict, channel=channel_id)
+                )
+            else:
+                _LOGGER.error("Could not resolve target: %s", target)
 
-        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
-        for target, result in zip(tasks, results, strict=False):
+        if not tasks:
+            return
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for target, result in zip(targets, results, strict=False):
             if isinstance(result, SlackApiError):
                 _LOGGER.error(
                     "There was a Slack API error while sending to %s: %r",
@@ -284,9 +407,9 @@ class SlackNotificationService(BaseNotificationService):
             data = {}
 
         title = kwargs.get(ATTR_TITLE)
-        targets = _async_sanitize_channel_names(
-            kwargs.get(ATTR_TARGET, [self._config[CONF_DEFAULT_CHANNEL]])
-        )
+        targets = kwargs.get(ATTR_TARGET, [self._config[CONF_DEFAULT_CHANNEL]])
+        if isinstance(targets, str):
+            targets = [targets]
 
         # Message Type 1: A text-only message
         if ATTR_FILE not in data:
@@ -328,46 +451,3 @@ class SlackNotificationService(BaseNotificationService):
             title,
             thread_ts=data.get(ATTR_THREAD_TS),
         )
-
-    async def _async_get_channel_id(self, channel_name: str) -> str | None:
-        """Get the Slack channel ID from the channel name.
-
-        This method retrieves the channel ID for a given Slack channel name by
-        querying the Slack API. It handles both public and private channels.
-        Including this so users can  provide channel names instead of IDs.
-
-        Args:
-            channel_name (str): The name of the Slack channel.
-
-        Returns:
-            str | None: The ID of the Slack channel if found, otherwise None.
-
-        Raises:
-            SlackApiError: If there is an error while communicating with the Slack API.
-
-        """
-        try:
-            # Remove # if present
-            channel_name = channel_name.lstrip("#")
-
-            # Get channel list
-            # Multiple types is not working. Tested here: https://api.slack.com/methods/conversations.list/test
-            # response = await self._client.conversations_list(types="public_channel,private_channel")
-            #
-            # Workaround for the types parameter not working
-            channels = []
-            for channel_type in ("public_channel", "private_channel"):
-                response = await self._client.conversations_list(types=channel_type)
-                channels.extend(response["channels"])
-
-            # Find channel ID
-            for channel in channels:
-                if channel["name"] == channel_name:
-                    return cast(str, channel["id"])
-
-            _LOGGER.error("Channel %s not found", channel_name)
-
-        except SlackApiError as err:
-            _LOGGER.error("Error getting channel ID: %r", err)
-
-        return None
