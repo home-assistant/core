@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from aioairq import DeviceInfo
 import pytest
 
-from homeassistant.components.airq.const import DOMAIN as AIRQ_DOMAIN
+from homeassistant.components.airq.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
@@ -38,7 +38,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def airq_config_entry():
     """Create a minimal MockConfigEntry."""
     return MockConfigEntry(
-        domain=AIRQ_DOMAIN, data=TEST_USER_DATA, unique_id=TEST_DEVICE_INFO["id"]
+        domain=DOMAIN, data=TEST_USER_DATA, unique_id=TEST_DEVICE_INFO["id"]
     )
 
 
