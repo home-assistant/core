@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
-from telegram import Update, User
+from telegram import Update
 from telegram.error import (
     InvalidToken,
     NetworkError,
@@ -16,6 +16,7 @@ from telegram.error import (
 )
 
 from homeassistant.components.telegram_bot import (
+    ATTR_AUTHENTICATION,
     ATTR_CALLBACK_QUERY_ID,
     ATTR_CHAT_ID,
     ATTR_FILE,
@@ -25,9 +26,13 @@ from homeassistant.components.telegram_bot import (
     ATTR_MESSAGE_THREAD_ID,
     ATTR_MESSAGEID,
     ATTR_OPTIONS,
+    ATTR_PASSWORD,
     ATTR_QUESTION,
     ATTR_STICKER_ID,
     ATTR_TARGET,
+    ATTR_URL,
+    ATTR_USERNAME,
+    ATTR_VERIFY_SSL,
     CONF_CONFIG_ENTRY_ID,
     CONF_PLATFORM,
     DOMAIN,
@@ -48,11 +53,17 @@ from homeassistant.components.telegram_bot import (
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_BEARER_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
 from homeassistant.setup import async_setup_component
+from homeassistant.util.file import write_utf8_file
 
 from tests.common import MockConfigEntry, async_capture_events
 from tests.typing import ClientSessionGenerator
@@ -561,10 +572,7 @@ async def test_send_message_no_chat_id_error(
         CONF_API_KEY: "mock api key",
     }
 
-    with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
-        return_value=User(123456, "Testbot", True),
-    ):
+    with patch("homeassistant.components.telegram_bot.config_flow.Bot.get_me"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -630,8 +638,7 @@ async def test_delete_message(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.delete_message",
-        AsyncMock(return_value=True),
+        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.delete_message"
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
@@ -655,8 +662,7 @@ async def test_edit_message(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.edit_message",
-        AsyncMock(return_value=True),
+        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.edit_message"
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
@@ -698,8 +704,7 @@ async def test_answer_callback_query(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.answer_callback_query",
-        AsyncMock(),
+        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.answer_callback_query"
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
@@ -713,3 +718,184 @@ async def test_answer_callback_query(
 
     await hass.async_block_till_done()
     mock.assert_called_once()
+
+
+async def test_send_video(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test answer callback query."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # test: invalid file path
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_VIDEO,
+            {
+                ATTR_FILE: "/mock/file",
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    assert (
+        err.value.args[0]
+        == "File path has not been configured in allowlist_external_dirs."
+    )
+
+    # test: missing username input
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_VIDEO,
+            {
+                ATTR_URL: "https://mock",
+                ATTR_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
+                ATTR_PASSWORD: "mock password",
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    assert err.value.args[0] == "Username is required."
+
+    # test: missing password input
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_VIDEO,
+            {
+                ATTR_URL: "https://mock",
+                ATTR_AUTHENTICATION: HTTP_BEARER_AUTHENTICATION,
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    assert err.value.args[0] == "Password is required."
+
+    # test: 404 error
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+    ) as mock_get:
+        mock_get.return_value = AsyncMock(status_code=404, text="Success")
+
+        with pytest.raises(ServiceValidationError) as err:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_SEND_VIDEO,
+                {
+                    ATTR_URL: "https://mock",
+                    ATTR_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+                    ATTR_USERNAME: "mock username",
+                    ATTR_PASSWORD: "mock password",
+                },
+                blocking=True,
+            )
+
+    await hass.async_block_till_done()
+    assert mock_get.call_count > 0
+    assert err.value.args[0] == "Failed to load URL: 404"
+
+    # test: invalid url
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_VIDEO,
+            {
+                ATTR_URL: "invalid url",
+                ATTR_VERIFY_SSL: True,
+                ATTR_AUTHENTICATION: HTTP_BEARER_AUTHENTICATION,
+                ATTR_PASSWORD: "mock password",
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    assert mock_get.call_count > 0
+    assert (
+        err.value.args[0]
+        == "Failed to load URL: Request URL is missing an 'http://' or 'https://' protocol."
+    )
+
+    # test: no url/file input
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_VIDEO,
+            {},
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    assert err.value.args[0] == "URL or File is required."
+
+    # test: load file error (e.g. not found, permissions error)
+
+    hass.config.allowlist_external_dirs.add("/tmp/")  # noqa: S108
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_VIDEO,
+            {
+                ATTR_FILE: "/tmp/not-exists",  # noqa: S108
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    assert (
+        err.value.args[0]
+        == "Failed to load file: [Errno 2] No such file or directory: '/tmp/not-exists'"
+    )
+
+    # test: success with file
+    write_utf8_file("/tmp/mock", "mock file contents")  # noqa: S108
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_VIDEO,
+        {
+            ATTR_FILE: "/tmp/mock",  # noqa: S108
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    await hass.async_block_till_done()
+    assert response["chats"][0]["message_id"] == 12345
+
+    # test: success with url
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+    ) as mock_get:
+        mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
+
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_VIDEO,
+            {
+                ATTR_URL: "https://mock",
+                ATTR_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
+                ATTR_USERNAME: "mock username",
+                ATTR_PASSWORD: "mock password",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    await hass.async_block_till_done()
+    assert mock_get.call_count > 0
+    assert response["chats"][0]["message_id"] == 12345
