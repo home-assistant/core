@@ -8,11 +8,7 @@ from typing import Any
 
 from bluecurrent_api import Client
 
-from homeassistant.components.switch import (
-    SwitchDeviceClass,
-    SwitchEntity,
-    SwitchEntityDescription,
-)
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -34,35 +30,80 @@ class BlueCurrentSwitchEntityDescription(SwitchEntityDescription):
 
     function: Callable[[Client, str, bool], Any]
 
+    update_lastest_data: Callable[[str, Connector], tuple[bool, bool]]
+    """Update the switch based on the latest data received from the websocket. The first returned boolean is _attr_is_on, the second one has_value."""
+
+    on_switch_update: Callable[[str, Connector, bool], None] | None = None
+    """
+    Change the settings on the charge point object when the value of the switch has changed.
+    """
+
+
+def update_on_value_and_activity(
+    key: str, evse_id: str, connector: Connector, reverse_is_on: bool = False
+) -> tuple[bool, bool]:
+    """Return the updated state of the switch based on received chargepoint data and activity."""
+
+    data_object = connector.charge_points[evse_id].get(key)
+    is_on = data_object[VALUE] if data_object is not None else None
+    activity = connector.charge_points[evse_id].get("activity")
+
+    if is_on is not None and activity == AVAILABLE:
+        return is_on if not reverse_is_on else not is_on, True
+    return False, False
+
+
+def update_block_switch(evse_id: str, connector: Connector) -> tuple[bool, bool]:
+    """Return the updated data for a block switch."""
+    activity = connector.charge_points[evse_id].get("activity")
+    return activity == UNAVAILABLE, activity in [AVAILABLE, UNAVAILABLE]
+
+
+def update_charge_point(
+    key: str, evse_id: str, connector: Connector, new_switch_value: bool
+) -> None:
+    """Change charge point data when the state of the switch changes."""
+    data_objects = connector.charge_points[evse_id].get(key)
+    if data_objects is not None:
+        data_objects[VALUE] = new_switch_value
+
 
 SWITCHES = (
     BlueCurrentSwitchEntityDescription(
         key=PLUG_AND_CHARGE,
-        device_class=SwitchDeviceClass.SWITCH,
         translation_key=PLUG_AND_CHARGE,
-        icon="mdi:ev-plug-type2",
         function=lambda client, evse_id, value: client.set_plug_and_charge(
             evse_id, value
         ),
-        has_entity_name=True,
+        update_lastest_data=lambda evse_id, connector: update_on_value_and_activity(
+            PLUG_AND_CHARGE, evse_id, connector
+        ),
+        on_switch_update=lambda evse_id,
+        connector,
+        new_switch_value: update_charge_point(
+            PLUG_AND_CHARGE, evse_id, connector, new_switch_value
+        ),
     ),
     BlueCurrentSwitchEntityDescription(
         key=LINKED_CHARGE_CARDS,
-        device_class=SwitchDeviceClass.SWITCH,
         translation_key=LINKED_CHARGE_CARDS,
-        icon="mdi:account-group",
         function=lambda client, evse_id, value: client.set_linked_charge_cards_only(
             evse_id, value
         ),
-        has_entity_name=True,
+        update_lastest_data=lambda evse_id, connector: update_on_value_and_activity(
+            PUBLIC_CHARGING, evse_id, connector, reverse_is_on=True
+        ),
+        on_switch_update=lambda evse_id,
+        connector,
+        new_switch_value: update_charge_point(
+            PUBLIC_CHARGING, evse_id, connector, not new_switch_value
+        ),
     ),
     BlueCurrentSwitchEntityDescription(
         key=BLOCK,
-        device_class=SwitchDeviceClass.SWITCH,
         translation_key=BLOCK,
-        icon="mdi:lock",
         function=lambda client, evse_id, value: client.block(evse_id, value),
-        has_entity_name=True,
+        update_lastest_data=update_block_switch,
     ),
 )
 
@@ -73,7 +114,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Blue Current switches."""
-    connector: Connector = entry.runtime_data
+    connector = entry.runtime_data
 
     async_add_entities(
         ChargePointSwitch(
@@ -89,7 +130,6 @@ async def async_setup_entry(
 class ChargePointSwitch(ChargepointEntity, SwitchEntity):
     """Base charge point switch."""
 
-    _attr_should_poll = False
     has_value = True
     entity_description: BlueCurrentSwitchEntityDescription
 
@@ -118,42 +158,25 @@ class ChargePointSwitch(ChargepointEntity, SwitchEntity):
         """Turn the entity on."""
         await self.call_function(True)
         self._attr_is_on = True
+        if self.entity_description.on_switch_update is not None:
+            self.entity_description.on_switch_update(self.evse_id, self.connector, True)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.call_function(False)
         self._attr_is_on = False
+        if self.entity_description.on_switch_update is not None:
+            self.entity_description.on_switch_update(
+                self.evse_id, self.connector, False
+            )
         self.async_write_ha_state()
 
     @callback
     def update_from_latest_data(self) -> None:
         """Fetch new state data for the switch."""
-
-        def get_updated_switch_state(key: str = self.key) -> bool | None:
-            data_object = self.connector.charge_points[self.evse_id].get(key)
-            return data_object[VALUE] if data_object is not None else None
-
-        activity = self.connector.charge_points[self.evse_id].get("activity")
-
-        if self.key == PLUG_AND_CHARGE:
-            is_on = get_updated_switch_state()
-
-            if is_on is not None and activity == AVAILABLE:
-                self._attr_is_on = is_on
-                self.has_value = True
-            else:
-                self.has_value = False
-
-        elif self.key == LINKED_CHARGE_CARDS:
-            is_on = get_updated_switch_state(PUBLIC_CHARGING)
-
-            if is_on is not None and activity == AVAILABLE:
-                self._attr_is_on = not is_on
-                self.has_value = True
-            else:
-                self.has_value = False
-
-        elif self.key == BLOCK:
-            self._attr_is_on = activity == UNAVAILABLE
-            self.has_value = activity in [AVAILABLE, UNAVAILABLE]
+        new_state = self.entity_description.update_lastest_data(
+            self.evse_id, self.connector
+        )
+        self._attr_is_on = new_state[0]
+        self.has_value = new_state[1]

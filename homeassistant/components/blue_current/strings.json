@@ -127,13 +127,13 @@
     },
     "switch": {
       "plug_and_charge": {
-        "name": "Plug and charge"
+        "name": "Plug & Charge"
       },
       "linked_charge_cards_only": {
-        "name": "Linked charge cards only"
+        "name": "Linked charging cards only"
       },
       "block": {
-        "name": "Block"
+        "name": "Block charge point"
       }
     }
   }
