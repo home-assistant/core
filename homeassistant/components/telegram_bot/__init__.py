@@ -423,7 +423,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     except InvalidToken as err:
         raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
     except TelegramError as err:
-        raise ConfigEntryNotReady(str(err)) from err
+        raise ConfigEntryNotReady from err
 
     p_type: str = entry.data[CONF_PLATFORM]
 
