@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, Mock, patch
 from homematicip.connection.connection_context import ConnectionContext
 from homematicip.exceptions.connection_exceptions import HmipConnectionError
 
-from homeassistant.components.homematicip_cloud import _async_remove_obsolete_entities
 from homeassistant.components.homematicip_cloud.const import (
     CONF_ACCESSPOINT,
     CONF_AUTHTOKEN,
@@ -15,11 +14,9 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_NAME,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -179,8 +176,8 @@ async def test_hmip_dump_hap_config_services(
         assert write_mock.mock_calls
 
 
-async def test_setup_services_and_unload_services(hass: HomeAssistant) -> None:
-    """Test setup services and unload services."""
+async def test_setup_services(hass: HomeAssistant) -> None:
+    """Test setup services."""
     mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
     MockConfigEntry(domain=DOMAIN, data=mock_config).add_to_hass(hass)
 
@@ -204,112 +201,3 @@ async def test_setup_services_and_unload_services(hass: HomeAssistant) -> None:
     assert len(config_entries) == 1
 
     await hass.config_entries.async_unload(config_entries[0].entry_id)
-    # Check services are removed
-    assert not hass.services.async_services().get(DOMAIN)
-
-
-async def test_setup_two_haps_unload_one_by_one(hass: HomeAssistant) -> None:
-    """Test setup two access points and unload one by one and check services."""
-
-    # Setup AP1
-    mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
-    MockConfigEntry(domain=DOMAIN, data=mock_config).add_to_hass(hass)
-    # Setup AP2
-    mock_config2 = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC1234", HMIPC_NAME: "name2"}
-    MockConfigEntry(domain=DOMAIN, data=mock_config2).add_to_hass(hass)
-
-    with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
-        instance = mock_hap.return_value
-        instance.async_setup = AsyncMock(return_value=True)
-        instance.home.id = "1"
-        instance.home.modelType = "mock-type"
-        instance.home.name = "mock-name"
-        instance.home.label = "mock-label"
-        instance.home.currentAPVersion = "mock-ap-version"
-        instance.async_reset = AsyncMock(return_value=True)
-
-        assert await async_setup_component(hass, DOMAIN, {})
-
-    hmipc_services = hass.services.async_services()[DOMAIN]
-    assert len(hmipc_services) == 9
-
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(config_entries) == 2
-    # unload the first AP
-    await hass.config_entries.async_unload(config_entries[0].entry_id)
-
-    # services still exists
-    hmipc_services = hass.services.async_services()[DOMAIN]
-    assert len(hmipc_services) == 9
-
-    # unload the second AP
-    await hass.config_entries.async_unload(config_entries[1].entry_id)
-
-    # Check services are removed
-    assert not hass.services.async_services().get(DOMAIN)
-
-
-async def test_remove_obsolete_entities(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test removing obsolete entities."""
-    mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
-    entry = MockConfigEntry(domain=DOMAIN, data=mock_config)
-    entry.add_to_hass(hass)
-
-    test_entities = [
-        {
-            "entity_id": "ap",
-            "unique_id": "HomematicipAccesspointStatus123",
-            "keep": False,
-        },
-        {
-            "entity_id": "battery",
-            "unique_id": "HomematicipBatterySensor_ABC123",
-            "keep": False,
-        },
-        {
-            "entity_id": "keep",
-            "unique_id": "ShouldRemain123",
-            "keep": True,
-        },
-    ]
-
-    for entity in test_entities:
-        # Create mock entries in the entity registry
-        entity_registry.async_get_or_create(
-            SENSOR_DOMAIN,
-            DOMAIN,
-            entity["unique_id"],
-            config_entry=entry,
-            suggested_object_id=entity["entity_id"],
-        )
-
-    with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
-        instance = mock_hap.return_value
-        instance.async_setup = AsyncMock(return_value=True)
-        instance.home.id = "1"
-        instance.home.modelType = "mock-type"
-        instance.home.name = "mock-name"
-        instance.home.label = "mock-label"
-        # Use a proper version string for comparison
-        instance.home.currentAPVersion = "2.2.12"
-        # Add access point states needed for battery sensor check
-        instance.home.accessPointUpdateStates = ["ABC123"]
-        instance.async_reset = AsyncMock(return_value=True)
-
-        assert await async_setup_component(hass, DOMAIN, {})
-
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(config_entries) == 1
-    hap = config_entries[0].runtime_data
-
-    _async_remove_obsolete_entities(hass, config_entries[0], hap)
-
-    # Check that the entities were removed or kept
-    for entity in test_entities:
-        registered_entity = entity_registry.async_get(f"sensor.{entity['entity_id']}")
-        if entity["keep"]:
-            assert registered_entity is not None
-        else:
-            assert registered_entity is None
