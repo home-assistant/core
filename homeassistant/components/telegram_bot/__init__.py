@@ -8,7 +8,7 @@ from types import ModuleType
 from typing import Any
 
 from telegram import Bot
-from telegram.error import InvalidToken
+from telegram.error import InvalidToken, TelegramError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -26,7 +26,11 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -418,6 +422,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
         await bot.get_me()
     except InvalidToken as err:
         raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
+    except TelegramError as err:
+        raise ConfigEntryNotReady(str(err)) from err
 
     p_type: str = entry.data[CONF_PLATFORM]
 
