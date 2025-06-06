@@ -28,6 +28,20 @@
       "intensity": {
         "name": "Intensity"
       }
+    },
+    "sensor": {
+      "amplitude": {
+        "name": "Amplitude"
+      },
+      "period": {
+        "name": "Period"
+      },
+      "activity": {
+        "name": "Activity"
+      },
+      "swing_count": {
+        "name": "Swing count"
+      }
     }
   }
 }
