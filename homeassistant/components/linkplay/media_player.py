@@ -316,14 +316,21 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
 
         shared_data = self.hass.data[DOMAIN][SHARED_DATA]
 
-        return [
-            entity_id
-            for entity_id, bridge in shared_data.entity_to_bridge.items()
-            if bridge
-            in [multiroom.leader.device.uuid]
-            + [follower.device.uuid for follower in multiroom.followers]
+        # find the entity-id whose UUID matches the leader
+        master_id = next(
+            ent_id
+            for ent_id, uuid in shared_data.entity_to_bridge.items()
+            if uuid == multiroom.leader.device.uuid
+        )
+
+        # collect followers (UUID string comparison)
+        followers = [
+            ent_id
+            for ent_id, uuid in shared_data.entity_to_bridge.items()
+            if uuid in {f.device.uuid for f in multiroom.followers}
         ]
 
+        return [master_id, *followers]
     @property
     def media_image_url(self) -> str | None:
         """Image url of playing media."""
