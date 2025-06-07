@@ -16,6 +16,7 @@ from homeassistant.components.number import (
     NumberMode,
     RestoreNumber,
 )
+from homeassistant.components.sensor.recorder import EQUIVALENT_UNITS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -70,6 +71,13 @@ MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
 
 def validate_config(config: ConfigType) -> ConfigType:
     """Validate that the configuration is valid, throws if it isn't."""
+    if (
+        CONF_UNIT_OF_MEASUREMENT in config
+        and (unit_of_measurement := config[CONF_UNIT_OF_MEASUREMENT])
+        in EQUIVALENT_UNITS
+    ):
+        config[CONF_UNIT_OF_MEASUREMENT] = EQUIVALENT_UNITS[unit_of_measurement]
+
     if config[CONF_MIN] > config[CONF_MAX]:
         raise vol.Invalid(f"{CONF_MAX} must be >= {CONF_MIN}")
 

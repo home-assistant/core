@@ -262,7 +262,7 @@ async def test_xiaomi_hhccjcy01(hass: HomeAssistant) -> None:
     cond_sensor_attribtes = cond_sensor.attributes
     assert cond_sensor.state == "599"
     assert cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Conductivity"
-    assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "µS/cm"
+    assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "μS/cm"
     assert cond_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
     moist_sensor = hass.states.get("sensor.plant_sensor_3e7a_moisture")
@@ -351,7 +351,7 @@ async def test_xiaomi_hhccjcy01_not_connectable(hass: HomeAssistant) -> None:
     cond_sensor_attribtes = cond_sensor.attributes
     assert cond_sensor.state == "599"
     assert cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Conductivity"
-    assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "µS/cm"
+    assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "μS/cm"
     assert cond_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
     moist_sensor = hass.states.get("sensor.plant_sensor_3e7a_moisture")
@@ -438,7 +438,7 @@ async def test_xiaomi_hhccjcy01_only_some_sources_connectable(
     cond_sensor_attribtes = cond_sensor.attributes
     assert cond_sensor.state == "599"
     assert cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Conductivity"
-    assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "µS/cm"
+    assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "μS/cm"
     assert cond_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
     moist_sensor = hass.states.get("sensor.plant_sensor_3e7a_moisture")
@@ -653,7 +653,7 @@ async def test_hhccjcy10_uuid(hass: HomeAssistant) -> None:
     cond_sensor_attr = cond_sensor.attributes
     assert cond_sensor.state == "91"
     assert cond_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 5BFC Conductivity"
-    assert cond_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "µS/cm"
+    assert cond_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "μS/cm"
     assert cond_sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
     moist_sensor = hass.states.get("sensor.plant_sensor_5bfc_moisture")
