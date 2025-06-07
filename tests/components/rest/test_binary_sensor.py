@@ -595,3 +595,53 @@ async def test_availability_in_config(hass: HomeAssistant) -> None:
 
     state = hass.states.get("binary_sensor.rest_binary_sensor")
     assert state.state == STATE_UNAVAILABLE
+
+
+@respx.mock
+async def test_availability_blocks_value_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test availability blocks value_template from rendering."""
+    error = "Error parsing value for binary_sensor.block_template: 'x' is undefined"
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, content="51")
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "resource": "http://localhost",
+                    "binary_sensor": [
+                        {
+                            "unique_id": "block_template",
+                            "name": "block_template",
+                            "value_template": "{{ x - 1 }}",
+                            "availability": "{{ value == '50' }}",
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+    assert error not in caplog.text
+
+    state = hass.states.get("binary_sensor.block_template")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    respx.clear()
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, content="50")
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["binary_sensor.block_template"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert error in caplog.text

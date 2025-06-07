@@ -16,10 +16,7 @@ from amcrest import AmcrestError, ApiWrapper, LoginError
 import httpx
 import voluptuous as vol
 
-from homeassistant.auth.models import User
-from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_AUTHENTICATION,
     CONF_BINARY_SENSORS,
     CONF_HOST,
@@ -30,21 +27,17 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SWITCHES,
     CONF_USERNAME,
-    ENTITY_MATCH_ALL,
-    ENTITY_MATCH_NONE,
     HTTP_BASIC_AUTHENTICATION,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import Unauthorized, UnknownUser
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
-from .camera import CAMERA_SERVICES, STREAM_SOURCE_LIST
+from .camera import STREAM_SOURCE_LIST
 from .const import (
     CAMERAS,
     COMM_RETRIES,
@@ -58,6 +51,7 @@ from .const import (
 )
 from .helpers import service_signal
 from .sensor import SENSOR_KEYS
+from .services import async_setup_services
 from .switch import SWITCH_KEYS
 
 _LOGGER = logging.getLogger(__name__)
@@ -455,47 +449,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not hass.data[DATA_AMCREST][DEVICES]:
         return False
 
-    def have_permission(user: User | None, entity_id: str) -> bool:
-        return not user or user.permissions.check_entity(entity_id, POLICY_CONTROL)
-
-    async def async_extract_from_service(call: ServiceCall) -> list[str]:
-        if call.context.user_id:
-            user = await hass.auth.async_get_user(call.context.user_id)
-            if user is None:
-                raise UnknownUser(context=call.context)
-        else:
-            user = None
-
-        if call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL:
-            # Return all entity_ids user has permission to control.
-            return [
-                entity_id
-                for entity_id in hass.data[DATA_AMCREST][CAMERAS]
-                if have_permission(user, entity_id)
-            ]
-
-        if call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_NONE:
-            return []
-
-        call_ids = await async_extract_entity_ids(hass, call)
-        entity_ids = []
-        for entity_id in hass.data[DATA_AMCREST][CAMERAS]:
-            if entity_id not in call_ids:
-                continue
-            if not have_permission(user, entity_id):
-                raise Unauthorized(
-                    context=call.context, entity_id=entity_id, permission=POLICY_CONTROL
-                )
-            entity_ids.append(entity_id)
-        return entity_ids
-
-    async def async_service_handler(call: ServiceCall) -> None:
-        args = [call.data[arg] for arg in CAMERA_SERVICES[call.service][2]]
-        for entity_id in await async_extract_from_service(call):
-            async_dispatcher_send(hass, service_signal(call.service, entity_id), *args)
-
-    for service, params in CAMERA_SERVICES.items():
-        hass.services.async_register(DOMAIN, service, async_service_handler, params[0])
+    async_setup_services(hass)
 
     return True
 

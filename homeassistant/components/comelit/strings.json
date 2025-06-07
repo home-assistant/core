@@ -23,11 +23,24 @@
           "pin": "[%key:component::comelit::config::step::reauth_confirm::data_description::pin%]",
           "type": "The type of your Comelit device."
         }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "pin": "[%key:common::config_flow::data::pin%]"
+        },
+        "data_description": {
+          "host": "[%key:component::comelit::config::step::user::data_description::host%]",
+          "port": "[%key:component::comelit::config::step::user::data_description::port%]",
+          "pin": "[%key:component::comelit::config::step::reauth_confirm::data_description::pin%]"
+        }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -61,6 +74,18 @@
       "dehumidifier": {
         "name": "Dehumidifier"
       }
+    },
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
     }
   },
   "exceptions": {
@@ -74,7 +99,13 @@
       "message": "Error connecting: {error}"
     },
     "cannot_authenticate": {
-      "message": "Error authenticating: {error}"
+      "message": "Error authenticating"
+    },
+    "cannot_retrieve_data": {
+      "message": "Error retrieving data: {error}"
+    },
+    "update_failed": {
+      "message": "Failed to update data: {error}"
     }
   }
 }

@@ -4,20 +4,19 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_API, DATA_LOCATION, DOMAIN
+from . import IpmaConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: IpmaConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    location = hass.data[DOMAIN][entry.entry_id][DATA_LOCATION]
-    api = hass.data[DOMAIN][entry.entry_id][DATA_API]
+    location = entry.runtime_data.location
+    api = entry.runtime_data.api
 
     return {
         "location_information": {

@@ -26,7 +26,7 @@
     "sensor": {
       "threshold": {
         "state": {
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "green": "Green",
           "yellow": "Yellow",
           "red": "Red"

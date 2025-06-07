@@ -59,7 +59,7 @@ def setup_platform(
         config[CONF_SOURCES],
     )
 
-    if pioneer.update():
+    if pioneer.update_device():
         add_entities([pioneer])
 
 
@@ -122,7 +122,11 @@ class PioneerDevice(MediaPlayerEntity):
         except telnetlib.socket.timeout:
             _LOGGER.debug("Pioneer %s command %s timed out", self._name, command)
 
-    def update(self):
+    def update(self) -> None:
+        """Update the entity."""
+        self.update_device()
+
+    def update_device(self) -> bool:
         """Get the latest details from the device."""
         try:
             telnet = telnetlib.Telnet(self._host, self._port, self._timeout)

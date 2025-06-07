@@ -22,7 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import (
     CONNECTED_PLC_DEVICES,
     CONNECTED_WIFI_CLIENTS,
@@ -31,7 +30,7 @@ from .const import (
     PLC_RX_RATE,
     PLC_TX_RATE,
 )
-from .coordinator import DevoloDataUpdateCoordinator
+from .coordinator import DevoloDataUpdateCoordinator, DevoloHomeNetworkConfigEntry
 from .entity import DevoloCoordinatorEntity
 
 PARALLEL_UPDATES = 0
@@ -138,7 +137,7 @@ async def async_setup_entry(
                 SENSOR_TYPES[CONNECTED_PLC_DEVICES],
             )
         )
-        network = await device.plcnet.async_get_network_overview()
+        network: LogicalNetwork = coordinators[CONNECTED_PLC_DEVICES].data
         peers = [
             peer.mac_address for peer in network.devices if peer.topology == REMOTE
         ]

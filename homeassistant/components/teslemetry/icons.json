@@ -1,6 +1,24 @@
 {
   "entity": {
     "binary_sensor": {
+      "state": {
+        "state": {
+          "off": "mdi:sleep",
+          "on": "mdi:car-connected"
+        }
+      },
+      "cellular": {
+        "state": {
+          "off": "mdi:signal-cellular-outline",
+          "on": "mdi:signal-cellular-3"
+        }
+      },
+      "wifi": {
+        "state": {
+          "off": "mdi:wifi-off",
+          "on": "mdi:wifi"
+        }
+      },
       "climate_state_is_preconditioning": {
         "state": {
           "off": "mdi:hvac-off",
@@ -41,6 +59,78 @@
         "state": {
           "off": "mdi:tire",
           "on": "mdi:car-tire-alert"
+        }
+      },
+      "charge_enable_request": {
+        "state": {
+          "off": "mdi:battery-off-outline",
+          "on": "mdi:battery-charging-outline"
+        }
+      },
+      "defrost_for_preconditioning": {
+        "state": {
+          "off": "mdi:snowflake-off",
+          "on": "mdi:snowflake-melt"
+        }
+      },
+      "lights_hazards_active": {
+        "state": {
+          "off": "mdi:car-light-dimmed",
+          "on": "mdi:hazard-lights"
+        }
+      },
+      "lights_high_beams": {
+        "state": {
+          "off": "mdi:car-light-dimmed",
+          "on": "mdi:car-light-high"
+        }
+      },
+      "seat_vent_enabled": {
+        "state": {
+          "off": "mdi:car-seat",
+          "on": "mdi:fan"
+        }
+      },
+      "speed_limit_mode": {
+        "state": {
+          "off": "mdi:speedometer",
+          "on": "mdi:car-speed-limiter"
+        }
+      },
+      "remote_start_enabled": {
+        "state": {
+          "off": "mdi:remote-off",
+          "on": "mdi:remote"
+        }
+      },
+      "hvac_auto_mode": {
+        "state": {
+          "off": "mdi:hvac-off",
+          "on": "mdi:hvac"
+        }
+      },
+      "backup_capable": {
+        "state": {
+          "off": "mdi:battery-off",
+          "on": "mdi:home-battery"
+        }
+      },
+      "grid_status": {
+        "state": {
+          "off": "mdi:transmission-tower-off",
+          "on": "mdi:transmission-tower"
+        }
+      },
+      "grid_services_active": {
+        "state": {
+          "on": "mdi:sine-wave",
+          "off": "mdi:transmission-tower-off"
+        }
+      },
+      "components_grid_services_enabled": {
+        "state": {
+          "on": "mdi:sine-wave",
+          "off": "mdi:transmission-tower-off"
         }
       }
     },
@@ -165,6 +255,7 @@
         "default": "mdi:ev-plug-ccs2"
       }
     },
+
     "sensor": {
       "battery_power": {
         "default": "mdi:home-battery"
@@ -288,6 +379,344 @@
       },
       "consumer_energy_imported_from_generator": {
         "default": "mdi:generator-stationary"
+      },
+      "sentry_mode": {
+        "default": "mdi:shield-car",
+        "state": {
+          "off": "mdi:shield-off-outline",
+          "idle": "mdi:shield-outline",
+          "armed": "mdi:shield-check",
+          "aware": "mdi:shield-alert",
+          "panic": "mdi:shield-alert-outline",
+          "quiet": "mdi:shield-half-full"
+        }
+      },
+      "bms_state": {
+        "default": "mdi:battery-heart-variant",
+        "state": {
+          "standby": "mdi:battery-clock",
+          "drive": "mdi:car-electric",
+          "support": "mdi:battery-check",
+          "charge": "mdi:battery-charging",
+          "full_electric_in_motion": "mdi:battery-arrow-up",
+          "clear_fault": "mdi:battery-alert-variant-outline",
+          "fault": "mdi:battery-alert",
+          "weld": "mdi:battery-lock",
+          "test": "mdi:battery-sync",
+          "system_not_available": "mdi:battery-off"
+        }
+      },
+      "brake_pedal_position": {
+        "default": "mdi:car-brake-alert"
+      },
+      "brick_voltage_max": {
+        "default": "mdi:battery-high"
+      },
+      "brick_voltage_min": {
+        "default": "mdi:battery-low"
+      },
+      "credit_balance": {
+        "default": "mdi:credit-card"
+      },
+      "cruise_follow_distance": {
+        "default": "mdi:car-cruise-control"
+      },
+      "cruise_set_speed": {
+        "default": "mdi:speedometer"
+      },
+      "current_limit_mph": {
+        "default": "mdi:car-cruise-control"
+      },
+      "dc_charging_energy_in": {
+        "default": "mdi:ev-station"
+      },
+      "dc_charging_power": {
+        "default": "mdi:lightning-bolt"
+      },
+      "di_axle_speed_f": {
+        "default": "mdi:speedometer"
+      },
+      "di_axle_speed_r": {
+        "default": "mdi:speedometer"
+      },
+      "di_axle_speed_rel": {
+        "default": "mdi:speedometer"
+      },
+      "di_axle_speed_rer": {
+        "default": "mdi:speedometer"
+      },
+      "di_heatsink_tf": {
+        "default": "mdi:thermometer"
+      },
+      "di_heatsink_tr": {
+        "default": "mdi:thermometer"
+      },
+      "di_heatsink_trel": {
+        "default": "mdi:thermometer"
+      },
+      "di_heatsink_trer": {
+        "default": "mdi:thermometer"
+      },
+      "di_inverter_tf": {
+        "default": "mdi:sine-wave"
+      },
+      "di_inverter_tr": {
+        "default": "mdi:sine-wave"
+      },
+      "di_inverter_trel": {
+        "default": "mdi:sine-wave"
+      },
+      "di_inverter_trer": {
+        "default": "mdi:sine-wave"
+      },
+      "di_motor_current_f": {
+        "default": "mdi:current-ac"
+      },
+      "di_motor_current_r": {
+        "default": "mdi:current-ac"
+      },
+      "di_motor_current_rel": {
+        "default": "mdi:current-ac"
+      },
+      "di_motor_current_rer": {
+        "default": "mdi:current-ac"
+      },
+      "di_slave_torque_cmd": {
+        "default": "mdi:engine"
+      },
+      "di_state_f": {
+        "default": "mdi:car-electric",
+        "state": {
+          "unavailable": "mdi:car-off",
+          "standby": "mdi:power-sleep",
+          "fault": "mdi:alert-circle",
+          "abort": "mdi:stop-circle",
+          "enabled": "mdi:check-circle"
+        }
+      },
+      "di_state_r": {
+        "default": "mdi:car-electric",
+        "state": {
+          "unavailable": "mdi:car-off",
+          "standby": "mdi:power-sleep",
+          "fault": "mdi:alert-circle",
+          "abort": "mdi:stop-circle",
+          "enabled": "mdi:check-circle"
+        }
+      },
+      "di_state_rel": {
+        "default": "mdi:car-electric",
+        "state": {
+          "unavailable": "mdi:car-off",
+          "standby": "mdi:power-sleep",
+          "fault": "mdi:alert-circle",
+          "abort": "mdi:stop-circle",
+          "enabled": "mdi:check-circle"
+        }
+      },
+      "di_state_rer": {
+        "default": "mdi:car-electric",
+        "state": {
+          "unavailable": "mdi:car-off",
+          "standby": "mdi:power-sleep",
+          "fault": "mdi:alert-circle",
+          "abort": "mdi:stop-circle",
+          "enabled": "mdi:check-circle"
+        }
+      },
+      "di_stator_temp_f": {
+        "default": "mdi:thermometer"
+      },
+      "di_stator_temp_r": {
+        "default": "mdi:thermometer"
+      },
+      "di_stator_temp_rel": {
+        "default": "mdi:thermometer"
+      },
+      "di_stator_temp_rer": {
+        "default": "mdi:thermometer"
+      },
+      "energy_remaining": {
+        "default": "mdi:battery-medium"
+      },
+      "estimated_hours_to_charge_termination": {
+        "default": "mdi:battery-clock"
+      },
+      "forward_collision_warning": {
+        "default": "mdi:car-crash",
+        "state": {
+          "off": "mdi:car-off",
+          "late": "mdi:alert",
+          "average": "mdi:alert-circle",
+          "early": "mdi:alert-octagon"
+        }
+      },
+      "gps_heading": {
+        "default": "mdi:compass"
+      },
+      "guest_mode_mobile_access_state": {
+        "default": "mdi:account-key",
+        "state": {
+          "init": "mdi:cog-refresh",
+          "not_authenticated": "mdi:account-off",
+          "authenticated": "mdi:account-check",
+          "aborted_driving": "mdi:car-off",
+          "aborted_using_remote_start": "mdi:remote-off",
+          "aborted_using_ble_keys": "mdi:bluetooth-off",
+          "aborted_valet_mode": "mdi:car-key",
+          "aborted_guest_mode_off": "mdi:power-off",
+          "aborted_drive_auth_time_exceeded": "mdi:timer-off",
+          "aborted_no_data_received": "mdi:network-off",
+          "requesting_from_mothership": "mdi:cloud-download",
+          "requesting_from_auth_d": "mdi:shield-key",
+          "aborted_fetch_failed": "mdi:wifi-off",
+          "aborted_bad_data_received": "mdi:file-alert",
+          "showing_qr_code": "mdi:qrcode",
+          "swiped_away": "mdi:gesture-swipe",
+          "dismissed_qr_code_expired": "mdi:clock-alert",
+          "succeeded_paired_new_ble_key": "mdi:bluetooth-connect"
+        }
+      },
+      "homelink_device_count": {
+        "default": "mdi:garage"
+      },
+      "hvac_fan_speed": {
+        "default": "mdi:fan"
+      },
+      "hvac_fan_status": {
+        "default": "mdi:fan"
+      },
+      "hvac_left_temperature_request": {
+        "default": "mdi:thermometer"
+      },
+      "hvac_right_temperature_request": {
+        "default": "mdi:thermometer"
+      },
+      "isolation_resistance": {
+        "default": "mdi:resistor"
+      },
+      "lane_departure_avoidance": {
+        "default": "mdi:road-variant",
+        "state": {
+          "warning": "mdi:alert",
+          "assist": "mdi:steering"
+        }
+      },
+      "lateral_acceleration": {
+        "default": "mdi:axis-arrow"
+      },
+      "lifetime_energy_used": {
+        "default": "mdi:lightning-bolt"
+      },
+      "lifetime_energy_used_drive": {
+        "default": "mdi:lightning-bolt"
+      },
+      "longitudinal_acceleration": {
+        "default": "mdi:axis-arrow"
+      },
+      "module_temp_max": {
+        "default": "mdi:thermometer-high"
+      },
+      "module_temp_min": {
+        "default": "mdi:thermometer-low"
+      },
+      "pack_current": {
+        "default": "mdi:current-dc"
+      },
+      "pack_voltage": {
+        "default": "mdi:lightning-bolt"
+      },
+      "paired_phone_key_and_key_fob_qty": {
+        "default": "mdi:key"
+      },
+      "pedal_position": {
+        "default": "mdi:pedestal"
+      },
+      "powershare_hours_left": {
+        "default": "mdi:clock-time-eight-outline"
+      },
+      "powershare_instantaneous_power_kw": {
+        "default": "mdi:flash"
+      },
+      "powershare_status": {
+        "default": "mdi:power-socket",
+        "state": {
+          "inactive": "mdi:power-plug-off-outline",
+          "handshaking": "mdi:handshake",
+          "init": "mdi:cog-refresh",
+          "enabled": "mdi:check-circle",
+          "reconnecting": "mdi:wifi-refresh",
+          "stopped": "mdi:stop-circle"
+        }
+      },
+      "powershare_stop_reason": {
+        "default": "mdi:stop-circle",
+        "state": {
+          "soc_too_low": "mdi:battery-low",
+          "retry": "mdi:refresh",
+          "fault": "mdi:alert-circle",
+          "user": "mdi:account",
+          "reconnecting": "mdi:wifi-refresh",
+          "authentication": "mdi:shield-key"
+        }
+      },
+      "powershare_type": {
+        "default": "mdi:power-socket",
+        "state": {
+          "load": "mdi:power-plug",
+          "home": "mdi:home"
+        }
+      },
+      "rated_range": {
+        "default": "mdi:map-marker-distance"
+      },
+      "route_last_updated": {
+        "default": "mdi:map-clock"
+      },
+      "scheduled_charging_mode": {
+        "default": "mdi:calendar-clock",
+        "state": {
+          "off": "mdi:calendar"
+        }
+      },
+      "software_update_expected_duration_minutes": {
+        "default": "mdi:update"
+      },
+      "speed_limit_warning": {
+        "default": "mdi:car-cruise-control"
+      },
+      "tonneau_tent_mode": {
+        "default": "mdi:tent",
+        "state": {
+          "moving": "mdi:sync",
+          "failed": "mdi:alert"
+        }
+      },
+      "tpms_hard_warnings": {
+        "default": "mdi:car-tire-alert"
+      },
+      "tpms_soft_warnings": {
+        "default": "mdi:car-tire-alert"
+      },
+      "lights_turn_signal": {
+        "default": "mdi:car-light-dimmed",
+        "state": {
+          "left": "mdi:arrow-left-bold-box",
+          "right": "mdi:arrow-right-bold-box",
+          "both": "mdi:hazard-lights"
+        }
+      },
+      "charge_rate_mile_per_hour": {
+        "default": "mdi:speedometer"
+      },
+      "hvac_power_state": {
+        "default": "mdi:hvac",
+        "state": {
+          "precondition": "mdi:sun-thermometer",
+          "overheat_protection": "mdi:thermometer-alert",
+          "off": "mdi:hvac-off",
+          "on": "mdi:hvac"
+        }
       }
     },
     "switch": {

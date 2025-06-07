@@ -208,7 +208,7 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
 
 async def google_generative_ai_config_option_schema(
     hass: HomeAssistant,
-    options: dict[str, Any] | MappingProxyType[str, Any],
+    options: Mapping[str, Any],
     genai_client: genai.Client,
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
@@ -254,11 +254,11 @@ async def google_generative_ai_config_option_schema(
         )
         for api_model in sorted(api_models, key=lambda x: x.display_name or "")
         if (
-            api_model.name != "models/gemini-1.0-pro"  # duplicate of gemini-pro
-            and api_model.display_name
+            api_model.display_name
             and api_model.name
-            and api_model.supported_actions
+            and "tts" not in api_model.name
             and "vision" not in api_model.name
+            and api_model.supported_actions
             and "generateContent" in api_model.supported_actions
         )
     ]

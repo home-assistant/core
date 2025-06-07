@@ -67,6 +67,7 @@ POLLEN_CATEGORY_MAP = {
     2: "moderate",
     3: "high",
     4: "very_high",
+    5: "extreme",
 }
 UPDATE_INTERVAL_OBSERVATION = timedelta(minutes=40)
 UPDATE_INTERVAL_DAILY_FORECAST = timedelta(hours=6)

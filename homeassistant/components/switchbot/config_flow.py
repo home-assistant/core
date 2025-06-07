@@ -367,7 +367,9 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                 ),
             ): int
         }
-        if self.config_entry.data.get(CONF_SENSOR_TYPE) == SupportedModels.LOCK_PRO:
+        if self.config_entry.data.get(CONF_SENSOR_TYPE, "").startswith(
+            SupportedModels.LOCK
+        ):
             options.update(
                 {
                     vol.Optional(

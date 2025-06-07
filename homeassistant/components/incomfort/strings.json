@@ -9,7 +9,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "Hostname or IP-address of the Intergas gateway.",
+          "host": "Hostname or IP address of the Intergas gateway.",
           "username": "The username to log in to the gateway. This is `admin` in most cases.",
           "password": "The password to log in to the gateway, is printed at the bottom of the gateway or is `intergas` for some older devices."
         }
@@ -49,7 +49,7 @@
       "auth_error": "Invalid credentials.",
       "no_heaters": "No heaters found.",
       "not_found": "No gateway found.",
-      "timeout_error": "Time out when connecting to the gateway.",
+      "timeout_error": "Timeout when connecting to the gateway.",
       "unknown": "Unknown error when connecting to the gateway."
     }
   },
@@ -119,13 +119,14 @@
           "sensor_test": "Sensor test",
           "central_heating": "Central heating",
           "standby": "[%key:common::state::standby%]",
+          "off": "[%key:common::state::off%]",
           "postrun_boyler": "Post run boiler",
           "service": "Service",
           "tapwater": "Tap water",
           "postrun_ch": "Post run central heating",
           "boiler_int": "Boiler internal",
           "buffer": "Buffer",
-          "sensor_fault_after_self_check_e0": "Sensor fault after self check",
+          "sensor_fault_after_self_check_e0": "Sensor fault after self-check",
           "cv_temperature_too_high_e1": "Temperature too high",
           "s1_and_s2_interchanged_e2": "S1 and S2 interchanged",
           "no_flame_signal_e4": "No flame signal",
@@ -142,7 +143,7 @@
           "sensor_fault_s2_e22": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
           "sensor_fault_s2_e23": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
           "sensor_fault_s2_e24": "[%key:component::incomfort::entity::water_heater::boiler::state::sensor_fault_s2_e20%]",
-          "shortcut_outside_sensor_temperature_e27": "Shortcut outside sensor temperature",
+          "shortcut_outside_sensor_temperature_e27": "Shortcut outside temperature sensor",
           "gas_valve_relay_faulty_e29": "Gas valve relay faulty",
           "gas_valve_relay_faulty_e30": "[%key:component::incomfort::entity::water_heater::boiler::state::gas_valve_relay_faulty_e29%]"
         }

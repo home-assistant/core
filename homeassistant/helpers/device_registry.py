@@ -397,11 +397,11 @@ class DeletedDeviceEntry:
     config_entries: set[str] = attr.ib()
     config_entries_subentries: dict[str, set[str | None]] = attr.ib()
     connections: set[tuple[str, str]] = attr.ib()
-    identifiers: set[tuple[str, str]] = attr.ib()
+    created_at: datetime = attr.ib()
     id: str = attr.ib()
+    identifiers: set[tuple[str, str]] = attr.ib()
+    modified_at: datetime = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
-    created_at: datetime = attr.ib(factory=utcnow)
-    modified_at: datetime = attr.ib(factory=utcnow)
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     def to_device_entry(
@@ -440,8 +440,8 @@ class DeletedDeviceEntry:
                     "created_at": self.created_at,
                     "identifiers": list(self.identifiers),
                     "id": self.id,
-                    "orphaned_timestamp": self.orphaned_timestamp,
                     "modified_at": self.modified_at,
+                    "orphaned_timestamp": self.orphaned_timestamp,
                 }
             )
         )
@@ -575,9 +575,11 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         """Unindex an entry."""
         old_entry = self.data[key]
         for connection in old_entry.connections:
-            del self._connections[connection]
+            if connection in self._connections:
+                del self._connections[connection]
         for identifier in old_entry.identifiers:
-            del self._identifiers[identifier]
+            if identifier in self._identifiers:
+                del self._identifiers[identifier]
 
     def get_entry(
         self,
@@ -1242,6 +1244,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             created_at=device.created_at,
             identifiers=device.identifiers,
             id=device.id,
+            modified_at=utcnow(),
             orphaned_timestamp=None,
         )
         for other_device in list(self.devices.values()):

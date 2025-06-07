@@ -62,6 +62,11 @@
       "scan_clients": {
         "name": "Scan clients"
       }
+    },
+    "update": {
+      "server_update": {
+        "name": "[%key:component::update::title%]"
+      }
     }
   },
   "services": {

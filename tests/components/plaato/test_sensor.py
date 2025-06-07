@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pyplaato.models.device import PlaatoDeviceType
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

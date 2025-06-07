@@ -112,15 +112,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_TURN_OFF, None, "async_turn_off", [WaterHeaterEntityFeature.ON_OFF]
     )
     component.async_register_entity_service(
-        SERVICE_SET_AWAY_MODE, SET_AWAY_MODE_SCHEMA, async_service_away_mode
+        SERVICE_SET_AWAY_MODE,
+        SET_AWAY_MODE_SCHEMA,
+        async_service_away_mode,
+        [WaterHeaterEntityFeature.AWAY_MODE],
     )
     component.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE, SET_TEMPERATURE_SCHEMA, async_service_temperature_set
+        SERVICE_SET_TEMPERATURE,
+        SET_TEMPERATURE_SCHEMA,
+        async_service_temperature_set,
+        [WaterHeaterEntityFeature.TARGET_TEMPERATURE],
     )
     component.async_register_entity_service(
         SERVICE_SET_OPERATION_MODE,
         SET_OPERATION_MODE_SCHEMA,
         "async_handle_set_operation_mode",
+        [WaterHeaterEntityFeature.OPERATION_MODE],
     )
 
     return True

@@ -31,8 +31,11 @@ SONOS_ALBUM_ARTIST = "album_artists"
 SONOS_TRACKS = "tracks"
 SONOS_COMPOSER = "composers"
 SONOS_RADIO = "radio"
+SONOS_SHARE = "share"
 SONOS_OTHER_ITEM = "other items"
 SONOS_AUDIO_BOOK = "audio book"
+
+MEDIA_TYPE_DIRECTORY = MediaClass.DIRECTORY
 
 SONOS_STATE_PLAYING = "PLAYING"
 SONOS_STATE_TRANSITIONING = "TRANSITIONING"
@@ -43,12 +46,14 @@ EXPANDABLE_MEDIA_TYPES = [
     MediaType.COMPOSER,
     MediaType.GENRE,
     MediaType.PLAYLIST,
+    MEDIA_TYPE_DIRECTORY,
     SONOS_ALBUM,
     SONOS_ALBUM_ARTIST,
     SONOS_ARTIST,
     SONOS_GENRE,
     SONOS_COMPOSER,
     SONOS_PLAYLISTS,
+    SONOS_SHARE,
 ]
 
 SONOS_TO_MEDIA_CLASSES = {
@@ -59,6 +64,8 @@ SONOS_TO_MEDIA_CLASSES = {
     SONOS_GENRE: MediaClass.GENRE,
     SONOS_PLAYLISTS: MediaClass.PLAYLIST,
     SONOS_TRACKS: MediaClass.TRACK,
+    SONOS_SHARE: MediaClass.DIRECTORY,
+    "object.container": MediaClass.DIRECTORY,
     "object.container.album.musicAlbum": MediaClass.ALBUM,
     "object.container.genre.musicGenre": MediaClass.PLAYLIST,
     "object.container.person.composer": MediaClass.PLAYLIST,
@@ -79,6 +86,7 @@ SONOS_TO_MEDIA_TYPES = {
     SONOS_GENRE: MediaType.GENRE,
     SONOS_PLAYLISTS: MediaType.PLAYLIST,
     SONOS_TRACKS: MediaType.TRACK,
+    "object.container": MEDIA_TYPE_DIRECTORY,
     "object.container.album.musicAlbum": MediaType.ALBUM,
     "object.container.genre.musicGenre": MediaType.PLAYLIST,
     "object.container.person.composer": MediaType.PLAYLIST,
@@ -97,6 +105,7 @@ MEDIA_TYPES_TO_SONOS: dict[MediaType | str, str] = {
     MediaType.GENRE: SONOS_GENRE,
     MediaType.PLAYLIST: SONOS_PLAYLISTS,
     MediaType.TRACK: SONOS_TRACKS,
+    MEDIA_TYPE_DIRECTORY: SONOS_SHARE,
 }
 
 SONOS_TYPES_MAPPING = {
@@ -127,6 +136,7 @@ LIBRARY_TITLES_MAPPING = {
     "A:GENRE": "Genres",
     "A:PLAYLISTS": "Playlists",
     "A:TRACKS": "Tracks",
+    "S:": "Folders",
 }
 
 PLAYABLE_MEDIA_TYPES = [

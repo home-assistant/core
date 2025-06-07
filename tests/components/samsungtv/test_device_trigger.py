@@ -16,19 +16,21 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
-from .const import MOCK_ENTRYDATA_ENCRYPTED_WS
+from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET
 
 from tests.common import MockConfigEntry, async_get_device_automations
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 async def test_get_triggers(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test we get the expected triggers."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "any")})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "be9554b9-c9fb-41f4-8920-22da015376a4")}
+    )
 
     turn_on_trigger = {
         "platform": "device",
@@ -44,17 +46,19 @@ async def test_get_triggers(
     assert turn_on_trigger in triggers
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 async def test_if_fires_on_turn_on_request(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
-    entity_id = "media_player.fake"
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
+    entity_id = "media_player.mock_title"
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "any")})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "be9554b9-c9fb-41f4-8920-22da015376a4")}
+    )
 
     assert await async_setup_component(
         hass,
@@ -105,12 +109,12 @@ async def test_if_fires_on_turn_on_request(
     assert service_calls[2].data["id"] == 0
 
 
-@pytest.mark.usefixtures("remoteencws", "rest_api")
+@pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 async def test_failure_scenarios(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test failure scenarios."""
-    await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
+    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
     # Test wrong trigger platform type
     with pytest.raises(HomeAssistantError):

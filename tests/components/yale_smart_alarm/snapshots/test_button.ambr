@@ -27,6 +27,7 @@
     'original_name': 'Panic button',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'panic',
     'unique_id': 'yale_smart_alarm-panic',

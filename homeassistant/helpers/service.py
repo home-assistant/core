@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 import dataclasses
 from enum import Enum
 from functools import cache, partial
@@ -1094,9 +1094,15 @@ async def _handle_entity_call(
 
 async def _async_admin_handler(
     hass: HomeAssistant,
-    service_job: HassJob[[ServiceCall], Awaitable[None] | None],
+    service_job: HassJob[
+        [ServiceCall],
+        Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+        | ServiceResponse
+        | EntityServiceResponse
+        | None,
+    ],
     call: ServiceCall,
-) -> None:
+) -> ServiceResponse | EntityServiceResponse | None:
     """Run an admin service."""
     if call.context.user_id:
         user = await hass.auth.async_get_user(call.context.user_id)
@@ -1105,9 +1111,10 @@ async def _async_admin_handler(
         if not user.is_admin:
             raise Unauthorized(context=call.context)
 
-    result = hass.async_run_hass_job(service_job, call)
-    if result is not None:
-        await result
+    task = hass.async_run_hass_job(service_job, call)
+    if task is not None:
+        return await task
+    return None
 
 
 @bind_hass
@@ -1116,8 +1123,15 @@ def async_register_admin_service(
     hass: HomeAssistant,
     domain: str,
     service: str,
-    service_func: Callable[[ServiceCall], Awaitable[None] | None],
+    service_func: Callable[
+        [ServiceCall],
+        Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+        | ServiceResponse
+        | EntityServiceResponse
+        | None,
+    ],
     schema: VolSchemaType = vol.Schema({}, extra=vol.PREVENT_EXTRA),
+    supports_response: SupportsResponse = SupportsResponse.NONE,
 ) -> None:
     """Register a service that requires admin access."""
     hass.services.async_register(
@@ -1129,6 +1143,7 @@ def async_register_admin_service(
             HassJob(service_func, f"admin service {domain}.{service}"),
         ),
         schema,
+        supports_response,
     )
 
 

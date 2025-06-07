@@ -279,7 +279,7 @@ class Luminary(LightEntity):
         return self._device_attributes
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 

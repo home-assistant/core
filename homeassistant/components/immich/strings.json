@@ -1,0 +1,73 @@
+{
+  "common": {
+    "data_desc_url": "The full URL of your immich instance.",
+    "data_desc_api_key": "API key to connect to your immich instance.",
+    "data_desc_ssl_verify": "Whether to verify the SSL certificate when SSL encryption is used to connect to your immich instance."
+  },
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "[%key:component::immich::common::data_desc_url%]",
+          "api_key": "[%key:component::immich::common::data_desc_api_key%]",
+          "verify_ssl": "[%key:component::immich::common::data_desc_ssl_verify%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Update the API key for {name}.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::immich::common::data_desc_api_key%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "The provided URL is invalid.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The provided API key does not match the configured user.",
+      "already_configured": "This user is already configured for this immich instance."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "disk_size": {
+        "name": "Disk size"
+      },
+      "disk_available": {
+        "name": "Disk available"
+      },
+      "disk_use": {
+        "name": "Disk used"
+      },
+      "disk_usage": {
+        "name": "Disk usage"
+      },
+      "photos_count": {
+        "name": "Photos count",
+        "unit_of_measurement": "photos"
+      },
+      "videos_count": {
+        "name": "Videos count",
+        "unit_of_measurement": "videos"
+      },
+      "usage_by_photos": {
+        "name": "Disk used by photos"
+      },
+      "usage_by_videos": {
+        "name": "Disk used by videos"
+      }
+    }
+  }
+}

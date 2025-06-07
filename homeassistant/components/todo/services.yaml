@@ -100,6 +100,7 @@ remove_item:
   fields:
     item:
       required: true
+      example: "Submit income tax return"
       selector:
         text:
 

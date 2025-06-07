@@ -110,6 +110,10 @@ class AiohttpClientMocker:
         """Register a mock patch request."""
         self.request("patch", *args, **kwargs)
 
+    def head(self, *args, **kwargs):
+        """Register a mock head request."""
+        self.request("head", *args, **kwargs)
+
     @property
     def call_count(self):
         """Return the number of requests made."""

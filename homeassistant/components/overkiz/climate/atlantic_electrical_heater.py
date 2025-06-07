@@ -58,9 +58,12 @@ class AtlanticElectricalHeater(OverkizEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        return OVERKIZ_TO_HVAC_MODES[
-            cast(str, self.executor.select_state(OverkizState.CORE_ON_OFF))
-        ]
+        if OverkizState.CORE_ON_OFF in self.device.states:
+            return OVERKIZ_TO_HVAC_MODES[
+                cast(str, self.executor.select_state(OverkizState.CORE_ON_OFF))
+            ]
+
+        return HVACMode.OFF
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""

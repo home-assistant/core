@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from advantage_air import ApiError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.advantage_air.climate import ADVANTAGE_AIR_MYAUTO
 from homeassistant.components.climate import (

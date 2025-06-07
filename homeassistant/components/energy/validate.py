@@ -50,6 +50,7 @@ GAS_USAGE_UNITS: dict[str, tuple[UnitOfEnergy | UnitOfVolume, ...]] = {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.LITERS,
     ),
 }
 GAS_PRICE_UNITS = tuple(

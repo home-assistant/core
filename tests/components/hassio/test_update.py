@@ -5,7 +5,11 @@ import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohasupervisor import SupervisorBadRequestError, SupervisorError
+from aiohasupervisor import (
+    SupervisorBadRequestError,
+    SupervisorError,
+    SupervisorNotFoundError,
+)
 from aiohasupervisor.models import (
     HomeAssistantUpdateOptions,
     OSUpdate,
@@ -987,6 +991,7 @@ async def test_update_core_with_backup_and_error(
 
 async def test_release_notes_between_versions(
     hass: HomeAssistant,
+    addon_changelog: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -994,12 +999,10 @@ async def test_release_notes_between_versions(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
+    addon_changelog.return_value = "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"
+
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
-            return_value={"test": "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"},
-        ),
     ):
         result = await async_setup_component(
             hass,
@@ -1026,6 +1029,7 @@ async def test_release_notes_between_versions(
 
 async def test_release_notes_full(
     hass: HomeAssistant,
+    addon_changelog: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -1033,12 +1037,11 @@ async def test_release_notes_full(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
+    full_changelog = "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"
+    addon_changelog.return_value = full_changelog
+
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
-            return_value={"test": "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"},
-        ),
     ):
         result = await async_setup_component(
             hass,
@@ -1062,9 +1065,21 @@ async def test_release_notes_full(
     assert "Old updates" in result["result"]
     assert "New updates" in result["result"]
 
+    # Update entity without update should returns full changelog
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "update/release_notes",
+            "entity_id": "update.test2_update",
+        }
+    )
+    result = await client.receive_json()
+    assert result["result"] == full_changelog
+
 
 async def test_not_release_notes(
     hass: HomeAssistant,
+    addon_changelog: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -1072,12 +1087,10 @@ async def test_not_release_notes(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
+    addon_changelog.side_effect = SupervisorNotFoundError()
+
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
-            return_value={"test": None},
-        ),
     ):
         result = await async_setup_component(
             hass,

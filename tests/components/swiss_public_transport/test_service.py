@@ -27,7 +27,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,9 +68,9 @@ async def test_service_call_fetch_connections_success(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
     ) as mock:
-        mock().connections = json.loads(load_fixture("connections.json", DOMAIN))[
-            0 : data.get(ATTR_LIMIT, CONNECTIONS_COUNT) + 2
-        ]
+        mock().connections = json.loads(
+            await async_load_fixture(hass, "connections.json", DOMAIN)
+        )[0 : data.get(ATTR_LIMIT, CONNECTIONS_COUNT) + 2]
 
         await setup_integration(hass, config_entry)
 
@@ -136,7 +136,9 @@ async def test_service_call_fetch_connections_error(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
     ) as mock:
-        mock().connections = json.loads(load_fixture("connections.json", DOMAIN))
+        mock().connections = json.loads(
+            await async_load_fixture(hass, "connections.json", DOMAIN)
+        )
 
         await setup_integration(hass, config_entry)
 
@@ -176,7 +178,9 @@ async def test_service_call_load_unload(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
     ) as mock:
-        mock().connections = json.loads(load_fixture("connections.json", DOMAIN))
+        mock().connections = json.loads(
+            await async_load_fixture(hass, "connections.json", DOMAIN)
+        )
 
         await setup_integration(hass, config_entry)
 
