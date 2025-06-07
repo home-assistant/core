@@ -1494,6 +1494,15 @@ def test_from_json(hass: HomeAssistant) -> None:
     ).async_render()
     assert actual_result == expected_result
 
+    info = render_to_info(hass, "{{ 'garbage string' | from_json }}")
+    with pytest.raises(TemplateError, match="no default was specified"):
+        info.result()
+
+    actual_result = template.Template(
+        "{{ 'garbage string' | from_json('Bar') }}", hass
+    ).async_render()
+    assert actual_result == expected_result
+
 
 def test_average(hass: HomeAssistant) -> None:
     """Test the average filter."""
