@@ -431,6 +431,20 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Alarm Host
+    # https://developer.tuya.com/en/docs/iot/alarm-hosts?id=K9gf48r87hyjk
+    "mal": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_ALARM_SOUND,
+            translation_key="alarm_sound",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_ALARM_LIGHT,
+            translation_key="alarm_light",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Sous Vide Cooker
     # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
     "mzj": (
