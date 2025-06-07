@@ -105,5 +105,21 @@
         "name": "Bypassed"
       }
     }
+  },
+  "services": {
+    "set_time": {
+      "name": "Set the alarm panel time",
+      "description": "Sets the time of an alarm panel.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry",
+          "description": "The Risco alarm panel to set the time for."
+        },
+        "time": {
+          "name": "Time",
+          "description": "The time to send to the alarm panel. Leave it empty to use the Home Assistant system time."
+        }
+      }
+    }
   }
 }
