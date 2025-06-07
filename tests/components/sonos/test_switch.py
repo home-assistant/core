@@ -156,7 +156,7 @@ async def test_switch_alarm_turn_on(
     service: str,
     expected_result: str,
 ) -> None:
-    """Test for correct creation and deletion of alarms during runtime."""
+    """Test enabling and disabling of alarm."""
     await async_setup_sonos()
 
     await hass.services.async_call(
@@ -178,7 +178,7 @@ async def test_alarm_create_delete(
     alarm_event,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test enabling and disabling of alarm."""
+    """Test for correct creation and deletion of alarms during runtime."""
     one_alarm = copy(alarm_clock.ListAlarms.return_value)
     two_alarms = copy(alarm_clock_extended.ListAlarms.return_value)
 
