@@ -98,6 +98,7 @@ class DPCode(StrEnum):
 
     AIR_QUALITY = "air_quality"
     AIR_QUALITY_INDEX = "air_quality_index"
+    ALARM_DELAY_TIME = "alarm_delay_time"
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
@@ -176,6 +177,7 @@ class DPCode(StrEnum):
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DELAY_SET = "delay_set"
     DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
@@ -314,6 +316,8 @@ class DPCode(StrEnum):
     SWITCH_6 = "switch_6"  # Switch 6
     SWITCH_7 = "switch_7"  # Switch 7
     SWITCH_8 = "switch_8"  # Switch 8
+    SWITCH_ALARM_SOUND = "switch_alarm_sound"
+    SWITCH_ALARM_LIGHT = "switch_alarm_light"
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
     SWITCH_CHARGE = "switch_charge"
     SWITCH_CONTROLLER = "switch_controller"
