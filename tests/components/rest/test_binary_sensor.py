@@ -248,7 +248,9 @@ async def test_setup_get_template_headers_params(
 
     # Verify headers and params were sent correctly by checking the mock was called
     assert aioclient_mock.call_count == 1
-    # Note: aioclient_mock doesn't provide direct access to request headers/params like respx
+    last_request_headers = aioclient_mock.mock_calls[0][3]
+    assert last_request_headers["Accept"] == CONTENT_TYPE_JSON
+    assert last_request_headers["User-Agent"] == "Mozilla/5.0"
 
 
 async def test_setup_get_digest_auth(
