@@ -85,6 +85,25 @@ class SonosMockService:
         self.subscribe = AsyncMock(return_value=SonosMockSubscribe(ip_address))
 
 
+class SonosMockAlarmClock(SonosMockService):
+    """Mock a Sonos AlarmClock Service used in callbacks."""
+
+    def __init__(self, ip_address="192.168.42.2") -> None:
+        """Initialize the instance."""
+        super().__init__("AlarmClock", ip_address)
+        self.ListAlarms = Mock()
+        self.ListAlarms.return_value = {
+            "CurrentAlarmListVersion": "RINCON_test:14",
+            "CurrentAlarmList": "<Alarms>"
+            '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+            'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
+            'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+            'IncludeLinkedZones="0"/>'
+            "</Alarms>",
+        }
+        self.UpdateAlarm = Mock()
+
+
 class SonosMockEvent:
     """Mock a sonos Event used in callbacks."""
 
@@ -593,11 +612,9 @@ def music_library_fixture(
 
 
 @pytest.fixture(name="alarm_clock")
-def alarm_clock_fixture():
+def alarm_clock_fixture() -> SonosMockAlarmClock:
     """Create alarmClock fixture."""
-    alarm_clock = SonosMockService("AlarmClock")
-    # pylint: disable-next=attribute-defined-outside-init
-    alarm_clock.ListAlarms = Mock()
+    alarm_clock = SonosMockAlarmClock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:14",
         "CurrentAlarmList": "<Alarms>"
@@ -611,11 +628,9 @@ def alarm_clock_fixture():
 
 
 @pytest.fixture(name="alarm_clock_extended")
-def alarm_clock_fixture_extended():
+def alarm_clock_fixture_extended() -> SonosMockAlarmClock:
     """Create alarmClock fixture."""
-    alarm_clock = SonosMockService("AlarmClock")
-    # pylint: disable-next=attribute-defined-outside-init
-    alarm_clock.ListAlarms = Mock()
+    alarm_clock = SonosMockAlarmClock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:15",
         "CurrentAlarmList": "<Alarms>"
