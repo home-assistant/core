@@ -88,19 +88,11 @@ class SonosMockService:
 class SonosMockAlarmClock(SonosMockService):
     """Mock a Sonos AlarmClock Service used in callbacks."""
 
-    def __init__(self, ip_address="192.168.42.2") -> None:
+    def __init__(self, return_value: dict[str, str], ip_address="192.168.42.2") -> None:
         """Initialize the instance."""
         super().__init__("AlarmClock", ip_address)
         self.ListAlarms = Mock()
-        self.ListAlarms.return_value = {
-            "CurrentAlarmListVersion": "RINCON_test:14",
-            "CurrentAlarmList": "<Alarms>"
-            '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
-            'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
-            'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
-            'IncludeLinkedZones="0"/>'
-            "</Alarms>",
-        }
+        self.ListAlarms.return_value = return_value
         self.UpdateAlarm = Mock()
 
 
@@ -614,37 +606,37 @@ def music_library_fixture(
 @pytest.fixture(name="alarm_clock")
 def alarm_clock_fixture() -> SonosMockAlarmClock:
     """Create alarmClock fixture."""
-    alarm_clock = SonosMockAlarmClock()
-    alarm_clock.ListAlarms.return_value = {
-        "CurrentAlarmListVersion": "RINCON_test:14",
-        "CurrentAlarmList": "<Alarms>"
-        '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
-        'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
-        'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
-        'IncludeLinkedZones="0"/>'
-        "</Alarms>",
-    }
-    return alarm_clock
+    return SonosMockAlarmClock(
+        {
+            "CurrentAlarmListVersion": "RINCON_test:14",
+            "CurrentAlarmList": "<Alarms>"
+            '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+            'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
+            'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+            'IncludeLinkedZones="0"/>'
+            "</Alarms>",
+        }
+    )
 
 
 @pytest.fixture(name="alarm_clock_extended")
 def alarm_clock_fixture_extended() -> SonosMockAlarmClock:
     """Create alarmClock fixture."""
-    alarm_clock = SonosMockAlarmClock()
-    alarm_clock.ListAlarms.return_value = {
-        "CurrentAlarmListVersion": "RINCON_test:15",
-        "CurrentAlarmList": "<Alarms>"
-        '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
-        'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
-        'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
-        'IncludeLinkedZones="0"/>'
-        '<Alarm ID="15" StartTime="07:00:00" Duration="02:00:00" '
-        'Recurrence="DAILY" Enabled="1" RoomUUID="RINCON_test" '
-        'ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" '
-        'Volume="25" IncludeLinkedZones="0"/>'
-        "</Alarms>",
-    }
-    return alarm_clock
+    return SonosMockAlarmClock(
+        {
+            "CurrentAlarmListVersion": "RINCON_test:15",
+            "CurrentAlarmList": "<Alarms>"
+            '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+            'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
+            'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+            'IncludeLinkedZones="0"/>'
+            '<Alarm ID="15" StartTime="07:00:00" Duration="02:00:00" '
+            'Recurrence="DAILY" Enabled="1" RoomUUID="RINCON_test" '
+            'ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" '
+            'Volume="25" IncludeLinkedZones="0"/>'
+            "</Alarms>",
+        }
+    )
 
 
 @pytest.fixture(name="speaker_model")
