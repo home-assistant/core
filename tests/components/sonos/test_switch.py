@@ -1,5 +1,6 @@
 """Tests for the Sonos Alarm switch platform."""
 
+import asyncio
 from copy import copy
 from datetime import timedelta
 from unittest.mock import patch
@@ -16,7 +17,7 @@ from homeassistant.components.sonos.switch import (
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_TIME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import SonosMockEvent
@@ -174,3 +175,55 @@ async def test_alarm_create_delete(
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" not in entity_registry.entities
+
+
+async def test_alarm_change_device(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco,
+    alarm_clock,
+    alarm_clock_extended,
+    alarm_event,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    sonos_setup_two_speakers,
+) -> None:
+    """Test Sonos Alarm being moved to a different speaker.
+
+    This test simulates a scenario where an alarm is created on one speaker
+    and then moved to another speaker. It checks that the alarm is correctly
+    created on the new speaker and removed from the old one.
+    """
+    soco_lr = sonos_setup_two_speakers[0]
+
+    await async_setup_sonos()
+
+    # Initially, the alarm is created on the soco mock
+    assert "switch.sonos_alarm_14" in entity_registry.entities
+    alarm_14 = entity_registry.async_get("switch.sonos_alarm_14")
+    device = device_registry.async_get(alarm_14.device_id)
+    assert device.name == soco.get_speaker_info()["zone_name"]
+
+    # Simulate the alarm being moved to the soco_lr speaker
+    alarm_update = copy(alarm_clock_extended.ListAlarms.return_value)
+    alarm_update["CurrentAlarmList"] = alarm_update["CurrentAlarmList"].replace(
+        '"RINCON_test"', f'"{soco_lr.uid}"'
+    )
+    alarm_clock.ListAlarms.return_value = alarm_update
+
+    # Update the alarm_list_version so it gets processed.
+    alarm_event.variables["alarm_list_version"] = "RINCON_test:1000"
+    alarm_update["CurrentAlarmListVersion"] = alarm_event.increment_variable(
+        "alarm_list_version"
+    )
+
+    alarm_clock.subscribe.return_value.callback(event=alarm_event)
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    asyncio.sleep(1.0)  # Allow time for the state to update
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "switch.sonos_alarm_14" in entity_registry.entities
+    alarm_14 = entity_registry.async_get("switch.sonos_alarm_14")
+    device = device_registry.async_get(alarm_14.device_id)
+    assert device.name == soco_lr.get_speaker_info()["zone_name"]
