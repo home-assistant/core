@@ -235,7 +235,7 @@ class ONVIFDevice:
         LOGGER.debug("%s: Retrieving current device date/time", self.name)
         try:
             device_time = await device_mgmt.GetSystemDateAndTime()
-        except (aiohttp.ClientError, Fault) as err:
+        except (TimeoutError, aiohttp.ClientError, Fault) as err:
             LOGGER.warning(
                 "Couldn't get device '%s' date/time. Error: %s", self.name, err
             )
@@ -303,7 +303,7 @@ class ONVIFDevice:
         # Set Date and Time ourselves if Date and Time is set manually in the camera.
         try:
             await self.async_manually_set_date_and_time()
-        except (aiohttp.ClientError, TransportError, IndexError, Fault):
+        except (TimeoutError, aiohttp.ClientError, TransportError, IndexError, Fault):
             LOGGER.warning("%s: Could not sync date/time on this camera", self.name)
             self._async_log_time_out_of_sync(cam_date_utc, system_date)
 

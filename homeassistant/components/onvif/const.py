@@ -1,5 +1,6 @@
 """Constants for the onvif component."""
 
+import asyncio
 import logging
 
 import aiohttp
@@ -48,4 +49,10 @@ SERVICE_PTZ = "ptz"
 
 # Some cameras don't support the GetServiceCapabilities call
 # and will return a 404 error which is caught by TransportError
-GET_CAPABILITIES_EXCEPTIONS = (ONVIFError, Fault, aiohttp.ClientError, TransportError)
+GET_CAPABILITIES_EXCEPTIONS = (
+    ONVIFError,
+    Fault,
+    aiohttp.ClientError,
+    asyncio.TimeoutError,
+    TransportError,
+)

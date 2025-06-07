@@ -34,10 +34,23 @@ from .parsers import PARSERS
 UNHANDLED_TOPICS: set[str] = {"tns1:MediaControl/VideoEncoderConfiguration"}
 
 SUBSCRIPTION_ERRORS = (Fault, TimeoutError, TransportError)
-CREATE_ERRORS = (ONVIFError, Fault, aiohttp.ClientError, XMLParseError, ValidationError)
+CREATE_ERRORS = (
+    ONVIFError,
+    Fault,
+    aiohttp.ClientError,
+    asyncio.TimeoutError,
+    XMLParseError,
+    ValidationError,
+)
 SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 UNSUBSCRIBE_ERRORS = (XMLParseError, *SUBSCRIPTION_ERRORS)
-RENEW_ERRORS = (ONVIFError, aiohttp.ClientError, XMLParseError, *SUBSCRIPTION_ERRORS)
+RENEW_ERRORS = (
+    ONVIFError,
+    aiohttp.ClientError,
+    asyncio.TimeoutError,
+    XMLParseError,
+    *SUBSCRIPTION_ERRORS,
+)
 #
 # We only keep the subscription alive for 10 minutes, and will keep
 # renewing it every 8 minutes. This is to avoid the camera
