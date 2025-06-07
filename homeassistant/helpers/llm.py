@@ -28,16 +28,23 @@ from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
 from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
     ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     ATTR_SERVICE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED,
+    EVENT_STATE_CHANGED,
 )
-from homeassistant.core import Context, Event, HomeAssistant, callback, split_entity_id
+from homeassistant.core import (
+    Context,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.hass_dict import HassKey
@@ -54,10 +61,11 @@ from . import (
     selector,
     service,
 )
+from .entity import entity_sources
 from .singleton import singleton
 
 ACTION_PARAMETERS_CACHE: HassKey[
-    dict[tuple[str, str], tuple[str | None, vol.Schema]]
+    dict[tuple[str, str], tuple[str | None, vol.Schema, list[str] | None]]
 ] = HassKey("llm_action_parameters_cache")
 
 
@@ -807,12 +815,237 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
     return {"type": "string"}
 
 
+def _validate_entity_filter(
+    hass: HomeAssistant, state: State, entity_filter: dict
+) -> bool:
+    """Validate if the entity matches the filter."""
+    if not entity_filter:
+        return True
+
+    if (integration := entity_filter.get("integration")) and (
+        (entity_info := entity_sources(hass).get(state.entity_id)) is None
+        or integration != entity_info.get("domain")
+    ):
+        return False
+
+    if (
+        device_class := entity_filter.get("device_class")
+    ) and device_class != state.attributes.get("device_class"):
+        return False
+
+    if supported_features := entity_filter.get("supported_features"):
+        for feature_mask in supported_features:
+            if (
+                state.attributes.get("supported_features", 0) & feature_mask
+                == feature_mask
+            ):
+                # Must be the last filter option to check
+                return True
+        return False
+
+    return True
+
+
+def _validate_device_filter(
+    hass: HomeAssistant, state: State, device_filter: dict
+) -> bool:
+    """Validate if the entity matches the filter."""
+    if not device_filter:
+        return True
+
+    if (domain := device_filter.get("domain")) and domain != state.domain:
+        return False
+
+    if (integration := device_filter.get("integration")) and (
+        (entity_info := entity_sources(hass).get(state.entity_id)) is None
+        or integration != entity_info.get("domain")
+    ):
+        return False
+
+    entity_registry = er.async_get(hass)
+    entity_entry = entity_registry.async_get(state.entity_id)
+    if entity_entry is None or not entity_entry.device_id:
+        return all(key == "integration" for key in device_filter)
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(entity_entry.device_id)
+    if not device:
+        return all(key == "integration" for key in device_filter)
+
+    if (
+        manufacturer := device_filter.get("manufacturer")
+    ) and manufacturer != device.manufacturer:
+        return False
+
+    if (model := device_filter.get("model")) and model != device.model:
+        return False
+
+    if (model_id := device_filter.get("model_id")) and model_id != device.model_id:
+        return False
+
+    if entity_filters := device_filter.get("entity"):
+        # Verify that the device contains at least one entity
+        # matching at least one of these selectors
+        for entity_entry in entity_registry.entities.values():
+            if entity_entry.device_id != device.id:
+                continue
+
+            for entity_filter in entity_filters:
+                entity_state = hass.states.get(entity_entry.entity_id)
+                if entity_state and _validate_entity_filter(
+                    hass, entity_state, entity_filter
+                ):
+                    # Must be the last filter option to check
+                    return True
+        return False
+
+    return True
+
+
+def _validate_area_filter(hass: HomeAssistant, state: State, area_filter: dict) -> bool:
+    """Validate if the entity matches the filter."""
+    if not state.attributes.get(ATTR_AREA_ID):
+        return False
+
+    if not area_filter:
+        return True
+
+    entity_filters = area_filter.get("entity", [])
+    device_filters = area_filter.get("device", [])
+
+    entity_registry = er.async_get(hass)
+    for entity_entry in er.async_entries_for_area(
+        entity_registry, state.attributes[ATTR_AREA_ID]
+    ):
+        entity_matched = not entity_filters
+        device_matched = not device_filters
+
+        if not entity_matched:
+            # Verify that the area contains at least one entity
+            # matching at least one of these selectors
+            for entity_filter in entity_filters:
+                entity_state = hass.states.get(entity_entry.entity_id)
+                if entity_state and _validate_entity_filter(
+                    hass, entity_state, entity_filter
+                ):
+                    entity_matched = True
+                    break
+
+        if not device_matched:
+            # Verify that the area contains at least one device
+            # matching at least one of these selectors
+            for device_filter in device_filters:
+                entity_state = hass.states.get(entity_entry.entity_id)
+                if entity_state and _validate_device_filter(
+                    hass, entity_state, device_filter
+                ):
+                    device_matched = True
+                    break
+
+        if entity_matched and device_matched:
+            return True
+
+    return False
+
+
+def _validate_floor_filter(
+    hass: HomeAssistant, state: State, floor_filter: dict
+) -> bool:
+    """Validate if the entity matches the filter."""
+    if not floor_filter:
+        return True
+
+    if not state.attributes.get(ATTR_FLOOR_ID):
+        return False
+
+    entity_filters = floor_filter.get("entity", [])
+    device_filters = floor_filter.get("device", [])
+
+    entity_registry = er.async_get(hass)
+    area_registry = ar.async_get(hass)
+    for area_entry in ar.async_entries_for_floor(
+        area_registry, state.attributes[ATTR_FLOOR_ID]
+    ):
+        for entity_entry in er.async_entries_for_area(entity_registry, area_entry.id):
+            entity_matched = not entity_filters
+            device_matched = not device_filters
+
+            if not entity_matched:
+                # Verify that the floor contains at least one entity
+                # matching at least one of these selectors
+                for entity_filter in entity_filters:
+                    entity_state = hass.states.get(entity_entry.entity_id)
+                    if entity_state and _validate_entity_filter(
+                        hass, entity_state, entity_filter
+                    ):
+                        entity_matched = True
+                        break
+
+            if not device_matched:
+                # Verify that the floor contains at least one device
+                # matching at least one of these selectors
+                for device_filter in device_filters:
+                    entity_state = hass.states.get(entity_entry.entity_id)
+                    if entity_state and _validate_device_filter(
+                        hass, entity_state, device_filter
+                    ):
+                        device_matched = True
+                        break
+
+            if entity_matched and device_matched:
+                return True
+
+    return False
+
+
+def _get_target_entities(hass: HomeAssistant, domain: str, target: dict) -> list[str]:
+    """Get target entities for a service action.
+
+    The list is filtered by services.yaml selectors,
+    but not by exposure to certain assistants.
+    """
+
+    target_entities: list[str] = []
+
+    entity_filters = target.get("entity", [{}])
+    device_filters = target.get("device", [{}])
+    area_filters = target.get("area", [{}])
+    floor_filters = target.get("floor", [{}])
+
+    domains = {
+        d
+        for entity_filter in entity_filters
+        for d in entity_filter.get("domain", [domain])
+    }
+    for state in hass.states.async_all(domains):
+        if not any(_validate_entity_filter(hass, state, ef) for ef in entity_filters):
+            continue
+
+        if not any(_validate_device_filter(hass, state, df) for df in device_filters):
+            continue
+
+        if not any(_validate_area_filter(hass, state, af) for af in area_filters):
+            continue
+
+        if not any(
+            _validate_floor_filter(hass, state, floor_filter)
+            for floor_filter in floor_filters
+        ):
+            continue
+
+        target_entities.append(state.entity_id)
+
+    return target_entities
+
+
 def _get_cached_action_parameters(
     hass: HomeAssistant, domain: str, action: str
-) -> tuple[str | None, vol.Schema]:
+) -> tuple[str | None, vol.Schema, list[str] | None]:
     """Get action description and schema."""
     description: str | None = None
     parameters = vol.Schema({})
+    target_entities: list[str] | None = None
+    cache_key = (domain, action)
 
     parameters_cache = hass.data.get(ACTION_PARAMETERS_CACHE)
 
@@ -820,24 +1053,46 @@ def _get_cached_action_parameters(
         parameters_cache = hass.data[ACTION_PARAMETERS_CACHE] = {}
 
         @callback
-        def clear_cache(event: Event) -> None:
+        def on_service_removed(event: Event) -> None:
             """Clear action parameter cache on action removal."""
             if (event.data[ATTR_DOMAIN], event.data[ATTR_SERVICE]) in parameters_cache:
                 parameters_cache.pop(
                     (event.data[ATTR_DOMAIN], event.data[ATTR_SERVICE])
                 )
 
-        cancel = hass.bus.async_listen(EVENT_SERVICE_REMOVED, clear_cache)
+        cancel_service_listener = hass.bus.async_listen(
+            EVENT_SERVICE_REMOVED, on_service_removed
+        )
+
+        @callback
+        def on_state_changed(event: Event[EventStateChangedData]) -> None:
+            """Clear action parameter cache on new entities added to Home Assistant.
+
+            This is needed to update the lest of affected target entities for entity service actions.
+            """
+
+            if event.data.get("old_state"):
+                return
+
+            # Clear cache for all entity service actions
+            for k, v in parameters_cache.items():
+                if v[2] is not None:
+                    parameters_cache.pop(k)
+
+        cancel_entity_listener = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, on_state_changed
+        )
 
         @callback
         def on_homeassistant_close(event: Event) -> None:
             """Cleanup."""
-            cancel()
+            cancel_entity_listener()
+            cancel_service_listener()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, on_homeassistant_close)
 
-    if (domain, action) in parameters_cache:
-        return parameters_cache[(domain, action)]
+    if cache_key in parameters_cache:
+        return parameters_cache[cache_key]
 
     if action_desc := service.async_get_cached_service_description(
         hass, domain, action
@@ -863,35 +1118,7 @@ def _get_cached_action_parameters(
                 schema[key] = cv.string
 
         if target := action_desc.get("target"):
-            entity_filter = target.get("entity", {})
-            device_filter = target.get("device", {})
-            schema[vol.Optional(ATTR_ENTITY_ID)] = selector.selector(
-                {"entity": {"multiple": True, "filter": entity_filter}}
-            )
-            schema[vol.Optional(ATTR_DEVICE_ID)] = selector.selector(
-                {"device": {"multiple": True, "filter": device_filter}}
-            )
-            schema[vol.Optional(ATTR_AREA_ID)] = selector.selector(
-                {
-                    "area": {
-                        "multiple": True,
-                        "entity": entity_filter,
-                        "device": device_filter,
-                    }
-                }
-            )
-            schema[vol.Optional(ATTR_FLOOR_ID)] = selector.selector(
-                {
-                    "floor": {
-                        "multiple": True,
-                        "entity": entity_filter,
-                        "device": device_filter,
-                    }
-                }
-            )
-            schema[vol.Optional(ATTR_LABEL_ID)] = selector.selector(
-                {"label": {"multiple": True}}
-            )
+            target_entities = _get_target_entities(hass, domain, target)
 
         parameters = vol.Schema(schema)
 
@@ -910,9 +1137,9 @@ def _get_cached_action_parameters(
 
         description = ". ".join(description_list) or None
 
-        parameters_cache[(domain, action)] = (description, parameters)
+        parameters_cache[cache_key] = (description, parameters, target_entities)
 
-    return description, parameters
+    return description, parameters, target_entities
 
 
 class ActionTool(Tool):
@@ -923,53 +1150,111 @@ class ActionTool(Tool):
         hass: HomeAssistant,
         domain: str,
         action: str,
+        exposed_entities: dict[str, dict[str, Any]] | None = None,
     ) -> None:
         """Init the class."""
         self._domain = domain
         self._action = action
         self.name = f"{domain}_{action}"
-        self.description, self.parameters = _get_cached_action_parameters(
-            hass, domain, action
+        self.description, self.parameters, target_entities = (
+            _get_cached_action_parameters(hass, domain, action)
         )
+        self.target_entities: list[str] | None = None
+
+        if target_entities is not None and exposed_entities is not None:
+            self.target_entities = [
+                entity_id
+                for entity_id in target_entities
+                if entity_id in exposed_entities
+            ]
+            if not self.target_entities:
+                raise HomeAssistantError(
+                    f"Action {domain}.{action} has no exposed entities to target."
+                )
+
+            if len(self.target_entities) == 1:
+                if self.description is None:
+                    self.description = ""
+                else:
+                    self.description += ". "
+                self.description += f"Targets {'/'.join(exposed_entities[self.target_entities[0]]['names'])}"
+
+            else:
+                names = [
+                    name
+                    for entity_id in self.target_entities
+                    for name in exposed_entities[entity_id]["names"].split(", ")
+                ]
+                self.parameters = self.parameters.extend(
+                    {
+                        vol.Optional(
+                            "target",
+                            description="Target entities for this action. "
+                            "If not specified, the action will be performed on all applicable entities",
+                        ): [vol.In(names)]
+                    }
+                )
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
         """Call the action."""
 
+        service_args = tool_input.tool_args.copy()
+
         for field, validator in self.parameters.schema.items():
-            if field not in tool_input.tool_args:
+            if field not in service_args:
                 continue
             if isinstance(validator, selector.AreaSelector):
                 area_reg = ar.async_get(hass)
                 if validator.config.get("multiple"):
                     areas: list[ar.AreaEntry] = []
-                    for area in tool_input.tool_args[field]:
+                    for area in service_args[field]:
                         areas.extend(intent.find_areas(area, area_reg))
-                    tool_input.tool_args[field] = list({area.id for area in areas})
+                    service_args[field] = list({area.id for area in areas})
                 else:
-                    area = tool_input.tool_args[field]
+                    area = service_args[field]
                     area = list(intent.find_areas(area, area_reg))[0].id
-                    tool_input.tool_args[field] = area
+                    service_args[field] = area
 
             elif isinstance(validator, selector.FloorSelector):
                 floor_reg = fr.async_get(hass)
                 if validator.config.get("multiple"):
                     floors: list[fr.FloorEntry] = []
-                    for floor in tool_input.tool_args[field]:
+                    for floor in service_args[field]:
                         floors.extend(intent.find_floors(floor, floor_reg))
-                    tool_input.tool_args[field] = list(
-                        {floor.floor_id for floor in floors}
-                    )
+                    service_args[field] = list({floor.floor_id for floor in floors})
                 else:
-                    floor = tool_input.tool_args[field]
+                    floor = service_args[field]
                     floor = list(intent.find_floors(floor, floor_reg))[0].floor_id
-                    tool_input.tool_args[field] = floor
+                    service_args[field] = floor
+
+        if self.target_entities is not None:
+            if len(self.target_entities) == 1 or "target" not in service_args:
+                service_args[ATTR_ENTITY_ID] = self.target_entities
+            else:
+                targets = service_args.pop("target")
+
+                states = [
+                    state
+                    for state in hass.states.async_all()
+                    if state.entity_id in self.target_entities
+                ]
+
+                target_entities = {
+                    state.entity_id
+                    for name in targets
+                    for state in intent.async_match_states(
+                        hass, name=name, states=states
+                    )
+                }
+
+                service_args[ATTR_ENTITY_ID] = list(target_entities)
 
         result = await hass.services.async_call(
             self._domain,
             self._action,
-            tool_input.tool_args,
+            service_args,
             context=llm_context.context,
             blocking=True,
             return_response=True,
