@@ -11,12 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import (
-    DOMAIN,
-    OPTION_DISABLE_KEEP_ALIVE,
-    OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
-    PLATFORMS,
-)
+from .const import DOMAIN, PLATFORMS
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 
 
@@ -24,12 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
     """Set up Enphase Envoy from a config entry."""
 
     host = entry.data[CONF_HOST]
-    options = entry.options
     session = async_create_clientsession(hass, verify_ssl=False)
-    if options.get(OPTION_DISABLE_KEEP_ALIVE, OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE):
-        # User set option to disable keep-alive
-        pass
-
     envoy = Envoy(host, session)
     coordinator = EnphaseUpdateCoordinator(hass, envoy, entry)
 
