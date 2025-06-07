@@ -238,7 +238,7 @@ class TelegramNotificationService:
             PARSER_MD2: ParseMode.MARKDOWN_V2,
             PARSER_PLAIN_TEXT: None,
         }
-        self._parse_mode = self._parsers.get(parser)
+        self.parse_mode = self._parsers.get(parser)
         self.bot = bot
         self.hass = hass
 
@@ -352,7 +352,7 @@ class TelegramNotificationService:
 
         # Defaults
         params = {
-            ATTR_PARSER: self._parse_mode,
+            ATTR_PARSER: self.parse_mode,
             ATTR_DISABLE_NOTIF: False,
             ATTR_DISABLE_WEB_PREV: None,
             ATTR_REPLY_TO_MSGID: None,
@@ -364,7 +364,7 @@ class TelegramNotificationService:
         if data is not None:
             if ATTR_PARSER in data:
                 params[ATTR_PARSER] = self._parsers.get(
-                    data[ATTR_PARSER], self._parse_mode
+                    data[ATTR_PARSER], self.parse_mode
                 )
             if ATTR_TIMEOUT in data:
                 params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
