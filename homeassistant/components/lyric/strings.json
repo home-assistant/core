@@ -1,4 +1,7 @@
 {
+  "application_credentials": {
+    "description": "To be able to login to Honeywell Lyric we require a client ID and secret. To acquire them, please follow the following steps.\n\n1. Go to the [Honeywell Lyric Developer Apps Dashboard]({developer_dashboard_url}).\n1. Sign up for a developer account if you don't have one yet. This is a separate account from your Honeywell account.\n1. Log in with your Honeywell Lyric developer account.\n1. Go to the **My Apps** section.\n1. Press the **CREATE NEW APP** button.\n1. Give the application a name of your choice.\n1. Set the **Callback URL** to `{redirect_url}`.\n1. Save your changes.\n 1. Copy the **Consumer Key** to and paste it here as the **Client ID** and the **Consumer Secret** to and paste it here as the **Client Secret**."
+  },
   "config": {
     "step": {
       "pick_implementation": {
@@ -9,7 +12,7 @@
         "description": "The Lyric integration needs to re-authenticate your account."
       },
       "oauth_discovery": {
-        "description": "Home Assistant has found a Honeywell Lyric device on your network. Press **Submit** to continue setting up Honeywell Lyric."
+        "description": "Home Assistant has found a Honeywell Lyric device on your network. Be aware that the setup of the Lyric integration is more complicated than other integrations. Press **Submit** to continue setting up Honeywell Lyric."
       }
     },
     "abort": {
