@@ -1,6 +1,5 @@
 """Tests for the Sonos Alarm switch platform."""
 
-import asyncio
 from copy import copy
 from datetime import timedelta
 from unittest.mock import patch
@@ -218,9 +217,6 @@ async def test_alarm_change_device(
     )
 
     alarm_clock.subscribe.return_value.callback(event=alarm_event)
-
-    await hass.async_block_till_done(wait_background_tasks=True)
-    asyncio.sleep(1.0)  # Allow time for the state to update
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
