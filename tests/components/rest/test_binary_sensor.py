@@ -4,6 +4,7 @@ from http import HTTPStatus
 import ssl
 from unittest.mock import patch
 
+import aiohttp
 import pytest
 
 from homeassistant import config as hass_config
@@ -481,7 +482,7 @@ async def test_setup_with_exception(
     await hass.async_block_till_done()
 
     aioclient_mock.clear_requests()
-    aioclient_mock.get("http://localhost", exc=Exception("Request failed"))
+    aioclient_mock.get("http://localhost", exc=aiohttp.ClientError("Request failed"))
     await hass.services.async_call(
         "homeassistant",
         "update_entity",

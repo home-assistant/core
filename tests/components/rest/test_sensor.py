@@ -174,7 +174,6 @@ async def test_setup_ssl_ciphers(
     hass: HomeAssistant,
     ssl_cipher_list: str,
     ssl_cipher_list_expected: SSLCipherList,
-    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup with minimum configuration."""
     with patch(
