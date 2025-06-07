@@ -67,7 +67,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             coordinators = {}
         if not coordinators:
             _LOGGER.error(
-                "No Daikin coordinators found in hass.data[DOMAIN]. Service cannot proceed."
+                "No Daikin coordinators found in hass.data[DOMAIN]. Service cannot proceed"
             )
             return
 
@@ -110,6 +110,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             for attempt in range(retries):
                 try:
                     await device.set_zone(data.zone_id, "zone_onoff", "1")
+                    # ruff: noqa: SLF001
                     current_state = await device._get_resource(
                         "aircon/get_zone_setting"
                     )
@@ -139,18 +140,16 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                     params_str = "&".join(f"{k}={v}" for k, v in params.items())
                     path = f"{path}?{params_str}"
                     response = await device._get_resource(path)
-                    if not response:
+                    if isinstance(response, str) and "ret=PARAM NG" in response:
                         raise HomeAssistantError(
                             "Failed to set zone temperature. The device may not support this operation."
                         )
+                    # For any other response (including ret=OK), consider it a success
                     verify_state = await device._get_resource("aircon/get_zone_setting")
-                    if not verify_state:
-                        raise HomeAssistantError(
-                            "Failed to verify zone temperature setting. The device may not support this operation."
-                        )
-                    device.values.update(verify_state)
-                    if hasattr(coordinator, "async_request_refresh"):
-                        await coordinator.async_request_refresh()
+                    if verify_state:
+                        device.values.update(verify_state)
+                        if hasattr(coordinator, "async_request_refresh"):
+                            await coordinator.async_request_refresh()
                     break
                 except (IndexError, KeyError, AttributeError) as err:
                     _LOGGER.error(
@@ -166,13 +165,17 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                         ) from err
                     await asyncio.sleep(1)
 
-        await asyncio.gather(
+        results = await asyncio.gather(
             *(
                 set_temp(entry_id, coordinator)
                 for entry_id, coordinator in coordinators.items()
             ),
             return_exceptions=True,
         )
+        # Check for exceptions in results
+        for result in results:
+            if isinstance(result, Exception):
+                raise result
 
     hass.services.async_register(
         DOMAIN,

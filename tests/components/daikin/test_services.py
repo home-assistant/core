@@ -30,7 +30,7 @@ import voluptuous as vol
 
 from homeassistant.components.daikin import services
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 
 
 class FakeDevice:
@@ -44,12 +44,70 @@ class FakeDevice:
         self.last_zone_id: int | None = None
         self.last_param: str | None = None
         self.last_value: str | None = None
+        self.lztemp_h: dict[int, str] = {}
+        self.lztemp_c: dict[int, str] = {}
+        self.values = {
+            "zone_name": ";".join(z[0] for z in self.zones),
+            "zone_onoff": ";".join(z[1] for z in self.zones),
+            "lztemp_h": ";".join(
+                str(self.lztemp_h.get(i, 22)) for i in range(len(self.zones))
+            ),
+            "lztemp_c": ";".join(
+                str(self.lztemp_c.get(i, 22)) for i in range(len(self.zones))
+            ),
+        }
 
     async def set_zone(self, zone_id, param, value) -> None:
         """Simulate setting a zone parameter on the device."""
         self.last_zone_id = zone_id
         self.last_param = param
         self.last_value = value
+        if param == "lztemp_h":
+            self.lztemp_h[zone_id] = value
+        elif param == "lztemp_c":
+            self.lztemp_c[zone_id] = value
+        # Update values dict to simulate device state
+        self.values["lztemp_h"] = ";".join(
+            str(self.lztemp_h.get(i, 22)) for i in range(len(self.zones))
+        )
+        self.values["lztemp_c"] = ";".join(
+            str(self.lztemp_c.get(i, 22)) for i in range(len(self.zones))
+        )
+
+    async def _get_resource(self, path):
+        # Simulate getting or setting zone state
+        if path.startswith("aircon/get_zone_setting"):
+            return self.values
+        # Simulate set_zone_setting: update lztemp_h and lztemp_c dicts from values
+        if path.startswith("aircon/set_zone_setting"):
+            # Parse params from the path
+            import urllib.parse
+
+            parsed = urllib.parse.urlparse(path)
+            params = urllib.parse.parse_qs(parsed.query)
+            lztemp_h_str = params.get("lztemp_h", [""])[0]
+            lztemp_c_str = params.get("lztemp_c", [""])[0]
+            lztemp_h_list = (
+                urllib.parse.unquote(lztemp_h_str).split(";") if lztemp_h_str else []
+            )
+            lztemp_c_list = (
+                urllib.parse.unquote(lztemp_c_str).split(";") if lztemp_c_str else []
+            )
+            for i, val in enumerate(lztemp_h_list):
+                self.lztemp_h[i] = val
+            for i, val in enumerate(lztemp_c_list):
+                self.lztemp_c[i] = val
+            return True
+        return True
+
+    def represent(self, key):
+        """Simulate the real device's represent method for lztemp_h and lztemp_c."""
+        # Simulate the real device's represent method for lztemp_h and lztemp_c
+        if key == "lztemp_h":
+            return (None, [self.lztemp_h.get(i, "22") for i in range(len(self.zones))])
+        if key == "lztemp_c":
+            return (None, [self.lztemp_c.get(i, "22") for i in range(len(self.zones))])
+        return (None, [])
 
 
 class FakeCoordinator:
@@ -92,34 +150,28 @@ async def test_service_set_zone_temperature_success(setup_integration) -> None:
         "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
     )
     device = coordinator.device
-    assert device.last_zone_id == 0, (
-        f"Expected last_zone_id 0, got {device.last_zone_id}"
+    # Check both lztemp_h and lztemp_c are set
+    assert device.lztemp_h[0] == "23", (
+        f"Expected lztemp_h[0] '23', got {device.lztemp_h.get(0)}"
     )
-    assert device.last_param == "lztemp_h", (
-        f"Expected last_param 'lztemp_h', got {device.last_param}"
-    )
-    assert device.last_value == "23", (
-        f"Expected last_value '23', got {device.last_value}"
+    assert device.lztemp_c[0] == "23", (
+        f"Expected lztemp_c[0] '23', got {device.lztemp_c.get(0)}"
     )
 
 
 @pytest.mark.asyncio
-async def test_service_set_zone_temperature_out_of_range(
-    setup_integration, caplog
-) -> None:
+async def test_service_set_zone_temperature_out_of_range(setup_integration) -> None:
     """Test out-of-range zone temperature service call."""
     hass, coordinator = setup_integration
     await services.async_setup_services(hass)
     service_data = {"zone_id": 0, "temperature": 26}
-    caplog.clear()
-    await hass.services.async_call(
-        "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
-    )
-    assert any("out of range" in m for m in caplog.text.splitlines()), (
-        "Expected out of range error log"
-    )
+    with pytest.raises(HomeAssistantError, match="outside the supported range"):
+        await hass.services.async_call(
+            "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
+        )
     # State should not change
-    assert coordinator.device.last_zone_id is None
+    assert coordinator.device.lztemp_h.get(0, 22) == 22
+    assert coordinator.device.lztemp_c.get(0, 22) == 22
 
 
 @pytest.mark.asyncio
@@ -140,15 +192,9 @@ async def test_service_entry_filter(setup_integration) -> None:
         "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
     )
     # Verify only device2 was updated and device in "test_entry" remains unchanged
-    assert coordinator.device.last_zone_id is None, (
-        "Expected no update on coordinator.device"
-    )
-    assert coordinator2.device.last_zone_id == 0, (
-        f"Expected last_zone_id 0, got {coordinator2.device.last_zone_id}"
-    )
-    assert coordinator2.device.last_value == "21", (
-        f"Expected last_value '21', got {coordinator2.device.last_value}"
-    )
+    assert coordinator.device.lztemp_h.get(0, 22) == 22
+    assert coordinator2.device.lztemp_h[0] == "21"
+    assert coordinator2.device.lztemp_c[0] == "21"
 
 
 @pytest.mark.asyncio
@@ -202,9 +248,8 @@ async def test_service_multiple_calls(setup_integration) -> None:
         await hass.services.async_call(
             "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
         )
-        assert coordinator.device.last_value == str(temp), (
-            f"Expected last_value '{temp}', got {coordinator.device.last_value}"
-        )
+        assert coordinator.device.lztemp_h[0] == str(temp)
+        assert coordinator.device.lztemp_c[0] == str(temp)
 
 
 @pytest.mark.asyncio
@@ -237,50 +282,40 @@ async def test_service_no_zones_support(setup_integration) -> None:
     await hass.services.async_call(
         "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
     )
-    assert coordinator.device.last_zone_id is None, (
-        "Expected no update when device doesn't support zones"
-    )
+    assert coordinator.device.lztemp_h.get(0) is None
 
 
 @pytest.mark.asyncio
-async def test_service_inactive_zone(setup_integration, caplog) -> None:
+async def test_service_inactive_zone(setup_integration) -> None:
     """Test service call with an inactive zone."""
     hass, coordinator = setup_integration
     coordinator.device.zones = [["-", "0", 0]]  # Inactive zone
     await services.async_setup_services(hass)
     service_data = {"zone_id": 0, "temperature": 22}
-    caplog.clear()
-    await hass.services.async_call(
-        "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
-    )
-    assert any("not active" in m for m in caplog.text.splitlines()), (
-        "Expected not active error log"
-    )
-    assert coordinator.device.last_zone_id is None
+    with pytest.raises(HomeAssistantError, match="not active"):
+        await hass.services.async_call(
+            "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
+        )
+    assert coordinator.device.lztemp_h.get(0, 22) == 22
 
 
 @pytest.mark.asyncio
-async def test_service_nonexistent_zone(setup_integration, caplog) -> None:
+async def test_service_nonexistent_zone(setup_integration) -> None:
     """Test service call with a non-existent zone."""
     hass, coordinator = setup_integration
     await services.async_setup_services(hass)
     service_data = {"zone_id": 99, "temperature": 22}
-    caplog.clear()
-    await hass.services.async_call(
-        "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
-    )
-    assert any("does not exist" in m for m in caplog.text.splitlines()), (
-        "Expected does not exist error log"
-    )
-    assert coordinator.device.last_zone_id is None
+    with pytest.raises(HomeAssistantError, match="does not exist"):
+        await hass.services.async_call(
+            "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
+        )
+    assert coordinator.device.lztemp_h.get(99) is None
 
 
 @pytest.mark.asyncio
 async def test_service_set_zone_temperature_retry(setup_integration) -> None:
     """Test retry mechanism when setting zone temperature fails."""
     hass, coordinator = setup_integration
-
-    # Make the first two attempts fail
     attempt_count = 0
     original_set_zone = coordinator.device.set_zone
 
@@ -292,21 +327,19 @@ async def test_service_set_zone_temperature_retry(setup_integration) -> None:
         await original_set_zone(*args, **kwargs)
 
     coordinator.device.set_zone = failing_set_zone
-
     await services.async_setup_services(hass)
     service_data = {"zone_id": 0, "temperature": 23}
     await hass.services.async_call(
         "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
     )
-    assert attempt_count == 3, f"Expected 3 attempts, got {attempt_count}"
-    assert coordinator.device.last_value == "23", (
-        f"Expected last_value '23', got {coordinator.device.last_value}"
-    )
+    assert attempt_count == 3
+    assert coordinator.device.lztemp_h[0] == "23"
+    assert coordinator.device.lztemp_c[0] == "23"
 
 
 @pytest.mark.asyncio
 async def test_service_set_zone_temperature_max_retries_exceeded(
-    setup_integration, caplog
+    setup_integration,
 ) -> None:
     """Test that service fails after maximum retries are exceeded."""
     hass, coordinator = setup_integration
@@ -317,12 +350,8 @@ async def test_service_set_zone_temperature_max_retries_exceeded(
     coordinator.device.set_zone = always_fail
     await services.async_setup_services(hass)
     service_data = {"zone_id": 0, "temperature": 23}
-    caplog.clear()
-    await hass.services.async_call(
-        "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
-    )
-    assert any(
-        "Failed to set zone temperature after 3 attempts" in m
-        for m in caplog.text.splitlines()
-    ), "Expected max retries error log"
-    assert coordinator.device.last_value is None
+    with pytest.raises(HomeAssistantError, match="after 3 attempts"):
+        await hass.services.async_call(
+            "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
+        )
+    assert coordinator.device.lztemp_h.get(0, 22) == 22
