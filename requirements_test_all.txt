@@ -1630,7 +1630,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.0.0
+pyenphase==2.0.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
