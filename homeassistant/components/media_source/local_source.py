@@ -241,7 +241,7 @@ class LocalMediaView(http.HomeAssistantView):
         This is sent by some DLNA renderers, like Samsung ones, prior to sending
         the GET request.
 
-        Check whether the location exists and return its path.
+        Check whether the location exists or not.
         """
         await self._validate_media_path(source_dir_id, location)
 

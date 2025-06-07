@@ -325,7 +325,10 @@ class ImageView(HomeAssistantView):
         except (HomeAssistantError, ValueError) as ex:
             raise web.HTTPInternalServerError from ex
 
-        return web.Response(content_type=image.content_type)
+        return web.Response(
+            content_type=image.content_type,
+            headers={"Content-Length": str(len(image.content))},
+        )
 
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
@@ -341,7 +344,11 @@ class ImageView(HomeAssistantView):
         except (HomeAssistantError, ValueError) as ex:
             raise web.HTTPInternalServerError from ex
 
-        return web.Response(body=image.content, content_type=image.content_type)
+        return web.Response(
+            body=image.content,
+            content_type=image.content_type,
+            headers={"Content-Length": str(len(image.content))},
+        )
 
 
 async def async_get_still_stream(
