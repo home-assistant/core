@@ -1200,7 +1200,7 @@ class ActionTool(Tool):
     ) -> JsonObjectType:
         """Call the action."""
 
-        service_args = tool_input.tool_args.copy()
+        service_args = self.parameters(tool_input.tool_args)
 
         for field, validator in self.parameters.schema.items():
             if field not in service_args:
