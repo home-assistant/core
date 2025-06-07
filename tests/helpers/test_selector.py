@@ -521,7 +521,7 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections) -> N
         (
             {"entity_id": "sensor.abc", "multiple": True},
             (["on"], ["on", "off"], []),
-            (None, True, 1, "on"),
+            (None, True, 1, [True], [1], "on"),
         ),
     ],
 )
