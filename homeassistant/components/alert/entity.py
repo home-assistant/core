@@ -15,18 +15,18 @@ from homeassistant.components.notify import (
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_ON
 from homeassistant.core import Event, EventStateChangedData, HassJob, HomeAssistant
 from homeassistant.exceptions import ServiceNotFound, ServiceValidationError
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.template import Template
 from homeassistant.util.dt import now
 
 from .const import DOMAIN, LOGGER
 
 
-class AlertEntity(Entity):
+class AlertEntity(RestoreEntity):
     """Representation of an alert."""
 
     _attr_should_poll = False
@@ -205,3 +205,16 @@ class AlertEntity(Entity):
         if self._ack:
             return await self.async_turn_on()
         return await self.async_turn_off()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
+        old_state = await self.async_get_last_state()
+        if old_state is None:
+            return
+
+        # Restore state to preserve acknowedlge state after reboots
+        self._firing = old_state.state != STATE_IDLE
+        if old_state.state == STATE_OFF:
+            await self.async_turn_off()
