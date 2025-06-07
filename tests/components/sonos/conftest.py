@@ -188,8 +188,7 @@ class MockSoCo(MagicMock):
     def all_zones(self) -> set[MockSoCo]:
         """Return a set of all mock zones, or just self if no factory or zones."""
         if self.factory is not None:
-            zones = self.factory.mock_all_zones
-            if zones:
+            if zones := self.factory.mock_all_zones:
                 return zones
         return {self}
 
