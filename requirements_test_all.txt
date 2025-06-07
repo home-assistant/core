@@ -438,7 +438,7 @@ airthings-cloud==0.2.0
 airtouch4pyapi==1.0.5
 
 # homeassistant.components.airtouch5
-airtouch5py==0.2.11
+airtouch5py==0.3.0
 
 # homeassistant.components.amberelectric
 amberelectric==2.0.12
