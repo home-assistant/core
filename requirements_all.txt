@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.64.1
+PySwitchbot==0.65.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -176,7 +176,7 @@ aio-georss-gdacs==0.10
 aioacaia==0.1.14
 
 # homeassistant.components.airq
-aioairq==0.4.4
+aioairq==0.4.6
 
 # homeassistant.components.airzone_cloud
 aioairzone-cloud==0.6.12
@@ -247,7 +247,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==31.1.0
+aioesphomeapi==32.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -283,7 +283,7 @@ aiohue==4.7.4
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.8.0
+aioimmich==0.9.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -459,7 +459,7 @@ airthings-cloud==0.2.0
 airtouch4pyapi==1.0.5
 
 # homeassistant.components.airtouch5
-airtouch5py==0.2.11
+airtouch5py==0.3.0
 
 # homeassistant.components.alpha_vantage
 alpha-vantage==2.3.1
@@ -1124,7 +1124,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.0
 
 # homeassistant.components.bluetooth
-habluetooth==3.48.2
+habluetooth==3.49.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.101.0
@@ -1164,7 +1164,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.73
+holidays==0.74
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250531.0
@@ -1551,7 +1551,7 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==2.2.6
+numpy==2.3.0
 
 # homeassistant.components.nyt_games
 nyt_games==0.4.4
@@ -1587,7 +1587,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.0.14
 
 # homeassistant.components.onvif
-onvif-zeep-async==3.2.5
+onvif-zeep-async==4.0.1
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1961,7 +1961,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.26.1
+pyenphase==2.0.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2054,7 +2054,7 @@ pyiqvia==2022.04.0
 pyirishrail==0.0.2
 
 # homeassistant.components.iskra
-pyiskra==0.1.19
+pyiskra==0.1.21
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -2150,7 +2150,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.8.3
+pymodbus==3.9.2
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2404,7 +2404,7 @@ python-awair==0.2.4
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==1.2.1
+python-bsblan==2.1.0
 
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
@@ -2562,7 +2562,7 @@ pyuptimerobot==22.2.0
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.15
+pyvera==0.3.16
 
 # homeassistant.components.versasense
 pyversasense==0.0.6
@@ -2865,7 +2865,7 @@ surepy==0.9.0
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.4.0
+switchbot-api==2.5.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
@@ -2993,7 +2993,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.10.1
+uiprotect==7.11.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
