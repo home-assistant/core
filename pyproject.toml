@@ -30,7 +30,7 @@ dependencies = [
   "aiohasupervisor==0.3.1",
   "aiohttp==3.12.9",
   "aiohttp_cors==0.7.0",
-  "aiohttp-fast-zlib==0.2.3",
+  "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.1.1",
   "aiozoneinfo==0.2.3",
   "annotatedyaml==0.4.5",
