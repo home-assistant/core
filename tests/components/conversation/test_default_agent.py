@@ -13,7 +13,11 @@ import yaml
 
 from homeassistant.components import conversation, cover, media_player, weather
 from homeassistant.components.conversation import default_agent
-from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation.const import (
+    ATTR_LANGUAGE,
+    ATTR_TEXT,
+    DATA_DEFAULT_ENTITY,
+)
 from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.components.cover import SERVICE_OPEN_COVER
@@ -2475,8 +2479,8 @@ async def test_language_region(hass: HomeAssistant, init_components) -> None:
         "conversation",
         "process",
         {
-            conversation.ATTR_TEXT: "turn on the kitchen",
-            conversation.ATTR_LANGUAGE: language,
+            ATTR_TEXT: "turn on the kitchen",
+            ATTR_LANGUAGE: language,
         },
     )
     await hass.async_block_till_done()
@@ -2542,7 +2546,7 @@ async def test_turn_on_area(
     await hass.services.async_call(
         "conversation",
         "process",
-        {conversation.ATTR_TEXT: "turn on lights in the kitchen"},
+        {ATTR_TEXT: "turn on lights in the kitchen"},
     )
     await hass.async_block_till_done()
 
@@ -2561,7 +2565,7 @@ async def test_turn_on_area(
     await hass.services.async_call(
         "conversation",
         "process",
-        {conversation.ATTR_TEXT: "turn on lights in the kitchen"},
+        {ATTR_TEXT: "turn on lights in the kitchen"},
     )
     await hass.async_block_till_done()
 
@@ -2571,7 +2575,7 @@ async def test_turn_on_area(
     await hass.services.async_call(
         "conversation",
         "process",
-        {conversation.ATTR_TEXT: "turn on lights in the basement"},
+        {ATTR_TEXT: "turn on lights in the basement"},
     )
     await hass.async_block_till_done()
 
@@ -2635,7 +2639,7 @@ async def test_light_area_same_name(
     await hass.services.async_call(
         "conversation",
         "process",
-        {conversation.ATTR_TEXT: "turn on light in the kitchen"},
+        {ATTR_TEXT: "turn on light in the kitchen"},
     )
     await hass.async_block_till_done()
 
@@ -3276,8 +3280,8 @@ async def test_language_with_alternative_code(
             "conversation",
             "process",
             {
-                conversation.ATTR_TEXT: sentence,
-                conversation.ATTR_LANGUAGE: lang_code,
+                ATTR_TEXT: sentence,
+                ATTR_LANGUAGE: lang_code,
             },
         )
         await hass.async_block_till_done()
