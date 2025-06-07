@@ -14,14 +14,10 @@ DEFAULT_TIMEOUT = 30  # seconds
 DEFAULT_SCAN_INTERVAL = 600  # seconds
 
 CONF_SERIALNUMBER = "serialnumber"
+
 SOFTWARE_VERSION = "2.10"  # Extract from Pooldose web interface under admin:info
-
 APIVERSION = "v1"  # API version supported by the integration
-
 MANUFACTURER = "SEKO"
-MODEL = "PoolDose Dual pH/ORP Wifi"
-MODELID = "PDPR1H1HAW100"
-DEVICE_NAME = "PoolDose"
 
 
 def device_info(info: dict | None) -> DeviceInfo:
@@ -30,9 +26,9 @@ def device_info(info: dict | None) -> DeviceInfo:
     return DeviceInfo(
         identifiers={(DOMAIN, info.get("SERIAL_NUMBER", "unknown"))},
         manufacturer=MANUFACTURER,
-        model=MODEL,
-        model_id=MODELID,
-        name=info.get("SYSTEMNAME") or DEVICE_NAME,
+        model=info.get("NAME"),
+        model_id=info.get("PRODUCT_CODE"),
+        name=info.get("SYSTEMNAME"),
         serial_number=info.get("SERIAL_NUMBER"),
         sw_version=info.get("SOFTWAREVERSION_GATEWAY"),
         hw_version=info.get("FIRMWARERELEASE_DEVICE"),
@@ -40,7 +36,6 @@ def device_info(info: dict | None) -> DeviceInfo:
             (CONNECTION_NETWORK_MAC, str(info.get("MAC"))),
         },
         configuration_url=f"http://{info.get('IP')}/index.html",
-        suggested_area=info.get("Pool"),
     )
 
 

@@ -104,6 +104,18 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
         except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
             _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
 
+        # Model Info from /api/v1/debug/config
+        try:
+            url = f"http://{host}/api/v1/debug/config"
+            timeout = aiohttp.ClientTimeout(total=5)
+            async with session.get(url, timeout=timeout) as resp:
+                data = await resp.json()
+                if (device := data.get("DEVICES")[0]) is not None:
+                    device_info["NAME"] = device.get("NAME")
+                    device_info["PRODUCT_CODE"] = device.get("PRODUCT_CODE")
+        except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
+            _LOGGER.error("Failed to fetch model info from %s: %s", url, err)
+
     return device_info
 
 

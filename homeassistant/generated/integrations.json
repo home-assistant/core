@@ -5038,7 +5038,7 @@
       "iot_class": "cloud_polling"
     },
     "pooldose": {
-      "name": "Seko Pooldose",
+      "name": "Seko PoolDose",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"

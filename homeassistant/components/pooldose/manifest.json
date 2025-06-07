@@ -1,14 +1,9 @@
 {
   "domain": "pooldose",
-  "name": "Seko Pooldose",
+  "name": "Seko PoolDose",
   "codeowners": ["@lmaertin"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/pooldose",
-  "homekit": {},
   "iot_class": "local_polling",
-  "quality_scale": "bronze",
-  "requirements": [],
-  "ssdp": [],
-  "zeroconf": []
+  "quality_scale": "bronze"
 }
