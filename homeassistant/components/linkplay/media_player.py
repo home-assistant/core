@@ -325,6 +325,13 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         ]
 
     @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return stock attributes plus master flag."""
+        attrs = super().extra_state_attributes or {}
+        attrs["is_master"] = self._bridge.player.play_mode != PlayingMode.FOLLOWER
+        return attrs
+
+    @property
     def media_image_url(self) -> str | None:
         """Image url of playing media."""
         if self._bridge.player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
