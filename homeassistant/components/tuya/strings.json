@@ -210,6 +210,12 @@
       },
       "down_delay": {
         "name": "Down delay"
+      },
+      "delay_set": {
+        "name": "Delay Arm"
+      },
+      "alarm_delay_time": {
+        "name": "Delay Alarm"
       }
     },
     "select": {
@@ -889,6 +895,12 @@
       },
       "sterilization": {
         "name": "Sterilization"
+      },
+      "alarm_sound": {
+        "name": "Arm/Disarm Sound"
+      },
+      "alarm_light": {
+        "name": "Siren"
       }
     }
   }
