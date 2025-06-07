@@ -63,6 +63,7 @@ from . import (
     template,
     translation,
 )
+from .deprecation import deprecated_function
 from .group import expand_entity_ids
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
@@ -1149,8 +1150,21 @@ def async_register_admin_service(
 
 @bind_hass
 @callback
+@deprecated_function("verify_domain_entity_control", breaks_in_ha_version="2026.7")
 def verify_domain_control(
     hass: HomeAssistant, domain: str
+) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]:
+    """Ensure permission to access any entity under domain in service call.
+
+    The use of this decorator is discouraged, and it should not be used
+    for new functions - please use `verify_domain_entity_control`.
+    """
+
+    return verify_domain_entity_control(domain)
+
+
+def verify_domain_entity_control(
+    domain: str,
 ) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]:
     """Ensure permission to access any entity under domain in service call."""
 
@@ -1166,7 +1180,7 @@ def verify_domain_control(
             if not call.context.user_id:
                 return await service_handler(call)
 
-            user = await hass.auth.async_get_user(call.context.user_id)
+            user = await call.hass.auth.async_get_user(call.context.user_id)
 
             if user is None:
                 raise UnknownUser(
@@ -1175,7 +1189,7 @@ def verify_domain_control(
                     user_id=call.context.user_id,
                 )
 
-            reg = entity_registry.async_get(hass)
+            reg = entity_registry.async_get(call.hass)
 
             authorized = False
 
