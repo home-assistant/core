@@ -3,10 +3,10 @@
 from typing import Any
 
 from switchbot_api import (
-    CeilingLightCommands,
     CommonCommands,
     Device,
     Remote,
+    RGBWWLightCommands,
     SwitchBotAPI,
 )
 
@@ -70,10 +70,9 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         """Return True if entity is on."""
         response: dict | None = self.coordinator.data
         assert response is not None
-
         if self._attr_is_on is None:
             self._attr_color_mode = ColorMode.RGB
-            power: str | None = response.get("power") if response else None
+            power: str | None = response.get("power")
             self._attr_is_on = "on" in power if power else False
             self._attr_brightness: int | None = response.get("brightness")
             attr_rgb_color: str | None = response.get("color")
@@ -100,7 +99,7 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         if brightness:
             self._attr_color_mode = ColorMode.RGB
             await self.send_api_command(
-                CeilingLightCommands.SET_BRIGHTNESS,
+                RGBWWLightCommands.SET_BRIGHTNESS,
                 parameters=str(value_map_brightness(brightness)),
             )
             self._attr_brightness = brightness
@@ -108,14 +107,14 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
             self._attr_color_mode = ColorMode.RGB
             # need fixed while switch-api update
             await self.send_api_command(
-                CeilingLightCommands.SET_COLOR_TEMPERATURE,
+                RGBWWLightCommands.SET_COLOR,
                 parameters=":".join([str(i) for i in rgb_color]),
             )
             self._attr_rgb_color = rgb_color
         if color_temp_kelvin:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             await self.send_api_command(
-                CeilingLightCommands.SET_COLOR_TEMPERATURE,
+                RGBWWLightCommands.SET_COLOR_TEMPERATURE,
                 parameters=str(color_temp_kelvin),
             )
             self._attr_color_temp_kelvin = color_temp_kelvin
