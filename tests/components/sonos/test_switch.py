@@ -178,7 +178,7 @@ async def test_alarm_create_delete(
     alarm_event,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test for correct creation and deletion of alarms during runtime."""
+    """Test enabling and disabling of alarm."""
     one_alarm = copy(alarm_clock.ListAlarms.return_value)
     two_alarms = copy(alarm_clock_extended.ListAlarms.return_value)
 
