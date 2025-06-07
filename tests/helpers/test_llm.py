@@ -836,10 +836,11 @@ async def test_script_tool(
     assert hass.data[llm.ACTION_PARAMETERS_CACHE][("script", "test_script")] == (
         "This is a test script. Aliases: ['script name', 'script alias']",
         vol.Schema(schema),
+        None,
     )
     assert hass.data[llm.ACTION_PARAMETERS_CACHE][
         ("script", "script_with_no_fields")
-    ] == ("This is another test script", vol.Schema({}))
+    ] == ("This is another test script", vol.Schema({}), None)
 
     # Test script with response
     tool_input = llm.ToolInput(
@@ -949,15 +950,17 @@ async def test_script_tool(
     assert hass.data[llm.ACTION_PARAMETERS_CACHE][("script", "test_script")] == (
         "This is a new test script. Aliases: ['script name', 'script alias']",
         vol.Schema(schema),
+        None,
     )
     assert hass.data[llm.ACTION_PARAMETERS_CACHE][
         ("script", "script_with_no_fields")
-    ] == ("This is another test script", vol.Schema({}))
+    ] == ("This is another test script", vol.Schema({}), None)
 
     # Modify the cache to make sure the cached value is used
     hass.data[llm.ACTION_PARAMETERS_CACHE][("script", "test_script")] = (
         "This is a modified test script",
         vol.Schema({}),
+        None,
     )
 
     api = await llm.async_get_api(hass, "assist", llm_context)
