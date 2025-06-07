@@ -183,7 +183,6 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.lights.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

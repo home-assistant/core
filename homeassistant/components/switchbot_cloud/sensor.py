@@ -91,10 +91,6 @@ CO2_DESCRIPTION = SensorEntityDescription(
 
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
-    "Strip Light 3": (BATTERY_DESCRIPTION,),
-    "Strip Light": (BATTERY_DESCRIPTION,),
-    "Floor Lamp": (BATTERY_DESCRIPTION,),
-    "Color Bulb": (BATTERY_DESCRIPTION,),
     "Meter": (
         TEMPERATURE_DESCRIPTION,
         HUMIDITY_DESCRIPTION,
