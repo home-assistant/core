@@ -1,0 +1,11 @@
+{
+  "domain": "laith_switch",
+  "name": "Laith Light",
+  "codeowners": ["@LaithAbusada"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/laith_switch",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": []
+}

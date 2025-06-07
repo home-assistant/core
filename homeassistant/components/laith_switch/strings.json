@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "host",
+          "username": "username",
+          "password": "password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "cannot connect",
+      "invalid_auth": "auth failed",
+      "unknown": "unknown"
+    },
+    "abort": {
+      "already_configured": "already configured"
+    }
+  }
+}
