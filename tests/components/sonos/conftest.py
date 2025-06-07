@@ -91,8 +91,7 @@ class SonosMockAlarmClock(SonosMockService):
     def __init__(self, return_value: dict[str, str], ip_address="192.168.42.2") -> None:
         """Initialize the instance."""
         super().__init__("AlarmClock", ip_address)
-        self.ListAlarms = Mock()
-        self.ListAlarms.return_value = return_value
+        self.ListAlarms = Mock(return_value=return_value)
         self.UpdateAlarm = Mock()
 
 
