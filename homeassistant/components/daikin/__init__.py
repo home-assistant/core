@@ -26,13 +26,7 @@ from homeassistant.util.ssl import client_context_no_verify
 from .const import DOMAIN, KEY_MAC, TIMEOUT
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
-
-# Enable debug logging for pydaikin
-pydaikin_logger = logging.getLogger("pydaikin")
-pydaikin_logger.setLevel(logging.DEBUG)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
