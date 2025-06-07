@@ -23,13 +23,18 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util.ssl import client_context_no_verify
 
-from .const import KEY_MAC, TIMEOUT
+from .const import DOMAIN, KEY_MAC, TIMEOUT
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
 
+# Enable debug logging for pydaikin
+pydaikin_logger = logging.getLogger("pydaikin")
+pydaikin_logger.setLevel(logging.DEBUG)
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH, Platform.NUMBER]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bool:
@@ -66,7 +71,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
     await async_migrate_unique_id(hass, entry, device)
 
     entry.runtime_data = coordinator
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Register Daikin custom services
+    from . import services
+
+    await services.async_setup_services(hass)
+
     return True
 
 

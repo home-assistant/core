@@ -4,6 +4,8 @@ import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Any
+from urllib.parse import quote
+from weakref import WeakKeyDictionary
 
 import voluptuous as vol
 
@@ -13,9 +15,14 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
+# Configure logging
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_SET_ZONE_TEMPERATURE = "set_zone_temperature"
+
+# Track service registration per hass instance
+_services_registered = WeakKeyDictionary()
+
 
 @dataclass(slots=True)
 class SetZoneTemperatureData:
@@ -24,6 +31,7 @@ class SetZoneTemperatureData:
     zone_id: int
     temperature: float
     entry_id: str | None = None
+
 
 SERVICE_SET_ZONE_TEMPERATURE_SCHEMA = vol.Schema(
     {
@@ -34,11 +42,12 @@ SERVICE_SET_ZONE_TEMPERATURE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Register custom Daikin services."""
-    if hasattr(hass.services, "_daikin_services_registered"):
+    if _services_registered.get(hass):
         return
-    setattr(hass.services, "_daikin_services_registered", True)
+    _services_registered[hass] = True
 
     async def async_handle_set_zone_temperature(call: ServiceCall) -> None:
         """Handle the set_zone_temperature service call."""
@@ -47,14 +56,20 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             temperature=call.data["temperature"],
             entry_id=call.data.get("entry_id"),
         )
-        _LOGGER.debug(
-            "Received call to set zone_id=%s to temperature=%s", data.zone_id, data.temperature
-        )
-        coordinators: dict[str, Any]
+        # Find coordinators
+        daikin_data = hass.data.get(DOMAIN, {})
         if data.entry_id:
-            coordinators = {data.entry_id: hass.data.get(DOMAIN, {}).get(data.entry_id)}
+            coordinators = {data.entry_id: daikin_data.get(data.entry_id)}
+        elif daikin_data:
+            first_entry_id = next(iter(daikin_data))
+            coordinators = {first_entry_id: daikin_data[first_entry_id]}
         else:
-            coordinators = hass.data.get(DOMAIN, {})
+            coordinators = {}
+        if not coordinators:
+            _LOGGER.error(
+                "No Daikin coordinators found in hass.data[DOMAIN]. Service cannot proceed."
+            )
+            return
 
         async def set_temp(entry_id: str, coordinator: Any) -> None:
             if coordinator is None:
@@ -64,34 +79,76 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             if not device:
                 _LOGGER.warning("No device found in coordinator for entry %s", entry_id)
                 return
-            match device:
-                case _ if hasattr(device, "target_temperature"):
-                    target_temp = device.target_temperature
-                case _:
-                    target_temp = 22
-                    _LOGGER.debug("Using default target temperature of 22 for range check")
+            zones = getattr(device, "zones", None)
+            if not zones:
+                _LOGGER.warning("Device does not support zones")
+                return
+            try:
+                zone = zones[data.zone_id]
+                if zone[0] == "-" or zone[2] == 0:
+                    raise HomeAssistantError(
+                        f"Zone {data.zone_id} is not active. "
+                        "Please enable the zone in your Daikin device settings first."
+                    )
+            except IndexError as err:
+                raise HomeAssistantError(
+                    f"Zone {data.zone_id} does not exist. "
+                    f"Available zones are 0-{len(zones) - 1}."
+                ) from err
+            try:
+                target_temp = device.target_temperature
+            except AttributeError:
+                target_temp = 22
             min_temp, max_temp = target_temp - 2, target_temp + 2
             if not (min_temp <= data.temperature <= max_temp):
                 raise HomeAssistantError(
-                    f"Value {data.temperature}°C out of range ({min_temp}°C - {max_temp}°C)"
+                    f"Temperature {data.temperature}°C is outside the supported range. "
+                    f"The zone temperature must be within ±2°C of the main system's target temperature "
+                    f"({min_temp}°C - {max_temp}°C)."
                 )
             retries = 3
             for attempt in range(retries):
                 try:
-                    _LOGGER.debug(
-                        "Attempting to set zone %s to %s°C on device %s (attempt %s)",
-                        data.zone_id,
-                        data.temperature,
-                        getattr(device, "mac", "unknown"),
-                        attempt + 1,
-                    )
-                    await device.set_zone(data.zone_id, "lztemp_h", str(round(data.temperature)))
-                    _LOGGER.debug(
-                        "Successfully set temperature for zone %s to %s°C on device %s",
-                        data.zone_id,
-                        data.temperature,
-                        getattr(device, "mac", "unknown"),
-                    )
+                    await device.set_zone(data.zone_id, "zone_onoff", "1")
+                    current_state = await device.get_resource("aircon/get_zone_setting")
+                    if not current_state:
+                        raise HomeAssistantError(
+                            "Failed to get zone settings. This device may not support zone temperature control."
+                        )
+                    device.values.update(current_state)
+                    current_heating = device.represent("lztemp_h")[1]
+                    current_cooling = device.represent("lztemp_c")[1]
+                    if not current_heating or not current_cooling:
+                        raise HomeAssistantError(
+                            "This device does not support zone temperature control. "
+                            "The required temperature control parameters are not available."
+                        )
+                    current_heating[data.zone_id] = str(round(data.temperature))
+                    current_cooling[data.zone_id] = str(round(data.temperature))
+                    device.values["lztemp_h"] = quote(";".join(current_heating)).lower()
+                    device.values["lztemp_c"] = quote(";".join(current_cooling)).lower()
+                    path = "aircon/set_zone_setting"
+                    params = {
+                        "zone_name": current_state["zone_name"],
+                        "zone_onoff": device.values["zone_onoff"],
+                        "lztemp_c": device.values["lztemp_c"],
+                        "lztemp_h": device.values["lztemp_h"],
+                    }
+                    params_str = "&".join(f"{k}={v}" for k, v in params.items())
+                    path = f"{path}?{params_str}"
+                    response = await device.get_resource(path)
+                    if not response:
+                        raise HomeAssistantError(
+                            "Failed to set zone temperature. The device may not support this operation."
+                        )
+                    verify_state = await device.get_resource("aircon/get_zone_setting")
+                    if not verify_state:
+                        raise HomeAssistantError(
+                            "Failed to verify zone temperature setting. The device may not support this operation."
+                        )
+                    device.values.update(verify_state)
+                    if hasattr(coordinator, "async_request_refresh"):
+                        await coordinator.async_request_refresh()
                     break
                 except (IndexError, KeyError, AttributeError) as err:
                     _LOGGER.error(
@@ -102,10 +159,18 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                     )
                     if attempt == retries - 1:
                         raise HomeAssistantError(
-                            f"Failed to set zone temperature after {retries} attempts: {err}"
+                            f"Failed to set zone temperature after {retries} attempts. "
+                            "This device may not support zone temperature control."
                         ) from err
                     await asyncio.sleep(1)
-        await asyncio.gather(*(set_temp(entry_id, coordinator) for entry_id, coordinator in coordinators.items()), return_exceptions=True)
+
+        await asyncio.gather(
+            *(
+                set_temp(entry_id, coordinator)
+                for entry_id, coordinator in coordinators.items()
+            ),
+            return_exceptions=True,
+        )
 
     hass.services.async_register(
         DOMAIN,
@@ -113,11 +178,11 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         async_handle_set_zone_temperature,
         schema=SERVICE_SET_ZONE_TEMPERATURE_SCHEMA,
     )
-    _LOGGER.debug("Daikin custom services registered")
+    _LOGGER.info("Daikin custom services registered")
+
 
 async def async_unload_services(hass: HomeAssistant) -> None:
-    """Unregister Daikin custom services. Called if the integration is fully unloaded (e.g., last config entry removed)."""
+    """Unregister Daikin custom services."""
     hass.services.async_remove(DOMAIN, SERVICE_SET_ZONE_TEMPERATURE)
-    if hasattr(hass.services, "_daikin_services_registered"):
-        delattr(hass.services, "_daikin_services_registered")
+    _services_registered.pop(hass, None)
     _LOGGER.info("Daikin custom services unregistered")
