@@ -110,7 +110,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             for attempt in range(retries):
                 try:
                     await device.set_zone(data.zone_id, "zone_onoff", "1")
-                    current_state = await device.get_resource("aircon/get_zone_setting")
+                    current_state = await device._get_resource(
+                        "aircon/get_zone_setting"
+                    )
                     if not current_state:
                         raise HomeAssistantError(
                             "Failed to get zone settings. This device may not support zone temperature control."
@@ -136,12 +138,12 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                     }
                     params_str = "&".join(f"{k}={v}" for k, v in params.items())
                     path = f"{path}?{params_str}"
-                    response = await device.get_resource(path)
+                    response = await device._get_resource(path)
                     if not response:
                         raise HomeAssistantError(
                             "Failed to set zone temperature. The device may not support this operation."
                         )
-                    verify_state = await device.get_resource("aircon/get_zone_setting")
+                    verify_state = await device._get_resource("aircon/get_zone_setting")
                     if not verify_state:
                         raise HomeAssistantError(
                             "Failed to verify zone temperature setting. The device may not support this operation."
