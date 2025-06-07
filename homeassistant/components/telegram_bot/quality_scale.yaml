@@ -4,7 +4,7 @@ rules:
   appropriate-polling:
     status: exempt
     comment: |
-      The integration does not provide any entities. The integration provides webhooks (push based), polling (long polling) and broadcast (no data fetching) platforms which do not have interval polling.
+      The integration provides webhooks (push based), polling (long polling) and broadcast (no data fetching) platforms which do not have interval polling.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
