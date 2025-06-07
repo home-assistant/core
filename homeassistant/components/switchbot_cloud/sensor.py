@@ -136,8 +136,6 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Smart Lock Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock": (BATTERY_DESCRIPTION,),
-    "Smart Lock Lite": (BATTERY_DESCRIPTION,),
-    "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
 }
 
 
