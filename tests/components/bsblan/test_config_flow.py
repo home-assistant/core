@@ -7,7 +7,7 @@ from bsblan import BSBLANAuthError, BSBLANConnectionError
 import pytest
 
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -657,3 +657,218 @@ async def test_zeroconf_discovery_no_mac_duplicate_host_port(
 
     # Should not call device API since we abort early
     assert len(mock_bsblan.device.mock_calls) == 0
+
+
+async def test_reauth_flow_success(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Start reauth flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    # Check that the form has the correct description placeholder
+    assert result.get("description_placeholders") == {"name": "BSBLAN Setup"}
+
+    # Check that existing values are preserved as defaults
+    data_schema = result.get("data_schema")
+    assert data_schema is not None
+
+    # Complete reauth with new credentials
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSKEY: "new_passkey",
+            CONF_USERNAME: "new_admin",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "reauth_successful"
+
+    # Verify config entry was updated with new credentials
+    assert mock_config_entry.data[CONF_PASSKEY] == "new_passkey"
+    assert mock_config_entry.data[CONF_USERNAME] == "new_admin"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+    # Verify host and port remain unchanged
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert mock_config_entry.data[CONF_PORT] == 80
+
+
+async def test_reauth_flow_auth_error(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow with authentication error."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock authentication error
+    mock_bsblan.device.side_effect = BSBLANAuthError
+
+    # Start reauth flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    # Submit with wrong credentials
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSKEY: "wrong_passkey",
+            CONF_USERNAME: "wrong_admin",
+            CONF_PASSWORD: "wrong_password",
+        },
+    )
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "reauth_confirm"
+    assert result2.get("errors") == {"base": "invalid_auth"}
+
+    # Verify that user input is preserved in the form after error
+    data_schema = result2.get("data_schema")
+    assert data_schema is not None
+
+    # Check that the form fields contain the previously entered values
+    passkey_field = next(
+        field for field in data_schema.schema if field.schema == CONF_PASSKEY
+    )
+    username_field = next(
+        field for field in data_schema.schema if field.schema == CONF_USERNAME
+    )
+
+    assert passkey_field.default() == "wrong_passkey"
+    assert username_field.default() == "wrong_admin"
+
+
+async def test_reauth_flow_connection_error(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow with connection error."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock connection error
+    mock_bsblan.device.side_effect = BSBLANConnectionError
+
+    # Start reauth flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    # Submit credentials but get connection error
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "reauth_confirm"
+    assert result2.get("errors") == {"base": "cannot_connect"}
+
+
+async def test_reauth_flow_preserves_existing_values(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that reauth flow preserves existing values when user doesn't change them."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Start reauth flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    # Submit without changing any credentials (only password is provided)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSWORD: "new_password_only",
+        },
+    )
+
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "reauth_successful"
+
+    # Verify that existing passkey and username are preserved
+    assert mock_config_entry.data[CONF_PASSKEY] == "1234"  # Original value
+    assert mock_config_entry.data[CONF_USERNAME] == "admin"  # Original value
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password_only"  # New value
+
+
+async def test_reauth_flow_partial_credentials_update(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow with partial credential updates."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Start reauth flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    # Submit with only username and password changes
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "new_admin",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "reauth_successful"
+
+    # Verify partial update: passkey preserved, username and password updated
+    assert mock_config_entry.data[CONF_PASSKEY] == "1234"  # Original preserved
+    assert mock_config_entry.data[CONF_USERNAME] == "new_admin"  # Updated
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"  # Updated
+    # Host and port should remain unchanged
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert mock_config_entry.data[CONF_PORT] == 80
