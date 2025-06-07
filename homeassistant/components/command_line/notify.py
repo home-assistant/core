@@ -9,12 +9,11 @@ from typing import Any
 from homeassistant.components.notify import BaseNotificationService
 from homeassistant.const import CONF_COMMAND
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
 from .const import CONF_COMMAND_TIMEOUT, LOGGER
+from .utils import render_template_args
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,28 +44,10 @@ class CommandLineNotificationService(BaseNotificationService):
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a command line."""
-        command = self.command
-        if " " not in command:
-            prog = command
-            args = None
-            args_compiled = None
-        else:
-            prog, args = command.split(" ", 1)
-            args_compiled = Template(args, self.hass)
+        if not (command := render_template_args(self.hass, self.command)):
+            return
 
-        rendered_args = None
-        if args_compiled:
-            args_to_render = {"arguments": args}
-            try:
-                rendered_args = args_compiled.async_render(args_to_render)
-            except TemplateError as ex:
-                LOGGER.exception("Error rendering command template: %s", ex)
-                return
-
-        if rendered_args != args:
-            command = f"{prog} {rendered_args}"
-
-        LOGGER.debug("Running command: %s, with message: %s", command, message)
+        LOGGER.debug("Running with message: %s", message)
 
         with subprocess.Popen(  # noqa: S602 # shell by design
             command,
