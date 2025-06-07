@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "climate": {
+      "daikin_ac": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "high": "mdi:fan-plus",
+              "medium_high": "mdi:fan-speed-3",
+              "medium": "mdi:fan-speed-2",
+              "low_medium": "mdi:fan-speed-1",
+              "low": "mdi:fan",
+              "quiet": "mdi:fan-minus"
+            }
+          }
+        }
+      }
+    }
+  }
+}
