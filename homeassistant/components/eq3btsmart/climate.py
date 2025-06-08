@@ -70,7 +70,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     _target_temperature: float | None = None
 
     @callback
-    def _async_on_updated(self) -> None:
+    def _async_on_updated(self, data: Any) -> None:
         """Handle updated data from the thermostat."""
 
         if self._thermostat.status is not None:
@@ -79,7 +79,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         if self._thermostat.device_data is not None:
             self._async_on_device_updated()
 
-        super()._async_on_updated()
+        super()._async_on_updated(data)
 
     @callback
     def _async_on_status_updated(self) -> None:

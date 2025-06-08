@@ -1,5 +1,9 @@
 """Base class for all eQ-3 entities."""
 
+from typing import Any
+
+from eq3btsmart.const import Eq3Event
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
@@ -45,7 +49,15 @@ class Eq3Entity(Entity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
-        self._thermostat.register_update_callback(self._async_on_updated)
+        self._thermostat.register_callback(
+            Eq3Event.DEVICE_DATA_RECEIVED, self._async_on_updated
+        )
+        self._thermostat.register_callback(
+            Eq3Event.STATUS_RECEIVED, self._async_on_updated
+        )
+        self._thermostat.register_callback(
+            Eq3Event.SCHEDULE_RECEIVED, self._async_on_updated
+        )
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -65,9 +77,17 @@ class Eq3Entity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
 
-        self._thermostat.unregister_update_callback(self._async_on_updated)
+        self._thermostat.unregister_callback(
+            Eq3Event.DEVICE_DATA_RECEIVED, self._async_on_updated
+        )
+        self._thermostat.unregister_callback(
+            Eq3Event.STATUS_RECEIVED, self._async_on_updated
+        )
+        self._thermostat.unregister_callback(
+            Eq3Event.SCHEDULE_RECEIVED, self._async_on_updated
+        )
 
-    def _async_on_updated(self) -> None:
+    def _async_on_updated(self, data: Any) -> None:
         """Handle updated data from the thermostat."""
 
         self.async_write_ha_state()
