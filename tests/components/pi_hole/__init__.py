@@ -250,8 +250,6 @@ def _create_mocked_hole(
                 mocked_hole.data = [] if api_version == 5 else {}
             elif password == "newkey" or api_token == "newkey":
                 mocked_hole.data = ZERO_DATA_V6 if api_version == 6 else ZERO_DATA
-            else:
-                mocked_hole.data = ZERO_DATA_V6 if api_version == 6 else ZERO_DATA
 
         mocked_hole.authenticate = AsyncMock(side_effect=authenticate_side_effect)
         mocked_hole.get_data = AsyncMock(side_effect=get_data_side_effect)
