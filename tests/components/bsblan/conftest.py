@@ -1,7 +1,8 @@
 """Fixtures for BSBLAN integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from ipaddress import ip_address
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bsblan import Device, HotWaterState, Info, Sensor, State, StaticState
 import pytest
@@ -9,6 +10,7 @@ import pytest
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -78,3 +80,66 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+# ZeroconfServiceInfo fixtures for different discovery scenarios
+
+
+@pytest.fixture
+def zeroconf_discovery_info() -> ZeroconfServiceInfo:
+    """Return zeroconf discovery info for a BSBLAN device with MAC address."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address("10.0.2.60"),
+        ip_addresses=[ip_address("10.0.2.60")],
+        name="BSB-LAN web service._http._tcp.local.",
+        type="_http._tcp.local.",
+        properties={"mac": "00:80:41:19:69:90"},
+        port=80,
+        hostname="BSB-LAN.local.",
+    )
+
+
+@pytest.fixture
+def zeroconf_discovery_info_no_mac() -> Mock:
+    """Return zeroconf discovery info for a BSBLAN device without MAC address."""
+    discovery_info = Mock()
+    discovery_info.ip_address = ip_address("10.0.2.60")
+    discovery_info.ip_addresses = [ip_address("10.0.2.60")]
+    discovery_info.name = "BSB-LAN web service._http._tcp.local."
+    discovery_info.type = "_http._tcp.local."
+    discovery_info.properties = {}  # No MAC in properties
+    discovery_info.properties_raw = {}  # No MAC in properties_raw either
+    discovery_info.port = 80
+    discovery_info.hostname = "BSB-LAN.local."
+    return discovery_info
+
+
+@pytest.fixture
+def zeroconf_discovery_info_different_ip() -> ZeroconfServiceInfo:
+    """Return zeroconf discovery info for a BSBLAN device with different IP."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
+        name="BSB-LAN web service._http._tcp.local.",
+        type="_http._tcp.local.",
+        properties={"mac": "00:80:41:19:69:90"},
+        port=8080,
+        hostname="BSB-LAN.local.",
+    )
+
+
+@pytest.fixture
+def zeroconf_discovery_info_properties_raw() -> Mock:
+    """Return zeroconf discovery info with MAC in properties_raw."""
+    discovery_info = Mock()
+    discovery_info.ip_address = ip_address("10.0.2.60")
+    discovery_info.ip_addresses = [ip_address("10.0.2.60")]
+    discovery_info.name = "BSB-LAN web service._http._tcp.local."
+    discovery_info.type = "_http._tcp.local."
+    discovery_info.properties = {}  # No MAC in properties
+    discovery_info.properties_raw = {
+        b"mac=00:80:41:19:69:90": b""
+    }  # MAC in properties_raw
+    discovery_info.port = 80
+    discovery_info.hostname = "BSB-LAN.local."
+    return discovery_info
