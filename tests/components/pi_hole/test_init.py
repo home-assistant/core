@@ -90,10 +90,9 @@ async def test_setup_api_v5(
 async def test_setup_with_defaults_v5(hass: HomeAssistant) -> None:
     """Tests component setup with default config."""
     mocked_hole = _create_mocked_hole(api_version=5)
-    config_data_v5 = {**CONFIG_DATA_DEFAULTS}
-    config_data_v5[CONF_API_VERSION] = 5
     entry = MockConfigEntry(
-        domain=pi_hole.DOMAIN, data={**config_data_v5, CONF_STATISTICS_ONLY: True}
+        domain=pi_hole.DOMAIN,
+        data={**CONFIG_DATA_DEFAULTS, CONF_API_VERSION: 5, CONF_STATISTICS_ONLY: True},
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
@@ -192,6 +191,30 @@ async def test_setup_with_defaults_v6(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.pi_hole_status")
     assert state.name == "Pi-Hole Status"
     assert state.state == "off"
+
+
+async def test_setup_without_api_version(hass: HomeAssistant) -> None:
+    """Tests component setup without API version."""
+
+    mocked_hole = _create_mocked_hole(api_version=6)
+    config = {**CONFIG_DATA_DEFAULTS}
+    config.pop(CONF_API_VERSION)
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=config)
+    entry.add_to_hass(hass)
+    with _patch_init_hole(mocked_hole):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.data[CONF_API_VERSION] == 6
+
+    mocked_hole = _create_mocked_hole(api_version=5)
+    config = {**CONFIG_DATA_DEFAULTS}
+    config.pop(CONF_API_VERSION)
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=config)
+    entry.add_to_hass(hass)
+    with _patch_init_hole(mocked_hole):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.data[CONF_API_VERSION] == 5
 
 
 async def test_setup_name_config(hass: HomeAssistant) -> None:
