@@ -4,13 +4,13 @@ import logging
 from typing import Any
 
 import aiohttp
+from tiltpi import TiltPiClient, TiltPiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import TiltPiClient, TiltPiError
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

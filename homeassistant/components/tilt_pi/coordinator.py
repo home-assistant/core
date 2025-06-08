@@ -2,11 +2,12 @@
 
 import logging
 
+from tiltpi import TiltPiClient, TiltPiError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import TiltPiClient, TiltPiError
 from .const import SCAN_INTERVAL
 from .model import TiltHydrometerData
 

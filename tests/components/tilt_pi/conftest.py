@@ -4,8 +4,8 @@ from types import MappingProxyType
 from unittest.mock import MagicMock
 
 import pytest
+from tiltpi import TiltPiClient
 
-from homeassistant.components.tilt_pi.api import TiltPiClient
 from homeassistant.components.tilt_pi.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
@@ -38,19 +38,6 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="test123",
     )
-
-
-@pytest.fixture
-def tiltpi_api_all_response() -> list[dict[str, any]]:
-    """Fixture for TiltPi API response."""
-    return [
-        {
-            "mac": "00:1A:2B:3C:4D:5E",
-            "Color": "red",
-            "Temp": "68.5",
-            "SG": "1.052",
-        }
-    ]
 
 
 @pytest.fixture

@@ -1,11 +1,12 @@
 """The Tilt Pi integration."""
 
+from tiltpi import TiltPiClient
+
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import TiltPiClient
 from .coordinator import TiltPiConfigEntry, TiltPiDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]

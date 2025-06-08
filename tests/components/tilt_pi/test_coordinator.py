@@ -3,11 +3,8 @@
 from unittest.mock import MagicMock
 
 import pytest
+from tiltpi import TiltPiConnectionError, TiltPiConnectionTimeoutError
 
-from homeassistant.components.tilt_pi.api import (
-    TiltPiConnectionError,
-    TiltPiConnectionTimeoutError,
-)
 from homeassistant.components.tilt_pi.coordinator import TiltPiDataUpdateCoordinator
 from homeassistant.components.tilt_pi.model import TiltColor, TiltHydrometerData
 from homeassistant.core import HomeAssistant
