@@ -248,7 +248,7 @@ def _create_mocked_hole(
                 or (api_version == 6 and password not in ["newkey", "apikey"])
             ):
                 mocked_hole.data = [] if api_version == 5 else {}
-            elif password in ["newkey", "apikey"] or api_token == ["newkey", "apikey"]:
+            elif password in ["newkey", "apikey"] or api_token in ["newkey", "apikey"]:
                 mocked_hole.data = ZERO_DATA_V6 if api_version == 6 else ZERO_DATA
 
         mocked_hole.authenticate = AsyncMock(side_effect=authenticate_side_effect)
