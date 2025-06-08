@@ -30,6 +30,25 @@
           "password": "[%key:common::config_flow::data::password%]",
           "temperature_unit": "[%key:component::elkm1::config::step::manual_connection::data::temperature_unit%]"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure ElkM1",
+        "description": "[%key:component::elkm1::config::step::manual_connection::description%]",
+        "data": {
+          "protocol": "[%key:component::elkm1::config::step::manual_connection::data::protocol%]",
+          "address": "[%key:component::elkm1::config::step::manual_connection::data::address%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reconfigure_discovered": {
+        "title": "[%key:component::elkm1::config::step::reconfigure::title%]",
+        "description": "Update settings for discovered system: {mac_address} ({host})",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "protocol": "[%key:component::elkm1::config::step::manual_connection::data::protocol%]"
+        }
       }
     },
     "error": {
@@ -43,7 +62,8 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "An ElkM1 with this prefix is already configured",
-      "address_already_configured": "An ElkM1 with this address is already configured"
+      "address_already_configured": "An ElkM1 with this address is already configured",
+      "reconfigure_successful": "Successfully reconfigured ElkM1 integration"
     }
   },
   "services": {

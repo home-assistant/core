@@ -9,7 +9,7 @@ from elkm1_lib.discovery import ElkSystem
 from elkm1_lib.elk import Elk
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_HOST,
@@ -195,6 +195,19 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return True if other_flow is matching this flow."""
         return other_flow.host == self.host
 
+    def _get_reconfigure_entry(self) -> ConfigEntry:
+        """Get the config entry being reconfigured."""
+        assert self.hass
+        entry_id = self.context.get("entry_id")
+        if entry_id is None:
+            raise ValueError("No entry_id in context")
+
+        entry = self.hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            raise ValueError(f"Config entry {entry_id} not found")
+
+        return entry
+
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -204,6 +217,155 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovered_device
         )
         return await self.async_step_discovered_connection()
+
+    async def async_step_reconfigure_discovered(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle device reconfiguration when using discovery."""
+        errors: dict[str, str] = {}
+        device = self._discovered_device
+        reconfigure_entry = self._get_reconfigure_entry()
+        assert device is not None
+
+        if user_input is not None:
+            try:
+                validate_input_data = dict(user_input)
+                validate_input_data[CONF_ADDRESS] = _address_from_discovery(device)
+                validate_input_data[CONF_PREFIX] = reconfigure_entry.data.get(
+                    CONF_PREFIX, ""
+                )
+                info = await validate_input(
+                    validate_input_data, reconfigure_entry.unique_id
+                )
+            except TimeoutError:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors[CONF_PASSWORD] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during reconfiguration")
+                errors["base"] = "unknown"
+            else:
+                _LOGGER.info(
+                    "Successfully reconfigured ElkM1 integration with host %s using %s protocol",
+                    _address_from_discovery(device),
+                    user_input[CONF_PROTOCOL],
+                )
+                self.hass.config_entries.async_update_entry(
+                    reconfigure_entry,
+                    data={
+                        CONF_HOST: info[CONF_HOST],
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_AUTO_CONFIGURE: reconfigure_entry.data.get(
+                            CONF_AUTO_CONFIGURE, True
+                        ),
+                        CONF_PREFIX: info[CONF_PREFIX],
+                    },
+                )
+                await self.hass.config_entries.async_reload(reconfigure_entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+        default_proto = PORT_PROTOCOL_MAP.get(device.port, DEFAULT_SECURE_PROTOCOL)
+        return self.async_show_form(
+            step_id="reconfigure_discovered",
+            data_schema=vol.Schema(
+                {
+                    **BASE_SCHEMA,
+                    vol.Required(CONF_PROTOCOL, default=default_proto): vol.In(
+                        ALL_PROTOCOLS
+                    ),
+                }
+            ),
+            errors=errors,
+            description_placeholders=_placeholders_from_device(device),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                validate_input_data = dict(user_input)
+                validate_input_data[CONF_PREFIX] = reconfigure_entry.data.get(
+                    CONF_PREFIX, ""
+                )
+                info = await validate_input(
+                    validate_input_data, reconfigure_entry.unique_id
+                )
+            except TimeoutError:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors[CONF_PASSWORD] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during reconfiguration")
+                errors["base"] = "unknown"
+            else:
+                _LOGGER.info(
+                    "Successfully reconfigured ElkM1 integration with host %s using %s protocol",
+                    user_input[CONF_ADDRESS],
+                    user_input[CONF_PROTOCOL],
+                )
+                self.hass.config_entries.async_update_entry(
+                    reconfigure_entry,
+                    data={
+                        CONF_HOST: info[CONF_HOST],
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_AUTO_CONFIGURE: reconfigure_entry.data.get(
+                            CONF_AUTO_CONFIGURE, True
+                        ),
+                        CONF_PREFIX: info[CONF_PREFIX],
+                    },
+                )
+                await self.hass.config_entries.async_reload(reconfigure_entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+        existing_data = reconfigure_entry.data
+        current_host = hostname_from_url(existing_data[CONF_HOST])
+        current_proto = next(
+            (
+                k
+                for k, v in PROTOCOL_MAP.items()
+                if existing_data[CONF_HOST].startswith(v)
+            ),
+            DEFAULT_SECURE_PROTOCOL,
+        )
+        # Extract just the IP/hostname part from the current host URL
+        current_address = current_host.split("://")[-1]
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_USERNAME,
+                        default=existing_data.get(CONF_USERNAME, ""),
+                    ): str,
+                    vol.Optional(
+                        CONF_PASSWORD,
+                        default=existing_data.get(CONF_PASSWORD, ""),
+                    ): str,
+                    vol.Required(
+                        CONF_ADDRESS,
+                        default=current_address,
+                    ): str,
+                    vol.Required(
+                        CONF_PROTOCOL,
+                        default=current_proto,
+                    ): vol.In(ALL_PROTOCOLS),
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "current_host": current_host,
+                "current_protocol": current_proto,
+                "device_info": f"Reconfiguring ElkM1 at {current_address} (currently using {current_proto} connection)",
+            },
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
