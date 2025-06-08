@@ -98,6 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
         return None
 
     await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
+
     if version is None:
         _LOGGER.debug(
             "No API version specified, determining Pi-hole API version for %s", host
