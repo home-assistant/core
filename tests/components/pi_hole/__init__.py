@@ -229,6 +229,7 @@ def _create_mocked_hole(
                 raise HoleError("Authentication failed: Invalid password")
 
         async def get_data_side_effect(*_args, **_kwargs):
+            """Return data based on the mocked Hole instance state."""
             password = getattr(mocked_hole, "password", None)
             api_token = getattr(mocked_hole, "api_token", None)
             if (

@@ -22,11 +22,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_STATISTICS_ONLY, DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import (
+    CONF_STATISTICS_ONLY,
+    DOMAIN,
+    MIN_TIME_BETWEEN_UPDATES,
+    VERSION_6_RESPONSE_TO_5_ERROR,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,7 +133,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
         try:
             await api.get_data()
             await api.get_versions()
+            if (
+                "error" in (response := api.data)
+                and response["error"] == VERSION_6_RESPONSE_TO_5_ERROR
+            ):
+                _LOGGER.warning(
+                    "Pi-hole API v6 returned an error that is expected when using v5 endpoints we will create a repair issue"
+                )
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id=f"v5_to_v6_migration_{api.base_url}",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="v5_to_v6_migration",
+                    is_persistent=True,
+                )
+                raise ConfigEntryAuthFailed
         except HoleError as err:
+            if str(err) == "Authentication failed: Invalid password":
+                raise ConfigEntryAuthFailed from err
             raise UpdateFailed(f"Failed to communicate with API: {err}") from err
         if not isinstance(api.data, dict):
             raise ConfigEntryAuthFailed

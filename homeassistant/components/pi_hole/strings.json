@@ -30,6 +30,12 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "issues": {
+    "v5_to_v6_migration": {
+      "title": "Recent migration from Pi-hole API v5 to v6",
+      "description": "We have detected that you have likely updated you Pi-hole to a version 6 API from version 5. Some sensors are different in the new API as the daily sensors have been removed and your old API token will be invalid, please provide your new app password by following the re-authentication process in repairs or in Settings -> Devices & services -> Pi-hole"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "status": {
