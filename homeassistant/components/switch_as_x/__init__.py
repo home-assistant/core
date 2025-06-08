@@ -26,12 +26,12 @@ def async_add_to_device(
     hass: HomeAssistant, entry: ConfigEntry, entity_id: str
 ) -> str | None:
     """Add our config entry to the tracked entity's device."""
-    registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
     device_id = None
 
     if (
-        not (wrapped_switch := registry.async_get(entity_id))
+        not (wrapped_switch := entity_registry.async_get(entity_id))
         or not (device_id := wrapped_switch.device_id)
         or not (device_registry.async_get(device_id))
     ):
@@ -44,10 +44,12 @@ def async_add_to_device(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
     try:
-        entity_id = er.async_validate_entity_id(registry, entry.options[CONF_ENTITY_ID])
+        entity_id = er.async_validate_entity_id(
+            entity_registry, entry.options[CONF_ENTITY_ID]
+        )
     except vol.Invalid:
         # The entity is identified by an unknown entity registry ID
         _LOGGER.error(
@@ -75,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # If the tracked switch is no longer in the device, remove our config entry
             # from the device
             if (
-                not (entity_entry := registry.async_get(data[CONF_ENTITY_ID]))
+                not (entity_entry := entity_registry.async_get(data[CONF_ENTITY_ID]))
                 or not device_registry.async_get(device_id)
                 or entity_entry.device_id == device_id
             ):
