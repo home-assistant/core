@@ -142,7 +142,7 @@ async def test_setup_with_defaults_v5(hass: HomeAssistant) -> None:
 async def test_setup_with_defaults_v6(hass: HomeAssistant) -> None:
     """Tests component setup with default config."""
     mocked_hole = _create_mocked_hole(
-        api_version=6, has_data=True, incorrect_app_password=False, hole_version=6
+        api_version=6, has_data=True, incorrect_app_password=False
     )
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_STATISTICS_ONLY: True}
@@ -219,7 +219,7 @@ async def test_setup_without_api_version(hass: HomeAssistant) -> None:
 
 async def test_setup_name_config(hass: HomeAssistant) -> None:
     """Tests component setup with a custom name."""
-    mocked_hole = _create_mocked_hole(api_version=6, hole_version=6)
+    mocked_hole = _create_mocked_hole(api_version=6)
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_NAME: "Custom"}
     )
