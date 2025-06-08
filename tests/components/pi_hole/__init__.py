@@ -206,7 +206,6 @@ def _create_mocked_hole(
     has_versions: bool = True,
     has_update: bool = True,
     has_data: bool = True,
-    hole_version: int = 5,
     api_version: int = 5,
     incorrect_app_password: bool = False,
 ) -> MagicMock:
