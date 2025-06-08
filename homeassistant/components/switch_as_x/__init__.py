@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return
 
         if "entity_id" in data["changes"]:
-            # Entity_id changed, reload the config entry
+            # Entity_id changed, update the config entry
             hass.config_entries.async_update_entry(
                 entry,
                 options={**entry.options, CONF_ENTITY_ID: data["entity_id"]},
