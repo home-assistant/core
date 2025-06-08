@@ -63,7 +63,7 @@ class PlaystationNetwork:
         )
         return self.user
 
-    def retrieve_data_from_api(self) -> PlaystationNetworkData:
+    def retrieve_psn_data(self) -> PlaystationNetworkData:
         """Bundle api calls to retrieve data from the PlayStation Network."""
         data = PlaystationNetworkData()
 
@@ -80,7 +80,7 @@ class PlaystationNetwork:
 
     async def get_data(self) -> PlaystationNetworkData:
         """Get title data from the PlayStation Network."""
-        data = await self.hass.async_add_executor_job(self.retrieve_data_from_api)
+        data = await self.hass.async_add_executor_job(self.retrieve_psn_data)
         data.username = self.user.online_id
         data.account_id = self.user.account_id
 
