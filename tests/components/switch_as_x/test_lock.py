@@ -20,18 +20,25 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
-async def test_default_state(hass: HomeAssistant) -> None:
+async def test_default_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test lock switch default state."""
+    switch_entity_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", original_name="candy_jar"
+    )
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: "switch.test",
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: Platform.LOCK,
         },

@@ -20,22 +20,29 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
-async def test_default_state(hass: HomeAssistant) -> None:
+async def test_default_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test valve switch default state."""
+    switch_entity_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", original_name="Valve"
+    )
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: "switch.test",
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: Platform.VALVE,
         },
-        title="Garage Door",
+        title="Valve",
         version=SwitchAsXConfigFlowHandler.VERSION,
         minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
     )
@@ -43,7 +50,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("valve.garage_door")
+    state = hass.states.get("valve.valve")
     assert state is not None
     assert state.state == "unavailable"
     assert state.attributes["supported_features"] == 3
