@@ -333,10 +333,6 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/hbldh/bleak/pull/1718 (not yet released)
         "homeassistant": {"bleak"}
     },
-    "eq3btsmart": {
-        # https://github.com/EuleMitKeule/eq3btsmart/releases/tag/2.0.0
-        "homeassistant": {"eq3btsmart"}
-    },
     "python_script": {
         # Security audits are needed for each Python version
         "homeassistant": {"restrictedpython"}
