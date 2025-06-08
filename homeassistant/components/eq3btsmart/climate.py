@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from eq3btsmart.const import EQ3BT_MAX_TEMP, EQ3BT_OFF_TEMP, Eq3Preset, OperationMode
+from eq3btsmart.const import EQ3_MAX_TEMP, EQ3_OFF_TEMP, Eq3OperationMode, Eq3Preset
 from eq3btsmart.exceptions import Eq3Exception
 
 from homeassistant.components.climate import (
@@ -57,8 +57,8 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = EQ3BT_OFF_TEMP
-    _attr_max_temp = EQ3BT_MAX_TEMP
+    _attr_min_temp = EQ3_OFF_TEMP
+    _attr_max_temp = EQ3_MAX_TEMP
     _attr_precision = PRECISION_HALVES
     _attr_hvac_modes = list(HA_TO_EQ_HVAC.keys())
     _attr_preset_modes = list(Preset)
@@ -165,7 +165,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             return Preset.LOW_BATTERY
         if status.is_away:
             return Preset.AWAY
-        if status.operation_mode is OperationMode.ON:
+        if status.operation_mode is Eq3OperationMode.ON:
             return Preset.OPEN
         if status.presets is None:
             return PRESET_NONE
@@ -181,7 +181,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         if (
             self._thermostat.status is None
-            or self._thermostat.status.operation_mode is OperationMode.OFF
+            or self._thermostat.status.operation_mode is Eq3OperationMode.OFF
         ):
             return HVACAction.OFF
         if self._thermostat.status.valve == 0:
@@ -227,7 +227,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         """Set new target hvac mode."""
 
         if hvac_mode is HVACMode.OFF:
-            await self.async_set_temperature(temperature=EQ3BT_OFF_TEMP)
+            await self.async_set_temperature(temperature=EQ3_OFF_TEMP)
 
         try:
             await self._thermostat.async_set_mode(HA_TO_EQ_HVAC[hvac_mode])
@@ -247,4 +247,4 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             case Preset.COMFORT:
                 await self._thermostat.async_set_preset(Eq3Preset.COMFORT)
             case Preset.OPEN:
-                await self._thermostat.async_set_mode(OperationMode.ON)
+                await self._thermostat.async_set_mode(Eq3OperationMode.ON)

@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from eq3btsmart.const import OperationMode
+from eq3btsmart.const import Eq3OperationMode
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -34,17 +34,17 @@ ENTITY_KEY_AWAY_UNTIL = "away_until"
 
 GET_DEVICE_TIMEOUT = 5  # seconds
 
-EQ_TO_HA_HVAC: dict[OperationMode, HVACMode] = {
-    OperationMode.OFF: HVACMode.OFF,
-    OperationMode.ON: HVACMode.HEAT,
-    OperationMode.AUTO: HVACMode.AUTO,
-    OperationMode.MANUAL: HVACMode.HEAT,
+EQ_TO_HA_HVAC: dict[Eq3OperationMode, HVACMode] = {
+    Eq3OperationMode.OFF: HVACMode.OFF,
+    Eq3OperationMode.ON: HVACMode.HEAT,
+    Eq3OperationMode.AUTO: HVACMode.AUTO,
+    Eq3OperationMode.MANUAL: HVACMode.HEAT,
 }
 
 HA_TO_EQ_HVAC = {
-    HVACMode.OFF: OperationMode.OFF,
-    HVACMode.AUTO: OperationMode.AUTO,
-    HVACMode.HEAT: OperationMode.MANUAL,
+    HVACMode.OFF: Eq3OperationMode.OFF,
+    HVACMode.AUTO: Eq3OperationMode.AUTO,
+    HVACMode.HEAT: Eq3OperationMode.MANUAL,
 }
 
 

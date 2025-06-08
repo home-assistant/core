@@ -5,12 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from eq3btsmart import Thermostat
-from eq3btsmart.const import (
-    EQ3BT_MAX_OFFSET,
-    EQ3BT_MAX_TEMP,
-    EQ3BT_MIN_OFFSET,
-    EQ3BT_MIN_TEMP,
-)
+from eq3btsmart.const import EQ3_MAX_OFFSET, EQ3_MAX_TEMP, EQ3_MIN_OFFSET, EQ3_MIN_TEMP
 from eq3btsmart.models import Presets
 
 from homeassistant.components.number import (
@@ -54,8 +49,8 @@ NUMBER_ENTITY_DESCRIPTIONS = [
         value_func=lambda presets: presets.comfort_temperature.value,
         value_set_func=lambda thermostat: thermostat.async_configure_comfort_temperature,
         translation_key=ENTITY_KEY_COMFORT,
-        native_min_value=EQ3BT_MIN_TEMP,
-        native_max_value=EQ3BT_MAX_TEMP,
+        native_min_value=EQ3_MIN_TEMP,
+        native_max_value=EQ3_MAX_TEMP,
         native_step=EQ3BT_STEP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
@@ -65,8 +60,8 @@ NUMBER_ENTITY_DESCRIPTIONS = [
         value_func=lambda presets: presets.eco_temperature.value,
         value_set_func=lambda thermostat: thermostat.async_configure_eco_temperature,
         translation_key=ENTITY_KEY_ECO,
-        native_min_value=EQ3BT_MIN_TEMP,
-        native_max_value=EQ3BT_MAX_TEMP,
+        native_min_value=EQ3_MIN_TEMP,
+        native_max_value=EQ3_MAX_TEMP,
         native_step=EQ3BT_STEP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
@@ -76,8 +71,8 @@ NUMBER_ENTITY_DESCRIPTIONS = [
         value_func=lambda presets: presets.window_open_temperature.value,
         value_set_func=lambda thermostat: thermostat.async_configure_window_open_temperature,
         translation_key=ENTITY_KEY_WINDOW_OPEN_TEMPERATURE,
-        native_min_value=EQ3BT_MIN_TEMP,
-        native_max_value=EQ3BT_MAX_TEMP,
+        native_min_value=EQ3_MIN_TEMP,
+        native_max_value=EQ3_MAX_TEMP,
         native_step=EQ3BT_STEP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
@@ -87,8 +82,8 @@ NUMBER_ENTITY_DESCRIPTIONS = [
         value_func=lambda presets: presets.offset_temperature.value,
         value_set_func=lambda thermostat: thermostat.async_configure_temperature_offset,
         translation_key=ENTITY_KEY_OFFSET,
-        native_min_value=EQ3BT_MIN_OFFSET,
-        native_max_value=EQ3BT_MAX_OFFSET,
+        native_min_value=EQ3_MIN_OFFSET,
+        native_max_value=EQ3_MAX_OFFSET,
         native_step=EQ3BT_STEP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=NumberDeviceClass.TEMPERATURE,
