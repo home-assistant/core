@@ -1494,7 +1494,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.7.2
+py-synologydsm-api==2.7.3
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
