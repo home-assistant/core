@@ -1,6 +1,5 @@
 """Tests for the BSBLan device config flow."""
 
-from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 from bsblan import BSBLANConnectionError
@@ -120,17 +119,10 @@ async def test_zeroconf_discovery(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
     mock_setup_entry: AsyncMock,
+    zeroconf_discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """Test the Zeroconf discovery flow."""
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("10.0.2.60"),
-        ip_addresses=[ip_address("10.0.2.60")],
-        name="BSB-LAN web service._http._tcp.local.",
-        type="_http._tcp.local.",
-        properties={"mac": "00:80:41:19:69:90"},  # Include MAC address
-        port=80,
-        hostname="BSB-LAN.local.",
-    )
+    discovery_info = zeroconf_discovery_info
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -169,6 +161,7 @@ async def test_zeroconf_discovery(
 async def test_abort_if_existing_entry_for_zeroconf(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
+    zeroconf_discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """Test we abort if the same host/port already exists during zeroconf discovery."""
     # Create an existing entry
@@ -185,15 +178,7 @@ async def test_abort_if_existing_entry_for_zeroconf(
     entry.add_to_hass(hass)
 
     # Mock zeroconf discovery of the same device
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("10.0.2.60"),
-        ip_addresses=[ip_address("10.0.2.60")],
-        name="BSB-LAN web service._http._tcp.local.",
-        type="_http._tcp.local.",
-        properties={"mac": "00:80:41:19:69:90"},  # Include MAC address
-        port=80,
-        hostname="BSB-LAN.local.",
-    )
+    discovery_info = zeroconf_discovery_info
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -209,20 +194,11 @@ async def test_zeroconf_discovery_mac_from_properties_raw(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
     mock_setup_entry: AsyncMock,
+    zeroconf_discovery_info_properties_raw: Mock,
 ) -> None:
     """Test Zeroconf discovery when MAC is found in properties_raw instead of properties."""
     # Create a mock object that mimics ZeroconfServiceInfo but allows properties_raw
-    discovery_info = Mock()
-    discovery_info.ip_address = ip_address("10.0.2.60")
-    discovery_info.ip_addresses = [ip_address("10.0.2.60")]
-    discovery_info.name = "BSB-LAN web service._http._tcp.local."
-    discovery_info.type = "_http._tcp.local."
-    discovery_info.properties = {}  # No MAC in properties
-    discovery_info.properties_raw = {
-        b"mac=00:80:41:19:69:90": b""
-    }  # MAC in properties_raw
-    discovery_info.port = 80
-    discovery_info.hostname = "BSB-LAN.local."
+    discovery_info = zeroconf_discovery_info_properties_raw
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -258,20 +234,14 @@ async def test_zeroconf_discovery_mac_from_properties_raw(
     assert len(mock_bsblan.device.mock_calls) == 1
 
 
-async def test_zeroconf_discovery_no_mac_abort(
+async def test_zeroconf_discovery_no_mac_in_announcement(
     hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    zeroconf_discovery_info_no_mac: Mock,
 ) -> None:
-    """Test Zeroconf discovery aborts when no MAC address is found."""
+    """Test Zeroconf discovery works when no MAC address is in the announcement."""
     # Create a mock object that mimics ZeroconfServiceInfo but allows properties_raw
-    discovery_info = Mock()
-    discovery_info.ip_address = ip_address("10.0.2.60")
-    discovery_info.ip_addresses = [ip_address("10.0.2.60")]
-    discovery_info.name = "BSB-LAN web service._http._tcp.local."
-    discovery_info.type = "_http._tcp.local."
-    discovery_info.properties = {}  # No MAC in properties
-    discovery_info.properties_raw = {}  # No MAC in properties_raw either
-    discovery_info.port = 80
-    discovery_info.hostname = "BSB-LAN.local."
+    discovery_info = zeroconf_discovery_info_no_mac
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -279,26 +249,40 @@ async def test_zeroconf_discovery_no_mac_abort(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_mac_address"
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    # Now complete the discovery by providing credentials and connecting
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "secret",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "00:80:41:19:69:90"  # MAC from fixture file
+    assert result2["data"] == {
+        CONF_HOST: "10.0.2.60",
+        CONF_PORT: 80,
+        CONF_PASSKEY: None,
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "secret",
+    }
 
 
 async def test_zeroconf_discovery_connection_error(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
+    zeroconf_discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """Test connection error during zeroconf discovery shows the correct form."""
     mock_bsblan.device.side_effect = BSBLANConnectionError
 
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("10.0.2.60"),
-        ip_addresses=[ip_address("10.0.2.60")],
-        name="BSB-LAN web service._http._tcp.local.",
-        type="_http._tcp.local.",
-        properties={"mac": "00:80:41:19:69:90"},
-        port=80,
-        hostname="BSB-LAN.local.",
-    )
+    discovery_info = zeroconf_discovery_info
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -326,6 +310,7 @@ async def test_zeroconf_discovery_connection_error(
 async def test_zeroconf_discovery_doesnt_update_host_port_on_existing_entry(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
+    zeroconf_discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """Test that discovered devices don't update host/port of existing entries."""
     # Create an existing entry with different host/port
@@ -342,15 +327,7 @@ async def test_zeroconf_discovery_doesnt_update_host_port_on_existing_entry(
     entry.add_to_hass(hass)
 
     # Mock zeroconf discovery of the same device but with different IP/port
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("10.0.2.60"),  # Different IP from existing entry
-        ip_addresses=[ip_address("10.0.2.60")],
-        name="BSB-LAN web service._http._tcp.local.",
-        type="_http._tcp.local.",
-        properties={"mac": "00:80:41:19:69:90"},  # Same MAC as existing entry
-        port=80,  # Different port from existing entry
-        hostname="BSB-LAN.local.",
-    )
+    discovery_info = zeroconf_discovery_info
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
