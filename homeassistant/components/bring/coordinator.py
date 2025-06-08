@@ -30,7 +30,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type BringConfigEntry = ConfigEntry[BringDataUpdateCoordinator]
+type BringConfigEntry = ConfigEntry[BringCoordinators]
+
+
+@dataclass
+class BringCoordinators:
+    """Data class holding coordinators."""
+
+    data: BringDataUpdateCoordinator
+    activity: BringActivityCoordinator
 
 
 @dataclass(frozen=True)
@@ -39,16 +47,27 @@ class BringData(DataClassORJSONMixin):
 
     lst: BringList
     content: BringItemsResponse
+
+
+@dataclass(frozen=True)
+class BringActivityData(DataClassORJSONMixin):
+    """Coordinator data class."""
+
     activity: BringActivityResponse
     users: BringUsersResponse
 
 
-class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
-    """A Bring Data Update Coordinator."""
+class BringBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+    """Bring base coordinator."""
 
     config_entry: BringConfigEntry
-    user_settings: BringUserSettingsResponse
     lists: list[BringList]
+
+
+class BringDataUpdateCoordinator(BringBaseCoordinator[dict[str, BringData]]):
+    """A Bring Data Update Coordinator."""
+
+    user_settings: BringUserSettingsResponse
 
     def __init__(
         self, hass: HomeAssistant, config_entry: BringConfigEntry, bring: Bring
@@ -90,16 +109,19 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
             current_lists := {lst.listUuid for lst in self.lists}
         ):
             self._purge_deleted_lists()
+        new_lists = current_lists - self.previous_lists
         self.previous_lists = current_lists
 
         list_dict: dict[str, BringData] = {}
         for lst in self.lists:
-            if (ctx := set(self.async_contexts())) and lst.listUuid not in ctx:
+            if (
+                (ctx := set(self.async_contexts()))
+                and lst.listUuid not in ctx
+                and lst.listUuid not in new_lists
+            ):
                 continue
             try:
                 items = await self.bring.get_list(lst.listUuid)
-                activity = await self.bring.get_activity(lst.listUuid)
-                users = await self.bring.get_list_users(lst.listUuid)
             except BringRequestException as e:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
@@ -111,7 +133,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                     translation_key="setup_parse_exception",
                 ) from e
             else:
-                list_dict[lst.listUuid] = BringData(lst, items, activity, users)
+                list_dict[lst.listUuid] = BringData(lst, items)
 
         return list_dict
 
@@ -156,3 +178,60 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=self.config_entry.entry_id
                 )
+
+
+class BringActivityCoordinator(BringBaseCoordinator[dict[str, BringActivityData]]):
+    """A Bring Activity Data Update Coordinator."""
+
+    user_settings: BringUserSettingsResponse
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: BringConfigEntry,
+        coordinator: BringDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the Bring Activity data coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(minutes=10),
+        )
+
+        self.coordinator = coordinator
+        self.lists = coordinator.lists
+
+    async def _async_update_data(self) -> dict[str, BringActivityData]:
+        """Fetch activity data from bring."""
+
+        list_dict: dict[str, BringActivityData] = {}
+        for lst in self.lists:
+            if (
+                ctx := set(self.coordinator.async_contexts())
+            ) and lst.listUuid not in ctx:
+                continue
+            try:
+                activity = await self.coordinator.bring.get_activity(lst.listUuid)
+                users = await self.coordinator.bring.get_list_users(lst.listUuid)
+            except BringAuthException as e:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_authentication_exception",
+                    translation_placeholders={CONF_EMAIL: self.coordinator.bring.mail},
+                ) from e
+            except BringRequestException as e:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_request_exception",
+                ) from e
+            except BringParseException as e:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_parse_exception",
+                ) from e
+            else:
+                list_dict[lst.listUuid] = BringActivityData(activity, users)
+
+        return list_dict

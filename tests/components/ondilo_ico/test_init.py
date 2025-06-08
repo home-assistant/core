@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from ondilo import OndiloError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

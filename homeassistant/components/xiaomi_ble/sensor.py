@@ -177,6 +177,25 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Low frequency impedance sensor (ohm)
+    (ExtendedSensorDeviceClass.IMPEDANCE_LOW, Units.OHM): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.IMPEDANCE_LOW),
+        native_unit_of_measurement=Units.OHM,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:omega",
+    ),
+    # Heart rate sensor (bpm)
+    (ExtendedSensorDeviceClass.HEART_RATE, "bpm"): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.HEART_RATE),
+        native_unit_of_measurement="bpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:heart-pulse",
+    ),
+    # User profile ID sensor
+    (ExtendedSensorDeviceClass.PROFILE_ID, None): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.PROFILE_ID),
+        icon="mdi:identifier",
+    ),
 }
 
 

@@ -23,10 +23,8 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
 from . import EconetConfigEntry
-from .const import DOMAIN
 from .entity import EcoNetEntity
 
 ECONET_STATE_TO_HA = {
@@ -55,7 +53,6 @@ SUPPORT_FLAGS_THERMOSTAT = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
     | ClimateEntityFeature.FAN_MODE
-    | ClimateEntityFeature.AUX_HEAT
 )
 
 
@@ -151,11 +148,6 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
             self._econet.set_set_point(None, target_temp_high, target_temp_low)
 
     @property
-    def is_aux_heat(self) -> bool:
-        """Return true if aux heater."""
-        return self._econet.mode == ThermostatOperationMode.EMERGENCY_HEAT
-
-    @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool, mode.
 
@@ -212,41 +204,13 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
         """Set the fan mode."""
         self._econet.set_fan_mode(HA_FAN_STATE_TO_ECONET[fan_mode])
 
-    def turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2025.4.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
-        self._econet.set_mode(ThermostatOperationMode.EMERGENCY_HEAT)
-
-    def turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2025.4.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
-        self._econet.set_mode(ThermostatOperationMode.HEATING)
-
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._econet.set_point_limits[0]
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._econet.set_point_limits[1]
 

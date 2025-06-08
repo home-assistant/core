@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     )
     _LOGGER.debug("Getting home data")
     try:
-        home_data = await api_client.get_home_data_v2(user_data)
+        home_data = await api_client.get_home_data_v3(user_data)
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
             "Invalid credentials",

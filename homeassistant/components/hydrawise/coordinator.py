@@ -14,6 +14,8 @@ from homeassistant.util.dt import now
 
 from .const import DOMAIN, LOGGER, MAIN_SCAN_INTERVAL, WATER_USE_SCAN_INTERVAL
 
+type HydrawiseConfigEntry = ConfigEntry[HydrawiseUpdateCoordinators]
+
 
 @dataclass
 class HydrawiseData:
@@ -40,7 +42,7 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
     """Base class for Hydrawise Data Update Coordinators."""
 
     api: HydrawiseBase
-    config_entry: ConfigEntry
+    config_entry: HydrawiseConfigEntry
 
 
 class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
@@ -52,7 +54,10 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
     """
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: HydrawiseBase
+        self,
+        hass: HomeAssistant,
+        config_entry: HydrawiseConfigEntry,
+        api: HydrawiseBase,
     ) -> None:
         """Initialize HydrawiseDataUpdateCoordinator."""
         super().__init__(
@@ -92,7 +97,7 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: HydrawiseConfigEntry,
         api: HydrawiseBase,
         main_coordinator: HydrawiseMainDataUpdateCoordinator,
     ) -> None:

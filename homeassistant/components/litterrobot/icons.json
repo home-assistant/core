@@ -6,6 +6,9 @@
       },
       "sleep_mode": {
         "default": "mdi:sleep"
+      },
+      "hopper_connected": {
+        "default": "mdi:filter-check"
       }
     },
     "button": {
@@ -30,6 +33,19 @@
       },
       "meal_insert_size": {
         "default": "mdi:scale"
+      }
+    },
+    "sensor": {
+      "hopper_status": {
+        "default": "mdi:filter",
+        "state": {
+          "disabled": "mdi:filter-remove",
+          "empty": "mdi:filter-minus-outline",
+          "enabled": "mdi:filter-check",
+          "motor_disconnected": "mdi:engine-off",
+          "motor_fault_short": "mdi:flash-off",
+          "motor_ot_amps": "mdi:flash-alert"
+        }
       }
     },
     "switch": {

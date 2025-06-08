@@ -21,6 +21,7 @@ APPLICATION_CREDENTIALS = [
     "lyric",
     "mcp",
     "microbees",
+    "miele",
     "monzo",
     "myuplink",
     "neato",

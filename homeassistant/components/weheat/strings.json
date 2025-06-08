@@ -86,6 +86,12 @@
       "dhw_bottom_temperature": {
         "name": "DHW bottom temperature"
       },
+      "dhw_flow_volume": {
+        "name": "DHW pump flow"
+      },
+      "central_heating_flow_volume": {
+        "name": "Central heating pump flow"
+      },
       "heat_pump_state": {
         "state": {
           "standby": "[%key:common::state::standby%]",
@@ -95,7 +101,7 @@
           "dhw": "Heating DHW",
           "legionella_prevention": "Legionella prevention",
           "defrosting": "Defrosting",
-          "self_test": "Self test",
+          "self_test": "Self-test",
           "manual_control": "Manual control"
         }
       },

@@ -60,6 +60,7 @@ class FritzEntityBaseMock(Mock):
     """base mock of a AVM Fritz!Box binary sensor device."""
 
     ain = CONF_FAKE_AIN
+    device_and_unit_id = (CONF_FAKE_AIN, None)
     manufacturer = CONF_FAKE_MANUFACTURER
     name = CONF_FAKE_NAME
     productname = CONF_FAKE_PRODUCTNAME

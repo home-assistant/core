@@ -64,10 +64,10 @@ def async_remove_stale_devices_links_keep_entity_device(
     entry_id: str,
     source_entity_id_or_uuid: str,
 ) -> None:
-    """Remove the link between stale devices and a configuration entry.
+    """Remove entry_id from all devices except that of source_entity_id_or_uuid.
 
-    Only the device passed in the source_entity_id_or_uuid parameter
-    linked to the configuration entry will be maintained.
+    Also moves all entities linked to the entry_id to the device of
+    source_entity_id_or_uuid.
     """
 
     async_remove_stale_devices_links_keep_current_device(
@@ -83,13 +83,17 @@ def async_remove_stale_devices_links_keep_current_device(
     entry_id: str,
     current_device_id: str | None,
 ) -> None:
-    """Remove the link between stale devices and a configuration entry.
-
-    Only the device passed in the current_device_id parameter linked to
-    the configuration entry will be maintained.
-    """
+    """Remove entry_id from all devices except current_device_id."""
 
     dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+
+    # Make sure all entities are linked to the correct device
+    for entity in ent_reg.entities.get_entries_for_config_entry_id(entry_id):
+        if entity.device_id == current_device_id:
+            continue
+        ent_reg.async_update_entity(entity.entity_id, device_id=current_device_id)
+
     # Removes all devices from the config entry that are not the same as the current device
     for device in dev_reg.devices.get_devices_for_config_entry_id(entry_id):
         if device.id == current_device_id:

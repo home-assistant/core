@@ -9,7 +9,7 @@ from typing import Any
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
@@ -60,10 +60,25 @@ class ESPHomeDashboardManager:
     async def async_setup(self) -> None:
         """Restore the dashboard from storage."""
         self._data = await self._store.async_load()
-        if (data := self._data) and (info := data.get("info")):
-            await self.async_set_dashboard_info(
-                info["addon_slug"], info["host"], info["port"]
+        if not (data := self._data) or not (info := data.get("info")):
+            return
+        if is_hassio(self._hass):
+            from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
+                get_addons_info,
             )
+
+            if (addons := get_addons_info(self._hass)) is not None and info[
+                "addon_slug"
+            ] not in addons:
+                # The addon is not installed anymore, but it make come back
+                # so we don't want to remove the dashboard, but for now
+                # we don't want to use it.
+                _LOGGER.debug("Addon %s is no longer installed", info["addon_slug"])
+                return
+
+        await self.async_set_dashboard_info(
+            info["addon_slug"], info["host"], info["port"]
+        )
 
     @callback
     def async_get(self) -> ESPHomeDashboardCoordinator | None:
@@ -88,9 +103,7 @@ class ESPHomeDashboardManager:
                 self._cancel_shutdown = None
             self._current_dashboard = None
 
-        dashboard = ESPHomeDashboardCoordinator(
-            hass, addon_slug, url, async_get_clientsession(hass)
-        )
+        dashboard = ESPHomeDashboardCoordinator(hass, addon_slug, url)
         await dashboard.async_request_refresh()
 
         self._current_dashboard = dashboard

@@ -514,16 +514,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._name = f"{device.hostname} Internet Access"
         self._attr_unique_id = f"{self._mac}_internet_access"
         self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            default_manufacturer="AVM",
-            default_model="FRITZ!Box Tracked device",
-            default_name=device.hostname,
-            via_device=(
-                DOMAIN,
-                avm_wrapper.unique_id,
-            ),
-        )
 
     @property
     def is_on(self) -> bool | None:

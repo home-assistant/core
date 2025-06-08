@@ -297,7 +297,6 @@ class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
     _attr_translation_key = "backup_reserve"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_device_class = SensorDeviceClass.BATTERY
 
     @property
     def unique_id(self) -> str:
@@ -315,7 +314,7 @@ class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
 class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
-    _attr_state_class = SensorStateClass.TOTAL
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
 

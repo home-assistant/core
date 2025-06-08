@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{name} ({host})",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "Set up ViCare integration. To generate client ID go to https://app.developer.viessmann.com",
@@ -11,8 +11,8 @@
           "heating_type": "Heating type"
         },
         "data_description": {
-          "username": "The email address to login to your ViCare account.",
-          "password": "The password to login to your ViCare account.",
+          "username": "The email address to log in to your ViCare account.",
+          "password": "The password to log in to your ViCare account.",
           "client_id": "The ID of the API client created in the Viessmann developer portal.",
           "heating_type": "Allows to overrule the device auto detection."
         }

@@ -994,7 +994,7 @@ async def test_cost_sensor_handle_late_price_sensor(
 
 @pytest.mark.parametrize(
     "unit",
-    [UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS],
+    [UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS, UnitOfVolume.LITERS],
 )
 async def test_cost_sensor_handle_gas(
     setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any], unit

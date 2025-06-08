@@ -11,6 +11,8 @@ from homeassistant.components.time import TimeEntity
 
 from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
+PARALLEL_UPDATES = 0
+
 
 class EsphomeTime(EsphomeEntity[TimeInfo, TimeState], TimeEntity):
     """A time implementation for esphome."""

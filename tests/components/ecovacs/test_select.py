@@ -3,9 +3,9 @@
 from deebot_client.command import Command
 from deebot_client.commands.json import SetWaterInfo
 from deebot_client.event_bus import EventBus
-from deebot_client.events import WaterAmount, WaterInfoEvent
+from deebot_client.events.water_info import WaterAmount, WaterAmountEvent
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import select
 from homeassistant.components.ecovacs.const import DOMAIN
@@ -33,7 +33,7 @@ def platforms() -> Platform | list[Platform]:
 
 async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     """Notify events."""
-    event_bus.notify(WaterInfoEvent(WaterAmount.ULTRAHIGH))
+    event_bus.notify(WaterAmountEvent(WaterAmount.ULTRAHIGH))
     await block_till_done(hass, event_bus)
 
 

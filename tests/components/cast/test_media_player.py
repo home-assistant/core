@@ -18,6 +18,7 @@ import yarl
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.const import (
+    DOMAIN,
     SIGNAL_HASS_CAST_SHOW_VIEW,
     HomeAssistantControllerData,
 )
@@ -45,7 +46,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockConfigEntry,
     assert_setup_component,
-    load_fixture,
+    async_load_fixture,
     mock_platform,
 )
 from tests.components.media_player import common
@@ -1037,6 +1038,7 @@ async def test_entity_browse_media(
         ),
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1049,6 +1051,7 @@ async def test_entity_browse_media(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1107,6 +1110,7 @@ async def test_entity_browse_media_audio_only(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1345,7 +1349,7 @@ async def test_entity_play_media_playlist(
 ) -> None:
     """Test playing media."""
     entity_id = "media_player.speaker"
-    aioclient_mock.get(url, text=load_fixture(fixture, "cast"))
+    aioclient_mock.get(url, text=await async_load_fixture(hass, fixture, DOMAIN))
 
     await async_process_ha_core_config(
         hass,
@@ -2208,6 +2212,7 @@ async def test_cast_platform_browse_media(
         "media_content_id": "",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "thumbnail": "https://brands.home-assistant.io/_/spotify/logo.png",
         "children_media_class": None,
     }
@@ -2232,6 +2237,7 @@ async def test_cast_platform_browse_media(
         "media_content_id": "",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "children_media_class": None,
         "thumbnail": None,
         "children": [],

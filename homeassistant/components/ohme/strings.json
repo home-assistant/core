@@ -140,7 +140,7 @@
   },
   "exceptions": {
     "auth_failed": {
-      "message": "Unable to login to Ohme"
+      "message": "Unable to log in to Ohme"
     },
     "device_info_failed": {
       "message": "Unable to get Ohme device information"

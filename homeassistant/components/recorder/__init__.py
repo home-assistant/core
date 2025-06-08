@@ -170,12 +170,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         exclude_event_types=exclude_event_types,
     )
     get_instance.cache_clear()
+    entity_registry.async_setup(hass)
     instance.async_initialize()
     instance.async_register()
     instance.start()
     async_register_services(hass, instance)
     websocket_api.async_setup(hass)
-    entity_registry.async_setup(hass)
 
     await _async_setup_integration_platform(hass, instance)
 

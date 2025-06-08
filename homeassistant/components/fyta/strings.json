@@ -9,8 +9,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "The email address to login to your FYTA account.",
-          "password": "The password to login to your FYTA account."
+          "username": "The email address to log in to your FYTA account.",
+          "password": "The password to log in to your FYTA account."
         }
       },
       "reauth_confirm": {
@@ -59,6 +59,14 @@
       },
       "sensor_update_available": {
         "name": "Sensor update available"
+      }
+    },
+    "image": {
+      "plant_image": {
+        "name": "Plant image"
+      },
+      "plant_image_user": {
+        "name": "User image"
       }
     },
     "sensor": {

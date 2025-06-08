@@ -12,5 +12,5 @@
   "documentation": "https://www.home-assistant.io/integrations/nexia",
   "iot_class": "cloud_polling",
   "loggers": ["nexia"],
-  "requirements": ["nexia==2.7.0"]
+  "requirements": ["nexia==2.10.0"]
 }

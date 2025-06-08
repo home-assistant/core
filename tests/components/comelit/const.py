@@ -38,7 +38,7 @@ BRIDGE_DEVICE_QUERY = {
             type="climate",
             val=[
                 [221, 0, "U", "M", 50, 0, 0, "U"],
-                [650, 0, "O", "M", 500, 0, 0, "N"],
+                [650, 0, "U", "M", 500, 0, 0, "U"],
                 [0, 0],
             ],
             protected=0,

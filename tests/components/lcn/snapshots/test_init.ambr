@@ -30,7 +30,6 @@
           'transition': 5.0,
         }),
         'name': 'Light_Output1',
-        'resource': 'output1',
       }),
     ]),
     'host': 'pchk',
@@ -72,7 +71,6 @@
           'transition': 5.0,
         }),
         'name': 'Light_Output1',
-        'resource': 'output1',
       }),
       dict({
         'address': tuple(
@@ -87,7 +85,6 @@
           'transition': 0.0,
         }),
         'name': 'Light_Output2',
-        'resource': 'output2',
       }),
       dict({
         'address': tuple(
@@ -107,7 +104,6 @@
           'transition': 0.0,
         }),
         'name': 'Romantic',
-        'resource': '0.0',
       }),
       dict({
         'address': tuple(
@@ -127,7 +123,134 @@
           'transition': 10.0,
         }),
         'name': 'Romantic Transition',
-        'resource': '0.1',
+      }),
+    ]),
+    'host': 'pchk',
+    'ip_address': '192.168.2.41',
+    'password': 'lcn',
+    'port': 4114,
+    'sk_num_tries': 0,
+    'username': 'lcn',
+  })
+# ---
+# name: test_migrate_2_1
+  dict({
+    'acknowledge': False,
+    'devices': list([
+      dict({
+        'address': tuple(
+          0,
+          7,
+          False,
+        ),
+        'hardware_serial': -1,
+        'hardware_type': -1,
+        'name': 'TestModule',
+        'software_serial': -1,
+      }),
+    ]),
+    'dim_mode': 'STEPS200',
+    'entities': list([
+      dict({
+        'address': tuple(
+          0,
+          7,
+          False,
+        ),
+        'domain': 'light',
+        'domain_data': dict({
+          'dimmable': True,
+          'output': 'OUTPUT1',
+          'transition': 5.0,
+        }),
+        'name': 'Light_Output1',
+      }),
+      dict({
+        'address': tuple(
+          0,
+          7,
+          False,
+        ),
+        'domain': 'switch',
+        'domain_data': dict({
+          'output': 'RELAY1',
+        }),
+        'name': 'Switch_Relay1',
+      }),
+      dict({
+        'address': tuple(
+          0,
+          7,
+          False,
+        ),
+        'domain': 'cover',
+        'domain_data': dict({
+          'motor': 'MOTOR1',
+          'reverse_time': 'RT1200',
+        }),
+        'name': 'Cover_Relays',
+      }),
+      dict({
+        'address': tuple(
+          0,
+          7,
+          False,
+        ),
+        'domain': 'climate',
+        'domain_data': dict({
+          'lockable': True,
+          'max_temp': 40.0,
+          'min_temp': 0.0,
+          'setpoint': 'R1VARSETPOINT',
+          'source': 'VAR1',
+          'target_value_locked': -1,
+          'unit_of_measurement': '°C',
+        }),
+        'name': 'Climate1',
+      }),
+      dict({
+        'address': tuple(
+          0,
+          7,
+          False,
+        ),
+        'domain': 'scene',
+        'domain_data': dict({
+          'outputs': list([
+            'OUTPUT1',
+            'OUTPUT2',
+            'RELAY1',
+          ]),
+          'register': 0,
+          'scene': 0,
+          'transition': 0.0,
+        }),
+        'name': 'Romantic',
+      }),
+      dict({
+        'address': tuple(
+          0,
+          7,
+          False,
+        ),
+        'domain': 'binary_sensor',
+        'domain_data': dict({
+          'source': 'BINSENSOR1',
+        }),
+        'name': 'Binary_Sensor1',
+      }),
+      dict({
+        'address': tuple(
+          0,
+          7,
+          False,
+        ),
+        'domain': 'sensor',
+        'domain_data': dict({
+          'source': 'VAR1',
+          'unit_of_measurement': '°C',
+        }),
+        'name': 'Sensor_Var1',
       }),
     ]),
     'host': 'pchk',

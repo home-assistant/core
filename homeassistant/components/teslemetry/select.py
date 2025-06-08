@@ -20,7 +20,7 @@ from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_command, handle_vehicle_command
@@ -177,7 +177,7 @@ async def async_setup_entry(
     async_add_entities(
         chain(
             (
-                TeslemetryPollingSelectEntity(
+                TeslemetryVehiclePollingSelectEntity(
                     vehicle, description, entry.runtime_data.scopes
                 )
                 if vehicle.api.pre2021
@@ -208,6 +208,7 @@ async def async_setup_entry(
 class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
     """Parent vehicle select entity class."""
 
+    api: Vehicle
     entity_description: TeslemetrySelectEntityDescription
     _climate: bool = False
 
@@ -223,7 +224,9 @@ class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingSelectEntity(TeslemetryVehicleEntity, TeslemetrySelectEntity):
+class TeslemetryVehiclePollingSelectEntity(
+    TeslemetryVehiclePollingEntity, TeslemetrySelectEntity
+):
     """Base polling vehicle select entity class."""
 
     def __init__(

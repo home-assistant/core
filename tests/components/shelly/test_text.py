@@ -3,15 +3,19 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 
+from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.text import (
     ATTR_VALUE,
     DOMAIN as TEXT_PLATFORM,
     SERVICE_SET_VALUE,
 )
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -67,6 +71,7 @@ async def test_rpc_device_virtual_text(
         blocking=True,
     )
     mock_rpc_device.mock_update()
+    mock_rpc_device.text_set.assert_called_once_with(203, "sed do eiusmod")
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "sed do eiusmod"
@@ -127,3 +132,96 @@ async def test_rpc_remove_virtual_text_when_orphaned(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while calling action for text.test_name_text_203 of Test name",
+        ),
+        (
+            RpcCallError(999),
+            "RPC call error occurred while calling action for text.test_name_text_203 of Test name",
+        ),
+    ],
+)
+async def test_text_set_exc(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test text setting with exception."""
+    config = deepcopy(mock_rpc_device.config)
+    config["text:203"] = {
+        "name": None,
+        "meta": {"ui": {"view": "field"}},
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["text:203"] = {"value": "lorem ipsum"}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    mock_rpc_device.text_set.side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match=error):
+        await hass.services.async_call(
+            TEXT_PLATFORM,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: f"{TEXT_PLATFORM}.test_name_text_203",
+                ATTR_VALUE: "new value",
+            },
+            blocking=True,
+        )
+
+
+async def test_text_set_reauth_error(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test text setting with authentication error."""
+    config = deepcopy(mock_rpc_device.config)
+    config["text:203"] = {
+        "name": None,
+        "meta": {"ui": {"view": "field"}},
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["text:203"] = {"value": "lorem ipsum"}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    entry = await init_integration(hass, 3)
+
+    mock_rpc_device.text_set.side_effect = InvalidAuthError
+
+    await hass.services.async_call(
+        TEXT_PLATFORM,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: f"{TEXT_PLATFORM}.test_name_text_203",
+            ATTR_VALUE: "new value",
+        },
+        blocking=True,
+    )
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id

@@ -15,9 +15,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import CONNECTED_WIFI_CLIENTS, DOMAIN, WIFI_APTYPE, WIFI_BANDS
-from .coordinator import DevoloDataUpdateCoordinator
+from .coordinator import DevoloDataUpdateCoordinator, DevoloHomeNetworkConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -88,6 +87,8 @@ class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
 ):
     """Representation of a devolo device tracker."""
 
+    _attr_translation_key = "device_tracker"
+
     def __init__(
         self,
         coordinator: DevoloDataUpdateCoordinator[list[ConnectedStationInfo]],
@@ -122,13 +123,6 @@ class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
                 else STATE_UNKNOWN
             )
         return attrs
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        if self.is_connected:
-            return "mdi:lan-connect"
-        return "mdi:lan-disconnect"
 
     @property
     def is_connected(self) -> bool:

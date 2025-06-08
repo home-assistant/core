@@ -10,7 +10,6 @@ from aiohue.v2.models.resource import ResourceTypes
 from homeassistant import core
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_HOST, CONF_USERNAME
 from homeassistant.helpers import (
     aiohttp_client,
@@ -18,12 +17,13 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
+from .bridge import HueConfigEntry
 from .const import DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 
 
-async def check_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
+async def check_migration(hass: core.HomeAssistant, entry: HueConfigEntry) -> None:
     """Check if config entry needs any migration actions."""
     host = entry.data[CONF_HOST]
 
@@ -66,7 +66,7 @@ async def check_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
             hass.config_entries.async_update_entry(entry, data=data)
 
 
-async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
+async def handle_v2_migration(hass: core.HomeAssistant, entry: HueConfigEntry) -> None:
     """Perform migration of devices and entities to V2 Id's."""
     host = entry.data[CONF_HOST]
     api_key = entry.data[CONF_API_KEY]

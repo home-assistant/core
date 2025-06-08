@@ -197,6 +197,7 @@ class ChatLog:
                 (
                     "?",
                     ";",  # Greek question mark
+                    "？",  # Chinese question mark
                 )
             )
         )
@@ -387,7 +388,7 @@ class ChatLog:
         self,
         conversing_domain: str,
         user_input: ConversationInput,
-        user_llm_hass_api: str | None = None,
+        user_llm_hass_api: str | list[str] | None = None,
         user_llm_prompt: str | None = None,
     ) -> None:
         """Set the LLM system prompt."""

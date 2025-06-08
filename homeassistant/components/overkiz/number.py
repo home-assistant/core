@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -172,6 +172,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         native_max_value=7,
         set_native_value=_async_set_native_value_boost_mode_duration,
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
     ),
     # DomesticHotWaterProduction - away mode in days (0 - 6)
     OverkizNumberDescription(
@@ -182,6 +184,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         native_min_value=0,
         native_max_value=6,
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
     ),
 ]
 

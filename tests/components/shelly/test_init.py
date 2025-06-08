@@ -16,6 +16,8 @@ from aioshelly.rpc_device.utils import bluetooth_mac_from_primary_mac
 import pytest
 
 from homeassistant.components.shelly.const import (
+    BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
+    BLE_SCANNER_MIN_FIRMWARE,
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_BLE_SCANNER_MODE,
@@ -38,7 +40,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceRegistry, format_mac
 from homeassistant.setup import async_setup_component
 
-from . import init_integration, mutate_rpc_device_status
+from . import MOCK_MAC, init_integration, mutate_rpc_device_status
 
 
 async def test_custom_coap_port(
@@ -344,7 +346,7 @@ async def test_sleeping_rpc_device_offline_during_setup(
     ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
-        (2, "switch.test_switch_0"),
+        (2, "switch.test_name_test_switch_0"),
     ],
 )
 async def test_entry_unload(
@@ -376,7 +378,7 @@ async def test_entry_unload(
     ("gen", "entity_id"),
     [
         (1, "switch.test_name_channel_1"),
-        (2, "switch.test_switch_0"),
+        (2, "switch.test_name_test_switch_0"),
     ],
 )
 async def test_entry_unload_device_not_ready(
@@ -415,7 +417,7 @@ async def test_entry_unload_not_connected(
         )
         assert entry.state is ConfigEntryState.LOADED
 
-        assert (state := hass.states.get("switch.test_switch_0"))
+        assert (state := hass.states.get("switch.test_name_test_switch_0"))
         assert state.state == STATE_ON
         assert not mock_stop_scanner.call_count
 
@@ -446,7 +448,7 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         )
         assert entry.state is ConfigEntryState.LOADED
 
-        assert (state := hass.states.get("switch.test_switch_0"))
+        assert (state := hass.states.get("switch.test_name_test_switch_0"))
         assert state.state == STATE_ON
         assert not mock_stop_scanner.call_count
 
@@ -481,6 +483,7 @@ async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device: Mock) -
 
     assert entry.state is ConfigEntryState.LOADED
 
+    # num_outputs is 2, channel name is used
     assert (state := hass.states.get("switch.test_name_channel_1"))
     assert state.state == STATE_ON
 
@@ -579,3 +582,27 @@ async def test_device_script_getcode_error(
 
     entry = await init_integration(hass, 2)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_ble_scanner_unsupported_firmware_fixed(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test device init with unsupported firmware."""
+    issue_id = BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
+    entry = await init_integration(
+        hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+    )
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+    monkeypatch.setitem(mock_rpc_device.shelly, "ver", BLE_SCANNER_MIN_FIRMWARE)
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.statistics import DOMAIN as STATISTICS_DOMAIN
+from homeassistant.components.statistics import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -51,7 +51,7 @@ async def test_device_cleaning(
     # Configure the configuration entry for Statistics
     statistics_config_entry = MockConfigEntry(
         data={},
-        domain=STATISTICS_DOMAIN,
+        domain=DOMAIN,
         options={
             "name": "Statistics",
             "entity_id": "sensor.test_source",

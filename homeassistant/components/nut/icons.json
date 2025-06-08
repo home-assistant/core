@@ -1,10 +1,5 @@
 {
   "entity": {
-    "button": {
-      "outlet_number_load_cycle": {
-        "default": "mdi:restart"
-      }
-    },
     "sensor": {
       "ambient_humidity_status": {
         "default": "mdi:information-outline"

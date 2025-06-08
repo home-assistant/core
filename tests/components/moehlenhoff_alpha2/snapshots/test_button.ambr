@@ -27,6 +27,7 @@
     'original_name': 'Sync time',
     'platform': 'moehlenhoff_alpha2',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '6fa019921cf8e7a3f57a3c2ed001a10d:sync_time',

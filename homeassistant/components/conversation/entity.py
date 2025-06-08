@@ -18,7 +18,13 @@ class ConversationEntity(RestoreEntity):
 
     _attr_should_poll = False
     _attr_supported_features = ConversationEntityFeature(0)
+    _attr_supports_streaming = False
     __last_activity: str | None = None
+
+    @property
+    def supports_streaming(self) -> bool:
+        """Return if the entity supports streaming responses."""
+        return self._attr_supports_streaming
 
     @property
     @final

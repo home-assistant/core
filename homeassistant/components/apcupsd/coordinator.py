@@ -86,10 +86,15 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
         self._port = port
 
     @property
+    def unique_device_id(self) -> str:
+        """Return a unique ID of the device, which is the serial number (if available) or the config entry ID."""
+        return self.data.serial_no or self.config_entry.entry_id
+
+    @property
     def device_info(self) -> DeviceInfo:
         """Return the DeviceInfo of this APC UPS, if serial number is available."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.data.serial_no or self.config_entry.entry_id)},
+            identifiers={(DOMAIN, self.unique_device_id)},
             model=self.data.model,
             manufacturer="APC",
             name=self.data.name or "APC UPS",
@@ -108,4 +113,7 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
                 data = await aioapcaccess.request_status(self._host, self._port)
                 return APCUPSdData(data)
             except (OSError, asyncio.IncompleteReadError) as error:
-                raise UpdateFailed(error) from error
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                ) from error

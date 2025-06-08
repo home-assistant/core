@@ -68,6 +68,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': <FanEntityFeature: 57>,
       'translation_key': 'vesync',
       'unique_id': 'air-purifier',
@@ -78,11 +79,17 @@
 # name: test_fan_state[Air Purifier 131s][fan.air_purifier_131s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': 0,
       'friendly_name': 'Air Purifier 131s',
+      'mode': 'sleep',
+      'percentage': None,
+      'percentage_step': 33.333333333333336,
+      'preset_mode': 'sleep',
       'preset_modes': list([
         'auto',
         'sleep',
       ]),
+      'screen_status': 'on',
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -90,7 +97,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'on',
   })
 # ---
 # name: test_fan_state[Air Purifier 200s][devices]
@@ -161,6 +168,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': <FanEntityFeature: 57>,
       'translation_key': 'vesync',
       'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55',
@@ -261,6 +269,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': <FanEntityFeature: 57>,
       'translation_key': 'vesync',
       'unique_id': '400s-purifier',
@@ -362,6 +371,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': <FanEntityFeature: 57>,
       'translation_key': 'vesync',
       'unique_id': '600s-purifier',
@@ -634,8 +644,8 @@
         'preset_modes': list([
           'advancedSleep',
           'auto',
-          'turbo',
           'normal',
+          'turbo',
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -660,6 +670,7 @@
       'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': <FanEntityFeature: 57>,
       'translation_key': 'vesync',
       'unique_id': 'smarttowerfan',
@@ -676,12 +687,12 @@
       'night_light': 'off',
       'percentage': None,
       'percentage_step': 7.6923076923076925,
-      'preset_mode': None,
+      'preset_mode': 'normal',
       'preset_modes': list([
         'advancedSleep',
         'auto',
-        'turbo',
         'normal',
+        'turbo',
       ]),
       'screen_status': False,
       'supported_features': <FanEntityFeature: 57>,

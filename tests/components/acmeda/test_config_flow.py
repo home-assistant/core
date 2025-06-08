@@ -49,6 +49,21 @@ async def test_show_form_no_hubs(hass: HomeAssistant, mock_hub_discover) -> None
     assert len(mock_hub_discover.mock_calls) == 1
 
 
+async def test_timeout_fetching_hub(hass: HomeAssistant, mock_hub_discover) -> None:
+    """Test that flow aborts if no hubs are discovered."""
+    mock_hub_discover.side_effect = TimeoutError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+    # Check we performed the discovery
+    assert len(mock_hub_discover.mock_calls) == 1
+
+
 @pytest.mark.usefixtures("mock_hub_run")
 async def test_show_form_one_hub(hass: HomeAssistant, mock_hub_discover) -> None:
     """Test that a config is created when one hub discovered."""

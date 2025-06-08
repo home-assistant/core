@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
@@ -36,7 +36,7 @@ async def test_all_entities(
     await snapshot_platform(
         hass,
         entity_registry,
-        snapshot(),
+        snapshot,
         mock_serial_bridge_config_entry.entry_id,
     )
 

@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN as AGENT_DOMAIN, SERVER_URL
+from .const import DOMAIN, SERVER_URL
 
 ATTRIBUTION = "ispyconnect.com"
 DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
@@ -46,7 +46,7 @@ async def async_setup_entry(
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(AGENT_DOMAIN, agent_client.unique)},
+        identifiers={(DOMAIN, agent_client.unique)},
         manufacturer="iSpyConnect",
         name=f"Agent {agent_client.name}",
         model="Agent DVR",

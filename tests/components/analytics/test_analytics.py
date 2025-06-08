@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 import aiohttp
 from awesomeversion import AwesomeVersion
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
 from homeassistant.components.analytics.analytics import Analytics
@@ -918,5 +918,51 @@ async def test_not_check_config_entries_if_yaml(
 
     assert submitted_data["integration_count"] == 1
     assert submitted_data["integrations"] == ["default_config"]
+    assert submitted_data == logged_data
+    assert snapshot == submitted_data
+
+
+@pytest.mark.usefixtures("installation_type_mock", "supervisor_client")
+async def test_submitting_legacy_integrations(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test submitting legacy integrations."""
+    hass.http = Mock(ssl_certificate=None)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    analytics = Analytics(hass)
+
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
+    assert analytics.preferences[ATTR_BASE]
+    assert analytics.preferences[ATTR_USAGE]
+    hass.config.components = ["binary_sensor"]
+
+    with (
+        patch(
+            "homeassistant.components.analytics.analytics.async_get_integrations",
+            return_value={
+                "default_config": mock_integration(
+                    hass,
+                    MockModule(
+                        "legacy_binary_sensor",
+                        async_setup=AsyncMock(return_value=True),
+                        partial_manifest={"config_flow": False},
+                    ),
+                ),
+            },
+        ),
+        patch(
+            "homeassistant.config.async_hass_config_yaml",
+            return_value={"binary_sensor": [{"platform": "legacy_binary_sensor"}]},
+        ),
+    ):
+        await analytics.send_analytics()
+
+    logged_data = caplog.records[-1].args
+    submitted_data = _last_call_payload(aioclient_mock)
+
+    assert submitted_data["integrations"] == ["legacy_binary_sensor"]
     assert submitted_data == logged_data
     assert snapshot == submitted_data

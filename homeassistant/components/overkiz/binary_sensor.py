@@ -49,6 +49,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         key=OverkizState.CORE_WATER_DETECTION,
         name="Water",
         icon="mdi:water",
+        device_class=BinarySensorDeviceClass.MOISTURE,
         value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # AirSensor/AirFlowSensor

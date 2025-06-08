@@ -111,7 +111,7 @@ async def test_options_unsupported_model(
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
             CONF_CHAT_MODEL: "o1-mini",
-            CONF_LLM_HASS_API: "assist",
+            CONF_LLM_HASS_API: ["assist"],
         },
     )
     await hass.async_block_till_done()
@@ -168,7 +168,6 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
         (
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "none",
                 CONF_PROMPT: "bla",
             },
             {
@@ -204,12 +203,29 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
             },
             {
                 CONF_RECOMMENDED: True,
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_PROMPT: "",
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_PROMPT: "",
+            },
+        ),
+        (
+            {
+                CONF_RECOMMENDED: True,
                 CONF_LLM_HASS_API: "assist",
                 CONF_PROMPT: "",
             },
             {
                 CONF_RECOMMENDED: True,
-                CONF_LLM_HASS_API: "assist",
+                CONF_LLM_HASS_API: ["assist"],
+                CONF_PROMPT: "",
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_LLM_HASS_API: ["assist"],
                 CONF_PROMPT: "",
             },
         ),
@@ -338,7 +354,7 @@ async def test_options_web_search_unsupported_model(
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
             CONF_CHAT_MODEL: "o1-pro",
-            CONF_LLM_HASS_API: "assist",
+            CONF_LLM_HASS_API: ["assist"],
             CONF_WEB_SEARCH: True,
         },
     )

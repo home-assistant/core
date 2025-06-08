@@ -30,7 +30,7 @@ def mocked_ec():
     ec_mock.lat = FAKE_CONFIG[CONF_LATITUDE]
     ec_mock.lon = FAKE_CONFIG[CONF_LONGITUDE]
     ec_mock.language = FAKE_CONFIG[CONF_LANGUAGE]
-    ec_mock.metadata = {"location": FAKE_TITLE}
+    ec_mock.metadata.location = FAKE_TITLE
 
     ec_mock.update = AsyncMock()
 

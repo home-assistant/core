@@ -9,8 +9,454 @@ from typing import Final
 
 DHCP: Final[list[dict[str, str | bool]]] = [
     {
+        "domain": "airthings",
+        "hostname": "airthings-view",
+    },
+    {
+        "domain": "airthings",
+        "hostname": "airthings-hub",
+        "macaddress": "D0141190*",
+    },
+    {
+        "domain": "airthings",
+        "hostname": "airthings-hub",
+        "macaddress": "70B3D52A0*",
+    },
+    {
         "domain": "airzone",
         "macaddress": "E84F25*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "007147*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "00FC8B*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "0812A5*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "086AE5*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "08849D*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "089115*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "08A6BC*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "08C224*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "0CDC91*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "0CEE99*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "1009F9*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "109693*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "10BF67*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "10CE02*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "140AC5*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "149138*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "1848BE*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "1C12B0*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "1C4D66*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "1C93C4*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "1CFE2B*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "244CE3*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "24CE33*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "2873F6*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "2C71FF*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "34AFB3*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "34D270*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "38F73D*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "3C5CC4*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "3CE441*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "440049*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "40A2DB*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "40A9CF*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "40B4CD*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "443D54*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "44650D*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "485F2D*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "48785E*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "48B423*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "4C1744*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "4CEFC0*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "5007C3*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "50D45C*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "50DCE7*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "50F5DA*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "5C415A*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "6837E9*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "6854FD*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "689A87*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "68B691*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "68DBF5*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "68F63B*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "6C0C9A*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "6C5697*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "7458F3*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "74C246*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "74D637*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "74E20C*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "74ECB2*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "786C84*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "78A03F*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "7C6166*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "7C6305*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "7CD566*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "8871E5*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "901195*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "90235B*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "90A822*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "90F82E*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "943A91*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "98226E*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "98CCF3*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "9CC8E9*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "A002DC*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "A0D2B1*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "A40801*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "A8E621*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "AC416A*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "AC63BE*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "ACCCFC*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "B0739C*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "B0CFCB*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "B0F7C4*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "B85F98*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "C091B9*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "C095CF*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "C49500*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "C86C3D*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "CC9EA2*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "CCF735*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "DC54D7*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "D8BE65*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "D8FBD6*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "DC91BF*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "DCA0D0*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "E0F728*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "EC2BEB*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "EC8AC4*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "ECA138*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "F02F9E*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "F0272D*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "F0F0A4*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "F4032A*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "F854B8*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "FC492D*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "FC65DE*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "FCA183*",
+    },
+    {
+        "domain": "amazon_devices",
+        "macaddress": "FCE9D8*",
     },
     {
         "domain": "august",
@@ -93,6 +539,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "bond",
         "hostname": "bond-*",
         "macaddress": "F44E38*",
+    },
+    {
+        "domain": "bosch_alarm",
+        "macaddress": "000463*",
     },
     {
         "domain": "broadlink",
@@ -259,6 +709,21 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "30AEA4*",
     },
     {
+        "domain": "home_connect",
+        "hostname": "balay-*",
+        "macaddress": "C8D778*",
+    },
+    {
+        "domain": "home_connect",
+        "hostname": "(balay|bosch|neff|siemens)-*",
+        "macaddress": "68A40E*",
+    },
+    {
+        "domain": "home_connect",
+        "hostname": "(siemens|neff)-*",
+        "macaddress": "38B4D3*",
+    },
+    {
         "domain": "homewizard",
         "registered_devices": True,
     },
@@ -312,6 +777,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "000DB9*",
     },
     {
+        "domain": "knocki",
+        "hostname": "knc*",
+    },
+    {
         "domain": "lamarzocco",
         "registered_devices": True,
     },
@@ -330,6 +799,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "lametric",
         "registered_devices": True,
+    },
+    {
+        "domain": "lg_thinq",
+        "macaddress": "34E6E6*",
     },
     {
         "domain": "lifx",
@@ -405,11 +878,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "9CADEF*",
     },
     {
-        "domain": "oncue",
-        "hostname": "kohlergen*",
-        "macaddress": "00146F*",
-    },
-    {
         "domain": "onvif",
         "registered_devices": True,
     },
@@ -470,6 +938,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "rainforest_eagle",
         "macaddress": "D8D5B9*",
+    },
+    {
+        "domain": "rehlko",
+        "hostname": "kohlergen*",
+        "macaddress": "00146F*",
     },
     {
         "domain": "reolink",
@@ -612,6 +1085,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "sleepiq",
         "macaddress": "64DBA0*",
+    },
+    {
+        "domain": "sma",
+        "hostname": "sma*",
+        "macaddress": "0015BB*",
+    },
+    {
+        "domain": "sma",
+        "registered_devices": True,
     },
     {
         "domain": "smartthings",

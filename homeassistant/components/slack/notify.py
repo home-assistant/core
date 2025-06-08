@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 
 from aiohttp import BasicAuth
 from aiohttp.client_exceptions import ClientError
-from slack.errors import SlackApiError
+from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
 import voluptuous as vol
 

@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 from soco.data_structures import SearchResult
 from sonos_websocket.exception import SonosWebsocketError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -27,7 +27,8 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.components.sonos.const import (
-    DOMAIN as SONOS_DOMAIN,
+    DOMAIN,
+    MEDIA_TYPE_DIRECTORY,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
@@ -182,6 +183,19 @@ async def test_entity_basic(
                 "play_pos": 0,
             },
         ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/elton%20john",
+            MediaPlayerEnqueue.REPLACE,
+            {
+                "title": None,
+                "item_id": "S://192.168.1.1/music/elton%20john",
+                "clear_queue": 1,
+                "position": None,
+                "play": 1,
+                "play_pos": 0,
+            },
+        ),
     ],
 )
 async def test_play_media_library(
@@ -246,6 +260,11 @@ async def test_play_media_library(
             "UnknownContent",
             "A:ALBUM/UnknowAlbum",
             "Sonos does not support media content type: UnknownContent",
+        ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/error",
+            "Could not find media in library: S://192.168.1.1/music/error",
         ),
     ],
 )
@@ -993,7 +1012,7 @@ async def test_play_media_favorite_item_id(
 async def _setup_hass(hass: HomeAssistant):
     await async_setup_component(
         hass,
-        SONOS_DOMAIN,
+        DOMAIN,
         {
             "sonos": {
                 "media_player": {
@@ -1018,7 +1037,7 @@ async def test_service_snapshot_restore(
         "homeassistant.components.sonos.speaker.Snapshot.snapshot"
     ) as mock_snapshot:
         await hass.services.async_call(
-            SONOS_DOMAIN,
+            DOMAIN,
             SERVICE_SNAPSHOT,
             {
                 ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
@@ -1031,7 +1050,7 @@ async def test_service_snapshot_restore(
         "homeassistant.components.sonos.speaker.Snapshot.restore"
     ) as mock_restore:
         await hass.services.async_call(
-            SONOS_DOMAIN,
+            DOMAIN,
             SERVICE_RESTORE,
             {
                 ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
@@ -1208,7 +1227,7 @@ async def test_media_get_queue(
     """Test getting the media queue."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     result = await hass.services.async_call(
-        SONOS_DOMAIN,
+        DOMAIN,
         SERVICE_GET_QUEUE,
         {
             ATTR_ENTITY_ID: "media_player.zone_a",
