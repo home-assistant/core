@@ -382,3 +382,50 @@ async def test_user_flow_can_update_existing_host_port(
     # Verify the existing entry WAS updated with new host/port (user flow behavior)
     assert entry.data[CONF_HOST] == "10.0.2.60"  # Updated host
     assert entry.data[CONF_PORT] == 80  # Updated port
+
+
+async def test_zeroconf_discovery_mac_mismatch_updates_unique_id(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_setup_entry: AsyncMock,
+    zeroconf_discovery_info_different_mac: ZeroconfServiceInfo,
+) -> None:
+    """Test Zeroconf discovery when MAC from discovery differs from device API."""
+    # The fixture provides MAC "aa:bb:cc:dd:ee:ff" in Zeroconf discovery
+    # But the mock device API returns "00:80:41:19:69:90" (from device.json)
+    discovery_info = zeroconf_discovery_info_different_mac
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "discovery_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    # Title should use the MAC from the device API, not from Zeroconf
+    assert result2.get("title") == format_mac("00:80:41:19:69:90")
+    assert result2.get("data") == {
+        CONF_HOST: "10.0.2.60",
+        CONF_PORT: 80,
+        CONF_PASSKEY: "1234",
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "admin1234",
+    }
+    assert "result" in result2
+    # Unique ID should be updated to the MAC from device API
+    assert result2["result"].unique_id == format_mac("00:80:41:19:69:90")
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_bsblan.device.mock_calls) == 1
