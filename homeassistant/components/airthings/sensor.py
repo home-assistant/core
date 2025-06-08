@@ -19,6 +19,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
     UnitOfPressure,
+    UnitOfSoundPressure,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -53,6 +54,12 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="pressure",
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "sla": SensorEntityDescription(
+        key="sla",
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
+        native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": SensorEntityDescription(

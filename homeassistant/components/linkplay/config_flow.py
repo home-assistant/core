@@ -31,6 +31,9 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle Zeroconf discovery."""
 
+        # Do not probe the device if the host is already configured
+        self._async_abort_entries_match({CONF_HOST: discovery_info.host})
+
         session: ClientSession = await async_get_client_session(self.hass)
         bridge: LinkPlayBridge | None = None
 

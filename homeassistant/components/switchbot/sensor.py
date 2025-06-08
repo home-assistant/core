@@ -19,6 +19,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
 )
@@ -94,7 +95,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     "current": SensorEntityDescription(
         key="current",
-        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
     ),
@@ -109,6 +110,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         translation_key="aqi_quality_level",
         device_class=SensorDeviceClass.ENUM,
         options=[member.name.lower() for member in AirQualityLevel],
+    ),
+    "energy": SensorEntityDescription(
+        key="energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
     ),
 }
 

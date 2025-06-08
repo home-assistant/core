@@ -6,11 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    LockEntity,
-    LockEntityFeature,
-)
+from homeassistant.components.lock import DOMAIN, LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -128,7 +124,7 @@ async def setup_lock_platform_test_entity(
 
     mock_platform(
         hass,
-        f"{TEST_DOMAIN}.{LOCK_DOMAIN}",
+        f"{TEST_DOMAIN}.{DOMAIN}",
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 

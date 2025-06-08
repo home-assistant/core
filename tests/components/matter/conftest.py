@@ -88,6 +88,7 @@ async def integration_fixture(
         "eve_thermo",
         "eve_weather_sensor",
         "extended_color_light",
+        "extractor_hood",
         "fan",
         "flow_sensor",
         "generic_switch",

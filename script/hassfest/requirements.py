@@ -26,9 +26,13 @@ from .model import Config, Integration
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
     "attrs": "CalVer",
+    "awesomeversion": "CalVer",
     "grpcio": "SemVer",
     "httpx": "SemVer",
     "mashumaro": "SemVer",
+    "numpy": "SemVer",
+    "pandas": "SemVer",
+    "pillow": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
     "pytz": "CalVer",
@@ -40,13 +44,14 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
-    "ollama": {
-        # https://github.com/ollama/ollama-python/pull/445 (not yet released)
-        "ollama": {"httpx"}
+    "geocaching": {
+        # scipy version closely linked to numpy
+        # geocachingapi > reverse_geocode > scipy > numpy
+        "scipy": {"numpy"}
     },
-    "overkiz": {
-        # https://github.com/iMicknl/python-overkiz-api/issues/1644 (not yet released)
-        "pyoverkiz": {"attrs"},
+    "mealie": {
+        # https://github.com/joostlek/python-mealie/pull/490
+        "aiomealie": {"awesomeversion"}
     },
 }
 
@@ -91,7 +96,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "bsblan": {"python-bsblan": {"async-timeout"}},
     "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
@@ -332,14 +336,6 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "eq3btsmart": {
         # https://github.com/EuleMitKeule/eq3btsmart/releases/tag/2.0.0
         "homeassistant": {"eq3btsmart"}
-    },
-    "homekit_controller": {
-        # https://github.com/Jc2k/aiohomekit/issues/456
-        "homeassistant": {"aiohomekit"}
-    },
-    "netatmo": {
-        # https://github.com/jabesq-org/pyatmo/pull/533 (not yet released)
-        "homeassistant": {"pyatmo"}
     },
     "python_script": {
         # Security audits are needed for each Python version

@@ -150,6 +150,10 @@ async def async_setup_entry(
 
         if host.api.new_devices and config_entry.state == ConfigEntryState.LOADED:
             # Their are new cameras/chimes connected, reload to add them.
+            _LOGGER.debug(
+                "Reloading Reolink %s to add new device (capabilities)",
+                host.api.nvr_name,
+            )
             hass.async_create_task(
                 hass.config_entries.async_reload(config_entry.entry_id)
             )

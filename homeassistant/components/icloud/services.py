@@ -115,8 +115,8 @@ def _get_account(hass: HomeAssistant, account_identifier: str) -> IcloudAccount:
     return icloud_account
 
 
-def register_services(hass: HomeAssistant) -> None:
-    """Set up an iCloud account from a config entry."""
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Register iCloud services."""
 
     hass.services.async_register(
         DOMAIN, SERVICE_ICLOUD_PLAY_SOUND, play_sound, schema=SERVICE_SCHEMA_PLAY_SOUND
