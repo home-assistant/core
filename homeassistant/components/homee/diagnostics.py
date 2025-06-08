@@ -39,16 +39,8 @@ async def async_get_device_diagnostics(
             if identifier[0] == DOMAIN
         ),
     )
-
-    if identifiers_matches:
-        node_id = identifiers_matches.group(1)
-
-        return {
-            "device": device.dict_repr,
-            "homee node": entry.runtime_data.get_node_by_id(int(node_id)).raw_data,
-        }
-
+    assert identifiers_matches is not None
+    node_id = identifiers_matches.group(1)
     return {
-        "error": "Device does not have a valid homee identifier.",
-        "device": device.dict_repr,
+        "homee node": entry.runtime_data.get_node_by_id(int(node_id)).raw_data,
     }

@@ -39,6 +39,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: TESTPASS,
         },
         unique_id=HOMEE_ID,
+        entry_id="test_entry_id",
     )
 
 

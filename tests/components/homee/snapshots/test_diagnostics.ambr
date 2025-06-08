@@ -581,41 +581,6 @@
 # ---
 # name: test_diagnostics_device
   dict({
-    'device': dict({
-      'area_id': None,
-      'config_entries': list([
-        '01JX56AFJ73TG8ZQXQXZT5VCNJ',
-      ]),
-      'config_entries_subentries': dict({
-        '01JX56AFJ73TG8ZQXQXZT5VCNJ': list([
-          None,
-        ]),
-      }),
-      'configuration_url': None,
-      'connections': list([
-      ]),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': 'a33a334f289d08e93a34ca29ae39bf4a',
-      'identifiers': list([
-        list([
-          'homee',
-          '00055511EECC-1',
-        ]),
-      ]),
-      'labels': list([
-      ]),
-      'manufacturer': None,
-      'model': 'perimeter_protection_system',
-      'model_id': None,
-      'name': 'Test Number',
-      'name_by_user': None,
-      'primary_config_entry': '01JX56AFJ73TG8ZQXQXZT5VCNJ',
-      'serial_number': None,
-      'sw_version': None,
-      'via_device_id': '0a8b8638365bb3ae4e6ca529fbd3b108',
-    }),
     'homee node': dict({
       'added': 1680027411,
       'attributes': list([

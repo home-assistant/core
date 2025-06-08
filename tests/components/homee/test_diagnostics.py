@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.components.homee.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -45,7 +44,7 @@ async def test_diagnostics_config_entry(
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
-    assert result == snapshot(exclude=props("created_at", "modified_at"))
+    assert result == snapshot
 
 
 async def test_diagnostics_device(
@@ -59,9 +58,11 @@ async def test_diagnostics_device(
     """Test diagnostics for a device."""
     await setup_mock_homee(hass, mock_homee, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-1")})
-    assert device is not None
-    result = await get_diagnostics_for_device(
-        hass, hass_client, mock_config_entry, device
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{HOMEE_ID}-1")}
     )
-    assert result == snapshot(exclude=props("created_at", "modified_at"))
+    assert device_entry is not None
+    result = await get_diagnostics_for_device(
+        hass, hass_client, mock_config_entry, device_entry
+    )
+    assert result == snapshot
