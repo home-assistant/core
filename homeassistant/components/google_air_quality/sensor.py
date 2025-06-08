@@ -135,14 +135,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
-    coordinator = entry.runtime_data
+    coordinators: dict[str, GoogleAirQualityUpdateCoordinator] = entry.runtime_data
 
-    for subentry_id, subenrty in entry.subentries.items():
+    for subentry_id, subentry in entry.subentries.items():
+        coordinator = coordinators[subentry_id]
         async_add_entities(
             [
-                AirQualitySensorEntity(coordinator, description, subentry_id, subenrty)
+                AirQualitySensorEntity(coordinator, description, subentry_id, subentry)
                 for description in AIR_QUALITY_SENSOR_TYPES
-                if description.exists_fn(coordinator.data[subentry_id])
+                if description.exists_fn(coordinator.data)
             ],
             config_subentry_id=subentry_id,
         )
@@ -176,25 +177,23 @@ class AirQualitySensorEntity(
             entry_type=DeviceEntryType.SERVICE,
         )
         self._attr_translation_placeholders = {
-            "local_aqi": coordinator.data[subentry_id].indexes[1].display_name
+            "local_aqi": coordinator.data.indexes[1].display_name
         }
         self.subentry_id = subentry_id
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data[self.subentry_id])
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
     def options(self) -> list[str] | None:
         """Return the option of the sensor."""
-        return self.entity_description.options_fn(
-            self.coordinator.data[self.subentry_id]
-        )
+        return self.entity_description.options_fn(self.coordinator.data)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of measurement of the sensor."""
         return self.entity_description.native_unit_of_measurement_fn(
-            self.coordinator.data[self.subentry_id]
+            self.coordinator.data
         )

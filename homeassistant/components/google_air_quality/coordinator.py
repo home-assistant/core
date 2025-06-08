@@ -19,12 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL: Final = datetime.timedelta(hours=1)
 
-type GoogleAirQualityConfigEntry = ConfigEntry[GoogleAirQualityUpdateCoordinator]
+type GoogleAirQualityConfigEntry = ConfigEntry[
+    dict[str, GoogleAirQualityUpdateCoordinator]
+]
 
 
-class GoogleAirQualityUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, AirQualityData]]
-):
+class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
     """Coordinator for fetching Google AirQuality data."""
 
     config_entry: GoogleAirQualityConfigEntry
@@ -33,6 +33,7 @@ class GoogleAirQualityUpdateCoordinator(
         self,
         hass: HomeAssistant,
         config_entry: GoogleAirQualityConfigEntry,
+        subentry_id: str,
         client: GoogleAirQualityApi,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
@@ -40,31 +41,23 @@ class GoogleAirQualityUpdateCoordinator(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{subentry_id}",
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
-        self.config_entry = config_entry
+        self.subentry = config_entry.subentries[subentry_id]
+        self.subentry_id = subentry_id
 
-    async def _async_update_data(self) -> dict[str, AirQualityData]:
-        """Fetch air quality data from API."""
-
-        subentry_ids = list(self.config_entry.subentries)
-        coordinates: list[tuple[float, float]] = [
-            (
-                self.config_entry.subentries[sid].data[CONF_LATITUDE],
-                self.config_entry.subentries[sid].data[CONF_LONGITUDE],
-            )
-            for sid in subentry_ids
-        ]
+    async def _async_update_data(self) -> AirQualityData:
+        """Fetch air quality data for this coordinate."""
+        latitude = self.subentry.data[CONF_LATITUDE]
+        longitude = self.subentry.data[CONF_LONGITUDE]
 
         try:
-            results = await self.client.async_air_quality_multiple(coordinates)
+            return await self.client.async_air_quality(latitude, longitude)
         except GoogleAirQualityApiError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_fetch",
                 translation_placeholders={"err": str(err)},
             ) from err
-
-        return dict(zip(subentry_ids, results, strict=False))

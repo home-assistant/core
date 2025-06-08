@@ -36,17 +36,23 @@ async def async_setup_entry(
     web_session = async_get_clientsession(hass)
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     auth = api.AsyncConfigEntryAuth(web_session, oauth_session)
+
     try:
         await auth.async_get_access_token()
-    except ClientResponseError as err:
+    except (ClientResponseError, ClientError) as err:
         raise ConfigEntryNotReady from err
-    except ClientError as err:
-        raise ConfigEntryNotReady from err
-    coordinator = GoogleAirQualityUpdateCoordinator(
-        hass, entry, GoogleAirQualityApi(auth)
-    )
-    await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
+
+    api_client = GoogleAirQualityApi(auth)
+
+    coordinators: dict[str, GoogleAirQualityUpdateCoordinator] = {}
+    for subentry_id in entry.subentries:
+        coordinator = GoogleAirQualityUpdateCoordinator(
+            hass, entry, subentry_id, api_client
+        )
+        await coordinator.async_config_entry_first_refresh()
+        coordinators[subentry_id] = coordinator
+
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
