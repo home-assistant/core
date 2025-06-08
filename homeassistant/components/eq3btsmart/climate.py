@@ -1,9 +1,16 @@
 """Platform for eQ-3 climate entities."""
 
+from datetime import timedelta
 import logging
 from typing import Any
 
-from eq3btsmart.const import EQ3_MAX_TEMP, EQ3_OFF_TEMP, Eq3OperationMode, Eq3Preset
+from eq3btsmart.const import (
+    EQ3_DEFAULT_AWAY_TEMP,
+    EQ3_MAX_TEMP,
+    EQ3_OFF_TEMP,
+    Eq3OperationMode,
+    Eq3Preset,
+)
 from eq3btsmart.exceptions import Eq3Exception
 
 from homeassistant.components.climate import (
@@ -20,9 +27,11 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+import homeassistant.util.dt as dt_util
 
 from . import Eq3ConfigEntry
 from .const import (
+    DEFAULT_AWAY_HOURS,
     EQ_TO_HA_HVAC,
     HA_TO_EQ_HVAC,
     CurrentTemperatureSelector,
@@ -241,7 +250,8 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             case Preset.BOOST:
                 await self._thermostat.async_set_boost(True)
             case Preset.AWAY:
-                await self._thermostat.async_set_away(True)
+                away_until = dt_util.now() + timedelta(hours=DEFAULT_AWAY_HOURS)
+                await self._thermostat.async_set_away(away_until, EQ3_DEFAULT_AWAY_TEMP)
             case Preset.ECO:
                 await self._thermostat.async_set_preset(Eq3Preset.ECO)
             case Preset.COMFORT:

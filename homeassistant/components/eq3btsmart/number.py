@@ -1,12 +1,12 @@
 """Platform for eq3 number entities."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from eq3btsmart import Thermostat
 from eq3btsmart.const import EQ3_MAX_OFFSET, EQ3_MAX_TEMP, EQ3_MIN_OFFSET, EQ3_MIN_TEMP
-from eq3btsmart.models import Presets
+from eq3btsmart.models import Presets, Status
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -37,7 +37,7 @@ class Eq3NumberEntityDescription(NumberEntityDescription):
     value_func: Callable[[Presets], float]
     value_set_func: Callable[
         [Thermostat],
-        Callable[[float], Awaitable[None]],
+        Callable[[float], Coroutine[None, None, Status]],
     ]
     mode: NumberMode = NumberMode.BOX
     entity_category: EntityCategory | None = EntityCategory.CONFIG
