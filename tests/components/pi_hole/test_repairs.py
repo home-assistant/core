@@ -56,7 +56,7 @@ async def test_change_api_5_to_6(
         assert pihole_data.api.data == V6_RESPONSE_TO_V5_ENPOINT
 
         # ensure an issue is created for the API version change
-        assert len(issue_registry.issues) == 0
+        assert len(issue_registry.issues) == 1
         assert (
             issue_registry.async_get_issue(
                 issue_id=f"v5_to_v6_migration_{pihole_data.api.base_url}",
