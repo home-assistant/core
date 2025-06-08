@@ -300,7 +300,9 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
-        connection.logger.exception("Unexpected exception")
+        connection.logger.error(
+            "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
+        )
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,

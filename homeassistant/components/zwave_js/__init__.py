@@ -94,6 +94,7 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INSTALLER_MODE,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
     CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_NETWORK_KEY,
@@ -132,7 +133,7 @@ from .helpers import (
     get_valueless_base_unique_id,
 )
 from .migrate import async_migrate_discovered_value
-from .services import ZWaveServices
+from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
 DATA_DRIVER_EVENTS = "driver_events"
@@ -176,10 +177,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 entry, unique_id=str(entry.unique_id)
             )
 
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-    services = ZWaveServices(hass, ent_reg, dev_reg)
-    services.async_register()
+    async_setup_services(hass)
 
     return True
 
@@ -405,9 +403,10 @@ class DriverEvents:
 
         # Devices that are in the device registry that are not known by the controller
         # can be removed
-        for device in stored_devices:
-            if device not in known_devices and device not in provisioned_devices:
-                self.dev_reg.async_remove_device(device.id)
+        if not self.config_entry.data.get(CONF_KEEP_OLD_DEVICES):
+            for device in stored_devices:
+                if device not in known_devices and device not in provisioned_devices:
+                    self.dev_reg.async_remove_device(device.id)
 
         # run discovery on controller node
         if controller.own_node:

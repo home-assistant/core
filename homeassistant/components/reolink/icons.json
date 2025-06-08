@@ -462,6 +462,12 @@
       "doorbell_button_sound": {
         "default": "mdi:volume-high"
       },
+      "hardwired_chime_enabled": {
+        "default": "mdi:bell",
+        "state": {
+          "off": "mdi:bell-off"
+        }
+      },
       "hdr": {
         "default": "mdi:hdr"
       },

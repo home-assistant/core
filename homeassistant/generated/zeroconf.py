@@ -128,6 +128,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Luna": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Mini": {
         "always_discover": True,
         "domain": "lifx",
@@ -859,11 +863,6 @@ ZEROCONF = {
     "_soundtouch._tcp.local.": [
         {
             "domain": "soundtouch",
-        },
-    ],
-    "_spotify-connect._tcp.local.": [
-        {
-            "domain": "spotify",
         },
     ],
     "_ssh._tcp.local.": [
