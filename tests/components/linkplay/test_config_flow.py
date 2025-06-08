@@ -1,7 +1,7 @@
 """Tests for the LinkPlay config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from linkplay.exceptions import LinkPlayRequestException
 import pytest
@@ -222,7 +222,10 @@ async def test_user_flow_errors(
     assert result["result"].unique_id == UUID
 
 
-async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_linkplay_factory_bridge")
+async def test_zeroconf_no_probe_existing_device(
+    hass: HomeAssistant, mock_linkplay_factory_bridge: AsyncMock
+) -> None:
     """Test we do not probe the device is the host is already configured."""
     entry = MockConfigEntry(
         data={CONF_HOST: HOST},
@@ -231,16 +234,14 @@ async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
         unique_id=UUID,
     )
     entry.add_to_hass(hass)
-    with (
-        patch("linkplay.discovery.linkplay_factory_httpapi_bridge") as mock_get_data,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZEROCONF_DISCOVERY,
-        )
-        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert len(mock_get_data.mock_calls) == 0
+    assert len(mock_linkplay_factory_bridge.mock_calls) == 0
