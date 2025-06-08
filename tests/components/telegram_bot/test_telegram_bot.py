@@ -974,3 +974,33 @@ async def test_send_video(
     await hass.async_block_till_done()
     assert mock_get.call_count > 0
     assert response["chats"][0]["message_id"] == 12345
+
+
+async def test_set_message_reaction(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test set message reaction."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.set_message_reaction",
+        AsyncMock(return_value=True),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_message_reaction",
+            {
+                ATTR_CHAT_ID: 12345,
+                ATTR_MESSAGEID: 54321,
+                "reaction": ["👍"],
+                "is_big": True,
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once()
