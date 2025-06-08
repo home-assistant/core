@@ -47,16 +47,6 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
 
         self.psn = psn
 
-    async def _async_update_data(self) -> PlaystationNetworkData:
-        """Get the latest data from the PSN."""
-        try:
-            return await self.psn.get_data()
-        except (PSNAWPAuthenticationError, PSNAWPServerError) as error:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed",
-            ) from error
-
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
 
@@ -66,4 +56,14 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="not_ready",
+            ) from error
+
+    async def _async_update_data(self) -> PlaystationNetworkData:
+        """Get the latest data from the PSN."""
+        try:
+            return await self.psn.get_data()
+        except (PSNAWPAuthenticationError, PSNAWPServerError) as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
             ) from error

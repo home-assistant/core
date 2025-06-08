@@ -63,23 +63,26 @@ class PlaystationNetwork:
         )
         return self.user
 
-    async def get_data(self) -> PlaystationNetworkData:
-        """Get title data from the PlayStation Network."""
+    def retrieve_data_from_api(self) -> PlaystationNetworkData:
+        """Bundle api calls to retrieve data from the PlayStation Network."""
         data = PlaystationNetworkData()
 
         if not self.client:
-            self.client = await self.hass.async_add_executor_job(self.psn.me)
+            self.client = self.psn.me()
 
         data.registered_platforms = {
             PlatformType(device["deviceType"])
-            for device in await self.hass.async_add_executor_job(
-                self.client.get_account_devices
-            )
+            for device in self.client.get_account_devices()
         } & SUPPORTED_PLATFORMS
 
+        data.presence = self.user.get_presence()
+        return data
+
+    async def get_data(self) -> PlaystationNetworkData:
+        """Get title data from the PlayStation Network."""
+        data = await self.hass.async_add_executor_job(self.retrieve_data_from_api)
         data.username = self.user.online_id
         data.account_id = self.user.account_id
-        data.presence = await self.hass.async_add_executor_job(self.user.get_presence)
 
         data.available = (
             data.presence.get("basicPresence", {}).get("availability")
@@ -113,6 +116,7 @@ class PlaystationNetwork:
 
         # check legacy platforms if owned
         if LEGACY_PLATFORMS & data.registered_platforms:
+            assert self.client is not None
             self.legacy_profile = await self.hass.async_add_executor_job(
                 self.client.get_profile_legacy
             )
