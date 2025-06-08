@@ -10,7 +10,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import (
     CONFIG_DATA_DEFAULTS,
     CONFIG_ENTRY_WITH_API_KEY,
-    CONFIG_FLOW_API_KEY,
     CONFIG_FLOW_USER,
     NAME,
     ZERO_DATA,
@@ -25,7 +24,7 @@ from tests.common import MockConfigEntry
 
 async def test_flow_user_with_api_key_v6(hass: HomeAssistant) -> None:
     """Test user initialized flow with api key needed."""
-    mocked_hole = _create_mocked_hole(has_data=False)
+    mocked_hole = _create_mocked_hole(has_data=False, api_version=6)
     with (
         _patch_init_hole(mocked_hole),
         _patch_config_flow_hole(mocked_hole),
@@ -41,19 +40,19 @@ async def test_flow_user_with_api_key_v6(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CONFIG_FLOW_USER,
+            user_input={**CONFIG_FLOW_USER, CONF_API_KEY: "invalid_password"},
         )
         # we have had no response from the server yet, so we expect an error
         assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
 
-        # now we mock the response from the server
-        mocked_hole.data = ZERO_DATA
+        # now we have a valid passiword
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CONFIG_FLOW_API_KEY,
+            user_input=CONFIG_FLOW_USER,
         )
+
+        # form should be complete with a valid config entry
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == NAME
         assert result["data"] == CONFIG_ENTRY_WITH_API_KEY
         mock_setup.assert_called_once()
 
@@ -69,8 +68,13 @@ async def test_flow_user_with_api_key_v6(hass: HomeAssistant) -> None:
 
 async def test_flow_user_with_api_key_v5(hass: HomeAssistant) -> None:
     """Test user initialized flow with api key needed."""
-    mocked_hole = _create_mocked_hole(has_data=False, api_version=5)
-    with _patch_config_flow_hole(mocked_hole), _patch_setup_hole() as mock_setup:
+    mocked_hole = _create_mocked_hole(api_version=5)
+    with (
+        _patch_init_hole(mocked_hole),
+        _patch_config_flow_hole(mocked_hole),
+        _patch_setup_hole() as mock_setup,
+    ):
+        # start the flow as a user initiated flow
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -79,22 +83,27 @@ async def test_flow_user_with_api_key_v5(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"] == {}
 
+        # configure the flow with an invalid api key
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={**CONFIG_FLOW_USER, CONF_API_KEY: "wrong_token"},
+        )
+
+        # confirm an invalid authentication error
+        assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
+
+        # configure the flow with a valid api key
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONFIG_FLOW_USER,
         )
-        assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
 
-        mocked_hole.data = ZERO_DATA
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONFIG_FLOW_API_KEY,
-        )
+        # in API V5 we get data to confirm authentication
+        assert mocked_hole.instances[-1].data == ZERO_DATA
+
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == NAME
-        v5_entry = {**CONFIG_ENTRY_WITH_API_KEY}
-        v5_entry[CONF_API_VERSION] = 5
-        assert result["data"] == v5_entry
+        assert result["data"] == {**CONFIG_ENTRY_WITH_API_KEY, CONF_API_VERSION: 5}
         mock_setup.assert_called_once()
 
         # duplicated server
@@ -135,9 +144,10 @@ async def test_flow_user_invalid_v6(hass: HomeAssistant) -> None:
 
 async def test_flow_reauth(hass: HomeAssistant) -> None:
     """Test reauth flow."""
-    mocked_hole = _create_mocked_hole(has_data=False)
+    mocked_hole = _create_mocked_hole(has_data=False, api_version=5)
     entry = MockConfigEntry(
-        domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS, CONF_API_VERSION: 5}
+        domain=pi_hole.DOMAIN,
+        data={**CONFIG_DATA_DEFAULTS, CONF_API_VERSION: 5, CONF_API_KEY: "oldkey"},
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole), _patch_config_flow_hole(mocked_hole):
@@ -149,7 +159,7 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
         assert len(flows) == 1
         assert flows[0]["step_id"] == "reauth_confirm"
         assert flows[0]["context"]["entry_id"] == entry.entry_id
-        mocked_hole.api_token.set("newkey")
+        mocked_hole.instances[-1].api_token = "newkey"
         result = await hass.config_entries.flow.async_configure(
             flows[0]["flow_id"],
             user_input={CONF_API_KEY: "newkey"},
