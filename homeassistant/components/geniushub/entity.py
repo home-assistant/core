@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from typing import Any
 
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -160,6 +161,16 @@ class GeniusHeatingZone(GeniusZone):
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return UnitOfTemperature.CELSIUS
+
+    @property
+    def temperature_device_class(self) -> str:
+        """Return the device class."""
+        return SensorDeviceClass.TEMPERATURE
+
+    @property
+    def temperature_state_class(self) -> str:
+        """Return the state class."""
+        return SensorStateClass.MEASUREMENT
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""
