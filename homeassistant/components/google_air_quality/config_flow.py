@@ -1,5 +1,6 @@
 """Config flow for Google Air Quality."""
 
+import asyncio
 import logging
 from typing import Any
 
@@ -157,12 +158,18 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_LONGITUDE: lon,
                 "region_code": user_resource_info.region_code,
             }
-
-            return self.async_create_entry(
+            result = self.async_create_entry(
                 title=f"Coordinates {lat}, {lon}",
                 data=data,
                 unique_id=unique_id,
             )
+
+            async def reload_later() -> None:
+                await asyncio.sleep(0)
+                await self.hass.config_entries.async_reload(entry.entry_id)
+
+            self.hass.async_create_task(reload_later())
+            return result
         return self._show_form_user()
 
     def _show_form_user(
