@@ -234,9 +234,9 @@ def _create_mocked_hole(
             if (
                 raise_exception
                 or incorrect_app_password
-                or (api_version == 6 and password == "wrong_password")
+                or (api_version == 6 and password not in ["newkey", "apikey"])
             ):
-                raise HoleError("Authentication failed: Invalid API token")
+                raise HoleError("Authentication failed: Invalid password")
 
         async def get_data_side_effect(*_args, **_kwargs):
             password = getattr(mocked_hole, "password", None)
@@ -245,10 +245,10 @@ def _create_mocked_hole(
                 raise_exception
                 or incorrect_app_password
                 or (api_version == 5 and (not api_token or api_token == "wrong_token"))
-                or (api_version == 6 and password == "wrong_password")
+                or (api_version == 6 and password not in ["newkey", "apikey"])
             ):
                 mocked_hole.data = [] if api_version == 5 else {}
-            elif password == "newkey" or api_token == "newkey":
+            elif password in ["newkey", "apikey"] or api_token == ["newkey", "apikey"]:
                 mocked_hole.data = ZERO_DATA_V6 if api_version == 6 else ZERO_DATA
 
         mocked_hole.authenticate = AsyncMock(side_effect=authenticate_side_effect)
