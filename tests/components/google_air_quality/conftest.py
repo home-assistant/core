@@ -162,6 +162,8 @@ def mock_client_api(
     """Set up fake Google Air Quality API responses from fixtures."""
     mock_api = AsyncMock(GoogleAirQualityApi, autospec=True)
     responses = load_json_object_fixture("air_quality_data.json", DOMAIN)
+    parsed_data = AirQualityData.from_dict(responses)
+    mock_api.async_air_quality_multiple.return_value = [parsed_data]
     mock_api.async_air_quality.return_value = AirQualityData.from_dict(responses)
     mock_api.async_air_quality.side_effect = api_error
     mock_api.get_user_info.return_value = UserInfoResult(

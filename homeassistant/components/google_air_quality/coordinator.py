@@ -47,18 +47,24 @@ class GoogleAirQualityUpdateCoordinator(
         self.config_entry = config_entry
 
     async def _async_update_data(self) -> dict[str, AirQualityData]:
-        """Fetch albums from API endpoint."""
-        data = {}
-        for subentry_id, subentry in self.config_entry.subentries.items():
-            try:
-                data[subentry_id] = await self.client.async_air_quality(
-                    subentry.data[CONF_LATITUDE],
-                    subentry.data[CONF_LONGITUDE],
-                )
-            except GoogleAirQualityApiError as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="unable_to_fetch",
-                    translation_placeholders={"err": str(err)},
-                ) from err
-        return data
+        """Fetch air quality data from API."""
+
+        subentry_ids = list(self.config_entry.subentries)
+        coordinates: list[tuple[float, float]] = [
+            (
+                self.config_entry.subentries[sid].data[CONF_LATITUDE],
+                self.config_entry.subentries[sid].data[CONF_LONGITUDE],
+            )
+            for sid in subentry_ids
+        ]
+
+        try:
+            results = await self.client.async_air_quality_multiple(coordinates)
+        except GoogleAirQualityApiError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_fetch",
+                translation_placeholders={"err": str(err)},
+            ) from err
+
+        return dict(zip(subentry_ids, results, strict=False))
