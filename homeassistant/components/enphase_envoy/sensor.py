@@ -2,54 +2,34 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass, replace
 import datetime
 import logging
+from collections.abc import Callable
+from dataclasses import dataclass, replace
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
-from pyenphase import (
-    EnvoyACBPower,
-    EnvoyBatteryAggregate,
-    EnvoyEncharge,
-    EnvoyEnchargeAggregate,
-    EnvoyEnchargePower,
-    EnvoyEnpower,
-    EnvoyInverter,
-    EnvoySystemConsumption,
-    EnvoySystemProduction,
-)
+from pyenphase import (EnvoyACBPower, EnvoyBatteryAggregate, EnvoyEncharge,
+                       EnvoyEnchargeAggregate, EnvoyEnchargePower,
+                       EnvoyEnpower, EnvoyInverter, EnvoySystemConsumption,
+                       EnvoySystemProduction)
 from pyenphase.const import PHASENAMES
-from pyenphase.models.meters import (
-    CtMeterStatus,
-    CtState,
-    CtStatusFlags,
-    CtType,
-    EnvoyMeterData,
-)
+from pyenphase.models.meters import (CtMeterStatus, CtState, CtStatusFlags,
+                                     CtType, EnvoyMeterData)
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    PERCENTAGE,
-    EntityCategory,
-    UnitOfApparentPower,
-    UnitOfElectricCurrent,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfFrequency,
-    UnitOfPower,
-    UnitOfTemperature,
-)
+from homeassistant.components.sensor import (SensorDeviceClass, SensorEntity,
+                                             SensorEntityDescription,
+                                             SensorStateClass)
+from homeassistant.const import (PERCENTAGE, EntityCategory,
+                                 UnitOfApparentPower, UnitOfElectricCurrent,
+                                 UnitOfElectricPotential, UnitOfEnergy,
+                                 UnitOfFrequency, UnitOfPower,
+                                 UnitOfTemperature)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import \
+    AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -79,6 +59,54 @@ INVERTER_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=attrgetter("last_report_watts"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key=INVERTERS_KEY,
+        name=None,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        value_fn=attrgetter("dc_voltage"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key=INVERTERS_KEY,
+        name=None,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        value_fn=attrgetter("dc_current"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key=INVERTERS_KEY,
+        name=None,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        value_fn=attrgetter("ac_voltage"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key=INVERTERS_KEY,
+        name=None,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        value_fn=attrgetter("ac_current"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key=INVERTERS_KEY,
+        name=None,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
+        value_fn=attrgetter("ac_frequency"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key=INVERTERS_KEY,
+        name=None,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        value_fn=attrgetter("temperature"),
     ),
     EnvoyInverterSensorEntityDescription(
         key=LAST_REPORTED_KEY,
