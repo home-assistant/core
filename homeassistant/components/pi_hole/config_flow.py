@@ -183,7 +183,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                         5,
                         str(pi_hole.data),
                     )
-                    raise HoleError(pi_hole.data["error"])  # noqa: TRY301
+                    raise HoleError(pi_hole.data)  # noqa: TRY301
                 _LOGGER.debug(
                     "Success connecting to, but necessarily authenticating with, pihole, API version is: %s",
                     5,
