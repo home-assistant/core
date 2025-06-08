@@ -244,7 +244,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==32.0.0
+aioesphomeapi==32.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1774,7 +1774,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.7.2
+py-synologydsm-api==2.7.3
 
 # homeassistant.components.atome
 pyAtome==0.1.1
@@ -2987,7 +2987,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.11.0
+uiprotect==7.12.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
