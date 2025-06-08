@@ -30,6 +30,9 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "grpcio": "SemVer",
     "httpx": "SemVer",
     "mashumaro": "SemVer",
+    "numpy": "SemVer",
+    "pandas": "SemVer",
+    "pillow": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
     "pytz": "CalVer",
@@ -41,6 +44,11 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
+    "geocaching": {
+        # scipy version closely linked to numpy
+        # geocachingapi > reverse_geocode > scipy > numpy
+        "scipy": {"numpy"}
+    },
     "mealie": {
         # https://github.com/joostlek/python-mealie/pull/490
         "aiomealie": {"awesomeversion"}
@@ -88,7 +96,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "bsblan": {"python-bsblan": {"async-timeout"}},
     "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
