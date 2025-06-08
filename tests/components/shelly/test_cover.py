@@ -286,7 +286,7 @@ async def test_update_position_closing(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test update_position while the cover is closing."""
-    entity_id = "cover.test_cover_0"
+    entity_id = "cover.test_name_test_cover_0"
     await init_integration(hass, 2)
 
     # Set initial state to closing
@@ -324,7 +324,7 @@ async def test_update_position_opening(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test update_position while the cover is opening."""
-    entity_id = "cover.test_cover_0"
+    entity_id = "cover.test_name_test_cover_0"
     await init_integration(hass, 2)
 
     # Set initial state to opening
@@ -362,7 +362,7 @@ async def test_update_position_no_movement(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test update_position when the cover is not moving."""
-    entity_id = "cover.test_cover_0"
+    entity_id = "cover.test_name_test_cover_0"
     await init_integration(hass, 2)
 
     # Set initial state to open
