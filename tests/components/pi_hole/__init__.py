@@ -231,12 +231,10 @@ def _create_mocked_hole(
 
         async def authenticate_side_effect(*_args, **_kwargs):
             password = getattr(mocked_hole, "password", None)
-            api_token = getattr(mocked_hole, "api_token", None)
             if (
                 raise_exception
                 or incorrect_app_password
                 or (api_version == 6 and password == "wrong_password")
-                or (api_version == 5 and (not api_token or api_token == "wrong_token"))
             ):
                 raise HoleError("Authentication failed: Invalid API token")
 
