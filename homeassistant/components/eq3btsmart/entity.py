@@ -105,9 +105,3 @@ class Eq3Entity(Entity):
 
         self._attr_available = True
         self.async_write_ha_state()
-
-    @property
-    def available(self) -> bool:
-        """Whether the entity is available."""
-
-        return self._thermostat.status is not None and self._attr_available
