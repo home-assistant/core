@@ -70,12 +70,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if the device is already configured using MAC
         await self.async_set_unique_id(format_mac(self.mac))
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: self.host,
-                CONF_PORT: self.port,
-            }
-        )
+        self._abort_if_unique_id_configured()
 
         # Proceed to get credentials
         self.context["title_placeholders"] = {"name": f"BSBLAN {self.host}"}
@@ -102,13 +97,28 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.username = user_input.get(CONF_USERNAME)
         self.password = user_input.get(CONF_PASSWORD)
 
-        return await self._validate_and_create()
+        return await self._validate_and_create(is_discovery=True)
 
-    async def _validate_and_create(self) -> ConfigFlowResult:
+    async def _validate_and_create(
+        self, is_discovery: bool = False
+    ) -> ConfigFlowResult:
         """Validate device connection and create entry."""
         try:
-            await self._get_bsblan_info()
+            await self._get_bsblan_info(is_discovery=is_discovery)
         except BSBLANError:
+            if is_discovery:
+                return self.async_show_form(
+                    step_id="discovery_confirm",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Optional(CONF_PASSKEY): str,
+                            vol.Optional(CONF_USERNAME): str,
+                            vol.Optional(CONF_PASSWORD): str,
+                        }
+                    ),
+                    errors={"base": "cannot_connect"},
+                    description_placeholders={"host": str(self.host)},
+                )
             return self._show_setup_form({"base": "cannot_connect"})
 
         return self._async_create_entry()
@@ -144,7 +154,9 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _get_bsblan_info(self, raise_on_progress: bool = True) -> None:
+    async def _get_bsblan_info(
+        self, raise_on_progress: bool = True, is_discovery: bool = False
+    ) -> None:
         """Get device information from a BSBLAN device."""
         config = BSBLANConfig(
             host=self.host,
@@ -161,9 +173,14 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             format_mac(self.mac), raise_on_progress=raise_on_progress
         )
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: self.host,
-                CONF_PORT: self.port,
-            }
-        )
+
+        # For discovered devices, don't allow updating host/port
+        if is_discovery:
+            self._abort_if_unique_id_configured()
+        else:
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: self.host,
+                    CONF_PORT: self.port,
+                }
+            )
