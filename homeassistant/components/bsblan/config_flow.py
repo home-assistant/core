@@ -54,7 +54,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.host = str(discovery_info.ip_address)
         self.port = discovery_info.port or DEFAULT_PORT
 
-        # Try to get MAC from properties first (for future compatibility)
+        # Try to get MAC from properties first (for new firmware)
         self.mac = discovery_info.properties.get("mac")
 
         # If MAC not found in properties, try to parse from raw TXT records
@@ -64,13 +64,14 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.mac = key[4:].decode("utf-8")
                     break
 
-        # If still no MAC found, abort the discovery flow
-        if not self.mac:
-            return self.async_abort(reason="no_mac_address")
-
-        # Check if the device is already configured using MAC
-        await self.async_set_unique_id(format_mac(self.mac))
-        self._abort_if_unique_id_configured()
+        # If MAC was found in zeroconf, use it immediately
+        if self.mac:
+            await self.async_set_unique_id(format_mac(self.mac))
+            self._abort_if_unique_id_configured()
+        else:
+            # For older firmware without MAC in zeroconf:
+            # Use discovery without unique ID pattern - will get MAC via API later
+            await self._async_handle_discovery_without_unique_id()
 
         # Proceed to get credentials
         self.context["title_placeholders"] = {"name": f"BSBLAN {self.host}"}
@@ -168,11 +169,21 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         bsblan = BSBLAN(config, session)
         device = await bsblan.device()
-        self.mac = device.MAC
+        retrieved_mac = device.MAC
 
-        await self.async_set_unique_id(
-            format_mac(self.mac), raise_on_progress=raise_on_progress
-        )
+        # Handle unique ID assignment based on whether MAC was available from zeroconf
+        if not self.mac:
+            # MAC wasn't available from zeroconf, now we have it from API
+            self.mac = retrieved_mac
+            await self.async_set_unique_id(
+                format_mac(self.mac), raise_on_progress=raise_on_progress
+            )
+        elif self.mac != retrieved_mac:
+            # MAC from zeroconf doesn't match retrieved MAC - update it
+            self.mac = retrieved_mac
+            await self.async_set_unique_id(
+                format_mac(self.mac), raise_on_progress=raise_on_progress
+            )
 
         # For discovered devices, don't allow updating host/port
         if is_discovery:
