@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from pysmhi import SmhiForecastException
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.smhi.const import DOMAIN
@@ -17,13 +16,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-
-async def test_form(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-) -> None:
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form and create an entry."""
 
     hass.config.latitude = 0.0
@@ -35,11 +29,17 @@ async def test_form(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.smhi.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
+    with (
+        patch(
+            "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
+            return_value={"test": "something", "test2": "something else"},
+        ),
+        patch(
+            "homeassistant.components.smhi.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_LOCATION: {
@@ -48,11 +48,11 @@ async def test_form(
                 }
             },
         )
+        await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home"
-    assert result["result"].unique_id == "0.0-0.0"
-    assert result["data"] == {
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Home"
+    assert result2["data"] == {
         "location": {
             "latitude": 0.0,
             "longitude": 0.0,
@@ -61,22 +61,33 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
     # Check title is "Weather" when not home coordinates
-    result = await hass.config_entries.flow.async_init(
+    result3 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_LOCATION: {
-                CONF_LATITUDE: 1.0,
-                CONF_LONGITUDE: 1.0,
-            }
-        },
-    )
+    with (
+        patch(
+            "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
+            return_value={"test": "something", "test2": "something else"},
+        ),
+        patch(
+            "homeassistant.components.smhi.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 1.0,
+                    CONF_LONGITUDE: 1.0,
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Weather 1.0 1.0"
-    assert result["data"] == {
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == "Weather 1.0 1.0"
+    assert result4["data"] == {
         "location": {
             "latitude": 1.0,
             "longitude": 1.0,
@@ -84,45 +95,55 @@ async def test_form(
     }
 
 
-async def test_form_invalid_coordinates(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-) -> None:
+async def test_form_invalid_coordinates(hass: HomeAssistant) -> None:
     """Test we handle invalid coordinates."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_client.async_get_daily_forecast.side_effect = SmhiForecastException
+    with patch(
+        "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
+        side_effect=SmhiForecastException,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 0.0,
+                    CONF_LONGITUDE: 0.0,
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_LOCATION: {
-                CONF_LATITUDE: 0.0,
-                CONF_LONGITUDE: 0.0,
-            }
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "wrong_location"}
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "wrong_location"}
 
     # Continue flow with new coordinates
-    mock_client.async_get_daily_forecast.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_LOCATION: {
-                CONF_LATITUDE: 2.0,
-                CONF_LONGITUDE: 2.0,
-            }
-        },
-    )
+    with (
+        patch(
+            "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
+            return_value={"test": "something", "test2": "something else"},
+        ),
+        patch(
+            "homeassistant.components.smhi.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 2.0,
+                    CONF_LONGITUDE: 2.0,
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Weather 2.0 2.0"
-    assert result["data"] == {
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Weather 2.0 2.0"
+    assert result3["data"] == {
         "location": {
             "latitude": 2.0,
             "longitude": 2.0,
@@ -130,10 +151,7 @@ async def test_form_invalid_coordinates(
     }
 
 
-async def test_form_unique_id_exist(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-) -> None:
+async def test_form_unique_id_exist(hass: HomeAssistant) -> None:
     """Test we handle unique id already exist."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -151,23 +169,27 @@ async def test_form_unique_id_exist(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_LOCATION: {
-                CONF_LATITUDE: 1.0,
-                CONF_LONGITUDE: 1.0,
-            }
-        },
-    )
+    with patch(
+        "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
+        return_value={"test": "something", "test2": "something else"},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 1.0,
+                    CONF_LONGITUDE: 1.0,
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
 
 
 async def test_reconfigure_flow(
     hass: HomeAssistant,
-    mock_client: MagicMock,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
@@ -195,32 +217,44 @@ async def test_reconfigure_flow(
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
-    mock_client.async_get_daily_forecast.side_effect = SmhiForecastException
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_LOCATION: {
-                CONF_LATITUDE: 0.0,
-                CONF_LONGITUDE: 0.0,
-            }
-        },
-    )
+    with patch(
+        "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
+        side_effect=SmhiForecastException,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 0.0,
+                    CONF_LONGITUDE: 0.0,
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "wrong_location"}
 
-    mock_client.async_get_daily_forecast.side_effect = None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_LOCATION: {
-                CONF_LATITUDE: 58.2898,
-                CONF_LONGITUDE: 14.6304,
-            }
-        },
-    )
+    with (
+        patch(
+            "homeassistant.components.smhi.config_flow.SMHIPointForecast.async_get_daily_forecast",
+            return_value={"test": "something", "test2": "something else"},
+        ),
+        patch(
+            "homeassistant.components.smhi.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 58.2898,
+                    CONF_LONGITUDE: 14.6304,
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -239,3 +273,4 @@ async def test_reconfigure_flow(
     device = device_registry.async_get(device.id)
     assert device
     assert device.identifiers == {(DOMAIN, "58.2898, 14.6304")}
+    assert len(mock_setup_entry.mock_calls) == 1

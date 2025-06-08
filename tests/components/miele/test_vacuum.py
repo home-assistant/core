@@ -24,11 +24,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import get_actions_callback, get_data_callback
 
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
 
 TEST_PLATFORM = VACUUM_DOMAIN
 ENTITY_ID = "vacuum.robot_vacuum_cleaner"
@@ -68,9 +64,7 @@ async def test_vacuum_states_api_push(
     await data_callback(device_fixture)
     await hass.async_block_till_done()
 
-    act_file = await async_load_json_object_fixture(
-        hass, "action_push_vacuum.json", DOMAIN
-    )
+    act_file = load_json_object_fixture("action_push_vacuum.json", DOMAIN)
     action_callback = get_actions_callback(mock_miele_client)
     await action_callback(act_file)
     await hass.async_block_till_done()

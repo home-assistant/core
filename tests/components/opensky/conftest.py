@@ -18,9 +18,8 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_json_object_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -88,7 +87,7 @@ def mock_config_entry_authenticated() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def opensky_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
+async def opensky_client() -> AsyncGenerator[AsyncMock]:
     """Mock the OpenSky client."""
     with (
         patch(
@@ -102,7 +101,7 @@ async def opensky_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.get_states.return_value = StatesResponse.from_api(
-            await async_load_json_object_fixture(hass, "states.json", DOMAIN)
+            load_json_object_fixture("states.json", DOMAIN)
         )
         client.is_authenticated = False
         yield client

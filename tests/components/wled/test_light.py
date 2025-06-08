@@ -42,7 +42,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    async_load_json_object_fixture,
+    load_json_object_fixture,
 )
 
 pytestmark = pytest.mark.usefixtures("init_integration")
@@ -202,7 +202,7 @@ async def test_dynamically_handle_segments(
 
     return_value = mock_wled.update.return_value
     mock_wled.update.return_value = WLEDDevice.from_dict(
-        await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
+        load_json_object_fixture("rgb.json", DOMAIN)
     )
 
     freezer.tick(SCAN_INTERVAL)

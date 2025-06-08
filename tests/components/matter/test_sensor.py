@@ -17,7 +17,7 @@ from .common import (
 )
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "matter_devices")
+@pytest.mark.usefixtures("matter_devices")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

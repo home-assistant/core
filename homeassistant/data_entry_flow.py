@@ -543,17 +543,8 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             flow.cur_step = result
             return result
 
-        try:
-            # We pass a copy of the result because we're mutating our version
-            result = await self.async_finish_flow(flow, result.copy())
-        except AbortFlow as err:
-            result = self._flow_result(
-                type=FlowResultType.ABORT,
-                flow_id=flow.flow_id,
-                handler=flow.handler,
-                reason=err.reason,
-                description_placeholders=err.description_placeholders,
-            )
+        # We pass a copy of the result because we're mutating our version
+        result = await self.async_finish_flow(flow, result.copy())
 
         # _async_finish_flow may change result type, check it again
         if result["type"] == FlowResultType.FORM:

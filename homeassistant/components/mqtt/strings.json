@@ -644,7 +644,6 @@
         "invalid_template": "Invalid template",
         "invalid_supported_color_modes": "Invalid supported color modes selection",
         "invalid_uom": "The unit of measurement \"{unit_of_measurement}\" is not supported by the selected device class, please either remove the device class, select a device class which supports \"{unit_of_measurement}\", or pick a supported unit of measurement from the list",
-        "invalid_uom_for_state_class": "The unit of measurement \"{unit_of_measurement}\" is not supported by the selected state class, please either remove the state class, select a state class which supports \"{unit_of_measurement}\", or pick a supported unit of measurement from the list",
         "invalid_url": "Invalid URL",
         "last_reset_not_with_state_class_total": "The last reset value template option should be used with state class 'Total' only",
         "max_below_min_kelvin": "Max Kelvin value should be greater than min Kelvin value",

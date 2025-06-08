@@ -540,41 +540,32 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
                 )
             continue
 
-        # Check for restrictive version limits on Python
         if (
-            (requires_python := metadata(package)["Requires-Python"])
+            package in packages  # Top-level checks only until bleak is resolved
+            and (requires_python := metadata(package)["Requires-Python"])
             and not all(
                 _is_dependency_version_range_valid(version_part, "SemVer")
                 for version_part in requires_python.split(",")
             )
-            # "bleak" is a transient dependency of 53 integrations, and we don't
-            # want to add the whole list to PYTHON_VERSION_CHECK_EXCEPTIONS
-            # This extra check can be removed when bleak is updated
-            # https://github.com/hbldh/bleak/pull/1718
-            and (package in packages or package != "bleak")
         ):
             needs_python_version_check_exception = True
             integration.add_warning_or_error(
                 package in python_version_check_exceptions.get("homeassistant", set()),
                 "requirements",
-                "Version restrictions for Python are too strict "
-                f"({requires_python}) in {package}",
+                f"Version restrictions for Python are too strict ({requires_python}) in {package}",
             )
 
-        # Use inner loop to check dependencies
-        # so we have access to the dependency parent (=current package)
         dependencies: dict[str, str] = item["dependencies"]
+        package_exceptions = forbidden_package_exceptions.get(package, set())
         for pkg, version in dependencies.items():
-            # Check for forbidden packages
             if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
                 reason = FORBIDDEN_PACKAGES.get(pkg, "not be a runtime dependency")
                 needs_forbidden_package_exceptions = True
                 integration.add_warning_or_error(
-                    pkg in forbidden_package_exceptions.get(package, set()),
+                    pkg in package_exceptions,
                     "requirements",
                     f"Package {pkg} should {reason} in {package}",
                 )
-            # Check for restrictive version limits on common packages
             if not check_dependency_version_range(
                 integration,
                 package,

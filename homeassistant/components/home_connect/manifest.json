@@ -10,11 +10,11 @@
       "macaddress": "C8D778*"
     },
     {
-      "hostname": "(balay|bosch|neff|siemens)-*",
+      "hostname": "(bosch|siemens)-*",
       "macaddress": "68A40E*"
     },
     {
-      "hostname": "(siemens|neff)-*",
+      "hostname": "siemens-*",
       "macaddress": "38B4D3*"
     }
   ],

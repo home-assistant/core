@@ -19,7 +19,7 @@ from . import setup_platform
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    async_load_json_object_fixture,
+    load_json_object_fixture,
     snapshot_platform,
 )
 
@@ -75,16 +75,8 @@ async def test_add_remove_entities(
     assert hass.states.get("sensor.gummibaum_plant_state").state == "doing_great"
 
     plants: dict[int, Plant] = {
-        0: Plant.from_dict(
-            await async_load_json_object_fixture(
-                hass, "plant_status1.json", FYTA_DOMAIN
-            )
-        ),
-        2: Plant.from_dict(
-            await async_load_json_object_fixture(
-                hass, "plant_status3.json", FYTA_DOMAIN
-            )
-        ),
+        0: Plant.from_dict(load_json_object_fixture("plant_status1.json", FYTA_DOMAIN)),
+        2: Plant.from_dict(load_json_object_fixture("plant_status3.json", FYTA_DOMAIN)),
     }
     mock_fyta_connector.update_all_plants.return_value = plants
     mock_fyta_connector.plant_list = {

@@ -390,6 +390,12 @@
       "evse_user_max_charge_current": {
         "name": "User max charge current"
       },
+      "min_pin_code_length": {
+        "name": "Min PIN code length"
+      },
+      "max_pin_code_length": {
+        "name": "Max PIN code length"
+      },
       "window_covering_target_position": {
         "name": "Target opening position"
       }

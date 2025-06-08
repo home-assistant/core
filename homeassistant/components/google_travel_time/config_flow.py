@@ -50,12 +50,7 @@ from .const import (
     UNITS_IMPERIAL,
     UNITS_METRIC,
 )
-from .helpers import (
-    InvalidApiKeyException,
-    PermissionDeniedException,
-    UnknownException,
-    validate_config_entry,
-)
+from .helpers import InvalidApiKeyException, UnknownException, validate_config_entry
 
 RECONFIGURE_SCHEMA = vol.Schema(
     {
@@ -193,8 +188,6 @@ async def validate_input(
             user_input[CONF_ORIGIN],
             user_input[CONF_DESTINATION],
         )
-    except PermissionDeniedException:
-        return {"base": "permission_denied"}
     except InvalidApiKeyException:
         return {"base": "invalid_auth"}
     except TimeoutError:

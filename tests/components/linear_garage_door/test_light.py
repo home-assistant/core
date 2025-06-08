@@ -27,7 +27,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    async_load_json_object_fixture,
+    load_json_object_fixture,
     snapshot_platform,
 )
 
@@ -112,9 +112,7 @@ async def test_update_light_state(
     assert hass.states.get("light.test_garage_1_light").state == STATE_ON
     assert hass.states.get("light.test_garage_2_light").state == STATE_OFF
 
-    device_states = await async_load_json_object_fixture(
-        hass, "get_device_state_1.json", DOMAIN
-    )
+    device_states = load_json_object_fixture("get_device_state_1.json", DOMAIN)
     mock_linear.get_device_state.side_effect = lambda device_id: device_states[
         device_id
     ]
