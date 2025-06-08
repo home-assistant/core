@@ -77,9 +77,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # If the tracked switch is no longer in the device, remove our config entry
             # from the device
             if (
-                not (s_entity_entry := entity_registry.async_get(data[CONF_ENTITY_ID]))
+                not (
+                    updated_entity_entry := entity_registry.async_get(
+                        data[CONF_ENTITY_ID]
+                    )
+                )
                 or not device_registry.async_get(device_id)
-                or s_entity_entry.device_id == device_id
+                or updated_entity_entry.device_id == device_id
             ):
                 # No need to do any cleanup
                 return
