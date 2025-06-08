@@ -134,7 +134,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             lat = location[CONF_LATITUDE]
             lon = location[CONF_LONGITUDE]
             try:
-                user_resource_info = await client.async_air_quality(lat, lon)
+                air_quality_data = await client.async_air_quality(lat, lon)
             except NoDataForLocationError:
                 return self._show_form_user(
                     user_input,
@@ -156,7 +156,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             data = {
                 CONF_LATITUDE: lat,
                 CONF_LONGITUDE: lon,
-                "region_code": user_resource_info.region_code,
+                "region_code": air_quality_data.region_code,
             }
             result = self.async_create_entry(
                 title=f"Coordinates {lat}, {lon}",
