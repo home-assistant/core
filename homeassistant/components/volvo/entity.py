@@ -48,7 +48,6 @@ class VolvoEntity(CoordinatorEntity[VolvoDataCoordinator]):
             coordinator.config_entry.data[CONF_VIN], description.key
         )
         self._attr_device_info = coordinator.device
-        self._attr_extra_state_attributes = {}
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -70,4 +69,5 @@ class VolvoEntity(CoordinatorEntity[VolvoDataCoordinator]):
 
     @abstractmethod
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
+        """Update the state of the entity."""
         raise NotImplementedError

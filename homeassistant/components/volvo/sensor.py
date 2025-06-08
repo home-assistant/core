@@ -336,6 +336,7 @@ class VolvoSensor(VolvoEntity, SensorEntity):
     entity_description: VolvoSensorDescription
 
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
+        """Update the state of the entity."""
         if api_field is None:
             self._attr_native_value = None
             return

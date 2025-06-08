@@ -1,19 +1,20 @@
 """Application credentials platform for the Volvo integration."""
 
+from __future__ import annotations
+
 from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
 from volvocarsapi.scopes import DEFAULT_SCOPES
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    AbstractOAuth2Implementation,
     LocalOAuth2ImplementationWithPkce,
 )
 
 
 async def async_get_auth_implementation(
     hass: HomeAssistant, auth_domain: str, credential: ClientCredential
-) -> AbstractOAuth2Implementation:
+) -> VolvoOAuth2Implementation:
     """Return auth implementation for a custom auth implementation."""
     return VolvoOAuth2Implementation(
         hass,

@@ -1,7 +1,4 @@
 {
-  "common": {
-    "api_timestamp": "API timestamp"
-  },
   "config": {
     "step": {
       "pick_implementation": {
@@ -60,92 +57,37 @@
           "no_internet": "No internet",
           "power_saving_mode": "Power saving mode",
           "unavailable": "Unavailable"
-        },
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
         }
       },
       "average_energy_consumption": {
-        "name": "TM avg. energy consumption",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "TM avg. energy consumption"
       },
       "average_energy_consumption_automatic": {
-        "name": "TA avg. energy consumption",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "TA avg. energy consumption"
       },
       "average_energy_consumption_charge": {
-        "name": "Avg. energy consumption since charge",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Avg. energy consumption since charge"
       },
       "average_fuel_consumption": {
-        "name": "TM avg. fuel consumption",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "TM avg. fuel consumption"
       },
       "average_fuel_consumption_automatic": {
-        "name": "TA avg. fuel consumption",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "TA avg. fuel consumption"
       },
       "average_speed": {
-        "name": "TM avg. speed",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "TM avg. speed"
       },
       "average_speed_automatic": {
-        "name": "TA avg. speed",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "TA avg. speed"
       },
       "battery_capacity": {
-        "name": "Battery capacity",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Battery capacity"
       },
       "battery_charge_level": {
-        "name": "Battery charge level",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Battery charge level"
       },
       "charging_current_limit": {
-        "name": "Charging limit",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Charging limit"
       },
       "charging_connection_status": {
         "name": "Charging connection status",
@@ -154,11 +96,6 @@
           "connection_status_connected_dc": "Connected DC",
           "connection_status_disconnected": "[%key:common::state::disconnected%]",
           "connection_status_fault": "[%key:common::state::error%]"
-        },
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
         }
       },
       "charging_system_status": {
@@ -169,100 +106,40 @@
           "charging_system_fault": "[%key:common::state::error%]",
           "charging_system_idle": "[%key:common::state::idle%]",
           "charging_system_scheduled": "Scheduled"
-        },
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
         }
       },
       "distance_to_empty_battery": {
-        "name": "Distance to empty battery",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Distance to empty battery"
       },
       "distance_to_empty_tank": {
-        "name": "Distance to empty tank",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Distance to empty tank"
       },
       "distance_to_service": {
-        "name": "Distance to service",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Distance to service"
       },
       "engine_time_to_service": {
-        "name": "Engine time to service",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Engine time to service"
       },
       "estimated_charging_time": {
-        "name": "Est. charging time",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Est. charging time"
       },
       "fuel_amount": {
-        "name": "Fuel amount",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Fuel amount"
       },
       "odometer": {
-        "name": "Odometer",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Odometer"
       },
       "target_battery_charge_level": {
-        "name": "Target battery charge level",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Target battery charge level"
       },
       "time_to_service": {
-        "name": "Time to service",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "Time to service"
       },
       "trip_meter_automatic": {
-        "name": "TA distance",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "TA distance"
       },
       "trip_meter_manual": {
-        "name": "TM distance",
-        "state_attributes": {
-          "api_timestamp": {
-            "name": "[%key:component::volvo::common::api_timestamp%]"
-          }
-        }
+        "name": "TM distance"
       }
     }
   },

@@ -120,7 +120,7 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
         api_calls = self._get_api_calls()
         data: CoordinatorData = {}
-        valid = 0
+        valid = False
         exception: Exception | None = None
 
         results = await asyncio.gather(
@@ -135,7 +135,7 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 #
                 # Raising ConfigEntryAuthFailed will cancel future updates
                 # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-                _LOGGER.exception(
+                _LOGGER.debug(
                     "%s - Authentication failed. %s",
                     self.config_entry.entry_id,
                     result.message,
@@ -163,10 +163,10 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 ) from result
 
             data |= cast(CoordinatorData, result)
-            valid += 1
+            valid = True
 
         # Raise an error if not a single API call succeeded
-        if valid == 0:
+        if not valid:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
