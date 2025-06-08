@@ -143,3 +143,17 @@ def zeroconf_discovery_info_properties_raw() -> Mock:
     discovery_info.port = 80
     discovery_info.hostname = "BSB-LAN.local."
     return discovery_info
+
+
+@pytest.fixture
+def zeroconf_discovery_info_different_mac() -> ZeroconfServiceInfo:
+    """Return zeroconf discovery info with a different MAC than the device API returns."""
+    return ZeroconfServiceInfo(
+        ip_address=ip_address("10.0.2.60"),
+        ip_addresses=[ip_address("10.0.2.60")],
+        name="BSB-LAN web service._http._tcp.local.",
+        type="_http._tcp.local.",
+        properties={"mac": "aa:bb:cc:dd:ee:ff"},  # Different MAC than in device.json
+        port=80,
+        hostname="BSB-LAN.local.",
+    )
