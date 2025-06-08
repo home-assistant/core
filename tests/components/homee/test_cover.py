@@ -39,6 +39,7 @@ async def test_open_close_stop_cover(
 ) -> None:
     """Test opening the cover."""
     mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
 
     await setup_integration(hass, mock_config_entry)
 
@@ -73,6 +74,7 @@ async def test_set_cover_position(
 ) -> None:
     """Test setting the cover position."""
     mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
 
     await setup_integration(hass, mock_config_entry)
 
@@ -182,6 +184,7 @@ async def test_cover_positions(
     # Cover open, tilt open.
     # mock_homee.nodes = [cover]
     mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     cover = mock_homee.nodes[0]
 
     await setup_integration(hass, mock_config_entry)
