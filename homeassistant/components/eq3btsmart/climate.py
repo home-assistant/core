@@ -88,7 +88,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         if self._thermostat.status is None:
             return
 
-        self._target_temperature = self._thermostat.status.target_temperature.value
+        self._target_temperature = self._thermostat.status.target_temperature
         self._attr_hvac_mode = EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
         self._attr_current_temperature = self._get_current_temperature()
         self._attr_target_temperature = self._get_target_temperature()
@@ -109,7 +109,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             device_registry.async_update_device(
                 device.id,
                 sw_version=str(self._thermostat.device_data.firmware_version),
-                serial_number=self._thermostat.device_data.device_serial.value,
+                serial_number=self._thermostat.device_data.device_serial,
             )
 
     def _get_current_temperature(self) -> float | None:
@@ -129,7 +129,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
                 if self._thermostat.status is None:
                     return None
 
-                return float(self._thermostat.status.target_temperature.value)
+                return float(self._thermostat.status.target_temperature)
             case CurrentTemperatureSelector.ENTITY:
                 state = self.hass.states.get(self._eq3_config.external_temp_sensor)
                 if state is not None:
@@ -150,7 +150,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
                 if self._thermostat.status is None:
                     return None
 
-                return float(self._thermostat.status.target_temperature.value)
+                return float(self._thermostat.status.target_temperature)
 
     def _get_current_preset_mode(self) -> str:
         """Return the current preset mode."""
