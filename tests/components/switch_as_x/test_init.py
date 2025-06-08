@@ -271,11 +271,15 @@ async def test_config_entry_entity_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, target_domain: Platform
 ) -> None:
     """Test light switch setup from config entry with entity id."""
+    registry_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
+    switch_entity_id = registry_entry.entity_id
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: "switch.abc",
+            CONF_ENTITY_ID: switch_entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -382,12 +386,16 @@ async def test_setup_and_remove_config_entry(
     target_domain: Platform,
 ) -> None:
     """Test removing a config entry."""
+    registry_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
+    switch_entity_id = registry_entry.entity_id
     # Setup the config entry
     switch_as_x_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: "switch.test",
+            CONF_ENTITY_ID: switch_entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -931,12 +939,16 @@ async def test_migrate(
     target_domain: Platform,
 ) -> None:
     """Test migration."""
+    registry_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
+    switch_entity_id = registry_entry.entity_id
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: "switch.test",
+            CONF_ENTITY_ID: switch_entity_id,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
@@ -950,7 +962,7 @@ async def test_migrate(
     # Check migration was successful and added invert option
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.options == {
-        CONF_ENTITY_ID: "switch.test",
+        CONF_ENTITY_ID: switch_entity_id,
         CONF_INVERT: False,
         CONF_TARGET_DOMAIN: target_domain,
     }

@@ -46,12 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
-    try:
-        entity_id = er.async_validate_entity_id(
-            entity_registry, entry.options[CONF_ENTITY_ID]
-        )
-    except vol.Invalid:
-        # The entity is identified by an unknown entity registry ID
+    if (
+        entity_entry := entity_registry.async_get(entry.options[CONF_ENTITY_ID])
+    ) is None:
         _LOGGER.error(
             "Failed to setup switch_as_x for unknown entity %s",
             entry.options[CONF_ENTITY_ID],
@@ -71,15 +68,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if "entity_id" in data["changes"]:
             # Entity_id changed, reload the config entry
-            await hass.config_entries.async_reload(entry.entry_id)
+            hass.config_entries.async_update_entry(
+                entry,
+                options={**entry.options, CONF_ENTITY_ID: data["entity_id"]},
+            )
 
         if device_id and "device_id" in data["changes"]:
             # If the tracked switch is no longer in the device, remove our config entry
             # from the device
             if (
-                not (entity_entry := entity_registry.async_get(data[CONF_ENTITY_ID]))
+                not (s_entity_entry := entity_registry.async_get(data[CONF_ENTITY_ID]))
                 or not device_registry.async_get(device_id)
-                or entity_entry.device_id == device_id
+                or s_entity_entry.device_id == device_id
             ):
                 # No need to do any cleanup
                 return
@@ -90,12 +90,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(
         async_track_entity_registry_updated_event(
-            hass, entity_id, async_registry_updated
+            hass, entity_entry.entity_id, async_registry_updated
         )
     )
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
 
-    device_id = async_add_to_device(hass, entry, entity_id)
+    device_id = async_add_to_device(hass, entry, entity_entry.entity_id)
 
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options[CONF_TARGET_DOMAIN],)
