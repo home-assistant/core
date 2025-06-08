@@ -904,11 +904,11 @@ def _validate_device_filter(
 
 def _validate_area_filter(hass: HomeAssistant, state: State, area_filter: dict) -> bool:
     """Validate if the entity matches the filter."""
-    if not state.attributes.get(ATTR_AREA_ID):
-        return False
-
     if not area_filter:
         return True
+
+    if not state.attributes.get(ATTR_AREA_ID):
+        return False
 
     entity_filters = area_filter.get("entity", [])
     device_filters = area_filter.get("device", [])
@@ -998,7 +998,9 @@ def _validate_floor_filter(
     return False
 
 
-def _get_target_entities(hass: HomeAssistant, domain: str, target: dict) -> list[str]:
+def _get_target_entities(
+    hass: HomeAssistant, default_domain: str, target: dict
+) -> list[str]:
     """Get target entities for a service action.
 
     The list is filtered by services.yaml selectors,
@@ -1007,7 +1009,7 @@ def _get_target_entities(hass: HomeAssistant, domain: str, target: dict) -> list
 
     target_entities: list[str] = []
 
-    entity_filters = target.get("entity", [{}])
+    entity_filters = target.get("entity", [{"domain": default_domain}])
     device_filters = target.get("device", [{}])
     area_filters = target.get("area", [{}])
     floor_filters = target.get("floor", [{}])
@@ -1015,9 +1017,9 @@ def _get_target_entities(hass: HomeAssistant, domain: str, target: dict) -> list
     domains = {
         d
         for entity_filter in entity_filters
-        for d in entity_filter.get("domain", [domain])
+        for d in entity_filter.get("domain", [None])
     }
-    for state in hass.states.async_all(domains):
+    for state in hass.states.async_all(domains if None not in domains else None):
         if not any(_validate_entity_filter(hass, state, ef) for ef in entity_filters):
             continue
 
@@ -1143,14 +1145,14 @@ def _get_cached_action_parameters(
 
 
 class ActionTool(Tool):
-    """LLM Tool representing an action."""
+    """LLM Tool representing a service action."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         domain: str,
         action: str,
-        exposed_entities: dict[str, dict[str, Any]] | None = None,
+        exposed_entities: dict[str, dict[str, Any]] | None,
     ) -> None:
         """Init the class."""
         self._domain = domain
@@ -1177,7 +1179,7 @@ class ActionTool(Tool):
                     self.description = ""
                 else:
                     self.description += ". "
-                self.description += f"Targets {'/'.join(exposed_entities[self.target_entities[0]]['names'])}"
+                self.description += f"Targets {'/'.join(exposed_entities[self.target_entities[0]]['names'].split(', '))}"
 
             else:
                 names = [
@@ -1280,7 +1282,7 @@ class ScriptTool(ActionTool):
         if entity_entry and entity_entry.unique_id:
             action = entity_entry.unique_id
 
-        super().__init__(hass, SCRIPT_DOMAIN, action)
+        super().__init__(hass, SCRIPT_DOMAIN, action, None)
 
         self.name = script_name
         if self.name[0].isdigit():

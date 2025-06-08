@@ -1011,14 +1011,33 @@ async def test_script_tool_name(hass: HomeAssistant) -> None:
     assert tool.name == "_123456"
 
 
-async def test_action_tool(hass: HomeAssistant) -> None:
+async def test_action_tool(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
     """Test ActionTool can be created for each action (service) without exceptions."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {})
+    hass.states.async_set(
+        "calendar.test_calendar",
+        "on",
+        {"friendly_name": "Mock Calendar Name", "supported_features": 1},
+    )
+    hass.states.async_set(
+        "valve.test_valve",
+        "on",
+        {"friendly_name": "Mock Valve Name", "supported_features": 8 + 4},
+    )
     await service.async_get_all_descriptions(hass)
+    for state in hass.states.async_all():
+        async_expose_entity(hass, "conversation", state.entity_id, True)
+
+    exposed_entities = llm._get_exposed_entities(hass, "conversation")
     for domain, actions in hass.services.async_services().items():
         for action in actions:
-            tool = llm.ActionTool(hass, domain, action)
+            tool = llm.ActionTool(
+                hass,
+                domain,
+                action,
+                exposed_entities.get(domain, exposed_entities["entities"]),
+            )
             assert tool.name == f"{domain}_{action}"
 
 
