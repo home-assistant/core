@@ -212,7 +212,7 @@ async def test_alarm_change_device(
     alarm_clock.ListAlarms.return_value = alarm_update
 
     # Update the alarm_list_version so it gets processed.
-    alarm_event.variables["alarm_list_version"] = "RINCON_test:1000"
+    alarm_event.variables["alarm_list_version"] = f"{soco_lr.uid}:1000"
     alarm_update["CurrentAlarmListVersion"] = alarm_event.increment_variable(
         "alarm_list_version"
     )
