@@ -281,3 +281,127 @@ async def test_zeroconf_discovery_no_mac_abort(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "no_mac_address"
+
+
+async def test_zeroconf_discovery_connection_error(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test connection error during zeroconf discovery shows the correct form."""
+    mock_bsblan.device.side_effect = BSBLANConnectionError
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("10.0.2.60"),
+        ip_addresses=[ip_address("10.0.2.60")],
+        name="BSB-LAN web service._http._tcp.local.",
+        type="_http._tcp.local.",
+        properties={"mac": "00:80:41:19:69:90"},
+        port=80,
+        hostname="BSB-LAN.local.",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "discovery_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "discovery_confirm"
+    assert result2.get("errors") == {"base": "cannot_connect"}
+
+
+async def test_zeroconf_discovery_doesnt_update_host_port_on_existing_entry(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test that discovered devices don't update host/port of existing entries."""
+    # Create an existing entry with different host/port
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",  # Different IP
+            CONF_PORT: 8080,  # Different port
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+        unique_id="00:80:41:19:69:90",
+    )
+    entry.add_to_hass(hass)
+
+    # Mock zeroconf discovery of the same device but with different IP/port
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("10.0.2.60"),  # Different IP from existing entry
+        ip_addresses=[ip_address("10.0.2.60")],
+        name="BSB-LAN web service._http._tcp.local.",
+        type="_http._tcp.local.",
+        properties={"mac": "00:80:41:19:69:90"},  # Same MAC as existing entry
+        port=80,  # Different port from existing entry
+        hostname="BSB-LAN.local.",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    # Should abort because device is already configured
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify the existing entry was NOT updated with new host/port
+    assert entry.data[CONF_HOST] == "192.168.1.100"  # Original host preserved
+    assert entry.data[CONF_PORT] == 8080  # Original port preserved
+
+
+async def test_user_flow_can_update_existing_host_port(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test that manual user configuration can update host/port of existing entries."""
+    # Create an existing entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 8080,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+        unique_id="00:80:41:19:69:90",
+    )
+    entry.add_to_hass(hass)
+
+    # Try to configure the same device with different host/port via user flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_HOST: "10.0.2.60",  # Different IP
+            CONF_PORT: 80,  # Different port
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    # Should abort because device is already configured, but should update host/port
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify the existing entry WAS updated with new host/port (user flow behavior)
+    assert entry.data[CONF_HOST] == "10.0.2.60"  # Updated host
+    assert entry.data[CONF_PORT] == 80  # Updated port
