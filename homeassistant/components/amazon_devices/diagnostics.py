@@ -1,4 +1,4 @@
-"""Diagnostics support for Amazon Devices integration."""
+"""Diagnostics support for Amazon Alexa integration."""
 
 from __future__ import annotations
 

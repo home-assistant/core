@@ -1,4 +1,4 @@
-"""Defines a base Amazon Devices entity."""
+"""Defines a base Amazon Alexa entity."""
 
 from aioamazondevices.api import AmazonDevice
 from aioamazondevices.const import SPEAKER_GROUP_MODEL
@@ -12,7 +12,7 @@ from .coordinator import AmazonDevicesCoordinator
 
 
 class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
-    """Defines a base Amazon Devices entity."""
+    """Defines a base Amazon Alexa entity."""
 
     _attr_has_entity_name = True
 

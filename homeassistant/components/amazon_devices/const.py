@@ -1,4 +1,4 @@
-"""Amazon Devices constants."""
+"""Amazon Alexa constants."""
 
 import logging
 

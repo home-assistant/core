@@ -211,7 +211,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "cloud_polling",
-          "name": "Amazon Devices"
+          "name": "Amazon Alexa"
         },
         "amazon_polly": {
           "integration_type": "hub",

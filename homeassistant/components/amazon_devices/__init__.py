@@ -1,4 +1,4 @@
-"""Amazon Devices integration."""
+"""Amazon Alexa integration."""
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -13,7 +13,7 @@ PLATFORMS = [
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
-    """Set up Amazon Devices platform."""
+    """Set up Amazon Alexa platform."""
 
     coordinator = AmazonDevicesCoordinator(hass, entry)
 

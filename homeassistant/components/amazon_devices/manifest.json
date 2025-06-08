@@ -1,6 +1,6 @@
 {
   "domain": "amazon_devices",
-  "name": "Amazon Devices",
+  "name": "Amazon Alexa",
   "codeowners": ["@chemelli74"],
   "config_flow": true,
   "dhcp": [
