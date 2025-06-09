@@ -36,7 +36,7 @@ numpy==2.3.0
 PyJWT==2.10.1
 cryptography==45.0.3
 Pillow==11.2.1
-propcache==0.3.1
+propcache==0.3.2
 pyOpenSSL==25.1.0
 orjson==3.10.18
 packaging>=23.1
