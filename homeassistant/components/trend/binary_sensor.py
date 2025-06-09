@@ -240,7 +240,8 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
                 self.async_schedule_update_ha_state(True)
             except (ValueError, TypeError) as ex:
                 _LOGGER.error(
-                    "Error processing sensor state change for entity_id=%s, attribute=%s, state=%s: %s",
+                    "Error processing sensor state change for "
+                    "entity_id=%s, attribute=%s, state=%s: %s",
                     self._entity_id,
                     self._attribute,
                     new_state.state,
