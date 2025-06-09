@@ -13,14 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ADD_ENTITIES_CALLBACKS,
-    CONF_DOMAIN_DATA,
-    CONF_OUTPUT,
-    OUTPUT_PORTS,
-    RELAY_PORTS,
-    SETPOINTS,
-)
+from .const import CONF_DOMAIN_DATA, CONF_OUTPUT, OUTPUT_PORTS, RELAY_PORTS, SETPOINTS
 from .entity import LcnEntity
 from .helpers import InputType
 
@@ -61,7 +54,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    config_entry.runtime_data[ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data.add_entities_callbacks.update(
         {DOMAIN_SWITCH: add_entities}
     )
 

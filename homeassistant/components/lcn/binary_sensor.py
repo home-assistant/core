@@ -22,13 +22,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ADD_ENTITIES_CALLBACKS,
-    BINSENSOR_PORTS,
-    CONF_DOMAIN_DATA,
-    DOMAIN,
-    SETPOINTS,
-)
+from .const import BINSENSOR_PORTS, CONF_DOMAIN_DATA, DOMAIN, SETPOINTS
 from .entity import LcnEntity
 from .helpers import InputType
 
@@ -63,7 +57,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    config_entry.runtime_data[ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data.add_entities_callbacks.update(
         {DOMAIN_BINARY_SENSOR: add_entities}
     )
 

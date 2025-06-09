@@ -21,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ADD_ENTITIES_CALLBACKS,
     CONF_DIMMABLE,
     CONF_DOMAIN_DATA,
     CONF_OUTPUT,
@@ -62,7 +61,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    config_entry.runtime_data[ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data.add_entities_callbacks.update(
         {DOMAIN_LIGHT: add_entities}
     )
 

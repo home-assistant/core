@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from functools import partial
 import logging
 
@@ -38,20 +40,18 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ADD_ENTITIES_CALLBACKS,
     CONF_ACKNOWLEDGE,
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
     CONF_SK_NUM_TRIES,
     CONF_TARGET_VALUE_LOCKED,
     CONF_TRANSITION,
-    CONNECTION,
-    DEVICE_CONNECTIONS,
     DOMAIN,
     PLATFORMS,
 )
 from .helpers import (
     AddressType,
+    DeviceConnectionType,
     InputType,
     async_update_config_entry,
     generate_unique_id,
@@ -65,6 +65,15 @@ from .websocket import register_panel_and_ws_api
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+@dataclass
+class LcnData:
+    """Lcn runtime data."""
+
+    connection: PchkConnectionManager
+    device_connections: dict[str, DeviceConnectionType]
+    add_entities_callbacks: dict[str, Callable[[Iterable[ConfigType]], None]]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -109,11 +118,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ) from ex
 
     _LOGGER.debug('LCN connected to "%s"', config_entry.title)
-    config_entry.runtime_data = {
-        CONNECTION: lcn_connection,
-        DEVICE_CONNECTIONS: {},
-        ADD_ENTITIES_CALLBACKS: {},
-    }
+    config_entry.runtime_data = LcnData(
+        connection=lcn_connection,
+        device_connections={},
+        add_entities_callbacks={},
+    )
 
     # Update config_entry with LCN device serials
     await async_update_config_entry(hass, config_entry)
@@ -220,7 +229,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     )
 
     if unload_ok:
-        await config_entry.runtime_data[CONNECTION].async_close()
+        await config_entry.runtime_data.connection.async_close()
 
     return unload_ok
 
@@ -229,7 +238,7 @@ def async_host_event_received(
     hass: HomeAssistant, config_entry: ConfigEntry, event: pypck.lcn_defs.LcnEvent
 ) -> None:
     """Process received event from LCN."""
-    lcn_connection = config_entry.runtime_data[CONNECTION]
+    lcn_connection = config_entry.runtime_data.connection
 
     async def reload_config_entry() -> None:
         """Close connection and schedule config entry for reload."""
@@ -260,7 +269,7 @@ def async_host_input_received(
     if not isinstance(inp, pypck.inputs.ModInput):
         return
 
-    lcn_connection = config_entry.runtime_data[CONNECTION]
+    lcn_connection = config_entry.runtime_data.connection
     logical_address = lcn_connection.physical_to_logical(inp.physical_source_addr)
     address = (
         logical_address.seg_id,

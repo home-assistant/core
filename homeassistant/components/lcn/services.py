@@ -35,7 +35,6 @@ from .const import (
     CONF_TRANSITION,
     CONF_VALUE,
     CONF_VARIABLE,
-    DEVICE_CONNECTIONS,
     DOMAIN,
     LED_PORTS,
     LED_STATUS,
@@ -87,7 +86,7 @@ class LcnServiceCall:
         ):
             return None
 
-        return config_entry.runtime_data[DEVICE_CONNECTIONS][device_id]
+        return config_entry.runtime_data.device_connections[device_id]
 
     async def async_call_service(self, service: ServiceCall) -> ServiceResponse:
         """Execute service call."""

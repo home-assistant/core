@@ -28,12 +28,10 @@ from homeassistant.helpers import (
 )
 
 from .const import (
-    ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
     CONF_HARDWARE_SERIAL,
     CONF_HARDWARE_TYPE,
     CONF_SOFTWARE_SERIAL,
-    CONNECTION,
     DOMAIN,
 )
 from .helpers import (
@@ -181,7 +179,7 @@ async def websocket_scan_devices(
     config_entry: ConfigEntry,
 ) -> None:
     """Scan for new devices."""
-    host_connection = config_entry.runtime_data[CONNECTION]
+    host_connection = config_entry.runtime_data.connection
     await host_connection.scan_modules()
 
     for device_connection in host_connection.address_conns.values():
@@ -347,7 +345,7 @@ async def websocket_add_entity(
     }
 
     # Create new entity and add to corresponding component
-    add_entities = config_entry.runtime_data[ADD_ENTITIES_CALLBACKS][msg[CONF_DOMAIN]]
+    add_entities = config_entry.runtime_data.add_entities_callbacks[msg[CONF_DOMAIN]]
     add_entities([entity_config])
 
     # Add entity config to config_entry

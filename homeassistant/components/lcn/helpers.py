@@ -33,8 +33,6 @@ from .const import (
     CONF_HARDWARE_TYPE,
     CONF_SCENES,
     CONF_SOFTWARE_SERIAL,
-    CONNECTION,
-    DEVICE_CONNECTIONS,
     DOMAIN,
 )
 
@@ -65,7 +63,7 @@ def get_device_connection(
     hass: HomeAssistant, address: AddressType, config_entry: ConfigEntry
 ) -> DeviceConnectionType:
     """Return a lcn device_connection."""
-    host_connection = config_entry.runtime_data[CONNECTION]
+    host_connection = config_entry.runtime_data.connection
     addr = pypck.lcn_addr.LcnAddr(*address)
     return host_connection.get_address_conn(addr)
 
@@ -217,7 +215,7 @@ def register_lcn_address_devices(
             model=device_model,
         )
 
-        config_entry.runtime_data[DEVICE_CONNECTIONS][device_entry.id] = (
+        config_entry.runtime_data.device_connections[device_entry.id] = (
             get_device_connection(hass, address, config_entry)
         )
 
