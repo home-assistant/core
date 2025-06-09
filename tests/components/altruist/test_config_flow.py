@@ -1,7 +1,7 @@
 """Test the Altruist Sensor config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from altruistclient import AltruistError
 
@@ -13,8 +13,21 @@ from homeassistant.components.altruist.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
+
+ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
+    ip_address=ip_address("192.168.1.100"),
+    ip_addresses=[ip_address("192.168.1.100")],
+    hostname="altruist-purple.local.",
+    name="altruist-purple._altruist._tcp.local.",
+    port=80,
+    type="_altruist._tcp.local.",
+    properties={
+        "PATH": "/config",
+    },
+)
 
 
 async def test_form_user_step(hass: HomeAssistant) -> None:
@@ -126,13 +139,10 @@ async def test_form_user_step_already_configured(
 
 async def test_zeroconf_discovery(hass: HomeAssistant, mock_altruist_client) -> None:
     """Test zeroconf discovery."""
-    discovery_info = Mock()
-    discovery_info.ip_address = ip_address("192.168.1.100")
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=discovery_info,
+        data=ZEROCONF_DISCOVERY,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -150,13 +160,10 @@ async def test_zeroconf_discovery_already_configured(
     )
     entry.add_to_hass(hass)
 
-    discovery_info = Mock()
-    discovery_info.ip_address = "192.168.1.100"
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=discovery_info,
+        data=ZEROCONF_DISCOVERY,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -167,13 +174,11 @@ async def test_zeroconf_discovery_confirm(
     hass: HomeAssistant, mock_altruist_client
 ) -> None:
     """Test zeroconf discovery confirmation."""
-    discovery_info = Mock()
-    discovery_info.ip_address = "192.168.1.100"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=discovery_info,
+        data=ZEROCONF_DISCOVERY,
     )
 
     result2 = await hass.config_entries.flow.async_configure(
