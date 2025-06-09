@@ -9,7 +9,7 @@ from fyta_cli.fyta_models import Plant
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fyta.const import DOMAIN as FYTA_DOMAIN
+from homeassistant.components.fyta.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -76,14 +76,10 @@ async def test_add_remove_entities(
 
     plants: dict[int, Plant] = {
         0: Plant.from_dict(
-            await async_load_json_object_fixture(
-                hass, "plant_status1.json", FYTA_DOMAIN
-            )
+            await async_load_json_object_fixture(hass, "plant_status1.json", DOMAIN)
         ),
         2: Plant.from_dict(
-            await async_load_json_object_fixture(
-                hass, "plant_status3.json", FYTA_DOMAIN
-            )
+            await async_load_json_object_fixture(hass, "plant_status3.json", DOMAIN)
         ),
     }
     mock_fyta_connector.update_all_plants.return_value = plants

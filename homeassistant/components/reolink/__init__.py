@@ -158,6 +158,10 @@ async def async_setup_entry(
 
         if host.api.new_devices and config_entry.state == ConfigEntryState.LOADED:
             # Their are new cameras/chimes connected, reload to add them.
+            _LOGGER.debug(
+                "Reloading Reolink %s to add new device (capabilities)",
+                host.api.nvr_name,
+            )
             hass.async_create_task(
                 hass.config_entries.async_reload(config_entry.entry_id)
             )
@@ -225,6 +229,14 @@ async def async_setup_entry(
     hass.http.register_view(PlaybackProxyView(hass))
 
     await register_callbacks(host, device_coordinator, hass)
+
+    # ensure host device is setup before connected camera devices that use via_device
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, host.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
+    )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

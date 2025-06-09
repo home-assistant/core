@@ -58,17 +58,22 @@ def get_mock_session(
     return mock_session
 
 
+@pytest.mark.parametrize(
+    ("content_type"),
+    [("video/mp4"), ("application/octet-stream"), ("apolication/octet-stream")],
+)
 async def test_playback_proxy(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
+    content_type: str,
 ) -> None:
     """Test successful playback proxy URL."""
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
 
-    mock_session = get_mock_session()
+    mock_session = get_mock_session(content_type=content_type)
 
     with patch(
         "homeassistant.components.reolink.views.async_get_clientsession",

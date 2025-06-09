@@ -98,7 +98,7 @@ def async_get_energy_site_for_entry(
     return energy_data
 
 
-def async_register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Teslemetry services."""
 
     async def navigate_gps_request(call: ServiceCall) -> None:
