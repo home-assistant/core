@@ -144,8 +144,8 @@ httpcore==1.0.9
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.2.6
-pandas~=2.2.3
+numpy==2.3.0
+pandas==2.3.0
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
