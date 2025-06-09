@@ -86,6 +86,7 @@ async def test_form_user_step_cannot_connect_then_recovers(
 
         assert result3["type"] is FlowResultType.CREATE_ENTRY
         assert result3["title"] == "Altruist 5366960e8b18"
+        assert result3["result"].unique_id == "5366960e8b18"
         assert result3["data"] == {
             CONF_IP_ADDRESS: "192.168.1.100",
             CONF_DEVICE_ID: "5366960e8b18",
