@@ -1,6 +1,5 @@
 """Diagnostics for homee integration."""
 
-import re
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -31,16 +30,12 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a device."""
 
     # Extract node_id from the device identifiers
-    identifiers_matches = re.search(
-        r"[0-9,A-F]{12}-(\d{1,4})",
-        next(
-            identifier[1]
-            for identifier in device.identifiers
-            if identifier[0] == DOMAIN
-        ),
-    )
-    assert identifiers_matches is not None
-    node_id = identifiers_matches.group(1)
+    split_uid = next(
+        identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN
+    ).split("-")
+    # Homee hub itself only has MAC as identifier and a node_id of -1
+    node_id = -1 if len(split_uid) < 2 else split_uid[1]
+
     node = entry.runtime_data.get_node_by_id(int(node_id))
     assert node is not None
     return {

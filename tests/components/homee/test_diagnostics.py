@@ -66,3 +66,28 @@ async def test_diagnostics_device(
         hass, hass_client, mock_config_entry, device_entry
     )
     assert result == snapshot
+
+
+async def test_diagnostics_homee_device(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test diagnostics for the homee hub device."""
+    mock_homee.nodes = [
+        build_mock_node("homee.json"),
+    ]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    await setup_integration(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{HOMEE_ID}")}
+    )
+    assert device_entry is not None
+    result = await get_diagnostics_for_device(
+        hass, hass_client, mock_config_entry, device_entry
+    )
+    assert result == snapshot
