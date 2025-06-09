@@ -218,3 +218,7 @@ multidict>=6.4.2
 # Stable Alpine current only ships cargo 1.83.0
 # No wheels upstream available for armhf & armv7
 rpds-py==0.24.0
+
+# frozenlist 1.6.1 and 1.6.2 causes the test runner to crash
+# https://github.com/microsoft/vscode-python-debugger/issues/723
+frozenlist==1.6.0
