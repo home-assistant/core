@@ -6,6 +6,9 @@
       },
       "pm_25": {
         "default": "mdi:thought-bubble-outline"
+      },
+      "radiation": {
+        "default": "mdi:radioactive"
       }
     }
   }

@@ -1,4 +1,4 @@
-"""Constants for the Altruist Sensor integration."""
+"""Constants for the Altruist integration."""
 
 DOMAIN = "altruist"
 

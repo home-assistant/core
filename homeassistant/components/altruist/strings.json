@@ -7,23 +7,22 @@
       },
       "user": {
         "data": {
-          "ip_address": "IP Address"
+          "ip_address": "[%key:common::config_flow::data::ip%]"
         },
         "data_description": {
-          "ip_address": "Altruist Sensor IP address in the local network"
+          "ip_address": "Altruist IP address in the local network"
         },
-        "description": "Fill in Altruist Sensor IP address in your local network"
+        "description": "Fill in Altruist IP address in your local network"
       }
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "invalid_ip": "Invalid IP address",
+      "invalid_ip": "[%key:common::config_flow::error::invalid_host%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "invalid_ip": "Invalid IP address",
-      "no_device_found": "Can't connect to device on {ip_address}"
+      "invalid_ip": "[%key:common::config_flow::error::invalid_host%]",
+      "no_device_found": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
@@ -72,6 +71,9 @@
       },
       "scd4x_co2": {
         "name": "SCD4x CO2"
+      },
+      "radiation": {
+        "name": "Radiation level"
       }
     }
   }

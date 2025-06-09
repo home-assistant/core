@@ -1,14 +1,19 @@
 """AirGradient tests configuration."""
 
 from collections.abc import Generator
+import json
 from unittest.mock import AsyncMock, Mock, patch
 
 from altruistclient import AltruistDeviceModel
 import pytest
 
-from homeassistant.components.altruist.const import DOMAIN
+from homeassistant.components.altruist.const import (
+    CONF_DEVICE_ID,
+    CONF_IP_ADDRESS,
+    DOMAIN,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -26,7 +31,7 @@ def mock_config_entry():
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={"ip_address": "192.168.1.100", "id": "5366960e8b18"},
+        data={CONF_IP_ADDRESS: "192.168.1.100", CONF_DEVICE_ID: "5366960e8b18"},
         unique_id="5366960e8b18",
     )
 
@@ -45,15 +50,26 @@ def mock_altruist_device():
 @pytest.fixture
 def mock_altruist_client(mock_altruist_device):
     """Return a mock AltruistClient."""
-    client = Mock()
-    client.device = mock_altruist_device
-    client.device_id = mock_altruist_device.id
-    client.sensor_names = ["BME280_temperature", "BME280_humidity", "SDS_P1"]
-    client.fetch_data = AsyncMock(
-        return_value=[
-            {"value_type": "BME280_temperature", "value": "25.5"},
-            {"value_type": "BME280_humidity", "value": "60"},
-            {"value_type": "SDS_P1", "value": "15"},
-        ]
-    )
-    return client
+    with (
+        patch(
+            "homeassistant.components.altruist.coordinator.AltruistClient",
+            autospec=True,
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.altruist.config_flow.AltruistClient",
+            new=mock_client_class,
+        ),
+    ):
+        mock_instance = AsyncMock()
+        mock_instance.device = mock_altruist_device
+        mock_instance.device_id = mock_altruist_device.id
+        mock_instance.sensor_names = json.loads(
+            load_fixture("sensor_names.json", DOMAIN)
+        )
+        mock_instance.fetch_data.return_value = json.loads(
+            load_fixture("real_data.json", DOMAIN)
+        )
+
+        mock_client_class.from_ip_address = AsyncMock(return_value=mock_instance)
+
+        yield mock_instance

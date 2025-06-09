@@ -1,4 +1,4 @@
-"""Config flow for the Altruist Sensor integration."""
+"""Config flow for the Altruist integration."""
 
 import ipaddress
 import logging
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Altruist Sensor."""
+    """Handle a config flow for Altruist."""
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -25,21 +25,23 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         ip_address = ""
         if user_input is not None:
             ip_address = user_input[CONF_IP_ADDRESS]
             if self._is_valid_ip(ip_address):
                 try:
-                    session = async_get_clientsession(self.hass)
-                    client = await AltruistClient.from_ip_address(session, ip_address)
+                    client = await AltruistClient.from_ip_address(
+                        async_get_clientsession(self.hass), ip_address
+                    )
                 except AltruistError:
                     errors["base"] = "no_device_found"
                 else:
+                    self.device = client.device
                     await self.async_set_unique_id(client.device_id)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
-                        title=ip_address,
+                        title=f"Altruist {self.device.id}",
                         data={
                             CONF_IP_ADDRESS: ip_address,
                             CONF_DEVICE_ID: client.device_id,
@@ -63,10 +65,9 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        _LOGGER.info("Zeroconf discovery: %s", discovery_info)
-        session = async_get_clientsession(self.hass)
+        _LOGGER.debug("Zeroconf discovery: %s", discovery_info)
         client = await AltruistClient.from_ip_address(
-            session, str(discovery_info.ip_address)
+            async_get_clientsession(self.hass), str(discovery_info.ip_address)
         )
         self.device = client.device
         _LOGGER.debug("Zeroconf device: %s", client.device)
@@ -86,19 +87,21 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
-        if self.device is None:
-            raise RuntimeError("Device must be set before discovery_confirm step")
+        assert self.device
         if user_input is not None:
             return self.async_create_entry(
-                title=f"{self.device.name} {self.device.id}",
-                data={"ip_address": self.device.ip_address, "id": self.device.id},
+                title=f"Altruist {self.device.id}",
+                data={
+                    CONF_IP_ADDRESS: self.device.ip_address,
+                    CONF_DEVICE_ID: self.device.id,
+                },
             )
 
         self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                "model": f"{self.device.name} {self.device.id}",
+                "model": f"Altruist {self.device.id}",
             },
         )
 
