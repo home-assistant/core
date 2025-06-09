@@ -13,8 +13,10 @@ from pyuptimekuma import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -30,9 +32,10 @@ class UptimeKumaDataUpdateCoordinator(
     """Update coordinator for Uptime Kuma."""
 
     config_entry: UptimeKumaConfigEntry
+    api: UptimeKuma
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: UptimeKumaConfigEntry, api: UptimeKuma
+        self, hass: HomeAssistant, config_entry: UptimeKumaConfigEntry
     ) -> None:
         """Initialize the coordinator."""
 
@@ -43,23 +46,17 @@ class UptimeKumaDataUpdateCoordinator(
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-        self.api = api
 
     async def _async_setup(self) -> None:
         """Set up coordinator."""
-
-        try:
-            await self.api.async_get_monitors()
-        except UptimeKumaAuthenticationException as e:
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="auth_failed_exception",
-            ) from e
-        except UptimeKumaException as e:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="request_failed_exception",
-            ) from e
+        session = async_get_clientsession(self.hass)
+        self.api = UptimeKuma(
+            session,
+            self.config_entry.data[CONF_URL],
+            "",
+            self.config_entry.data[CONF_API_KEY],
+            self.config_entry.data[CONF_VERIFY_SSL],
+        )
 
     async def _async_update_data(self) -> dict[str, UptimeKumaMonitor]:
         """Fetch the latest data from Uptime Kuma."""
@@ -70,7 +67,7 @@ class UptimeKumaDataUpdateCoordinator(
                 for monitor in (await self.api.async_get_monitors()).data
             }
         except UptimeKumaAuthenticationException as e:
-            raise UpdateFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed_exception",
             ) from e

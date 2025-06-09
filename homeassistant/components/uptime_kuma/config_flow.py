@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pyuptimekuma import (
     UptimeKuma,
@@ -50,10 +50,8 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             session = async_get_clientsession(self.hass)
-            url = URL(user_input[CONF_URL])
-            if url.path.endswith("/"):
-                url = url.with_path(url.path[:-1])
-            self._async_abort_entries_match({CONF_URL: url.human_repr()})
+            url = URL(user_input[CONF_URL]).human_repr().removesuffix("/")
+            self._async_abort_entries_match({CONF_URL: url})
 
             uptime_kuma = UptimeKuma(
                 session,
@@ -73,11 +71,9 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if TYPE_CHECKING:
-                    assert url.host
                 return self.async_create_entry(
-                    title=url.host,
-                    data={**user_input, CONF_URL: url.human_repr()},
+                    title=URL(user_input[CONF_URL]).host or "",
+                    data={**user_input, CONF_URL: url},
                 )
 
         return self.async_show_form(

@@ -19,6 +19,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import UptimeKumaConfigEntry, UptimeKumaDataUpdateCoordinator
@@ -87,21 +88,21 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
             "steam",
             "mqtt",
             "sqlserver",
-            "json-query",
+            "json_query",
             "group",
             "docker",
-            "grps-keyword",
-            "real-browser",
+            "grps_keyword",
+            "real_browser",
             "gamedig",
-            "kafka-producer",
+            "kafka_producer",
             "postgres",
             "mysql",
             "mongodb",
             "radius",
             "redis",
-            "tailscale-ping",
+            "tailscale_ping",
         ],
-        value_fn=lambda m: m.monitor_type,
+        value_fn=lambda m: slugify(m.monitor_type),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     UptimeKumaSensorEntityDescription(
@@ -160,7 +161,6 @@ class UptimeKumaSensorEntity(
     """An Uptime Kuma sensor entity."""
 
     entity_description: UptimeKumaSensorEntityDescription
-    coordinator: UptimeKumaDataUpdateCoordinator
 
     _attr_has_entity_name = True
 
@@ -174,7 +174,7 @@ class UptimeKumaSensorEntity(
         super().__init__(coordinator)
         self.monitor_name = monitor_name
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{monitor_name}_{self.entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{monitor_name}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             name=monitor_name,
@@ -198,4 +198,7 @@ class UptimeKumaSensorEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data.get(self.monitor_name) is not None
+        return (
+            self.coordinator.data.get(self.monitor_name) is not None
+            and super().available
+        )

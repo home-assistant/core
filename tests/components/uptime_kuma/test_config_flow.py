@@ -29,7 +29,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_URL: "https://uptime.example.org",
+            CONF_URL: "https://uptime.example.org/",
             CONF_VERIFY_SSL: True,
             CONF_API_KEY: "apikey",
         },
@@ -39,7 +39,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "uptime.example.org"
     assert result["data"] == {
-        CONF_URL: "https://uptime.example.org/",
+        CONF_URL: "https://uptime.example.org",
         CONF_VERIFY_SSL: True,
         CONF_API_KEY: "apikey",
     }
@@ -70,7 +70,7 @@ async def test_form_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_URL: "https://uptime.example.org",
+            CONF_URL: "https://uptime.example.org/",
             CONF_VERIFY_SSL: True,
             CONF_API_KEY: "apikey",
         },
@@ -83,7 +83,7 @@ async def test_form_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_URL: "https://uptime.example.org",
+            CONF_URL: "https://uptime.example.org/",
             CONF_VERIFY_SSL: True,
             CONF_API_KEY: "apikey",
         },
@@ -93,7 +93,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "uptime.example.org"
     assert result["data"] == {
-        CONF_URL: "https://uptime.example.org/",
+        CONF_URL: "https://uptime.example.org",
         CONF_VERIFY_SSL: True,
         CONF_API_KEY: "apikey",
     }
