@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from pysmartthings import Attribute, Capability, Command, SmartThings
+from pysmartthings import Attribute, Capability, Command, SmartThings, Status
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -47,10 +48,7 @@ class SmartThingsSwitchEntityDescription(SwitchEntityDescription):
     """Describe a SmartThings switch entity."""
 
     status_attribute: Attribute
-    component_translation_key: dict[str, str] | None = None
-    on_key: str = "on"
-    on_command: Command = Command.ON
-    off_command: Command = Command.OFF
+    exists_fn: Callable[[dict[Attribute | str, Status]], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -80,6 +78,13 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         translation_key="auto_cycle_link",
         status_attribute=Attribute.STEAM_CLOSET_AUTO_CYCLE_LINK,
         command=Command.SET_STEAM_CLOSET_AUTO_CYCLE_LINK,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: SmartThingsCommandSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
+        translation_key="LIGHT",
+        status_attribute=Attribute.AIR_CONDITIONER_LIGHTING,
+        command=Command.SET_AIR_CONDITIONER_LIGHTING,
         entity_category=EntityCategory.CONFIG,
     ),
 }
