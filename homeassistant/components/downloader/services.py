@@ -141,7 +141,7 @@ def download_file(service: ServiceCall) -> None:
     threading.Thread(target=do_download).start()
 
 
-def register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register the services for the downloader component."""
     async_register_admin_service(
         hass,

@@ -29,7 +29,7 @@ async def async_service_command(call: ServiceCall) -> None:
             await device.async_send_command(command)
 
 
-def register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Handle for services."""
 
     hass.services.async_register(

@@ -135,7 +135,7 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
 
 
 class OptionsFlowHandler(OptionsFlow):
-    """Options flow for webhooks."""
+    """Options flow."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
