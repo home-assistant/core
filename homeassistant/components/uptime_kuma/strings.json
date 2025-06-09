@@ -78,5 +78,13 @@
         "name": "Monitored port"
       }
     }
+  },
+  "exceptions": {
+    "auth_failed_exception": {
+      "message": "Authentication with Uptime Kuma failed. Please check that your API key is correct and still valid"
+    },
+    "request_failed_exception": {
+      "message": "Connection to Uptime Kuma failed"
+    }
   }
 }
