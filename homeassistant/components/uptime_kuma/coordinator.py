@@ -53,7 +53,7 @@ class UptimeKumaDataUpdateCoordinator(
         except UptimeKumaAuthenticationException as e:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
-                translation_key="authentication_failed_exception",
+                translation_key="auth_failed_exception",
             ) from e
         except UptimeKumaException as e:
             raise ConfigEntryNotReady(
@@ -69,6 +69,11 @@ class UptimeKumaDataUpdateCoordinator(
                 monitor.monitor_name: monitor
                 for monitor in (await self.api.async_get_monitors()).data
             }
+        except UptimeKumaAuthenticationException as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed_exception",
+            ) from e
         except UptimeKumaException as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
