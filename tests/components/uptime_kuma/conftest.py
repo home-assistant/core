@@ -1,7 +1,7 @@
 """Common fixtures for the Uptime Kuma tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, create_autospec, patch
+from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
 from pyuptimekuma import MonitorType, UptimeKumaMonitor
@@ -85,9 +85,7 @@ def mock_pyuptimekuma() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
 
-        client.async_get_monitors.return_value = {
-            "Monitor 1": monitor_1,
-            "Monitor 2": monitor_2,
-            "Monitor 3": monitor_3,
-        }
+        client.async_get_monitors.return_value = Mock(
+            data=[monitor_1, monitor_2, monitor_3]
+        )
         yield client
