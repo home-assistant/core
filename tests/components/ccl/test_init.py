@@ -44,15 +44,15 @@ async def test_load_unload_config_entry(
         (
             {"Content-Type": "application/json"},
             HTTPStatus.OK,
-        ),  # Success
+        ),
         (
             None,
             HTTPStatus.OK,
-        ),  # Missing Headers
+        ),
         (
             {"Content-Type": "text/html"},
             HTTPStatus.BAD_REQUEST,
-        ),  # False Content-Type
+        ),
     ],
 )
 async def test_webhook_post(
