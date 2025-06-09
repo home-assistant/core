@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import FritzboxConfigEntry
@@ -17,7 +17,7 @@ from .entity import FritzBoxDeviceEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzboxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome switch from ConfigEntry."""
     coordinator = entry.runtime_data

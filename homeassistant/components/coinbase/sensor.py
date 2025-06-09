@@ -7,7 +7,7 @@ import logging
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import CoinbaseConfigEntry, CoinbaseData
 from .const import (
@@ -45,7 +45,7 @@ ATTRIBUTION = "Data provided by coinbase.com"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: CoinbaseConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Coinbase sensor platform."""
     instance = config_entry.runtime_data

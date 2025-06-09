@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from propcache.api import cached_property
 import pytest
+from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
@@ -35,7 +36,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import (
@@ -44,6 +45,7 @@ from tests.common import (
     MockEntityPlatform,
     MockModule,
     MockPlatform,
+    RegistryEntryWithDefaults,
     mock_integration,
     mock_registry,
 )
@@ -392,7 +394,7 @@ async def test_async_parallel_updates_with_zero_on_sync_update(
             await asyncio.sleep(0)
 
         assert len(updates) == 2
-        assert updates == [1, 2]
+        assert updates == unordered([1, 2])
     finally:
         test_lock.set()
         await asyncio.sleep(0)
@@ -683,7 +685,7 @@ async def test_warn_disabled(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we warn once if we write to a disabled entity."""
-    entry = er.RegistryEntry(
+    entry = RegistryEntryWithDefaults(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
@@ -710,7 +712,7 @@ async def test_warn_disabled(
 
 async def test_disabled_in_entity_registry(hass: HomeAssistant) -> None:
     """Test entity is removed if we disable entity registry entry."""
-    entry = er.RegistryEntry(
+    entry = RegistryEntryWithDefaults(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
@@ -986,7 +988,7 @@ async def _test_friendly_name(
     async def async_setup_entry(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setup entry method."""
         async_add_entities([ent])
@@ -1314,7 +1316,7 @@ async def test_entity_name_translation_placeholder_errors(
     async def async_setup_entry(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setup entry method."""
         async_add_entities([ent])
@@ -1542,7 +1544,7 @@ async def test_friendly_name_updated(
     async def async_setup_entry(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setup entry method."""
         async_add_entities(
@@ -1705,13 +1707,15 @@ async def test_invalid_state(
     assert hass.states.get("test.test").state == "x" * 255
 
     caplog.clear()
-    ent._attr_state = "x" * 256
+    long_state = "x" * 256
+    ent._attr_state = long_state
     ent.async_write_ha_state()
     assert hass.states.get("test.test").state == STATE_UNKNOWN
     assert (
-        "homeassistant.helpers.entity",
+        "homeassistant.core",
         logging.ERROR,
-        f"Failed to set state for test.test, fall back to {STATE_UNKNOWN}",
+        f"State {long_state} for test.test is longer than 255, "
+        f"falling back to {STATE_UNKNOWN}",
     ) in caplog.record_tuples
 
     ent._attr_state = "x" * 255

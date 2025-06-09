@@ -11,7 +11,7 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import (
     PeblarConfigEntry,
@@ -53,7 +53,7 @@ DESCRIPTIONS: tuple[PeblarUpdateEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PeblarConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Peblar update based on a config entry."""
     async_add_entities(

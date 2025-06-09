@@ -1,6 +1,26 @@
 # serializer version: 1
 # name: test_async_get_config_entry_diagnostics
   dict({
+    '123456789012345678': dict({
+      'brand': 'BOSCH',
+      'connected': True,
+      'e_number': 'HCS000000/06',
+      'ha_id': '123456789012345678',
+      'name': 'CookProcessor',
+      'programs': list([
+      ]),
+      'settings': dict({
+      }),
+      'status': dict({
+        'BSH.Common.Status.DoorState': 'BSH.Common.EnumType.DoorState.Closed',
+        'BSH.Common.Status.OperationState': 'BSH.Common.EnumType.OperationState.Ready',
+        'BSH.Common.Status.RemoteControlActive': True,
+        'BSH.Common.Status.RemoteControlStartAllowed': True,
+        'Refrigeration.Common.Status.Door.Refrigerator': 'BSH.Common.EnumType.DoorState.Open',
+      }),
+      'type': 'CookProcessor',
+      'vib': 'HCS000006',
+    }),
     'BOSCH-000000000-000000000000': dict({
       'brand': 'BOSCH',
       'connected': True,
@@ -20,6 +40,26 @@
       }),
       'type': 'DNE',
       'vib': 'HCS000000',
+    }),
+    'BOSCH-HCS000000-68A40E000000': dict({
+      'brand': 'BOSCH',
+      'connected': True,
+      'e_number': 'HCS000000/05',
+      'ha_id': 'BOSCH-HCS000000-68A40E000000',
+      'name': 'Hob',
+      'programs': list([
+      ]),
+      'settings': dict({
+      }),
+      'status': dict({
+        'BSH.Common.Status.DoorState': 'BSH.Common.EnumType.DoorState.Closed',
+        'BSH.Common.Status.OperationState': 'BSH.Common.EnumType.OperationState.Ready',
+        'BSH.Common.Status.RemoteControlActive': True,
+        'BSH.Common.Status.RemoteControlStartAllowed': True,
+        'Refrigeration.Common.Status.Door.Refrigerator': 'BSH.Common.EnumType.DoorState.Open',
+      }),
+      'type': 'Hob',
+      'vib': 'HCS000005',
     }),
     'BOSCH-HCS000000-D00000000001': dict({
       'brand': 'BOSCH',
@@ -90,6 +130,9 @@
       'ha_id': 'BOSCH-HCS000000-D00000000004',
       'name': 'Hood',
       'programs': list([
+        'Cooking.Common.Program.Hood.Automatic',
+        'Cooking.Common.Program.Hood.Venting',
+        'Cooking.Common.Program.Hood.DelayedShutOff',
       ]),
       'settings': dict({
         'BSH.Common.Setting.AmbientLightBrightness': 70,
@@ -98,8 +141,8 @@
         'BSH.Common.Setting.AmbientLightEnabled': True,
         'Cooking.Common.Setting.Lighting': True,
         'Cooking.Common.Setting.LightingBrightness': 70,
+        'Cooking.Hood.Setting.ColorTemperature': 'Cooking.Hood.EnumType.ColorTemperature.warmToNeutral',
         'Cooking.Hood.Setting.ColorTemperaturePercent': 70,
-        'unknown': 'Cooking.Hood.EnumType.ColorTemperature.warmToNeutral',
       }),
       'status': dict({
         'BSH.Common.Status.DoorState': 'BSH.Common.EnumType.DoorState.Closed',
@@ -110,46 +153,6 @@
       }),
       'type': 'Hood',
       'vib': 'HCS000004',
-    }),
-    'BOSCH-HCS000000-D00000000005': dict({
-      'brand': 'BOSCH',
-      'connected': True,
-      'e_number': 'HCS000000/05',
-      'ha_id': 'BOSCH-HCS000000-D00000000005',
-      'name': 'Hob',
-      'programs': list([
-      ]),
-      'settings': dict({
-      }),
-      'status': dict({
-        'BSH.Common.Status.DoorState': 'BSH.Common.EnumType.DoorState.Closed',
-        'BSH.Common.Status.OperationState': 'BSH.Common.EnumType.OperationState.Ready',
-        'BSH.Common.Status.RemoteControlActive': True,
-        'BSH.Common.Status.RemoteControlStartAllowed': True,
-        'Refrigeration.Common.Status.Door.Refrigerator': 'BSH.Common.EnumType.DoorState.Open',
-      }),
-      'type': 'Hob',
-      'vib': 'HCS000005',
-    }),
-    'BOSCH-HCS000000-D00000000006': dict({
-      'brand': 'BOSCH',
-      'connected': True,
-      'e_number': 'HCS000000/06',
-      'ha_id': 'BOSCH-HCS000000-D00000000006',
-      'name': 'CookProcessor',
-      'programs': list([
-      ]),
-      'settings': dict({
-      }),
-      'status': dict({
-        'BSH.Common.Status.DoorState': 'BSH.Common.EnumType.DoorState.Closed',
-        'BSH.Common.Status.OperationState': 'BSH.Common.EnumType.OperationState.Ready',
-        'BSH.Common.Status.RemoteControlActive': True,
-        'BSH.Common.Status.RemoteControlStartAllowed': True,
-        'Refrigeration.Common.Status.Door.Refrigerator': 'BSH.Common.EnumType.DoorState.Open',
-      }),
-      'type': 'CookProcessor',
-      'vib': 'HCS000006',
     }),
     'BOSCH-HCS01OVN1-43E0065FE245': dict({
       'brand': 'BOSCH',
@@ -272,6 +275,7 @@
       'settings': dict({
         'BSH.Common.Setting.ChildLock': False,
         'BSH.Common.Setting.PowerState': 'BSH.Common.EnumType.PowerState.On',
+        'LaundryCare.Washer.Setting.IDos2BaseLevel': 0,
       }),
       'status': dict({
         'BSH.Common.Status.DoorState': 'BSH.Common.EnumType.DoorState.Closed',

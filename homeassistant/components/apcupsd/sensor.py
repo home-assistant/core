@@ -21,7 +21,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import LAST_S_TEST
@@ -406,7 +406,7 @@ INFERRED_UNITS = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: APCUPSdConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the APCUPSd sensors from config entries."""
     coordinator = config_entry.runtime_data
@@ -458,11 +458,8 @@ class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, context=description.key.upper())
 
-        # Set up unique id and device info if serial number is available.
-        if (serial_no := coordinator.data.serial_no) is not None:
-            self._attr_unique_id = f"{serial_no}_{description.key}"
-
         self.entity_description = description
+        self._attr_unique_id = f"{coordinator.unique_device_id}_{description.key}"
         self._attr_device_info = coordinator.device_info
 
         # Initial update of attributes.

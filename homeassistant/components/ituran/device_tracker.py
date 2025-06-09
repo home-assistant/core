@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IturanConfigEntry
 from .coordinator import IturanDataUpdateCoordinator
@@ -14,7 +14,7 @@ from .entity import IturanBaseEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IturanConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ituran tracker from config entry."""
     coordinator = config_entry.runtime_data

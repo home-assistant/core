@@ -14,7 +14,7 @@ from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -35,7 +35,7 @@ from .helpers import InputType
 
 def add_lcn_entities(
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     entity_configs: Iterable[ConfigType],
 ) -> None:
     """Add entities for this domain."""
@@ -54,7 +54,7 @@ def add_lcn_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
     add_entities = partial(

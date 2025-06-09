@@ -1,7 +1,7 @@
 {
   "domain": "motionmount",
   "name": "Vogel's MotionMount",
-  "codeowners": ["@RJPoelstra"],
+  "codeowners": ["@laiho-vogels"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/motionmount",
   "integration_type": "device",

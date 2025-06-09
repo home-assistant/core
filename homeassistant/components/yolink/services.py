@@ -25,7 +25,7 @@ _SPEAKER_HUB_PLAY_CALL_OPTIONAL_ATTRS = (
 )
 
 
-def async_register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for YoLink integration."""
 
     async def handle_speaker_hub_play_call(service_call: ServiceCall) -> None:
@@ -39,7 +39,7 @@ def async_register_services(hass: HomeAssistant) -> None:
                     continue
                 if entry.domain == DOMAIN:
                     break
-            if entry is None or entry.state == ConfigEntryState.NOT_LOADED:
+            if entry is None or entry.state != ConfigEntryState.LOADED:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="invalid_config_entry",

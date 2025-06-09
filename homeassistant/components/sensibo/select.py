@@ -17,7 +17,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -67,7 +67,7 @@ DEVICE_SELECT_TYPES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SensiboConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensibo select platform."""
 
@@ -115,7 +115,8 @@ async def async_setup_entry(
     def _add_remove_devices() -> None:
         """Handle additions of devices and sensors."""
         nonlocal added_devices
-        new_devices, _, added_devices = coordinator.get_devices(added_devices)
+        new_devices, _, new_added_devices = coordinator.get_devices(added_devices)
+        added_devices = new_added_devices
 
         if new_devices:
             async_add_entities(

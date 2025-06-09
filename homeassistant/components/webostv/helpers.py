@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from aiowebostv import WebOsClient
+from aiowebostv import WebOsClient, WebOsTvState
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
@@ -83,16 +83,16 @@ def async_get_client_by_device_entry(
     )
 
 
-def get_sources(client: WebOsClient) -> list[str]:
+def get_sources(tv_state: WebOsTvState) -> list[str]:
     """Construct sources list."""
     sources = []
     found_live_tv = False
-    for app in client.apps.values():
+    for app in tv_state.apps.values():
         sources.append(app["title"])
         if app["id"] == LIVE_TV_APP_ID:
             found_live_tv = True
 
-    for source in client.inputs.values():
+    for source in tv_state.inputs.values():
         sources.append(source["label"])
         if source["appId"] == LIVE_TV_APP_ID:
             found_live_tv = True

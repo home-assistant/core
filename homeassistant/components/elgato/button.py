@@ -16,7 +16,7 @@ from homeassistant.components.button import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ElgatoConfigEntry, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
@@ -50,7 +50,7 @@ BUTTONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ElgatoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Elgato button based on a config entry."""
     coordinator = entry.runtime_data

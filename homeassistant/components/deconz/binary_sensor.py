@@ -25,7 +25,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DeconzConfigEntry
 from .const import ATTR_DARK, ATTR_ON
@@ -161,7 +161,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzBinarySensorDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DeconzConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ binary sensor."""
     hub = config_entry.runtime_data

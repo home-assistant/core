@@ -104,6 +104,58 @@ async def test_play_quick_reply_message(
     reolink_connect.quick_reply_dict = MagicMock()
 
 
+async def test_host_scene_select(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test host select entity with scene mode."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.SELECT}.{TEST_NVR_NAME}_scene_mode"
+    assert hass.states.get(entity_id).state == "off"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, "option": "home"},
+        blocking=True,
+    )
+    reolink_connect.baichuan.set_scene.assert_called_once()
+
+    reolink_connect.baichuan.set_scene.side_effect = ReolinkError("Test error")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, "option": "home"},
+            blocking=True,
+        )
+
+    reolink_connect.baichuan.set_scene.side_effect = InvalidParameterError("Test error")
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, "option": "home"},
+            blocking=True,
+        )
+
+    reolink_connect.baichuan.active_scene = "Invalid value"
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    reolink_connect.baichuan.set_scene.reset_mock(side_effect=True)
+    reolink_connect.baichuan.active_scene = "off"
+
+
 async def test_chime_select(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

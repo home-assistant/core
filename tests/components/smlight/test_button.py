@@ -3,18 +3,22 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pysmlight import Info
+from pysmlight import Info, Radio
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.smlight.const import SCAN_INTERVAL
+from homeassistant.components.smlight.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 
 @pytest.fixture
@@ -23,7 +27,7 @@ def platforms() -> Platform | list[Platform]:
     return [Platform.BUTTON]
 
 
-MOCK_ROUTER = Info(MAC="AA:BB:CC:DD:EE:FF", zb_type=1)
+MOCK_ROUTER = Info(MAC="AA:BB:CC:DD:EE:FF", radios=[Radio(zb_type=1)])
 
 
 @pytest.mark.parametrize(
@@ -45,6 +49,7 @@ async def test_buttons(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test creation of button entities."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = MOCK_ROUTER
     await setup_integration(hass, mock_config_entry)
 
@@ -66,7 +71,7 @@ async def test_buttons(
     )
 
     assert len(mock_method.mock_calls) == 1
-    mock_method.assert_called_with()
+    mock_method.assert_called()
 
 
 @pytest.mark.parametrize("entity_id", ["zigbee_flash_mode", "reconnect_zigbee_router"])
@@ -78,6 +83,7 @@ async def test_disabled_by_default_buttons(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test the disabled by default buttons."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = MOCK_ROUTER
     await setup_integration(hass, mock_config_entry)
 
@@ -88,6 +94,29 @@ async def test_disabled_by_default_buttons(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_zigbee2_router_button(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test creation of second radio router button (if available)."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info.from_dict(
+        await async_load_json_object_fixture(hass, "info-MR1.json", DOMAIN)
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("button.mock_title_reconnect_zigbee_router")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    entry = entity_registry.async_get("button.mock_title_reconnect_zigbee_router")
+    assert entry is not None
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-reconnect_zigbee_router_1"
+
+
 async def test_remove_router_reconnect(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -96,7 +125,8 @@ async def test_remove_router_reconnect(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test removal of orphaned router reconnect button."""
-    save_mock = mock_smlight_client.get_info.return_value
+    save_mock = mock_smlight_client.get_info.side_effect
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = MOCK_ROUTER
     mock_config_entry = await setup_integration(hass, mock_config_entry)
 
@@ -106,7 +136,7 @@ async def test_remove_router_reconnect(
     assert len(entities) == 4
     assert entities[3].unique_id == "aa:bb:cc:dd:ee:ff-reconnect_zigbee_router"
 
-    mock_smlight_client.get_info.return_value = save_mock
+    mock_smlight_client.get_info.side_effect = save_mock
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

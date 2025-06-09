@@ -1,11 +1,49 @@
 {
   "entity": {
+    "climate": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "mdi:hand-back-left"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "mdi:hand-back-left",
+              "auto": "mdi:auto-mode",
+              "summer": "mdi:sun-thermometer-outline"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
+      "brightness": {
+        "default": "mdi:brightness-5"
+      },
+      "brightness_instance": {
+        "default": "mdi:brightness-5"
+      },
       "link_quality": {
         "default": "mdi:signal"
       },
       "window_position": {
         "default": "mdi:window-closed"
+      }
+    },
+    "switch": {
+      "watchdog": {
+        "default": "mdi:dog"
+      },
+      "manual_operation": {
+        "default": "mdi:hand-back-left"
       }
     }
   }

@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import FytaConfigEntry, FytaCoordinator
@@ -154,7 +154,9 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: FytaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FytaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FYTA sensors."""
     coordinator: FytaCoordinator = entry.runtime_data

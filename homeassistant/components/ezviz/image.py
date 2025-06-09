@@ -4,14 +4,15 @@ from __future__ import annotations
 
 import logging
 
-from pyezviz.exceptions import PyEzvizError
-from pyezviz.utils import decrypt_image
+from propcache.api import cached_property
+from pyezvizapi.exceptions import PyEzvizError
+from pyezvizapi.utils import decrypt_image
 
 from homeassistant.components.image import Image, ImageEntity, ImageEntityDescription
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -29,7 +30,7 @@ IMAGE_TYPE = ImageEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EzvizConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ image entities based on a config entry."""
 
@@ -61,6 +62,11 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
             if camera and camera.source != SOURCE_IGNORE
             else None
         )
+
+    @cached_property
+    def available(self) -> bool:
+        """Entity gets data from ezviz API so always available."""
+        return True
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""

@@ -14,7 +14,7 @@ from homeassistant.components.switch import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode
@@ -80,7 +80,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Pet Water Feeder
+    # Pet Fountain
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
     "cwysj": (
         SwitchEntityDescription(
@@ -612,6 +612,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
+    # SIREN: Siren (switch) with Temperature and Humidity Sensor with External Probe
+    # New undocumented category qxj, see https://github.com/home-assistant/core/issues/136472
+    "qxj": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+    ),
     # Ceiling Light
     # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
     "xdd": (
@@ -720,15 +729,61 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
+    # Electric Blanket
+    # https://developer.tuya.com/en/docs/iot/categorydr?id=Kaiuz22dyc66p
+    "dr": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Power",
+            icon="mdi:power",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Side A Power",
+            icon="mdi:alpha-a",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Side B Power",
+            icon="mdi:alpha-b",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT,
+            name="Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT_1,
+            name="Side A Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT_2,
+            name="Side B Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+    ),
 }
 
 # Socket (duplicate of `pc`)
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 SWITCHES["cz"] = SWITCHES["pc"]
 
+# Smart Camera - Low power consumption camera (duplicate of `sp`)
+# Undocumented, see https://github.com/home-assistant/core/issues/132844
+SWITCHES["dghsxj"] = SWITCHES["sp"]
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
     hass_data = entry.runtime_data

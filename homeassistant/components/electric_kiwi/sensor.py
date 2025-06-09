@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -26,6 +26,8 @@ from .coordinator import (
     ElectricKiwiConfigEntry,
     ElectricKiwiHOPDataCoordinator,
 )
+
+PARALLEL_UPDATES = 0
 
 ATTR_EK_HOP_START = "hop_power_start"
 ATTR_EK_HOP_END = "hop_power_end"
@@ -130,7 +132,7 @@ HOP_SENSOR_TYPES: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ElectricKiwiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Electric Kiwi Sensors Setup."""
     account_coordinator = entry.runtime_data.account

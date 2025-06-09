@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -64,6 +64,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=2,
     ),
     "Humidity": LaCrosseSensorEntityDescription(
         key="Humidity",
@@ -71,6 +72,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
     ),
     "HeatIndex": LaCrosseSensorEntityDescription(
         key="HeatIndex",
@@ -79,6 +81,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        suggested_display_precision=2,
     ),
     "WindSpeed": LaCrosseSensorEntityDescription(
         key="WindSpeed",
@@ -86,6 +89,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
+        suggested_display_precision=2,
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",
@@ -93,12 +97,16 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
+        suggested_display_precision=2,
     ),
     "WindHeading": LaCrosseSensorEntityDescription(
         key="WindHeading",
         translation_key="wind_heading",
         value_fn=get_value,
         native_unit_of_measurement=DEGREE,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     "WetDry": LaCrosseSensorEntityDescription(
         key="WetDry",
@@ -117,6 +125,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
+        suggested_display_precision=2,
     ),
     "FeelsLike": LaCrosseSensorEntityDescription(
         key="FeelsLike",
@@ -125,6 +134,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        suggested_display_precision=2,
     ),
     "WindChill": LaCrosseSensorEntityDescription(
         key="WindChill",
@@ -133,6 +143,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        suggested_display_precision=2,
     ),
 }
 # map of API returned unit of measurement strings to their corresponding unit of measurement
@@ -149,7 +160,7 @@ UNIT_OF_MEASUREMENT_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaCrosse View from a config entry."""
     coordinator: DataUpdateCoordinator[list[Sensor]] = hass.data[DOMAIN][

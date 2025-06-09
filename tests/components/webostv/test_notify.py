@@ -104,7 +104,7 @@ async def test_errors(
 ) -> None:
     """Test error scenarios."""
     await setup_webostv(hass)
-    client.is_on = is_on
+    client.tv_state.is_on = is_on
 
     assert hass.services.has_service("notify", SERVICE_NAME)
 

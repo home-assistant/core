@@ -384,6 +384,11 @@ class ModbusHub:
             {ATTR_SLAVE: slave} if slave is not None else {ATTR_SLAVE: 1}
         )
         entry = self._pb_request[use_call]
+
+        if use_call in {"write_registers", "write_coils"}:
+            if not isinstance(value, list):
+                value = [value]
+
         kwargs[entry.value_attr_name] = value
         try:
             result: ModbusPDU = await entry.func(address, **kwargs)

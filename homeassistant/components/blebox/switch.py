@@ -7,7 +7,7 @@ import blebox_uniapi.switch
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
@@ -18,7 +18,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BleBoxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox switch entity."""
     entities = [

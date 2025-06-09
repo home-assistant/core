@@ -18,7 +18,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
 from .const import DOMAIN
@@ -90,6 +90,7 @@ CO2_DESCRIPTION = SensorEntityDescription(
 )
 
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
+    "Bot": (BATTERY_DESCRIPTION,),
     "Meter": (
         TEMPERATURE_DESCRIPTION,
         HUMIDITY_DESCRIPTION,
@@ -133,13 +134,15 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         BATTERY_DESCRIPTION,
         CO2_DESCRIPTION,
     ),
+    "Smart Lock Pro": (BATTERY_DESCRIPTION,),
+    "Smart Lock": (BATTERY_DESCRIPTION,),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]

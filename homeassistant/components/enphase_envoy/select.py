@@ -14,11 +14,11 @@ from pyenphase.models.tariff import EnvoyStorageMode, EnvoyStorageSettings
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity
+from .entity import EnvoyBaseEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -130,7 +130,7 @@ STORAGE_MODE_ENTITY = EnvoyStorageSettingsSelectEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EnphaseConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Enphase Envoy select platform."""
     coordinator = config_entry.runtime_data
@@ -192,6 +192,7 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
         """Return the state of the Enpower switch."""
         return self.entity_description.value_fn(self.relay)
 
+    @exception_handler
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
         await self.entity_description.update_fn(self.envoy, self.relay, option)
@@ -243,6 +244,7 @@ class EnvoyStorageSettingsSelectEntity(EnvoyBaseEntity, SelectEntity):
         assert self.data.tariff.storage_settings is not None
         return self.entity_description.value_fn(self.data.tariff.storage_settings)
 
+    @exception_handler
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
         await self.entity_description.update_fn(self.envoy, option)

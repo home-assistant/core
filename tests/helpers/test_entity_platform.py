@@ -48,6 +48,7 @@ from tests.common import (
     MockEntity,
     MockEntityPlatform,
     MockPlatform,
+    RegistryEntryWithDefaults,
     async_fire_time_changed,
     mock_platform,
     mock_registry,
@@ -55,7 +56,6 @@ from tests.common import (
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
-PLATFORM = "test_platform"
 
 
 async def test_polling_only_updates_entities_it_should_poll(
@@ -752,7 +752,7 @@ async def test_overriding_name_from_registry(hass: HomeAssistant) -> None:
     mock_registry(
         hass,
         {
-            "test_domain.world": er.RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -785,7 +785,7 @@ async def test_registry_respect_entity_disabled(hass: HomeAssistant) -> None:
     mock_registry(
         hass,
         {
-            "test_domain.world": er.RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -832,7 +832,7 @@ async def test_entity_registry_updates_name(hass: HomeAssistant) -> None:
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": er.RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -1065,7 +1065,7 @@ async def test_entity_registry_updates_entity_id(hass: HomeAssistant) -> None:
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": er.RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -1097,14 +1097,14 @@ async def test_entity_registry_updates_invalid_entity_id(hass: HomeAssistant) ->
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": er.RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
                 platform="test_platform",
                 name="Some name",
             ),
-            "test_domain.existing": er.RegistryEntry(
+            "test_domain.existing": RegistryEntryWithDefaults(
                 entity_id="test_domain.existing",
                 unique_id="5678",
                 platform="test_platform",
@@ -1529,14 +1529,19 @@ async def test_entity_info_added_to_entity_registry(
 
     entry_default = entity_registry.async_get_or_create(DOMAIN, DOMAIN, "default")
     assert entry_default == er.RegistryEntry(
-        "test_domain.best_name",
-        "default",
-        "test_domain",
+        entity_id="test_domain.best_name",
+        unique_id="default",
+        platform="test_domain",
         capabilities={"max": 100},
+        config_entry_id=None,
+        config_subentry_id=None,
         created_at=dt_util.utcnow(),
         device_class=None,
+        device_id=None,
+        disabled_by=None,
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
+        hidden_by=None,
         icon=None,
         id=ANY,
         modified_at=dt_util.utcnow(),
@@ -1544,6 +1549,8 @@ async def test_entity_info_added_to_entity_registry(
         original_device_class="mock-device-class",
         original_icon="nice:icon",
         original_name="best name",
+        options=None,
+        suggested_object_id=None,
         supported_features=5,
         translation_key="my_translation_key",
         unit_of_measurement=PERCENTAGE,
@@ -2402,3 +2409,41 @@ async def test_device_type_error_checking(
     assert len(device_registry.devices) == 0
     assert len(entity_registry.entities) == number_of_entities
     assert len(hass.states.async_all()) == number_of_entities
+
+
+async def test_add_entity_unknown_subentry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test adding an entity to an unknown subentry."""
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [MockEntity(name="test", unique_id="unique")],
+            config_subentry_id="unknown-subentry",
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert not await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+    full_name = f"{config_entry.domain}.{entity_platform.domain}"
+    assert full_name not in hass.config.components
+    assert len(hass.states.async_entity_ids()) == 0
+    assert len(entity_registry.entities) == 0
+
+    assert (
+        "Can't add entities to unknown subentry unknown-subentry "
+        "of config entry super-mock-id"
+    ) in caplog.text

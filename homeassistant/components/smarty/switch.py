@@ -11,7 +11,7 @@ from pysmarty2 import Smarty
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SmartyConfigEntry, SmartyCoordinator
 from .entity import SmartyEntity
@@ -42,7 +42,7 @@ ENTITIES: tuple[SmartySwitchDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smarty Switch Platform."""
 

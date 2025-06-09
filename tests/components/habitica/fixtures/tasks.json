@@ -425,7 +425,18 @@
       "date": "2024-09-27T22:17:00.000Z",
       "completed": false,
       "collapseChecklist": false,
-      "checklist": [],
+      "checklist": [
+        {
+          "completed": false,
+          "id": "fccc26f2-1e2b-4bf8-9dd0-a405be261036",
+          "text": "Checklist-item1"
+        },
+        {
+          "completed": true,
+          "id": "5a897af4-ea94-456a-a2bd-f336bcd79509",
+          "text": "Checklist-item2"
+        }
+      ],
       "type": "todo",
       "text": "Buch zu Ende lesen",
       "notes": "Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.",
@@ -533,7 +544,10 @@
       "type": "reward",
       "text": "Belohne Dich selbst",
       "notes": "Schaue fern, spiele ein Spiel, gönne Dir einen Leckerbissen, es liegt ganz bei Dir!",
-      "tags": [],
+      "tags": [
+        "3450351f-1323-4c7e-9fd2-0cdff25b3ce0",
+        "b2780f82-b3b5-49a3-a677-48f2c8c7e3bb"
+      ],
       "value": 10,
       "priority": 1,
       "attribute": "str",
@@ -591,13 +605,67 @@
       "startDate": "2024-09-20T23:00:00.000Z",
       "daysOfMonth": [],
       "weeksOfMonth": [3],
-      "checklist": [],
+      "checklist": [
+        {
+          "completed": false,
+          "id": "a2a6702d-58e1-46c2-a3ce-422d525cc0b6",
+          "text": "Checklist-item1"
+        },
+        {
+          "completed": true,
+          "id": "9f64e1cd-b0ab-4577-8344-c7a5e1827997",
+          "text": "Checklist-item2"
+        }
+      ],
       "reminders": [],
       "createdAt": "2024-10-10T15:57:14.304Z",
       "updatedAt": "2024-11-27T23:47:29.986Z",
       "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
       "isDue": false,
       "id": "6e53f1f5-a315-4edd-984d-8d762e4a08ef"
+    },
+    {
+      "repeat": {
+        "m": false,
+        "t": false,
+        "w": false,
+        "th": false,
+        "f": false,
+        "s": false,
+        "su": true
+      },
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "369afeed-61e3-4bf7-9747-66e05807134c",
+      "frequency": "monthly",
+      "everyX": 1,
+      "streak": 1,
+      "nextDue": ["2024-12-14T23:00:00.000Z", "2025-01-18T23:00:00.000Z"],
+      "yesterDaily": true,
+      "history": [],
+      "completed": false,
+      "collapseChecklist": false,
+      "type": "daily",
+      "text": "Monatliche Finanzübersicht erstellen",
+      "notes": "Setze dich einmal im Monat hin, um deine Einnahmen und Ausgaben zu überprüfen und dein Budget zu planen.",
+      "tags": [],
+      "value": -0.9215181434950852,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "startDate": "2024-04-04T22:00:00.000Z",
+      "daysOfMonth": [],
+      "weeksOfMonth": [0],
+      "checklist": [],
+      "reminders": [],
+      "createdAt": "2024-04-04T22:00:00.000Z",
+      "updatedAt": "2024-04-04T22:00:00.000Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "isDue": false,
+      "id": "369afeed-61e3-4bf7-9747-66e05807134c"
     },
     {
       "repeat": {

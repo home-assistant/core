@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from unittest.mock import Mock, patch
 
 from pyheos import (
+    BrowseResult,
     HeosGroup,
     HeosHost,
     HeosNowPlayingMedia,
@@ -14,10 +15,12 @@ from pyheos import (
     HeosSystem,
     LineOutLevelType,
     MediaItem,
+    MediaMusicSource,
     MediaType,
     NetworkType,
     PlayerUpdateResult,
     PlayState,
+    QueueItem,
     RepeatType,
     const,
 )
@@ -130,16 +133,17 @@ def system_info_fixture() -> HeosSystem:
     )
 
 
-@pytest.fixture(name="players")
-def players_fixture() -> dict[int, HeosPlayer]:
-    """Create two mock HeosPlayers."""
-    players = {}
-    for i in (1, 2):
-        player = HeosPlayer(
-            player_id=i,
+@pytest.fixture(name="player_factory")
+def player_factory_fixture() -> Callable[[int, str, str], HeosPlayer]:
+    """Return a method that creates players."""
+
+    def factory(player_id: int, name: str, model: str) -> HeosPlayer:
+        """Create a player."""
+        return HeosPlayer(
+            player_id=player_id,
             group_id=999,
-            name="Test Player" if i == 1 else f"Test Player {i}",
-            model="HEOS Drive HS2" if i == 1 else "Speaker",
+            name=name,
+            model=model,
             serial="123456",
             version="1.0.0",
             supported_version=True,
@@ -147,26 +151,37 @@ def players_fixture() -> dict[int, HeosPlayer]:
             is_muted=False,
             available=True,
             state=PlayState.STOP,
-            ip_address=f"127.0.0.{i}",
+            ip_address=f"127.0.0.{player_id}",
             network=NetworkType.WIRED,
             shuffle=False,
             repeat=RepeatType.OFF,
             volume=25,
+            now_playing_media=HeosNowPlayingMedia(
+                type=MediaType.STATION,
+                song="Song",
+                station="Station Name",
+                album="Album",
+                artist="Artist",
+                image_url="http://",
+                album_id="1",
+                media_id="1",
+                queue_id=1,
+                source_id=10,
+            ),
         )
-        player.now_playing_media = HeosNowPlayingMedia(
-            type=MediaType.STATION,
-            song="Song",
-            station="Station Name",
-            album="Album",
-            artist="Artist",
-            image_url="http://",
-            album_id="1",
-            media_id="1",
-            queue_id=1,
-            source_id=10,
-        )
-        players[player.player_id] = player
-    return players
+
+    return factory
+
+
+@pytest.fixture(name="players")
+def players_fixture(
+    player_factory: Callable[[int, str, str], HeosPlayer],
+) -> dict[int, HeosPlayer]:
+    """Create two mock HeosPlayers."""
+    return {
+        1: player_factory(1, "Test Player", "HEOS Drive HS2"),
+        2: player_factory(2, "Test Player 2", "Speaker"),
+    }
 
 
 @pytest.fixture(name="group")
@@ -282,10 +297,10 @@ def quick_selects_fixture() -> dict[int, str]:
     }
 
 
-@pytest.fixture(name="playlists")
-def playlists_fixture() -> list[MediaItem]:
-    """Create favorites fixture."""
-    playlist = MediaItem(
+@pytest.fixture(name="playlist")
+def playlist_fixture() -> MediaItem:
+    """Create playlist fixture."""
+    return MediaItem(
         source_id=const.MUSIC_SOURCE_PLAYLISTS,
         name="Awesome Music",
         type=MediaType.PLAYLIST,
@@ -294,6 +309,44 @@ def playlists_fixture() -> list[MediaItem]:
         image_url="",
         heos=None,
     )
+
+
+@pytest.fixture(name="music_sources")
+def music_sources_fixture() -> dict[int, MediaMusicSource]:
+    """Create music sources fixture."""
+    return {
+        const.MUSIC_SOURCE_PANDORA: MediaMusicSource(
+            source_id=const.MUSIC_SOURCE_PANDORA,
+            name="Pandora",
+            type=MediaType.MUSIC_SERVICE,
+            available=True,
+            service_username="user",
+            image_url="",
+            heos=None,
+        ),
+        const.MUSIC_SOURCE_TUNEIN: MediaMusicSource(
+            source_id=const.MUSIC_SOURCE_TUNEIN,
+            name="TuneIn",
+            type=MediaType.MUSIC_SERVICE,
+            available=False,
+            service_username=None,
+            image_url="",
+            heos=None,
+        ),
+    }
+
+
+@pytest.fixture(name="pandora_browse_result")
+def pandora_browse_response_fixture(favorites: dict[int, MediaItem]) -> BrowseResult:
+    """Create a mock response for browsing Pandora."""
+    return BrowseResult(
+        1, 1, const.MUSIC_SOURCE_PANDORA, items=[favorites[1]], options=[]
+    )
+
+
+@pytest.fixture(name="playlists")
+def playlists_fixture(playlist: MediaItem) -> list[MediaItem]:
+    """Create playlists fixture."""
     return [playlist]
 
 
@@ -307,3 +360,28 @@ def change_data_fixture() -> PlayerUpdateResult:
 def change_data_mapped_ids_fixture() -> PlayerUpdateResult:
     """Create player change data for testing."""
     return PlayerUpdateResult(updated_player_ids={1: 101})
+
+
+@pytest.fixture(name="queue")
+def queue_fixture() -> list[QueueItem]:
+    """Create a queue fixture."""
+    return [
+        QueueItem(
+            queue_id=1,
+            song="Espresso",
+            album="Espresso",
+            artist="Sabrina Carpenter",
+            image_url="http://resources.wimpmusic.com/images/e4f2d75f/a69e/4b8a/b800/e18546b1ad4c/640x640.jpg",
+            media_id="356276483",
+            album_id="356276481",
+        ),
+        QueueItem(
+            queue_id=2,
+            song="A Bar Song (Tipsy)",
+            album="A Bar Song (Tipsy)",
+            artist="Shaboozey",
+            image_url="http://resources.wimpmusic.com/images/d05b8da3/4fae/45ff/ac1b/7ab7caab3523/640x640.jpg",
+            media_id="354365598",
+            album_id="354365596",
+        ),
+    ]

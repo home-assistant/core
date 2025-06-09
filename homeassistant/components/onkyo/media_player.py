@@ -3,96 +3,54 @@
 from __future__ import annotations
 
 import asyncio
+from enum import Enum
 from functools import cache
 import logging
 from typing import Any, Literal
 
-import voluptuous as vol
-
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OnkyoConfigEntry
 from .const import (
-    CONF_RECEIVER_MAX_VOLUME,
-    CONF_SOURCES,
     DOMAIN,
     OPTION_MAX_VOLUME,
     OPTION_VOLUME_RESOLUTION,
     PYEISCP_COMMANDS,
     ZONES,
     InputSource,
+    ListeningMode,
     VolumeResolution,
 )
-from .receiver import Receiver, async_discover
+from .receiver import Receiver
 from .services import DATA_MP_ENTITIES
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MAX_VOLUME_DEFAULT = 100
-CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
-CONF_SOURCES_DEFAULT = {
-    "tv": "TV",
-    "bd": "Bluray",
-    "game": "Game",
-    "aux1": "Aux1",
-    "video1": "Video 1",
-    "video2": "Video 2",
-    "video3": "Video 3",
-    "video4": "Video 4",
-    "video5": "Video 5",
-    "video6": "Video 6",
-    "video7": "Video 7",
-    "fm": "Radio",
-}
 
-PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(OPTION_MAX_VOLUME, default=CONF_MAX_VOLUME_DEFAULT): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=100)
-        ),
-        vol.Optional(
-            CONF_RECEIVER_MAX_VOLUME, default=CONF_RECEIVER_MAX_VOLUME_DEFAULT
-        ): cv.positive_int,
-        vol.Optional(CONF_SOURCES, default=CONF_SOURCES_DEFAULT): {
-            cv.string: cv.string
-        },
-    }
-)
-
-SUPPORT_ONKYO_WO_VOLUME = (
+SUPPORTED_FEATURES_BASE = (
     MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.PLAY_MEDIA
 )
-SUPPORT_ONKYO = (
-    SUPPORT_ONKYO_WO_VOLUME
-    | MediaPlayerEntityFeature.VOLUME_SET
+SUPPORTED_FEATURES_VOLUME = (
+    MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
-DEFAULT_PLAYABLE_SOURCES = (
-    InputSource.from_meaning("FM"),
-    InputSource.from_meaning("AM"),
-    InputSource.from_meaning("DAB"),
+PLAYABLE_SOURCES = (
+    InputSource.FM,
+    InputSource.AM,
+    InputSource.DAB,
 )
 
 ATTR_PRESET = "preset"
@@ -115,7 +73,6 @@ AUDIO_INFORMATION_MAPPING = [
     "auto_phase_control_phase",
     "upmix_mode",
 ]
-
 VIDEO_INFORMATION_MAPPING = [
     "video_input_port",
     "input_resolution",
@@ -128,7 +85,6 @@ VIDEO_INFORMATION_MAPPING = [
     "picture_mode",
     "input_hdr",
 ]
-ISSUE_URL_PLACEHOLDER = "/config/integrations/dashboard/add?domain=onkyo"
 
 type LibValue = str | tuple[str, ...]
 
@@ -136,7 +92,19 @@ type LibValue = str | tuple[str, ...]
 def _get_single_lib_value(value: LibValue) -> str:
     if isinstance(value, str):
         return value
-    return value[0]
+    return value[-1]
+
+
+def _get_lib_mapping[T: Enum](cmds: Any, cls: type[T]) -> dict[T, LibValue]:
+    result: dict[T, LibValue] = {}
+    for k, v in cmds["values"].items():
+        try:
+            key = cls(k)
+        except ValueError:
+            continue
+        result[key] = v["name"]
+
+    return result
 
 
 @cache
@@ -151,15 +119,7 @@ def _input_source_lib_mappings(zone: str) -> dict[InputSource, LibValue]:
         case "zone4":
             cmds = PYEISCP_COMMANDS["zone4"]["SL4"]
 
-    result: dict[InputSource, LibValue] = {}
-    for k, v in cmds["values"].items():
-        try:
-            source = InputSource(k)
-        except ValueError:
-            continue
-        result[source] = v["name"]
-
-    return result
+    return _get_lib_mapping(cmds, InputSource)
 
 
 @cache
@@ -167,126 +127,28 @@ def _rev_input_source_lib_mappings(zone: str) -> dict[LibValue, InputSource]:
     return {value: key for key, value in _input_source_lib_mappings(zone).items()}
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Import config from yaml."""
-    host = config.get(CONF_HOST)
+@cache
+def _listening_mode_lib_mappings(zone: str) -> dict[ListeningMode, LibValue]:
+    match zone:
+        case "main":
+            cmds = PYEISCP_COMMANDS["main"]["LMD"]
+        case "zone2":
+            cmds = PYEISCP_COMMANDS["zone2"]["LMZ"]
+        case _:
+            return {}
 
-    source_mapping: dict[str, InputSource] = {}
-    for zone in ZONES:
-        for source, source_lib in _input_source_lib_mappings(zone).items():
-            if isinstance(source_lib, str):
-                source_mapping.setdefault(source_lib, source)
-            else:
-                for source_lib_single in source_lib:
-                    source_mapping.setdefault(source_lib_single, source)
+    return _get_lib_mapping(cmds, ListeningMode)
 
-    sources: dict[InputSource, str] = {}
-    for source_lib_single, source_name in config[CONF_SOURCES].items():
-        user_source = source_mapping.get(source_lib_single.lower())
-        if user_source is not None:
-            sources[user_source] = source_name
 
-    config[CONF_SOURCES] = sources
-
-    results = []
-    if host is not None:
-        _LOGGER.debug("Importing yaml single: %s", host)
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-        results.append((host, result))
-    else:
-        for info in await async_discover():
-            host = info.host
-
-            # Migrate legacy entities.
-            registry = er.async_get(hass)
-            old_unique_id = f"{info.model_name}_{info.identifier}"
-            new_unique_id = f"{info.identifier}_main"
-            entity_id = registry.async_get_entity_id(
-                "media_player", DOMAIN, old_unique_id
-            )
-            if entity_id is not None:
-                _LOGGER.debug(
-                    "Migrating unique_id from [%s] to [%s] for entity %s",
-                    old_unique_id,
-                    new_unique_id,
-                    entity_id,
-                )
-                registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-            _LOGGER.debug("Importing yaml discover: %s", info.host)
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config | {CONF_HOST: info.host} | {"info": info},
-            )
-            results.append((host, result))
-
-    _LOGGER.debug("Importing yaml results: %s", results)
-    if not results:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_import_issue_no_discover",
-            breaks_in_ha_version="2025.5.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_import_issue_no_discover",
-            translation_placeholders={"url": ISSUE_URL_PLACEHOLDER},
-        )
-
-    all_successful = True
-    for host, result in results:
-        if (
-            result.get("type") == FlowResultType.CREATE_ENTRY
-            or result.get("reason") == "already_configured"
-        ):
-            continue
-        if error := result.get("reason"):
-            all_successful = False
-            async_create_issue(
-                hass,
-                DOMAIN,
-                f"deprecated_yaml_import_issue_{host}_{error}",
-                breaks_in_ha_version="2025.5.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key=f"deprecated_yaml_import_issue_{error}",
-                translation_placeholders={
-                    "host": host,
-                    "url": ISSUE_URL_PLACEHOLDER,
-                },
-            )
-
-    if all_successful:
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            breaks_in_ha_version="2025.5.0",
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "onkyo",
-            },
-        )
+@cache
+def _rev_listening_mode_lib_mappings(zone: str) -> dict[LibValue, ListeningMode]:
+    return {value: key for key, value in _listening_mode_lib_mappings(zone).items()}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OnkyoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MediaPlayer for config entry."""
     data = entry.runtime_data
@@ -300,6 +162,7 @@ async def async_setup_entry(
     volume_resolution: VolumeResolution = entry.options[OPTION_VOLUME_RESOLUTION]
     max_volume: float = entry.options[OPTION_MAX_VOLUME]
     sources = data.sources
+    sound_modes = data.sound_modes
 
     def connect_callback(receiver: Receiver) -> None:
         if not receiver.first_connect:
@@ -328,6 +191,7 @@ async def async_setup_entry(
                 volume_resolution=volume_resolution,
                 max_volume=max_volume,
                 sources=sources,
+                sound_modes=sound_modes,
             )
             entities[zone] = zone_entity
             async_add_entities([zone_entity])
@@ -342,6 +206,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     _attr_should_poll = False
 
     _supports_volume: bool = False
+    _supports_sound_mode: bool = False
     _supports_audio_info: bool = False
     _supports_video_info: bool = False
     _query_timer: asyncio.TimerHandle | None = None
@@ -354,6 +219,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         volume_resolution: VolumeResolution,
         max_volume: float,
         sources: dict[InputSource, str],
+        sound_modes: dict[ListeningMode, str],
     ) -> None:
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
@@ -367,6 +233,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._volume_resolution = volume_resolution
         self._max_volume = max_volume
 
+        self._options_sources = sources
         self._source_lib_mapping = _input_source_lib_mappings(zone)
         self._rev_source_lib_mapping = _rev_input_source_lib_mappings(zone)
         self._source_mapping = {
@@ -378,7 +245,28 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             value: key for key, value in self._source_mapping.items()
         }
 
+        self._options_sound_modes = sound_modes
+        self._sound_mode_lib_mapping = _listening_mode_lib_mappings(zone)
+        self._rev_sound_mode_lib_mapping = _rev_listening_mode_lib_mappings(zone)
+        self._sound_mode_mapping = {
+            key: value
+            for key, value in sound_modes.items()
+            if key in self._sound_mode_lib_mapping
+        }
+        self._rev_sound_mode_mapping = {
+            value: key for key, value in self._sound_mode_mapping.items()
+        }
+
         self._attr_source_list = list(self._rev_source_mapping)
+        self._attr_sound_mode_list = list(self._rev_sound_mode_mapping)
+
+        self._attr_supported_features = SUPPORTED_FEATURES_BASE
+        if zone == "main":
+            self._attr_supported_features |= SUPPORTED_FEATURES_VOLUME
+            self._supports_volume = True
+            self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
+            self._supports_sound_mode = True
+
         self._attr_extra_state_attributes = {}
 
     async def async_added_to_hass(self) -> None:
@@ -390,13 +278,6 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         if self._query_timer:
             self._query_timer.cancel()
             self._query_timer = None
-
-    @property
-    def supported_features(self) -> MediaPlayerEntityFeature:
-        """Return media player features that are supported."""
-        if self._supports_volume:
-            return SUPPORT_ONKYO
-        return SUPPORT_ONKYO_WO_VOLUME
 
     @callback
     def _update_receiver(self, propname: str, value: Any) -> None:
@@ -463,6 +344,24 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             "input-selector" if self._zone == "main" else "selector", source_lib_single
         )
 
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Select listening sound mode."""
+        if not self.sound_mode_list or sound_mode not in self.sound_mode_list:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_sound_mode",
+                translation_placeholders={
+                    "invalid_sound_mode": sound_mode,
+                    "entity_id": self.entity_id,
+                },
+            )
+
+        sound_mode_lib = self._sound_mode_lib_mapping[
+            self._rev_sound_mode_mapping[sound_mode]
+        ]
+        sound_mode_lib_single = _get_single_lib_value(sound_mode_lib)
+        self._update_receiver("listening-mode", sound_mode_lib_single)
+
     async def async_select_output(self, hdmi_output: str) -> None:
         """Set hdmi-out."""
         self._update_receiver("hdmi-output-selector", hdmi_output)
@@ -473,7 +372,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         """Play radio station by preset number."""
         if self.source is not None:
             source = self._rev_source_mapping[self.source]
-            if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
+            if media_type.lower() == "radio" and source in PLAYABLE_SOURCES:
                 self._update_receiver("preset", media_id)
 
     @callback
@@ -514,7 +413,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 self._attr_extra_state_attributes.pop(ATTR_PRESET, None)
                 self._attr_extra_state_attributes.pop(ATTR_VIDEO_OUT, None)
         elif command in ["volume", "master-volume"] and value != "N/A":
-            self._supports_volume = True
+            if not self._supports_volume:
+                self._attr_supported_features |= SUPPORTED_FEATURES_VOLUME
+                self._supports_volume = True
             # AMP_VOL / (VOL_RESOLUTION * (MAX_VOL / 100))
             volume_level: float = value / (
                 self._volume_resolution * self._max_volume / 100
@@ -522,7 +423,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             self._attr_volume_level = min(1, volume_level)
         elif command in ["muting", "audio-muting"]:
             self._attr_is_volume_muted = bool(value == "on")
-        elif command in ["selector", "input-selector"]:
+        elif command in ["selector", "input-selector"] and value != "N/A":
             self._parse_source(value)
             self._query_av_info_delayed()
         elif command == "hdmi-output-selector":
@@ -532,6 +433,14 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 self._attr_extra_state_attributes[ATTR_PRESET] = value
             elif ATTR_PRESET in self._attr_extra_state_attributes:
                 del self._attr_extra_state_attributes[ATTR_PRESET]
+        elif command == "listening-mode" and value != "N/A":
+            if not self._supports_sound_mode:
+                self._attr_supported_features |= (
+                    MediaPlayerEntityFeature.SELECT_SOUND_MODE
+                )
+                self._supports_sound_mode = True
+            self._parse_sound_mode(value)
+            self._query_av_info_delayed()
         elif command == "audio-information":
             self._supports_audio_info = True
             self._parse_audio_information(value)
@@ -551,12 +460,45 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             return
 
         source_meaning = source.value_meaning
-        _LOGGER.error(
-            'Input source "%s" is invalid for entity: %s',
-            source_meaning,
-            self.entity_id,
-        )
+
+        if source not in self._options_sources:
+            _LOGGER.warning(
+                'Input source "%s" for entity: %s is not in the list. Check integration options',
+                source_meaning,
+                self.entity_id,
+            )
+        else:
+            _LOGGER.error(
+                'Input source "%s" is invalid for entity: %s',
+                source_meaning,
+                self.entity_id,
+            )
+
         self._attr_source = source_meaning
+
+    @callback
+    def _parse_sound_mode(self, mode_lib: LibValue) -> None:
+        sound_mode = self._rev_sound_mode_lib_mapping[mode_lib]
+        if sound_mode in self._sound_mode_mapping:
+            self._attr_sound_mode = self._sound_mode_mapping[sound_mode]
+            return
+
+        sound_mode_meaning = sound_mode.value_meaning
+
+        if sound_mode not in self._options_sound_modes:
+            _LOGGER.warning(
+                'Listening mode "%s" for entity: %s is not in the list. Check integration options',
+                sound_mode_meaning,
+                self.entity_id,
+            )
+        else:
+            _LOGGER.error(
+                'Listening mode "%s" is invalid for entity: %s',
+                sound_mode_meaning,
+                self.entity_id,
+            )
+
+        self._attr_sound_mode = sound_mode_meaning
 
     @callback
     def _parse_audio_information(

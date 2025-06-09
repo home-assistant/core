@@ -41,7 +41,10 @@ from homeassistant.core import (
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
@@ -116,7 +119,7 @@ def validate_is_number(value):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Utility Meter config entry."""
     entry_id = config_entry.entry_id
@@ -574,9 +577,9 @@ class UtilityMeterSensor(RestoreSensor):
     async def _async_reset_meter(self, event):
         """Reset the utility meter status."""
 
-        await self._program_reset()
-
         await self.async_reset_meter(self._tariff_entity)
+
+        await self._program_reset()
 
     async def async_reset_meter(self, entity_id):
         """Reset meter."""
@@ -602,7 +605,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_native_value = Decimal(str(value))
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 

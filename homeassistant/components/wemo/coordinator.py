@@ -29,7 +29,7 @@ from homeassistant.helpers.device_registry import CONNECTION_UPNP, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
-from .models import async_wemo_data
+from .models import DATA_WEMO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -316,9 +316,9 @@ def async_get_coordinator(hass: HomeAssistant, device_id: str) -> DeviceCoordina
 
 @callback
 def _async_coordinators(hass: HomeAssistant) -> dict[str, DeviceCoordinator]:
-    return async_wemo_data(hass).config_entry_data.device_coordinators
+    return hass.data[DATA_WEMO].config_entry_data.device_coordinators
 
 
 @callback
 def _async_registry(hass: HomeAssistant) -> SubscriptionRegistry:
-    return async_wemo_data(hass).registry
+    return hass.data[DATA_WEMO].registry

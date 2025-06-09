@@ -9,10 +9,10 @@ from bring_api import ActivityType, BringList
 
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BringConfigEntry
-from .coordinator import BringDataUpdateCoordinator
+from .coordinator import BringActivityCoordinator
 from .entity import BringBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -21,7 +21,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BringConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the event platform."""
     coordinator = config_entry.runtime_data
@@ -32,18 +32,18 @@ async def async_setup_entry(
         """Add event entities."""
         nonlocal lists_added
 
-        if new_lists := {lst.listUuid for lst in coordinator.lists} - lists_added:
+        if new_lists := {lst.listUuid for lst in coordinator.data.lists} - lists_added:
             async_add_entities(
                 BringEventEntity(
-                    coordinator,
+                    coordinator.activity,
                     bring_list,
                 )
-                for bring_list in coordinator.lists
+                for bring_list in coordinator.data.lists
                 if bring_list.listUuid in new_lists
             )
             lists_added |= new_lists
 
-    coordinator.async_add_listener(add_entities)
+    coordinator.activity.async_add_listener(add_entities)
     add_entities()
 
 
@@ -51,10 +51,11 @@ class BringEventEntity(BringBaseEntity, EventEntity):
     """An event entity."""
 
     _attr_translation_key = "activities"
+    coordinator: BringActivityCoordinator
 
     def __init__(
         self,
-        coordinator: BringDataUpdateCoordinator,
+        coordinator: BringActivityCoordinator,
         bring_list: BringList,
     ) -> None:
         """Initialize the entity."""
@@ -77,9 +78,12 @@ class BringEventEntity(BringBaseEntity, EventEntity):
             attributes = asdict(activity.content)
 
             attributes["last_activity_by"] = next(
-                x.name
-                for x in bring_list.users.users
-                if x.publicUuid == activity.content.publicUserUuid
+                (
+                    x.name
+                    for x in bring_list.users.users
+                    if x.publicUuid == activity.content.publicUserUuid
+                ),
+                None,
             )
 
             self._trigger_event(

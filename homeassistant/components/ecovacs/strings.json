@@ -14,7 +14,7 @@
     "step": {
       "auth": {
         "data": {
-          "country": "Country",
+          "country": "[%key:common::config_flow::data::country%]",
           "override_rest_url": "REST URL",
           "override_mqtt_url": "MQTT URL",
           "password": "[%key:common::config_flow::data::password%]",
@@ -176,9 +176,9 @@
       "water_amount": {
         "name": "Water flow level",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "medium": "Medium",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
           "ultrahigh": "Ultrahigh"
         }
       },
@@ -229,9 +229,9 @@
         "state_attributes": {
           "fan_speed": {
             "state": {
+              "normal": "[%key:common::state::normal%]",
               "max": "Max",
               "max_plus": "Max+",
-              "normal": "Normal",
               "quiet": "Quiet"
             }
           },
@@ -250,7 +250,7 @@
       "message": "Params are required for the command: {command}"
     },
     "vacuum_raw_get_positions_not_supported": {
-      "message": "Getting the positions of the chargers and the device itself is not supported"
+      "message": "Retrieving the positions of the chargers and the device itself is not supported"
     }
   },
   "selector": {
@@ -264,7 +264,7 @@
   "services": {
     "raw_get_positions": {
       "name": "Get raw positions",
-      "description": "Get the raw response for the positions of the chargers and the device itself."
+      "description": "Retrieves a raw response containing the positions of the chargers and the device itself."
     }
   }
 }

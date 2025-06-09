@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SONOS_CREATE_BATTERY, SONOS_CREATE_MIC_SENSOR
 from .entity import SonosEntity
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonos from a config entry."""
 
@@ -86,7 +86,7 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return whether this device is available."""
-        return self.speaker.available and (self.speaker.charging is not None)
+        return self.speaker.available and self.speaker.charging is not None
 
 
 class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):

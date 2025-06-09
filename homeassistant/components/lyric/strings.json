@@ -7,6 +7,9 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Lyric integration needs to re-authenticate your account."
+      },
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Honeywell Lyric device on your network. Press **Submit** to continue setting up Honeywell Lyric."
       }
     },
     "abort": {
@@ -53,12 +56,12 @@
   },
   "services": {
     "set_hold_time": {
-      "name": "Set Hold Time",
-      "description": "Sets the time to hold until.",
+      "name": "Set hold time",
+      "description": "Sets the time period to keep the temperature and override the schedule.",
       "fields": {
         "time_period": {
-          "name": "Time Period",
-          "description": "Time to hold until."
+          "name": "Time period",
+          "description": "Duration for which to override the schedule."
         }
       }
     }

@@ -16,7 +16,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
 from .coordinator import POLL_DEVICES, OmadaCoordinator, OmadaDevicesCoordinator
@@ -93,7 +93,7 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):  #
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OmadaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches."""
     controller = config_entry.runtime_data

@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any
 
-from pyezviz import HTTPError, PyEzvizError, SupportExt
+from pyezvizapi import HTTPError, PyEzvizError, SupportExt
 
 from homeassistant.components.siren import (
     SirenEntity,
@@ -17,7 +17,7 @@ from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import event as evt
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
@@ -35,7 +35,7 @@ SIREN_ENTITY_TYPE = SirenEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EzvizConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ sensors based on a config entry."""
     coordinator = entry.runtime_data

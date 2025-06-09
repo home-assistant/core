@@ -16,7 +16,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
@@ -69,7 +69,7 @@ SWITCHES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeWizardConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches."""
     async_add_entities(

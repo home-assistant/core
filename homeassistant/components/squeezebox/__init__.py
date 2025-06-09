@@ -3,6 +3,7 @@
 from asyncio import timeout
 from dataclasses import dataclass
 from datetime import datetime
+from http import HTTPStatus
 import logging
 
 from pysqueezebox import Player, Server
@@ -16,7 +17,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
@@ -53,8 +58,11 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.MEDIA_PLAYER,
     Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
 
@@ -91,14 +99,60 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
             status = await lms.async_query(
                 "serverstatus", "-", "-", "prefs:libraryname"
             )
-    except Exception as err:
+    except TimeoutError as err:  # Specifically catch timeout
+        _LOGGER.warning("Timeout connecting to LMS %s: %s", host, err)
         raise ConfigEntryNotReady(
-            f"Error communicating config not read for {host}"
+            translation_domain=DOMAIN,
+            translation_key="init_timeout",
+            translation_placeholders={
+                "host": str(host),
+            },
         ) from err
 
     if not status:
-        raise ConfigEntryNotReady(f"Error Config Not read for {host}")
+        # pysqueezebox's async_query returns None on various issues,
+        # including HTTP errors where it sets lms.http_status.
+        http_status = getattr(lms, "http_status", "N/A")
+
+        if http_status == HTTPStatus.UNAUTHORIZED:
+            _LOGGER.warning("Authentication failed for Squeezebox server %s", host)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="init_auth_failed",
+                translation_placeholders={
+                    "host": str(host),
+                },
+            )
+
+        # For other errors where status is None (e.g., server error, connection refused by server)
+        _LOGGER.warning(
+            "LMS %s returned no status or an error (HTTP status: %s). Retrying setup",
+            host,
+            http_status,
+        )
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="init_get_status_failed",
+            translation_placeholders={
+                "host": str(host),
+                "http_status": str(http_status),
+            },
+        )
+
+    # If we are here, status is a valid dictionary
     _LOGGER.debug("LMS Status for setup  = %s", status)
+
+    # Check for essential keys in status before using them
+    if STATUS_QUERY_UUID not in status:
+        _LOGGER.error("LMS %s status response missing UUID", host)
+        # This is a non-recoverable error with the current server response
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="init_missing_uuid",
+            translation_placeholders={
+                "host": str(host),
+            },
+        )
 
     lms.uuid = status[STATUS_QUERY_UUID]
     _LOGGER.debug("LMS %s = '%s' with uuid = %s ", lms.name, host, lms.uuid)
@@ -129,10 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
     server_coordinator = LMSStatusDataUpdateCoordinator(hass, entry, lms)
 
-    entry.runtime_data = SqueezeboxData(
-        coordinator=server_coordinator,
-        server=lms,
-    )
+    entry.runtime_data = SqueezeboxData(coordinator=server_coordinator, server=lms)
 
     # set up player discovery
     known_servers = hass.data.setdefault(DOMAIN, {}).setdefault(KNOWN_SERVERS, {})
@@ -153,6 +204,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                 player_coordinator = SqueezeBoxPlayerUpdateCoordinator(
                     hass, entry, player, lms.uuid
                 )
+                await player_coordinator.async_refresh()
                 known_players.append(player.player_id)
                 async_dispatcher_send(
                     hass, SIGNAL_PLAYER_DISCOVERED, player_coordinator

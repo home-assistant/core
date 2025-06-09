@@ -14,7 +14,7 @@ from homeassistant.components.remote import (
     RemoteEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
 from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
@@ -24,7 +24,7 @@ from .entity import JellyfinClientEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: JellyfinConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Jellyfin remote from a config entry."""
     coordinator = entry.runtime_data

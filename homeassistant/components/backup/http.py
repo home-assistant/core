@@ -15,13 +15,14 @@ from multidict import istr
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import frame
 from homeassistant.util import slugify
 
 from . import util
 from .agent import BackupAgent
 from .const import DATA_MANAGER
 from .manager import BackupManager
-from .models import BackupNotFound
+from .models import AgentBackup, BackupNotFound
 
 
 @callback
@@ -59,11 +60,19 @@ class DownloadBackupView(HomeAssistantView):
         if agent_id not in manager.backup_agents:
             return Response(status=HTTPStatus.BAD_REQUEST)
         agent = manager.backup_agents[agent_id]
-        backup = await agent.async_get_backup(backup_id)
+        try:
+            backup = await agent.async_get_backup(backup_id)
+        except BackupNotFound:
+            return Response(status=HTTPStatus.NOT_FOUND)
 
-        # We don't need to check if the path exists, aiohttp.FileResponse will handle
-        # that
-        if backup is None:
+        # Check for None to be backwards compatible with the old BackupAgent API,
+        # this can be removed in HA Core 2025.10
+        if not backup:
+            frame.report_usage(
+                "returns None from BackupAgent.async_get_backup",
+                breaks_in_ha_version="2025.10",
+                integration_domain=agent_id.partition(".")[0],
+            )
             return Response(status=HTTPStatus.NOT_FOUND)
 
         headers = {
@@ -76,7 +85,15 @@ class DownloadBackupView(HomeAssistantView):
                     request, headers, backup_id, agent_id, agent, manager
                 )
             return await self._send_backup_with_password(
-                hass, request, headers, backup_id, agent_id, password, agent, manager
+                hass,
+                backup,
+                request,
+                headers,
+                backup_id,
+                agent_id,
+                password,
+                agent,
+                manager,
             )
         except BackupNotFound:
             return Response(status=HTTPStatus.NOT_FOUND)
@@ -92,6 +109,8 @@ class DownloadBackupView(HomeAssistantView):
     ) -> StreamResponse | FileResponse | Response:
         if agent_id in manager.local_backup_agents:
             local_agent = manager.local_backup_agents[agent_id]
+            # We don't need to check if the path exists, aiohttp.FileResponse will
+            # handle that
             path = local_agent.get_backup_path(backup_id)
             return FileResponse(path=path.as_posix(), headers=headers)
 
@@ -105,6 +124,7 @@ class DownloadBackupView(HomeAssistantView):
     async def _send_backup_with_password(
         self,
         hass: HomeAssistant,
+        backup: AgentBackup,
         request: Request,
         headers: dict[istr, str],
         backup_id: str,
@@ -133,7 +153,8 @@ class DownloadBackupView(HomeAssistantView):
 
         stream = util.AsyncIteratorWriter(hass)
         worker = threading.Thread(
-            target=util.decrypt_backup, args=[reader, stream, password, on_done, 0, []]
+            target=util.decrypt_backup,
+            args=[backup, reader, stream, password, on_done, 0, []],
         )
         try:
             worker.start()

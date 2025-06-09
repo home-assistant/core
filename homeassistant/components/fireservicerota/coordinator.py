@@ -28,12 +28,19 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
+type FireServiceConfigEntry = ConfigEntry[FireServiceUpdateCoordinator]
+
 
 class FireServiceUpdateCoordinator(DataUpdateCoordinator[dict | None]):
     """Data update coordinator for FireServiceRota."""
 
+    config_entry: FireServiceConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, client: FireServiceRotaClient, entry: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        client: FireServiceRotaClient,
+        entry: FireServiceConfigEntry,
     ) -> None:
         """Initialize the FireServiceRota DataUpdateCoordinator."""
         super().__init__(
@@ -213,3 +220,7 @@ class FireServiceRotaClient:
         )
 
         await self.update_call(self.fsr.set_incident_response, self.incident_id, value)
+
+    async def async_stop_listener(self) -> None:
+        """Stop listener."""
+        await self._hass.async_add_executor_job(self.websocket.stop_listener)

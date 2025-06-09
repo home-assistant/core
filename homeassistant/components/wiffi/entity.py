@@ -41,7 +41,7 @@ class WiffiEntity(Entity):
         self._value = None
         self._timeout = options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Entity has been added to hass."""
         self.async_on_remove(
             async_dispatcher_connect(

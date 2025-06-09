@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from elevenlabs import AsyncElevenLabs
@@ -20,7 +20,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElevenLabsConfigEntry
 from .const import (
@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-def to_voice_settings(options: MappingProxyType[str, Any]) -> VoiceSettings:
+def to_voice_settings(options: Mapping[str, Any]) -> VoiceSettings:
     """Return voice settings."""
     return VoiceSettings(
         stability=options.get(CONF_STABILITY, DEFAULT_STABILITY),
@@ -58,7 +58,7 @@ def to_voice_settings(options: MappingProxyType[str, Any]) -> VoiceSettings:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ElevenLabsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""
     client = config_entry.runtime_data.client

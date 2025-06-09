@@ -17,7 +17,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, STATE_MAP
 from .coordinator import WeatherFlowCloudDataUpdateCoordinator
@@ -27,7 +27,7 @@ from .entity import WeatherFlowCloudEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator: WeatherFlowCloudDataUpdateCoordinator = hass.data[DOMAIN][

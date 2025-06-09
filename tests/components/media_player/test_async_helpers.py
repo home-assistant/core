@@ -69,6 +69,10 @@ class SimpleMediaPlayer(mp.MediaPlayerEntity):
         """Put device in standby."""
         self._state = STATE_STANDBY
 
+    def idle(self):
+        """Put device in idle."""
+        self._state = STATE_IDLE
+
 
 class ExtendedMediaPlayer(SimpleMediaPlayer):
     """Media player test class."""
@@ -92,7 +96,7 @@ class ExtendedMediaPlayer(SimpleMediaPlayer):
 
     def toggle(self):
         """Toggle the power on the media player."""
-        if self._state in [STATE_OFF, STATE_IDLE, STATE_STANDBY]:
+        if self._state in [STATE_OFF, STATE_STANDBY]:
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
@@ -187,3 +191,7 @@ async def test_toggle(player) -> None:
     assert player.state == STATE_STANDBY
     await player.async_toggle()
     assert player.state == STATE_ON
+    player.idle()
+    assert player.state == STATE_IDLE
+    await player.async_toggle()
+    assert player.state == STATE_OFF

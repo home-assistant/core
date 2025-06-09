@@ -15,7 +15,7 @@ from uiprotect.data import (
 from homeassistant.components.text import TextEntity, TextEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import (
@@ -46,7 +46,7 @@ async def _set_doorbell_message(obj: Camera, message: str) -> None:
 CAMERA: tuple[ProtectTextEntityDescription, ...] = (
     ProtectTextEntityDescription(
         key="doorbell",
-        name="Doorbell",
+        translation_key="doorbell",
         entity_category=EntityCategory.CONFIG,
         ufp_value_fn=_get_doorbell_current,
         ufp_set_method_fn=_set_doorbell_message,
@@ -63,7 +63,7 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
     data = entry.runtime_data

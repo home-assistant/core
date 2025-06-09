@@ -8,7 +8,7 @@ from py_dormakaba_dkey.commands import UnlockStatus
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DormakabaDkeyConfigEntry, DormakabaDkeyCoordinator
 from .entity import DormakabaDkeyEntity
@@ -17,7 +17,7 @@ from .entity import DormakabaDkeyEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DormakabaDkeyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the lock platform for Dormakaba dKey."""
     async_add_entities([DormakabaDkeyLock(entry.runtime_data)])

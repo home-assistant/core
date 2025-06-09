@@ -64,11 +64,11 @@
       "dsl_line_status": {
         "name": "DSL line status",
         "state": {
-          "no_defect": "No Defect",
-          "of_frame": "Of Frame",
-          "loss_of_signal": "Loss Of Signal",
-          "loss_of_power": "Loss Of Power",
-          "loss_of_signal_quality": "Loss Of Signal Quality",
+          "no_defect": "No defect",
+          "loss_of_frame": "Loss of frame",
+          "loss_of_signal": "Loss of signal",
+          "loss_of_power": "Loss of power",
+          "loss_of_signal_quality": "Loss of signal quality",
           "unknown": "Unknown"
         }
       },

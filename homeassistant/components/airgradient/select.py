@@ -14,7 +14,7 @@ from homeassistant.components.select import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AirGradientConfigEntry
 from .const import DOMAIN, PM_STANDARD, PM_STANDARD_REVERSE
@@ -142,7 +142,7 @@ CONTROL_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirGradientConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirGradient select entities based on a config entry."""
 

@@ -26,7 +26,7 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -94,26 +94,66 @@ def _get_obj_holidays(
         language=language,
         categories=set_categories,
     )
+
+    supported_languages = obj_holidays.supported_languages
+    default_language = obj_holidays.default_language
+
+    if default_language and not language:
+        # If no language is set, use the default language
+        LOGGER.debug("Changing language from None to %s", default_language)
+        return country_holidays(  # Return default if no language
+            country,
+            subdiv=province,
+            years=year,
+            language=default_language,
+            categories=set_categories,
+        )
+
     if (
-        (supported_languages := obj_holidays.supported_languages)
+        default_language
         and language
+        and language not in supported_languages
         and language.startswith("en")
     ):
+        # If language does not match supported languages, use the first English variant
+        if default_language.startswith("en"):
+            LOGGER.debug("Changing language from %s to %s", language, default_language)
+            return country_holidays(  # Return default English if default language
+                country,
+                subdiv=province,
+                years=year,
+                language=default_language,
+                categories=set_categories,
+            )
         for lang in supported_languages:
             if lang.startswith("en"):
-                obj_holidays = country_holidays(
+                LOGGER.debug("Changing language from %s to %s", language, lang)
+                return country_holidays(
                     country,
                     subdiv=province,
                     years=year,
                     language=lang,
                     categories=set_categories,
                 )
-            LOGGER.debug("Changing language from %s to %s", language, lang)
+
+    if default_language and language and language not in supported_languages:
+        # If language does not match supported languages, use the default language
+        LOGGER.debug("Changing language from %s to %s", language, default_language)
+        return country_holidays(  # Return default English if default language
+            country,
+            subdiv=province,
+            years=year,
+            language=default_language,
+            categories=set_categories,
+        )
+
     return obj_holidays
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Workday sensor."""
     add_holidays: list[str] = entry.options[CONF_ADD_HOLIDAYS]

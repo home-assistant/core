@@ -6,14 +6,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from pyezviz import EzvizClient
-from pyezviz.constants import SupportExt
-from pyezviz.exceptions import HTTPError, PyEzvizError
+from pyezvizapi import EzvizClient
+from pyezvizapi.constants import SupportExt
+from pyezvizapi.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
@@ -68,7 +68,7 @@ BUTTON_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EzvizConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ button based on a config entry."""
     coordinator = entry.runtime_data

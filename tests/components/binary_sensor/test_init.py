@@ -7,9 +7,9 @@ import pytest
 
 from homeassistant.components import binary_sensor
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import MockBinarySensor
 
@@ -62,7 +62,7 @@ async def test_name(hass: HomeAssistant) -> None:
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [binary_sensor.DOMAIN]
+            config_entry, [Platform.BINARY_SENSOR]
         )
         return True
 
@@ -102,7 +102,7 @@ async def test_name(hass: HomeAssistant) -> None:
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test binary_sensor platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])
@@ -142,7 +142,7 @@ async def test_entity_category_config_raises_error(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [binary_sensor.DOMAIN]
+            config_entry, [Platform.BINARY_SENSOR]
         )
         return True
 
@@ -172,7 +172,7 @@ async def test_entity_category_config_raises_error(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test binary_sensor platform via config entry."""
         async_add_entities([entity1, entity2])

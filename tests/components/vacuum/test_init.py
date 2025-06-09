@@ -5,13 +5,12 @@ from __future__ import annotations
 from enum import Enum
 from types import ModuleType
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
-    DOMAIN as VACUUM_DOMAIN,
+    DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -25,7 +24,6 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import frame
 
 from . import MockVacuum, help_async_setup_entry_init, help_async_unload_entry
 from .common import async_start
@@ -122,13 +120,11 @@ async def test_state_services(
             async_unload_entry=help_async_unload_entry,
         ),
     )
-    setup_test_component_platform(
-        hass, VACUUM_DOMAIN, [mock_vacuum], from_config_entry=True
-    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.services.async_call(
-        VACUUM_DOMAIN,
+        DOMAIN,
         service,
         {"entity_id": mock_vacuum.entity_id},
         blocking=True,
@@ -155,16 +151,14 @@ async def test_fan_speed(hass: HomeAssistant, config_flow_fixture: None) -> None
             async_unload_entry=help_async_unload_entry,
         ),
     )
-    setup_test_component_platform(
-        hass, VACUUM_DOMAIN, [mock_vacuum], from_config_entry=True
-    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
 
     await hass.services.async_call(
-        VACUUM_DOMAIN,
+        DOMAIN,
         SERVICE_SET_FAN_SPEED,
         {"entity_id": mock_vacuum.entity_id, "fan_speed": "high"},
         blocking=True,
@@ -203,13 +197,11 @@ async def test_locate(hass: HomeAssistant, config_flow_fixture: None) -> None:
             async_unload_entry=help_async_unload_entry,
         ),
     )
-    setup_test_component_platform(
-        hass, VACUUM_DOMAIN, [mock_vacuum], from_config_entry=True
-    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.services.async_call(
-        VACUUM_DOMAIN,
+        DOMAIN,
         SERVICE_LOCATE,
         {"entity_id": mock_vacuum.entity_id},
         blocking=True,
@@ -254,13 +246,11 @@ async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> N
             async_unload_entry=help_async_unload_entry,
         ),
     )
-    setup_test_component_platform(
-        hass, VACUUM_DOMAIN, [mock_vacuum], from_config_entry=True
-    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.services.async_call(
-        VACUUM_DOMAIN,
+        DOMAIN,
         SERVICE_SEND_COMMAND,
         {
             "entity_id": mock_vacuum.entity_id,
@@ -326,7 +316,6 @@ async def test_vacuum_not_log_deprecated_state_warning(
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_vacuum_log_deprecated_state_warning_using_state_prop(
     hass: HomeAssistant,
     config_flow_fixture: None,
@@ -356,8 +345,9 @@ async def test_vacuum_log_deprecated_state_warning_using_state_prop(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
+        built_in=False,
     )
-    setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(entity.entity_id)
@@ -370,7 +360,6 @@ async def test_vacuum_log_deprecated_state_warning_using_state_prop(
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
     hass: HomeAssistant,
     config_flow_fixture: None,
@@ -399,8 +388,9 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
+        built_in=False,
     )
-    setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(entity.entity_id)
@@ -427,8 +417,7 @@ async def test_vacuum_log_deprecated_state_warning_using_attr_state_attr(
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
-async def test_alarm_control_panel_deprecated_state_does_not_break_state(
+async def test_vacuum_deprecated_state_does_not_break_state(
     hass: HomeAssistant,
     config_flow_fixture: None,
     caplog: pytest.LogCaptureFixture,
@@ -463,8 +452,9 @@ async def test_alarm_control_panel_deprecated_state_does_not_break_state(
             async_setup_entry=help_async_setup_entry_init,
             async_unload_entry=help_async_unload_entry,
         ),
+        built_in=False,
     )
-    setup_test_component_platform(hass, VACUUM_DOMAIN, [entity], from_config_entry=True)
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(entity.entity_id)
@@ -472,7 +462,7 @@ async def test_alarm_control_panel_deprecated_state_does_not_break_state(
     assert state.state == "docked"
 
     await hass.services.async_call(
-        VACUUM_DOMAIN,
+        DOMAIN,
         SERVICE_START,
         {
             "entity_id": entity.entity_id,

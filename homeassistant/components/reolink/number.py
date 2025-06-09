@@ -9,13 +9,14 @@ from typing import Any
 from reolink_aio.api import Chime, Host
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import (
     ReolinkChannelCoordinatorEntity,
@@ -42,6 +43,19 @@ class ReolinkNumberEntityDescription(
     method: Callable[[Host, int, float], Any]
     mode: NumberMode = NumberMode.AUTO
     value: Callable[[Host, int], float | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReolinkSmartAINumberEntityDescription(
+    NumberEntityDescription,
+    ReolinkChannelEntityDescription,
+):
+    """A class that describes smart AI number entities."""
+
+    smart_type: str
+    method: Callable[[Host, int, int, float], Any]
+    mode: NumberMode = NumberMode.AUTO
+    value: Callable[[Host, int, int], float | None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -125,6 +139,7 @@ NUMBER_ENTITIES = (
         cmd_key="GetPtzGuard",
         translation_key="guard_return_time",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=10,
@@ -248,6 +263,7 @@ NUMBER_ENTITIES = (
         cmd_key="GetAiAlarm",
         translation_key="ai_face_delay",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
         entity_registry_enabled_default=False,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -264,6 +280,7 @@ NUMBER_ENTITIES = (
         cmd_key="GetAiAlarm",
         translation_key="ai_person_delay",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
         entity_registry_enabled_default=False,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -280,6 +297,7 @@ NUMBER_ENTITIES = (
         cmd_key="GetAiAlarm",
         translation_key="ai_vehicle_delay",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
         entity_registry_enabled_default=False,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -296,6 +314,7 @@ NUMBER_ENTITIES = (
         cmd_key="GetAiAlarm",
         translation_key="ai_package_delay",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
         entity_registry_enabled_default=False,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -312,6 +331,7 @@ NUMBER_ENTITIES = (
         cmd_key="GetAiAlarm",
         translation_key="ai_pet_delay",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
         entity_registry_enabled_default=False,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -330,6 +350,7 @@ NUMBER_ENTITIES = (
         cmd_key="GetAiAlarm",
         translation_key="ai_animal_delay",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
         entity_registry_enabled_default=False,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -346,6 +367,7 @@ NUMBER_ENTITIES = (
         cmd_key="GetAutoReply",
         translation_key="auto_quick_reply_time",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=1,
@@ -385,6 +407,7 @@ NUMBER_ENTITIES = (
         cmd_key="GetAiCfg",
         translation_key="auto_track_disappear_time",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=1,
@@ -400,6 +423,7 @@ NUMBER_ENTITIES = (
         cmd_key="GetAiCfg",
         translation_key="auto_track_stop_time",
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=1,
@@ -493,6 +517,168 @@ NUMBER_ENTITIES = (
     ),
 )
 
+SMART_AI_NUMBER_ENTITIES = (
+    ReolinkSmartAINumberEntityDescription(
+        key="crossline_sensitivity",
+        smart_type="crossline",
+        cmd_id=527,
+        translation_key="crossline_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "ai_crossline"),
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_sensitivity(ch, "crossline", loc)
+        ),
+        method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
+            ch, "crossline", loc, sensitivity=int(value)
+        ),
+    ),
+    ReolinkSmartAINumberEntityDescription(
+        key="intrusion_sensitivity",
+        smart_type="intrusion",
+        cmd_id=529,
+        translation_key="intrusion_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "ai_intrusion"),
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_sensitivity(ch, "intrusion", loc)
+        ),
+        method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
+            ch, "intrusion", loc, sensitivity=int(value)
+        ),
+    ),
+    ReolinkSmartAINumberEntityDescription(
+        key="linger_sensitivity",
+        smart_type="loitering",
+        cmd_id=531,
+        translation_key="linger_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "ai_linger"),
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_sensitivity(ch, "loitering", loc)
+        ),
+        method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
+            ch, "loitering", loc, sensitivity=int(value)
+        ),
+    ),
+    ReolinkSmartAINumberEntityDescription(
+        key="forgotten_item_sensitivity",
+        smart_type="legacy",
+        cmd_id=549,
+        translation_key="forgotten_item_sensitivity",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "ai_forgotten_item"),
+        value=lambda api, ch, loc: (
+            api.baichuan.smart_ai_sensitivity(ch, "legacy", loc)
+        ),
+        method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
+            ch, "legacy", loc, sensitivity=int(value)
+        ),
+    ),
+    ReolinkSmartAINumberEntityDescription(
+        key="taken_item_sensitivity",
+        smart_type="loss",
+        cmd_id=551,
+        translation_key="taken_item_sensitivity",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "ai_taken_item"),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_sensitivity(ch, "loss", loc),
+        method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
+            ch, "loss", loc, sensitivity=int(value)
+        ),
+    ),
+    ReolinkSmartAINumberEntityDescription(
+        key="intrusion_delay",
+        smart_type="intrusion",
+        cmd_id=529,
+        translation_key="intrusion_delay",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0,
+        native_max_value=10,
+        supported=lambda api, ch: api.supported(ch, "ai_intrusion"),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_delay(ch, "intrusion", loc),
+        method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
+            ch, "intrusion", loc, delay=int(value)
+        ),
+    ),
+    ReolinkSmartAINumberEntityDescription(
+        key="linger_delay",
+        smart_type="loitering",
+        cmd_id=531,
+        translation_key="linger_delay",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=1,
+        native_max_value=10,
+        supported=lambda api, ch: api.supported(ch, "ai_linger"),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_delay(ch, "loitering", loc),
+        method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
+            ch, "loitering", loc, delay=int(value)
+        ),
+    ),
+    ReolinkSmartAINumberEntityDescription(
+        key="forgotten_item_delay",
+        smart_type="legacy",
+        cmd_id=549,
+        translation_key="forgotten_item_delay",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=1,
+        native_max_value=30,
+        supported=lambda api, ch: api.supported(ch, "ai_forgotten_item"),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_delay(ch, "legacy", loc),
+        method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
+            ch, "legacy", loc, delay=int(value)
+        ),
+    ),
+    ReolinkSmartAINumberEntityDescription(
+        key="taken_item_delay",
+        smart_type="loss",
+        cmd_id=551,
+        translation_key="taken_item_delay",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=1,
+        native_max_value=30,
+        supported=lambda api, ch: api.supported(ch, "ai_taken_item"),
+        value=lambda api, ch, loc: api.baichuan.smart_ai_delay(ch, "loss", loc),
+        method=lambda api, ch, loc, value: api.baichuan.set_smart_ai(
+            ch, "loss", loc, delay=int(value)
+        ),
+    ),
+)
+
 HOST_NUMBER_ENTITIES = (
     ReolinkHostNumberEntityDescription(
         key="alarm_volume",
@@ -538,26 +724,36 @@ CHIME_NUMBER_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink number entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
+    api = reolink_data.host.api
 
     entities: list[NumberEntity] = [
         ReolinkNumberEntity(reolink_data, channel, entity_description)
         for entity_description in NUMBER_ENTITIES
-        for channel in reolink_data.host.api.channels
-        if entity_description.supported(reolink_data.host.api, channel)
+        for channel in api.channels
+        if entity_description.supported(api, channel)
     ]
+    entities.extend(
+        ReolinkSmartAINumberEntity(reolink_data, channel, location, entity_description)
+        for entity_description in SMART_AI_NUMBER_ENTITIES
+        for channel in api.channels
+        for location in api.baichuan.smart_location_list(
+            channel, entity_description.smart_type
+        )
+        if entity_description.supported(api, channel)
+    )
     entities.extend(
         ReolinkHostNumberEntity(reolink_data, entity_description)
         for entity_description in HOST_NUMBER_ENTITIES
-        if entity_description.supported(reolink_data.host.api)
+        if entity_description.supported(api)
     )
     entities.extend(
         ReolinkChimeNumberEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_NUMBER_ENTITIES
-        for chime in reolink_data.host.api.chime_list
+        for chime in api.chime_list
     )
     async_add_entities(entities)
 
@@ -596,6 +792,51 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self.entity_description.method(self._host.api, self._channel, value)
+        self.async_write_ha_state()
+
+
+class ReolinkSmartAINumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
+    """Base smart AI number entity class for Reolink IP cameras."""
+
+    entity_description: ReolinkSmartAINumberEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        channel: int,
+        location: int,
+        entity_description: ReolinkSmartAINumberEntityDescription,
+    ) -> None:
+        """Initialize Reolink number entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
+
+        unique_index = self._host.api.baichuan.smart_ai_index(
+            channel, entity_description.smart_type, location
+        )
+        self._attr_unique_id = f"{self._attr_unique_id}_{unique_index}"
+
+        self._location = location
+        self._attr_mode = entity_description.mode
+        self._attr_translation_placeholders = {
+            "zone_name": self._host.api.baichuan.smart_ai_name(
+                channel, entity_description.smart_type, location
+            )
+        }
+
+    @property
+    def native_value(self) -> float | None:
+        """State of the number entity."""
+        return self.entity_description.value(
+            self._host.api, self._channel, self._location
+        )
+
+    @raise_translated_error
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        await self.entity_description.method(
+            self._host.api, self._channel, self._location, value
+        )
         self.async_write_ha_state()
 
 
