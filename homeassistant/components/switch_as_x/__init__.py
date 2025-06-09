@@ -102,6 +102,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 device_id, remove_config_entry_id=entry.entry_id
             )
 
+            # Reload the config entry so the switch_as_x entity is recreated with
+            # correct device info
+            await hass.config_entries.async_reload(entry.entry_id)
+
     entry.async_on_unload(
         async_track_entity_registry_updated_event(
             hass, entity_id, async_registry_updated

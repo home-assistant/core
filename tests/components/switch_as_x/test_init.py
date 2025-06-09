@@ -222,15 +222,26 @@ async def test_device_registry_config_entry_1(
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id in device_entry.config_entries
 
-    # Remove the wrapped switch's config entry from the device
-    device_registry.async_update_device(
-        device_entry.id, remove_config_entry_id=switch_config_entry.entry_id
-    )
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    # Remove the wrapped switch's config entry from the device, this removes the
+    # wrapped switch
+    with patch(
+        "homeassistant.components.switch_as_x.async_unload_entry", return_value=True
+    ) as mock_setup_entry:
+        device_registry.async_update_device(
+            device_entry.id, remove_config_entry_id=switch_config_entry.entry_id
+        )
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+    mock_setup_entry.assert_called_once()
+
     # Check that the switch_as_x config entry is removed from the device
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+
+    # Check that the switch_as_x config entry is removed
+    assert (
+        switch_as_x_config_entry.entry_id not in hass.config_entries.async_entry_ids()
+    )
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -282,11 +293,21 @@ async def test_device_registry_config_entry_2(
     assert switch_as_x_config_entry.entry_id in device_entry.config_entries
 
     # Remove the wrapped switch from the device
-    entity_registry.async_update_entity(switch_entity_entry.entity_id, device_id=None)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.switch_as_x.async_unload_entry",
+    ) as mock_setup_entry:
+        entity_registry.async_update_entity(
+            switch_entity_entry.entity_id, device_id=None
+        )
+        await hass.async_block_till_done()
+    mock_setup_entry.assert_called_once()
+
     # Check that the switch_as_x config entry is removed from the device
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
+
+    # Check that the switch_as_x config entry is not removed
+    assert switch_as_x_config_entry.entry_id in hass.config_entries.async_entry_ids()
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -344,16 +365,23 @@ async def test_device_registry_config_entry_3(
     assert switch_as_x_config_entry.entry_id not in device_entry_2.config_entries
 
     # Move the wrapped switch to another device
-    entity_registry.async_update_entity(
-        switch_entity_entry.entity_id, device_id=device_entry_2.id
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.switch_as_x.async_unload_entry",
+    ) as mock_setup_entry:
+        entity_registry.async_update_entity(
+            switch_entity_entry.entity_id, device_id=device_entry_2.id
+        )
+        await hass.async_block_till_done()
+    mock_setup_entry.assert_called_once()
 
     # Check that the switch_as_x config entry is moved to the other device
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id not in device_entry.config_entries
     device_entry_2 = device_registry.async_get(device_entry_2.id)
     assert switch_as_x_config_entry.entry_id in device_entry_2.config_entries
+
+    # Check that the switch_as_x config entry is not removed
+    assert switch_as_x_config_entry.entry_id in hass.config_entries.async_entry_ids()
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
