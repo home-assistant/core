@@ -72,7 +72,7 @@ async def test_form_user_step_cannot_connect_then_recovers(
         # First attempt triggers an error
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"ip_address": "192.168.1.100"},
+            {CONF_IP_ADDRESS: "192.168.1.100"},
         )
 
         assert result2["type"] is FlowResultType.FORM
@@ -81,7 +81,7 @@ async def test_form_user_step_cannot_connect_then_recovers(
         # Second attempt recovers with a valid client
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"ip_address": "192.168.1.100"},
+            {CONF_IP_ADDRESS: "192.168.1.100"},
         )
 
         assert result3["type"] is FlowResultType.CREATE_ENTRY
