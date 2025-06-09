@@ -58,9 +58,13 @@ class HomeeLock(HomeeEntity, LockEntity):
             AttributeChangedBy, self._attribute.changed_by
         )
         if self._attribute.changed_by == AttributeChangedBy.USER:
-            changed_id = self._entry.runtime_data.get_user_by_id(
+            user = self._entry.runtime_data.get_user_by_id(
                 self._attribute.changed_by_id
-            ).username
+            )
+            if user is not None:
+                changed_id = user.username
+            else:
+                changed_id = "Unknown"
 
         return f"{changed_by_name}-{changed_id}"
 
