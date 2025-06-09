@@ -1011,7 +1011,7 @@ async def test_script_tool_name(hass: HomeAssistant) -> None:
     assert tool.name == "_123456"
 
 
-async def test_action_tool(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+async def test_action_tool(hass: HomeAssistant) -> None:
     """Test ActionTool can be created for each action (service) without exceptions."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {})
@@ -1039,6 +1039,86 @@ async def test_action_tool(hass: HomeAssistant, llm_context: llm.LLMContext) -> 
                 exposed_entities.get(domain, exposed_entities["entities"]),
             )
             assert tool.name == f"{domain}_{action}"
+
+
+@pytest.mark.parametrize(
+    ("target", "expected_entities", "unexpected_entities"),
+    [
+        (  # Entities from `demo` integration with device class `outlet`
+            {"entity": [{"integration": "demo", "device_class": "outlet"}]},
+            ["switch.ac"],
+            ["light.kitchen_lights"],
+        ),
+        (  # Entities from `demo` integration with domain `light`
+            {
+                "entity": [{}],
+                "device": [{"integration": "demo", "domain": "light", "entity": [{}]}],
+            },
+            ["light.kitchen_lights"],
+            ["switch.ac"],
+        ),
+        (
+            {"entity": [{}], "device": [{"manufacturer": "Unknown manufacturer"}]},
+            [],
+            [],
+        ),
+        (
+            {"entity": [{}], "device": [{"model": "Unknown model"}]},
+            [],
+            [],
+        ),
+        (  # Light entities from an area that also have a switch
+            {"entity": [{"domain": "light"}], "area": [{"domain": "switch"}]},
+            [],
+            [],
+        ),
+        (  # Light entities from a floor that also have a switch
+            {"entity": [{"domain": "light"}], "floor": [{"domain": "switch"}]},
+            [],
+            [],
+        ),
+    ],
+)
+async def test_action_tool_targets(
+    hass: HomeAssistant, target, expected_entities, unexpected_entities
+) -> None:
+    """Test ActionTool with different targets."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "demo", {})
+    await service.async_get_all_descriptions(hass)
+    for state in hass.states.async_all():
+        async_expose_entity(hass, "conversation", state.entity_id, True)
+
+    exposed_entities = llm._get_exposed_entities(hass, "conversation")
+
+    async_mock_service(
+        hass,
+        domain="demo",
+        service="mock_action",
+        schema=cv.make_entity_service_schema({}),
+        response={"success": True},
+    )
+    service.async_set_service_schema(hass, "demo", "mock_action", {"target": target})
+    if expected_entities:
+        tool = llm.ActionTool(
+            hass,
+            "demo",
+            "mock_action",
+            exposed_entities["entities"],
+        )
+        assert all(entity in tool.target_entities for entity in expected_entities)
+        assert all(entity not in tool.target_entities for entity in unexpected_entities)
+    else:
+        with pytest.raises(
+            HomeAssistantError,
+            match="Action demo.mock_action has no exposed entities to target.",
+        ):
+            llm.ActionTool(
+                hass,
+                "demo",
+                "mock_action",
+                exposed_entities["entities"],
+            )
 
 
 async def test_selector_serializer(

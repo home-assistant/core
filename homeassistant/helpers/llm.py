@@ -1175,7 +1175,7 @@ class ActionTool(Tool):
                 )
 
             if len(self.target_entities) == 1:
-                if self.description is None:
+                if not self.description:
                     self.description = ""
                 else:
                     self.description += ". "
