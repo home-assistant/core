@@ -45,8 +45,6 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
     _attr_preset_modes = list(BatteryCirculatorFanMode)
 
     _attr_is_on: bool | None = None
-    # preset_mode: str = BatteryCirculatorFanMode.DIRECT.value
-    # percentage: int = 0
 
     @property
     def is_on(self) -> bool | None:
@@ -85,7 +83,6 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         power: str | None = response.get("power")
         fan_speed: int | None = response.get("fanSpeed")
         mode: str | None = response.get("mode")
-
         if self._attr_is_on is False and (power and "off" in power):
             await self.send_api_command(CommonCommands.ON)
             _LOGGER.info("Send_api_command CommonCommands.ON")
