@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
 from telegram import Update, User
+from telegram.constants import ParseMode
 from telegram.error import (
     InvalidToken,
     NetworkError,
@@ -16,20 +17,30 @@ from telegram.error import (
 )
 
 from homeassistant.components.telegram_bot import (
-    ATTR_CALLBACK_QUERY_ID,
-    ATTR_CHAT_ID,
-    ATTR_FILE,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    async_setup_entry,
+)
+from homeassistant.components.telegram_bot.const import (
+    ATTR_CALLBACK_QUERY_ID,
+    ATTR_CHAT_ID,
+    ATTR_DISABLE_NOTIF,
+    ATTR_DISABLE_WEB_PREV,
+    ATTR_FILE,
+    ATTR_KEYBOARD,
+    ATTR_KEYBOARD_INLINE,
     ATTR_MESSAGE,
+    ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
     ATTR_MESSAGEID,
     ATTR_OPTIONS,
+    ATTR_PARSER,
     ATTR_QUESTION,
+    ATTR_REPLY_TO_MSGID,
     ATTR_STICKER_ID,
     ATTR_TARGET,
+    ATTR_TIMEOUT,
     CONF_CONFIG_ENTRY_ID,
-    CONF_PLATFORM,
     DOMAIN,
     PLATFORM_BROADCAST,
     SERVICE_ANSWER_CALLBACK_QUERY,
@@ -44,11 +55,10 @@ from homeassistant.components.telegram_bot import (
     SERVICE_SEND_STICKER,
     SERVICE_SEND_VIDEO,
     SERVICE_SEND_VOICE,
-    async_setup_entry,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_PLATFORM
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
@@ -74,6 +84,43 @@ async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> N
         (
             SERVICE_SEND_MESSAGE,
             {ATTR_MESSAGE: "test_message", ATTR_MESSAGE_THREAD_ID: "123"},
+        ),
+        (
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_KEYBOARD: ["/command1, /command2", "/command3"],
+                ATTR_MESSAGE: "test_message",
+                ATTR_PARSER: ParseMode.HTML,
+                ATTR_TIMEOUT: 15,
+                ATTR_DISABLE_NOTIF: True,
+                ATTR_DISABLE_WEB_PREV: True,
+                ATTR_MESSAGE_TAG: "mock_tag",
+                ATTR_REPLY_TO_MSGID: 12345,
+            },
+        ),
+        (
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_KEYBOARD: [],
+                ATTR_MESSAGE: "test_message",
+            },
+        ),
+        (
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_KEYBOARD_INLINE: "command1:/cmd1,/cmd2,mock_link:https://mock_link",
+            },
+        ),
+        (
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_KEYBOARD_INLINE: [
+                    [["command1", "/cmd1"]],
+                    [["mock_line", "https://mock_link"]],
+                ],
+            },
         ),
         (
             SERVICE_SEND_STICKER,
@@ -122,6 +169,23 @@ async def test_send_message(
 
     assert len(response["chats"]) == 1
     assert (response["chats"][0]["message_id"]) == 12345
+
+
+async def test_send_message_inline_keyboard_error(
+    hass: HomeAssistant, webhook_platform
+) -> None:
+    """Test the send_message service with invalid inline keyboard."""
+
+    with pytest.raises(TypeError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_MESSAGE: "mock message", ATTR_KEYBOARD_INLINE: 12345},
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    assert err.value.args[0] == "12345"
 
 
 @patch(
