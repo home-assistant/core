@@ -249,12 +249,14 @@ async def async_setup_entry(
     _LOGGER.debug(
         "Setting up config entry for Bayesian sensor: '%s' with %s observations",
         config_entry.options[CONF_NAME],
-        len(config_entry.options.get(CONF_OBSERVATIONS, [])),
+        len(config_entry.subentries),
     )
     config = config_entry.options
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID, config_entry.entry_id)
-    observations: list[ConfigType] = config[CONF_OBSERVATIONS]
+    observations: list[ConfigType] = [
+        dict(subentry.data) for subentry in config_entry.subentries.values()
+    ]
     prior: float = config[CONF_PRIOR]
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
@@ -290,6 +292,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         """Initialize the Bayesian sensor."""
         self._attr_name = name
         self._attr_unique_id = unique_id and f"bayesian-{unique_id}"
+        _LOGGER.debug("Observations are %s", observations)  # TODO delete me
         self._observations = [
             Observation(
                 entity_id=observation.get(CONF_ENTITY_ID),
