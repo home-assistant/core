@@ -2174,7 +2174,7 @@ pynina==0.3.6
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.2.4
+pynordpool==0.3.0
 
 # homeassistant.components.nuki
 pynuki==1.6.3
