@@ -41,6 +41,10 @@ async def async_get_device_diagnostics(
     )
     assert identifiers_matches is not None
     node_id = identifiers_matches.group(1)
-    return {
-        "homee node": entry.runtime_data.get_node_by_id(int(node_id)).raw_data,
-    }
+    node = entry.runtime_data.get_node_by_id(int(node_id))
+    if node is not None:
+        return {
+            "homee node": node.raw_data,
+        }
+
+    return {"homee node": "Node with given ID not found."}
