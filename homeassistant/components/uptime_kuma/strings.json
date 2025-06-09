@@ -53,19 +53,19 @@
           "steam": "Steam Game Server",
           "mqtt": "MQTT",
           "sqlserver": "Microsoft SQL Server",
-          "json-query": "HTTP(s) - JSON query",
+          "json_query": "HTTP(s) - JSON query",
           "group": "Group",
           "docker": "Docker",
-          "grpc-keyword": "gPRC(s) - Keyword",
-          "real-browser": "HTTP(s) - Browser engine",
+          "grpc_keyword": "gPRC(s) - Keyword",
+          "real_browser": "HTTP(s) - Browser engine",
           "gamedig": "GameDig",
-          "kafka-producer": "Kafka Producer",
+          "kafka_producer": "Kafka Producer",
           "postgres": "PostgreSQL",
           "mysql": "MySQL/MariaDB",
           "mongodb": "MongoDB",
           "radius": "Radius",
           "redis": "Redis",
-          "tailscale-ping": "Tailscale Ping"
+          "tailscale_ping": "Tailscale Ping"
         }
       },
       "url": {

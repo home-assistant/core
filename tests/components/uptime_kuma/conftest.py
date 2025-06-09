@@ -28,7 +28,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="uptime.example.org",
         data={
-            CONF_URL: "https://uptime.example.org/",
+            CONF_URL: "https://uptime.example.org",
             CONF_VERIFY_SSL: True,
             CONF_API_KEY: "apikey",
         },
@@ -73,7 +73,7 @@ def mock_pyuptimekuma() -> Generator[AsyncMock]:
         monitor_port="null",
         monitor_response_time=120,
         monitor_status=0,
-        monitor_type=MonitorType.HTTP,
+        monitor_type="json-query",
         monitor_url="https://down.example.org",
     )
 
@@ -81,7 +81,10 @@ def mock_pyuptimekuma() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.uptime_kuma.config_flow.UptimeKuma", autospec=True
         ) as mock_client,
-        patch("homeassistant.components.uptime_kuma.UptimeKuma", new=mock_client),
+        patch(
+            "homeassistant.components.uptime_kuma.coordinator.UptimeKuma",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
 
