@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import switch_as_x
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.lock import LockState
 from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
@@ -24,8 +25,9 @@ from homeassistant.const import (
     EntityCategory,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.setup import async_setup_component
 
 from . import PLATFORMS_TO_TEST
@@ -222,10 +224,19 @@ async def test_device_registry_config_entry_1(
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id in device_entry.config_entries
 
+    events = []
+
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data["action"])
+
+    async_track_entity_registry_updated_event(hass, entity_entry.entity_id, add_event)
+
     # Remove the wrapped switch's config entry from the device, this removes the
     # wrapped switch
     with patch(
-        "homeassistant.components.switch_as_x.async_unload_entry", return_value=True
+        "homeassistant.components.switch_as_x.async_unload_entry",
+        wraps=switch_as_x.async_unload_entry,
     ) as mock_setup_entry:
         device_registry.async_update_device(
             device_entry.id, remove_config_entry_id=switch_config_entry.entry_id
@@ -242,6 +253,9 @@ async def test_device_registry_config_entry_1(
     assert (
         switch_as_x_config_entry.entry_id not in hass.config_entries.async_entry_ids()
     )
+
+    # Check we got the expected events
+    assert events == ["remove"]
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -292,9 +306,18 @@ async def test_device_registry_config_entry_2(
     device_entry = device_registry.async_get(device_entry.id)
     assert switch_as_x_config_entry.entry_id in device_entry.config_entries
 
+    events = []
+
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data["action"])
+
+    async_track_entity_registry_updated_event(hass, entity_entry.entity_id, add_event)
+
     # Remove the wrapped switch from the device
     with patch(
         "homeassistant.components.switch_as_x.async_unload_entry",
+        wraps=switch_as_x.async_unload_entry,
     ) as mock_setup_entry:
         entity_registry.async_update_entity(
             switch_entity_entry.entity_id, device_id=None
@@ -308,6 +331,9 @@ async def test_device_registry_config_entry_2(
 
     # Check that the switch_as_x config entry is not removed
     assert switch_as_x_config_entry.entry_id in hass.config_entries.async_entry_ids()
+
+    # Check we got the expected events
+    assert events == ["update"]
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -364,9 +390,18 @@ async def test_device_registry_config_entry_3(
     device_entry_2 = device_registry.async_get(device_entry_2.id)
     assert switch_as_x_config_entry.entry_id not in device_entry_2.config_entries
 
+    events = []
+
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data["action"])
+
+    async_track_entity_registry_updated_event(hass, entity_entry.entity_id, add_event)
+
     # Move the wrapped switch to another device
     with patch(
         "homeassistant.components.switch_as_x.async_unload_entry",
+        wraps=switch_as_x.async_unload_entry,
     ) as mock_setup_entry:
         entity_registry.async_update_entity(
             switch_entity_entry.entity_id, device_id=device_entry_2.id
@@ -382,6 +417,9 @@ async def test_device_registry_config_entry_3(
 
     # Check that the switch_as_x config entry is not removed
     assert switch_as_x_config_entry.entry_id in hass.config_entries.async_entry_ids()
+
+    # Check we got the expected events
+    assert events == ["update"]
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
