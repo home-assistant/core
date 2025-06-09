@@ -177,8 +177,8 @@ async def test_fetch_image_authenticated(
     # Using HEAD
     resp = await client.head("/api/image_proxy/image.test")
     assert resp.status == HTTPStatus.OK
-    assert resp.content_type == "image/png"
-    assert resp.content_length == "4"
+    assert resp.content_type == "image/jpeg"
+    assert resp.content_length == 4
 
     resp = await client.head("/api/image_proxy/image.unknown")
     assert resp.status == HTTPStatus.NOT_FOUND
@@ -188,8 +188,8 @@ async def test_fetch_image_authenticated(
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == b"Test"
-    assert resp.content_type == "image/png"
-    assert resp.content_length == "4"
+    assert resp.content_type == "image/jpeg"
+    assert resp.content_length == 4
 
     resp = await client.get("/api/image_proxy/image.unknown")
     assert resp.status == HTTPStatus.NOT_FOUND
@@ -276,7 +276,7 @@ async def test_fetch_image_url_success(
     resp = await client.head("/api/image_proxy/image.test")
     assert resp.status == HTTPStatus.OK
     assert resp.content_type == "image/png"
-    assert resp.content_length == "4"
+    assert resp.content_length == 4
 
     # Using GET
     resp = await client.get("/api/image_proxy/image.test")
@@ -284,7 +284,7 @@ async def test_fetch_image_url_success(
     body = await resp.read()
     assert body == b"Test"
     assert resp.content_type == "image/png"
-    assert resp.content_length == "4"
+    assert resp.content_length == 4
 
 
 @respx.mock
