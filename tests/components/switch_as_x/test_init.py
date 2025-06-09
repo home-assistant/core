@@ -44,13 +44,13 @@ async def test_config_entry_unregistered_uuid(
     hass: HomeAssistant, target_domain: str
 ) -> None:
     """Test light switch setup from config entry with unknown entity registry id."""
-    fake_uuid = "a266a680b608c32770e6c45bfe6b8411"
+    fake_entity_id = "switch.something"
 
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: fake_uuid,
+            CONF_ENTITY_ID: fake_entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -96,7 +96,7 @@ async def test_entity_registry_events(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: registry_entry.id,
+            CONF_ENTITY_ID: switch_entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -180,7 +180,7 @@ async def test_device_registry_config_entry_1(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -238,7 +238,7 @@ async def test_device_registry_config_entry_2(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -271,11 +271,15 @@ async def test_config_entry_entity_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, target_domain: Platform
 ) -> None:
     """Test light switch setup from config entry with entity id."""
+    registry_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
+    switch_entity_id = registry_entry.entity_id
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: "switch.abc",
+            CONF_ENTITY_ID: switch_entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -316,7 +320,7 @@ async def test_config_entry_uuid(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: registry_entry.id,
+            CONF_ENTITY_ID: registry_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -356,7 +360,7 @@ async def test_device(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -382,12 +386,16 @@ async def test_setup_and_remove_config_entry(
     target_domain: Platform,
 ) -> None:
     """Test removing a config entry."""
+    registry_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
+    switch_entity_id = registry_entry.entity_id
     # Setup the config entry
     switch_as_x_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: "switch.test",
+            CONF_ENTITY_ID: switch_entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -440,7 +448,7 @@ async def test_reset_hidden_by(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -478,7 +486,7 @@ async def test_entity_category_inheritance(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -516,7 +524,7 @@ async def test_entity_options(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -571,7 +579,7 @@ async def test_entity_name(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -697,7 +705,7 @@ async def test_custom_name_2(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -763,7 +771,7 @@ async def test_import_expose_settings_1(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -824,7 +832,7 @@ async def test_import_expose_settings_2(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -889,7 +897,7 @@ async def test_restore_expose_settings(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: switch_entity_entry.id,
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -931,12 +939,16 @@ async def test_migrate(
     target_domain: Platform,
 ) -> None:
     """Test migration."""
+    registry_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
+    switch_entity_id = registry_entry.entity_id
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: "switch.test",
+            CONF_ENTITY_ID: switch_entity_id,
             CONF_TARGET_DOMAIN: target_domain,
         },
         title="ABC",
@@ -950,7 +962,7 @@ async def test_migrate(
     # Check migration was successful and added invert option
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.options == {
-        CONF_ENTITY_ID: "switch.test",
+        CONF_ENTITY_ID: switch_entity_id,
         CONF_INVERT: False,
         CONF_TARGET_DOMAIN: target_domain,
     }

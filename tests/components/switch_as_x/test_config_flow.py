@@ -130,15 +130,20 @@ async def test_config_flow_registered_entity(
 async def test_options(
     hass: HomeAssistant,
     target_domain: Platform,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test reconfiguring."""
+    switch_entity_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", original_name="ABC"
+    )
+    switch_entity_id = switch_entity_entry.entity_id
     switch_state = STATE_ON
-    hass.states.async_set("switch.ceiling", switch_state)
+    hass.states.async_set(switch_entity_id, switch_state)
     switch_as_x_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: "switch.ceiling",
+            CONF_ENTITY_ID: switch_entity_id,
             CONF_INVERT: True,
             CONF_TARGET_DOMAIN: target_domain,
         },
@@ -170,13 +175,13 @@ async def test_options(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_ENTITY_ID: "switch.ceiling",
+        CONF_ENTITY_ID: switch_entity_id,
         CONF_INVERT: False,
         CONF_TARGET_DOMAIN: target_domain,
     }
     assert config_entry.data == {}
     assert config_entry.options == {
-        CONF_ENTITY_ID: "switch.ceiling",
+        CONF_ENTITY_ID: switch_entity_id,
         CONF_INVERT: False,
         CONF_TARGET_DOMAIN: target_domain,
     }

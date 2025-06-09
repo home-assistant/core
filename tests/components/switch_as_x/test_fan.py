@@ -18,18 +18,25 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
-async def test_default_state(hass: HomeAssistant) -> None:
+async def test_default_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test fan switch default state."""
+    switch_entity_entry = entity_registry.async_get_or_create(
+        "switch", "test", "unique", original_name="Wind Machine"
+    )
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: "switch.test",
+            CONF_ENTITY_ID: switch_entity_entry.entity_id,
             CONF_INVERT: False,
             CONF_TARGET_DOMAIN: Platform.FAN,
         },
@@ -42,7 +49,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.wind_machine")
-    assert state is not None
     assert state.state == "unavailable"
     assert state.attributes["supported_features"] == 48
 
