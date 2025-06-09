@@ -6,6 +6,36 @@
         "state": {
           "off": "mdi:bluetooth-off"
         }
+      },
+      "baby_cry_detection": {
+        "default": "mdi:account-voice",
+        "state": {
+          "off": "mdi:account-voice-off"
+        }
+      },
+      "beeping_appliance_detection": {
+        "default": "mdi:bell-ring",
+        "state": {
+          "off": "mdi:bell-off"
+        }
+      },
+      "cough_detection": {
+        "default": "mdi:blur",
+        "state": {
+          "off": "mdi:blur-off"
+        }
+      },
+      "dog_bark_detection": {
+        "default": "mdi:dog-side",
+        "state": {
+          "off": "mdi:dog-side-off"
+        }
+      },
+      "water_sounds_detection": {
+        "default": "mdi:water-pump",
+        "state": {
+          "off": "mdi:water-pump-off"
+        }
       }
     }
   }

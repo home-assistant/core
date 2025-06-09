@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from aioamazondevices.api import AmazonDevice
+from aioamazondevices.const import SENSOR_STATE_OFF
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -28,7 +29,8 @@ PARALLEL_UPDATES = 0
 class AmazonBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Alexa Devices binary sensor entity description."""
 
-    is_on_fn: Callable[[AmazonDevice], bool]
+    is_on_fn: Callable[[AmazonDevice, str], bool]
+    removal_condition: Callable[[AmazonDevice, str], bool] | None = None
 
 
 BINARY_SENSORS: Final = (
@@ -36,13 +38,61 @@ BINARY_SENSORS: Final = (
         key="online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda _device: _device.online,
+        is_on_fn=lambda _device, _: _device.online,
     ),
     AmazonBinarySensorEntityDescription(
         key="bluetooth",
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="bluetooth",
-        is_on_fn=lambda _device: _device.bluetooth_state,
+        is_on_fn=lambda _device, _: _device.bluetooth_state,
+    ),
+    AmazonBinarySensorEntityDescription(
+        key="babyCryDetectionState",
+        translation_key="baby_cry_detection",
+        is_on_fn=lambda _device, _key: (
+            _device.sensors[_key].value != SENSOR_STATE_OFF
+        ),
+        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
+    ),
+    AmazonBinarySensorEntityDescription(
+        key="beepingApplianceDetectionState",
+        translation_key="beeping_appliance_detection",
+        is_on_fn=lambda _device, _key: (
+            _device.sensors[_key].value != SENSOR_STATE_OFF
+        ),
+        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
+    ),
+    AmazonBinarySensorEntityDescription(
+        key="coughDetectionState",
+        translation_key="cough_detection",
+        is_on_fn=lambda _device, _key: (
+            _device.sensors[_key].value != SENSOR_STATE_OFF
+        ),
+        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
+    ),
+    AmazonBinarySensorEntityDescription(
+        key="dogBarkDetectionState",
+        translation_key="dog_bark_detection",
+        is_on_fn=lambda _device, _key: (
+            _device.sensors[_key].value != SENSOR_STATE_OFF
+        ),
+        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
+    ),
+    AmazonBinarySensorEntityDescription(
+        key="humanPresenceDetectionState",
+        device_class=BinarySensorDeviceClass.MOTION,
+        is_on_fn=lambda _device, _key: (
+            _device.sensors[_key].value != SENSOR_STATE_OFF
+        ),
+        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
+    ),
+    AmazonBinarySensorEntityDescription(
+        key="waterSoundsDetectionState",
+        translation_key="water_sounds_detection",
+        is_on_fn=lambda _device, _key: (
+            _device.sensors[_key].value != SENSOR_STATE_OFF
+        ),
+        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
     ),
 )
 
@@ -60,6 +110,12 @@ async def async_setup_entry(
         AmazonBinarySensorEntity(coordinator, serial_num, sensor_desc)
         for sensor_desc in BINARY_SENSORS
         for serial_num in coordinator.data
+        if (
+            not sensor_desc.removal_condition
+            or not sensor_desc.removal_condition(
+                coordinator.data[serial_num], sensor_desc.key
+            )
+        )
     )
 
 
@@ -71,4 +127,6 @@ class AmazonBinarySensorEntity(AmazonEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
-        return self.entity_description.is_on_fn(self.device)
+        return self.entity_description.is_on_fn(
+            self.device, self.entity_description.key
+        )
