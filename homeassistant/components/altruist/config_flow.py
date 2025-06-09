@@ -23,7 +23,9 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.device: AltruistDeviceModel | None = None
 
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         ip_address = ""
@@ -76,8 +78,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": "Altruist",
-                    "ip_address": self.device.ip_address,
+                    "name": f"Altruist {self.device.id}",
                 }
             }
         )

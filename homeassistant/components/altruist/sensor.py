@@ -225,12 +225,18 @@ class AltruistSensor(CoordinatorEntity[AltruistDataUpdateCoordinator], SensorEnt
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.id)},
-            name=f"Altruist {self._device.id}",
             manufacturer="Robonomics",
             model="Altruist",
             sw_version=self._device.fw_version,
             configuration_url=f"http://{self._device.ip_address}",
             serial_number=self._device.id,
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available and self.entity_description.key in self.coordinator.data
         )
 
     @property
