@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await hass.config_entries.async_reload(entry.entry_id)
 
         if device_id and "device_id" in data["changes"]:
-            # If the tracked switch is no longer in the device, remove our config entry
+            # Handle the wrapped switch being moved to a different device or removed
             # from the device
             if (
                 not (entity_entry := entity_registry.async_get(data[CONF_ENTITY_ID]))
@@ -90,6 +90,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ):
                 # No need to do any cleanup
                 return
+
+            if entity_entry.device_id is not None:
+                # The wrapped switch has been moved to a different device,
+                # update the device entry to include our config entry
+                device_registry.async_update_device(
+                    entity_entry.device_id, add_config_entry_id=entry.entry_id
+                )
 
             device_registry.async_update_device(
                 device_id, remove_config_entry_id=entry.entry_id
