@@ -10,13 +10,14 @@ from zha.exceptions import ZHAException
 from zigpy.application import ControllerApplication
 
 from homeassistant.components.update import (
+    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -195,3 +196,10 @@ class ZHAFirmwareUpdateEntity(
         """Update the entity."""
         await CoordinatorEntity.async_update(self)
         await super().async_update()
+
+    @callback
+    def restore_external_state_attributes(self, state: State) -> None:
+        """Restore entity state."""
+        self.entity_data.entity.restore_external_state_attributes(
+            latest_version=state.attributes.get(ATTR_LATEST_VERSION),
+        )
