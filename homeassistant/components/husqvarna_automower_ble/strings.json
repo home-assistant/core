@@ -14,18 +14,18 @@
       "confirm": {
         "description": "Do you want to set up {name}? Make sure the mower is in pairing mode",
         "data": {
-          "pin": "Mower PIN"
+          "pin": "[%key:component::husqvarna_automower_ble::config::step::user::data::pin%]"
         },
         "data_description": {
-          "pin": "The PIN used to secure the mower"
+          "pin": "[%key:component::husqvarna_automower_ble::config::step::user::data_description::pin%]"
         }
       },
       "reauth_confirm": {
         "data": {
-          "pin": "Mower PIN"
+          "pin": "[%key:component::husqvarna_automower_ble::config::step::user::data::pin%]"
         },
         "data_description": {
-          "pin": "The PIN used to secure the mower"
+          "pin": "[%key:component::husqvarna_automower_ble::config::step::user::data_description::pin%]"
         }
       }
     },
