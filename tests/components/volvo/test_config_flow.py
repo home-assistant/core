@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .common import load_json_object_fixture
+from .common import async_load_fixture_as_json
 from .const import DEFAULT_MODEL, DEFAULT_VIN, REDIRECT_URI, SERVER_TOKEN_RESPONSE
 
 from tests.common import MockConfigEntry
@@ -45,7 +45,7 @@ async def test_single_vin_flow(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Check flow where API returns a single VIN."""
-    _mock_api_client(aioclient_mock, single_vin=True)
+    await _mock_api_client(hass, aioclient_mock, single_vin=True)
 
     # Since there is only one VIN, the api_key step is the only step
     config_flow = await hass.config_entries.flow.async_configure(config_flow["flow_id"])
@@ -111,7 +111,7 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_key"
 
-    _mock_api_client(aioclient_mock)
+    await _mock_api_client(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: "abcdef0123456879abcdef"}
@@ -182,7 +182,7 @@ async def _async_run_flow_to_completion(
     api_key_failure: bool = False,
 ) -> ConfigFlowResult:
     if configure:
-        _mock_api_client(aioclient_mock, api_key_failure=api_key_failure)
+        await _mock_api_client(hass, aioclient_mock, api_key_failure=api_key_failure)
         config_flow = await hass.config_entries.flow.async_configure(
             config_flow["flow_id"]
         )
@@ -193,7 +193,7 @@ async def _async_run_flow_to_completion(
     assert config_flow["type"] is FlowResultType.FORM
     assert config_flow["step_id"] == "api_key"
 
-    _mock_api_client(aioclient_mock, api_key_failure=False)
+    await _mock_api_client(hass, aioclient_mock, api_key_failure=False)
     config_flow = await hass.config_entries.flow.async_configure(
         config_flow["flow_id"], {CONF_API_KEY: "abcdef0123456879abcdef"}
     )
@@ -209,7 +209,8 @@ async def _async_run_flow_to_completion(
     return config_flow
 
 
-def _mock_api_client(
+async def _mock_api_client(
+    hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     *,
     single_vin: bool = False,
@@ -239,7 +240,7 @@ def _mock_api_client(
             },
         )
 
-    vehicle_data = load_json_object_fixture("vehicle", DEFAULT_MODEL)
+    vehicle_data = await async_load_fixture_as_json(hass, "vehicle", DEFAULT_MODEL)
     aioclient_mock.get(
         f"{_API_URL}{_API_CONNECTED_ENDPOINT}/{DEFAULT_VIN}",
         json={
@@ -247,7 +248,7 @@ def _mock_api_client(
         },
     )
 
-    vehicle_data = load_json_object_fixture("vehicle", "xc90_petrol_2019")
+    vehicle_data = await async_load_fixture_as_json(hass, "vehicle", "xc90_petrol_2019")
     aioclient_mock.get(
         f"{_API_URL}{_API_CONNECTED_ENDPOINT}/YV10000000AAAAAAA",
         json={

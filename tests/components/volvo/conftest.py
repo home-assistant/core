@@ -10,7 +10,6 @@ from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
 from volvocarsapi.models import (
     VolvoCarsAvailableCommand,
     VolvoCarsLocation,
-    VolvoCarsValueField,
     VolvoCarsVehicle,
 )
 from volvocarsapi.scopes import DEFAULT_SCOPES
@@ -27,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from .common import load_json_object_fixture
+from .common import async_load_fixture_as_json, async_load_fixture_as_value_field
 from .const import (
     CLIENT_ID,
     CLIENT_SECRET,
@@ -91,7 +90,9 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-async def mock_api(full_model_from_marker: str) -> AsyncGenerator[AsyncMock]:
+async def mock_api(
+    hass: HomeAssistant, full_model_from_marker: str
+) -> AsyncGenerator[AsyncMock]:
     """Mock the Volvo API."""
     model = full_model_from_marker
 
@@ -99,28 +100,42 @@ async def mock_api(full_model_from_marker: str) -> AsyncGenerator[AsyncMock]:
         "homeassistant.components.volvo.VolvoCarsApi",
         spec_set=VolvoCarsApi,
     ) as mock_api:
-        vehicle_data = load_json_object_fixture("vehicle", model)
+        vehicle_data = await async_load_fixture_as_json(hass, "vehicle", model)
         vehicle = VolvoCarsVehicle.from_dict(vehicle_data)
 
-        commands_data = load_json_object_fixture("commands", model).get("data")
-        commands = [VolvoCarsAvailableCommand.from_dict(item) for item in commands_data]  # type: ignore[arg-type, union-attr]
+        commands_data = (await async_load_fixture_as_json(hass, "commands", model)).get(
+            "data"
+        )
+        commands = [VolvoCarsAvailableCommand.from_dict(item) for item in commands_data]
 
-        location_data = load_json_object_fixture("location", model)
+        location_data = await async_load_fixture_as_json(hass, "location", model)
         location = {"location": VolvoCarsLocation.from_dict(location_data)}
 
-        availability = _get_json_as_value_field("availability", model)
-        brakes = _get_json_as_value_field("brakes", model)
-        diagnostics = _get_json_as_value_field("diagnostics", model)
-        doors = _get_json_as_value_field("doors", model)
-        engine_status = _get_json_as_value_field("engine_status", model)
-        engine_warnings = _get_json_as_value_field("engine_warnings", model)
-        fuel_status = _get_json_as_value_field("fuel_status", model)
-        odometer = _get_json_as_value_field("odometer", model)
-        recharge_status = _get_json_as_value_field("recharge_status", model)
-        statistics = _get_json_as_value_field("statistics", model)
-        tyres = _get_json_as_value_field("tyres", model)
-        warnings = _get_json_as_value_field("warnings", model)
-        windows = _get_json_as_value_field("windows", model)
+        availability = await async_load_fixture_as_value_field(
+            hass, "availability", model
+        )
+        brakes = await async_load_fixture_as_value_field(hass, "brakes", model)
+        diagnostics = await async_load_fixture_as_value_field(
+            hass, "diagnostics", model
+        )
+        doors = await async_load_fixture_as_value_field(hass, "doors", model)
+        engine_status = await async_load_fixture_as_value_field(
+            hass, "engine_status", model
+        )
+        engine_warnings = await async_load_fixture_as_value_field(
+            hass, "engine_warnings", model
+        )
+        fuel_status = await async_load_fixture_as_value_field(
+            hass, "fuel_status", model
+        )
+        odometer = await async_load_fixture_as_value_field(hass, "odometer", model)
+        recharge_status = await async_load_fixture_as_value_field(
+            hass, "recharge_status", model
+        )
+        statistics = await async_load_fixture_as_value_field(hass, "statistics", model)
+        tyres = await async_load_fixture_as_value_field(hass, "tyres", model)
+        warnings = await async_load_fixture_as_value_field(hass, "warnings", model)
+        windows = await async_load_fixture_as_value_field(hass, "windows", model)
 
         api: VolvoCarsApi = mock_api.return_value
         api.async_get_brakes_status = AsyncMock(return_value=brakes)
@@ -217,8 +232,3 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.volvo.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
-
-
-def _get_json_as_value_field(name: str, model: str) -> dict[str, VolvoCarsValueField]:
-    data = load_json_object_fixture(name, model)
-    return {key: VolvoCarsValueField.from_dict(value) for key, value in data.items()}
