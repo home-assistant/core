@@ -1049,7 +1049,7 @@ async def test_action_tool(hass: HomeAssistant) -> None:
             ["switch.ac"],
             ["light.kitchen_lights"],
         ),
-        (  # Entities from `demo` integration with domain `light`
+        (  # Entities from `demo` integration from devices that also have entities with domain `light`
             {
                 "entity": [{}],
                 "device": [{"integration": "demo", "domain": "light", "entity": [{}]}],
@@ -1057,8 +1057,21 @@ async def test_action_tool(hass: HomeAssistant) -> None:
             ["light.kitchen_lights"],
             ["switch.ac"],
         ),
+        (  # Light entities from a device that also has a switch
+            {
+                "entity": [{"domain": "light"}],
+                "device": [{"entity": [{"domain": "switch"}]}],
+            },
+            [],
+            [],
+        ),
         (
             {"entity": [{}], "device": [{"manufacturer": "Unknown manufacturer"}]},
+            [],
+            [],
+        ),
+        (
+            {"entity": [{}], "device": [{"integration": "test"}]},
             [],
             [],
         ),
@@ -1067,13 +1080,40 @@ async def test_action_tool(hass: HomeAssistant) -> None:
             [],
             [],
         ),
+        (
+            {"entity": [{}], "device": [{"model_id": "Unknown model ID"}]},
+            [],
+            [],
+        ),
         (  # Light entities from an area that also have a switch
-            {"entity": [{"domain": "light"}], "area": [{"domain": "switch"}]},
+            {
+                "entity": [{"domain": "light"}],
+                "area": [{"entity": [{"domain": "switch"}]}],
+            },
+            [],
+            [],
+        ),
+        (  # Light entities from an area that also have a switch that belongs to a device
+            {
+                "entity": [{"domain": "light"}],
+                "area": [{"device": [{"entity": [{"domain": "switch"}]}]}],
+            },
             [],
             [],
         ),
         (  # Light entities from a floor that also have a switch
-            {"entity": [{"domain": "light"}], "floor": [{"domain": "switch"}]},
+            {
+                "entity": [{"domain": "light"}],
+                "floor": [{"entity": [{"domain": "switch"}]}],
+            },
+            [],
+            [],
+        ),
+        (  # Light entities from a floor that also have a switch that belongs to a device
+            {
+                "entity": [{"domain": "light"}],
+                "floor": [{"device": [{"entity": [{"domain": "switch"}]}]}],
+            },
             [],
             [],
         ),
