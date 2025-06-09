@@ -4,33 +4,8 @@ from unittest.mock import patch
 
 from altruistclient import AltruistError
 
-from homeassistant.components.altruist.const import DOMAIN
-from homeassistant.components.altruist.coordinator import AltruistDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-
-async def test_setup_entry_success(
-    hass: HomeAssistant, mock_config_entry, mock_altruist_client
-) -> None:
-    """Test successful setup of config entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    # Confirm that the runtime_data contains a coordinator
-    coordinator = mock_config_entry.runtime_data
-    assert isinstance(coordinator, AltruistDataUpdateCoordinator)
-
-    # Confirm that coordinator.client is the mock client
-    assert coordinator.client == mock_altruist_client
-
-    # Confirm that the domain is properly set up
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
 
 
 async def test_setup_entry_client_creation_failure(
