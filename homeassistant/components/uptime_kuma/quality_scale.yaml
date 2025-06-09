@@ -26,8 +26,10 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
+  action-exceptions:
+    status: exempt
+    comment: integration has no actions
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: integration has no options
