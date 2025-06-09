@@ -28,12 +28,14 @@ class TiltEntity(CoordinatorEntity[TiltPiDataUpdateCoordinator]):
             model=f"{hydrometer.color} Tilt Hydrometer",
         )
 
-    def get_current_hydrometer(self) -> TiltHydrometerData | None:
-        """Get current hydrometer data."""
+    @property
+    def current_hydrometer(self) -> TiltHydrometerData | None:
+        """Return the current hydrometer data for this entity."""
         if not self.coordinator.data:
             return None
+        return self.coordinator.data.get(self._mac_id)
 
-        for hydrometer in self.coordinator.data:
-            if hydrometer.mac_id == self._mac_id:
-                return hydrometer
-        return None
+    @property
+    def available(self) -> bool:
+        """Return True if the hydrometer is available (present in coordinator data)."""
+        return self._mac_id in self.coordinator.data if self.coordinator.data else False

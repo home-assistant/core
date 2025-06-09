@@ -40,12 +40,12 @@ async def test_coordinator_async_update_data(
     data = await coordinator._async_update_data()
 
     assert len(data) == 2
-    black_tilt = data[0]
+    black_tilt = data.get("00:1A:2B:3C:4D:5E")
     assert black_tilt.color == TiltColor.BLACK
     assert black_tilt.mac_id == "00:1A:2B:3C:4D:5E"
     assert black_tilt.temperature == 55.0
     assert black_tilt.gravity == 1.010
-    yellow_tilt = data[1]
+    yellow_tilt = data.get("00:1s:99:f1:d2:4f")
     assert yellow_tilt.color == TiltColor.YELLOW
     assert yellow_tilt.mac_id == "00:1s:99:f1:d2:4f"
     assert yellow_tilt.temperature == 68.0

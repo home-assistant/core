@@ -67,7 +67,7 @@ async def async_setup_entry(
             hydrometer=hydrometer,
         )
         for description in SENSOR_TYPES
-        for hydrometer in coordinator.data
+        for hydrometer in coordinator.data.values()
     )
 
 
@@ -90,6 +90,6 @@ class TiltSensor(TiltEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the sensor value."""
-        if hydrometer := self.get_current_hydrometer():
+        if hydrometer := self.current_hydrometer:
             return self.entity_description.value_fn(hydrometer)
         return None

@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 type TiltPiConfigEntry = ConfigEntry[TiltPiDataUpdateCoordinator]
 
 
-class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[list[TiltHydrometerData]]):
+class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, TiltHydrometerData]]):
     """Class to manage fetching Tilt Pi data."""
 
     config_entry: TiltPiConfigEntry
@@ -38,9 +38,10 @@ class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[list[TiltHydrometerData]
         self._api = client
         self.identifier = config_entry.entry_id
 
-    async def _async_update_data(self) -> list[TiltHydrometerData]:
-        """Fetch data from Tilt Pi."""
+    async def _async_update_data(self) -> dict[str, TiltHydrometerData]:
+        """Fetch data from Tilt Pi and return as a dict keyed by mac_id."""
         try:
-            return await self._api.get_hydrometers()
+            hydrometers = await self._api.get_hydrometers()
+            return {h.mac_id: h for h in hydrometers}
         except TiltPiError as err:
             raise UpdateFailed(f"Error communicating with Tilt Pi: {err}") from err
