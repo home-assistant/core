@@ -49,7 +49,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.address: str
-        self.pin: str | None
+        self.pin: str
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -115,8 +115,8 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             (manufacturer, device_type, model) = await Mower(
                 channel_id, self.address
             ).probe_gatts(device)
-        except (BleakError, TimeoutError):
-            LOGGER.exception("Failed to probe device ({self.address}): {exception}")
+        except (BleakError, TimeoutError) as exception:
+            LOGGER.exception(f"Failed to probe device ({self.address}): {exception}")
             return None
 
         title = manufacturer + " " + device_type
@@ -128,9 +128,10 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     async def connect_mower(self, device) -> tuple[int, Mower]:
         """Connect to the Mower."""
         assert self.address
+        assert self.pin
 
         channel_id = random.randint(1, 0xFFFFFFFF)
-        mower = Mower(channel_id, self.address, self.pin)
+        mower = Mower(channel_id, self.address, int(self.pin))
 
         return (channel_id, mower)
 
