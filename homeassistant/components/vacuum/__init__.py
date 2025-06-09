@@ -261,21 +261,19 @@ class StateVacuumEntity(
             method in cls.__dict__
             for method in ("_attr_battery_level", "battery_level")
         ):
-            # Integrations should use the 'activity' property instead of
-            # setting the state directly.
+            # Integrations should use a separate battery sensor.
             cls.__vacuum_legacy_battery_level = True
         if any(
             method in cls.__dict__ for method in ("_attr_battery_icon", "battery_icon")
         ):
-            # Integrations should use the 'activity' property instead of
-            # setting the state directly.
+            # Integrations should use a separate battery sensor.
             cls.__vacuum_legacy_battery_icon = True
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute.
 
-        Deprecation warning if setting '_attr_state' directly
-        unless already reported.
+        Deprecation warning if setting state, battery icon or battery level
+        attributes directly unless already reported.
         """
         if name == "_attr_state":
             self._report_deprecated_activity_handling()
