@@ -221,4 +221,5 @@ rpds-py==0.24.0
 
 # frozenlist 1.6.1 and 1.6.2 causes the test runner to crash
 # https://github.com/microsoft/vscode-python-debugger/issues/723
+# https://github.com/aio-libs/frozenlist/issues/658
 frozenlist==1.6.0
