@@ -573,9 +573,6 @@
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature."
     },
-    "invalid_hvac_mode": {
-      "message": "Climate mode {hvac_mode} is not supported."
-    },
     "missing_temperature": {
       "message": "Temperature is required for this action."
     },

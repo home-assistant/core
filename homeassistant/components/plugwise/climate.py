@@ -15,7 +15,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MASTER_THERMOSTATS
@@ -216,17 +215,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @plugwise_command
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
-        if hvac_mode not in self.hvac_modes:
-            hvac_modes = ", ".join(self.hvac_modes)
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="unsupported_hvac_mode_requested",
-                translation_placeholders={
-                    "hvac_mode": hvac_mode,
-                    "hvac_modes": hvac_modes,
-                },
-            )
-
         if hvac_mode == self.hvac_mode:
             return
 
