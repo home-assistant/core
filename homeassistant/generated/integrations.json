@@ -2220,9 +2220,8 @@
     },
     "garni": {
       "name": "GARNI technology",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_push"
+      "integration_type": "virtual",
+      "supported_by": "ccl"
     },
     "gaviota": {
       "name": "Gaviota",
