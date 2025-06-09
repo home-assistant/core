@@ -3,7 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tilt_pi.coordinator import TiltPiDataUpdateCoordinator
 from homeassistant.components.tilt_pi.model import TiltHydrometerData
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import TEST_HOST, TEST_PORT
+from .conftest import TEST_URL
 
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -52,7 +52,7 @@ async def test_all_sensors(
         $ pytest tests/components/tilt_pi/test_sensor.py -v --snapshot-update
     """
     aioclient_mock.get(
-        f"http://{TEST_HOST}:{TEST_PORT}/macid/all",
+        f"{TEST_URL}/macid/all",
         json=[
             {
                 "mac": "00:1A:2B:3C:4D:5E",
