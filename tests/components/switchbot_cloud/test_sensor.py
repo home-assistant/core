@@ -12,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
 
-from tests.common import load_json_object_fixture, snapshot_platform
+from tests.common import async_load_json_object_fixture, snapshot_platform
 
 
 async def test_meter(
@@ -33,7 +33,9 @@ async def test_meter(
             hubDeviceId="test-hub-id",
         ),
     ]
-    mock_get_status.return_value = load_json_object_fixture("meter_status.json", DOMAIN)
+    mock_get_status.return_value = await async_load_json_object_fixture(
+        hass, "meter_status.json", DOMAIN
+    )
 
     with patch("homeassistant.components.switchbot_cloud.PLATFORMS", [Platform.SENSOR]):
         entry = await configure_integration(hass)
