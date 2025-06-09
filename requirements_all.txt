@@ -462,7 +462,7 @@ airtouch5py==0.3.0
 alpha-vantage==2.3.1
 
 # homeassistant.components.altruist
-altruistclient==0.1.0
+altruistclient==0.1.1
 
 # homeassistant.components.amberelectric
 amberelectric==2.0.12

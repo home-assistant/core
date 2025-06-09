@@ -52,7 +52,10 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 errors["base"] = "invalid_ip"
 
-        data_schema = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
+        data_schema = self.add_suggested_values_to_schema(
+            vol.Schema({vol.Required(CONF_IP_ADDRESS): str}),
+            {CONF_IP_ADDRESS: ip_address},
+        )
 
         return self.async_show_form(
             step_id="user",

@@ -58,8 +58,9 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.PRESSURE,
         key="BME280_pressure",
         translation_key="bme_pressure",
-        native_unit_of_measurement=UnitOfPressure.PA,
+        native_unit_of_measurement=UnitOfPressure.MMHG,
         suggested_display_precision=0,
+        native_value_fn=lambda string_value: float(string_value) * 0.0075,
     ),
     "BME280_temperature": AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -72,8 +73,9 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.PRESSURE,
         key="BMP_pressure",
         translation_key="bmp_pressure",
-        native_unit_of_measurement=UnitOfPressure.PA,
+        native_unit_of_measurement=UnitOfPressure.MMHG,
         suggested_display_precision=0,
+        native_value_fn=lambda string_value: float(string_value) * 0.0075,
     ),
     "BMP_temperature": AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -93,8 +95,9 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.PRESSURE,
         key="BMP280_pressure",
         translation_key="bmp280_pressure",
-        native_unit_of_measurement=UnitOfPressure.PA,
+        native_unit_of_measurement=UnitOfPressure.MMHG,
         suggested_display_precision=0,
+        native_value_fn=lambda string_value: float(string_value) * 0.0075,
     ),
     "HTU21D_humidity": AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,

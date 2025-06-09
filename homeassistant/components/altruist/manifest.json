@@ -7,6 +7,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["altruistclient==0.1.0"],
+  "requirements": ["altruistclient==0.1.1"],
   "zeroconf": ["_altruist._tcp.local."]
 }

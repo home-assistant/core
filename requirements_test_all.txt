@@ -441,7 +441,7 @@ airtouch4pyapi==1.0.5
 airtouch5py==0.3.0
 
 # homeassistant.components.altruist
-altruistclient==0.1.0
+altruistclient==0.1.1
 
 # homeassistant.components.amberelectric
 amberelectric==2.0.12
