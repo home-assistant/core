@@ -11,4 +11,4 @@ PLATFORMS: Final = [Platform.SENSOR]
 DOMAIN: Final[str] = "purpleair"
 
 CONF_SENSOR_INDICES: Final[str] = "sensor_indices"
-CONF_UPDATE_INTERVAL: str = "2"
+CONF_UPDATE_INTERVAL: Final[str] = "update_interval"

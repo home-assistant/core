@@ -68,10 +68,7 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
             name=entry.title,
             update_interval=timedelta(
                 minutes=DEFAULT_UPDATE_INTERVAL
-                if (
-                    entry.options.get(CONF_UPDATE_INTERVAL) is None
-                    or entry.options.get(CONF_UPDATE_INTERVAL) == "conf_update_interval"
-                )
+                if entry.options.get(CONF_UPDATE_INTERVAL) is None
                 else float(str(entry.options.get(CONF_UPDATE_INTERVAL)))
             ),
         )
