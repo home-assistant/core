@@ -22,7 +22,7 @@ from .const import (
     TEST_SITE_NAME_WAVERTREE,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
@@ -31,7 +31,7 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
     hass.config.longitude = TEST_LONGITUDE_WAVERTREE
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     requests_mock.get(
         "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
@@ -72,7 +72,7 @@ async def test_form_already_configured(
     hass.config.longitude = TEST_LONGITUDE_WAVERTREE
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     requests_mock.get(
         "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
@@ -146,7 +146,7 @@ async def test_reauth_flow(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test handling authentication errors and reauth flow."""
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     requests_mock.get(

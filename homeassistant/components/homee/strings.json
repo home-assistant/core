@@ -2,7 +2,9 @@
   "config": {
     "flow_title": "homee {name} ({host})",
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_hub": "Address belongs to a different homee."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -21,6 +23,16 @@
           "host": "The IP address of your homee.",
           "username": "The username for your homee.",
           "password": "The password for your homee."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure homee {name}",
+        "description": "Reconfigure the IP address of your homee.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address of your homee."
         }
       }
     }

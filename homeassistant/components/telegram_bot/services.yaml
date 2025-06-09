@@ -2,6 +2,10 @@
 
 send_message:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message:
       required: true
       example: The garage door has been open for 10 minutes.
@@ -61,6 +65,10 @@ send_message:
 
 send_photo:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/image.png"
       selector:
@@ -137,6 +145,10 @@ send_photo:
 
 send_sticker:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/sticker.webp"
       selector:
@@ -205,6 +217,10 @@ send_sticker:
 
 send_animation:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/animation.gif"
       selector:
@@ -281,6 +297,10 @@ send_animation:
 
 send_video:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/video.mp4"
       selector:
@@ -357,6 +377,10 @@ send_video:
 
 send_voice:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/voice.opus"
       selector:
@@ -425,6 +449,10 @@ send_voice:
 
 send_document:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     url:
       example: "http://example.org/path/to/the/document.odf"
       selector:
@@ -501,6 +529,10 @@ send_document:
 
 send_location:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     latitude:
       required: true
       selector:
@@ -555,6 +587,10 @@ send_location:
 
 send_poll:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -603,6 +639,10 @@ send_poll:
 
 edit_message:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -641,6 +681,10 @@ edit_message:
 
 edit_caption:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -665,6 +709,10 @@ edit_caption:
 
 edit_replymarkup:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
@@ -685,6 +733,10 @@ edit_replymarkup:
 
 answer_callback_query:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message:
       required: true
       example: "OK, I'm listening"
@@ -708,6 +760,10 @@ answer_callback_query:
 
 delete_message:
   fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"

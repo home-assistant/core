@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 
@@ -44,10 +44,12 @@ def async_add_to_device(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
     try:
-        entity_id = er.async_validate_entity_id(registry, entry.options[CONF_ENTITY_ID])
+        entity_id = er.async_validate_entity_id(
+            entity_registry, entry.options[CONF_ENTITY_ID]
+        )
     except vol.Invalid:
         # The entity is identified by an unknown entity registry ID
         _LOGGER.error(
@@ -68,14 +70,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return
 
         if "entity_id" in data["changes"]:
-            # Entity_id changed, reload the config entry
-            await hass.config_entries.async_reload(entry.entry_id)
+            # Entity_id changed, update or reload the config entry
+            if valid_entity_id(entry.options[CONF_ENTITY_ID]):
+                # If the entity is pointed to by an entity ID, update the entry
+                hass.config_entries.async_update_entry(
+                    entry,
+                    options={**entry.options, CONF_ENTITY_ID: data["entity_id"]},
+                )
+            else:
+                await hass.config_entries.async_reload(entry.entry_id)
 
         if device_id and "device_id" in data["changes"]:
             # If the tracked switch is no longer in the device, remove our config entry
             # from the device
             if (
-                not (entity_entry := registry.async_get(data[CONF_ENTITY_ID]))
+                not (entity_entry := entity_registry.async_get(data[CONF_ENTITY_ID]))
                 or not device_registry.async_get(device_id)
                 or entity_entry.device_id == device_id
             ):
