@@ -51,5 +51,5 @@ async def test_connection_error(
 
     assert (
         hass.states.get("sensor.altruist_5366960e8b18_bme280_temperature").state
-        == STATE_UNAVAILABLE
+        is STATE_UNAVAILABLE
     )

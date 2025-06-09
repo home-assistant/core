@@ -33,6 +33,7 @@ def mock_config_entry():
         domain=DOMAIN,
         data={CONF_IP_ADDRESS: "192.168.1.100", CONF_DEVICE_ID: "5366960e8b18"},
         unique_id="5366960e8b18",
+        title="Altruist 5366960e8b18",
     )
 
 

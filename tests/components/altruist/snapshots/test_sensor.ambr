@@ -148,7 +148,7 @@
     'supported_features': 0,
     'translation_key': 'bme_pressure',
     'unique_id': 'altruist_5366960e8b18-BME280_pressure',
-    'unit_of_measurement': <UnitOfPressure.PA: 'Pa'>,
+    'unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
   })
 # ---
 # name: test_all_entities[sensor.altruist_5366960e8b18_bme280_pressure-state]
@@ -157,14 +157,14 @@
       'device_class': 'pressure',
       'friendly_name': 'Altruist 5366960e8b18 BME280 pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.PA: 'Pa'>,
+      'unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.altruist_5366960e8b18_bme280_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '99978.16',
+    'state': '749.8362',
   })
 # ---
 # name: test_all_entities[sensor.altruist_5366960e8b18_bme280_temperature-entry]
