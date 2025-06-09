@@ -1,0 +1,82 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up **Uptime Kuma** monitoring service",
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "url": "Address of your Uptime Kuma instance. Example: `https://uptime.example.com`",
+          "verify_ssl": "Enable SSL certificate verification for secure connections. Disable only if connecting to an Uptime Kuma instance using a self-signed certificate or via IP address",
+          "api_key": "Enter an API key. To create a new API key navigate to **Settings → API Keys** and select **Add API Key**"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cert_days_remaining": {
+        "name": "Certificate expiry"
+      },
+      "response_time": {
+        "name": "Response time"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "up": "Up",
+          "down": "Down",
+          "pending": "Pending",
+          "maintenance": "Maintenance"
+        }
+      },
+      "type": {
+        "name": "Monitor type",
+        "state": {
+          "http": "HTTP(s)",
+          "port": "TCP port",
+          "ping": "Ping",
+          "keyword": "HTTP(s) - Keyword",
+          "dns": "DNS",
+          "push": "Push",
+          "steam": "Steam Game Server",
+          "mqtt": "MQTT",
+          "sqlserver": "Microsoft SQL Server",
+          "json-query": "HTTP(s) - JSON query",
+          "group": "Group",
+          "docker": "Docker",
+          "grpc-keyword": "gPRC(s) - Keyword",
+          "real-browser": "HTTP(s) - Browser engine",
+          "gamedig": "GameDig",
+          "kafka-producer": "Kafka Producer",
+          "postgres": "PostgreSQL",
+          "mysql": "MySQL/MariaDB",
+          "mongodb": "MongoDB",
+          "radius": "Radius",
+          "redis": "Redis",
+          "tailscale-ping": "Tailscale Ping"
+        }
+      },
+      "url": {
+        "name": "Monitored URL"
+      },
+      "hostname": {
+        "name": "Monitored hostname"
+      },
+      "port": {
+        "name": "Monitored port"
+      }
+    }
+  }
+}
