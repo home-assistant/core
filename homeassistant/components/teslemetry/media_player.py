@@ -63,7 +63,6 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
     """Base vehicle media player class."""
 
     api: Vehicle
-
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_volume_step = VOLUME_STEP
 

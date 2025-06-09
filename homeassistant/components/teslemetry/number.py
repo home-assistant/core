@@ -172,6 +172,7 @@ async def async_setup_entry(
 class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
     """Vehicle number entity base class."""
 
+    api: Vehicle
     entity_description: TeslemetryNumberVehicleEntityDescription
 
     async def async_set_native_value(self, value: float) -> None:

@@ -208,6 +208,7 @@ async def async_setup_entry(
 class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
     """Parent vehicle select entity class."""
 
+    api: Vehicle
     entity_description: TeslemetrySelectEntityDescription
     _climate: bool = False
 

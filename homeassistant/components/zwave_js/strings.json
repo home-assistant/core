@@ -31,14 +31,16 @@
     },
     "flow_title": "{name}",
     "progress": {
-      "install_addon": "Please wait while the Z-Wave add-on installation finishes. This can take several minutes.",
-      "start_addon": "Please wait while the Z-Wave add-on start completes. This may take some seconds.",
+      "install_addon": "Installation can take several minutes.",
+      "start_addon": "Starting add-on.",
       "backup_nvm": "Please wait while the network backup completes.",
       "restore_nvm": "Please wait while the network restore completes."
     },
     "step": {
-      "configure_addon": {
+      "configure_addon_user": {
         "data": {
+          "lr_s2_access_control_key": "Long Range S2 Access Control Key",
+          "lr_s2_authenticated_key": "Long Range S2 Authenticated Key",
           "s0_legacy_key": "S0 Key (Legacy)",
           "s2_access_control_key": "S2 Access Control Key",
           "s2_authenticated_key": "S2 Authenticated Key",
@@ -52,20 +54,22 @@
         "data": {
           "emulate_hardware": "Emulate Hardware",
           "log_level": "Log level",
-          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon::data::s0_legacy_key%]",
-          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_access_control_key%]",
-          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_authenticated_key%]",
-          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon::data::s2_unauthenticated_key%]",
+          "lr_s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_access_control_key%]",
+          "lr_s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_authenticated_key%]",
+          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s0_legacy_key%]",
+          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_access_control_key%]",
+          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_authenticated_key%]",
+          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_unauthenticated_key%]",
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
-        "description": "[%key:component::zwave_js::config::step::configure_addon::description%]",
-        "title": "[%key:component::zwave_js::config::step::configure_addon::title%]"
+        "description": "[%key:component::zwave_js::config::step::configure_addon_user::description%]",
+        "title": "[%key:component::zwave_js::config::step::configure_addon_user::title%]"
       },
       "hassio_confirm": {
         "description": "Do you want to set up the Z-Wave integration with the Z-Wave add-on?"
       },
       "install_addon": {
-        "title": "The Z-Wave add-on installation has started"
+        "title": "Installing add-on"
       },
       "manual": {
         "data": {
@@ -92,10 +96,7 @@
         "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]"
       },
       "start_addon": {
-        "title": "The Z-Wave add-on is starting."
-      },
-      "usb_confirm": {
-        "description": "Do you want to set up {name} with the Z-Wave add-on?"
+        "title": "Configuring add-on"
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
@@ -119,7 +120,7 @@
       },
       "restore_failed": {
         "title": "Restoring unsuccessful",
-        "description": "Your Z-Wave network could not be restored to the new controller. This means that your Z-Wave devices are not connected to Home Assistant.\n\nThe backup is saved to ”{file_path}”",
+        "description": "Your Z-Wave network could not be restored to the new controller. This means that your Z-Wave devices are not connected to Home Assistant.\n\nThe backup is saved to ”{file_path}”\n\n'<'a href=\"{file_url}\" download=\"{file_name}\"'>'Download backup file'<'/a'>'",
         "submit": "Try again"
       },
       "choose_serial_port": {
@@ -127,6 +128,14 @@
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "title": "Select your Z-Wave device"
+      },
+      "installation_type": {
+        "title": "Set up Z-Wave",
+        "description": "In a few steps, we’re going to set up your Home Assistant Connect ZWA-2. Home Assistant can automatically install and configure the recommended Z-Wave setup, or you can customize it.",
+        "menu_options": {
+          "intent_recommended": "Recommended installation",
+          "intent_custom": "Custom installation"
+        }
       }
     }
   },
@@ -269,6 +278,17 @@
     "invalid_server_version": {
       "description": "The version of Z-Wave Server you are currently running is too old for this version of Home Assistant. Please update the Z-Wave Server to the latest version to fix this issue.",
       "title": "Newer version of Z-Wave Server needed"
+    },
+    "migrate_unique_id": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "A Z-Wave controller of model {controller_model} with a different ID ({new_unique_id}) than the previously connected controller ({old_unique_id}) was connected to the {config_entry_title} configuration entry.\n\nReasons for a different controller ID could be:\n\n1. The controller was factory reset, with a 3rd party application.\n2. A controller Non Volatile Memory (NVM) backup was restored to the controller, with a 3rd party application.\n3. A different controller was connected to this configuration entry.\n\nIf a different controller was connected, you should instead set up a new configuration entry for the new controller.\n\nIf you are sure that the current controller is the correct controller you can confirm this by pressing Submit, and the configuration entry will remember the new controller ID.",
+            "title": "An unknown controller was detected"
+          }
+        }
+      },
+      "title": "An unknown controller was detected"
     }
   },
   "services": {

@@ -42,14 +42,17 @@ import respx
 from syrupy.assertion import SnapshotAssertion
 from syrupy.session import SnapshotSession
 
+# Setup patching of JSON functions before any other Home Assistant imports
+from . import patch_json  # isort:skip
+
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
 
 # Setup patching of recorder functions before any other Home Assistant imports
-from . import patch_recorder
+from . import patch_recorder  # isort:skip
 
 # Setup patching of dt_util time functions before any other Home Assistant imports
-from . import patch_time  # noqa: F401, isort:skip
+from . import patch_time  # isort:skip
 
 from homeassistant import components, core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
@@ -187,14 +190,14 @@ def pytest_runtest_setup() -> None:
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
-    freezegun.api.FakeDatetime = HAFakeDatetime  # type: ignore[attr-defined]
+    freezegun.api.datetime_to_fakedatetime = patch_time.ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
+    freezegun.api.FakeDatetime = patch_time.HAFakeDatetime  # type: ignore[attr-defined]
 
     def adapt_datetime(val):
         return val.isoformat(" ")
 
     # Setup HAFakeDatetime converter for sqlite3
-    sqlite3.register_adapter(HAFakeDatetime, adapt_datetime)
+    sqlite3.register_adapter(patch_time.HAFakeDatetime, adapt_datetime)
 
     # Setup HAFakeDatetime converter for pymysql
     try:
@@ -203,46 +206,9 @@ def pytest_runtest_setup() -> None:
     except ImportError:
         pass
     else:
-        MySQLdb_converters.conversions[HAFakeDatetime] = (
+        MySQLdb_converters.conversions[patch_time.HAFakeDatetime] = (
             MySQLdb_converters.DateTime2literal
         )
-
-
-def ha_datetime_to_fakedatetime(datetime) -> freezegun.api.FakeDatetime:  # type: ignore[name-defined]
-    """Convert datetime to FakeDatetime.
-
-    Modified to include https://github.com/spulec/freezegun/pull/424.
-    """
-    return freezegun.api.FakeDatetime(  # type: ignore[attr-defined]
-        datetime.year,
-        datetime.month,
-        datetime.day,
-        datetime.hour,
-        datetime.minute,
-        datetime.second,
-        datetime.microsecond,
-        datetime.tzinfo,
-        fold=datetime.fold,
-    )
-
-
-class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
-    """Modified to include https://github.com/spulec/freezegun/pull/424."""
-
-    @classmethod
-    def now(cls, tz=None):
-        """Return frozen now."""
-        now = cls._time_to_freeze() or freezegun.api.real_datetime.now()
-        if tz:
-            result = tz.fromutc(now.replace(tzinfo=tz))
-        else:
-            result = now
-
-        # Add the _tz_offset only if it's non-zero to preserve fold
-        if cls._tz_offset():
-            result += cls._tz_offset()
-
-        return ha_datetime_to_fakedatetime(result)
 
 
 def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
@@ -364,18 +330,18 @@ def long_repr_strings() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def enable_event_loop_debug(event_loop: asyncio.AbstractEventLoop) -> None:
+def enable_event_loop_debug() -> None:
     """Enable event loop debug mode."""
-    event_loop.set_debug(True)
+    asyncio.get_event_loop().set_debug(True)
 
 
 @pytest.fixture(autouse=True)
 def verify_cleanup(
-    event_loop: asyncio.AbstractEventLoop,
     expected_lingering_tasks: bool,
     expected_lingering_timers: bool,
 ) -> Generator[None]:
     """Verify that the test has cleaned up resources correctly."""
+    event_loop = asyncio.get_event_loop()
     threads_before = frozenset(threading.enumerate())
     tasks_before = asyncio.all_tasks(event_loop)
     yield
@@ -449,6 +415,12 @@ def reset_globals() -> Generator[None]:
     frame.async_setup(None)
     frame._REPORTED_INTEGRATIONS.clear()
 
+    # Reset patch_json
+    if patch_json.mock_objects:
+        obj = patch_json.mock_objects.pop()
+        patch_json.mock_objects.clear()
+        pytest.fail(f"Test attempted to serialize mock object {obj}")
+
 
 @pytest.fixture(autouse=True, scope="session")
 def bcrypt_cost() -> Generator[None]:
@@ -520,9 +492,7 @@ def aiohttp_client_cls() -> type[CoalescingClient]:
 
 
 @pytest.fixture
-def aiohttp_client(
-    event_loop: asyncio.AbstractEventLoop,
-) -> Generator[ClientSessionGenerator]:
+def aiohttp_client() -> Generator[ClientSessionGenerator]:
     """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
 
     Remove this when upgrading to 4.x as aiohttp_client_cls
@@ -532,7 +502,7 @@ def aiohttp_client(
     aiohttp_client(server, **kwargs)
     aiohttp_client(raw_server, **kwargs)
     """
-    loop = event_loop
+    loop = asyncio.get_event_loop()
     clients = []
 
     async def go(

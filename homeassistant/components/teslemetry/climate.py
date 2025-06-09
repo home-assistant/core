@@ -91,7 +91,6 @@ class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
     """Vehicle Climate Control."""
 
     api: Vehicle
-
     _attr_precision = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
@@ -372,7 +371,6 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntit
     """Vehicle Cabin Overheat Protection."""
 
     api: Vehicle
-
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 5
     _attr_min_temp = 30
