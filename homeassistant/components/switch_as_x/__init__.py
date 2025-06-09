@@ -13,7 +13,7 @@ from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 
-from .const import CONF_INVERT, CONF_TARGET_DOMAIN
+from .const import CONF_INVERT, CONF_TARGET_DOMAIN, DOMAIN
 from .light import LightSwitch
 
 __all__ = ["LightSwitch"]
@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await hass.config_entries.async_reload(entry.entry_id)
 
         if device_id and "device_id" in data["changes"]:
-            # If the tracked switch is no longer in the device, remove our config entry
+            # Handle the wrapped switch being moved to a different device or removed
             # from the device
             if (
                 not (entity_entry := entity_registry.async_get(data[CONF_ENTITY_ID]))
@@ -91,9 +91,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 # No need to do any cleanup
                 return
 
+            # The wrapped switch has been moved to a different device, update the
+            # switch_as_x entity and the device entry to include our config entry
+            switch_as_x_entity_id = entity_registry.async_get_entity_id(
+                entry.options[CONF_TARGET_DOMAIN], DOMAIN, entry.entry_id
+            )
+            if switch_as_x_entity_id:
+                # Update the switch_as_x entity to point to the new device (or no device)
+                entity_registry.async_update_entity(
+                    switch_as_x_entity_id, device_id=entity_entry.device_id
+                )
+
+            if entity_entry.device_id is not None:
+                device_registry.async_update_device(
+                    entity_entry.device_id, add_config_entry_id=entry.entry_id
+                )
+
             device_registry.async_update_device(
                 device_id, remove_config_entry_id=entry.entry_id
             )
+
+            # Reload the config entry so the switch_as_x entity is recreated with
+            # correct device info
+            await hass.config_entries.async_reload(entry.entry_id)
 
     entry.async_on_unload(
         async_track_entity_registry_updated_event(
