@@ -331,6 +331,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         ]
 
         return [leader_id, *followers]
+
     @property
     def media_image_url(self) -> str | None:
         """Image url of playing media."""
