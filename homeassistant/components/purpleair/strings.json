@@ -95,7 +95,8 @@
       "settings": {
         "title": "[%key:component::purpleair::options::step::init::menu_options::settings%]",
         "data": {
-          "show_on_map": "Show configured sensor locations on the map"
+          "show_on_map": "Show configured sensor locations on the map",
+          "update_interval": "Interval to poll PurpleAir API"
         }
       }
     },

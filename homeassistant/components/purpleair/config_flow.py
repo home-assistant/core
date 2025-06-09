@@ -40,7 +40,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
+from .const import CONF_SENSOR_INDICES, CONF_UPDATE_INTERVAL, DOMAIN, LOGGER
 
 CONF_DISTANCE = "distance"
 CONF_NEARBY_SENSOR_OPTIONS = "nearby_sensor_options"
@@ -331,7 +331,15 @@ class PurpleAirOptionsFlowHandler(OptionsFlow):
                             CONF_SHOW_ON_MAP
                         )
                     },
-                ): bool
+                ): bool,
+                vol.Optional(
+                    CONF_UPDATE_INTERVAL,
+                    description={
+                        "suggested_value": self.config_entry.options.get(
+                            CONF_UPDATE_INTERVAL
+                        ),
+                    },
+                ): int,
             }
         )
 
