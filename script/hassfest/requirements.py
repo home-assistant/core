@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import deque
 from functools import cache
+from importlib.metadata import metadata
 import json
 import os
 import re
@@ -25,9 +26,13 @@ from .model import Config, Integration
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
     "attrs": "CalVer",
+    "awesomeversion": "CalVer",
     "grpcio": "SemVer",
     "httpx": "SemVer",
     "mashumaro": "SemVer",
+    "numpy": "SemVer",
+    "pandas": "SemVer",
+    "pillow": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
     "pytz": "CalVer",
@@ -39,13 +44,14 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
-    "ollama": {
-        # https://github.com/ollama/ollama-python/pull/445 (not yet released)
-        "ollama": {"httpx"}
+    "geocaching": {
+        # scipy version closely linked to numpy
+        # geocachingapi > reverse_geocode > scipy > numpy
+        "scipy": {"numpy"}
     },
-    "overkiz": {
-        # https://github.com/iMicknl/python-overkiz-api/issues/1644 (not yet released)
-        "pyoverkiz": {"attrs"},
+    "mealie": {
+        # https://github.com/joostlek/python-mealie/pull/490
+        "aiomealie": {"awesomeversion"}
     },
 }
 
@@ -90,7 +96,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "bsblan": {"python-bsblan": {"async-timeout"}},
     "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
@@ -319,6 +324,25 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
 }
 
+PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
+    # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - dependencyX should be the name of the referenced dependency
+    "bluetooth": {
+        # https://github.com/hbldh/bleak/pull/1718 (not yet released)
+        "homeassistant": {"bleak"}
+    },
+    "eq3btsmart": {
+        # https://github.com/EuleMitKeule/eq3btsmart/releases/tag/2.0.0
+        "homeassistant": {"eq3btsmart"}
+    },
+    "python_script": {
+        # Security audits are needed for each Python version
+        "homeassistant": {"restrictedpython"}
+    },
+}
+
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle requirements for integrations."""
@@ -489,6 +513,11 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     )
     needs_package_version_check_exception = False
 
+    python_version_check_exceptions = PYTHON_VERSION_CHECK_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_python_version_check_exception = False
+
     while to_check:
         package = to_check.popleft()
 
@@ -507,22 +536,41 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
                 )
             continue
 
+        # Check for restrictive version limits on Python
+        if (
+            (requires_python := metadata(package)["Requires-Python"])
+            and not all(
+                _is_dependency_version_range_valid(version_part, "SemVer")
+                for version_part in requires_python.split(",")
+            )
+            # "bleak" is a transient dependency of 53 integrations, and we don't
+            # want to add the whole list to PYTHON_VERSION_CHECK_EXCEPTIONS
+            # This extra check can be removed when bleak is updated
+            # https://github.com/hbldh/bleak/pull/1718
+            and (package in packages or package != "bleak")
+        ):
+            needs_python_version_check_exception = True
+            integration.add_warning_or_error(
+                package in python_version_check_exceptions.get("homeassistant", set()),
+                "requirements",
+                "Version restrictions for Python are too strict "
+                f"({requires_python}) in {package}",
+            )
+
+        # Use inner loop to check dependencies
+        # so we have access to the dependency parent (=current package)
         dependencies: dict[str, str] = item["dependencies"]
-        package_exceptions = forbidden_package_exceptions.get(package, set())
         for pkg, version in dependencies.items():
+            # Check for forbidden packages
             if pkg.startswith("types-") or pkg in FORBIDDEN_PACKAGES:
                 reason = FORBIDDEN_PACKAGES.get(pkg, "not be a runtime dependency")
                 needs_forbidden_package_exceptions = True
-                if pkg in package_exceptions:
-                    integration.add_warning(
-                        "requirements",
-                        f"Package {pkg} should {reason} in {package}",
-                    )
-                else:
-                    integration.add_error(
-                        "requirements",
-                        f"Package {pkg} should {reason} in {package}",
-                    )
+                integration.add_warning_or_error(
+                    pkg in forbidden_package_exceptions.get(package, set()),
+                    "requirements",
+                    f"Package {pkg} should {reason} in {package}",
+                )
+            # Check for restrictive version limits on common packages
             if not check_dependency_version_range(
                 integration,
                 package,
@@ -545,6 +593,12 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             "requirements",
             f"Integration {integration.domain} version restrictions checks have been "
             "resolved, please remove from `PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS`",
+        )
+    if python_version_check_exceptions and not needs_python_version_check_exception:
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} version restrictions for Python have "
+            "been resolved, please remove from `PYTHON_VERSION_CHECK_EXCEPTIONS`",
         )
 
     return all_requirements
@@ -571,21 +625,16 @@ def check_dependency_version_range(
     ):
         return True
 
-    if pkg in package_exceptions:
-        integration.add_warning(
-            "requirements",
-            f"Version restrictions for {pkg} are too strict ({version}) in {source}",
-        )
-    else:
-        integration.add_error(
-            "requirements",
-            f"Version restrictions for {pkg} are too strict ({version}) in {source}",
-        )
+    integration.add_warning_or_error(
+        pkg in package_exceptions,
+        "requirements",
+        f"Version restrictions for {pkg} are too strict ({version}) in {source}",
+    )
     return False
 
 
 def _is_dependency_version_range_valid(version_part: str, convention: str) -> bool:
-    version_match = PIP_VERSION_RANGE_SEPARATOR.match(version_part)
+    version_match = PIP_VERSION_RANGE_SEPARATOR.match(version_part.strip())
     operator = version_match.group(1)
     version = version_match.group(2)
 
