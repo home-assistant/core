@@ -1,4 +1,4 @@
-"""Config flow for Amazon Alexa integration."""
+"""Config flow for Amazon Alexa Devices integration."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from .const import CONF_LOGIN_DATA, DOMAIN
 
 
 class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Amazon Alexa."""
+    """Handle a config flow for Amazon Alexa Devices."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

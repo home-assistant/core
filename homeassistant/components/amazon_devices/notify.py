@@ -20,7 +20,7 @@ PARALLEL_UPDATES = 1
 
 @dataclass(frozen=True, kw_only=True)
 class AmazonNotifyEntityDescription(NotifyEntityDescription):
-    """Amazon Alexa notify entity description."""
+    """Amazon Alexa Devices notify entity description."""
 
     method: Callable[[AmazonEchoApi, AmazonDevice, str], Awaitable[None]]
     subkey: str
@@ -49,7 +49,7 @@ async def async_setup_entry(
     entry: AmazonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Amazon Alexa notification entity based on a config entry."""
+    """Set up Amazon Alexa Devices notification entity based on a config entry."""
 
     coordinator = entry.runtime_data
 

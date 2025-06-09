@@ -25,7 +25,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class AmazonBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Amazon Alexa binary sensor entity description."""
+    """Amazon Alexa Devices binary sensor entity description."""
 
     is_on_fn: Callable[[AmazonDevice], bool]
 
@@ -49,7 +49,7 @@ async def async_setup_entry(
     entry: AmazonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Amazon Alexa binary sensors based on a config entry."""
+    """Set up Amazon Alexa Devices binary sensors based on a config entry."""
 
     coordinator = entry.runtime_data
 
