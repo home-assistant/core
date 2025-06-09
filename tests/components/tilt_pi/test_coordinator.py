@@ -1,6 +1,6 @@
 """Tests for the Tilt Pi coordinator."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from tiltpi import TiltPiConnectionError, TiltPiConnectionTimeoutError
@@ -34,22 +34,24 @@ async def test_coordinator_async_update_data(
         ),
     ]
 
-    coordinator = TiltPiDataUpdateCoordinator(
-        hass, mock_config_entry, mock_tiltpi_client
-    )
-    data = await coordinator._async_update_data()
+    with patch(
+        "homeassistant.components.tilt_pi.coordinator.TiltPiClient",
+        return_value=mock_tiltpi_client,
+    ):
+        coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
+        data = await coordinator._async_update_data()
 
-    assert len(data) == 2
-    black_tilt = data.get("00:1A:2B:3C:4D:5E")
-    assert black_tilt.color == TiltColor.BLACK
-    assert black_tilt.mac_id == "00:1A:2B:3C:4D:5E"
-    assert black_tilt.temperature == 55.0
-    assert black_tilt.gravity == 1.010
-    yellow_tilt = data.get("00:1s:99:f1:d2:4f")
-    assert yellow_tilt.color == TiltColor.YELLOW
-    assert yellow_tilt.mac_id == "00:1s:99:f1:d2:4f"
-    assert yellow_tilt.temperature == 68.0
-    assert yellow_tilt.gravity == 1.015
+        assert len(data) == 2
+        black_tilt = data.get("00:1A:2B:3C:4D:5E")
+        assert black_tilt.color == TiltColor.BLACK
+        assert black_tilt.mac_id == "00:1A:2B:3C:4D:5E"
+        assert black_tilt.temperature == 55.0
+        assert black_tilt.gravity == 1.010
+        yellow_tilt = data.get("00:1s:99:f1:d2:4f")
+        assert yellow_tilt.color == TiltColor.YELLOW
+        assert yellow_tilt.mac_id == "00:1s:99:f1:d2:4f"
+        assert yellow_tilt.temperature == 68.0
+        assert yellow_tilt.gravity == 1.015
 
 
 async def test_coordinator_async_update_data_empty_response(
@@ -60,12 +62,14 @@ async def test_coordinator_async_update_data_empty_response(
     """Test coordinator update with empty data."""
     mock_tiltpi_client.get_hydrometers.return_value = []
 
-    coordinator = TiltPiDataUpdateCoordinator(
-        hass, mock_config_entry, mock_tiltpi_client
-    )
-    data = await coordinator._async_update_data()
+    with patch(
+        "homeassistant.components.tilt_pi.coordinator.TiltPiClient",
+        return_value=mock_tiltpi_client,
+    ):
+        coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
+        data = await coordinator._async_update_data()
 
-    assert len(data) == 0
+        assert len(data) == 0
 
 
 async def test_coordinator_async_update_data_connection_error(
@@ -76,11 +80,13 @@ async def test_coordinator_async_update_data_connection_error(
     """Test coordinator handling connection error."""
     mock_tiltpi_client.get_hydrometers.side_effect = TiltPiConnectionError("Test error")
 
-    coordinator = TiltPiDataUpdateCoordinator(
-        hass, mock_config_entry, mock_tiltpi_client
-    )
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
+    with patch(
+        "homeassistant.components.tilt_pi.coordinator.TiltPiClient",
+        return_value=mock_tiltpi_client,
+    ):
+        coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
+        with pytest.raises(UpdateFailed):
+            await coordinator._async_update_data()
 
 
 async def test_coordinator_async_update_data_timeout_error(
@@ -93,8 +99,10 @@ async def test_coordinator_async_update_data_timeout_error(
         "Timeout"
     )
 
-    coordinator = TiltPiDataUpdateCoordinator(
-        hass, mock_config_entry, mock_tiltpi_client
-    )
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
+    with patch(
+        "homeassistant.components.tilt_pi.coordinator.TiltPiClient",
+        return_value=mock_tiltpi_client,
+    ):
+        coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
+        with pytest.raises(UpdateFailed):
+            await coordinator._async_update_data()

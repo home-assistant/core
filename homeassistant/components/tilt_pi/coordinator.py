@@ -5,7 +5,9 @@ import logging
 from tiltpi import TiltPiClient, TiltPiError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import SCAN_INTERVAL
@@ -25,7 +27,6 @@ class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, TiltHydrometer
         self,
         hass: HomeAssistant,
         config_entry: TiltPiConfigEntry,
-        client: TiltPiClient,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -35,7 +36,12 @@ class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, TiltHydrometer
             update_interval=SCAN_INTERVAL,
         )
         self.config_entry = config_entry
-        self._api = client
+        session = async_get_clientsession(hass)
+        self._api = TiltPiClient(
+            host=config_entry.data[CONF_HOST],
+            port=config_entry.data[CONF_PORT],
+            session=session,
+        )
         self.identifier = config_entry.entry_id
 
     async def _async_update_data(self) -> dict[str, TiltHydrometerData]:
