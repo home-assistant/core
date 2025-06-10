@@ -8,7 +8,6 @@ from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.NOTIFY,
-    Platform.SENSOR,
     Platform.SWITCH,
 ]
 
