@@ -601,6 +601,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfSpeed.KNOTS,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILLIMETERS_PER_SECOND,
+        UnitOfSpeed.METERS_PER_MINUTE,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
     ),
