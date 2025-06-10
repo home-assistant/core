@@ -26,6 +26,7 @@ from .const import (
     DEFAULT_ENDPOINT_URL,
     DESCRIPTION_AWS_S3_DOCS_URL,
     DESCRIPTION_BOTO3_DOCS_URL,
+    DESCRIPTION_BOTO3_CREDENTIALS_URL,
     DOMAIN,
 )
 
@@ -66,12 +67,15 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_ENDPOINT_URL] = "invalid_endpoint_url"
             else:
                 try:
+                    access_key_id = user_input[CONF_ACCESS_KEY_ID] if user_input[CONF_ACCESS_KEY_ID] != 'env' else None
+                    secret_access_key = user_input[CONF_SECRET_ACCESS_KEY] if user_input[CONF_ACCESS_KEY_ID] != 'env' else None
+
                     session = AioSession()
                     async with session.create_client(
                         "s3",
                         endpoint_url=user_input.get(CONF_ENDPOINT_URL),
-                        aws_secret_access_key=user_input[CONF_SECRET_ACCESS_KEY],
-                        aws_access_key_id=user_input[CONF_ACCESS_KEY_ID],
+                        aws_secret_access_key=secret_access_key,
+                        aws_access_key_id=access_key_id,
                     ) as client:
                         await client.head_bucket(Bucket=user_input[CONF_BUCKET])
                 except ClientError:
@@ -97,5 +101,6 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "aws_s3_docs_url": DESCRIPTION_AWS_S3_DOCS_URL,
                 "boto3_docs_url": DESCRIPTION_BOTO3_DOCS_URL,
+                "boto3_credentials_url": DESCRIPTION_BOTO3_CREDENTIALS_URL,
             },
         )

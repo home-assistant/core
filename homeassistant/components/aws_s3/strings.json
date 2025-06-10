@@ -9,7 +9,7 @@
           "endpoint_url": "Endpoint URL"
         },
         "data_description": {
-          "access_key_id": "Access key ID to connect to AWS S3 API",
+          "access_key_id": "Access key ID to connect to AWS S3 API. Use `env` if you are providing credentials [via another method]({boto3_credentials_url}).",
           "secret_access_key": "Secret access key to connect to AWS S3 API",
           "bucket": "Bucket must already exist and be writable by the provided credentials.",
           "endpoint_url": "Endpoint URL provided to [Boto3 Session]({boto3_docs_url}). Region-specific [AWS S3 endpoints]({aws_s3_docs_url}) are available in their docs."

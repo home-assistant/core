@@ -33,13 +33,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
 
     data = cast(dict, entry.data)
     try:
+        access_key_id = data[CONF_ACCESS_KEY_ID] if data[CONF_ACCESS_KEY_ID] != 'env' else None
+        secret_access_key = data[CONF_SECRET_ACCESS_KEY] if data[CONF_ACCESS_KEY_ID] != 'env' else None
+
         session = AioSession()
         # pylint: disable-next=unnecessary-dunder-call
         client = await session.create_client(
             "s3",
             endpoint_url=data.get(CONF_ENDPOINT_URL),
-            aws_secret_access_key=data[CONF_SECRET_ACCESS_KEY],
-            aws_access_key_id=data[CONF_ACCESS_KEY_ID],
+            aws_secret_access_key=secret_access_key,
+            aws_access_key_id=access_key_id,
         ).__aenter__()
         await client.head_bucket(Bucket=data[CONF_BUCKET])
     except ClientError as err:
