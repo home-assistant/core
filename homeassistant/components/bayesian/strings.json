@@ -24,7 +24,7 @@
     },
     "step": {
       "init": {
-        "title": "Sensor Options",
+        "title": "Sensor options",
         "description": "These options affect how much evidence is required for the Bayesian sensor to be considered 'on'.",
         "data": {
           "probability_threshold": "[%key:component::bayesian::config::step::user::data::probability_threshold%]",
@@ -43,15 +43,15 @@
     "error": {
       "extreme_prior_error": "A prior set to 0% means that it is impossible for the sensor to show 'on' and 100% means it will never show off, use a close number like 0.1% or 99.9% instead",
       "extreme_threshold_error": "A threshold set to 0% means that the sensor will always be 'on' and 100% mean it will always be off, use a close number like 0.1% or 99.9% instead",
-      "equal_probabilities": "If Probability Given True and Probability Given False are equal, this observation can have no effect, and is therefore redundant",
-      "extreme_prob_given_error": "If either Probability Given False or True is 0 or 100 this will create certainties that override all other observations, use numbers close to 0 or 100 instead"
+      "equal_probabilities": "If 'Probability given true' and 'Probability given false' are equal, this observation can have no effect, and is therefore redundant",
+      "extreme_prob_given_error": "If either 'Probability given false' or 'Probability given true' is 0 or 100 this will create certainties that override all other observations, use numbers close to 0 or 100 instead"
     },
     "step": {
       "user": {
-        "title": "Add a Bayesian Sensor",
-        "description": "Create a binary sensor which observes the state of multiple sensors to estimate the whether an event is occurring, or if something is true. See [the documentation](https://www.home-assistant.io/integrations/bayesian/) for more details.",
+        "title": "Add a Bayesian sensor",
+        "description": "Create a binary sensor which observes the state of multiple sensors to estimate whether an event is occurring, or if something is true. See [the documentation](https://www.home-assistant.io/integrations/Bayesian/) for more details.",
         "data": {
-          "probability_threshold": "Probability Threshold",
+          "probability_threshold": "Probability threshold",
           "prior": "Prior",
           "device_class": "Device Class",
           "name": "[%key:common::config_flow::data::name%]"
@@ -77,15 +77,14 @@
           }
         },
         "state": {
-          "title": "Add a Bayesian Sensor",
+          "title": "Add a Bayesian sensor",
           "description": "Add an observation which evalulates to `True` when the value of the sensor exactly matches 'To state'.",
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "entity_id": "Entity",
             "to_state": "To state",
             "prob_given_true": "Probability when Bayesian sensor `on`",
-            "prob_given_false": "Probability when Bayesian sensor `off`",
-            "add_another": "Add another observation?"
+            "prob_given_false": "Probability when Bayesian sensor `off`"
           },
           "data_description": {
             "name": "This name will be used for to identify this observation for editing in the future.",
@@ -104,8 +103,7 @@
             "above": "Above",
             "below": "Below",
             "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_true%]",
-            "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]",
-            "add_another": "[%key:component::bayesian::config_subentries::observation::step::state::data::add_another%]"
+            "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]"
           },
           "data_description": {
             "name": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::name%]",
@@ -123,8 +121,7 @@
             "name": "[%key:common::config_flow::data::name%]",
             "value_template": "Template",
             "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_true%]",
-            "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]",
-            "add_another": "[%key:component::bayesian::config_subentries::observation::step::state::data::add_another%]"
+            "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]"
           },
           "data_description": {
             "name": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::name%]",
