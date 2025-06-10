@@ -464,6 +464,6 @@ class InverterSensor(InverterEntity, SensorEntity):
         """Update the sensor timeline icon."""
         if self.data_key == "timeline_type_msg":
             raw_status = self.coordinator.data.get(self.data_key)
-            status = raw_status if isinstance(raw_status, str) else "unknown"
+            status = raw_status if isinstance(raw_status, str) else "warning_unknown"
             return TIMELINE_ICONS[status]
         return super().icon
