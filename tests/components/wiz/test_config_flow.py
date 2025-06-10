@@ -588,10 +588,10 @@ async def test_flow_replace_ignored_device(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "pick_device"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_device"
     # Proceed with selecting the device — previously ignored
     with (
         _patch_wizlight(),
@@ -604,13 +604,13 @@ async def test_flow_replace_ignored_device(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_DEVICE: FAKE_MAC}
         )
         await hass.async_block_till_done()
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "WiZ Dimmable White ABCABC"
-    assert result3["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "WiZ Dimmable White ABCABC"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
     }
     assert len(mock_setup.mock_calls) == 1
