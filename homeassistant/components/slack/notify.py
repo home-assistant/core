@@ -197,8 +197,8 @@ class SlackNotificationService(BaseNotificationService):
         if channel_id := self._channel_id_cache.get(channel_name):
             return channel_id
 
+        channels = []
         try:
-            channels = []
             for channel_type in ("public_channel", "private_channel"):
                 response = await self._client.conversations_list(types=channel_type)
                 if not response["ok"]:
