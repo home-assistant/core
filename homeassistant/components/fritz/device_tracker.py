@@ -101,9 +101,9 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
         return "mdi:lan-disconnect"
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str | int]:
         """Return the attributes."""
-        attrs: dict[str, str] = {}
+        attrs: dict[str, str | int] = {}
         device = self._avm_wrapper.devices[self._mac]
         self._last_activity = device.last_activity
         if self._last_activity is not None:
@@ -117,5 +117,5 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
         if device.ssid:
             attrs["ssid"] = device.ssid
         if device.speed:
-            attrs["speed"] = str(device.speed)
+            attrs["speed"] = device.speed
         return attrs
