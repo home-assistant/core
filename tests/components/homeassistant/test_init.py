@@ -675,13 +675,6 @@ async def test_deprecated_installation_issue_32bit_method(
 
 
 @pytest.mark.parametrize(
-    "installation_type",
-    [
-        "Home Assistant Container",
-        "Home Assistant OS",
-    ],
-)
-@pytest.mark.parametrize(
     "arch",
     [
         "i386",
@@ -691,14 +684,13 @@ async def test_deprecated_installation_issue_32bit_method(
 async def test_deprecated_installation_issue_32bit(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    installation_type: str,
     arch: str,
 ) -> None:
     """Test deprecated installation issue."""
     with patch(
         "homeassistant.components.homeassistant.async_get_system_info",
         return_value={
-            "installation_type": installation_type,
+            "installation_type": "Home Assistant Container",
             "arch": arch,
         },
     ):
@@ -710,7 +702,7 @@ async def test_deprecated_installation_issue_32bit(
     assert issue.domain == DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
-        "installation_type": installation_type[15:],
+        "installation_type": "Container",
         "arch": arch,
     }
 

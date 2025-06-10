@@ -401,10 +401,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     info = await async_get_system_info(hass)
 
     installation_type = info["installation_type"][15:]
-    deprecated_method = installation_type == "Core"
-    arch = info["arch"]
-    if arch == "armv7":
-        if installation_type == "Container":
+    if installation_type in {"Core", "Container"}:
+        deprecated_method = installation_type == "Core"
+        arch = info["arch"]
+        if arch == "armv7" and installation_type == "Container":
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -415,29 +415,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_container_armv7",
             )
-    deprecated_architecture = False
-    if arch in {"i386", "armhf"} or (arch == "armv7" and deprecated_method):
-        deprecated_architecture = True
-    if deprecated_method or deprecated_architecture:
-        issue_id = "deprecated"
-        if deprecated_method:
-            issue_id += "_method"
-        if deprecated_architecture:
-            issue_id += "_architecture"
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            breaks_in_ha_version="2025.12.0",
-            learn_more_url=DEPRECATION_URL,
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key=issue_id,
-            translation_placeholders={
-                "installation_type": installation_type,
-                "arch": arch,
-            },
-        )
+        deprecated_architecture = False
+        if arch in {"i386", "armhf"} or (arch == "armv7" and deprecated_method):
+            deprecated_architecture = True
+        if deprecated_method or deprecated_architecture:
+            issue_id = "deprecated"
+            if deprecated_method:
+                issue_id += "_method"
+            if deprecated_architecture:
+                issue_id += "_architecture"
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                breaks_in_ha_version="2025.12.0",
+                learn_more_url=DEPRECATION_URL,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key=issue_id,
+                translation_placeholders={
+                    "installation_type": installation_type,
+                    "arch": arch,
+                },
+            )
 
     return True
 
