@@ -46,7 +46,10 @@ from .utils import upload_file_to_slack
 _LOGGER = logging.getLogger(__name__)
 
 # Regex patterns for different Slack identifiers
+# Based on Slack API documentation: https://api.slack.com/types
+# User IDs: Start with U (regular users) or W (workspace users), followed by 8+ alphanumeric chars
 SLACK_USERID_PATTERN = re.compile(r"^[UW][A-Z0-9]{8,}$")
+# Channel IDs: Start with C (channels), G (groups), or D (DMs), followed by 8+ alphanumeric chars
 SLACK_CHANNELID_PATTERN = re.compile(r"^[CGD][A-Z0-9]{8,}$")
 
 FILE_PATH_SCHEMA = vol.Schema({vol.Required(CONF_PATH): cv.isfile})
