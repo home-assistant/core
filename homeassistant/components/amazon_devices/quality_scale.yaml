@@ -45,7 +45,9 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Network information not relevant
-  discovery: done
+  discovery:
+    status: exempt
+    comment: There are a ton of mac address ranges in use, but also by kindles which are not supported by this integration
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
