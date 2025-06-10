@@ -616,7 +616,7 @@ buienradar==1.0.6
 cached-ipaddress==0.10.0
 
 # homeassistant.components.caldav
-caldav==1.3.9
+caldav==1.6.0
 
 # homeassistant.components.coinbase
 coinbase-advanced-py==1.2.2
