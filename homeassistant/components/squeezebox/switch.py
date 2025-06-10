@@ -133,7 +133,11 @@ class SqueezeBoxAlarmEntity(SqueezeboxEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return whether the alarm is available."""
-        return super().available and self._alarm_id in self.coordinator.data["alarms"]
+        return (
+            super().available
+            and self.coordinator.available
+            and self._alarm_id in self.coordinator.data["alarms"]
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -183,3 +187,9 @@ class SqueezeBoxAlarmsEnabledEntity(SqueezeboxEntity, SwitchEntity):
         """Turn on the switch."""
         await self.coordinator.player.async_set_alarms_enabled(True)
         await self.coordinator.async_request_refresh()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        # Add this property to correctly check player and coordinator availability
+        return self.coordinator.available and super().available

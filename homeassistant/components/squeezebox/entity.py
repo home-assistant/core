@@ -55,3 +55,12 @@ class LMSStatusEntity(CoordinatorEntity[LMSStatusDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data[STATUS_QUERY_UUID])},
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        # Check basic coordinator availability (i.e., last_update_success) and  coordinator.data is populated
+        if not super().available or not self.coordinator.data:
+            return False
+        # Check if the specific key this entity relies on is present in the data
+        return self.entity_description.key in self.coordinator.data
