@@ -1,6 +1,8 @@
 """Ezlo HA Cloud integration options flow for Home Assistant."""
 
+import base64
 from datetime import datetime, timedelta
+import json
 import logging
 
 import voluptuous as vol
@@ -8,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .api import authenticate, signup
+from .api import authenticate, create_stripe_session, signup
 from .frp_helpers import fetch_and_update_frp_config, start_frpc, stop_frpc
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,7 +21,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize options flow."""
-        # self.config_entry = config_entry  # Add this line
+        self._config_entry = config_entry  # Add this line
 
     @staticmethod
     @callback
@@ -29,7 +31,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Check login status and show the correct UI."""
-        config_data = self.config_entry.data
+        config_data = self._config_entry.data
         is_logged_in = config_data.get("is_logged_in", False)
         token_expiry = config_data.get("token_expiry", 0)
 
@@ -59,14 +61,14 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_configure(self, user_input=None):
-        """Show configuration settings form properly."""
+        """Show configuration settings form."""
         if user_input is not None:
             # Save new configuration settings
-            new_data = self.config_entry.data.copy()
+            new_data = self._config_entry.data.copy()
             new_data.update(user_input)
 
             self.hass.config_entries.async_update_entry(
-                self.config_entry, data=new_data
+                self._config_entry, data=new_data
             )
             return self.async_abort(reason="config_saved")
 
@@ -75,20 +77,20 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "sni_host", default=self.config_entry.data.get("sni_host", "")
+                        "sni_host", default=self._config_entry.data.get("sni_host", "")
                     ): str,
                     vol.Required(
-                        "sni_port", default=self.config_entry.data.get("sni_port", 0)
+                        "sni_port", default=self._config_entry.data.get("sni_port", 0)
                     ): int,
                     vol.Required(
-                        "end_host", default=self.config_entry.data.get("end_host", "")
+                        "end_host", default=self._config_entry.data.get("end_host", "")
                     ): str,
                     vol.Required(
-                        "end_port", default=self.config_entry.data.get("end_port", 0)
+                        "end_port", default=self._config_entry.data.get("end_port", 0)
                     ): int,
                     vol.Required(
                         "fernet_token",
-                        default=self.config_entry.data.get("fernet_token", ""),
+                        default=self._config_entry.data.get("fernet_token", ""),
                     ): str,
                 }
             ),
@@ -96,13 +98,13 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_force_logout(self, user_input=None):
         # """Forcefully log out when the token expires and return to the main options screen."""
-        new_data = self.config_entry.data.copy()
+        new_data = self._config_entry.data.copy()
         new_data["is_logged_in"] = False
         new_data["auth_token"] = None
         new_data["user"] = {}
         new_data["token_expiry"] = 0  # Clear expiry time
 
-        self.hass.config_entries.async_update_entry(self.config_entry, data=new_data)
+        self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
 
         # Instead of showing logout message, return to the main options screen
         return await self.async_step_init()
@@ -133,7 +135,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                 _LOGGER.info("user info from login: %s", user_info)
                 expiry_time = datetime.now() + timedelta(seconds=3600)
 
-                new_data = self.config_entry.data.copy()
+                new_data = self._config_entry.data.copy()
                 new_data.update(
                     {
                         "auth_token": auth_response["token"],
@@ -153,7 +155,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                 # new_data["token_expiry"] = expiry_time.timestamp()
 
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=new_data
+                    self._config_entry, data=new_data
                 )
 
                 # UPDAT THE CONFIG TOML AND START THE FRPC CLIENT.
@@ -164,13 +166,13 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                         token=auth_response["token"],
                     )
 
-                    await start_frpc(hass=self.hass, config_entry=self.config_entry)
+                    await start_frpc(hass=self.hass, config_entry=self._config_entry)
                 except Exception as err:
                     _LOGGER.error("Failed to fetch the server details: %s", err)
                     raise err
 
                 self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                    self.hass.config_entries.async_reload(self._config_entry.entry_id)
                 )
 
                 return self.async_abort(reason="login_successful")
@@ -190,16 +192,14 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_logout(self, user_input=None):
         """Handle manual logout action."""
-        new_data = self.config_entry.data.copy()
+        new_data = self._config_entry.data.copy()
         new_data["is_logged_in"] = False
         new_data["auth_token"] = None
         new_data["user"] = {}
         new_data["token_expiry"] = 0  # Clear expiry time
 
-        self.hass.config_entries.async_update_entry(self.config_entry, data=new_data)
-
+        self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
         await stop_frpc(self.hass, self.hass.config_entries)
-
         # Show logout success message only for manual logout
         return self.async_abort(reason="logged_out")
 
@@ -217,9 +217,37 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                 signup, username, email, password
             )
 
-            if signup_response.get("success"):
-                return self.async_abort(reason="signup_successful")
-            errors["base"] = signup_response.get("error", "Signup failed")
+            _LOGGER.debug("Signup response: %s", signup_response)
+
+            if signup_response.get("success") and "identity" in signup_response:
+                try:
+                    identity_token = signup_response["identity"]
+
+                    padded = identity_token + "=" * (-len(identity_token) % 4)
+                    decoded_bytes = base64.b64decode(padded)
+                    decoded = json.loads(decoded_bytes)
+
+                    user_uuid = decoded.get("PK_User")
+
+                    stripe_response = await self.hass.async_add_executor_job(
+                        create_stripe_session,
+                        user_uuid,
+                        "price_1RLKzGIOARqo54014CFxqSo3",
+                    )
+
+                    if stripe_response and stripe_response.get("checkout_url"):
+                        return self.async_external_step(
+                            step_id="stripe_redirect",
+                            url=stripe_response["checkout_url"],
+                        )
+
+                    errors["base"] = "stripe_failed"
+
+                except Exception as decode_error:
+                    _LOGGER.error("Failed to decode Ezlo identity: %s", decode_error)
+                    errors["base"] = "signup_failed"
+            else:
+                errors["base"] = signup_response.get("error", "Signup failed")
 
         return self.async_show_form(
             step_id="signup",
@@ -232,3 +260,6 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             ),
             errors=errors,
         )
+
+    async def async_step_stripe_redirect(self, user_input=None):
+        return self.async_external_step_done(next_step_id="init")

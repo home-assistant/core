@@ -8,7 +8,8 @@ from .const import EZLO_API_URI, SIGNUP_UUID
 
 _LOGGER = logging.getLogger(__name__)
 
-API_BASE_URL = f"{EZLO_API_URI}/api/auth"
+AUTH_API_URL = f"{EZLO_API_URI}/api/auth"
+STRIPE_API_URL = f"{EZLO_API_URI}/api/stripe"
 
 
 def authenticate(username, password, uuid):
@@ -24,7 +25,7 @@ def authenticate(username, password, uuid):
     }
 
     try:
-        response = requests.post(f"{API_BASE_URL}/login", json=payload, timeout=10)
+        response = requests.post(f"{AUTH_API_URL}/login", json=payload, timeout=10)
         response_data = response.json()
 
         _LOGGER.info(f"login response: {response_data}")
@@ -67,16 +68,52 @@ def signup(username, email, password):
     }
 
     try:
-        response = requests.post(f"{API_BASE_URL}/signup", json=payload, timeout=5)
+        response = requests.post(f"{AUTH_API_URL}/signup", json=payload, timeout=5)
         response.raise_for_status()
 
         data = response.json()
-        if data.get("status") == 1 and "data" in data:
+        identity = data.get("data", {}).get("legacy", {}).get("identity")
+        if data.get("status") == 1 and identity:
             _LOGGER.info("Signup successful.")
-            return {"success": True, "message": "Signup successful!"}
+            return {
+                "success": True,
+                "message": "Signup successful!",
+                "identity": identity,
+            }
+
         _LOGGER.warning("Signup failed. Response: %s", data)
         return {"success": False, "error": "Signup failed"}
 
     except requests.RequestException as err:
         _LOGGER.error("Signup API request failed: %s", err)
         return {"success": False, "error": "API request failed"}
+
+
+def create_stripe_session(user_id, price_id):
+    """Creates a Stripe Checkout session and returns the checkout URL."""
+    _LOGGER.info(f"Creating Stripe checkout session for user: {user_id}")
+
+    payload = {
+        "user_id": user_id,
+        "plan_price_id": price_id,
+    }
+
+    try:
+        response = requests.post(
+            f"{STRIPE_API_URL}/create-session", json=payload, timeout=10
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        checkout_url = data.get("checkout_url")
+
+        if not checkout_url:
+            _LOGGER.error("Stripe response missing checkout_url: %s", data)
+            return None
+
+        _LOGGER.info("Stripe checkout session created.")
+        return {"checkout_url": checkout_url}
+
+    except requests.RequestException as err:
+        _LOGGER.error("Stripe session creation failed: %s", err)
+        return None
