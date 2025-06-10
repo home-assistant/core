@@ -1,6 +1,5 @@
 """Support for the Switchbot lock."""
 
-from types import MappingProxyType
 from typing import Any
 
 from switchbot_api import Device, LockCommands, Remote, SwitchBotAPI
@@ -22,8 +21,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    night_latch_options: list = config.options.get("SetNightLatchMode", [])
     async_add_entities(
-        SwitchBotCloudLock(data.api, device, coordinator, config.options)
+        SwitchBotCloudLock(data.api, device, coordinator, night_latch_options)
         for device, coordinator in data.devices.locks
     )
 
@@ -46,7 +46,7 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         api: SwitchBotAPI,
         device: Device | Remote,
         coordinator: SwitchBotCoordinator,
-        entity_options: MappingProxyType,
+        entity_options: list,
     ) -> None:
         """Init SwitchBotCloudLock."""
         super().__init__(api, device, coordinator)
@@ -59,13 +59,22 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        await self.send_api_command(LockCommands.LOCK)
+        entry_id: str | None = self.device_entry.id if self.device_entry else None
+        if entry_id and (entry_id in self.entity_options):
+            # send night latch command
+            await self.send_api_command(LockCommands.LOCK)
+        else:
+            await self.send_api_command(LockCommands.LOCK)
         self._attr_is_locked = True
         self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-
-        await self.send_api_command(LockCommands.UNLOCK)
+        entry_id: str | None = self.device_entry.id if self.device_entry else None
+        if entry_id and (entry_id in self.entity_options):
+            # send night latch command
+            await self.send_api_command(LockCommands.UNLOCK)
+        else:
+            await self.send_api_command(LockCommands.UNLOCK)
         self._attr_is_locked = False
         self.async_write_ha_state()
