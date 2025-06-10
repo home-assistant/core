@@ -36,6 +36,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
     "pytz": "CalVer",
+    "requests": "SemVer",
     "typing_extensions": "SemVer",
     "yarl": "SemVer",
 }
@@ -48,10 +49,6 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # scipy version closely linked to numpy
         # geocachingapi > reverse_geocode > scipy > numpy
         "scipy": {"numpy"}
-    },
-    "mealie": {
-        # https://github.com/joostlek/python-mealie/pull/490
-        "aiomealie": {"awesomeversion"}
     },
 }
 

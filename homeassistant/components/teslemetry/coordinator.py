@@ -195,9 +195,13 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(e.message) from e
 
         # Add all time periods together
-        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
+        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
         for period in data.get("time_series", []):
             for key in ENERGY_HISTORY_FIELDS:
-                output[key] += period.get(key, 0)
+                if key in period:
+                    if output[key] is None:
+                        output[key] = period[key]
+                    else:
+                        output[key] += period[key]
 
         return output

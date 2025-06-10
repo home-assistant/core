@@ -344,13 +344,17 @@ async def test_loading_from_storage(
             ],
             "deleted_devices": [
                 {
+                    "area_id": "12345A",
                     "config_entries": [mock_config_entry.entry_id],
                     "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "connections": [["Zigbee", "23.45.67.89.01"]],
                     "created_at": created_at,
+                    "disabled_by": dr.DeviceEntryDisabler.USER,
                     "id": "bcdefghijklmn",
                     "identifiers": [["serial", "3456ABCDEF12"]],
+                    "labels": {"label1", "label2"},
                     "modified_at": modified_at,
+                    "name_by_user": "Test Friendly Name",
                     "orphaned_timestamp": None,
                 }
             ],
@@ -363,13 +367,17 @@ async def test_loading_from_storage(
     assert len(registry.deleted_devices) == 1
 
     assert registry.deleted_devices["bcdefghijklmn"] == dr.DeletedDeviceEntry(
+        area_id="12345A",
         config_entries={mock_config_entry.entry_id},
         config_entries_subentries={mock_config_entry.entry_id: {None}},
         connections={("Zigbee", "23.45.67.89.01")},
         created_at=datetime.fromisoformat(created_at),
+        disabled_by=dr.DeviceEntryDisabler.USER,
         id="bcdefghijklmn",
         identifiers={("serial", "3456ABCDEF12")},
+        labels={"label1", "label2"},
         modified_at=datetime.fromisoformat(modified_at),
+        name_by_user="Test Friendly Name",
         orphaned_timestamp=None,
     )
 
@@ -417,15 +425,19 @@ async def test_loading_from_storage(
         model="model",
     )
     assert entry == dr.DeviceEntry(
+        area_id="12345A",
         config_entries={mock_config_entry.entry_id},
         config_entries_subentries={mock_config_entry.entry_id: {None}},
         connections={("Zigbee", "23.45.67.89.01")},
         created_at=datetime.fromisoformat(created_at),
+        disabled_by=dr.DeviceEntryDisabler.USER,
         id="bcdefghijklmn",
         identifiers={("serial", "3456ABCDEF12")},
+        labels={"label1", "label2"},
         manufacturer="manufacturer",
         model="model",
         modified_at=utcnow(),
+        name_by_user="Test Friendly Name",
         primary_config_entry=mock_config_entry.entry_id,
     )
     assert entry.id == "bcdefghijklmn"
@@ -566,13 +578,17 @@ async def test_migration_from_1_1(
             ],
             "deleted_devices": [
                 {
+                    "area_id": None,
                     "config_entries": ["123456"],
                     "config_entries_subentries": {"123456": [None]},
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
                     "id": "deletedid",
                     "identifiers": [["serial", "123456ABCDFF"]],
+                    "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
                     "orphaned_timestamp": None,
                 }
             ],
@@ -2066,6 +2082,49 @@ async def test_removing_area_id(
     assert entry_w_area != entry_wo_area
 
 
+async def test_removing_area_id_deleted_device(
+    device_registry: dr.DeviceRegistry, mock_config_entry: MockConfigEntry
+) -> None:
+    """Make sure we can clear area id."""
+    entry1 = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry2 = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:FF")},
+        identifiers={("bridgeid", "1234")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    entry1_w_area = device_registry.async_update_device(entry1.id, area_id="12345A")
+    entry2_w_area = device_registry.async_update_device(entry2.id, area_id="12345B")
+
+    device_registry.async_remove_device(entry1.id)
+    device_registry.async_remove_device(entry2.id)
+
+    device_registry.async_clear_area_id("12345A")
+    entry1_restored = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+    )
+    entry2_restored = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:FF")},
+        identifiers={("bridgeid", "1234")},
+    )
+
+    assert not entry1_restored.area_id
+    assert entry2_restored.area_id == "12345B"
+    assert entry1_w_area != entry1_restored
+    assert entry2_w_area != entry2_restored
+
+
 async def test_specifying_via_device_create(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -3276,7 +3335,8 @@ async def test_restore_device(
         suggested_area=None,
         sw_version=None,
     )
-    # This will restore the original device
+    # This will restore the original device, user customizations of
+    # area_id, disabled_by, labels and name_by_user will be restored
     entry3 = device_registry.async_get_or_create(
         config_entry_id=entry_id,
         config_subentry_id=subentry_id,
@@ -3295,23 +3355,23 @@ async def test_restore_device(
         via_device="via_device_id_new",
     )
     assert entry3 == dr.DeviceEntry(
-        area_id="suggested_area_new",
+        area_id="12345A",
         config_entries={entry_id},
         config_entries_subentries={entry_id: {subentry_id}},
         configuration_url="http://config_url_new.bla",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
         created_at=utcnow(),
-        disabled_by=None,
+        disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=None,
         hw_version="hw_version_new",
         id=entry.id,
         identifiers={("bridgeid", "0123")},
-        labels={},
+        labels={"label1", "label2"},
         manufacturer="manufacturer_new",
         model="model_new",
         model_id="model_id_new",
         modified_at=utcnow(),
-        name_by_user=None,
+        name_by_user="Test Friendly Name",
         name="name_new",
         primary_config_entry=entry_id,
         serial_number="serial_no_new",
@@ -3466,7 +3526,8 @@ async def test_restore_shared_device(
     assert len(device_registry.deleted_devices) == 1
 
     # config_entry_1 restores the original device, only the supplied config entry,
-    # config subentry, connections, and identifiers will be restored
+    # config subentry, connections, and identifiers will be restored, user
+    # customizations of area_id, disabled_by, labels and name_by_user will be restored.
     entry2 = device_registry.async_get_or_create(
         config_entry_id=config_entry_1.entry_id,
         config_subentry_id="mock-subentry-id-1-1",
@@ -3486,23 +3547,23 @@ async def test_restore_shared_device(
     )
 
     assert entry2 == dr.DeviceEntry(
-        area_id="suggested_area_new_1",
+        area_id="12345A",
         config_entries={config_entry_1.entry_id},
         config_entries_subentries={config_entry_1.entry_id: {"mock-subentry-id-1-1"}},
         configuration_url="http://config_url_new_1.bla",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
         created_at=utcnow(),
-        disabled_by=None,
+        disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
         hw_version="hw_version_new_1",
         id=entry.id,
         identifiers={("entry_123", "0123")},
-        labels={},
+        labels={"label1", "label2"},
         manufacturer="manufacturer_new_1",
         model="model_new_1",
         model_id="model_id_new_1",
         modified_at=utcnow(),
-        name_by_user=None,
+        name_by_user="Test Friendly Name",
         name="name_new_1",
         primary_config_entry=config_entry_1.entry_id,
         serial_number="serial_no_new_1",
@@ -3521,7 +3582,8 @@ async def test_restore_shared_device(
     device_registry.async_remove_device(entry.id)
 
     # config_entry_2 restores the original device, only the supplied config entry,
-    # config subentry, connections, and identifiers will be restored
+    # config subentry, connections, and identifiers will be restored, user
+    # customizations of area_id, disabled_by, labels and name_by_user will be restored.
     entry3 = device_registry.async_get_or_create(
         config_entry_id=config_entry_2.entry_id,
         configuration_url="http://config_url_new_2.bla",
@@ -3540,7 +3602,7 @@ async def test_restore_shared_device(
     )
 
     assert entry3 == dr.DeviceEntry(
-        area_id="suggested_area_new_2",
+        area_id="12345A",
         config_entries={config_entry_2.entry_id},
         config_entries_subentries={
             config_entry_2.entry_id: {None},
@@ -3548,17 +3610,17 @@ async def test_restore_shared_device(
         configuration_url="http://config_url_new_2.bla",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
         created_at=utcnow(),
-        disabled_by=None,
+        disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=None,
         hw_version="hw_version_new_2",
         id=entry.id,
         identifiers={("entry_234", "2345")},
-        labels={},
+        labels={"label1", "label2"},
         manufacturer="manufacturer_new_2",
         model="model_new_2",
         model_id="model_id_new_2",
         modified_at=utcnow(),
-        name_by_user=None,
+        name_by_user="Test Friendly Name",
         name="name_new_2",
         primary_config_entry=config_entry_2.entry_id,
         serial_number="serial_no_new_2",
@@ -3593,7 +3655,7 @@ async def test_restore_shared_device(
     )
 
     assert entry4 == dr.DeviceEntry(
-        area_id="suggested_area_new_2",
+        area_id="12345A",
         config_entries={config_entry_1.entry_id, config_entry_2.entry_id},
         config_entries_subentries={
             config_entry_1.entry_id: {"mock-subentry-id-1-1"},
@@ -3602,17 +3664,17 @@ async def test_restore_shared_device(
         configuration_url="http://config_url_new_1.bla",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
         created_at=utcnow(),
-        disabled_by=None,
+        disabled_by=dr.DeviceEntryDisabler.USER,
         entry_type=dr.DeviceEntryType.SERVICE,
         hw_version="hw_version_new_1",
         id=entry.id,
         identifiers={("entry_123", "0123"), ("entry_234", "2345")},
-        labels={},
+        labels={"label1", "label2"},
         manufacturer="manufacturer_new_1",
         model="model_new_1",
         model_id="model_id_new_1",
         modified_at=utcnow(),
-        name_by_user=None,
+        name_by_user="Test Friendly Name",
         name="name_new_1",
         primary_config_entry=config_entry_2.entry_id,
         serial_number="serial_no_new_1",
@@ -4067,6 +4129,65 @@ async def test_removing_labels(
     assert entry.labels == {"label1", "label2"}
     assert entry_cleared_label1.labels == {"label2"}
     assert not entry_cleared_label2.labels
+
+
+async def test_removing_labels_deleted_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Make sure we can clear labels."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    entry1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry1 = device_registry.async_update_device(entry1.id, labels={"label1", "label2"})
+    entry2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:FF")},
+        identifiers={("bridgeid", "1234")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry2 = device_registry.async_update_device(entry2.id, labels={"label3"})
+
+    device_registry.async_remove_device(entry1.id)
+    device_registry.async_remove_device(entry2.id)
+
+    device_registry.async_clear_label_id("label1")
+    entry1_cleared_label1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+    )
+
+    device_registry.async_remove_device(entry1.id)
+
+    device_registry.async_clear_label_id("label2")
+    entry1_cleared_label2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+    )
+    entry2_restored = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:FF")},
+        identifiers={("bridgeid", "1234")},
+    )
+
+    assert entry1_cleared_label1
+    assert entry1_cleared_label2
+    assert entry1 != entry1_cleared_label1
+    assert entry1 != entry1_cleared_label2
+    assert entry1_cleared_label1 != entry1_cleared_label2
+    assert entry1.labels == {"label1", "label2"}
+    assert entry1_cleared_label1.labels == {"label2"}
+    assert not entry1_cleared_label2.labels
+    assert entry2 != entry2_restored
+    assert entry2_restored.labels == {"label3"}
 
 
 async def test_entries_for_label(
