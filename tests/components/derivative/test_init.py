@@ -78,6 +78,19 @@ def derivative_config_entry(
     return config_entry
 
 
+def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Track entity registry actions for an entity."""
+    events = []
+
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data["action"])
+
+    async_track_entity_registry_updated_event(hass, entity_id, add_event)
+
+    return events
+
+
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -242,15 +255,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     sensor_device = device_registry.async_get(sensor_device.id)
     assert derivative_config_entry.entry_id in sensor_device.config_entries
 
-    events = []
-
-    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
-        """Add entity registry updated event to the list."""
-        events.append(event.data["action"])
-
-    async_track_entity_registry_updated_event(
-        hass, derivative_entity_entry.entity_id, add_event
-    )
+    events = track_entity_registry_actions(hass, derivative_entity_entry.entity_id)
 
     # Remove the source sensor's config entry from the device, this removes the
     # source sensor
@@ -294,15 +299,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     sensor_device = device_registry.async_get(sensor_device.id)
     assert derivative_config_entry.entry_id in sensor_device.config_entries
 
-    events = []
-
-    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
-        """Add entity registry updated event to the list."""
-        events.append(event.data["action"])
-
-    async_track_entity_registry_updated_event(
-        hass, derivative_entity_entry.entity_id, add_event
-    )
+    events = track_entity_registry_actions(hass, derivative_entity_entry.entity_id)
 
     # Remove the source sensor from the device
     with patch(
@@ -352,15 +349,7 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
     assert derivative_config_entry.entry_id not in sensor_device_2.config_entries
 
-    events = []
-
-    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
-        """Add entity registry updated event to the list."""
-        events.append(event.data["action"])
-
-    async_track_entity_registry_updated_event(
-        hass, derivative_entity_entry.entity_id, add_event
-    )
+    events = track_entity_registry_actions(hass, derivative_entity_entry.entity_id)
 
     # Move the source sensor to another device
     with patch(
@@ -404,15 +393,7 @@ async def test_async_handle_source_entity_new_entity_id(
     sensor_device = device_registry.async_get(sensor_device.id)
     assert derivative_config_entry.entry_id in sensor_device.config_entries
 
-    events = []
-
-    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
-        """Add entity registry updated event to the list."""
-        events.append(event.data["action"])
-
-    async_track_entity_registry_updated_event(
-        hass, derivative_entity_entry.entity_id, add_event
-    )
+    events = track_entity_registry_actions(hass, derivative_entity_entry.entity_id)
 
     # Change the source entity's entity ID
     with patch(

@@ -179,6 +179,19 @@ def mock_helper_integration(
     mock_platform(hass, f"{HELPER_DOMAIN}.config_flow", None)
 
 
+def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Track entity registry actions for an entity."""
+    events = []
+
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data["action"])
+
+    async_track_entity_registry_updated_event(hass, entity_id, add_event)
+
+    return events
+
+
 @pytest.mark.parametrize("use_entity_registry_id", [True, False])
 @pytest.mark.usefixtures("mock_helper_flow", "mock_helper_integration")
 async def test_async_handle_source_entity_changes_source_entity_removed(
@@ -215,15 +228,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     source_device = device_registry.async_get(source_device.id)
     assert helper_config_entry.entry_id in source_device.config_entries
 
-    events = []
-
-    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
-        """Add entity registry updated event to the list."""
-        events.append(event.data["action"])
-
-    async_track_entity_registry_updated_event(
-        hass, helper_entity_entry.entity_id, add_event
-    )
+    events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
 
     # Remove the source entitys's config entry from the device, this removes the
     # source entity
@@ -279,15 +284,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     source_device = device_registry.async_get(source_device.id)
     assert helper_config_entry.entry_id in source_device.config_entries
 
-    events = []
-
-    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
-        """Add entity registry updated event to the list."""
-        events.append(event.data["action"])
-
-    async_track_entity_registry_updated_event(
-        hass, helper_entity_entry.entity_id, add_event
-    )
+    events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
 
     # Remove the source entity from the device
     entity_registry.async_update_entity(source_entity_entry.entity_id, device_id=None)
@@ -346,15 +343,7 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     source_device_2 = device_registry.async_get(source_device_2.id)
     assert helper_config_entry.entry_id not in source_device_2.config_entries
 
-    events = []
-
-    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
-        """Add entity registry updated event to the list."""
-        events.append(event.data["action"])
-
-    async_track_entity_registry_updated_event(
-        hass, helper_entity_entry.entity_id, add_event
-    )
+    events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
 
     # Move the source entity to another device
     entity_registry.async_update_entity(
@@ -413,15 +402,7 @@ async def test_async_handle_source_entity_new_entity_id(
     source_device = device_registry.async_get(source_device.id)
     assert helper_config_entry.entry_id in source_device.config_entries
 
-    events = []
-
-    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
-        """Add entity registry updated event to the list."""
-        events.append(event.data["action"])
-
-    async_track_entity_registry_updated_event(
-        hass, helper_entity_entry.entity_id, add_event
-    )
+    events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
 
     # Change the source entity's entity ID
     entity_registry.async_update_entity(
