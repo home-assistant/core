@@ -498,6 +498,9 @@ async def _validate_observation_subentry(
     other_subentries: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Validate an observation input and manually update options with observations as they are nested items."""
+    _LOGGER.debug(
+        "Received observation with settings: %s", user_input
+    )  # TODO delete-me
     _validate_probabilities_given(user_input)
     user_input = _convert_percentages_to_fractions(user_input)
 
@@ -624,7 +627,9 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to add a state observation."""
         errors: dict[str, str] = {}
-
+        _LOGGER.error(
+            "***************async_step_state %s", user_input
+        )  # TODO delete-me
         if user_input is not None:
             try:
                 user_input = await _validate_observation_subentry(
@@ -688,7 +693,9 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
         """User flow to add a new template observation."""
 
         errors: dict[str, str] = {}
-
+        _LOGGER.error(
+            "***************async_step_template %s", user_input
+        )  # TODO delete-me
         if user_input is not None:
             try:
                 user_input = await _validate_observation_subentry(
@@ -721,19 +728,21 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
         )  # TODO delete-me
         sub_entry = self._get_reconfigure_subentry()
         if user_input is not None:
-            _LOGGER.debug("Reconfigure user input is %s", user_input)  # TODO delete-me
+            _LOGGER.debug(
+                "Reconfigure for subentry %s user input is %s", sub_entry, user_input
+            )  # TODO delete-me
             # TODO: re-do if we implement unique IDs
             # self.async_set_unique_id(user_id)
             # self._abort_if_unique_id_mismatch()
             try:
                 user_input = await _validate_observation_subentry(
-                    ObservationTypes.TEMPLATE, user_input
+                    sub_entry.data[CONF_PLATFORM], user_input
                 )
                 return self.async_update_and_abort(
                     self._get_entry(),
                     sub_entry,
                     title=user_input.get(CONF_NAME, sub_entry.data[CONF_NAME]),
-                    data_updates=_convert_percentages_to_fractions(user_input),
+                    data_updates=user_input,
                 )
             except SchemaFlowError as err:
                 _LOGGER.error("Error validating observation subentry: %s", err)
