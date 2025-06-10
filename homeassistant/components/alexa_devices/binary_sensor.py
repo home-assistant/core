@@ -30,7 +30,7 @@ class AmazonBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Alexa Devices binary sensor entity description."""
 
     is_on_fn: Callable[[AmazonDevice, str], bool]
-    removal_condition: Callable[[AmazonDevice, str], bool] | None = None
+    is_supported: Callable[[AmazonDevice, str], bool] = lambda _device, _key: True
 
 
 BINARY_SENSORS: Final = (
@@ -52,7 +52,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
     ),
     AmazonBinarySensorEntityDescription(
         key="beepingApplianceDetectionState",
@@ -60,7 +60,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
     ),
     AmazonBinarySensorEntityDescription(
         key="coughDetectionState",
@@ -68,7 +68,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
     ),
     AmazonBinarySensorEntityDescription(
         key="dogBarkDetectionState",
@@ -76,7 +76,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
     ),
     AmazonBinarySensorEntityDescription(
         key="humanPresenceDetectionState",
@@ -84,7 +84,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
     ),
     AmazonBinarySensorEntityDescription(
         key="waterSoundsDetectionState",
@@ -92,7 +92,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        removal_condition=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
     ),
 )
 
@@ -110,12 +110,7 @@ async def async_setup_entry(
         AmazonBinarySensorEntity(coordinator, serial_num, sensor_desc)
         for sensor_desc in BINARY_SENSORS
         for serial_num in coordinator.data
-        if (
-            not sensor_desc.removal_condition
-            or not sensor_desc.removal_condition(
-                coordinator.data[serial_num], sensor_desc.key
-            )
-        )
+        if sensor_desc.is_supported(coordinator.data[serial_num], sensor_desc.key)
     )
 
 
