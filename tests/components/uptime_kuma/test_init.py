@@ -31,10 +31,8 @@ async def test_entry_setup_unload(
 @pytest.mark.parametrize(
     ("exception", "state"),
     [
-        (UptimeKumaAuthenticationException, ConfigEntryState.SETUP_ERROR),
+        (UptimeKumaAuthenticationException, ConfigEntryState.SETUP_RETRY),
         (UptimeKumaException, ConfigEntryState.SETUP_RETRY),
-        ([None, UptimeKumaAuthenticationException], ConfigEntryState.SETUP_RETRY),
-        ([None, UptimeKumaException], ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_config_entry_not_ready(

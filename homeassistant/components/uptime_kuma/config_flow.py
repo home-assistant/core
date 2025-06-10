@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyuptimekuma import (
+from pythonkuma import (
     UptimeKuma,
     UptimeKumaAuthenticationException,
     UptimeKumaException,
@@ -49,7 +49,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            session = async_get_clientsession(self.hass)
+            session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
             url = URL(user_input[CONF_URL]).human_repr().removesuffix("/")
             self._async_abort_entries_match({CONF_URL: url})
 
@@ -58,7 +58,6 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
                 str(url),
                 "",
                 user_input[CONF_API_KEY],
-                user_input[CONF_VERIFY_SSL],
             )
 
             try:

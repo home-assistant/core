@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from pyuptimekuma import (
+from pythonkuma import (
     UptimeKuma,
     UptimeKumaAuthenticationException,
     UptimeKumaException,
@@ -51,7 +51,6 @@ class UptimeKumaDataUpdateCoordinator(
             config_entry.data[CONF_URL],
             "",
             config_entry.data[CONF_API_KEY],
-            config_entry.data[CONF_VERIFY_SSL],
         )
 
     async def _async_update_data(self) -> dict[str, UptimeKumaMonitor]:

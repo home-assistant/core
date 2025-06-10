@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
-from pyuptimekuma import MonitorType, UptimeKumaMonitor
+from pythonkuma import MonitorType, UptimeKumaMonitor
 
 from homeassistant.components.uptime_kuma.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
