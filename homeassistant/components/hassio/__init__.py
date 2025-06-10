@@ -603,7 +603,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 severity=IssueSeverity.WARNING,
                 translation_key=issue_id,
                 translation_placeholders={
-                    "installation_type": "Supervised",
+                    "installation_type": "OS" if is_haos else "Supervised",
                     "arch": arch,
                 },
             )
