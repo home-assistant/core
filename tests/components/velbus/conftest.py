@@ -85,6 +85,7 @@ def mock_module_no_subdevices(
     module.get_type_name.return_value = "VMB4RYLD"
     module.get_addresses.return_value = [1, 2, 3, 4]
     module.get_name.return_value = "BedRoom"
+    module.get_serial.return_value = "a1b2c3d4e5f6"
     module.get_sw_version.return_value = "1.0.0"
     module.is_loaded.return_value = True
     module.get_channels.return_value = {}
@@ -98,6 +99,7 @@ def mock_module_subdevices() -> AsyncMock:
     module.get_type_name.return_value = "VMB2BLE"
     module.get_addresses.return_value = [88]
     module.get_name.return_value = "Kitchen"
+    module.get_serial.return_value = "a1b2c3d4e5f6"
     module.get_sw_version.return_value = "2.0.0"
     module.is_loaded.return_value = True
     module.get_channels.return_value = {}

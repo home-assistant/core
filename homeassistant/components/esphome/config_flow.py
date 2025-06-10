@@ -22,6 +22,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -31,6 +32,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -57,6 +59,7 @@ ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
 _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
+DEFAULT_NAME = "ESPHome"
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -117,8 +120,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host = entry_data[CONF_HOST]
         self._port = entry_data[CONF_PORT]
         self._password = entry_data[CONF_PASSWORD]
-        self._name = self._reauth_entry.title
         self._device_name = entry_data.get(CONF_DEVICE_NAME)
+        self._name = self._reauth_entry.title
 
         # Device without encryption allows fetching device info. We can then check
         # if the device is no longer using a password. If we did try with a password,
@@ -147,7 +150,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_encryption_removed_confirm",
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
 
     async def async_step_reauth_confirm(
@@ -172,11 +175,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_NOISE_PSK): str}),
             errors=errors,
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
 
     async def async_step_reconfigure(
-        self, entry_data: Mapping[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by a reconfig request."""
         self._reconfig_entry = self._get_reconfigure_entry()
@@ -189,12 +192,14 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @property
     def _name(self) -> str:
-        return self.__name or "ESPHome"
+        return self.__name or DEFAULT_NAME
 
     @_name.setter
     def _name(self, value: str) -> None:
         self.__name = value
-        self.context["title_placeholders"] = {"name": self._name}
+        self.context["title_placeholders"] = {
+            "name": self._async_get_human_readable_name()
+        }
 
     async def _async_try_fetch_device_info(self) -> ConfigFlowResult:
         """Try to fetch device info and return any errors."""
@@ -254,7 +259,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._async_try_fetch_device_info()
         return self.async_show_form(
-            step_id="discovery_confirm", description_placeholders={"name": self._name}
+            step_id="discovery_confirm",
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
 
     async def async_step_zeroconf(
@@ -274,8 +280,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # Hostname is format: livingroom.local.
         device_name = discovery_info.hostname.removesuffix(".local.")
 
-        self._name = discovery_info.properties.get("friendly_name", device_name)
         self._device_name = device_name
+        self._name = discovery_info.properties.get("friendly_name", device_name)
         self._host = discovery_info.host
         self._port = discovery_info.port
         self._noise_required = bool(discovery_info.properties.get("api_encryption"))
@@ -298,7 +304,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         ):
             return
+        if entry.source == SOURCE_IGNORE:
+            # Don't call _fetch_device_info() for ignored entries
+            raise AbortFlow("already_configured")
+        configured_host: str | None = entry.data.get(CONF_HOST)
         configured_port: int | None = entry.data.get(CONF_PORT)
+        if configured_host == host and configured_port == port:
+            # Don't probe to verify the mac is correct since
+            # the host and port matches.
+            raise AbortFlow("already_configured")
         configured_psk: str | None = entry.data.get(CONF_NOISE_PSK)
         await self._fetch_device_info(host, port or configured_port, configured_psk)
         updates: dict[str, Any] = {}
@@ -306,7 +320,34 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             updates[CONF_HOST] = host
             if port is not None:
                 updates[CONF_PORT] = port
-        self._abort_if_unique_id_configured(updates=updates)
+        self._abort_unique_id_configured_with_details(updates=updates)
+
+    @callback
+    def _abort_unique_id_configured_with_details(self, updates: dict[str, Any]) -> None:
+        """Abort if unique_id is already configured with details."""
+        assert self.unique_id is not None
+        if not (
+            conflict_entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                self.handler, self.unique_id
+            )
+        ):
+            return
+        assert conflict_entry.unique_id is not None
+        if self.source == SOURCE_RECONFIGURE:
+            error = "reconfigure_already_configured"
+        elif updates:
+            error = "already_configured_updates"
+        else:
+            error = "already_configured_detailed"
+        self._abort_if_unique_id_configured(
+            updates=updates,
+            error=error,
+            description_placeholders={
+                "title": conflict_entry.title,
+                "name": conflict_entry.data.get(CONF_DEVICE_NAME, "unknown"),
+                "mac": format_mac(conflict_entry.unique_id),
+            },
+        )
 
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
@@ -341,7 +382,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         await self.async_set_unique_id(mac_address)
-        self._abort_if_unique_id_configured(
+        self._abort_unique_id_configured_with_details(
             updates={CONF_HOST: self._host, CONF_PORT: self._port}
         )
 
@@ -479,7 +520,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 data=self._reauth_entry.data | self._async_make_config_data(),
             )
         assert self._host is not None
-        self._abort_if_unique_id_configured(
+        self._abort_unique_id_configured_with_details(
             updates={
                 CONF_HOST: self._host,
                 CONF_PORT: self._port,
@@ -510,7 +551,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if not (
             unique_id_matches := (self.unique_id == self._reconfig_entry.unique_id)
         ):
-            self._abort_if_unique_id_configured(
+            self._abort_unique_id_configured_with_details(
                 updates={
                     CONF_HOST: self._host,
                     CONF_PORT: self._port,
@@ -568,8 +609,29 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="encryption_key",
             data_schema=vol.Schema({vol.Required(CONF_NOISE_PSK): str}),
             errors=errors,
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
         )
+
+    @callback
+    def _async_get_human_readable_name(self) -> str:
+        """Return a human readable name for the entry."""
+        entry: ConfigEntry | None = None
+        if self.source == SOURCE_REAUTH:
+            entry = self._reauth_entry
+        elif self.source == SOURCE_RECONFIGURE:
+            entry = self._reconfig_entry
+        friendly_name = self._name
+        device_name = self._device_name
+        if (
+            device_name
+            and friendly_name in (DEFAULT_NAME, device_name)
+            and entry
+            and entry.title != friendly_name
+        ):
+            friendly_name = entry.title
+        if not device_name or friendly_name == device_name:
+            return friendly_name
+        return f"{friendly_name} ({device_name})"
 
     async def async_step_authenticate(
         self, user_input: dict[str, Any] | None = None, error: str | None = None
@@ -589,7 +651,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="authenticate",
             data_schema=vol.Schema({vol.Required("password"): str}),
-            description_placeholders={"name": self._name},
+            description_placeholders={"name": self._async_get_human_readable_name()},
             errors=errors,
         )
 
@@ -612,10 +674,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return ERROR_REQUIRES_ENCRYPTION_KEY
         except InvalidEncryptionKeyAPIError as ex:
             if ex.received_name:
+                device_name_changed = self._device_name != ex.received_name
                 self._device_name = ex.received_name
                 if ex.received_mac:
                     self._device_mac = format_mac(ex.received_mac)
-                self._name = ex.received_name
+                if not self._name or device_name_changed:
+                    self._name = ex.received_name
             return ERROR_INVALID_ENCRYPTION_KEY
         except ResolveAPIError:
             return "resolve_error"
@@ -623,9 +687,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             return "connection_error"
         finally:
             await cli.disconnect(force=True)
-        self._name = self._device_info.friendly_name or self._device_info.name
-        self._device_name = self._device_info.name
         self._device_mac = format_mac(self._device_info.mac_address)
+        self._device_name = self._device_info.name
+        self._name = self._device_info.friendly_name or self._device_info.name
         return None
 
     async def fetch_device_info(self) -> str | None:
@@ -640,7 +704,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         mac_address = format_mac(self._device_info.mac_address)
         await self.async_set_unique_id(mac_address, raise_on_progress=False)
         if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
-            self._abort_if_unique_id_configured(
+            self._abort_unique_id_configured_with_details(
                 updates={
                     CONF_HOST: self._host,
                     CONF_PORT: self._port,

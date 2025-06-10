@@ -19,7 +19,7 @@ from music_assistant_models.media_items import (
 )
 from music_assistant_models.player import Player
 from music_assistant_models.player_queue import PlayerQueue
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

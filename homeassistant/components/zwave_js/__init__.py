@@ -94,6 +94,7 @@ from .const import (
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INSTALLER_MODE,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
     CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_NETWORK_KEY,
@@ -105,6 +106,7 @@ from .const import (
     CONF_USE_ADDON,
     DATA_CLIENT,
     DOMAIN,
+    DRIVER_READY_TIMEOUT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
@@ -131,11 +133,10 @@ from .helpers import (
     get_valueless_base_unique_id,
 )
 from .migrate import async_migrate_discovered_value
-from .services import ZWaveServices
+from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
 DATA_DRIVER_EVENTS = "driver_events"
-DRIVER_READY_TIMEOUT = 60
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -176,10 +177,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 entry, unique_id=str(entry.unique_id)
             )
 
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-    services = ZWaveServices(hass, ent_reg, dev_reg)
-    services.async_register()
+    async_setup_services(hass)
 
     return True
 
@@ -278,6 +276,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # and we'll handle the clean up below.
         await driver_events.setup(driver)
 
+    if (old_unique_id := entry.unique_id) is not None and old_unique_id != (
+        new_unique_id := str(driver.controller.home_id)
+    ):
+        device_registry = dr.async_get(hass)
+        controller_model = "Unknown model"
+        if (
+            (own_node := driver.controller.own_node)
+            and (
+                controller_device_entry := device_registry.async_get_device(
+                    identifiers={get_device_id(driver, own_node)}
+                )
+            )
+            and (model := controller_device_entry.model)
+        ):
+            controller_model = model
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"migrate_unique_id.{entry.entry_id}",
+            data={
+                "config_entry_id": entry.entry_id,
+                "config_entry_title": entry.title,
+                "controller_model": controller_model,
+                "new_unique_id": new_unique_id,
+                "old_unique_id": old_unique_id,
+            },
+            is_fixable=True,
+            severity=IssueSeverity.ERROR,
+            translation_key="migrate_unique_id",
+        )
+    else:
+        async_delete_issue(hass, DOMAIN, f"migrate_unique_id.{entry.entry_id}")
+
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
     if listen_task.done():
         listen_error, error_message = _get_listen_task_error(listen_task)
@@ -372,9 +403,10 @@ class DriverEvents:
 
         # Devices that are in the device registry that are not known by the controller
         # can be removed
-        for device in stored_devices:
-            if device not in known_devices and device not in provisioned_devices:
-                self.dev_reg.async_remove_device(device.id)
+        if not self.config_entry.data.get(CONF_KEEP_OLD_DEVICES):
+            for device in stored_devices:
+                if device not in known_devices and device not in provisioned_devices:
+                    self.dev_reg.async_remove_device(device.id)
 
         # run discovery on controller node
         if controller.own_node:
