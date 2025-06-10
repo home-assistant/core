@@ -65,7 +65,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.file import write_utf8_file
 
@@ -831,7 +835,7 @@ async def test_send_video(
     ) as mock_get:
         mock_get.return_value = AsyncMock(status_code=404, text="Success")
 
-        with pytest.raises(ServiceValidationError) as err:
+        with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_SEND_VIDEO,
@@ -850,7 +854,7 @@ async def test_send_video(
 
     # test: invalid url
 
-    with pytest.raises(ServiceValidationError) as err:
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SEND_VIDEO,
@@ -887,7 +891,7 @@ async def test_send_video(
 
     hass.config.allowlist_external_dirs.add("/tmp/")  # noqa: S108
 
-    with pytest.raises(ServiceValidationError) as err:
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SEND_VIDEO,
