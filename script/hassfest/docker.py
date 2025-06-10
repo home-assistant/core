@@ -103,7 +103,10 @@ RUN --mount=from=ghcr.io/astral-sh/uv:{uv},source=/uv,target=/bin/uv \
         --no-cache \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
         -r /usr/src/homeassistant/requirements.txt \
-        stdlib-list==0.10.0 pipdeptree=={pipdeptree} tqdm=={tqdm} ruff=={ruff} \
+        stdlib-list==0.10.0 \
+        pipdeptree=={pipdeptree} \
+        tqdm=={tqdm} \
+        ruff=={ruff} \
         {required_components_packages}
 
 LABEL "name"="hassfest"
@@ -169,7 +172,7 @@ def _generate_hassfest_dockerimage(
     return File(
         _HASSFEST_TEMPLATE.format(
             timeout=timeout,
-            required_components_packages=" ".join(sorted(packages)),
+            required_components_packages=" \\\n        ".join(sorted(packages)),
             **package_versions,
         ),
         config.root / "script/hassfest/docker/Dockerfile",
