@@ -14,9 +14,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 
 from .const import CONF_INVERT, CONF_TARGET_DOMAIN, DOMAIN
-from .light import LightSwitch
-
-__all__ = ["LightSwitch"]
 
 _LOGGER = logging.getLogger(__name__)
 
