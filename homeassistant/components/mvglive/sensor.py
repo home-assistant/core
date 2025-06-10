@@ -35,8 +35,6 @@ CONF_PRODUCTS = "products"
 CONF_TIMEOFFSET = "timeoffset"
 CONF_NUMBER = "number"
 
-DEFAULT_PRODUCT = ["S-Bahn", "U-Bahn", "Tram", "Bus", "ExpressBus", "Nachteule"]
-
 NONE_ICON = "mdi:clock"
 
 ATTRIBUTION = "Data provided by mvg.de"
@@ -171,7 +169,7 @@ def _get_minutes_until_departure(departure_time: int) -> int:
         departure_time: Unix timestamp of the departure time, in seconds.
 
     Returns:
-        The time difference in minutes, as a float.
+        The time difference in minutes, as an integer.
 
     """
     current_time = datetime.now()
@@ -207,7 +205,7 @@ class MVGData:
         """Update the connection data."""
         try:
 
-            def departures():
+            def departures_async():
                 return asyncio.run(
                     self.mvg.departures_async(
                         station_id=self.mvg.station_id,
@@ -223,7 +221,7 @@ class MVGData:
                     )
                 )
 
-            _departures = await self._hass.async_add_executor_job(departures)
+            _departures = await self._hass.async_add_executor_job(departures_async)
         except ValueError:
             self.departures = []
             _LOGGER.warning("Returned data not understood")
