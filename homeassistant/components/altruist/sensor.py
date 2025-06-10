@@ -1,4 +1,4 @@
-"""Defines the Altruist integration for Home Assistant."""
+"""Defines the Altruist sensor platform."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
