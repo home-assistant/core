@@ -32,7 +32,6 @@ class UptimeKumaDataUpdateCoordinator(
     """Update coordinator for Uptime Kuma."""
 
     config_entry: UptimeKumaConfigEntry
-    api: UptimeKuma
 
     def __init__(
         self, hass: HomeAssistant, config_entry: UptimeKumaConfigEntry
