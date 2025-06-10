@@ -880,7 +880,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
     # Next test editing a template observation
     # select the subentry for reconfiguration
     result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "observation", subentry_id="01JXCPHRM64Y84GQC58P5EKVHY"
+        hass, "observation", subentry_id="27TCPHRM64Y84GQC58P5EIES"
     )
     await hass.async_block_till_done()
 
