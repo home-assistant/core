@@ -37,5 +37,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_sun_solar_rising": {
+      "title": "Deprecated Sun solar rising sensor",
+      "description": "The sun 'solar rising' sensor is being deprecated; an equivalent 'solar rising' binary_sensor has been made available as a replacement. To resolve this issue, disable {entity}."
+    }
   }
 }
