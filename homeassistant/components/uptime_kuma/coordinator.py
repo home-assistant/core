@@ -47,10 +47,7 @@ class UptimeKumaDataUpdateCoordinator(
         )
         session = async_get_clientsession(hass, config_entry.data[CONF_VERIFY_SSL])
         self.api = UptimeKuma(
-            session,
-            config_entry.data[CONF_URL],
-            "",
-            config_entry.data[CONF_API_KEY],
+            session, config_entry.data[CONF_URL], "", config_entry.data[CONF_API_KEY]
         )
 
     async def _async_update_data(self) -> dict[str, UptimeKumaMonitor]:

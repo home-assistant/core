@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from pythonkuma import UptimeKumaMonitor
+from pythonkuma import MonitorType, UptimeKumaMonitor
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,7 +19,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import UptimeKumaConfigEntry, UptimeKumaDataUpdateCoordinator
@@ -78,31 +77,8 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         key=UptimeKumaSensor.TYPE,
         translation_key=UptimeKumaSensor.TYPE,
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "http",
-            "port",
-            "ping",
-            "keyword",
-            "dns",
-            "push",
-            "steam",
-            "mqtt",
-            "sqlserver",
-            "json_query",
-            "group",
-            "docker",
-            "grps_keyword",
-            "real_browser",
-            "gamedig",
-            "kafka_producer",
-            "postgres",
-            "mysql",
-            "mongodb",
-            "radius",
-            "redis",
-            "tailscale_ping",
-        ],
-        value_fn=lambda m: slugify(m.monitor_type),
+        options=[m.name.lower() for m in MonitorType],
+        value_fn=lambda m: m.monitor_type.name.lower(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     UptimeKumaSensorEntityDescription(

@@ -53,12 +53,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
             url = URL(user_input[CONF_URL]).human_repr().removesuffix("/")
             self._async_abort_entries_match({CONF_URL: url})
 
-            uptime_kuma = UptimeKuma(
-                session,
-                str(url),
-                "",
-                user_input[CONF_API_KEY],
-            )
+            uptime_kuma = UptimeKuma(session, str(url), "", user_input[CONF_API_KEY])
 
             try:
                 await uptime_kuma.async_get_monitors()
