@@ -619,15 +619,6 @@
       "keep_fresh_mode": {
         "name": "Keep fresh mode"
       }
-    },
-    "water_heater": {
-      "water_heater": {
-        "state": {
-          "standard": "Standard",
-          "force": "Forced",
-          "power": "Power"
-        }
-      }
     }
   },
   "issues": {
