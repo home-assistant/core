@@ -57,5 +57,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "grpc_error": {
+      "message": "Failed to communicate with Google Assistant"
+    }
   }
 }

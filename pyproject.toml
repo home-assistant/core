@@ -39,7 +39,7 @@ dependencies = [
   "attrs==25.3.0",
   "atomicwrites-homeassistant==1.4.1",
   "audioop-lts==0.2.1",
-  "awesomeversion==24.6.0",
+  "awesomeversion==25.5.0",
   "bcrypt==4.3.0",
   "certifi>=2021.5.30",
   "ciso8601==2.3.2",
@@ -106,7 +106,7 @@ dependencies = [
   # dependencies to stage 0.
   "PyTurboJPEG==1.8.0",
   "PyYAML==6.0.2",
-  "requests==2.32.3",
+  "requests==2.32.4",
   "securetar==2025.2.1",
   "SQLAlchemy==2.0.41",
   "standard-aifc==3.13.0",

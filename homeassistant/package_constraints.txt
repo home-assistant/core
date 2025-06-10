@@ -18,7 +18,7 @@ atomicwrites-homeassistant==1.4.1
 attrs==25.3.0
 audioop-lts==0.2.1
 av==13.1.0
-awesomeversion==24.6.0
+awesomeversion==25.5.0
 bcrypt==4.3.0
 bleak-retry-connector==3.9.0
 bleak==0.22.3
@@ -61,7 +61,7 @@ pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.8.0
 PyYAML==6.0.2
-requests==2.32.3
+requests==2.32.4
 securetar==2025.2.1
 SQLAlchemy==2.0.41
 standard-aifc==3.13.0
