@@ -64,7 +64,7 @@ async def test_sensor_state_update(
     mock_federwiege: MagicMock,
     entity_info: dict[str, str],
 ) -> None:
-    """Test Smarla Switch callback."""
+    """Test Smarla Sensor callback."""
     assert await setup_integration(hass, mock_config_entry)
 
     mock_sensor_property = mock_federwiege.get_property(
