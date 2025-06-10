@@ -151,16 +151,11 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 if server.http_status == HTTPStatus.UNAUTHORIZED:
                     return "invalid_auth"
                 return "cannot_connect"
+            if "uuid" not in status:
+                return "cannot_connect"
         except Exception:
             _LOGGER.exception("Unknown exception while validating connection")
             return "unknown"
-
-        if "uuid" not in status:
-            _LOGGER.warning(
-                "Squeezebox server at %s did not return a UUID, which is required for setup",
-                data[CONF_HOST],
-            )
-            return "missing_uuid"
 
         await self.async_set_unique_id(status["uuid"])
         self._abort_if_unique_id_configured()
