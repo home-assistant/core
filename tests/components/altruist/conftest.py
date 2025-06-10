@@ -4,7 +4,7 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
-from altruistclient import AltruistDeviceModel
+from altruistclient import AltruistDeviceModel, AltruistError
 import pytest
 
 from homeassistant.components.altruist.const import (
@@ -27,18 +27,18 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_IP_ADDRESS: "192.168.1.100", CONF_DEVICE_ID: "5366960e8b18"},
         unique_id="5366960e8b18",
-        title="Altruist 5366960e8b18",
+        title="5366960e8b18",
     )
 
 
 @pytest.fixture
-def mock_altruist_device():
+def mock_altruist_device() -> Mock:
     """Return a mock AltruistDeviceModel."""
     device = Mock(spec=AltruistDeviceModel)
     device.id = "5366960e8b18"
@@ -49,7 +49,7 @@ def mock_altruist_device():
 
 
 @pytest.fixture
-def mock_altruist_client(mock_altruist_device):
+def mock_altruist_client(mock_altruist_device: Mock) -> Generator[AsyncMock]:
     """Return a mock AltruistClient."""
     with (
         patch(
@@ -74,3 +74,13 @@ def mock_altruist_client(mock_altruist_device):
         mock_client_class.from_ip_address = AsyncMock(return_value=mock_instance)
 
         yield mock_instance
+
+
+@pytest.fixture
+def mock_altruist_client_fails_once(mock_altruist_client: AsyncMock) -> Generator[None]:
+    """Patch AltruistClient to fail once and then succeed."""
+    with patch(
+        "homeassistant.components.altruist.config_flow.AltruistClient.from_ip_address",
+        side_effect=[AltruistError("Connection failed"), mock_altruist_client],
+    ):
+        yield

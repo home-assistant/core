@@ -50,6 +50,6 @@ async def test_connection_error(
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get("sensor.altruist_5366960e8b18_bme280_temperature").state
-        is STATE_UNAVAILABLE
+        hass.states.get("sensor.5366960e8b18_bme280_temperature").state
+        == STATE_UNAVAILABLE
     )

@@ -62,13 +62,13 @@ class AltruistDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
     async def _async_update_data(self) -> dict[str, str]:
         new_data = {}
-        if self.client is not None:
-            try:
-                fetched_data = await self.client.fetch_data()
-            except AltruistError as ex:
-                raise UpdateFailed(
-                    f"The Altruist {self.client.device_id} is unavailable: {ex}"
-                ) from ex
-            for sensordata_value in fetched_data:
-                new_data[sensordata_value["value_type"]] = sensordata_value["value"]
+        assert self.client
+        try:
+            fetched_data = await self.client.fetch_data()
+        except AltruistError as ex:
+            raise UpdateFailed(
+                f"The Altruist {self.client.device_id} is unavailable: {ex}"
+            ) from ex
+        for sensordata_value in fetched_data:
+            new_data[sensordata_value["value_type"]] = sensordata_value["value"]
         return new_data

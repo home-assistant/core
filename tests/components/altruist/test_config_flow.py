@@ -1,9 +1,7 @@
 """Test the Altruist Sensor config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import patch
-
-from altruistclient import AltruistError
+from unittest.mock import AsyncMock
 
 from homeassistant import config_entries
 from homeassistant.components.altruist.const import (
@@ -35,7 +33,7 @@ async def test_form_user_step(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
 
@@ -55,46 +53,41 @@ async def test_form_user_step_invalid_ip(hass: HomeAssistant) -> None:
 
 
 async def test_form_user_step_cannot_connect_then_recovers(
-    hass: HomeAssistant, mock_altruist_client
+    hass: HomeAssistant,
+    mock_altruist_client: AsyncMock,
+    mock_altruist_client_fails_once: None,
 ) -> None:
     """Test we handle connection error and allow recovery."""
-    with patch(
-        "homeassistant.components.altruist.config_flow.AltruistClient.from_ip_address",
-        side_effect=[
-            AltruistError("Connection failed"),
-            mock_altruist_client,
-        ],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
 
-        # First attempt triggers an error
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_IP_ADDRESS: "192.168.1.100"},
-        )
+    # First attempt triggers an error
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_IP_ADDRESS: "192.168.1.100"},
+    )
 
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["errors"] == {"base": "no_device_found"}
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "no_device_found"}
 
-        # Second attempt recovers with a valid client
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_IP_ADDRESS: "192.168.1.100"},
-        )
+    # Second attempt recovers with a valid client
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_IP_ADDRESS: "192.168.1.100"},
+    )
 
-        assert result3["type"] is FlowResultType.CREATE_ENTRY
-        assert result3["title"] == "Altruist 5366960e8b18"
-        assert result3["result"].unique_id == "5366960e8b18"
-        assert result3["data"] == {
-            CONF_IP_ADDRESS: "192.168.1.100",
-            CONF_DEVICE_ID: "5366960e8b18",
-        }
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "5366960e8b18"
+    assert result3["result"].unique_id == "5366960e8b18"
+    assert result3["data"] == {
+        CONF_IP_ADDRESS: "192.168.1.100",
+        CONF_DEVICE_ID: "5366960e8b18",
+    }
 
 
 async def test_form_user_step_success(
-    hass: HomeAssistant, mock_altruist_client
+    hass: HomeAssistant, mock_altruist_client: AsyncMock
 ) -> None:
     """Test successful user step."""
     result = await hass.config_entries.flow.async_init(
@@ -107,7 +100,7 @@ async def test_form_user_step_success(
     )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Altruist 5366960e8b18"
+    assert result2["title"] == "5366960e8b18"
     assert result2["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_DEVICE_ID: "5366960e8b18",
@@ -115,7 +108,7 @@ async def test_form_user_step_success(
 
 
 async def test_form_user_step_already_configured(
-    hass: HomeAssistant, mock_altruist_client
+    hass: HomeAssistant, mock_altruist_client: AsyncMock
 ) -> None:
     """Test we abort if already configured."""
     entry = MockConfigEntry(
@@ -138,7 +131,9 @@ async def test_form_user_step_already_configured(
     assert result2["reason"] == "already_configured"
 
 
-async def test_zeroconf_discovery(hass: HomeAssistant, mock_altruist_client) -> None:
+async def test_zeroconf_discovery(
+    hass: HomeAssistant, mock_altruist_client: AsyncMock
+) -> None:
     """Test zeroconf discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -151,7 +146,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_altruist_client) -> 
 
 
 async def test_zeroconf_discovery_already_configured(
-    hass: HomeAssistant, mock_altruist_client
+    hass: HomeAssistant, mock_altruist_client: AsyncMock
 ) -> None:
     """Test zeroconf discovery when already configured."""
     entry = MockConfigEntry(
@@ -172,7 +167,7 @@ async def test_zeroconf_discovery_already_configured(
 
 
 async def test_zeroconf_discovery_confirm(
-    hass: HomeAssistant, mock_altruist_client
+    hass: HomeAssistant, mock_altruist_client: AsyncMock
 ) -> None:
     """Test zeroconf discovery confirmation."""
 
@@ -187,7 +182,7 @@ async def test_zeroconf_discovery_confirm(
     )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Altruist 5366960e8b18"
+    assert result2["title"] == "5366960e8b18"
     assert result2["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_DEVICE_ID: "5366960e8b18",

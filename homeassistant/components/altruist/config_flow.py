@@ -43,7 +43,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(client.device_id)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
-                        title=f"Altruist {self.device.id}",
+                        title=self.device.id,
                         data={
                             CONF_IP_ADDRESS: ip_address,
                             CONF_DEVICE_ID: client.device_id,
@@ -81,7 +81,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": f"Altruist {self.device.id}",
+                    "name": self.device.id,
                 }
             }
         )
@@ -94,7 +94,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.device
         if user_input is not None:
             return self.async_create_entry(
-                title=f"Altruist {self.device.id}",
+                title=self.device.id,
                 data={
                     CONF_IP_ADDRESS: self.device.ip_address,
                     CONF_DEVICE_ID: self.device.id,
@@ -105,7 +105,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                "model": f"Altruist {self.device.id}",
+                "model": self.device.id,
             },
         )
 

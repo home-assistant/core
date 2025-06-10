@@ -1,8 +1,4 @@
-"""Defines the Altruist integration for Home Assistant.
-
-Includes the setup of sensors, data update coordination, and sensor entity
-implementation for interacting with Altruist devices.
-"""
+"""Defines the Altruist integration for Home Assistant."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -42,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 class AltruistSensorEntityDescription(SensorEntityDescription):
     """Class to describe a Sensor entity."""
 
-    native_value_fn: Callable[[str], float | int | None] = float
+    native_value_fn: Callable[[str], float | int] = float
     state_class = SensorStateClass.MEASUREMENT
 
 
@@ -243,11 +239,7 @@ class AltruistSensor(CoordinatorEntity[AltruistDataUpdateCoordinator], SensorEnt
         )
 
     @property
-    def native_value(self) -> float | int | None:
+    def native_value(self) -> float | int:
         """Return the native value of the sensor."""
-        string_value = self.coordinator.data.get(self.entity_description.key)
-        return (
-            self.entity_description.native_value_fn(string_value)
-            if string_value is not None
-            else None
-        )
+        string_value = self.coordinator.data[self.entity_description.key]
+        return self.entity_description.native_value_fn(string_value)
