@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from functools import cached_property  # pylint: disable=hass-deprecated-import
 from types import ModuleType
 from typing import Any
 
 import pytest
 
-from homeassistant.backports import (
-    enum as backports_enum,
-    functools as backports_functools,
-)
+from homeassistant.backports import enum as backports_enum
 
 from .common import import_and_test_deprecated_alias
 
@@ -21,7 +17,6 @@ from .common import import_and_test_deprecated_alias
     ("module", "replacement", "breaks_in_ha_version"),
     [
         (backports_enum, StrEnum, "2025.5"),
-        (backports_functools, cached_property, "2025.5"),
     ],
 )
 def test_deprecated_aliases(
