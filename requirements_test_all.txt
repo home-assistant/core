@@ -289,7 +289,7 @@ aiolookin==1.0.0
 aiolyric==2.0.1
 
 # homeassistant.components.mealie
-aiomealie==0.9.5
+aiomealie==0.9.6
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -616,7 +616,7 @@ buienradar==1.0.6
 cached-ipaddress==0.10.0
 
 # homeassistant.components.caldav
-caldav==1.3.9
+caldav==1.6.0
 
 # homeassistant.components.coinbase
 coinbase-advanced-py==1.2.2
@@ -1016,7 +1016,7 @@ home-assistant-frontend==20250531.0
 home-assistant-intents==2025.5.28
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.1.1
+homematicip==2.0.4
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1941,7 +1941,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.8.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.3
+pysmartthings==3.2.4
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
