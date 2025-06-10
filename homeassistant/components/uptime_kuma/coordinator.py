@@ -46,16 +46,13 @@ class UptimeKumaDataUpdateCoordinator(
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-
-    async def _async_setup(self) -> None:
-        """Set up coordinator."""
-        session = async_get_clientsession(self.hass)
+        session = async_get_clientsession(hass, config_entry.data[CONF_VERIFY_SSL])
         self.api = UptimeKuma(
             session,
-            self.config_entry.data[CONF_URL],
+            config_entry.data[CONF_URL],
             "",
-            self.config_entry.data[CONF_API_KEY],
-            self.config_entry.data[CONF_VERIFY_SSL],
+            config_entry.data[CONF_API_KEY],
+            config_entry.data[CONF_VERIFY_SSL],
         )
 
     async def _async_update_data(self) -> dict[str, UptimeKumaMonitor]:
