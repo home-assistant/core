@@ -49,10 +49,6 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # geocachingapi > reverse_geocode > scipy > numpy
         "scipy": {"numpy"}
     },
-    "mealie": {
-        # https://github.com/joostlek/python-mealie/pull/490
-        "aiomealie": {"awesomeversion"}
-    },
 }
 
 PACKAGE_REGEX = re.compile(
