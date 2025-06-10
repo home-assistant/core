@@ -19,7 +19,7 @@ from volvocarsapi.models import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_BATTERY_CAPACITY, DOMAIN
@@ -35,6 +35,7 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
     """Volvo Data Coordinator."""
 
     config_entry: VolvoConfigEntry
+    vehicle: VolvoCarsVehicle
 
     def __init__(
         self,
@@ -53,7 +54,6 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
         )
 
         self.api = api
-        self.vehicle: VolvoCarsVehicle
 
         # The variable is set during _async_setup().
         self._refresh_conditions: dict[
@@ -76,7 +76,7 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
             ) from ex
 
         if vehicle is None:
-            raise HomeAssistantError(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN, translation_key="no_vehicle"
             )
 
