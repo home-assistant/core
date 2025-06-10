@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DOMAIN, MeshRoles
+from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, MeshRoles
 from .coordinator import (
     FRITZ_DATA_KEY,
     AvmWrapper,
@@ -30,6 +30,9 @@ from .coordinator import (
 from .entity import FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
+
+# Set a sane value to avoid too many updates
+PARALLEL_UPDATES = 5
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -175,16 +178,6 @@ class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
         self._name = f"{self.hostname} Wake on LAN"
         self._attr_unique_id = f"{self._mac}_wake_on_lan"
         self._is_available = True
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            default_manufacturer="AVM",
-            default_model="FRITZ!Box Tracked device",
-            default_name=device.hostname,
-            via_device=(
-                DOMAIN,
-                avm_wrapper.unique_id,
-            ),
-        )
 
     async def async_press(self) -> None:
         """Press the button."""

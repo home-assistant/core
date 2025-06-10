@@ -157,7 +157,6 @@ SENSORS = (
     HomeConnectSensorEntityDescription(
         key=StatusKey.BSH_COMMON_BATTERY_LEVEL,
         device_class=SensorDeviceClass.BATTERY,
-        translation_key="battery_level",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.BSH_COMMON_VIDEO_CAMERA_STATE,
@@ -648,10 +647,12 @@ class HomeConnectProgramSensor(HomeConnectSensor):
 class HomeConnectEventSensor(HomeConnectSensor):
     """Sensor class for Home Connect events."""
 
+    _attr_entity_registry_enabled_default = False
+
     def update_native_value(self) -> None:
         """Update the sensor's status."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         if event:
             self._update_native_value(event.value)
-        elif not self._attr_native_value:
+        elif self._attr_native_value is None:
             self._attr_native_value = self.entity_description.default_value

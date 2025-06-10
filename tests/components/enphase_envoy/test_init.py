@@ -19,6 +19,7 @@ from homeassistant.components.enphase_envoy.const import (
 )
 from homeassistant.components.enphase_envoy.coordinator import (
     FIRMWARE_REFRESH_INTERVAL,
+    MAC_VERIFICATION_DELAY,
     SCAN_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -443,3 +444,146 @@ async def test_coordinator_firmware_refresh_with_envoy_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Error reading firmware:" in caplog.text
+
+
+@respx.mock
+async def test_coordinator_interface_information(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator interface mac verification."""
+    await setup_integration(hass, config_entry)
+
+    caplog.set_level(logging.DEBUG)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+
+    # move time forward so interface information is fetched
+    freezer.tick(MAC_VERIFICATION_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # verify first time add of mac to connections is in log
+    assert "added connection" in caplog.text
+
+    # trigger integration reload by changing options
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: False,
+            OPTION_DISABLE_KEEP_ALIVE: True,
+        },
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    caplog.clear()
+    # envoy reloaded and device registry still has connection info
+    # force mac verification again to test existing connection is verified
+    freezer.tick(MAC_VERIFICATION_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # verify existing connection is verified in log
+    assert "connection verified as existing" in caplog.text
+
+
+@respx.mock
+async def test_coordinator_interface_information_no_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test coordinator interface mac verification full code cov."""
+    await setup_integration(hass, config_entry)
+
+    caplog.set_level(logging.DEBUG)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+
+    # update device to force no device found in mac verification
+    envoy_device = device_registry.async_get_device(
+        identifiers={
+            (
+                DOMAIN,
+                mock_envoy.serial_number,
+            )
+        }
+    )
+    device_registry.async_update_device(
+        device_id=envoy_device.id,
+        new_identifiers={(DOMAIN, "9999")},
+    )
+
+    # move time forward so interface information is fetched
+    freezer.tick(MAC_VERIFICATION_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # verify no device found message in log
+    assert "No envoy device found in device registry" in caplog.text
+
+
+@respx.mock
+async def test_coordinator_interface_information_mac_also_in_other_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test coordinator interface mac verification with MAC also in other existing device."""
+    await setup_integration(hass, config_entry)
+
+    caplog.set_level(logging.DEBUG)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+
+    # add existing device with MAC and sparsely populated i.e. unifi that found envoy
+    other_config_entry = MockConfigEntry(domain="test", data={})
+    other_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")},
+        manufacturer="Enphase Energy",
+    )
+
+    envoy_device = device_registry.async_get_device(
+        identifiers={
+            (
+                DOMAIN,
+                mock_envoy.serial_number,
+            )
+        }
+    )
+    assert envoy_device
+
+    # move time forward so interface information is fetched
+    freezer.tick(MAC_VERIFICATION_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # verify mac was added
+    assert "added connection: ('mac', '00:11:22:33:44:55') to Envoy 1234" in caplog.text
+
+    # verify connection is now in envoy device
+    envoy_device_refetched = device_registry.async_get(envoy_device.id)
+    assert envoy_device_refetched
+    assert envoy_device_refetched.name == "Envoy 1234"
+    assert envoy_device_refetched.serial_number == "1234"
+    assert envoy_device_refetched.connections == {
+        (
+            dr.CONNECTION_NETWORK_MAC,
+            "00:11:22:33:44:55",
+        )
+    }

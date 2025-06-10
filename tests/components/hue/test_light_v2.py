@@ -2,9 +2,14 @@
 
 from unittest.mock import Mock
 
-from homeassistant.components.light import ColorMode
+from homeassistant.components.light import (
+    ATTR_EFFECT,
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+)
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
@@ -17,7 +22,7 @@ async def test_lights(
     """Test if all v2 lights get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
     # 8 entities should be created from test data
@@ -85,7 +90,7 @@ async def test_light_turn_on_service(
     """Test calling the turn on service on a light."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     test_light_id = "light.hue_light_with_color_temperature_only"
 
@@ -271,7 +276,7 @@ async def test_light_turn_off_service(
     """Test calling the turn off service on a light."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     test_light_id = "light.hue_light_with_color_and_color_temperature_1"
 
@@ -359,7 +364,7 @@ async def test_light_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     """Test new light added to bridge."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     test_entity_id = "light.hue_mocked_device"
 
@@ -383,7 +388,7 @@ async def test_light_availability(
     """Test light availability property."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     test_light_id = "light.hue_light_with_color_and_color_temperature_1"
 
@@ -418,7 +423,7 @@ async def test_grouped_lights(
     """Test if all v2 grouped lights get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "light")
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
     # test if entities for hue groups are created and enabled by default
     for entity_id in ("light.test_zone", "light.test_room"):
@@ -639,3 +644,38 @@ async def test_grouped_lights(
             mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
             == "identify"
         )
+
+
+async def test_light_turn_on_service_deprecation(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test calling the turn on service on a light."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    test_light_id = "light.hue_light_with_color_temperature_only"
+
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    event = {
+        "id": "3a6710fa-4474-4eba-b533-5e6e72968feb",
+        "type": "light",
+        "effects": {"status": "candle"},
+    }
+    mock_bridge_v2.api.emit_event("update", event)
+    await hass.async_block_till_done()
+
+    # test disable effect
+    # it should send a request with effect set to "no_effect"
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: test_light_id,
+            ATTR_EFFECT: "None",
+        },
+        blocking=True,
+    )
+    assert mock_bridge_v2.mock_requests[0]["json"]["effects"]["effect"] == "no_effect"

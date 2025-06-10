@@ -13,7 +13,7 @@ from pysmartthings import (
     Subscription,
 )
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, HVACMode
@@ -38,7 +38,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration, trigger_update
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_devices(
@@ -57,6 +57,37 @@ async def test_devices(
 
     assert device is not None
     assert device == snapshot
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_device_not_resetting_area(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device not resetting area."""
+    await setup_integration(hass, mock_config_entry)
+
+    device_id = devices.get_devices.return_value[0].device_id
+
+    device = device_registry.async_get_device({(DOMAIN, device_id)})
+
+    assert device.area_id == "theater"
+
+    device_registry.async_update_device(device_id=device.id, area_id=None)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device({(DOMAIN, device_id)})
+
+    assert device.area_id is None
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    assert device.area_id is None
 
 
 @pytest.mark.parametrize("device_fixture", ["button"])
@@ -109,7 +140,9 @@ async def test_create_subscription(
     devices.subscribe.assert_called_once_with(
         "397678e5-9995-4a39-9d9f-ae6ba310236c",
         "5aaaa925-2be1-4e40-b257-e4ef59083324",
-        Subscription.from_json(load_fixture("subscription.json", DOMAIN)),
+        Subscription.from_json(
+            await async_load_fixture(hass, "subscription.json", DOMAIN)
+        ),
     )
 
 
@@ -340,11 +373,11 @@ async def test_hub_via_device(
 ) -> None:
     """Test hub with child devices."""
     mock_smartthings.get_devices.return_value = DeviceResponse.from_json(
-        load_fixture("devices/hub.json", DOMAIN)
+        await async_load_fixture(hass, "devices/hub.json", DOMAIN)
     ).items
     mock_smartthings.get_device_status.side_effect = [
         DeviceStatus.from_json(
-            load_fixture(f"device_status/{fixture}.json", DOMAIN)
+            await async_load_fixture(hass, f"device_status/{fixture}.json", DOMAIN)
         ).components
         for fixture in ("hub", "multipurpose_sensor")
     ]
@@ -530,11 +563,27 @@ async def test_entity_unique_id_migration(
             "2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_machineState_machineState",
         ),
         (
+            "da_ks_microwave_0101x",
+            SENSOR_DOMAIN,
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a.ovenJobState",
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a.completionTime",
+            "microwave_completion_time",
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_completionTime_completionTime",
+        ),
+        (
+            "da_ks_microwave_0101x",
+            SENSOR_DOMAIN,
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_ovenJobState_ovenJobState",
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a.completionTime",
+            "microwave_completion_time",
+            "2bad3237-4886-e699-1b90-4a51a3d55c8a_main_ovenOperatingState_completionTime_completionTime",
+        ),
+        (
             "da_wm_dw_000001",
             SENSOR_DOMAIN,
             "f36dc7ce-cac0-0667-dc14-a3704eb5e676.dishwasherJobState",
             "f36dc7ce-cac0-0667-dc14-a3704eb5e676.machineState",
-            "microwave_machine_state",
+            "dishwasher_machine_state",
             "f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_machineState_machineState",
         ),
         (
@@ -542,8 +591,24 @@ async def test_entity_unique_id_migration(
             SENSOR_DOMAIN,
             "f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_dishwasherJobState_dishwasherJobState",
             "f36dc7ce-cac0-0667-dc14-a3704eb5e676.machineState",
-            "microwave_machine_state",
+            "dishwasher_machine_state",
             "f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_machineState_machineState",
+        ),
+        (
+            "da_wm_dw_000001",
+            SENSOR_DOMAIN,
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676.dishwasherJobState",
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676.completionTime",
+            "dishwasher_completion_time",
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_completionTime_completionTime",
+        ),
+        (
+            "da_wm_dw_000001",
+            SENSOR_DOMAIN,
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_dishwasherJobState_dishwasherJobState",
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676.completionTime",
+            "dishwasher_completion_time",
+            "f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_dishwasherOperatingState_completionTime_completionTime",
         ),
         (
             "da_wm_wd_000001",
@@ -562,6 +627,22 @@ async def test_entity_unique_id_migration(
             "02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_machineState_machineState",
         ),
         (
+            "da_wm_wd_000001",
+            SENSOR_DOMAIN,
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b.dryerJobState",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b.completionTime",
+            "dryer_completion_time",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_completionTime_completionTime",
+        ),
+        (
+            "da_wm_wd_000001",
+            SENSOR_DOMAIN,
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_dryerJobState_dryerJobState",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b.completionTime",
+            "dryer_completion_time",
+            "02f7256e-8353-5bdd-547f-bd5b1647e01b_main_dryerOperatingState_completionTime_completionTime",
+        ),
+        (
             "da_wm_wm_000001",
             SENSOR_DOMAIN,
             "f984b91d-f250-9d42-3436-33f09a422a47.washerJobState",
@@ -576,6 +657,22 @@ async def test_entity_unique_id_migration(
             "f984b91d-f250-9d42-3436-33f09a422a47.machineState",
             "washer_machine_state",
             "f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_machineState_machineState",
+        ),
+        (
+            "da_wm_wm_000001",
+            SENSOR_DOMAIN,
+            "f984b91d-f250-9d42-3436-33f09a422a47.washerJobState",
+            "f984b91d-f250-9d42-3436-33f09a422a47.completionTime",
+            "washer_completion_time",
+            "f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_completionTime_completionTime",
+        ),
+        (
+            "da_wm_wm_000001",
+            SENSOR_DOMAIN,
+            "f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_washerJobState_washerJobState",
+            "f984b91d-f250-9d42-3436-33f09a422a47.completionTime",
+            "washer_completion_time",
+            "f984b91d-f250-9d42-3436-33f09a422a47_main_washerOperatingState_completionTime_completionTime",
         ),
     ],
 )

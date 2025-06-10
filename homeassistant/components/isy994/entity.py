@@ -181,6 +181,7 @@ class ISYProgramEntity(ISYEntity):
 
     _actions: Program
     _status: Program
+    _node: Program
 
     def __init__(self, name: str, status: Program, actions: Program = None) -> None:
         """Initialize the ISY program-based entity."""

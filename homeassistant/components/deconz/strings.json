@@ -73,7 +73,7 @@
       "remote_moved_any_side": "Device moved with any side up",
       "remote_double_tap_any_side": "Device double tapped on any side",
       "remote_turned_clockwise": "Device turned clockwise",
-      "remote_turned_counter_clockwise": "Device turned counter clockwise",
+      "remote_turned_counter_clockwise": "Device turned counterclockwise",
       "remote_rotate_from_side_1": "Device rotated from \"side 1\" to \"{subtype}\"",
       "remote_rotate_from_side_2": "Device rotated from \"side 2\" to \"{subtype}\"",
       "remote_rotate_from_side_3": "Device rotated from \"side 3\" to \"{subtype}\"",

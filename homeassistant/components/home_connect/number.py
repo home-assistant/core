@@ -11,6 +11,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -79,7 +80,7 @@ NUMBERS = (
     NumberEntityDescription(
         key=SettingKey.COOKING_HOOD_COLOR_TEMPERATURE_PERCENT,
         translation_key="color_temperature_percent",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
     ),
     NumberEntityDescription(
         key=SettingKey.LAUNDRY_CARE_WASHER_I_DOS_1_BASE_LEVEL,
