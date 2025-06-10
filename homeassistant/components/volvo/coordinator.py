@@ -20,10 +20,9 @@ from volvocarsapi.models import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DATA_BATTERY_CAPACITY, DOMAIN, MANUFACTURER
+from .const import DATA_BATTERY_CAPACITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,10 +52,8 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
             update_interval=timedelta(seconds=135),
         )
 
-        self.api: VolvoCarsApi = api
-
+        self.api = api
         self.vehicle: VolvoCarsVehicle
-        self.device: DeviceInfo
 
         # The variable is set during _async_setup().
         self._refresh_conditions: dict[
@@ -85,20 +82,6 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
         self.vehicle = vehicle
         self.data = {}
-
-        model = (
-            f"{vehicle.description.model} ({vehicle.model_year})"
-            if vehicle.fuel_type == "NONE"
-            else f"{vehicle.description.model} {vehicle.fuel_type} ({vehicle.model_year})"
-        )
-
-        self.device = DeviceInfo(
-            identifiers={(DOMAIN, vehicle.vin)},
-            manufacturer=MANUFACTURER,
-            model=model,
-            name=f"{MANUFACTURER} {vehicle.description.model}",
-            serial_number=vehicle.vin,
-        )
 
         self._refresh_conditions = {
             "command_accessibility": (self.api.async_get_command_accessibility, True),

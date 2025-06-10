@@ -6,10 +6,11 @@ from dataclasses import dataclass
 from volvocarsapi.models import VolvoCarsApiBaseModel
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_VIN
+from .const import CONF_VIN, DOMAIN, MANUFACTURER
 from .coordinator import VolvoDataCoordinator
 
 
@@ -47,7 +48,21 @@ class VolvoEntity(CoordinatorEntity[VolvoDataCoordinator]):
         self._attr_unique_id = get_unique_id(
             coordinator.config_entry.data[CONF_VIN], description.key
         )
-        self._attr_device_info = coordinator.device
+
+        vehicle = coordinator.vehicle
+        model = (
+            f"{vehicle.description.model} ({vehicle.model_year})"
+            if vehicle.fuel_type == "NONE"
+            else f"{vehicle.description.model} {vehicle.fuel_type} ({vehicle.model_year})"
+        )
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, vehicle.vin)},
+            manufacturer=MANUFACTURER,
+            model=model,
+            name=f"{MANUFACTURER} {vehicle.description.model}",
+            serial_number=vehicle.vin,
+        )
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
