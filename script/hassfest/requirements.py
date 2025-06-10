@@ -36,6 +36,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
     "pytz": "CalVer",
+    "requests": "SemVer",
     "typing_extensions": "SemVer",
     "yarl": "SemVer",
 }
