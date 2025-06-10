@@ -20,7 +20,7 @@
     },
     "deprecated_system_packages_config_flow_integration": {
       "title": "The {integration_title} integration is being removed",
-      "description": "The {integration_title} integration is being removed as it depends on system packages that can't be installed on your system because it uses deprecated architecture. To resolve this, remove all \"{integration_title}\" config entries."
+      "description": "The {integration_title} integration is being removed as it depends on system packages that can only be installed on systems running a deprecated architecture. To resolve this, remove all \"{integration_title}\" config entries."
     },
     "deprecated_system_packages_yaml_integration": {
       "title": "The {integration_title} integration is being removed",
