@@ -138,13 +138,12 @@ def _async_process_target(
     if not target:
         return "channel_name", target
 
-    if isinstance(target, str):
-        target = target.lstrip("#")
+    target = target.lstrip("#")
 
-        if SLACK_USERID_PATTERN.match(target):
-            return "user_id", target
-        if SLACK_CHANNELID_PATTERN.match(target):
-            return "channel_id", target
+    if SLACK_USERID_PATTERN.match(target):
+        return "user_id", target
+    if SLACK_CHANNELID_PATTERN.match(target):
+        return "channel_id", target
 
     return "channel_name", target
 
