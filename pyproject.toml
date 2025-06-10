@@ -106,7 +106,7 @@ dependencies = [
   # dependencies to stage 0.
   "PyTurboJPEG==1.8.0",
   "PyYAML==6.0.2",
-  "requests==2.32.3",
+  "requests==2.32.4",
   "securetar==2025.2.1",
   "SQLAlchemy==2.0.41",
   "standard-aifc==3.13.0",
