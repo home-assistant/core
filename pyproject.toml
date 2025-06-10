@@ -28,9 +28,9 @@ dependencies = [
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
   "aiohasupervisor==0.3.1",
-  "aiohttp==3.12.7",
+  "aiohttp==3.12.11",
   "aiohttp_cors==0.8.1",
-  "aiohttp-fast-zlib==0.2.3",
+  "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.1.1",
   "aiozoneinfo==0.2.3",
   "annotatedyaml==0.4.5",
@@ -79,7 +79,7 @@ dependencies = [
   # onboarding->cloud->alexa->camera->stream->numpy. Onboarding needs
   # to be setup in stage 0, but we don't want to also promote cloud with all its
   # dependencies to stage 0.
-  "numpy==2.2.6",
+  "numpy==2.3.0",
   "PyJWT==2.10.1",
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==45.0.3",
