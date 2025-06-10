@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsStats
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from voluptuous import Invalid
 
@@ -23,10 +24,13 @@ from homeassistant.components.hassio import (
     is_hassio as deprecated_is_hassio,
 )
 from homeassistant.components.hassio.config import STORAGE_KEY
-from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
+from homeassistant.components.hassio.const import (
+    HASSIO_UPDATE_INTERVAL,
+    REQUEST_REFRESH_DELAY,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
@@ -1140,3 +1144,63 @@ def test_deprecated_constants(
         replacement,
         "2025.11",
     )
+
+
+@pytest.mark.parametrize(
+    ("board", "issue_id"),
+    [
+        ("rpi3", "deprecated_os_aarch64"),
+        ("rpi4", "deprecated_os_aarch64"),
+        ("tinker", "deprecated_os_armv7"),
+        ("odroid-xu4", "deprecated_os_armv7"),
+        ("rpi2", "deprecated_os_armv7"),
+    ],
+)
+async def test_deprecated_installation_issue_aarch64(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    board: str,
+    issue_id: str,
+) -> None:
+    """Test deprecated installation issue."""
+    with (
+        patch.dict(os.environ, MOCK_ENVIRON),
+        patch(
+            "homeassistant.components.hassio.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant OS",
+                "arch": "armv7",
+            },
+        ),
+        patch(
+            "homeassistant.components.homeassistant.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant OS",
+                "arch": "armv7",
+            },
+        ),
+        patch(
+            "homeassistant.components.hassio.get_os_info", return_value={"board": board}
+        ),
+        patch(
+            "homeassistant.components.hassio.get_info", return_value={"hassos": True}
+        ),
+    ):
+        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue("homeassistant", issue_id)
+    assert issue.domain == "homeassistant"
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {
+        "installation_guide": "https://www.home-assistant.io/installation/",
+    }

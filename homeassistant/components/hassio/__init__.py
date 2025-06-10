@@ -563,29 +563,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return
         is_haos = info.get("hassos") is not None
         arch = system_info["arch"]
-        if is_haos and arch == "armv7":
+        board = os_info.get("board")
+        supported_board = board in {"rpi3", "rpi4", "tinker", "odroid-xu4", "rpi2"}
+        if is_haos and arch == "armv7" and supported_board:
             issue_id = "deprecated_os_"
-            board = os_info.get("board")
             if board in {"rpi3", "rpi4"}:
                 issue_id += "aarch64"
             elif board in {"tinker", "odroid-xu4", "rpi2"}:
                 issue_id += "armv7"
             ir.async_create_issue(
                 hass,
-                DOMAIN,
+                "homeassistant",
                 issue_id,
                 breaks_in_ha_version="2025.12.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
-                issue_domain="homeassistant",
                 translation_key=issue_id,
                 translation_placeholders={
                     "installation_guide": "https://www.home-assistant.io/installation/",
                 },
             )
         deprecated_architecture = False
-        if arch in {"i386", "armhf"} or (arch == "armv7" and not is_haos):
+        if arch in {"i386", "armhf"} or (arch == "armv7" and not supported_board):
             deprecated_architecture = True
         if not is_haos or deprecated_architecture:
             issue_id = "deprecated"
@@ -595,13 +595,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 issue_id += "_architecture"
             ir.async_create_issue(
                 hass,
-                DOMAIN,
+                "homeassistant",
                 issue_id,
                 breaks_in_ha_version="2025.12.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
-                issue_domain="homeassistant",
                 translation_key=issue_id,
                 translation_placeholders={
                     "installation_type": "Supervised",

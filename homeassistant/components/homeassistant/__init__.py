@@ -416,7 +416,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 translation_key="deprecated_container_armv7",
             )
         deprecated_architecture = False
-        if arch in {"i386", "armhf"} or (arch == "armv7" and deprecated_method):
+        if arch in {"i386", "armhf"} or (
+            arch == "armv7" and installation_type != "Container"
+        ):
             deprecated_architecture = True
         if deprecated_method or deprecated_architecture:
             issue_id = "deprecated"
