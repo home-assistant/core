@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.65.0
+PySwitchbot==0.66.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
