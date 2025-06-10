@@ -41,12 +41,6 @@ async def async_setup_entry(
 class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
     """Representation of a SwitchBot Battery Circulator Fan."""
 
-    # _attr_supported_features = (
-    #     LightEntityFeature.FLASH
-    #     | LightEntityFeature.EFFECT
-    #     | LightEntityFeature.TRANSITION
-    # )
-
     _attr_max_color_temp_kelvin = 6500
     _attr_min_color_temp_kelvin = 2700
 
@@ -129,21 +123,21 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
             f"rgb_color = {rgb_color},"
             f"color_temp_kelvin = {color_temp_kelvin}"
         )
-        if brightness:
+        if brightness is not None:
             self._attr_color_mode = ColorMode.RGB
             await self.send_api_command(
                 RGBWWLightCommands.SET_BRIGHTNESS,
                 parameters=str(value_map_brightness(brightness)),
             )
             self._attr_brightness = brightness
-        if rgb_color:
+        if rgb_color is not None:
             self._attr_color_mode = ColorMode.RGB
             await self.send_api_command(
                 RGBWWLightCommands.SET_COLOR,
                 parameters=":".join([str(i) for i in rgb_color]),
             )
             self._attr_rgb_color = rgb_color
-        if color_temp_kelvin:
+        if color_temp_kelvin is not None:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             await self.send_api_command(
                 RGBWWLightCommands.SET_COLOR_TEMPERATURE,
