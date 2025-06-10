@@ -477,10 +477,7 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         self._thermostat_type = coordinator.device.config[f"thermostat:{id_}"].get(
             "type", "heating"
         )
-        if self._thermostat_type == "cooling":
-            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
-        else:
-            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL]
         self._humidity_key: str | None = None
         # Check if there is a corresponding humidity key for the thermostat ID
         if (humidity_key := f"humidity:{id_}") in self.coordinator.device.status:
