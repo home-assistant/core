@@ -216,7 +216,7 @@ async def test_device_cleaning(
     assert len(devices_after_reload) == 1
 
 
-async def test_device_registry_config_entry_1(
+async def test_async_handle_source_entity_changes_source_entity_removed(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -225,7 +225,7 @@ async def test_device_registry_config_entry_1(
     sensor_device: dr.DeviceEntry,
     sensor_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test we add our config entry to the tracked sensor's device."""
+    """Test the derivative config entry is removed when the source entity is removed."""
     # Add another config entry to the sensor device
     other_config_entry = MockConfigEntry()
     other_config_entry.add_to_hass(hass)
@@ -257,13 +257,13 @@ async def test_device_registry_config_entry_1(
     with patch(
         "homeassistant.components.derivative.async_unload_entry",
         wraps=derivative.async_unload_entry,
-    ) as mock_setup_entry:
+    ) as mock_unload_entry:
         device_registry.async_update_device(
             sensor_device.id, remove_config_entry_id=sensor_config_entry.entry_id
         )
         await hass.async_block_till_done()
         await hass.async_block_till_done()
-    mock_setup_entry.assert_called_once()
+    mock_unload_entry.assert_called_once()
 
     # Check that the derivative config entry is removed from the device
     sensor_device = device_registry.async_get(sensor_device.id)
@@ -276,7 +276,7 @@ async def test_device_registry_config_entry_1(
     assert events == ["remove"]
 
 
-async def test_device_registry_config_entry_2(
+async def test_async_handle_source_entity_changes_source_entity_removed_from_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -284,7 +284,7 @@ async def test_device_registry_config_entry_2(
     sensor_device: dr.DeviceEntry,
     sensor_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test we add our config entry to the tracked sensor's device."""
+    """Test the source entity removed from the source device."""
     assert await hass.config_entries.async_setup(derivative_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -308,12 +308,12 @@ async def test_device_registry_config_entry_2(
     with patch(
         "homeassistant.components.derivative.async_unload_entry",
         wraps=derivative.async_unload_entry,
-    ) as mock_setup_entry:
+    ) as mock_unload_entry:
         entity_registry.async_update_entity(
             sensor_entity_entry.entity_id, device_id=None
         )
         await hass.async_block_till_done()
-    mock_setup_entry.assert_called_once()
+    mock_unload_entry.assert_called_once()
 
     # Check that the derivative config entry is removed from the device
     sensor_device = device_registry.async_get(sensor_device.id)
@@ -326,7 +326,7 @@ async def test_device_registry_config_entry_2(
     assert events == ["update"]
 
 
-async def test_device_registry_config_entry_3(
+async def test_async_handle_source_entity_changes_source_entity_moved_other_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -335,7 +335,7 @@ async def test_device_registry_config_entry_3(
     sensor_device: dr.DeviceEntry,
     sensor_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test we add our config entry to the tracked sensor's device."""
+    """Test the source entity is moved to another device."""
     sensor_device_2 = device_registry.async_get_or_create(
         config_entry_id=sensor_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:FF")},
@@ -344,8 +344,8 @@ async def test_device_registry_config_entry_3(
     assert await hass.config_entries.async_setup(derivative_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entry = entity_registry.async_get("sensor.my_derivative")
-    assert entity_entry.device_id == sensor_entity_entry.device_id
+    derivative_entity_entry = entity_registry.async_get("sensor.my_derivative")
+    assert derivative_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
     assert derivative_config_entry.entry_id in sensor_device.config_entries
@@ -358,18 +358,20 @@ async def test_device_registry_config_entry_3(
         """Add entity registry updated event to the list."""
         events.append(event.data["action"])
 
-    async_track_entity_registry_updated_event(hass, entity_entry.entity_id, add_event)
+    async_track_entity_registry_updated_event(
+        hass, derivative_entity_entry.entity_id, add_event
+    )
 
     # Move the source sensor to another device
     with patch(
         "homeassistant.components.derivative.async_unload_entry",
         wraps=derivative.async_unload_entry,
-    ) as mock_setup_entry:
+    ) as mock_unload_entry:
         entity_registry.async_update_entity(
             sensor_entity_entry.entity_id, device_id=sensor_device_2.id
         )
         await hass.async_block_till_done()
-    mock_setup_entry.assert_called_once()
+    mock_unload_entry.assert_called_once()
 
     # Check that the derivative config entry is moved to the other device
     sensor_device = device_registry.async_get(sensor_device.id)
@@ -382,3 +384,56 @@ async def test_device_registry_config_entry_3(
 
     # Check we got the expected events
     assert events == ["update"]
+
+
+async def test_async_handle_source_entity_new_entity_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    derivative_config_entry: MockConfigEntry,
+    sensor_device: dr.DeviceEntry,
+    sensor_entity_entry: er.RegistryEntry,
+) -> None:
+    """Test the source entity's entity ID is changed."""
+    assert await hass.config_entries.async_setup(derivative_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    derivative_entity_entry = entity_registry.async_get("sensor.my_derivative")
+    assert derivative_entity_entry.device_id == sensor_entity_entry.device_id
+
+    sensor_device = device_registry.async_get(sensor_device.id)
+    assert derivative_config_entry.entry_id in sensor_device.config_entries
+
+    events = []
+
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data["action"])
+
+    async_track_entity_registry_updated_event(
+        hass, derivative_entity_entry.entity_id, add_event
+    )
+
+    # Change the source entity's entity ID
+    with patch(
+        "homeassistant.components.derivative.async_unload_entry",
+        wraps=derivative.async_unload_entry,
+    ) as mock_unload_entry:
+        entity_registry.async_update_entity(
+            sensor_entity_entry.entity_id, new_entity_id="sensor.new_entity_id"
+        )
+        await hass.async_block_till_done()
+    mock_unload_entry.assert_called_once()
+
+    # Check that the derivative config entry is updated with the new entity ID
+    assert derivative_config_entry.options["source"] == "sensor.new_entity_id"
+
+    # Check that the helper config is still in the device
+    sensor_device = device_registry.async_get(sensor_device.id)
+    assert derivative_config_entry.entry_id in sensor_device.config_entries
+
+    # Check that the derivative config entry is not removed
+    assert derivative_config_entry.entry_id in hass.config_entries.async_entry_ids()
+
+    # Check we got the expected events
+    assert events == []
