@@ -46,7 +46,7 @@ pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.7.5
 PyYAML==6.0.2
-requests==2.32.3
+requests==2.32.4
 securetar==2025.2.1
 SQLAlchemy==2.0.40
 standard-aifc==3.13.0
