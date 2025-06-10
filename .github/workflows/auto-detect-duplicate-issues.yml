@@ -120,9 +120,13 @@ jobs:
               order: 'desc'
             });
 
-            // Filter out the current issue and pull requests
+            // Filter out the current issue, pull requests, and newer issues (higher numbers)
             const similarIssues = result.data.items
-              .filter(item => item.number !== currentNumber && !item.pull_request) // Exclude current issue and PRs
+              .filter(item =>
+                item.number !== currentNumber &&
+                !item.pull_request &&
+                item.number < currentNumber // Only include older issues (lower numbers)
+              )
               .map(item => ({
                 number: item.number,
                 title: item.title,
