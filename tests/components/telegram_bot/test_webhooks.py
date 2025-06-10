@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from telegram import WebhookInfo
 from telegram.error import TimedOut
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -55,6 +56,9 @@ async def test_set_webhooks_failed(
         application.start.assert_called_once()
         assert mock_set_webhook.call_count > 0
 
+        # SETUP_ERROR is result of ConfigEntryNotReady("Failed to register webhook with Telegram") in webhooks.py
+        assert mock_webhooks_config_entry.state == ConfigEntryState.SETUP_ERROR
+
 
 async def test_set_webhooks(
     hass: HomeAssistant,
@@ -97,6 +101,8 @@ async def test_set_webhooks(
         application.initialize.assert_called_once()
         application.start.assert_called_once()
         mock_set_webhook.assert_called_once()
+
+        assert mock_webhooks_config_entry.state == ConfigEntryState.LOADED
 
 
 async def test_webhooks_update_invalid_json(
