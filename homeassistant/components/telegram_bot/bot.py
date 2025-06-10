@@ -963,7 +963,7 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
             data = io.BytesIO(file.read())
             data.name = file_path
             return data
-    except (OSError, TypeError) as err:
+    except OSError as err:
         raise HomeAssistantError(
             f"Failed to load file: {err!s}",
             translation_domain=DOMAIN,
