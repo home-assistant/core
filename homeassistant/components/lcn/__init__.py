@@ -59,7 +59,7 @@ from .helpers import (
     register_lcn_address_devices,
     register_lcn_host_device,
 )
-from .services import register_services
+from .services import async_setup_services
 from .websocket import register_panel_and_ws_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LCN component."""
     hass.data.setdefault(DOMAIN, {})
 
-    await register_services(hass)
+    async_setup_services(hass)
     await register_panel_and_ws_api(hass)
 
     return True
