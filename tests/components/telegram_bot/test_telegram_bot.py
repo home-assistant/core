@@ -23,6 +23,7 @@ from homeassistant.components.telegram_bot import (
 )
 from homeassistant.components.telegram_bot.const import (
     ATTR_CALLBACK_QUERY_ID,
+    ATTR_CAPTION,
     ATTR_CHAT_ID,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
@@ -45,7 +46,9 @@ from homeassistant.components.telegram_bot.const import (
     PLATFORM_BROADCAST,
     SERVICE_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE,
+    SERVICE_EDIT_CAPTION,
     SERVICE_EDIT_MESSAGE,
+    SERVICE_EDIT_REPLYMARKUP,
     SERVICE_SEND_ANIMATION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
@@ -693,14 +696,23 @@ async def test_delete_message(
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_MESSAGE: "mock message"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response["chats"][0]["message_id"] == 12345
+
     with patch(
-        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.delete_message",
+        "homeassistant.components.telegram_bot.bot.Bot.delete_message",
         AsyncMock(return_value=True),
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DELETE_MESSAGE,
-            {ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
+            {ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: "last"},
             blocking=True,
         )
 
@@ -719,13 +731,41 @@ async def test_edit_message(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.edit_message",
+        "homeassistant.components.telegram_bot.bot.Bot.edit_message_text",
         AsyncMock(return_value=True),
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_MESSAGE,
             {ATTR_MESSAGE: "mock message", ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.edit_message_caption",
+        AsyncMock(return_value=True),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EDIT_CAPTION,
+            {ATTR_CAPTION: "mock caption", ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.edit_message_reply_markup",
+        AsyncMock(return_value=True),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EDIT_REPLYMARKUP,
+            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
             blocking=True,
         )
 

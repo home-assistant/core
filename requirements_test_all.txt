@@ -170,7 +170,7 @@ aioairzone-cloud==0.6.12
 aioairzone==1.0.0
 
 # homeassistant.components.amazon_devices
-aioamazondevices==3.0.5
+aioamazondevices==3.0.6
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -232,7 +232,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==32.2.0
+aioesphomeapi==32.2.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -757,7 +757,7 @@ energyzero==2.1.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.10.2
+env-canada==0.11.2
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1603,7 +1603,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2025.3.0
+pydrawise==2025.6.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -1804,7 +1804,7 @@ pynina==0.3.6
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.2.4
+pynordpool==0.3.0
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -2458,7 +2458,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.12.0
+uiprotect==7.13.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
