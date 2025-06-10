@@ -184,10 +184,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
     entry.runtime_data = SqueezeboxData(coordinator=server_coordinator, server=lms)
 
-    # set up player discovery
-    # known_servers = hass.data.setdefault(DOMAIN, {}).setdefault(KNOWN_SERVERS, {})
-    # known_players = known_servers.setdefault(lms.uuid, {}).setdefault(KNOWN_PLAYERS, [])
-
     async def _player_discovery(now: datetime | None = None) -> None:
         """Discover squeezebox players by polling server."""
 
