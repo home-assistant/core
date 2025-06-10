@@ -875,7 +875,7 @@ async def load_data(
                 try:
                     req = await client.get(url)
                 except (httpx.HTTPError, httpx.InvalidURL) as err:
-                    raise ServiceValidationError(
+                    raise HomeAssistantError(
                         f"Failed to load URL: {err!s}",
                         translation_domain=DOMAIN,
                         translation_key="failed_to_load_url",
@@ -901,7 +901,7 @@ async def load_data(
                     await asyncio.sleep(
                         1
                     )  # Add a sleep to allow other async operations to proceed
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 f"Failed to load URL: {req.status_code}",
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url",
@@ -964,7 +964,7 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
             data.name = file_path
             return data
     except (OSError, TypeError) as err:
-        raise ServiceValidationError(
+        raise HomeAssistantError(
             f"Failed to load file: {err!s}",
             translation_domain=DOMAIN,
             translation_key="failed_to_load_file",
