@@ -25,7 +25,7 @@
     "step": {
       "init": {
         "title": "Sensor Options",
-        "description": "These are the core options that affect the overall behaviour of the sensor.",
+        "description": "These options affect how much evidence is required for the Bayesian sensor to be considered 'on'.",
         "data": {
           "probability_threshold": "[%key:component::bayesian::config::step::user::data::probability_threshold%]",
           "prior": "[%key:component::bayesian::config::step::user::data::prior%]",
@@ -49,7 +49,7 @@
     "step": {
       "user": {
         "title": "Add a Bayesian Sensor",
-        "description": "Create a binary sensor which combines the state from multiple sensors to estimate the whether an event is occurring, or something is true. See [the documentation](https://www.home-assistant.io/integrations/bayesian/) for more details.",
+        "description": "Create a binary sensor which observes the state of multiple sensors to estimate the whether an event is occurring, or if something is true. See [the documentation](https://www.home-assistant.io/integrations/bayesian/) for more details.",
         "data": {
           "probability_threshold": "Probability Threshold",
           "prior": "Prior",
@@ -167,7 +167,7 @@
         "extreme_prob_given_error": "[%key:component::bayesian::config::error::extreme_prob_given_error%]"
       },
       "abort": {
-        "already_configured": "Topic is already configured"
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       }
     }
   },
