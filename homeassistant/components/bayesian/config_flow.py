@@ -49,7 +49,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -60,8 +59,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .binary_sensor import above_greater_than_below, no_overlapping
 from .const import (
-    CONF_INDEX,
-    CONF_OBSERVATIONS,
     CONF_P_GIVEN_F,
     CONF_P_GIVEN_T,
     CONF_PRIOR,
@@ -314,33 +311,6 @@ async def _select_observation_schema(
         return NUMERIC_STATE_SUBSCHEMA
 
     return TEMPLATE_SUBSCHEMA
-
-
-async def _get_remove_observation_schema(
-    handler: SchemaCommonFlowHandler,
-) -> vol.Schema:
-    """Return menu schema for multi-selecting observations for removal."""
-    return vol.Schema(
-        {
-            vol.Required(CONF_INDEX): cv.multi_select(
-                {
-                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_PLATFORM]})"
-                    for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
-                },
-            )
-        }
-    )
-
-
-async def _get_flow_step_for_editing(
-    user_input: dict[str, Any],
-) -> str:
-    """Choose which observation config flow form step to show depending on observation type selected."""
-
-    observations: list[dict[str, Any]] = user_input[CONF_OBSERVATIONS]
-    selected_idx = int(user_input[CONF_INDEX])
-
-    return str(observations[selected_idx][CONF_PLATFORM])
 
 
 async def _get_base_suggested_values(

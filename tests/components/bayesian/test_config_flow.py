@@ -681,7 +681,7 @@ async def test_basic_options(hass: HomeAssistant) -> None:
     }
 
 
-async def test_editing_observations(hass: HomeAssistant) -> None:
+async def test_reconfiguring_observations(hass: HomeAssistant) -> None:
     """Test editing observations through options flow, once of each of the 3 types."""
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -827,7 +827,25 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    await hass.config_entries.subentries.async_configure(
+    # Test an invalid re-configuration
+    # This should fail as the probabilities are equal
+    current_step = result["step_id"]
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_ENTITY_ID: "sensor.office_illuminance_lumens",
+            CONF_ABOVE: 2000,
+            CONF_P_GIVEN_T: 80,
+            CONF_P_GIVEN_F: 80,
+            CONF_NAME: "Office is bright",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["step_id"] == current_step
+    assert result["errors"] == {"base": "equal_probabilities"}
+
+    # This should work
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
             CONF_ENTITY_ID: "sensor.office_illuminance_lumens",
@@ -838,6 +856,8 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
+    assert "errors" not in result
+
     # Confirm the changes to the state config
     assert hass.config_entries.async_get_entry(config_entry.entry_id).options == {
         CONF_NAME: "Office occupied",
@@ -1037,22 +1057,6 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
 
         assert result["step_id"] == str(ObservationTypes.STATE)
         assert result["type"] is FlowResultType.FORM
-        current_step = result["step_id"]
-
-        # Observations with equal probabilities have no effect
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {
-                CONF_ENTITY_ID: "sensor.work_laptop",
-                CONF_TO_STATE: "on",
-                CONF_P_GIVEN_T: 60,
-                CONF_P_GIVEN_F: 60,
-                CONF_NAME: "Work laptop on network",
-            },
-        )
-        await hass.async_block_till_done()
-        assert result["step_id"] == current_step
-        assert result["errors"] == {"base": "equal_probabilities"}
 
         # Observations with a probability of 0 will create certainties
         with pytest.raises(vol.Invalid) as excinfo:
@@ -1083,3 +1087,68 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
             )
         assert CONF_P_GIVEN_F in excinfo.value.path
         assert excinfo.value.error_message == "extreme_prob_given_error"
+
+        # Observations with equal probabilities have no effect
+        # Try with a ObservationTypes.STATE observation
+        current_step = result["step_id"]
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_ENTITY_ID: "sensor.work_laptop",
+                CONF_TO_STATE: "on",
+                CONF_P_GIVEN_T: 60,
+                CONF_P_GIVEN_F: 60,
+                CONF_NAME: "Work laptop on network",
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["step_id"] == current_step
+        assert result["errors"] == {"base": "equal_probabilities"}
+
+        # Try with a ObservationTypes.NUMERIC_STATE observation
+        result = await hass.config_entries.subentries.async_init(
+            (config_entry.entry_id, "observation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
+        )
+        await hass.async_block_till_done()
+        current_step = result["step_id"]
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_ENTITY_ID: "sensor.office_illuminance_lux",
+                CONF_ABOVE: 40,
+                CONF_P_GIVEN_T: 85,
+                CONF_P_GIVEN_F: 85,
+                CONF_NAME: "Office is bright",
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["step_id"] == current_step
+        assert result["errors"] == {"base": "equal_probabilities"}
+
+        # Try with a ObservationTypes.TEMPLATE observation
+        result = await hass.config_entries.subentries.async_init(
+            (config_entry.entry_id, "observation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {"next_step_id": str(ObservationTypes.TEMPLATE)}
+        )
+        await hass.async_block_till_done()
+        current_step = result["step_id"]
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_VALUE_TEMPLATE: "{{ is_state('device_tracker.paulus', 'not_home') }}",
+                CONF_P_GIVEN_T: 50,
+                CONF_P_GIVEN_F: 50,
+                CONF_NAME: "Paulus not home",
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["step_id"] == current_step
+        assert result["errors"] == {"base": "equal_probabilities"}
