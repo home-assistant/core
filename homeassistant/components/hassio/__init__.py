@@ -112,7 +112,7 @@ from .coordinator import (
     get_core_info,  # noqa: F401
     get_core_stats,  # noqa: F401
     get_host_info,  # noqa: F401
-    get_info,  # noqa: F401
+    get_info,
     get_issues_info,  # noqa: F401
     get_os_info,
     get_supervisor_info,  # noqa: F401
@@ -554,15 +554,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = coordinator
 
-    info = await async_get_system_info(hass)
+    system_info = await async_get_system_info(hass)
 
     def deprecated_setup_issue() -> None:
         os_info = get_os_info(hass)
-        if os_info is None:
+        info = get_info(hass)
+        if os_info is None or info is None:
             return
-        installation_type = info["installation_type"][15:]
-        arch = info["arch"]
-        if installation_type == "OS" and arch == "armv7":
+        is_haos = info.get("hassos") is not None
+        arch = system_info["arch"]
+        if is_haos and arch == "armv7":
             issue_id = "deprecated_os_"
             board = os_info.get("board")
             if board in {"rpi3", "rpi4"}:
@@ -583,13 +584,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "installation_guide": "https://www.home-assistant.io/installation/",
                 },
             )
-        deprecated_method = installation_type == "Supervised"
         deprecated_architecture = False
-        if arch in {"i386", "armhf"} or (arch == "armv7" and deprecated_method):
+        if arch in {"i386", "armhf"} or (arch == "armv7" and not is_haos):
             deprecated_architecture = True
-        if deprecated_method or deprecated_architecture:
+        if not is_haos or deprecated_architecture:
             issue_id = "deprecated"
-            if deprecated_method:
+            if not is_haos:
                 issue_id += "_method"
             if deprecated_architecture:
                 issue_id += "_architecture"
@@ -601,9 +601,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
+                issue_domain="homeassistant",
                 translation_key=issue_id,
                 translation_placeholders={
-                    "installation_type": installation_type,
+                    "installation_type": "Supervised",
                     "arch": arch,
                 },
             )
