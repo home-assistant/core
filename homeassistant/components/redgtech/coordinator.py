@@ -14,12 +14,13 @@ from homeassistant.exceptions import HomeAssistantError, ConfigEntryError, Confi
 from redgtech_api.api import RedgtechAPI, RedgtechAuthError, RedgtechConnectionError
 from .const import DOMAIN
 
+UPDATE_INTERVAL = timedelta(minutes=1)
 _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class RedgtechDevice:
     """Representation of a Redgtech device."""
-    id: str
+    unique_id: str
     name: str
     state: str
 
@@ -43,18 +44,19 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=1),
+            update_interval=UPDATE_INTERVAL,
             config_entry=config_entry,
         )
 
-    async def login(self, email: str, password: str) -> str:
-        """Login to the Redgtech API and return the access token."""
+    async def login(self, email: str, password: str) -> None:
+        """Login to the Redgtech API and store the access token."""
         try:
-            access_token = await self.api.login(email, password)          
-        except Exception as e:
-            raise ConfigEntryError("Unexpected error during login") from e
-        self.access_token = access_token
-        return access_token
+            self.access_token = await self.api.login(email, password)
+        except RedgtechAuthError as e:
+            raise ConfigEntryError("Authentication error during login") from e
+        except RedgtechConnectionError as e:
+            raise ConfigEntryError("Connection error during login") from e
+        _LOGGER.debug("Access token obtained successfully")
 
     async def renew_token(self, email: str, password: str) -> None:
         """Renew the access token."""
@@ -70,7 +72,7 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
 
             data = await self.api.get_data(self.access_token)
         except RedgtechAuthError:
-            _LOGGER.warning("Auth failed, trying to renew token")
+            _LOGGER.debug("Auth failed, trying to renew token")
             try:
                 await self.renew_token(
                     self.config_entry.data[CONF_EMAIL],
@@ -89,7 +91,7 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
 
         for item in data["boards"]:
             device = RedgtechDevice(
-                id=item['endpointId'],
+                unique_id=item['endpointId'],
                 name=item["friendlyName"],
                 state=STATE_ON if item["value"] else STATE_OFF
             )

@@ -8,11 +8,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.components.switch import SwitchEntity
 from .const import DOMAIN
 from .coordinator import RedgtechDataUpdateCoordinator, RedgtechDevice, RedgtechConfigEntry
 from redgtech_api.api import RedgtechConnectionError, RedgtechAuthError
 from homeassistant.exceptions import HomeAssistantError, ConfigEntryError
-from homeassistant.helpers.entity import DeviceInfo, ToggleEntity
+from homeassistant.helpers.entity import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     async_add_entities(RedgtechSwitch(coordinator, device) for device in coordinator.data)
 
-class RedgtechSwitch(ToggleEntity):
+class RedgtechSwitch(CoordinatorEntity[RedgtechDataUpdateCoordinator], SwitchEntity):
     """Representation of a Redgtech switch."""
 
     _attr_has_entity_name = True
@@ -31,11 +32,12 @@ class RedgtechSwitch(ToggleEntity):
 
     def __init__(self, coordinator: RedgtechDataUpdateCoordinator, device: RedgtechDevice) -> None:
         """Initialize the switch."""
+        super().__init__(coordinator)
         self.coordinator = coordinator
         self.device = device
-        self._attr_unique_id = device.id
+        self._attr_unique_id = device.unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.id)},
+            identifiers={(DOMAIN, device.unique_id)},
             name=device.name,
             manufacturer="Redgtech",
         )
@@ -55,27 +57,25 @@ class RedgtechSwitch(ToggleEntity):
                 )
 
             await self.coordinator.api.set_switch_state(
-                self.device.id, new_state, self.coordinator.access_token
+                self.device.unique_id, new_state, self.coordinator.access_token
             )
+
+            self.device.state = STATE_ON if new_state else STATE_OFF
+            self.async_write_ha_state()
+             
         except RedgtechAuthError:
             try:
                 await self.coordinator.renew_token(
                     self.coordinator.email, self.coordinator.password
                 )
                 await self.coordinator.api.set_switch_state(
-                    self.device.id, new_state, self.coordinator.access_token
+                    self.device.unique_id, new_state, self.coordinator.access_token
                 )
-                self.device.state = STATE_ON if new_state else STATE_OFF
-                self.async_write_ha_state()
             except RedgtechAuthError as e:
                 raise HomeAssistantError("Failed to set switch state due to authentication error") from e
         except RedgtechConnectionError as e:
             raise HomeAssistantError("Connection error while setting switch state") from e
-        except Exception as e:
-            raise HomeAssistantError("Unexpected error while toggling switch state") from e
-    
-        self.device.state = STATE_ON if new_state else STATE_OFF
-        self.async_write_ha_state()
+
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

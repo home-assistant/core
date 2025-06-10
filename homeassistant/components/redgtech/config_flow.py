@@ -18,9 +18,13 @@ class RedgtechConfigFlow(ConfigFlow, domain=DOMAIN):
         
         errors: dict[str, str] = {}
 
-        if user_input:
+        if user_input is not None:
             email = user_input[CONF_EMAIL]
             password = user_input[CONF_PASSWORD]
+            
+            await self.async_set_unique_id(email)
+            self._abort_if_unique_id_configured()
+            
             api = RedgtechAPI()
             try:
                 await api.login(email, password)
@@ -33,15 +37,13 @@ class RedgtechConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 _LOGGER.debug("Login successful, token received.")
-                self._async_abort_entries_match({CONF_EMAIL: email})
                 return self.async_create_entry(
-                        title=email,
-                        data={
-                            CONF_EMAIL: email,
-                            CONF_PASSWORD: password,
-                        }
-                    )
-                errors["base"] = "already_configured"
+                    title=email,
+                    data={
+                        CONF_EMAIL: email,
+                        CONF_PASSWORD: password,
+                    }
+                )
 
         return self.async_show_form(
             step_id="user",

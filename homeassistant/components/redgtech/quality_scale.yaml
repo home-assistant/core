@@ -15,7 +15,7 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: done
+  entity-event-setup: exempt
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -33,7 +33,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: todo
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
   # Gold
   devices: done
