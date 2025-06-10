@@ -59,10 +59,8 @@ class UptimeKumaDataUpdateCoordinator(
         """Fetch the latest data from Uptime Kuma."""
 
         try:
-            return {
-                monitor.monitor_name: monitor
-                for monitor in (await self.api.async_get_monitors()).data
-            }
+            data = (await self.api.async_get_monitors()).data or []
+            return {monitor.monitor_name: monitor for monitor in data}
         except UptimeKumaAuthenticationException as e:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
