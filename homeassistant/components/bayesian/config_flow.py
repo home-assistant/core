@@ -498,7 +498,6 @@ async def _validate_observation_subentry(
     other_subentries: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Validate an observation input and manually update options with observations as they are nested items."""
-
     _validate_probabilities_given(user_input)
     user_input = _convert_percentages_to_fractions(user_input)
 
@@ -627,13 +626,17 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input = await _validate_observation_subentry(
-                ObservationTypes.STATE, user_input
-            )
-            return self.async_create_entry(
-                title=user_input.get(CONF_NAME),
-                data=user_input,
-            )
+            try:
+                user_input = await _validate_observation_subentry(
+                    ObservationTypes.STATE, user_input
+                )
+                return self.async_create_entry(
+                    title=user_input.get(CONF_NAME),
+                    data=user_input,
+                )
+            except SchemaFlowError as err:
+                _LOGGER.error("Error validating observation subentry: %s", err)
+                errors["base"] = str(err)
 
         return self.async_show_form(
             step_id=str(ObservationTypes.STATE),
@@ -656,16 +659,19 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                 dict(subentry.data)
                 for subentry in self._get_entry().subentries.values()
             ]
-
-            user_input = await _validate_observation_subentry(
-                ObservationTypes.NUMERIC_STATE,
-                user_input,
-                other_subentries=other_subentries,
-            )
-            return self.async_create_entry(
-                title=user_input.get(CONF_NAME),
-                data=user_input,
-            )
+            try:
+                user_input = await _validate_observation_subentry(
+                    ObservationTypes.NUMERIC_STATE,
+                    user_input,
+                    other_subentries=other_subentries,
+                )
+                return self.async_create_entry(
+                    title=user_input.get(CONF_NAME),
+                    data=user_input,
+                )
+            except SchemaFlowError as err:
+                _LOGGER.error("Error validating observation subentry: %s", err)
+                errors["base"] = str(err)
 
         return self.async_show_form(
             step_id=str(ObservationTypes.NUMERIC_STATE),
@@ -684,13 +690,17 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input = await _validate_observation_subentry(
-                ObservationTypes.TEMPLATE, user_input
-            )
-            return self.async_create_entry(
-                title=user_input.get(CONF_NAME),
-                data=user_input,
-            )
+            try:
+                user_input = await _validate_observation_subentry(
+                    ObservationTypes.TEMPLATE, user_input
+                )
+                return self.async_create_entry(
+                    title=user_input.get(CONF_NAME),
+                    data=user_input,
+                )
+            except SchemaFlowError as err:
+                _LOGGER.error("Error validating observation subentry: %s", err)
+                errors["base"] = str(err)
 
         return self.async_show_form(
             step_id=str(ObservationTypes.TEMPLATE),
@@ -715,12 +725,19 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
             # TODO: re-do if we implement unique IDs
             # self.async_set_unique_id(user_id)
             # self._abort_if_unique_id_mismatch()
-            return self.async_update_and_abort(
-                self._get_entry(),
-                sub_entry,
-                title=user_input.get(CONF_NAME, sub_entry.data[CONF_NAME]),
-                data_updates=_convert_percentages_to_fractions(user_input),
-            )
+            try:
+                user_input = await _validate_observation_subentry(
+                    ObservationTypes.TEMPLATE, user_input
+                )
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    sub_entry,
+                    title=user_input.get(CONF_NAME, sub_entry.data[CONF_NAME]),
+                    data_updates=_convert_percentages_to_fractions(user_input),
+                )
+            except SchemaFlowError as err:
+                _LOGGER.error("Error validating observation subentry: %s", err)
+                errors["base"] = str(err)
 
         return self.async_show_form(
             step_id="reconfigure",
