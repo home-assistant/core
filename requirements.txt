@@ -5,7 +5,7 @@
 # Home Assistant Core
 aiodns==3.4.0
 aiohasupervisor==0.3.1
-aiohttp==3.12.11
+aiohttp==3.12.12
 aiohttp_cors==0.8.1
 aiohttp-fast-zlib==0.3.0
 aiohttp-asyncmdnsresolver==0.1.1
@@ -36,7 +36,7 @@ numpy==2.3.0
 PyJWT==2.10.1
 cryptography==45.0.3
 Pillow==11.2.1
-propcache==0.3.1
+propcache==0.3.2
 pyOpenSSL==25.1.0
 orjson==3.10.18
 packaging>=23.1
@@ -46,7 +46,7 @@ pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.8.0
 PyYAML==6.0.2
-requests==2.32.3
+requests==2.32.4
 securetar==2025.2.1
 SQLAlchemy==2.0.41
 standard-aifc==3.13.0
@@ -58,6 +58,6 @@ uv==0.7.1
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
 voluptuous-openapi==0.1.0
-yarl==1.20.0
+yarl==1.20.1
 webrtc-models==0.3.0
 zeroconf==0.147.0
