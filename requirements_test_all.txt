@@ -2089,6 +2089,9 @@ python-technove==2.0.0
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==21.5
 
+# homeassistant.components.uptime_kuma
+pythonkuma==0.0.0rc0
+
 # homeassistant.components.tile
 pytile==2024.12.0
 
@@ -2113,9 +2116,6 @@ pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
 pytrydan==0.8.0
-
-# homeassistant.components.uptime_kuma
-pyuptimekuma-hass==0.0.6
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0

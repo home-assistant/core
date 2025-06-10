@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from pyuptimekuma import UptimeKumaMonitor
+from pythonkuma import UptimeKumaMonitor
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

@@ -3,10 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from pyuptimekuma import (
-    UptimeKumaAuthenticationException,
-    UptimeKumaConnectionException,
-)
+from pythonkuma import UptimeKumaAuthenticationException, UptimeKumaConnectionException
 
 from homeassistant.components.uptime_kuma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER

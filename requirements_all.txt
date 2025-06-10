@@ -2525,6 +2525,9 @@ python-vlc==3.0.18122
 # homeassistant.components.egardia
 pythonegardia==1.0.52
 
+# homeassistant.components.uptime_kuma
+pythonkuma==0.0.0rc0
+
 # homeassistant.components.tile
 pytile==2024.12.0
 
@@ -2552,9 +2555,6 @@ pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
 pytrydan==0.8.0
-
-# homeassistant.components.uptime_kuma
-pyuptimekuma-hass==0.0.6
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
