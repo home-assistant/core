@@ -360,7 +360,7 @@ jobs:
       - name: Run ruff
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
+          pre-commit run --hook-stage manual ruff-check --all-files --show-diff-on-failure
         env:
           RUFF_OUTPUT_FORMAT: github
 

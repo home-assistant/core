@@ -5,7 +5,7 @@ from contextlib import suppress
 from http import HTTPStatus
 import logging
 
-from httpx import RequestError
+import aiohttp
 from onvif.exceptions import ONVIFError
 from onvif.util import is_auth_error, stringify_onvif_error
 from zeep.exceptions import Fault, TransportError
@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await device.async_setup()
         if not entry.data.get(CONF_SNAPSHOT_AUTH):
             await async_populate_snapshot_auth(hass, device, entry)
-    except RequestError as err:
+    except (TimeoutError, aiohttp.ClientError) as err:
         await device.device.close()
         raise ConfigEntryNotReady(
             f"Could not connect to camera {device.device.host}:{device.device.port}: {err}"
@@ -119,7 +119,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.capabilities.events and device.events.started:
         try:
             await device.events.async_stop()
-        except (ONVIFError, Fault, RequestError, TransportError):
+        except (TimeoutError, ONVIFError, Fault, aiohttp.ClientError, TransportError):
             LOGGER.warning("Error while stopping events: %s", device.name)
 
     return await hass.config_entries.async_unload_platforms(entry, device.platforms)
