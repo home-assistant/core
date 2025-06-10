@@ -104,6 +104,11 @@ async def test_get_triggers(
             device_id=device_entry.id,
         )
 
+    DEVICE_CLASSES_WITHOUT_TRIGGER = {
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.TIMESTAMP,
+    }
     expected_triggers = [
         {
             "platform": "device",
@@ -115,13 +120,13 @@ async def test_get_triggers(
         }
         for device_class in SensorDeviceClass
         if device_class in UNITS_OF_MEASUREMENT
+        and device_class not in DEVICE_CLASSES_WITHOUT_TRIGGER
         for trigger in ENTITY_TRIGGERS[device_class]
-        if device_class != "none"
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert len(triggers) == 28
+    assert len(triggers) == 54
     assert triggers == unordered(expected_triggers)
 
 
