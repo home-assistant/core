@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from switchbot_api import Device
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.const import Platform
@@ -12,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
 
-from tests.common import load_json_object_fixture, snapshot_platform
+from tests.common import async_load_json_object_fixture, snapshot_platform
 
 
 async def test_meter(
@@ -26,13 +26,16 @@ async def test_meter(
 
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="meter-id-1",
             deviceName="meter-1",
             deviceType="Meter",
             hubDeviceId="test-hub-id",
         ),
     ]
-    mock_get_status.return_value = load_json_object_fixture("meter_status.json", DOMAIN)
+    mock_get_status.return_value = await async_load_json_object_fixture(
+        hass, "meter_status.json", DOMAIN
+    )
 
     with patch("homeassistant.components.switchbot_cloud.PLATFORMS", [Platform.SENSOR]):
         entry = await configure_integration(hass)
@@ -50,6 +53,7 @@ async def test_meter_no_coordinator_data(
     """Test meter sensors are unknown without coordinator data."""
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="meter-id-1",
             deviceName="meter-1",
             deviceType="Meter",

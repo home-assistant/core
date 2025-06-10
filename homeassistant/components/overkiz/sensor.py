@@ -413,6 +413,8 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_value=lambda value: OVERKIZ_STATE_TO_TRANSLATION.get(
             cast(str, value), cast(str, value)
         ),
+        device_class=SensorDeviceClass.ENUM,
+        options=["dead", "low_battery", "maintenance_required", "no_defect"],
     ),
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizSensorDescription(
