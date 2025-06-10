@@ -33,7 +33,10 @@ from homeassistant.const import (
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
 from homeassistant.helpers import condition, config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
@@ -242,7 +245,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Bayesian Binary sensor from a config entry."""
@@ -292,7 +295,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         """Initialize the Bayesian sensor."""
         self._attr_name = name
         self._attr_unique_id = unique_id and f"bayesian-{unique_id}"
-        _LOGGER.debug("Observations are %s", observations)  # TODO delete me
+
         self._observations = [
             Observation(
                 entity_id=observation.get(CONF_ENTITY_ID),

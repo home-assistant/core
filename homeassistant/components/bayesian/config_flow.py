@@ -121,19 +121,7 @@ class OptionsFlowSteps(StrEnum):
     """StrEnum for all the different options flow steps."""
 
     INIT = "init"
-    # BASE_OPTIONS = "base_options"
     ADD_OBSERVATION = OBSERVATION_SELECTOR
-    # SELECT_EDIT_OBSERVATION = "select_edit_observation"
-    # EDIT_OBSERVATION = "edit_observation"
-    # REMOVE_OBSERVATION = "remove_observation"
-
-    # @staticmethod
-    # def list_primary_steps() -> list[str]:
-    #     """Return a list of the values."""
-    #     li = [c.value for c in OptionsFlowSteps]
-    #     li.remove("init")
-    #     li.remove("edit_observation")
-    #     return li
 
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -235,8 +223,6 @@ OBSERVATION_BOILERPLATE = vol.Schema(
     }
 )
 
-# ADD_ANOTHER_BOX_SCHEMA = vol.Schema({vol.Optional("add_another"): cv.boolean})
-
 STATE_SUBSCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
@@ -318,23 +304,6 @@ def _convert_fractions_to_percentages(
     }
 
 
-# TODO remove after move to subentries
-async def _get_select_observation_schema(
-    handler: SchemaCommonFlowHandler,
-) -> vol.Schema:
-    """Return menu schema for selecting an observation for editing."""
-    return vol.Schema(
-        {
-            vol.Required(CONF_INDEX): vol.In(
-                {
-                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_PLATFORM]})"
-                    for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
-                },
-            )
-        }
-    )
-
-
 async def _select_observation_schema(
     obs_type: ObservationTypes,
 ) -> vol.Schema:
@@ -374,48 +343,6 @@ async def _get_flow_step_for_editing(
     return str(observations[selected_idx][CONF_PLATFORM])
 
 
-# async def _get_state_schema(
-#     handler: SchemaCommonFlowHandler,
-# ) -> vol.Schema:
-#     """Return the state schema, without an add_another box if editing."""
-
-#     if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
-#         return STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
-
-#     return STATE_SUBSCHEMA
-
-
-# async def _get_numeric_state_schema(
-#     handler: SchemaCommonFlowHandler,
-# ) -> vol.Schema:
-#     """Return the numeric_state schema, without an add_another box if editing."""
-
-#     if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
-#         return NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
-
-#     return NUMERIC_STATE_SUBSCHEMA
-
-
-# async def _get_template_schema(
-#     handler: SchemaCommonFlowHandler,
-# ) -> vol.Schema:
-#     """Return the template schema, without an add_another box if editing."""
-
-#     if not hasattr(handler, "options") or handler.options.get(CONF_INDEX) is None:
-#         return TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
-
-#     return TEMPLATE_SUBSCHEMA
-
-
-async def _add_more_or_end(
-    user_input: dict[str, Any],
-) -> str | None:
-    """Choose whether to add another observation or end the flow."""
-    if user_input.get("add_another", False):
-        return OBSERVATION_SELECTOR
-    return None
-
-
 async def _get_base_suggested_values(
     handler: SchemaCommonFlowHandler,
 ) -> dict[str, Any]:
@@ -448,64 +375,19 @@ def _validate_probabilities_given(
         raise SchemaFlowError("equal_probabilities")
 
 
-# TODO, may be deleted once using subentries in _validate_observation_subentry
-# async def _validate_observation_setup(
-#     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-# ) -> dict[str, Any]:
-#     """Validate an observation input and manually update options with observations as they are nested items."""
-#     _validate_probabilities_given(user_input)
-
-#     # add_another is really just a variable for controlling the flow
-#     add_another: bool = user_input.pop("add_another", False)
-
-#     user_input = _convert_percentages_to_fractions(user_input)
-
-#     # Standard behavior is to merge the result with the options.
-#     # In this case, we want to add a sub-item so we update the options directly.
-#     observations: list[dict[str, Any]] = handler.options.setdefault(
-#         CONF_OBSERVATIONS, []
-#     )
-
-#     if idx := handler.options.get(CONF_INDEX):
-#         # if there is an index, that means we are in observation editing mode and we want to overwrite not append
-#         user_input[CONF_PLATFORM] = observations[int(idx)][CONF_PLATFORM]
-#         if user_input[CONF_PLATFORM] == ObservationTypes.NUMERIC_STATE:
-#             above_greater_than_below(user_input)
-#             draft_observations = [*observations, user_input]
-#             draft_observations.remove(observations[int(idx)])
-#             no_overlapping(draft_observations)
-
-#         observations[int(idx)] = user_input
-
-#         # remove the index so it can not be saved
-#         handler.options.pop(CONF_INDEX, None)
-#     elif handler.parent_handler.cur_step is not None:
-#         # if we are in adding mode we need to record the platform from the step id
-#         user_input[CONF_PLATFORM] = handler.parent_handler.cur_step["step_id"]
-#         if user_input[CONF_PLATFORM] == ObservationTypes.NUMERIC_STATE:
-#             above_greater_than_below(user_input)
-#             no_overlapping([*observations, user_input])
-
-#         observations.append(user_input)
-
-#     _LOGGER.debug("Added observation with settings: %s", user_input)
-#     return {"add_another": True} if add_another else {}
-
-
 async def _validate_observation_subentry(
     obs_type: ObservationTypes,
     user_input: dict[str, Any],
     other_subentries: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Validate an observation input and manually update options with observations as they are nested items."""
-    _LOGGER.debug(
-        "Received observation with settings: %s", user_input
-    )  # TODO delete-me
+
     _validate_probabilities_given(user_input)
     user_input = _convert_percentages_to_fractions(user_input)
 
-    # if we are in adding mode we need to record the platform from the step id
+    # We need to record the observation type so add it to the user input.
     user_input[CONF_PLATFORM] = str(obs_type)
+
     if (
         user_input[CONF_PLATFORM] == ObservationTypes.NUMERIC_STATE
         and other_subentries is not None
@@ -520,50 +402,11 @@ async def _validate_observation_subentry(
     return user_input
 
 
-# async def _validate_remove_observation(
-#     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-# ) -> dict[str, Any]:
-#     """Delete observation(s)."""
-#     observations: list[dict[str, Any]] = handler.options[CONF_OBSERVATIONS]
-#     indexes: set[int] = {int(x) for x in user_input[CONF_INDEX]}
-
-#     # Standard behavior is to merge the result with the options.
-#     # In this case, we want to remove nested items so we update the options directly.
-#     # Remove the last indexes first so subsequent items to be removed aren't shifted
-#     for index in sorted(indexes, reverse=True):
-#         observations.pop(index)
-
-#     _LOGGER.debug("Deleted observations: '%s'", observations)
-#     return {}
-
-
 CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
     str(USER): SchemaFlowFormStep(
         CONFIG_SCHEMA,
         validate_user_input=_validate_user,
-        # next_step=OBSERVATION_SELECTOR,
     ),
-    # str(OBSERVATION_SELECTOR): SchemaFlowMenuStep(
-    #     [typ.value for typ in ObservationTypes]
-    # ),
-    # str(ObservationTypes.STATE): SchemaFlowFormStep(
-    #     _get_state_schema,
-    #     next_step=_add_more_or_end,
-    #     validate_user_input=_validate_observation_setup,
-    #     suggested_values=_get_observation_values_if_editing,
-    # ),
-    # str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
-    #     _get_numeric_state_schema,
-    #     next_step=_add_more_or_end,
-    #     validate_user_input=_validate_observation_setup,
-    #     suggested_values=_get_observation_values_if_editing,
-    # ),
-    # str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
-    #     _get_template_schema,
-    #     next_step=_add_more_or_end,
-    #     validate_user_input=_validate_observation_setup,
-    #     suggested_values=_get_observation_values_if_editing,
-    # ),
 }
 
 OPTIONS_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
@@ -572,16 +415,6 @@ OPTIONS_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
         suggested_values=_get_base_suggested_values,
         validate_user_input=_validate_user,
     ),
-    # str(OptionsFlowSteps.SELECT_EDIT_OBSERVATION): SchemaFlowFormStep(
-    #     _get_select_observation_schema,
-    #     suggested_values=None,
-    #     next_step=_get_flow_step_for_editing,
-    # ),
-    # str(OptionsFlowSteps.REMOVE_OBSERVATION): SchemaFlowFormStep(
-    #     _get_remove_observation_schema,
-    #     suggested_values=None,
-    #     validate_user_input=_validate_remove_observation,
-    # ),
 }
 OPTIONS_FLOW.update(CONFIG_FLOW)
 
@@ -627,9 +460,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to add a state observation."""
         errors: dict[str, str] = {}
-        _LOGGER.error(
-            "***************async_step_state %s", user_input
-        )  # TODO delete-me
+
         if user_input is not None:
             try:
                 user_input = await _validate_observation_subentry(
@@ -693,9 +524,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
         """User flow to add a new template observation."""
 
         errors: dict[str, str] = {}
-        _LOGGER.error(
-            "***************async_step_template %s", user_input
-        )  # TODO delete-me
+
         if user_input is not None:
             try:
                 user_input = await _validate_observation_subentry(
@@ -723,17 +552,9 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Enable the reconfigure button for observations."""
         errors: dict[str, str] = {}
-        _LOGGER.debug(
-            "Reconfigure entry is %s", self._get_reconfigure_subentry()
-        )  # TODO delete-me
+
         sub_entry = self._get_reconfigure_subentry()
         if user_input is not None:
-            _LOGGER.debug(
-                "Reconfigure for subentry %s user input is %s", sub_entry, user_input
-            )  # TODO delete-me
-            # TODO: re-do if we implement unique IDs
-            # self.async_set_unique_id(user_id)
-            # self._abort_if_unique_id_mismatch()
             try:
                 user_input = await _validate_observation_subentry(
                     sub_entry.data[CONF_PLATFORM], user_input
