@@ -38,7 +38,7 @@
       "step": {
         "user": {
           "title": "Air quality data location",
-          "description": "Select the cooordinates, for which you want to create an entry.",
+          "description": "Select the coordinates for which you want to create an entry.",
           "data": {
             "location": "[%key:common::config_flow::data::location%]"
           }
@@ -65,7 +65,7 @@
   "entity": {
     "sensor": {
       "uaqi_category": {
-        "name": "UAQI Category",
+        "name": "UAQI category",
         "state": {
           "excellent_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::excellent_air_quality%]",
           "good_air_quality": "[%key:component::google_air_quality::entity::sensor::local_category::state::good_air_quality%]",
@@ -75,7 +75,7 @@
         }
       },
       "local_category": {
-        "name": "{local_aqi} Category",
+        "name": "{local_aqi} category",
         "state": {
           "10_33": "10-33% of guideline",
           "1_blue": "1 - Blue",
@@ -129,7 +129,7 @@
           "good_air_quality": "Good air quality",
           "greater_100": "Greater than 100% of guideline",
           "hazardous_air_quality": "Hazardous air quality",
-          "heavily_polluted": "Heavily Polluted",
+          "heavily_polluted": "Heavily polluted",
           "heavy_air_pollution": "Heavy air pollution",
           "high_air_pollution": "High air pollution",
           "high_air_quality": "High air pollution",
@@ -159,10 +159,10 @@
           "regular_air_quality": "Regular air quality",
           "satisfactory_air_quality": "Satisfactory air quality",
           "serious_air_pollution": "Serious air pollution",
-          "seriously_polluted": "Seriously Polluted",
+          "seriously_polluted": "Seriously polluted",
           "severe_air_pollution": "Severe air pollution",
           "severe_air_quality": "Severe air quality",
-          "slightly_polluted": "Slightly Polluted",
+          "slightly_polluted": "Slightly polluted",
           "sufficient_air_quality": "Sufficient air quality",
           "unfavorable_air_quality": "Unfavorable air quality",
           "unfavorable_sensitive": "Unfavorable air quality for sensitive groups",
@@ -175,11 +175,11 @@
           "very_high_air_quality": "Very High air pollution",
           "very_high_health_risk": "Very high health risk",
           "very_low_air_pollution": "Very low air pollution",
-          "very_polluted": "Very Polluted",
+          "very_polluted": "Very polluted",
           "very_poor_air_quality": "Very poor air quality",
           "very_unfavorable_air_quality": "Very unfavorable air quality",
           "very_unhealthy": "Very unhealthy air quality",
-          "very_unhealthy_air_quality": "Very Unhealthy air quality",
+          "very_unhealthy_air_quality": "Very unhealthy air quality",
           "warning_air_pollution": "Warning level air pollution"
         }
       },
@@ -190,7 +190,7 @@
         "name": "{local_aqi} AQI"
       },
       "uaqi_dominant_pollutant": {
-        "name": "UAQI Dominant Pollutant",
+        "name": "UAQI dominant pollutant",
         "state": {
           "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
           "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
@@ -201,7 +201,7 @@
         }
       },
       "local_dominant_pollutant": {
-        "name": "{local_aqi} Dominant Pollutant",
+        "name": "{local_aqi} dominant pollutant",
         "state": {
           "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
           "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
