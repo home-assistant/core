@@ -34,8 +34,8 @@ class NextBusDataUpdateCoordinator(
             name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL_SECONDS),
         )
-        self.client: NextBusClient = NextBusClient(agency_id=agency)
-        self._agency: str = agency
+        self.client = NextBusClient(agency_id=agency)
+        self._agency = agency
         self._route_stops: set[RouteStop] = set()
         self._predictions: dict[RouteStop, dict[str, Any]] = {}
 
