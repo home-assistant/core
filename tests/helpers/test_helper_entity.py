@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-from homeassistant.helpers.helper_entity import async_handle_source_entity_changes
+from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 
 from tests.common import (
     MockConfigEntry,

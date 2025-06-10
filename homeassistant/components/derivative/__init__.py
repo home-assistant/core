@@ -11,7 +11,7 @@ from homeassistant.helpers.device import (
     async_entity_id_to_device_id,
     async_remove_stale_devices_links_keep_entity_device,
 )
-from homeassistant.helpers.helper_entity import async_handle_source_entity_changes
+from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 
 from .const import DOMAIN
 
