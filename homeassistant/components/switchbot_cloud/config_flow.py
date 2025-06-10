@@ -47,7 +47,8 @@ class SwitchbotCloudOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
         options: dict[vol.Optional, Any] = {
             vol.Optional(
-                "Choice Your Lock Set As Night Light Mode",
+                "SetNightLatchMode",
+                default=self.config_entry.options.get("SetNightLatchMode"),
             ): selector.DeviceSelector(
                 DeviceSelectorConfig(
                     multiple=True,
