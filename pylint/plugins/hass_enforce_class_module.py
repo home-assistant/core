@@ -70,7 +70,7 @@ _MODULES: dict[str, set[str]] = {
     "todo": {"TodoListEntity"},
     "tts": {"TextToSpeechEntity"},
     "update": {"UpdateEntity", "UpdateEntityDescription"},
-    "vacuum": {"StateVacuumEntity", "VacuumEntity", "VacuumEntityDescription"},
+    "vacuum": {"StateVacuumEntity", "VacuumEntityDescription"},
     "wake_word": {"WakeWordDetectionEntity"},
     "water_heater": {"WaterHeaterEntity"},
     "weather": {

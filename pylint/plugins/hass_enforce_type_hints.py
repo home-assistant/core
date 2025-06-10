@@ -2861,29 +2861,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
         ClassTypeHintMatch(
-            base_class="VacuumEntity",
-            matches=[
-                TypeHintMatch(
-                    function_name="status",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
-                    function_name="start_pause",
-                    kwargs_type="Any",
-                    return_type=None,
-                    has_async_counterpart=True,
-                ),
-                TypeHintMatch(
-                    function_name="async_pause",
-                    return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_start",
-                    return_type=None,
-                ),
-            ],
-        ),
-        ClassTypeHintMatch(
             base_class="StateVacuumEntity",
             matches=[
                 TypeHintMatch(
