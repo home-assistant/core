@@ -59,8 +59,8 @@ class LMSStatusEntity(CoordinatorEntity[LMSStatusDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        # Check basic coordinator availability (i.e., last_update_success) and  coordinator.data is populated
-        if not super().available or not self.coordinator.data:
+        # Check basic coordinator availability (i.e., last_update_success)
+        if not super().available:
             return False
         # Check if the specific key this entity relies on is present in the data
         return self.entity_description.key in self.coordinator.data
