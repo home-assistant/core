@@ -1167,10 +1167,10 @@ holidays==0.74
 home-assistant-frontend==20250531.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.5.28
+home-assistant-intents==2025.6.10
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.1.1
+homematicip==2.0.4
 
 # homeassistant.components.horizon
 horimote==0.4.1
