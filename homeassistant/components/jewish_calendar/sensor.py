@@ -225,7 +225,7 @@ async def async_setup_entry(
         JewishCalendarTimeSensor(config_entry, description)
         for description in TIME_SENSORS
     )
-    async_add_entities(sensors)
+    async_add_entities(sensors, update_before_add=True)
 
 
 class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):

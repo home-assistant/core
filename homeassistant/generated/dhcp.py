@@ -283,12 +283,12 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "home_connect",
-        "hostname": "(bosch|siemens)-*",
+        "hostname": "(balay|bosch|neff|siemens)-*",
         "macaddress": "68A40E*",
     },
     {
         "domain": "home_connect",
-        "hostname": "siemens-*",
+        "hostname": "(siemens|neff)-*",
         "macaddress": "38B4D3*",
     },
     {
@@ -367,6 +367,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "lametric",
         "registered_devices": True,
+    },
+    {
+        "domain": "lg_thinq",
+        "macaddress": "34E6E6*",
     },
     {
         "domain": "lifx",

@@ -87,14 +87,16 @@ TEST_MANAGER_BACKUP = ManagerBackup(
     addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
     agents={"test.test-agent": AgentBackupStatus(protected=True, size=0)},
     backup_id="backup-1",
-    date="1970-01-01T00:00:00.000Z",
     database_included=True,
+    date="1970-01-01T00:00:00.000Z",
     extra_metadata={"instance_id": "abc123", "with_automatic_settings": True},
+    failed_addons=[],
+    failed_agent_ids=[],
+    failed_folders=[],
     folders=[Folder.MEDIA, Folder.SHARE],
     homeassistant_included=True,
     homeassistant_version="2024.12.0",
     name="Test",
-    failed_agent_ids=[],
     with_automatic_settings=True,
 )
 
@@ -326,7 +328,15 @@ async def test_delete(
             "backups": [
                 {
                     "backup_id": "abc123",
+                    "failed_addons": [
+                        {
+                            "name": "Test add-on",
+                            "slug": "test_addon",
+                            "version": "1.0.0",
+                        }
+                    ],
                     "failed_agent_ids": ["test.remote"],
+                    "failed_folders": ["ssl"],
                 }
             ]
         },
