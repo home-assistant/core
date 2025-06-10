@@ -118,7 +118,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         key="average_fuel_consumption",
         translation_key="average_fuel_consumption",
         api_field="averageFuelConsumption",
-        native_unit_of_measurement="l/100 km",
+        native_unit_of_measurement="L/100 km",
         state_class=SensorStateClass.MEASUREMENT,
         available_fn=lambda vehicle: vehicle.has_combustion_engine(),
     ),
@@ -127,7 +127,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         key="average_fuel_consumption_automatic",
         translation_key="average_fuel_consumption_automatic",
         api_field="averageFuelConsumptionAutomatic",
-        native_unit_of_measurement="l/100 km",
+        native_unit_of_measurement="L/100 km",
         state_class=SensorStateClass.MEASUREMENT,
         available_fn=lambda vehicle: vehicle.has_combustion_engine(),
     ),
@@ -245,6 +245,8 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         translation_key="engine_time_to_service",
         api_field="engineHoursToService",
         native_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # recharge-status endpoint
     VolvoSensorDescription(
@@ -289,6 +291,8 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         translation_key="time_to_service",
         api_field="timeToService",
         native_unit_of_measurement=UnitOfTime.DAYS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=_calculate_time_to_service,
     ),
     # statistics endpoint
@@ -320,14 +324,14 @@ async def async_setup_entry(
     """Set up sensors."""
 
     coordinator = entry.runtime_data
-    items = [
-        VolvoSensor(coordinator, description)
-        for description in _DESCRIPTIONS
-        if description.api_field in coordinator.data
-        and description.available_fn(coordinator.vehicle)
-    ]
-
-    async_add_entities(items)
+    async_add_entities(
+        [
+            VolvoSensor(coordinator, description)
+            for description in _DESCRIPTIONS
+            if description.api_field in coordinator.data
+            and description.available_fn(coordinator.vehicle)
+        ]
+    )
 
 
 class VolvoSensor(VolvoEntity, SensorEntity):
