@@ -10,7 +10,7 @@ from . import device_registry as dr, entity_registry as er
 from .event import async_track_entity_registry_updated_event
 
 
-def async_track_entity_registry_changes(
+def async_handle_source_entity_changes(
     hass: HomeAssistant,
     *,
     helper_config_entry_id: str,
@@ -19,7 +19,22 @@ def async_track_entity_registry_changes(
     source_device_id: str | None,
     source_entity_id_or_uuid: str,
 ) -> CALLBACK_TYPE:
-    """Track changes to the entity registry for a helper entity's source entity."""
+    """Handle changes to a helper entity's source entity.
+
+    The following changes are handled:
+    - Entity removal: If the source entity is removed, the helper config entry
+      is removed, and the helper entity is cleaned up.
+    - Entity ID changed: If the source entity's entity ID changes and the source
+      entity is identified by an entity ID, the set_source_entity_id_or_uuid is
+      called. If the source entity is identified by a UUID, the helper config entry
+      is reloaded.
+    - Source entity moved to another device: The helper entity is updated to link
+      to the new device, and the helper config entry removed from the old device
+      and added to the new device. Then the helper config entry is reloaded.
+    - Source entity removed from the device: The helper entity is updated to link
+      to no device, and the helper config entry removed from the old device. Then
+      the helper config entry is reloaded.
+    """
 
     async def async_registry_updated(
         event: Event[er.EventEntityRegistryUpdatedData],

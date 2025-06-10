@@ -11,7 +11,7 @@ from homeassistant.helpers.device import (
     async_entity_id_to_device_id,
     async_remove_stale_devices_links_keep_entity_device,
 )
-from homeassistant.helpers.helper_entity import async_track_entity_registry_changes
+from homeassistant.helpers.helper_entity import async_handle_source_entity_changes
 
 from .const import DOMAIN
 
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entity_registry = er.async_get(hass)
     entry.async_on_unload(
-        async_track_entity_registry_changes(
+        async_handle_source_entity_changes(
             hass,
             helper_config_entry_id=entry.entry_id,
             get_helper_entity_id=lambda: entity_registry.async_get_entity_id(

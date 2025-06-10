@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.helper_entity import async_track_entity_registry_changes
+from homeassistant.helpers.helper_entity import async_handle_source_entity_changes
 
 from .const import CONF_INVERT, CONF_TARGET_DOMAIN, DOMAIN
 from .light import LightSwitch
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     entry.async_on_unload(
-        async_track_entity_registry_changes(
+        async_handle_source_entity_changes(
             hass,
             helper_config_entry_id=entry.entry_id,
             get_helper_entity_id=lambda: entity_registry.async_get_entity_id(
