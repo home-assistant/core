@@ -13,7 +13,7 @@ from homeassistant.core import Event, HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 
-from .const import CONF_INVERT, CONF_TARGET_DOMAIN
+from .const import CONF_INVERT, CONF_TARGET_DOMAIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
