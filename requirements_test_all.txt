@@ -78,7 +78,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.65.0
+PySwitchbot==0.66.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -289,7 +289,7 @@ aiolookin==1.0.0
 aiolyric==2.0.1
 
 # homeassistant.components.mealie
-aiomealie==0.9.5
+aiomealie==0.9.6
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
