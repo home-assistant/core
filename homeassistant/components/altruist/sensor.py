@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 class AltruistSensorEntityDescription(SensorEntityDescription):
     """Class to describe a Sensor entity."""
 
-    native_value_fn: Callable[[str], float | int] = float
+    native_value_fn: Callable[[str], float] = float
     state_class = SensorStateClass.MEASUREMENT
 
 
