@@ -238,9 +238,10 @@ class TelegramNotificationService:
             PARSER_MD2: ParseMode.MARKDOWN_V2,
             PARSER_PLAIN_TEXT: None,
         }
-        self._parse_mode = self._parsers.get(parser)
+        self.parse_mode = self._parsers.get(parser)
         self.bot = bot
         self.hass = hass
+        self._last_message_id: dict[int, int] = {}
 
     def _get_allowed_chat_ids(self) -> list[int]:
         allowed_chat_ids: list[int] = [
@@ -260,9 +261,6 @@ class TelegramNotificationService:
 
         return allowed_chat_ids
 
-    def _get_last_message_id(self):
-        return dict.fromkeys(self._get_allowed_chat_ids())
-
     def _get_msg_ids(self, msg_data, chat_id):
         """Get the message id to edit.
 
@@ -277,9 +275,9 @@ class TelegramNotificationService:
             if (
                 isinstance(message_id, str)
                 and (message_id == "last")
-                and (self._get_last_message_id()[chat_id] is not None)
+                and (chat_id in self._last_message_id)
             ):
-                message_id = self._get_last_message_id()[chat_id]
+                message_id = self._last_message_id[chat_id]
         else:
             inline_message_id = msg_data["inline_message_id"]
         return message_id, inline_message_id
@@ -352,7 +350,7 @@ class TelegramNotificationService:
 
         # Defaults
         params = {
-            ATTR_PARSER: self._parse_mode,
+            ATTR_PARSER: self.parse_mode,
             ATTR_DISABLE_NOTIF: False,
             ATTR_DISABLE_WEB_PREV: None,
             ATTR_REPLY_TO_MSGID: None,
@@ -364,7 +362,7 @@ class TelegramNotificationService:
         if data is not None:
             if ATTR_PARSER in data:
                 params[ATTR_PARSER] = self._parsers.get(
-                    data[ATTR_PARSER], self._parse_mode
+                    data[ATTR_PARSER], self.parse_mode
                 )
             if ATTR_TIMEOUT in data:
                 params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
@@ -408,10 +406,10 @@ class TelegramNotificationService:
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
                 message_id = out[ATTR_MESSAGEID]
-                self._get_last_message_id()[chat_id] = message_id
+                self._last_message_id[chat_id] = message_id
                 _LOGGER.debug(
                     "Last message ID: %s (from chat_id %s)",
-                    self._get_last_message_id(),
+                    self._last_message_id,
                     chat_id,
                 )
 
@@ -480,9 +478,9 @@ class TelegramNotificationService:
             context=context,
         )
         # reduce message_id anyway:
-        if self._get_last_message_id()[chat_id] is not None:
+        if chat_id in self._last_message_id:
             # change last msg_id for deque(n_msgs)?
-            self._get_last_message_id()[chat_id] -= 1
+            self._last_message_id[chat_id] -= 1
         return deleted
 
     async def edit_message(self, type_edit, chat_id=None, context=None, **kwargs):

@@ -39,6 +39,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: TESTPASS,
         },
         unique_id=HOMEE_ID,
+        entry_id="test_entry_id",
     )
 
 
@@ -68,5 +69,15 @@ def mock_homee() -> Generator[AsyncMock]:
         homee.connected = True
 
         homee.get_access_token.return_value = "test_token"
+        # Mock the Homee settings raw_data for diagnostics
+        homee.settings.raw_data = {
+            "uid": HOMEE_ID,
+            "homee_name": HOMEE_NAME,
+            "version": "1.2.3",
+            "mac_address": "00:05:55:11:ee:cc",
+            "wlan_ssid": "TestSSID",
+            "latitude": 52.5200,
+            "longitude": 13.4050,
+        }
 
         yield homee
