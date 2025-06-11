@@ -68,7 +68,7 @@ jobs:
                 .filter(label => label.name.startsWith('integration:'))
                 .map(label => label.name);
             } catch (error) {
-              console.error(`Failed to fetch issue #${context.payload.issue.number}:`, error.message);
+              core.error(`Failed to fetch issue #${context.payload.issue.number}:`, error.message);
               core.setOutput('should_continue', 'false');
               return;
             }
@@ -83,7 +83,7 @@ jobs:
                 per_page: 10
               });
             } catch (error) {
-              console.error('Failed to fetch comments:', error.message);
+              core.error('Failed to fetch comments:', error.message);
               // Continue anyway, worst case we might post a duplicate comment
               comments = { data: [] };
             }
@@ -152,9 +152,9 @@ jobs:
                 order: 'desc'
               });
             } catch (error) {
-              console.error('Failed to search for similar issues:', error.message);
+              core.error('Failed to search for similar issues:', error.message);
               if (error.status === 403 && error.message.includes('rate limit')) {
-                console.error('GitHub API rate limit exceeded');
+                core.error('GitHub API rate limit exceeded');
               }
               core.setOutput('has_similar', 'false');
               return;
@@ -366,9 +366,9 @@ jobs:
 
               console.log('Added potential-duplicate label to the issue');
             } catch (error) {
-              console.error('Failed to post duplicate detection comment or add label:', error.message);
+              core.error('Failed to post duplicate detection comment or add label:', error.message);
               if (error.status === 403) {
-                console.error('Permission denied or rate limit exceeded');
+                core.error('Permission denied or rate limit exceeded');
               }
               // Don't throw - we've done the analysis, just couldn't post the result
             }
