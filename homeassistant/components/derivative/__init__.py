@@ -30,6 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     async def source_entity_removed() -> None:
+        # The source entity has been removed, we need to clean the device links.
         async_remove_stale_devices_links_keep_entity_device(hass, entry.entry_id, None)
 
     entity_registry = er.async_get(hass)
