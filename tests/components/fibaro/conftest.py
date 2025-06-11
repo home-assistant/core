@@ -83,8 +83,8 @@ def mock_power_sensor() -> Mock:
 
 
 @pytest.fixture
-def mock_cover() -> Mock:
-    """Fixture for a cover."""
+def mock_positionable_cover() -> Mock:
+    """Fixture for a positionable cover."""
     cover = Mock()
     cover.fibaro_id = 3
     cover.parent_fibaro_id = 0
@@ -108,6 +108,42 @@ def mock_cover() -> Mock:
     state_mock = Mock()
     state_mock.has_value = True
     state_mock.str_value.return_value = "opening"
+    cover.state = state_mock
+    return cover
+
+
+@pytest.fixture
+def mock_cover() -> Mock:
+    """Fixture for a cover supporting slats but without positioning."""
+    cover = Mock()
+    cover.fibaro_id = 4
+    cover.parent_fibaro_id = 0
+    cover.name = "Test cover"
+    cover.room_id = 1
+    cover.dead = False
+    cover.visible = True
+    cover.enabled = True
+    cover.type = "com.fibaro.baseShutter"
+    cover.base_type = "com.fibaro.actor"
+    cover.properties = {"manufacturer": ""}
+    cover.actions = {
+        "open": 0,
+        "close": 0,
+        "stop": 0,
+        "rotateSlatsUp": 0,
+        "rotateSlatsDown": 0,
+        "stopSlats": 0,
+    }
+    cover.supported_features = {}
+    value_mock = Mock()
+    value_mock.has_value = False
+    cover.value = value_mock
+    value2_mock = Mock()
+    value2_mock.has_value = False
+    cover.value_2 = value2_mock
+    state_mock = Mock()
+    state_mock.has_value = True
+    state_mock.str_value.return_value = "closed"
     cover.state = state_mock
     return cover
 
