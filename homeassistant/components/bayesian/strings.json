@@ -53,7 +53,7 @@
         "data": {
           "probability_threshold": "Probability threshold",
           "prior": "Prior",
-          "device_class": "Device Class",
+          "device_class": "Device class",
           "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
