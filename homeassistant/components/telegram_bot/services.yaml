@@ -27,6 +27,7 @@ send_message:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:

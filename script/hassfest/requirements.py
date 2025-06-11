@@ -38,6 +38,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pytz": "CalVer",
     "requests": "SemVer",
     "typing_extensions": "SemVer",
+    "urllib3": "SemVer",
     "yarl": "SemVer",
 }
 PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
