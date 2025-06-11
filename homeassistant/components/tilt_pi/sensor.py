@@ -62,9 +62,9 @@ async def async_setup_entry(
 
     async_add_entities(
         TiltSensor(
-            coordinator=coordinator,
-            description=description,
-            hydrometer=hydrometer,
+            coordinator,
+            description,
+            hydrometer,
         )
         for description in SENSOR_TYPES
         for hydrometer in coordinator.data.values()

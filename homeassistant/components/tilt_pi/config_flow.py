@@ -25,8 +25,8 @@ class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _check_connection(self, host: str, port: int) -> str | None:
         """Check if we can connect to the TiltPi instance."""
         client = TiltPiClient(
-            host=host,
-            port=port,
+            host,
+            port,
             session=async_get_clientsession(self.hass),
         )
         try:

@@ -11,8 +11,8 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: TiltPiConfigEntry) -> bool:
     """Set up Tilt Pi from a config entry."""
     coordinator = TiltPiDataUpdateCoordinator(
-        hass=hass,
-        config_entry=entry,
+        hass,
+        entry,
     )
 
     await coordinator.async_config_entry_first_refresh()
