@@ -127,7 +127,7 @@
             "name": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::name%]",
             "value_template": "A template that evaluates to `True` will update the prior accordingly, A template that returns `False` or `None` will update the prior with inverse probabilities. A template that returns an error will not update probabilities. Results are coerced into being `True` or `False`",
             "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_true%]",
-            "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_true%]"
+            "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_false%]"
           }
         },
         "reconfigure": {
