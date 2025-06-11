@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 
@@ -38,7 +38,6 @@ from homeassistant.helpers import (
     restore_state,
 )
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
@@ -402,46 +401,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     info = await async_get_system_info(hass)
 
     installation_type = info["installation_type"][15:]
-    deprecated_method = installation_type in {
-        "Core",
-        "Supervised",
-    }
-    arch = info["arch"]
-    if arch == "armv7":
-        if installation_type == "OS":
-            # Local import to avoid circular dependencies
-            # We use the import helper because hassio
-            # may not be loaded yet and we don't want to
-            # do blocking I/O in the event loop to import it.
-            if TYPE_CHECKING:
-                # pylint: disable-next=import-outside-toplevel
-                from homeassistant.components import hassio
-            else:
-                hassio = await async_import_module(
-                    hass, "homeassistant.components.hassio"
-                )
-            os_info = hassio.get_os_info(hass)
-            assert os_info is not None
-            issue_id = "deprecated_os_"
-            board = os_info.get("board")
-            if board in {"rpi3", "rpi4"}:
-                issue_id += "aarch64"
-            elif board in {"tinker", "odroid-xu4", "rpi2"}:
-                issue_id += "armv7"
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                issue_id,
-                breaks_in_ha_version="2025.12.0",
-                learn_more_url=DEPRECATION_URL,
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key=issue_id,
-                translation_placeholders={
-                    "installation_guide": "https://www.home-assistant.io/installation/",
-                },
-            )
-        elif installation_type == "Container":
+    if installation_type in {"Core", "Container"}:
+        deprecated_method = installation_type == "Core"
+        arch = info["arch"]
+        if arch == "armv7" and installation_type == "Container":
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -452,29 +415,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_container_armv7",
             )
-    deprecated_architecture = False
-    if arch in {"i386", "armhf"} or (arch == "armv7" and deprecated_method):
-        deprecated_architecture = True
-    if deprecated_method or deprecated_architecture:
-        issue_id = "deprecated"
-        if deprecated_method:
-            issue_id += "_method"
-        if deprecated_architecture:
-            issue_id += "_architecture"
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            breaks_in_ha_version="2025.12.0",
-            learn_more_url=DEPRECATION_URL,
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key=issue_id,
-            translation_placeholders={
-                "installation_type": installation_type,
-                "arch": arch,
-            },
-        )
+        deprecated_architecture = False
+        if arch in {"i386", "armhf"} or (
+            arch == "armv7" and installation_type != "Container"
+        ):
+            deprecated_architecture = True
+        if deprecated_method or deprecated_architecture:
+            issue_id = "deprecated"
+            if deprecated_method:
+                issue_id += "_method"
+            if deprecated_architecture:
+                issue_id += "_architecture"
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                breaks_in_ha_version="2025.12.0",
+                learn_more_url=DEPRECATION_URL,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key=issue_id,
+                translation_placeholders={
+                    "installation_type": installation_type,
+                    "arch": arch,
+                },
+            )
 
     return True
 
