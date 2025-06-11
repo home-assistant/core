@@ -42,7 +42,7 @@
   "config": {
     "error": {
       "extreme_prior_error": "'Prior' set to 0% means that it is impossible for the sensor to show 'on' and 100% means it will never show 'off', use a close number like 0.1% or 99.9% instead",
-      "extreme_threshold_error": "A threshold set to 0% means that the sensor will always be 'on' and 100% mean it will always be off, use a close number like 0.1% or 99.9% instead",
+      "extreme_threshold_error": "'Probability threshold' set to 0% means that the sensor will always be 'on' and 100% mean it will always be 'off', use a close number like 0.1% or 99.9% instead",
       "equal_probabilities": "If 'Probability given true' and 'Probability given false' are equal, this observation can have no effect, and is therefore redundant",
       "extreme_prob_given_error": "If either 'Probability given false' or 'Probability given true' is 0 or 100 this will create certainties that override all other observations, use numbers close to 0 or 100 instead"
     },
