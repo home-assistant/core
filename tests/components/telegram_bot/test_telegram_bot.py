@@ -1,13 +1,14 @@
 """Tests for the telegram_bot component."""
 
 import base64
+from datetime import datetime
 import io
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.constants import ParseMode
+from telegram import Chat, InlineKeyboardButton, InlineKeyboardMarkup, Message, Update
+from telegram.constants import ChatType, ParseMode
 from telegram.error import (
     InvalidToken,
     NetworkError,
@@ -21,7 +22,6 @@ from homeassistant.components.telegram_bot import (
     ATTR_LONGITUDE,
     async_setup_entry,
 )
-from homeassistant.components.telegram_bot.bot import TelegramBotConfigEntry
 from homeassistant.components.telegram_bot.const import (
     ATTR_AUTHENTICATION,
     ATTR_CALLBACK_QUERY_ID,
@@ -41,7 +41,6 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_PASSWORD,
     ATTR_QUESTION,
     ATTR_REPLY_TO_MSGID,
-    ATTR_REPLYMARKUP,
     ATTR_STICKER_ID,
     ATTR_TARGET,
     ATTR_TIMEOUT,
@@ -220,39 +219,49 @@ async def test_send_message_with_inline_keyboard(
     expected: InlineKeyboardMarkup,
 ) -> None:
     """Test the send_message service.
-    
+
     Tests any service that does not require files to be sent.
     """
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
 
-    response = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        input,
-        blocking=True,
-        context=context,
-        return_response=True,
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_message",
+        AsyncMock(
+            return_value=Message(
+                message_id=12345,
+                date=datetime.now(),
+                chat=Chat(id=123456, type=ChatType.PRIVATE),
+            )
+        ),
+    ) as mock_send_message:
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            input,
+            blocking=True,
+            context=context,
+            return_response=True,
+        )
+        await hass.async_block_till_done()
+
+        mock_send_message.assert_called_once_with(
+            12345678,
+            "test_message",
+            parse_mode=ParseMode.MARKDOWN,
+            disable_web_page_preview=None,
+            disable_notification=False,
+            reply_to_message_id=None,
+            reply_markup=expected,
+            read_timeout=None,
+            message_thread_id=None,
+        )
 
     assert len(events) == 1
     assert events[0].context == context
 
     assert len(response["chats"]) == 1
     assert (response["chats"][0]["message_id"]) == 12345
-
-    # retrieve the last message
-    config_entry_ids = hass.config_entries.async_entry_ids()
-    assert len(config_entry_ids) == 1
-    config_entry: TelegramBotConfigEntry = hass.config_entries.async_get_known_entry(
-        config_entry_ids[0]
-    )
-    last_message: dict[str, Any] = config_entry.runtime_data.last_message[123456]
-
-    assert last_message[ATTR_MESSAGEID] == 12345
-    reply_markup: InlineKeyboardMarkup = last_message[ATTR_REPLYMARKUP]
-    assert reply_markup == expected
 
 
 async def test_send_message_inline_keyboard_error(
