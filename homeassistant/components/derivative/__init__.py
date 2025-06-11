@@ -29,6 +29,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             options={**entry.options, CONF_SOURCE: source_entity_id},
         )
 
+    async def source_entity_removed() -> None:
+        async_remove_stale_devices_links_keep_entity_device(hass, entry.entry_id, None)
+
     entity_registry = er.async_get(hass)
     entry.async_on_unload(
         async_handle_source_entity_changes(
@@ -42,6 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass, entry.options[CONF_SOURCE]
             ),
             source_entity_id_or_uuid=entry.options[CONF_SOURCE],
+            source_entity_removed=source_entity_removed,
         )
     )
     await hass.config_entries.async_forward_entry_setups(entry, (Platform.SENSOR,))

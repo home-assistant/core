@@ -60,6 +60,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             options={**entry.options, CONF_ENTITY_ID: source_entity_id},
         )
 
+    async def source_entity_removed() -> None:
+        await hass.config_entries.async_remove(entry.entry_id)
+
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
@@ -70,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=async_add_to_device(hass, entry, entity_id),
             source_entity_id_or_uuid=entry.options[CONF_ENTITY_ID],
+            source_entity_removed=source_entity_removed,
         )
     )
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))

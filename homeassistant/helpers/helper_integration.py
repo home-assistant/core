@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, valid_entity_id
 
@@ -18,6 +19,7 @@ def async_handle_source_entity_changes(
     set_source_entity_id_or_uuid: Callable[[str], None],
     source_device_id: str | None,
     source_entity_id_or_uuid: str,
+    source_entity_removed: Callable[[], Coroutine[Any, Any, None]],
 ) -> CALLBACK_TYPE:
     """Handle changes to a helper entity's source entity.
 
@@ -34,6 +36,14 @@ def async_handle_source_entity_changes(
     - Source entity removed from the device: The helper entity is updated to link
       to no device, and the helper config entry removed from the old device. Then
       the helper config entry is reloaded.
+
+    :param get_helper_entity: A function which returns the helper entity's entity ID,
+        or None if the helper entity does not exist.
+    :param set_source_entity_id_or_uuid: A function which updates the source entity
+        ID or UUID in the helper config entry options.
+    :param source_entity_removed: A function which is called when the source entity
+        is removed. This can be used to clean up any resources related to the source
+        entity or ask the user to select a new source entity.
     """
 
     async def async_registry_updated(
@@ -44,7 +54,7 @@ def async_handle_source_entity_changes(
 
         data = event.data
         if data["action"] == "remove":
-            await hass.config_entries.async_remove(helper_config_entry_id)
+            await source_entity_removed()
 
         if data["action"] != "update":
             return
