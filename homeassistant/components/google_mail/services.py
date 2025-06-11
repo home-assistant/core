@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from googleapiclient.http import HttpRequest
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
@@ -90,6 +90,7 @@ async def _gmail_service(call: ServiceCall) -> None:
         await call.hass.async_add_executor_job(settings.execute)
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Google Mail integration."""
 
