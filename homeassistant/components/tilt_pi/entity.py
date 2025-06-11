@@ -38,4 +38,4 @@ class TiltEntity(CoordinatorEntity[TiltPiDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if the hydrometer is available (present in coordinator data)."""
-        return self._mac_id in self.coordinator.data if self.coordinator.data else False
+        return self._mac_id in self.coordinator.data and super().available
