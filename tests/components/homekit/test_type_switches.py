@@ -6,6 +6,8 @@ import pytest
 
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
+    CHAR_CONFIGURED_NAME,
+    SERV_OUTLET,
     TYPE_FAUCET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
@@ -567,6 +569,10 @@ async def test_input_select_switch(
     acc = SelectSwitch(hass, hk_driver, "SelectSwitch", entity_id, 2, None)
     acc.run()
     await hass.async_block_till_done()
+
+    switch_service = acc.get_service(SERV_OUTLET)
+    configured_name_char = switch_service.get_characteristic(CHAR_CONFIGURED_NAME)
+    assert configured_name_char.value == "option1"
 
     assert acc.select_chars["option1"].value is True
     assert acc.select_chars["option2"].value is False

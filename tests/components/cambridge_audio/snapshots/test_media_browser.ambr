@@ -4,6 +4,7 @@
     dict({
       'can_expand': True,
       'can_play': False,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'directory',
       'media_content_id': '',
@@ -18,6 +19,7 @@
     dict({
       'can_expand': False,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'music',
       'media_content_id': '1',
@@ -28,6 +30,7 @@
     dict({
       'can_expand': False,
       'can_play': True,
+      'can_search': False,
       'children_media_class': None,
       'media_class': 'music',
       'media_content_id': '2',

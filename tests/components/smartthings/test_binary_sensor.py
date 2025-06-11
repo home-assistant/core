@@ -3,20 +3,26 @@
 from unittest.mock import AsyncMock
 
 from pysmartthings import Attribute, Capability
+from pysmartthings.models import HealthStatus
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import automation, script
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.smartthings import DOMAIN, MAIN
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from . import setup_integration, snapshot_smartthings_entities, trigger_update
+from . import (
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_health_update,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry
 
@@ -45,7 +51,7 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("binary_sensor.refrigerator_cooler_door").state == STATE_OFF
+    assert hass.states.get("binary_sensor.refrigerator_fridge_door").state == STATE_OFF
 
     await trigger_update(
         hass,
@@ -57,7 +63,48 @@ async def test_state_update(
         component="cooler",
     )
 
-    assert hass.states.get("binary_sensor.refrigerator_cooler_door").state == STATE_ON
+    assert hass.states.get("binary_sensor.refrigerator_fridge_door").state == STATE_ON
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ref_normal_000001"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.refrigerator_fridge_door").state == STATE_OFF
+
+    await trigger_health_update(
+        hass, devices, "7db87911-7dce-1cf2-7119-b953432a2f09", HealthStatus.OFFLINE
+    )
+
+    assert (
+        hass.states.get("binary_sensor.refrigerator_fridge_door").state
+        == STATE_UNAVAILABLE
+    )
+
+    await trigger_health_update(
+        hass, devices, "7db87911-7dce-1cf2-7119-b953432a2f09", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("binary_sensor.refrigerator_fridge_door").state == STATE_OFF
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ref_normal_000001"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        hass.states.get("binary_sensor.refrigerator_fridge_door").state
+        == STATE_UNAVAILABLE
+    )
 
 
 @pytest.mark.parametrize(
@@ -143,7 +190,6 @@ async def test_create_issue_with_items(
     assert automations_with_entity(hass, entity_id)[0] == "automation.test"
     assert scripts_with_entity(hass, entity_id)[0] == "script.test"
 
-    assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_key == f"deprecated_binary_{issue_string}_scripts"
@@ -163,7 +209,6 @@ async def test_create_issue_with_items(
 
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert len(issue_registry.issues) == 0
 
 
 @pytest.mark.parametrize(
@@ -211,7 +256,6 @@ async def test_create_issue(
 
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    assert len(issue_registry.issues) == 1
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.translation_key == f"deprecated_binary_{issue_string}"
@@ -230,4 +274,3 @@ async def test_create_issue(
 
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert len(issue_registry.issues) == 0

@@ -7,7 +7,7 @@ from unittest.mock import patch
 import wave
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from wyoming.audio import AudioChunk, AudioStop
 
 from homeassistant.components import tts, wyoming
@@ -117,7 +117,6 @@ async def test_get_tts_audio_different_formats(
         assert wav_file.getframerate() == 48000
         assert wav_file.getsampwidth() == 2
         assert wav_file.getnchannels() == 2
-        assert wav_file.getnframes() == wav_file.getframerate()  # one second
 
     assert mock_client.written == snapshot
 

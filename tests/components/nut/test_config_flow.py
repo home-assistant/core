@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from aionut import NUTError, NUTLoginError
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.nut.config_flow import PASSWORD_NOT_CHANGED
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import (
@@ -86,7 +86,6 @@ async def test_form_zeroconf(hass: HomeAssistant) -> None:
 
 async def test_form_user_one_alias(hass: HomeAssistant) -> None:
     """Test we can configure a device with one alias."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -131,8 +130,6 @@ async def test_form_user_one_alias(hass: HomeAssistant) -> None:
 
 async def test_form_user_multiple_aliases(hass: HomeAssistant) -> None:
     """Test we can configure device with multiple aliases."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "2.2.2.2", CONF_PORT: 123, CONF_RESOURCES: ["battery.charge"]},
@@ -202,7 +199,6 @@ async def test_form_user_one_alias_with_ignored_entry(hass: HomeAssistant) -> No
     )
     ignored_entry.add_to_hass(hass)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

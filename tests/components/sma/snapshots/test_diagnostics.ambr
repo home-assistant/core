@@ -20,7 +20,7 @@
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
-      'source': 'import',
+      'source': 'user',
       'subentries': list([
       ]),
       'title': 'SMA Device Name',

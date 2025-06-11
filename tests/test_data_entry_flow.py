@@ -464,6 +464,9 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
     """Test show progress logic."""
     manager.hass = hass
     events = []
+    progress_update_events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
+    )
     task_one_evt = asyncio.Event()
     task_two_evt = asyncio.Event()
     event_received_evt = asyncio.Event()
@@ -486,7 +489,9 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
                 await task_one_evt.wait()
 
             async def long_running_job_two() -> None:
+                self.async_update_progress(0.25)
                 await task_two_evt.wait()
+                self.async_update_progress(0.75)
                 self.data = {"title": "Hello"}
 
             uncompleted_task: asyncio.Task[None] | None = None
@@ -545,6 +550,12 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
     result = await manager.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
     assert result["progress_action"] == "task_two"
+    assert len(progress_update_events) == 1
+    assert progress_update_events[0].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "progress": 0.25,
+    }
 
     # Set task two done and wait for event
     task_two_evt.set()
@@ -555,6 +566,12 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
         "handler": "test",
         "flow_id": result["flow_id"],
         "refresh": True,
+    }
+    assert len(progress_update_events) == 2
+    assert progress_update_events[1].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "progress": 0.75,
     }
 
     # Frontend refreshes the flow
@@ -869,13 +886,40 @@ async def test_show_progress_fires_only_when_changed(
     )  # change (description placeholder)
 
 
-async def test_abort_flow_exception(manager: MockFlowManager) -> None:
-    """Test that the AbortFlow exception works."""
+async def test_abort_flow_exception_step(manager: MockFlowManager) -> None:
+    """Test that the AbortFlow exception works in a step."""
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
         async def async_step_init(self, user_input=None):
             raise data_entry_flow.AbortFlow("mock-reason", {"placeholder": "yo"})
+
+    form = await manager.async_init("test")
+    assert form["type"] == data_entry_flow.FlowResultType.ABORT
+    assert form["reason"] == "mock-reason"
+    assert form["description_placeholders"] == {"placeholder": "yo"}
+
+
+async def test_abort_flow_exception_finish_flow(hass: HomeAssistant) -> None:
+    """Test that the AbortFlow exception works when finishing a flow."""
+
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+        async def async_step_init(self, input):
+            """Return init form with one input field 'count'."""
+            return self.async_create_entry(title="init", data=input)
+
+    class FlowManager(data_entry_flow.FlowManager):
+        async def async_create_flow(self, handler_key, *, context, data):
+            """Create a test flow."""
+            return TestFlow()
+
+        async def async_finish_flow(self, flow, result):
+            """Raise AbortFlow."""
+            raise data_entry_flow.AbortFlow("mock-reason", {"placeholder": "yo"})
+
+    manager = FlowManager(hass)
 
     form = await manager.async_init("test")
     assert form["type"] == data_entry_flow.FlowResultType.ABORT

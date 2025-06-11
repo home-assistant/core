@@ -58,8 +58,11 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             LOGGER,
             config_entry=config_entry,
             name="Teslemetry Vehicle",
-            update_interval=VEHICLE_INTERVAL,
         )
+        if product["command_signing"] == "off":
+            # Only allow automatic polling if its included
+            self.update_interval = VEHICLE_INTERVAL
+
         self.api = api
         self.data = flatten(product)
         self.last_active = datetime.now()
@@ -192,9 +195,13 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(e.message) from e
 
         # Add all time periods together
-        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
+        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
         for period in data.get("time_series", []):
             for key in ENERGY_HISTORY_FIELDS:
-                output[key] += period.get(key, 0)
+                if key in period:
+                    if output[key] is None:
+                        output[key] = period[key]
+                    else:
+                        output[key] += period[key]
 
         return output

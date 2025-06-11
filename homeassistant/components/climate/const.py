@@ -96,7 +96,6 @@ class HVACAction(StrEnum):
 CURRENT_HVAC_ACTIONS = [cls.value for cls in HVACAction]
 
 
-ATTR_AUX_HEAT = "aux_heat"
 ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_FAN_MODES = "fan_modes"
@@ -128,7 +127,6 @@ DOMAIN = "climate"
 
 INTENT_SET_TEMPERATURE = "HassClimateSetTemperature"
 
-SERVICE_SET_AUX_HEAT = "set_aux_heat"
 SERVICE_SET_FAN_MODE = "set_fan_mode"
 SERVICE_SET_PRESET_MODE = "set_preset_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
@@ -147,7 +145,6 @@ class ClimateEntityFeature(IntFlag):
     FAN_MODE = 8
     PRESET_MODE = 16
     SWING_MODE = 32
-    AUX_HEAT = 64
     TURN_OFF = 128
     TURN_ON = 256
     SWING_HORIZONTAL_MODE = 512
