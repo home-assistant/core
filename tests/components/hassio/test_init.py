@@ -1,6 +1,5 @@
 """The tests for the hassio component."""
 
-from collections.abc import Generator
 from datetime import timedelta
 import logging
 import os
@@ -51,19 +50,6 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 def extra_os_info():
     """Extra os/info."""
     return {}
-
-
-@pytest.fixture
-def arch() -> str:
-    """Arch found in apk file."""
-    return "amd64"
-
-
-@pytest.fixture(autouse=True)
-def mock_arch_file(arch: str) -> Generator[None]:
-    """Mock arch file."""
-    with patch("homeassistant.components.hassio._get_arch", return_value=arch):
-        yield
 
 
 @pytest.fixture
