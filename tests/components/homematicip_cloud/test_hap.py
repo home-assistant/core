@@ -237,7 +237,7 @@ async def test_get_state_after_disconnect(
     hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
 ) -> None:
     """Test get state after disconnect."""
-    hass.config.components.add(DOMAIN)
+    hass.config.components.add(HMIPC_DOMAIN)
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
 
