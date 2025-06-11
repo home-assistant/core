@@ -40,7 +40,7 @@ def async_handle_source_entity_changes(
     :param get_helper_entity: A function which returns the helper entity's entity ID,
         or None if the helper entity does not exist.
     :param set_source_entity_id_or_uuid: A function which updates the source entity
-        ID or UUID in the helper config entry options.
+        ID or UUID, e.g., in the helper config entry options.
     :param source_entity_removed: A function which is called when the source entity
         is removed. This can be used to clean up any resources related to the source
         entity or ask the user to select a new source entity.
