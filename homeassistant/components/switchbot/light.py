@@ -6,7 +6,7 @@ import logging
 from typing import Any, cast
 
 import switchbot
-from switchbot import BulbColorMode, CeilingLightColorMode, StripLightColorMode
+from switchbot import ColorMode as SwitchBotColorMode
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -24,11 +24,8 @@ from .coordinator import SwitchbotConfigEntry
 from .entity import SwitchbotEntity, exception_handler
 
 SWITCHBOT_COLOR_MODE_TO_HASS = {
-    StripLightColorMode.RGB: ColorMode.RGB,
-    StripLightColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
-    BulbColorMode.RGB: ColorMode.RGB,
-    BulbColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
-    CeilingLightColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
+    SwitchBotColorMode.RGB: ColorMode.RGB,
+    SwitchBotColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
 }
 
 _LOGGER = logging.getLogger(__name__)
