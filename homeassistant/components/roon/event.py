@@ -69,7 +69,6 @@ class RoonEventEntity(EventEntity):
             name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
-            via_device=(DOMAIN, self._server.roon_id),
         )
 
     def _roonapi_volume_callback(
