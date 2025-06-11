@@ -8,6 +8,7 @@ from google_air_quality_api.exceptions import (
     GoogleAirQualityApiError,
     NoDataForLocationError,
 )
+from google_air_quality_api.model import UserInfoResult
 import pytest
 
 from homeassistant import config_entries
@@ -28,6 +29,7 @@ from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+NEW_USER_ID = "new-user-id"
 
 
 @pytest.fixture(name="mock_setup")
@@ -295,10 +297,14 @@ async def test_no_data_for_location_shows_form(
     assert step2["errors"] == {"base": "no_data_for_location"}
 
 
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize("fixture_name", ["air_quality_data.json"])
 @pytest.mark.usefixtures("setup_integration_and_subentry")
 async def test_already_configured(
     hass: HomeAssistant,
     config_and_subentry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_api: Mock,
 ) -> None:
     """Snapshot test of the sensors."""
     await hass.async_block_till_done()
@@ -339,3 +345,55 @@ async def test_already_configured(
     )
 
     assert step2["type"] is FlowResultType.CREATE_ENTRY
+
+    # Test adding a new main entry with the same coordinates
+    mock_api.get_user_info.return_value = UserInfoResult(
+        id=NEW_USER_ID,
+        name="New Test User",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        "&scope=https://www.googleapis.com/auth/cloud-platform"
+        "+https://www.googleapis.com/auth/userinfo.profile"
+        "&access_type=offline&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    new_entry = result["result"]
+    await hass.async_block_till_done()
+    result = await hass.config_entries.subentries.async_init(
+        (new_entry.entry_id, "location"),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_USER
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_LOCATION: {
+                CONF_LATITUDE: 41,
+                CONF_LONGITUDE: 2,
+            }
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

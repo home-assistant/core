@@ -140,9 +140,10 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_abort(reason="unknown")
 
             unique_id = f"{lat}_{lon}"
-            for existing_subentry in entry.subentries.values():
-                if existing_subentry.unique_id == unique_id:
-                    return self.async_abort(reason="already_configured")
+            for entry in hass.config_entries.async_entries(DOMAIN):
+                for subentry in entry.subentries.values():
+                    if subentry.unique_id == unique_id:
+                        return self.async_abort(reason="already_configured")
             data = {
                 CONF_LATITUDE: lat,
                 CONF_LONGITUDE: lon,
