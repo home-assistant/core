@@ -476,3 +476,114 @@ async def test_zeroconf_discovery_mac_mismatch_updates_unique_id(
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_bsblan.device.mock_calls) == 1
+
+
+async def test_zeroconf_discovery_connection_error_recovery(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_setup_entry: AsyncMock,
+    zeroconf_discovery_info: ZeroconfServiceInfo,
+) -> None:
+    """Test connection error during zeroconf discovery can be recovered from."""
+    # First attempt fails with connection error
+    mock_bsblan.device.side_effect = BSBLANConnectionError
+
+    result = await _init_zeroconf_flow(hass, zeroconf_discovery_info)
+    _assert_form_result(result, "discovery_confirm")
+
+    result2 = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_form_result(result2, "discovery_confirm", {"base": "cannot_connect"})
+
+    # Second attempt succeeds (connection is fixed)
+    mock_bsblan.device.side_effect = None
+
+    result3 = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_create_entry_result(
+        result3,
+        format_mac("00:80:41:19:69:90"),
+        {
+            CONF_HOST: "10.0.2.60",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+        format_mac("00:80:41:19:69:90"),
+    )
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    # Should have been called twice: first failed, second succeeded
+    assert len(mock_bsblan.device.mock_calls) == 2
+
+
+async def test_connection_error_recovery(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test we can recover from BSBLan connection error in user flow."""
+    # First attempt fails with connection error
+    mock_bsblan.device.side_effect = BSBLANConnectionError
+
+    result = await _init_user_flow(
+        hass,
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_form_result(result, "user", {"base": "cannot_connect"})
+
+    # Second attempt succeeds (connection is fixed)
+    mock_bsblan.device.side_effect = None
+
+    result2 = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    _assert_create_entry_result(
+        result2,
+        format_mac("00:80:41:19:69:90"),
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+        format_mac("00:80:41:19:69:90"),
+    )
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    # Should have been called twice: first failed, second succeeded
+    assert len(mock_bsblan.device.mock_calls) == 2
