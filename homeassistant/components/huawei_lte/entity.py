@@ -66,3 +66,12 @@ class HuaweiLteBaseEntityWithDevice(HuaweiLteBaseEntity):
             connections=self.router.device_connections,
             identifiers=self.router.device_identifiers,
         )
+
+
+class HuaweiLteBaseInteractiveEntity(HuaweiLteBaseEntityWithDevice):
+    """Base interactive entity."""
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and not self.router.suspended
