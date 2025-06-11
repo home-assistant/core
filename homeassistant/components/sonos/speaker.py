@@ -1153,8 +1153,13 @@ class SonosSpeaker:
                 while not _test_groups(groups):
                     await hass.data[DATA_SONOS].topology_condition.wait()
         except TimeoutError:
-            _LOGGER.warning("Timeout waiting for target groups %s", groups)
-
+            group_descriptions = [
+                f"{group[0].zone_name}: {', '.join(speaker.zone_name for speaker in group)}"
+                for group in groups
+            ]
+            _LOGGER.warning(
+                "Timeout waiting for target groups: %s", "; ".join(group_descriptions)
+            )
         any_speaker = next(iter(hass.data[DATA_SONOS].discovered.values()))
         any_speaker.soco.zone_group_state.clear_cache()
 
