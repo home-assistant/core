@@ -38,6 +38,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pytz": "CalVer",
     "requests": "SemVer",
     "typing_extensions": "SemVer",
+    "urllib3": "SemVer",
     "yarl": "SemVer",
 }
 PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
@@ -49,6 +50,14 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # scipy version closely linked to numpy
         # geocachingapi > reverse_geocode > scipy > numpy
         "scipy": {"numpy"}
+    },
+    "sensorpush_cloud": {
+        # https://github.com/sstallion/sensorpush-api/pull/4
+        "sensorpush-api": {"urllib3"}
+    },
+    "weheat": {
+        # https://github.com/wefabricate/wh-python/pull/40
+        "weheat": {"urllib3"}
     },
 }
 
