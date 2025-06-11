@@ -355,6 +355,9 @@ class NetatmoDataHandler:
         """Set up home door_tag modules."""
         for module in self.account.modules.values():
             if module.device_category is NetatmoDeviceCategory.opening:
+                _LOGGER.debug(
+                    "Module %s dispatched as opening category (door_tag)", module.name
+                )
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_DOOR_TAG,
