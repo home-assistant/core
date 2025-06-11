@@ -536,6 +536,102 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[extractor_hood][button.mock_extractor_hood_reset_filter_condition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_extractor_hood_reset_filter_condition',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset filter condition',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_filter_condition',
+    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-HepaFilterMonitoringResetButton-113-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[extractor_hood][button.mock_extractor_hood_reset_filter_condition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Extractor hood Reset filter condition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_extractor_hood_reset_filter_condition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[extractor_hood][button.mock_extractor_hood_reset_filter_condition_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.mock_extractor_hood_reset_filter_condition_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset filter condition',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_filter_condition',
+    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-ActivatedCarbonFilterMonitoringResetButton-114-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[extractor_hood][button.mock_extractor_hood_reset_filter_condition_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Extractor hood Reset filter condition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_extractor_hood_reset_filter_condition_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[fan][button.mocked_fan_switch_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

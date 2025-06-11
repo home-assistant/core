@@ -40,7 +40,7 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 
-async def async_register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register Onkyo services."""
 
     hass.data.setdefault(DATA_MP_ENTITIES, {})

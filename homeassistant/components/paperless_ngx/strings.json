@@ -126,6 +126,11 @@
           "error": "[%key:common::state::error%]"
         }
       }
+    },
+    "update": {
+      "paperless_update": {
+        "name": "Software"
+      }
     }
   },
   "exceptions": {

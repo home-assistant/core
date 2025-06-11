@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 VALID_CONFIG = {
@@ -35,11 +35,11 @@ async def test_default_setup(
     """Test the default setup."""
     aioclient_mock.get(
         re.compile("api.foobot.io/v2/owner/.*"),
-        text=load_fixture("devices.json", "foobot"),
+        text=await async_load_fixture(hass, "devices.json", "foobot"),
     )
     aioclient_mock.get(
         re.compile("api.foobot.io/v2/device/.*"),
-        text=load_fixture("data.json", "foobot"),
+        text=await async_load_fixture(hass, "data.json", "foobot"),
     )
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
     await hass.async_block_till_done()

@@ -354,6 +354,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_gateway_id": {
+      "message": "Gateway {gw_id} not found or not loaded!"
+    }
+  },
   "options": {
     "step": {
       "init": {

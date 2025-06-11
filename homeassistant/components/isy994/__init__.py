@@ -26,6 +26,7 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     _LOGGER,
@@ -46,13 +47,21 @@ from .const import (
 )
 from .helpers import _categorize_nodes, _categorize_programs
 from .models import IsyConfigEntry, IsyData
-from .services import async_setup_services, async_unload_services
+from .services import async_setup_services
 from .util import _async_cleanup_registry_entries
 
 CONFIG_SCHEMA = vol.Schema(
     cv.deprecated(DOMAIN),
     extra=vol.ALLOW_EXTRA,
 )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the ISY 994 integration."""
+
+    async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
@@ -167,9 +176,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update)
     )
 
-    # Register Integration-wide Services:
-    async_setup_services(hass)
-
     return True
 
 
@@ -220,9 +226,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool
 
     _LOGGER.debug("ISY Stopping Event Stream and automatic updates")
     entry.runtime_data.root.websocket.stop()
-
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        async_unload_services(hass)
 
     return unload_ok
 

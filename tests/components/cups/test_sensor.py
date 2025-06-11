@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.cups import CONF_PRINTERS, DOMAIN as CUPS_DOMAIN
+from homeassistant.components.cups import CONF_PRINTERS, DOMAIN
 from homeassistant.components.sensor.const import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -25,7 +25,7 @@ async def test_repair_issue_is_created(
             {
                 SENSOR_DOMAIN: [
                     {
-                        CONF_PLATFORM: CUPS_DOMAIN,
+                        CONF_PLATFORM: DOMAIN,
                         CONF_PRINTERS: [
                             "printer1",
                         ],
@@ -36,5 +36,5 @@ async def test_repair_issue_is_created(
         await hass.async_block_till_done()
         assert (
             HOMEASSISTANT_DOMAIN,
-            f"deprecated_system_packages_yaml_integration_{CUPS_DOMAIN}",
+            f"deprecated_system_packages_yaml_integration_{DOMAIN}",
         ) in issue_registry.issues

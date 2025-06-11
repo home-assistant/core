@@ -78,7 +78,7 @@
       "message": "Error connecting to the Overseerr instance: {error}"
     },
     "auth_error": {
-      "message": "Invalid API key."
+      "message": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "not_loaded": {
       "message": "{target} is not loaded."
