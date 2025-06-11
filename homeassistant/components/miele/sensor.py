@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     REVOLUTIONS_PER_MINUTE,
+    STATE_UNKNOWN,
     EntityCategory,
     UnitOfEnergy,
     UnitOfTemperature,
