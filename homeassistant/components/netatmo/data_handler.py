@@ -355,6 +355,7 @@ class NetatmoDataHandler:
         """Set up home door_tag modules."""
         for module in self.account.modules.values():
             if module.device_category is NetatmoDeviceCategory.opening:
+                _LOGGER.debug("Module %s dispatched as opening category (door_tag)", module.name)
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_DOOR_TAG,
@@ -388,11 +389,11 @@ class NetatmoDataHandler:
         }
         for module in home.modules.values():
             if not module.device_category:
-                _LOGGER.debug("Module %s skipped beacuse of category (%s)", module.signal_name, module.device_category)
+                _LOGGER.debug("Module %s skipped beacuse of category (%s)", module.name, module.device_category)
                 continue
 
             for signal in netatmo_type_signal_map.get(module.device_category, []):
-                _LOGGER.debug("Module %s dispatched as %s", module.signal_name, signal)
+                _LOGGER.debug("Module %s dispatched as %s", module.name, signal_name)
                 async_dispatcher_send(
                     self.hass,
                     signal,
@@ -404,7 +405,7 @@ class NetatmoDataHandler:
                     ),
                 )
             if module.device_category is NetatmoDeviceCategory.weather:
-                _LOGGER.debug("Module %s dispatched as weather category", module.signal_name)
+                _LOGGER.debug("Module %s dispatched as weather category", module.name)
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_WEATHER_SENSOR,
@@ -433,7 +434,7 @@ class NetatmoDataHandler:
 
                 for module in room.modules.values():
                     if module.device_category is NetatmoDeviceCategory.climate:
-                        _LOGGER.debug("Battery for climate module %s dispatched", module.signal_name)
+                        _LOGGER.debug("Battery for climate module %s dispatched", module.name)
                         async_dispatcher_send(
                             self.hass,
                             NETATMO_CREATE_BATTERY,
