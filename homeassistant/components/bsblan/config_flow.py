@@ -67,7 +67,12 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         # If MAC was found in zeroconf, use it immediately
         if self.mac:
             await self.async_set_unique_id(format_mac(self.mac))
-            self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: self.host,
+                    CONF_PORT: self.port,
+                }
+            )
         else:
             # For older firmware without MAC in zeroconf:
             # Use discovery without unique ID pattern - will get MAC via API later
@@ -185,13 +190,11 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 format_mac(self.mac), raise_on_progress=raise_on_progress
             )
 
-        # For discovered devices, don't allow updating host/port
-        if is_discovery:
-            self._abort_if_unique_id_configured()
-        else:
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_HOST: self.host,
-                    CONF_PORT: self.port,
-                }
-            )
+        # Always allow updating host/port for both user and discovery flows
+        # This ensures connectivity is maintained when devices change IP addresses
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: self.host,
+                CONF_PORT: self.port,
+            }
+        )
