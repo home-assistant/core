@@ -24,5 +24,17 @@
         }
       }
     }
+  },
+  "services": {
+    "cancel": {
+      "name": "Cancel",
+      "description": "Cancels a pushover emergency notification.",
+      "fields": {
+        "data": {
+          "name": "Data",
+          "description": "Extended information of notification. Supports tag."
+        }
+      }
+    }
   }
 }
