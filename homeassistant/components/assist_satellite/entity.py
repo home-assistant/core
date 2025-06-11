@@ -4,11 +4,13 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
 import contextlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
 import time
 from typing import Any, Literal, final
+
+from hassil import Intents, recognize
 
 from homeassistant.components import conversation, media_source, stt, tts
 from homeassistant.components.assist_pipeline import (
@@ -103,6 +105,42 @@ class AssistSatelliteAnnouncement:
 
     preannounce_media_id: str | None = None
     """Media ID to be played before announcement."""
+
+
+@dataclass
+class AssistSatellitePossibleAnswer:
+    """Possible answer to a question."""
+
+    id: str
+    """Id of answer that will be matched in a script or automation."""
+
+    sentences: list[str]
+    """List of hassil sentence templates for this answer."""
+
+
+@dataclass
+class AssistSatelliteQuestion:
+    """Question that needs an answer."""
+
+    announcement: AssistSatelliteAnnouncement
+    """Details of question announcement."""
+
+    answers: list[AssistSatellitePossibleAnswer]
+    """List of possible answers to the question."""
+
+
+@dataclass
+class AssistSatelliteAnswer:
+    """Answer to a question."""
+
+    id: str | None
+    """Matched answer id or None if no answer was matched."""
+
+    sentence: str
+    """Raw sentence text from user response."""
+
+    slots: dict[str, Any] = field(default_factory=dict)
+    """Matched slots from answer."""
 
 
 class AssistSatelliteEntity(entity.Entity):
@@ -316,7 +354,8 @@ class AssistSatelliteEntity(entity.Entity):
         question_media_id: str | None = None,
         preannounce: bool = True,
         preannounce_media_id: str = PREANNOUNCE_URL,
-    ) -> str | None:
+        answers: list[dict[str, Any]] | None = None,
+    ) -> AssistSatelliteAnswer | None:
         """Ask a question and get a user's response from the satellite.
 
         If question_media_id is not provided, question is synthesized to audio
@@ -335,6 +374,9 @@ class AssistSatelliteEntity(entity.Entity):
         if question is None:
             question = ""
 
+        if answers is None:
+            answers = []
+
         announcement = await self._resolve_announcement_media_id(
             question,
             question_media_id,
@@ -348,16 +390,66 @@ class AssistSatelliteEntity(entity.Entity):
         self._set_state(AssistSatelliteState.RESPONDING)
 
         try:
-            return await self.async_ask_question(announcement)
+            return await self.async_ask_question(
+                AssistSatelliteQuestion(
+                    announcement=announcement,
+                    answers=[
+                        AssistSatellitePossibleAnswer(
+                            id=answer["id"], sentences=answer["sentences"]
+                        )
+                        for answer in answers
+                    ],
+                )
+            )
         finally:
             self._is_announcing = False
             self._set_state(AssistSatelliteState.IDLE)
 
     async def async_ask_question(
-        self, start_announcement: AssistSatelliteAnnouncement
-    ) -> str | None:
-        """Ask a question and get a user's response from the satellite."""
+        self, question: AssistSatelliteQuestion
+    ) -> AssistSatelliteAnswer | None:
+        """Ask a question and get a user's answer from the satellite."""
         raise NotImplementedError
+
+    def question_response_to_answer(
+        self, response_text: str, question: AssistSatelliteQuestion
+    ) -> AssistSatelliteAnswer:
+        """Match text to a pre-defined set of answers."""
+        if not question.answers:
+            # Only return raw text
+            return AssistSatelliteAnswer(id=None, sentence=response_text)
+
+        # Build intents and match
+        intents = Intents.from_dict(
+            {
+                "language": self.hass.config.language,
+                "intents": {
+                    "QuestionIntent": {
+                        "data": [
+                            {
+                                "sentences": answer.sentences,
+                                "metadata": {"answer_id": answer.id},
+                            }
+                            for answer in question.answers
+                        ]
+                    }
+                },
+            }
+        )
+        result = recognize(response_text, intents)
+        if result is None:
+            # No match
+            return AssistSatelliteAnswer(id=None, sentence=response_text)
+
+        assert result.intent_metadata
+        return AssistSatelliteAnswer(
+            id=result.intent_metadata["answer_id"],
+            sentence=response_text,
+            slots={
+                entity_name: entity.value
+                for entity_name, entity in result.entities.items()
+            },
+        )
 
     async def async_accept_pipeline_from_satellite(
         self,

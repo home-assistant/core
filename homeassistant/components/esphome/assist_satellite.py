@@ -386,14 +386,15 @@ class EsphomeAssistSatellite(
         await self._do_announce(start_announcement, run_pipeline_after=True)
 
     async def async_ask_question(
-        self, start_announcement: assist_satellite.AssistSatelliteAnnouncement
-    ) -> str | None:
+        self, question: assist_satellite.AssistSatelliteQuestion
+    ) -> assist_satellite.AssistSatelliteAnswer | None:
         """Ask a question and get a user's response from the satellite."""
         self._ask_question_future = asyncio.Future()
 
         try:
-            await self._do_announce(start_announcement, run_pipeline_after=True)
-            return await self._ask_question_future
+            await self._do_announce(question.announcement, run_pipeline_after=True)
+            response_text = await self._ask_question_future
+            return self.question_response_to_answer(response_text or "", question)
         except APIConnectionError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
