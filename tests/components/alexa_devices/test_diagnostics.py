@@ -1,4 +1,4 @@
-"""Tests for Amazon Devices diagnostics platform."""
+"""Tests for Alexa Devices diagnostics platform."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.amazon_devices.const import DOMAIN
+from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 

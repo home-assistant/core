@@ -1,4 +1,4 @@
-"""Tests for the Amazon Devices integration."""
+"""Tests for the Alexa Devices integration."""
 
 from homeassistant.core import HomeAssistant
 

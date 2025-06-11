@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[binary_sensor.echo_test_bluetooth-entry]
+# name: test_all_entities[notify.echo_test_announce-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10,9 +10,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.echo_test_bluetooth',
+    'domain': 'notify',
+    'entity_category': None,
+    'entity_id': 'notify.echo_test_announce',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,30 +24,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Bluetooth',
-    'platform': 'amazon_devices',
+    'original_name': 'Announce',
+    'platform': 'alexa_devices',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'bluetooth',
-    'unique_id': 'echo_test_serial_number-bluetooth',
+    'translation_key': 'announce',
+    'unique_id': 'echo_test_serial_number-announce',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.echo_test_bluetooth-state]
+# name: test_all_entities[notify.echo_test_announce-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Echo Test Bluetooth',
+      'friendly_name': 'Echo Test Announce',
+      'supported_features': <NotifyEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.echo_test_bluetooth',
+    'entity_id': 'notify.echo_test_announce',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'unknown',
   })
 # ---
-# name: test_all_entities[binary_sensor.echo_test_connectivity-entry]
+# name: test_all_entities[notify.echo_test_speak-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -58,9 +59,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.echo_test_connectivity',
+    'domain': 'notify',
+    'entity_category': None,
+    'entity_id': 'notify.echo_test_speak',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -70,29 +71,29 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Connectivity',
-    'platform': 'amazon_devices',
+    'original_name': 'Speak',
+    'platform': 'alexa_devices',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'echo_test_serial_number-online',
+    'translation_key': 'speak',
+    'unique_id': 'echo_test_serial_number-speak',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.echo_test_connectivity-state]
+# name: test_all_entities[notify.echo_test_speak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Echo Test Connectivity',
+      'friendly_name': 'Echo Test Speak',
+      'supported_features': <NotifyEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.echo_test_connectivity',
+    'entity_id': 'notify.echo_test_speak',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'unknown',
   })
 # ---
