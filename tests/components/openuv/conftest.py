@@ -25,6 +25,14 @@ TEST_LONGITUDE = -0.3817765
 
 
 @pytest.fixture
+async def set_time_zone(hass: HomeAssistant) -> None:
+    """Set the time zone for the tests."""
+    # Set our timezone to CST/Regina so we can check calculations
+    # This keeps UTC-6 all year round
+    await hass.config.async_set_time_zone("America/Regina")
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
@@ -37,6 +45,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def client_fixture(data_protection_window, data_uv_index):
     """Define a mock Client object."""
     return Mock(
+        latitude=TEST_LATITUDE,
+        longitude=TEST_LONGITUDE,
         uv_index=AsyncMock(return_value=data_uv_index),
         uv_protection_window=AsyncMock(return_value=data_protection_window),
     )
@@ -81,7 +91,7 @@ def data_uv_index_fixture():
 
 
 @pytest.fixture(name="mock_pyopenuv")
-async def mock_pyopenuv_fixture(client):
+async def mock_pyopenuv_fixture(client, set_time_zone):
     """Define a fixture to patch pyopenuv."""
     with (
         patch(

@@ -78,7 +78,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.65.0
+PySwitchbot==0.66.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -170,7 +170,7 @@ aioairzone-cloud==0.6.12
 aioairzone==1.0.0
 
 # homeassistant.components.amazon_devices
-aioamazondevices==3.0.5
+aioamazondevices==3.0.6
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -232,7 +232,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==32.2.0
+aioesphomeapi==32.2.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -289,7 +289,7 @@ aiolookin==1.0.0
 aiolyric==2.0.1
 
 # homeassistant.components.mealie
-aiomealie==0.9.5
+aiomealie==0.9.6
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -471,7 +471,7 @@ apprise==1.9.1
 aprslib==0.7.2
 
 # homeassistant.components.apsystems
-apsystems-ez1==2.6.0
+apsystems-ez1==2.7.0
 
 # homeassistant.components.aranet
 aranet4==2.5.1
@@ -616,7 +616,7 @@ buienradar==1.0.6
 cached-ipaddress==0.10.0
 
 # homeassistant.components.caldav
-caldav==1.3.9
+caldav==1.6.0
 
 # homeassistant.components.coinbase
 coinbase-advanced-py==1.2.2
@@ -665,7 +665,7 @@ debugpy==1.8.14
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==13.2.1
+deebot-client==13.3.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -757,7 +757,7 @@ energyzero==2.1.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.10.2
+env-canada==0.11.2
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1013,10 +1013,10 @@ holidays==0.74
 home-assistant-frontend==20250531.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.5.28
+home-assistant-intents==2025.6.10
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.1.1
+homematicip==2.0.4
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1561,7 +1561,7 @@ pyblackbird==0.6
 pyblu==2.0.1
 
 # homeassistant.components.neato
-pybotvac==0.0.26
+pybotvac==0.0.28
 
 # homeassistant.components.braviatv
 pybravia==0.3.4
@@ -1603,7 +1603,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2025.3.0
+pydrawise==2025.6.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -1804,7 +1804,7 @@ pynina==0.3.6
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.2.4
+pynordpool==0.3.0
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -1941,7 +1941,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.8.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.3
+pysmartthings==3.2.4
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2022,7 +2022,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.9
+python-linkplay==0.2.10
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2144,7 +2144,7 @@ pywemo==1.4.0
 pywilight==0.0.74
 
 # homeassistant.components.wiz
-pywizlight==0.6.2
+pywizlight==0.6.3
 
 # homeassistant.components.wmspro
 pywmspro==0.2.2
@@ -2253,7 +2253,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.7.1
 
 # homeassistant.components.sensorpush_cloud
-sensorpush-api==2.1.2
+sensorpush-api==2.1.3
 
 # homeassistant.components.sensorpush
 sensorpush-ble==1.9.0
@@ -2458,7 +2458,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.12.0
+uiprotect==7.13.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2539,7 +2539,7 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.4.29
+weheat==2025.6.10
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.20.0

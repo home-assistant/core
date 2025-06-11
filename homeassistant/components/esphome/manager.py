@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from functools import partial
 import logging
-import re
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from aioesphomeapi import (
@@ -23,6 +22,7 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
+    parse_log_message,
 )
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -110,11 +110,6 @@ LOGGER_TO_LOG_LEVEL = {
     logging.ERROR: LogLevel.LOG_LEVEL_ERROR,
     logging.CRITICAL: LogLevel.LOG_LEVEL_ERROR,
 }
-# 7-bit and 8-bit C1 ANSI sequences
-# https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
-ANSI_ESCAPE_78BIT = re.compile(
-    rb"(?:\x1B[@-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1B\[|\x9B)[0-?]*[ -/]*[@-~])"
-)
 
 
 @callback
@@ -387,13 +382,15 @@ class ESPHomeManager:
 
     def _async_on_log(self, msg: SubscribeLogsResponse) -> None:
         """Handle a log message from the API."""
-        log: bytes = msg.message
-        _LOGGER.log(
-            LOG_LEVEL_TO_LOGGER.get(msg.level, logging.DEBUG),
-            "%s: %s",
-            self.entry.title,
-            ANSI_ESCAPE_78BIT.sub(b"", log).decode("utf-8", "backslashreplace"),
-        )
+        for line in parse_log_message(
+            msg.message.decode("utf-8", "backslashreplace"), "", strip_ansi_escapes=True
+        ):
+            _LOGGER.log(
+                LOG_LEVEL_TO_LOGGER.get(msg.level, logging.DEBUG),
+                "%s: %s",
+                self.entry.title,
+                line,
+            )
 
     @callback
     def _async_get_equivalent_log_level(self) -> LogLevel:
