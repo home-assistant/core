@@ -80,3 +80,7 @@ ask_question:
       required: false
       selector:
         text:
+    answers:
+      required: false
+      selector:
+        object:

@@ -3,6 +3,12 @@
 import logging
 from pathlib import Path
 
+from hassil.util import (
+    PUNCTUATION_END,
+    PUNCTUATION_END_WORD,
+    PUNCTUATION_START,
+    PUNCTUATION_START_WORD,
+)
 import voluptuous as vol
 
 from homeassistant.components.http import StaticPathConfig
@@ -23,9 +29,11 @@ from .const import (
 )
 from .entity import (
     AssistSatelliteAnnouncement,
+    AssistSatelliteAnswer,
     AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityDescription,
+    AssistSatelliteQuestion,
     AssistSatelliteWakeWord,
 )
 from .errors import SatelliteBusyError
@@ -34,10 +42,12 @@ from .websocket_api import async_register_websocket_api
 __all__ = [
     "DOMAIN",
     "AssistSatelliteAnnouncement",
+    "AssistSatelliteAnswer",
     "AssistSatelliteConfiguration",
     "AssistSatelliteEntity",
     "AssistSatelliteEntityDescription",
     "AssistSatelliteEntityFeature",
+    "AssistSatelliteQuestion",
     "AssistSatelliteWakeWord",
     "SatelliteBusyError",
 ]
@@ -95,6 +105,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Optional("question_media_id"): str,
                     vol.Optional("preannounce"): bool,
                     vol.Optional("preannounce_media_id"): str,
+                    vol.Optional("answers"): [
+                        {
+                            vol.Required("id"): str,
+                            vol.Required("sentences"): vol.All(
+                                cv.ensure_list,
+                                [cv.string],
+                                has_one_non_empty_item,
+                                has_no_punctuation,
+                            ),
+                        }
+                    ],
                 }
             ),
             cv.has_at_least_one_key("question", "question_media_id"),
@@ -127,3 +148,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+
+
+def has_no_punctuation(value: list[str]) -> list[str]:
+    """Validate result does not contain punctuation."""
+    for sentence in value:
+        if (
+            PUNCTUATION_START.search(sentence)
+            or PUNCTUATION_END.search(sentence)
+            or PUNCTUATION_START_WORD.search(sentence)
+            or PUNCTUATION_END_WORD.search(sentence)
+        ):
+            raise vol.Invalid("sentence should not contain punctuation")
+
+    return value
+
+
+def has_one_non_empty_item(value: list[str]) -> list[str]:
+    """Validate result has at least one item."""
+    if len(value) < 1:
+        raise vol.Invalid("at least one sentence is required")
+
+    for sentence in value:
+        if not sentence:
+            raise vol.Invalid(f"sentence too short: '{sentence}'")
+
+    return value
