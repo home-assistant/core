@@ -27,6 +27,8 @@ from .conftest import (
     setup_subaru_config_entry,
 )
 
+from tests.common import get_sensor_display_state
+
 
 async def test_sensors_ev_metric(hass: HomeAssistant, ev_entry) -> None:
     """Test sensors supporting metric units."""
@@ -141,5 +143,5 @@ def _assert_data(hass: HomeAssistant, expected_state: dict[str, Any]) -> None:
         expected_states[entity] = expected_state[item.key]
 
     for sensor, value in expected_states.items():
-        actual = hass.states.get(sensor)
-        assert actual.state == value
+        state = get_sensor_display_state(hass, entity_registry, sensor)
+        assert state == value

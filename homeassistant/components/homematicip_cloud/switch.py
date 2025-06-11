@@ -4,53 +4,48 @@ from __future__ import annotations
 
 from typing import Any
 
+from homematicip.base.enums import DeviceType
 from homematicip.device import (
     BrandSwitch2,
-    BrandSwitchMeasuring,
     DinRailSwitch,
     DinRailSwitch4,
     FullFlushInputSwitch,
-    FullFlushSwitchMeasuring,
     HeatingSwitch2,
     MultiIOBox,
     OpenCollector8Module,
     PlugableSwitch,
-    PlugableSwitchMeasuring,
     PrintedCircuitBoardSwitch2,
     PrintedCircuitBoardSwitchBattery,
+    SwitchMeasuring,
     WiredSwitch8,
 )
 from homematicip.group import ExtendedLinkedSwitchingGroup, SwitchingGroup
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import ATTR_GROUP_MEMBER_UNREACHABLE, HomematicipGenericEntity
-from .hap import HomematicipHAP
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HomematicIPConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP switch from a config entry."""
-    hap = hass.data[DOMAIN][config_entry.unique_id]
+    hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = [
         HomematicipGroupSwitch(hap, group)
         for group in hap.home.groups
         if isinstance(group, (ExtendedLinkedSwitchingGroup, SwitchingGroup))
     ]
     for device in hap.home.devices:
-        if isinstance(device, BrandSwitchMeasuring):
-            # BrandSwitchMeasuring inherits PlugableSwitchMeasuring
-            # This entity is implemented in the light platform and will
-            # not be added in the switch platform
-            pass
-        elif isinstance(device, (PlugableSwitchMeasuring, FullFlushSwitchMeasuring)):
+        if (
+            isinstance(device, SwitchMeasuring)
+            and getattr(device, "deviceType", None) != DeviceType.BRAND_SWITCH_MEASURING
+        ):
             entities.append(HomematicipSwitchMeasuring(hap, device))
         elif isinstance(device, WiredSwitch8):
             entities.extend(

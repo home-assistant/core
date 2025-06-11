@@ -12,7 +12,7 @@ from nibe.coil_groups import (
 )
 from nibe.heatpump import Model
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
@@ -23,14 +23,27 @@ ENTITY_ID = "light.hood_light"
 async def test_light_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
 ) -> None:
     """Test light entity state."""
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_light_states_api_push(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+    push_data_and_actions: None,
+) -> None:
+    """Test light state when the API pushes data via SSE."""
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -43,7 +56,7 @@ async def test_light_states(
 async def test_light_toggle(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
     service: str,
     light_state: int,
 ) -> None:
@@ -67,13 +80,15 @@ async def test_light_toggle(
 async def test_api_failure(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    setup_platform: None,
+    setup_platform: MockConfigEntry,
     service: str,
 ) -> None:
     """Test handling of exception from API."""
     mock_miele_client.send_action.side_effect = ClientError
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
+    ):
         await hass.services.async_call(
             TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
         )

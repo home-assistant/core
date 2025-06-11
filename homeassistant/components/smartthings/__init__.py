@@ -104,6 +104,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
     Platform.VALVE,
+    Platform.WATER_HEATER,
 ]
 
 
@@ -288,7 +289,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             for identifier in device_entry.identifiers
             if identifier[0] == DOMAIN
         )
-        if device_id in device_status:
+        if any(
+            device_id.startswith(device_identifier)
+            for device_identifier in device_status
+        ):
             continue
         device_registry.async_update_device(
             device_entry.id, remove_config_entry_id=entry.entry_id
@@ -515,6 +519,11 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
         )
         if disabled_components is not None:
             for component in disabled_components:
+                # Burner components are named burner-06
+                # but disabledComponents contain burner-6
+                if "burner" in component:
+                    burner_id = int(component.split("-")[-1])
+                    component = f"burner-0{burner_id}"
                 if component in status:
                     del status[component]
     for component_status in status.values():

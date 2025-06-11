@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 5
-PATCH_VERSION: Final = "3"
+MINOR_VERSION: Final = 6
+PATCH_VERSION: Final = "0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
@@ -634,11 +634,20 @@ class UnitOfEnergy(StrEnum):
     GIGA_CALORIE = "Gcal"
 
 
+# Reactive energy units
+class UnitOfReactiveEnergy(StrEnum):
+    """Reactive energy units."""
+
+    VOLT_AMPERE_REACTIVE_HOUR = "varh"
+    KILO_VOLT_AMPERE_REACTIVE_HOUR = "kvarh"
+
+
 # Energy Distance units
 class UnitOfEnergyDistance(StrEnum):
     """Energy Distance units."""
 
     KILO_WATT_HOUR_PER_100_KM = "kWh/100km"
+    WATT_HOUR_PER_KM = "Wh/km"
     MILES_PER_KILO_WATT_HOUR = "mi/kWh"
     KM_PER_KILO_WATT_HOUR = "km/kWh"
 

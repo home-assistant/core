@@ -5,12 +5,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import cast
 
-from pylamarzocco.const import ModelName, WidgetType
+from pylamarzocco.const import BackFlushStatus, ModelName, WidgetType
 from pylamarzocco.models import (
     BackFlush,
     BaseWidgetOutput,
     CoffeeAndFlushCounter,
     CoffeeBoiler,
+    MachineStatus,
     SteamBoilerLevel,
     SteamBoilerTemperature,
 )
@@ -73,6 +74,18 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         ),
     ),
     LaMarzoccoSensorEntityDescription(
+        key="brewing_start_time",
+        translation_key="brewing_start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=(
+            lambda config: cast(
+                MachineStatus, config[WidgetType.CM_MACHINE_STATUS]
+            ).brewing_start_time
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        available_fn=(lambda coordinator: not coordinator.websocket_terminated),
+    ),
+    LaMarzoccoSensorEntityDescription(
         key="steam_boiler_ready_time",
         translation_key="steam_boiler_ready_time",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -93,10 +106,17 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=(
             lambda config: cast(
-                BackFlush, config[WidgetType.CM_BACK_FLUSH]
+                BackFlush,
+                config.get(
+                    WidgetType.CM_BACK_FLUSH, BackFlush(status=BackFlushStatus.OFF)
+                ),
             ).last_cleaning_start_time
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            is not ModelName.GS3_MP
+        ),
     ),
 )
 

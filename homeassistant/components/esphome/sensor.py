@@ -88,9 +88,9 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             return
         if (
             state_class == EsphomeSensorStateClass.MEASUREMENT
-            and static_info.last_reset_type == LastResetType.AUTO
+            and static_info.legacy_last_reset_type == LastResetType.AUTO
         ):
-            # Legacy, last_reset_type auto was the equivalent to the
+            # Legacy, legacy_last_reset_type auto was the equivalent to the
             # TOTAL_INCREASING state class
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         else:

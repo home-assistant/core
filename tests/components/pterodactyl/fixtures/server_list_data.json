@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "pagination": {
+      "total": 2,
+      "count": 2,
+      "per_page": 50,
+      "current_page": 1
+    }
+  },
+  "data": [
+    {
+      "object": "server",
+      "attributes": {
+        "server_owner": true,
+        "identifier": "1",
+        "internal_id": 1,
+        "uuid": "1-1-1-1-1",
+        "name": "Test Server 1",
+        "node": "default_node",
+        "description": "Description of Test Server 1",
+        "limits": {
+          "memory": 2048,
+          "swap": 1024,
+          "disk": 10240,
+          "io": 500,
+          "cpu": 100,
+          "threads": null,
+          "oom_disabled": true
+        },
+        "invocation": "java -jar test1.jar",
+        "docker_image": "test_docker_image_1",
+        "egg_features": ["java_version"]
+      }
+    },
+    {
+      "object": "server",
+      "attributes": {
+        "server_owner": true,
+        "identifier": "2",
+        "internal_id": 2,
+        "uuid": "2-2-2-2-2",
+        "name": "Test Server 2",
+        "node": "default_node",
+        "description": "Description of Test Server 2",
+        "limits": {
+          "memory": 2048,
+          "swap": 1024,
+          "disk": 10240,
+          "io": 500,
+          "cpu": 100,
+          "threads": null,
+          "oom_disabled": true
+        },
+        "invocation": "java -jar test2.jar",
+        "docker_image": "test_docker_image2",
+        "egg_features": ["java_version"]
+      }
+    }
+  ]
+}

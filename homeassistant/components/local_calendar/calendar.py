@@ -36,6 +36,11 @@ _LOGGER = logging.getLogger(__name__)
 
 PRODID = "-//homeassistant.io//local_calendar 1.0//EN"
 
+# The calendar on disk is only changed when this entity is updated, so there
+# is no need to poll for changes. The calendar enttiy base class will handle
+# refreshing the entity state based on the start or end time of the event.
+SCAN_INTERVAL = timedelta(days=1)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import Mock, call, patch
 
 from requests.exceptions import HTTPError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritzbox.const import (
     COLOR_MODE,

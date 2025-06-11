@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from future.backports.datetime import timedelta
 import pytest
 from python_overseerr import OverseerrConnectionError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overseerr import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform

@@ -16,22 +16,21 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import cover_unique_id, get_data_update_coordinator
-from .coordinator import DeviceDataUpdateCoordinator
+from .common import cover_unique_id
+from .coordinator import DeviceDataUpdateCoordinator, GogoGateConfigEntry
 from .entity import GoGoGate2Entity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GogoGateConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
-    data_update_coordinator = get_data_update_coordinator(hass, config_entry)
+    data_update_coordinator = config_entry.runtime_data
 
     async_add_entities(
         [
@@ -48,7 +47,7 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: GogoGateConfigEntry,
         data_update_coordinator: DeviceDataUpdateCoordinator,
         door: AbstractDoor,
     ) -> None:

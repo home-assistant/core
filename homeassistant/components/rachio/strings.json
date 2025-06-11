@@ -31,6 +31,9 @@
     "binary_sensor": {
       "rain": {
         "name": "Rain"
+      },
+      "flow": {
+        "name": "Flow"
       }
     },
     "calendar": {

@@ -17,10 +17,11 @@ async def async_init_integration(
     hass: HomeAssistant,
     skip_setup: bool = False,
     exception: Exception | None = None,
+    *,
+    house_fixture="nexia/mobile_houses_123456.json",
 ) -> MockConfigEntry:
     """Set up the nexia integration in Home Assistant."""
 
-    house_fixture = "nexia/mobile_houses_123456.json"
     session_fixture = "nexia/session_123456.json"
     sign_in_fixture = "nexia/sign_in.json"
     set_fan_speed_fixture = "nexia/set_fan_speed_2293892.json"

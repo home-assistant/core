@@ -4,8 +4,6 @@ from datetime import datetime
 
 from homeassistant.components import assist_satellite
 from homeassistant.components.assist_satellite import AssistSatelliteEntity
-
-# pylint: disable-next=hass-component-root-import
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.components.esphome.assist_satellite import EsphomeAssistSatellite
 from homeassistant.components.esphome.coordinator import REFRESH_INTERVAL

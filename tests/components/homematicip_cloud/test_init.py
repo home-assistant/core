@@ -34,8 +34,6 @@ async def test_config_with_accesspoint_passed_to_config_entry(
     }
     # no config_entry exists
     assert len(hass.config_entries.async_entries(HMIPC_DOMAIN)) == 0
-    # no acccesspoint exists
-    assert not hass.data.get(HMIPC_DOMAIN)
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.async_connect",
@@ -53,7 +51,7 @@ async def test_config_with_accesspoint_passed_to_config_entry(
         "name": "name",
     }
     # defined access_point created for config_entry
-    assert isinstance(hass.data[HMIPC_DOMAIN]["ABC123"], HomematicipHAP)
+    assert isinstance(config_entries[0].runtime_data, HomematicipHAP)
 
 
 async def test_config_already_registered_not_passed_to_config_entry(
@@ -118,7 +116,7 @@ async def test_load_entry_fails_due_to_connection_error(
     ):
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
-    assert hass.data[HMIPC_DOMAIN][hmip_config_entry.unique_id]
+    assert hmip_config_entry.runtime_data
     assert hmip_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
@@ -136,7 +134,7 @@ async def test_load_entry_fails_due_to_generic_exception(
     ):
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
-    assert hass.data[HMIPC_DOMAIN][hmip_config_entry.unique_id]
+    assert hmip_config_entry.runtime_data
     assert hmip_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
@@ -159,14 +157,12 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     assert mock_hap.return_value.mock_calls[0][0] == "async_setup"
 
-    assert hass.data[HMIPC_DOMAIN]["ABC123"]
     config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
     assert len(config_entries) == 1
+    assert config_entries[0].runtime_data
     assert config_entries[0].state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(config_entries[0].entry_id)
     assert config_entries[0].state is ConfigEntryState.NOT_LOADED
-    # entry is unloaded
-    assert hass.data[HMIPC_DOMAIN] == {}
 
 
 async def test_hmip_dump_hap_config_services(
