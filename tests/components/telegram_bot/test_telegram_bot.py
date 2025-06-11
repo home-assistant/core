@@ -219,7 +219,10 @@ async def test_send_message_with_inline_keyboard(
     input: dict[str, Any],
     expected: InlineKeyboardMarkup,
 ) -> None:
-    """Test the send_message service. Tests any service that does not require files to be sent."""
+    """Test the send_message service.
+    
+    Tests any service that does not require files to be sent.
+    """
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
 
