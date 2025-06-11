@@ -86,6 +86,7 @@
     }),
     'config_entry': dict({
       'data': dict({
+        'device_config': True,
         'id': 'installation1',
         'password': '**REDACTED**',
         'username': '**REDACTED**',
@@ -95,7 +96,7 @@
       }),
       'domain': 'airzone_cloud',
       'entry_id': 'd186e31edb46d64d14b9b2f11f1ebd9f',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
