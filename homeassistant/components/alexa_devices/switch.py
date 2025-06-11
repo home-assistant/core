@@ -20,7 +20,7 @@ PARALLEL_UPDATES = 1
 
 @dataclass(frozen=True, kw_only=True)
 class AmazonSwitchEntityDescription(SwitchEntityDescription):
-    """Amazon Devices switch entity description."""
+    """Alexa Devices switch entity description."""
 
     is_on_fn: Callable[[AmazonDevice], bool]
     subkey: str
@@ -43,7 +43,7 @@ async def async_setup_entry(
     entry: AmazonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Amazon Devices switches based on a config entry."""
+    """Set up Alexa Devices switches based on a config entry."""
 
     coordinator = entry.runtime_data
 
