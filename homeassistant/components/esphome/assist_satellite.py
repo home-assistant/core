@@ -417,7 +417,7 @@ class EsphomeAssistSatellite(
         Optionally run a voice pipeline after the announcement has finished.
         """
         _LOGGER.debug(
-            "Waiting for announcement to finished (message=%s, media_id=%s)",
+            "Waiting for announcement to finish (message=%s, media_id=%s)",
             announcement.message,
             announcement.media_id,
         )

@@ -1331,6 +1331,9 @@ async def test_non_default_supported_features(
         satellite.supported_features & AssistSatelliteEntityFeature.START_CONVERSATION
     )
     assert not (satellite.supported_features & AssistSatelliteEntityFeature.ANNOUNCE)
+    assert not (
+        satellite.supported_features & AssistSatelliteEntityFeature.ASK_QUESTION
+    )
 
 
 async def test_start_conversation_message(
@@ -1627,6 +1630,120 @@ async def test_start_conversation_message_with_preannounce(
             )
             await done.wait()
             assert satellite.state == AssistSatelliteState.IDLE
+
+
+async def test_ask_question(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test asking a question and getting a response."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.SPEAKER
+            | VoiceAssistantFeature.API_AUDIO
+            | VoiceAssistantFeature.ANNOUNCE
+            # NOTE: The "start conversation" feature is used to ask questions
+            | VoiceAssistantFeature.START_CONVERSATION
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    pipeline = assist_pipeline.Pipeline(
+        conversation_engine="test engine",
+        conversation_language="en",
+        language="en",
+        name="test pipeline",
+        stt_engine="test stt",
+        stt_language="en",
+        tts_engine="test tts",
+        tts_language="en",
+        tts_voice=None,
+        wake_word_entity=None,
+        wake_word_id=None,
+    )
+
+    done = asyncio.Event()
+
+    async def send_voice_assistant_announcement_await_response(
+        media_id: str,
+        timeout: float,
+        text: str,
+        start_conversation: bool,
+        preannounce_media_id: str,
+    ):
+        assert satellite.state == AssistSatelliteState.RESPONDING
+        assert media_id == "http://10.10.10.10:8123/api/tts_proxy/test-token"
+        assert text == "test-text"
+        assert start_conversation
+        assert not preannounce_media_id
+
+        # Fake a pipeline run for the response
+        await satellite.handle_pipeline_start(
+            conversation_id="",
+            flags=VoiceAssistantCommandFlag(0),  # stt
+            audio_settings=VoiceAssistantAudioSettings(),
+            wake_word_phrase="",
+        )
+
+        done.set()
+
+    async def async_pipeline_from_audio_stream(*args, device_id, **kwargs):
+        event_callback = kwargs["event_callback"]
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.STT_END,
+                data={"stt_output": {"text": "test-stt-text"}},
+            )
+        )
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.tts.generate_media_source_id",
+            return_value="media-source://bla",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud_tts",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
+        ),
+        patch.object(
+            mock_client,
+            "send_voice_assistant_announcement_await_response",
+            new=send_voice_assistant_announcement_await_response,
+        ),
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_get_pipeline",
+            return_value=pipeline,
+        ),
+    ):
+        async with asyncio.timeout(1000):
+            response = await hass.services.async_call(
+                assist_satellite.DOMAIN,
+                "ask_question",
+                {
+                    ATTR_ENTITY_ID: satellite.entity_id,
+                    "question": "test-text",
+                    "preannounce": False,
+                },
+                blocking=True,
+                return_response=True,
+            )
+            await done.wait()
+            assert satellite.state == AssistSatelliteState.IDLE
+            assert response[satellite.entity_id].sentence == "test-stt-text"
 
 
 async def test_satellite_unloaded_on_disconnect(
