@@ -6,7 +6,6 @@ from dataclasses import asdict
 from typing import Any
 
 from aiohttp import web
-from home_assistant_intents import get_language_scores
 import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
@@ -219,10 +218,13 @@ async def websocket_hass_agent_language_scores(
     msg: dict[str, Any],
 ) -> None:
     """Get support scores per language."""
+    agent = get_agent_manager(hass).default_agent
+    assert agent is not None
+
     language = msg.get("language", hass.config.language)
     country = msg.get("country", hass.config.country)
 
-    scores = await hass.async_add_executor_job(get_language_scores)
+    scores = await agent.async_get_language_scores()
     matching_langs = language_util.matches(language, scores.keys(), country=country)
     preferred_lang = matching_langs[0] if matching_langs else language
     result = {

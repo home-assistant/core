@@ -29,7 +29,13 @@ from hassil.recognize import (
 from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
 from hassil.trie import Trie
 from hassil.util import merge_dict
-from home_assistant_intents import ErrorKey, get_intents, get_languages
+from home_assistant_intents import (
+    ErrorKey,
+    LanguageScores,
+    get_intents,
+    get_language_scores,
+    get_languages,
+)
 import yaml
 
 from homeassistant.components.conversation import (
@@ -1392,6 +1398,10 @@ class DefaultAgent(ConversationEntity):
             # We ignore no matching errors
             return None
         return response
+
+    async def async_get_language_scores(self) -> dict[str, LanguageScores]:
+        """Get support scores per language."""
+        return await self.hass.async_add_executor_job(get_language_scores)
 
 
 def _make_error_result(
