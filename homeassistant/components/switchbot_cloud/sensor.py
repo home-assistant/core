@@ -39,24 +39,6 @@ RELAY_SWITCH_2PM_SENSOR_TYPE_VOLTAGE = "Voltage"
 RELAY_SWITCH_2PM_SENSOR_TYPE_CURRENT = "ElectricCurrent"
 RELAY_SWITCH_2PM_SENSOR_TYPE_ElECTRICITY = "UsedElectricity"
 
-# {
-#     'online': True,
-#     'version': 'V1.7',
-#     'switch1Status': 1,
-#     'switch1Voltage': 234.5,
-#     'switch1Power': 0,
-#     'switch1ElectricCurrent': 3,
-#     'switch1UsedElectricity': 0,
-#     'switch2Status': 1,
-#     'switch2Voltage': 234.5,
-#     'switch2Power': 0,
-#     'switch2ElectricCurrent': 3,
-#     'switch2UsedElectricity': 0,
-#     'deviceId': 'C04E30DF93A6',
-#     'deviceType': 'Relay Switch 2PM',
-#     'hubDeviceId': 'C04E30DF93A6'
-# }
-
 
 TEMPERATURE_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,

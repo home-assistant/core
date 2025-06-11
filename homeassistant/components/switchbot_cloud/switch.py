@@ -79,11 +79,75 @@ class SwitchBotCloudRelaySwitchSwitch(SwitchBotCloudSwitch):
 class SwitchBotCloudRelaySwitch2PMSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot relay switch."""
 
+    def __init__(
+        self,
+        api: SwitchBotAPI,
+        device: Device | Remote,
+        coordinator: SwitchBotCoordinator,
+    ) -> None:
+        """Init SwitchBotCloudRelaySwitch2PMSwitch."""
+        super().__init__(api, device, coordinator)
+        self._current_switch_index = self.__get_current_switch_index()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
+        if self._attr_unique_id is None:
+            return
+        if f"-{self._current_switch_index}" in self._attr_unique_id:
+            self._attr_unique_id = self._attr_unique_id.replace(
+                f"-{self._current_switch_index}", ""
+            )
+
+        await self.send_api_command(
+            command=CommonCommands.ON, parameters=str(self._current_switch_index)
+        )
+
+        if f"-{self._current_switch_index}" not in self._attr_unique_id:
+            self._attr_unique_id = (
+                self._attr_unique_id + f"-{self._current_switch_index}"
+            )
+
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        if self._attr_unique_id is None:
+            return
+        if f"-{self._current_switch_index}" in self._attr_unique_id:
+            self._attr_unique_id = self._attr_unique_id.replace(
+                f"-{self._current_switch_index}", ""
+            )
+
+        await self.send_api_command(
+            command=CommonCommands.OFF, parameters=str(self._current_switch_index)
+        )
+
+        if f"-{self._current_switch_index}" not in self._attr_unique_id:
+            self._attr_unique_id = (
+                self._attr_unique_id + f"-{self._current_switch_index}"
+            )
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
+    def __get_current_switch_index(self) -> int | None:
+        """Get current Switch index."""
+        if not self.coordinator.data:
+            return None
+        name: str | None = (
+            self._attr_device_info.get("name") if self._attr_device_info else None
+        )
+        if name is None:
+            return None
+        return int(name.split("-")[-1].strip())
+
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-        self._attr_is_on = self.coordinator.data.get("switchStatus") == 1
+        self._attr_is_on = (
+            self.coordinator.data.get(f"switch{self._current_switch_index}Status") == 1
+        )
 
 
 @callback
