@@ -125,6 +125,7 @@ new_task:
           options:
             - on_enter
             - on_leave
+          translation_key: reminder_location_direction
     reminder_users:
       required: false
       selector:

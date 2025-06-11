@@ -28,6 +28,14 @@
       "message": "Project \"{project}\" has no section \"{section}\""
     }
   },
+  "selector": {
+    "reminder_location_direction": {
+      "options": {
+        "on_enter": "Entering",
+        "on_leave": "Leaving"
+      }
+    }
+  },
   "services": {
     "new_task": {
       "name": "New task",
