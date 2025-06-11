@@ -2567,7 +2567,6 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
-                "emulate_hardware": False,
             },
             0,
         ),
@@ -2592,7 +2591,6 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
-                "emulate_hardware": False,
             },
             1,
         ),
@@ -2707,7 +2705,6 @@ async def test_reconfigure_addon_running(
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
-                "emulate_hardware": False,
             },
             {
                 "usb_path": "/test",
@@ -2718,7 +2715,6 @@ async def test_reconfigure_addon_running(
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
-                "emulate_hardware": False,
             },
         ),
     ],
@@ -2837,7 +2833,6 @@ async def different_device_server_version(*args):
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
-                "emulate_hardware": False,
             },
             {
                 "usb_path": "/new",
@@ -2848,34 +2843,6 @@ async def different_device_server_version(*args):
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
-                "emulate_hardware": False,
-            },
-            0,
-            different_device_server_version,
-        ),
-        (
-            {},
-            {
-                "device": "/test",
-                "network_key": "old123",
-                "s0_legacy_key": "old123",
-                "s2_access_control_key": "old456",
-                "s2_authenticated_key": "old789",
-                "s2_unauthenticated_key": "old987",
-                "lr_s2_access_control_key": "old654",
-                "lr_s2_authenticated_key": "old321",
-                "log_level": "info",
-            },
-            {
-                "usb_path": "/new",
-                "s0_legacy_key": "new123",
-                "s2_access_control_key": "new456",
-                "s2_authenticated_key": "new789",
-                "s2_unauthenticated_key": "new987",
-                "lr_s2_access_control_key": "new654",
-                "lr_s2_authenticated_key": "new321",
-                "log_level": "info",
-                "emulate_hardware": False,
             },
             0,
             different_device_server_version,
@@ -2946,8 +2913,7 @@ async def test_reconfigure_different_device(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    # Default emulate_hardware is False.
-    addon_options = {"emulate_hardware": False} | old_addon_options
+    addon_options = {} | old_addon_options
     # Legacy network key is not reset.
     addon_options.pop("network_key")
 
@@ -2995,7 +2961,6 @@ async def test_reconfigure_different_device(
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
-                "emulate_hardware": False,
             },
             {
                 "usb_path": "/new",
@@ -3006,7 +2971,6 @@ async def test_reconfigure_different_device(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
-                "emulate_hardware": False,
             },
             0,
             [SupervisorError(), None],
@@ -3023,7 +2987,6 @@ async def test_reconfigure_different_device(
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
                 "log_level": "info",
-                "emulate_hardware": False,
             },
             {
                 "usb_path": "/new",
@@ -3034,7 +2997,6 @@ async def test_reconfigure_different_device(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
-                "emulate_hardware": False,
             },
             0,
             [
@@ -3152,7 +3114,6 @@ async def test_reconfigure_addon_running_server_info_failure(
         "lr_s2_access_control_key": "old654",
         "lr_s2_authenticated_key": "old321",
         "log_level": "info",
-        "emulate_hardware": False,
     }
     new_addon_options = {
         "usb_path": "/test",
@@ -3163,7 +3124,6 @@ async def test_reconfigure_addon_running_server_info_failure(
         "lr_s2_access_control_key": "old654",
         "lr_s2_authenticated_key": "old321",
         "log_level": "info",
-        "emulate_hardware": False,
     }
     addon_options.update(old_addon_options)
     entry = integration
@@ -3237,7 +3197,6 @@ async def test_reconfigure_addon_running_server_info_failure(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
-                "emulate_hardware": False,
             },
             0,
         ),
@@ -3262,7 +3221,6 @@ async def test_reconfigure_addon_running_server_info_failure(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
                 "log_level": "info",
-                "emulate_hardware": False,
             },
             1,
         ),
