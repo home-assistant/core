@@ -1,4 +1,4 @@
-"""Tests for the Altruist Sensor integration."""
+"""Tests for the Altruist integration."""
 
 from homeassistant.core import HomeAssistant
 

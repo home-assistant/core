@@ -39,7 +39,7 @@ rules:
     comment: |
       This integration does not provide options flow.
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: todo
@@ -62,11 +62,13 @@ rules:
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: todo
-  entity-translations: todo
+  entity-translations: done
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: No known use cases for repair issues or flows, yet
   stale-devices: todo
 
   # Platinum

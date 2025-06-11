@@ -1,4 +1,4 @@
-"""AirGradient tests configuration."""
+"""Altruist tests configuration."""
 
 from collections.abc import Generator
 import json
@@ -7,11 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from altruistclient import AltruistDeviceModel, AltruistError
 import pytest
 
-from homeassistant.components.altruist.const import (
-    CONF_DEVICE_ID,
-    CONF_IP_ADDRESS,
-    DOMAIN,
-)
+from homeassistant.components.altruist.const import CONF_IP_ADDRESS, DOMAIN
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -31,7 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_IP_ADDRESS: "192.168.1.100", CONF_DEVICE_ID: "5366960e8b18"},
+        data={CONF_IP_ADDRESS: "192.168.1.100"},
         unique_id="5366960e8b18",
         title="5366960e8b18",
     )

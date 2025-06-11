@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_DEVICE_ID, CONF_IP_ADDRESS, DOMAIN
+from .const import CONF_IP_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,6 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
                         title=self.device.id,
                         data={
                             CONF_IP_ADDRESS: ip_address,
-                            CONF_DEVICE_ID: client.device_id,
                         },
                     )
             else:
@@ -97,7 +96,6 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self.device.id,
                 data={
                     CONF_IP_ADDRESS: self.device.ip_address,
-                    CONF_DEVICE_ID: self.device.id,
                 },
             )
 

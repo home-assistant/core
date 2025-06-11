@@ -1,4 +1,4 @@
-"""Tests for the Altruist sensor platform."""
+"""Tests for the Altruist integration sensor platform."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch

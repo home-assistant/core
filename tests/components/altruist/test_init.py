@@ -1,4 +1,4 @@
-"""Test the Altruist Sensor integration."""
+"""Test the Altruist integration."""
 
 from unittest.mock import AsyncMock
 

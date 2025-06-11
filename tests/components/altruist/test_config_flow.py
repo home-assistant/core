@@ -1,14 +1,10 @@
-"""Test the Altruist Sensor config flow."""
+"""Test the Altruist config flow."""
 
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 from homeassistant import config_entries
-from homeassistant.components.altruist.const import (
-    CONF_DEVICE_ID,
-    CONF_IP_ADDRESS,
-    DOMAIN,
-)
+from homeassistant.components.altruist.const import CONF_IP_ADDRESS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -82,7 +78,6 @@ async def test_form_user_step_cannot_connect_then_recovers(
     assert result3["result"].unique_id == "5366960e8b18"
     assert result3["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
-        CONF_DEVICE_ID: "5366960e8b18",
     }
 
 
@@ -103,7 +98,6 @@ async def test_form_user_step_success(
     assert result2["title"] == "5366960e8b18"
     assert result2["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
-        CONF_DEVICE_ID: "5366960e8b18",
     }
 
 
@@ -113,7 +107,7 @@ async def test_form_user_step_already_configured(
     """Test we abort if already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_IP_ADDRESS: "192.168.1.100", CONF_DEVICE_ID: "5366960e8b18"},
+        data={CONF_IP_ADDRESS: "192.168.1.100"},
         unique_id="5366960e8b18",
     )
     entry.add_to_hass(hass)
@@ -151,7 +145,7 @@ async def test_zeroconf_discovery_already_configured(
     """Test zeroconf discovery when already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_IP_ADDRESS: "192.168.1.100", CONF_DEVICE_ID: "5366960e8b18"},
+        data={CONF_IP_ADDRESS: "192.168.1.100"},
         unique_id="5366960e8b18",
     )
     entry.add_to_hass(hass)
@@ -185,5 +179,4 @@ async def test_zeroconf_discovery_confirm(
     assert result2["title"] == "5366960e8b18"
     assert result2["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
-        CONF_DEVICE_ID: "5366960e8b18",
     }

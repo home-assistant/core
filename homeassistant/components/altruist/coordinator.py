@@ -15,11 +15,11 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_DEVICE_ID, CONF_IP_ADDRESS
+from .const import CONF_IP_ADDRESS
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL = 15
+UPDATE_INTERVAL = timedelta(seconds=15)
 
 type AltruistConfigEntry = ConfigEntry[AltruistDataUpdateCoordinator]
 
@@ -32,21 +32,14 @@ class AltruistDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         hass: HomeAssistant,
         config_entry: AltruistConfigEntry,
     ) -> None:
-        """Initialize the data update coordinator for Altruist sensors.
-
-        Args:
-            hass (HomeAssistant): The Home Assistant instance.
-            config_entry (AltruistConfigEntry): The Altruist integration config entry.
-            session (ClientSession): The aiohttp client session for making HTTP requests.
-
-        """
-        device_id = config_entry.data[CONF_DEVICE_ID]
+        """Initialize the data update coordinator for Altruist sensors."""
+        device_id = config_entry.unique_id
         super().__init__(
             hass,
             logger=_LOGGER,
             config_entry=config_entry,
             name=f"Altruist {device_id}",
-            update_interval=timedelta(seconds=UPDATE_INTERVAL),
+            update_interval=UPDATE_INTERVAL,
         )
         self.client: AltruistClient | None = None
         self._ip_address = config_entry.data[CONF_IP_ADDRESS]
@@ -61,7 +54,6 @@ class AltruistDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             raise ConfigEntryNotReady("Error in Altruist setup") from e
 
     async def _async_update_data(self) -> dict[str, str]:
-        new_data = {}
         assert self.client
         try:
             fetched_data = await self.client.fetch_data()
@@ -69,6 +61,4 @@ class AltruistDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             raise UpdateFailed(
                 f"The Altruist {self.client.device_id} is unavailable: {ex}"
             ) from ex
-        for sensordata_value in fetched_data:
-            new_data[sensordata_value["value_type"]] = sensordata_value["value"]
-        return new_data
+        return {item["value_type"]: item["value"] for item in fetched_data}
