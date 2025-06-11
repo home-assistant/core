@@ -239,7 +239,7 @@ class TelegramNotificationService:
             PARSER_MD2: ParseMode.MARKDOWN_V2,
             PARSER_PLAIN_TEXT: None,
         }
-        self._parse_mode = self._parsers[parser]
+        self.parse_mode = self._parsers[parser]
         self.bot = bot
         self.hass = hass
         self._last_message_id: dict[int, int] = {}
