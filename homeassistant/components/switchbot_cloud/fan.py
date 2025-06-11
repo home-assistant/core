@@ -10,7 +10,7 @@ from switchbot_api import (
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import _LOGGER, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
@@ -49,6 +49,12 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
+        return self._attr_is_on
+
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        if self.coordinator.data is None:
+            return
         if (
             self._attr_is_on is None
             and self.percentage == 0
@@ -68,7 +74,6 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
             )
             assert power is not None
             self._attr_is_on = "on" in power
-        return self._attr_is_on
 
     async def async_turn_on(
         self,
@@ -85,7 +90,6 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         mode: str | None = response.get("mode")
         if self._attr_is_on is False and (power and "off" in power):
             await self.send_api_command(CommonCommands.ON)
-            _LOGGER.info("Send_api_command CommonCommands.ON")
             self._attr_is_on = True
         elif self._attr_is_on is False and (power and "on" in power):
             self._attr_is_on = True
@@ -121,9 +125,6 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
             )
         else:
             self.percentage = 0
-        _LOGGER.info(
-            f"Power = {self._attr_is_on}, self.percentage = {self.percentage}, self.preset_mode = {self.preset_mode}"
-        )
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -145,15 +146,11 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
 
         if self._attr_is_on is True and (power and "on" in power):
             await self.send_api_command(CommonCommands.OFF)
-            _LOGGER.info("Send_api_command CommonCommands.OFF")
             self._attr_is_on = False
         elif self._attr_is_on is True and (power and "off" in power):
             self._attr_is_on = False
         else:
             pass
-        _LOGGER.info(
-            f"Power = {self._attr_is_on}, self.percentage = {self.percentage}, self.preset_mode = {self.preset_mode}"
-        )
         self.async_write_ha_state()
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -163,19 +160,12 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         assert response is not None
         mode: str | None = response.get("mode")
         if self._attr_is_on is False:
-            _LOGGER.info("Current Power State is OFF, Can't Set Fan Speed")
             self.percentage = 0
-            _LOGGER.info(
-                f"Power = {self._attr_is_on}, self.percentage = {self.percentage}, self.preset_mode = {self.preset_mode}"
-            )
             self.async_write_ha_state()
             return
 
         if mode is not None:
             if mode in BatteryCirculatorFanMode.DIRECT.value:
-                _LOGGER.info(
-                    f"Current Mode Is Direct, Send Command As Setup = {percentage}"
-                )
                 await self.send_api_command(
                     command=BatteryCirculatorFanCommands.SET_WIND_SPEED,
                     parameters=str(percentage),
@@ -183,29 +173,19 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
                 self.percentage = percentage
                 self.preset_mode = mode
             else:
-                _LOGGER.info("Current Mode Is Not Direct, Can't Set Fan Speed")
                 self.percentage = 0
                 self.preset_mode = mode
-        _LOGGER.info(
-            f"Power = {self._attr_is_on}, self.percentage = {self.percentage}, self.preset_mode = {self.preset_mode}"
-        )
         self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         assert preset_mode in [item.value for item in list(BatteryCirculatorFanMode)]
         if preset_mode != self.preset_mode:
-            _LOGGER.info(
-                f"Current Mode({self.preset_mode}) Is Different With Preset_mode {preset_mode}, Send Api Command"
-            )
             await self.send_api_command(
                 command=BatteryCirculatorFanCommands.SET_WIND_MODE,
                 parameters=preset_mode,
             )
         self.preset_mode = preset_mode
-        _LOGGER.info(
-            f"Current Mode({self.preset_mode}) Is Consistent With Preset_mode {preset_mode}"
-        )
 
         response: dict | None = await self._api.get_status(self.unique_id)
         assert response is not None
@@ -214,7 +194,4 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
             self.percentage = int(fan_speed) if fan_speed else 0
         else:
             self.percentage = 0
-        _LOGGER.info(
-            f"Power = {self._attr_is_on}, self.percentage = {self.percentage}, self.preset_mode = {self.preset_mode}"
-        )
         self.async_write_ha_state()
