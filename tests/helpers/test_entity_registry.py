@@ -289,6 +289,24 @@ def test_get_or_create_suggested_object_id_conflict_existing(
     assert entry.entity_id == "light.hue_1234_2"
 
 
+def test_remove(entity_registry: er.EntityRegistry) -> None:
+    """Test that we can remove an item."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+
+    assert not entity_registry.deleted_entities
+    assert list(entity_registry.entities) == [entry.entity_id]
+
+    # Remove the item
+    entity_registry.async_remove(entry.entity_id)
+    assert list(entity_registry.deleted_entities) == [("light", "hue", "1234")]
+    assert not entity_registry.entities
+
+    # Remove the item again
+    entity_registry.async_remove(entry.entity_id)
+    assert list(entity_registry.deleted_entities) == [("light", "hue", "1234")]
+    assert not entity_registry.entities
+
+
 def test_create_triggers_save(entity_registry: er.EntityRegistry) -> None:
     """Test that registering entry triggers a save."""
     with patch.object(entity_registry, "async_schedule_save") as mock_schedule_save:
