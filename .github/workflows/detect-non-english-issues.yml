@@ -17,13 +17,25 @@ jobs:
       - name: Check issue language
         id: detect_language
         uses: actions/github-script@v7.0.1
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_USER_TYPE: ${{ github.event.issue.user.type }}
         with:
           script: |
-            // Get the issue details
-            const issue = context.payload.issue;
-            const issueNumber = issue.number;
-            const issueTitle = issue.title || '';
-            const issueBody = issue.body || '';
+            // Get the issue details from environment variables
+            const issueNumber = process.env.ISSUE_NUMBER;
+            const issueTitle = process.env.ISSUE_TITLE || '';
+            const issueBody = process.env.ISSUE_BODY || '';
+            const userType = process.env.ISSUE_USER_TYPE;
+
+            // Skip language detection for bot users
+            if (userType === 'Bot') {
+              console.log('Skipping language detection for bot user');
+              core.setOutput('should_continue', 'false');
+              return;
+            }
 
             console.log(`Checking language for issue #${issueNumber}`);
             console.log(`Title: ${issueTitle}`);
@@ -34,7 +46,7 @@ jobs:
             // Check if the text is too short to reliably detect language
             if (fullText.trim().length < 20) {
               console.log('Text too short for reliable language detection');
-              core.setOutput('is_english', 'true'); // Default to English for very short text
+              core.setOutput('should_continue', 'false'); // Skip processing for very short text
               return;
             }
 
@@ -54,13 +66,14 @@ jobs:
             Rules:
             1. Analyze the text and determine the primary language
             2. IGNORE markdown headers (lines starting with #, ##, ###, etc.) as these are from issue templates, not user input
-            3. Consider technical terms, code snippets, and URLs as neutral (they don't indicate non-English)
-            4. Focus on the actual sentences and descriptions written by the user
-            5. Return ONLY a JSON object with two fields:
+            3. IGNORE all code blocks (text between ``` or ` markers) as they may contain system-generated error messages in other languages
+            4. Consider technical terms, code snippets, and URLs as neutral (they don't indicate non-English)
+            5. Focus on the actual sentences and descriptions written by the user
+            6. Return ONLY a JSON object with two fields:
                - "is_english": boolean (true if the text is primarily in English, false otherwise)
                - "detected_language": string (the name of the detected language, e.g., "English", "Spanish", "Chinese", etc.)
-            6. Be lenient - if the text is mostly English with minor non-English elements, consider it English
-            7. Common programming terms, error messages, and technical jargon should not be considered as non-English
+            7. Be lenient - if the text is mostly English with minor non-English elements, consider it English
+            8. Common programming terms, error messages, and technical jargon should not be considered as non-English
 
             Example response:
             {"is_english": false, "detected_language": "Spanish"}
@@ -88,9 +101,18 @@ jobs:
             let languageResult;
             try {
               languageResult = JSON.parse(aiResponse.trim());
+
+              // Validate the response structure
+              if (!languageResult || typeof languageResult.is_english !== 'boolean') {
+                throw new Error('Invalid response structure');
+              }
             } catch (error) {
-              core.error('Failed to parse AI response:', error.message);
+              core.error(`Failed to parse AI response: ${error.message}`);
               console.log('Raw AI response:', aiResponse);
+
+              // Log more details for debugging
+              core.warning('Defaulting to English due to parsing error');
+
               // Default to English if we can't parse the response
               return;
             }
