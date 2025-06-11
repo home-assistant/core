@@ -11,6 +11,22 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_get_device_automations
 
+ACTIVITY_TYPES = {
+    "available",
+    "charging",
+    "unavailable",
+    "error",
+    "offline",
+}
+
+VEHICLE_STATUS_TYPES = {
+    "standby",
+    "vehicle_detected",
+    "ready",
+    "no_power",
+    "vehicle_error",
+}
+
 
 async def test_get_triggers(
     hass: HomeAssistant,
@@ -32,92 +48,38 @@ async def test_get_triggers(
     entity_registry.async_get_or_create(
         DOMAIN, "vehicle_status", "101", device_id=device_entry.id
     )
-    expected_triggers = [
+
+    expected_condition_activity = [
         {
             "platform": "device",
             "domain": DOMAIN,
             "device_id": device_entry.id,
-            "entity_id": "sensor.activity_101",
-            "type": "available",
+            "entity_id": "sensor.101_activity",
+            "type": t,
             "metadata": {},
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "entity_id": "sensor.activity_101",
-            "type": "charging",
-            "metadata": {},
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "entity_id": "sensor.activity_101",
-            "type": "unavailable",
-            "metadata": {},
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "entity_id": "sensor.activity_101",
-            "type": "error",
-            "metadata": {},
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "entity_id": "sensor.activity_101",
-            "type": "offline",
-            "metadata": {},
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "entity_id": "sensor.vehicle_status_101",
-            "type": "standby",
-            "metadata": {},
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "entity_id": "sensor.vehicle_status_101",
-            "type": "vehicle_detected",
-            "metadata": {},
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "entity_id": "sensor.vehicle_status_101",
-            "type": "ready",
-            "metadata": {},
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "entity_id": "sensor.vehicle_status_101",
-            "type": "no_power",
-            "metadata": {},
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": device_entry.id,
-            "entity_id": "sensor.vehicle_status_101",
-            "type": "vehicle_error",
-            "metadata": {},
-        },
+        }
+        for t in ACTIVITY_TYPES
     ]
+
+    expected_condition_vehicle_status = [
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device_entry.id,
+            "entity_id": "sensor.101_vehicle_status",
+            "type": t,
+            "metadata": {},
+        }
+        for t in VEHICLE_STATUS_TYPES
+    ]
+
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    unordered(triggers, expected_triggers)
+
+    assert triggers == unordered(
+        expected_condition_activity + expected_condition_vehicle_status
+    )
 
 
 async def test_if_activity_fires_on_state_change(
@@ -160,13 +122,7 @@ async def test_if_activity_fires_on_state_change(
                         "data_template": {"some": (activity_type)},
                     },
                 }
-                for activity_type in (
-                    "available",
-                    "charging",
-                    "unavailable",
-                    "error",
-                    "offline",
-                )
+                for activity_type in ACTIVITY_TYPES
             ]
         },
     )
@@ -238,13 +194,7 @@ async def test_if_vehicle_status_fires_on_state_change(
                         "data_template": {"some": (vehicle_status_type)},
                     },
                 }
-                for vehicle_status_type in (
-                    "standby",
-                    "vehicle_detected",
-                    "ready",
-                    "no_power",
-                    "vehicle_error",
-                )
+                for vehicle_status_type in VEHICLE_STATUS_TYPES
             ]
         },
     )

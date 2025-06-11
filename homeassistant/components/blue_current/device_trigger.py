@@ -1,4 +1,4 @@
-"""Provides device triggers for BlueCurrent."""
+"""Provides device triggers for Blue Current."""
 
 from __future__ import annotations
 
@@ -40,21 +40,12 @@ VEHICLE_STATUS_TYPES = {
     "vehicle_error",
 }
 
-ACTIVITY_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(ACTIVITY_TYPES),
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_TYPE): vol.In(ACTIVITY_TYPES.union(VEHICLE_STATUS_TYPES)),
     }
 )
-
-VEHICLE_STATUS_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {
-        vol.Required(CONF_TYPE): vol.In(VEHICLE_STATUS_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    }
-)
-
-TRIGGER_SCHEMA = vol.Any(ACTIVITY_TRIGGER_SCHEMA, VEHICLE_STATUS_TRIGGER_SCHEMA)
 
 
 async def async_get_triggers(
@@ -75,27 +66,23 @@ async def async_get_triggers(
         CONF_DOMAIN: DOMAIN,
     }
 
-    triggers.extend(
-        [
-            {
-                **base_trigger,
-                CONF_TYPE: t,
-                CONF_ENTITY_ID: f"sensor.{evse_id}_activity",
-            }
-            for t in ACTIVITY_TYPES
-        ]
-    )
+    triggers += [
+        {
+            **base_trigger,
+            CONF_TYPE: t,
+            CONF_ENTITY_ID: f"sensor.{evse_id}_activity",
+        }
+        for t in ACTIVITY_TYPES
+    ]
 
-    triggers.extend(
-        [
-            {
-                **base_trigger,
-                CONF_TYPE: t,
-                CONF_ENTITY_ID: f"sensor.{evse_id}_vehicle_status",
-            }
-            for t in VEHICLE_STATUS_TYPES
-        ]
-    )
+    triggers += [
+        {
+            **base_trigger,
+            CONF_TYPE: t,
+            CONF_ENTITY_ID: f"sensor.{evse_id}_vehicle_status",
+        }
+        for t in VEHICLE_STATUS_TYPES
+    ]
     return triggers
 
 
