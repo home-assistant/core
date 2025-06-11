@@ -50,13 +50,13 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
-            url = URL(user_input[CONF_URL]).human_repr().removesuffix("/")
-            self._async_abort_entries_match({CONF_URL: url})
+            url = URL(user_input[CONF_URL])
+            self._async_abort_entries_match({CONF_URL: url.human_repr()})
 
-            uptime_kuma = UptimeKuma(session, str(url), "", user_input[CONF_API_KEY])
+            uptime_kuma = UptimeKuma(session, url, user_input[CONF_API_KEY])
 
             try:
-                await uptime_kuma.async_get_monitors()
+                await uptime_kuma.metrics()
             except UptimeKumaAuthenticationException:
                 errors["base"] = "invalid_auth"
             except UptimeKumaException:
@@ -66,8 +66,8 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=URL(user_input[CONF_URL]).host or "",
-                    data={**user_input, CONF_URL: url},
+                    title=url.host or "",
+                    data={**user_input, CONF_URL: url.human_repr()},
                 )
 
         return self.async_show_form(

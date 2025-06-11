@@ -36,7 +36,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "uptime.example.org"
     assert result["data"] == {
-        CONF_URL: "https://uptime.example.org",
+        CONF_URL: "https://uptime.example.org/",
         CONF_VERIFY_SSL: True,
         CONF_API_KEY: "apikey",
     }
@@ -63,7 +63,7 @@ async def test_form_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_pyuptimekuma.async_get_monitors.side_effect = raise_error
+    mock_pyuptimekuma.metrics.side_effect = raise_error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -76,7 +76,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
-    mock_pyuptimekuma.async_get_monitors.side_effect = None
+    mock_pyuptimekuma.metrics.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -90,7 +90,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "uptime.example.org"
     assert result["data"] == {
-        CONF_URL: "https://uptime.example.org",
+        CONF_URL: "https://uptime.example.org/",
         CONF_VERIFY_SSL: True,
         CONF_API_KEY: "apikey",
     }
@@ -113,7 +113,7 @@ async def test_form_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_URL: "https://uptime.example.org",
+            CONF_URL: "https://uptime.example.org/",
             CONF_VERIFY_SSL: True,
             CONF_API_KEY: "apikey",
         },

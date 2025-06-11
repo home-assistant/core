@@ -47,15 +47,14 @@ class UptimeKumaDataUpdateCoordinator(
         )
         session = async_get_clientsession(hass, config_entry.data[CONF_VERIFY_SSL])
         self.api = UptimeKuma(
-            session, config_entry.data[CONF_URL], "", config_entry.data[CONF_API_KEY]
+            session, config_entry.data[CONF_URL], config_entry.data[CONF_API_KEY]
         )
 
     async def _async_update_data(self) -> dict[str, UptimeKumaMonitor]:
         """Fetch the latest data from Uptime Kuma."""
 
         try:
-            data = (await self.api.async_get_monitors()).data or []
-            return {monitor.monitor_name: monitor for monitor in data}
+            return await self.api.metrics()
         except UptimeKumaAuthenticationException as e:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,

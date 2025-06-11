@@ -44,7 +44,7 @@ async def test_config_entry_not_ready(
 ) -> None:
     """Test config entry not ready."""
 
-    mock_pyuptimekuma.async_get_monitors.side_effect = exception
+    mock_pyuptimekuma.metrics.side_effect = exception
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

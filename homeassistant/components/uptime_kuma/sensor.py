@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from pythonkuma import MonitorType, UptimeKumaMonitor
+from pythonkuma.models import MonitorStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -70,7 +71,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         key=UptimeKumaSensor.STATUS,
         translation_key=UptimeKumaSensor.STATUS,
         device_class=SensorDeviceClass.ENUM,
-        options=list(STATUS_MAP.values()),
+        options=[m.name.lower() for m in MonitorStatus],
         value_fn=lambda m: STATUS_MAP.get(int(m.monitor_status)),
     ),
     UptimeKumaSensorEntityDescription(
