@@ -12,6 +12,7 @@ import re
 import struct
 from typing import Any, NamedTuple
 
+import aiofiles
 from aiohasupervisor import SupervisorError
 import voluptuous as vol
 
@@ -57,7 +58,6 @@ from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.service_info.hassio import (
     HassioServiceInfo as _HassioServiceInfo,
 )
-from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
@@ -560,7 +560,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = coordinator
 
-    system_info = await async_get_system_info(hass)
+    async with aiofiles.open("/etc/apk/arch") as arch_file:
+        raw_arch = await arch_file.read()
+    arch = {"x86": "i386"}.get(raw_arch, raw_arch)
 
     def deprecated_setup_issue() -> None:
         os_info = get_os_info(hass)
@@ -609,7 +611,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 translation_key=issue_id,
                 translation_placeholders={
                     "installation_type": "OS" if is_haos else "Supervised",
-                    "arch": system_info["arch"],
+                    "arch": arch,
                 },
             )
         listener()

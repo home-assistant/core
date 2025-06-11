@@ -7,6 +7,7 @@ import logging
 import struct
 from typing import Any
 
+import aiofiles
 import voluptuous as vol
 
 from homeassistant import config as conf_util, core_config
@@ -98,6 +99,12 @@ DEPRECATION_URL = (
 def _is_32_bit() -> bool:
     size = struct.calcsize("P")
     return size * 8 == 32
+
+
+async def _get_arch() -> str:
+    async with aiofiles.open("/etc/apk/arch") as arch_file:
+        raw_arch = await arch_file.read()
+    return {"x86": "i386"}.get(raw_arch, raw_arch)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
@@ -411,19 +418,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         deprecated_method = installation_type == "Core"
         bit32 = _is_32_bit()
         arch = info["arch"]
-        if arch in {"armv7", "armv7l"} and installation_type == "Container":
+        if bit32 and installation_type == "Container":
+            arch = await _get_arch()
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                "deprecated_container_armv7",
+                "deprecated_container",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
-                translation_key="deprecated_container_armv7",
+                translation_key="deprecated_container",
+                translation_placeholders={"arch": arch},
             )
-        deprecated_architecture = bit32 and not (
-            arch in {"armv7", "armv7l"} and installation_type == "Container"
-        )
+        deprecated_architecture = bit32 and installation_type != "Container"
         if deprecated_method or deprecated_architecture:
             issue_id = "deprecated"
             if deprecated_method:
