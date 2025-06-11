@@ -651,7 +651,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
 
         # recover last value from cache
         last_value = await self.async_get_last_state()
-        if last_value and last_value.state != "unknown":
+        if last_value and last_value.state != STATE_UNKNOWN:
             self._last_value = last_value.state
 
 
