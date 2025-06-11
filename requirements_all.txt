@@ -501,7 +501,7 @@ apprise==1.9.1
 aprslib==0.7.2
 
 # homeassistant.components.apsystems
-apsystems-ez1==2.6.0
+apsystems-ez1==2.7.0
 
 # homeassistant.components.aqualogic
 aqualogic==2.6
@@ -768,7 +768,7 @@ decora-wifi==1.4
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==13.2.1
+deebot-client==13.3.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1170,10 +1170,10 @@ holidays==0.74
 home-assistant-frontend==20250531.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.5.28
+home-assistant-intents==2025.6.10
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.1.1
+homematicip==2.0.4
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1865,7 +1865,7 @@ pyblackbird==0.6
 pyblu==2.0.1
 
 # homeassistant.components.neato
-pybotvac==0.0.26
+pybotvac==0.0.28
 
 # homeassistant.components.braviatv
 pybravia==0.3.4
@@ -2344,7 +2344,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.8.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.3
+pysmartthings==3.2.4
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2592,7 +2592,7 @@ pywemo==1.4.0
 pywilight==0.0.74
 
 # homeassistant.components.wiz
-pywizlight==0.6.2
+pywizlight==0.6.3
 
 # homeassistant.components.wmspro
 pywmspro==0.2.2
@@ -2737,7 +2737,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.7.1
 
 # homeassistant.components.sensorpush_cloud
-sensorpush-api==2.1.2
+sensorpush-api==2.1.3
 
 # homeassistant.components.sensorpush
 sensorpush-ble==1.9.0
@@ -3089,7 +3089,7 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.4.29
+weheat==2025.6.10
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.20.0

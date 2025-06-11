@@ -1,0 +1,534 @@
+# serializer version: 1
+# name: test_sensors[sensor.openuv_current_ozone_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openuv_current_ozone_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current ozone level',
+    'platform': 'openuv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_ozone_level',
+    'unique_id': '51.528308_-0.3817765_current_ozone_level',
+    'unit_of_measurement': 'du',
+  })
+# ---
+# name: test_sensors[sensor.openuv_current_ozone_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenUV Current ozone level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'du',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openuv_current_ozone_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '300.7',
+  })
+# ---
+# name: test_sensors[sensor.openuv_current_uv_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openuv_current_uv_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current UV index',
+    'platform': 'openuv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_uv_index',
+    'unique_id': '51.528308_-0.3817765_current_uv_index',
+    'unit_of_measurement': 'UV index',
+  })
+# ---
+# name: test_sensors[sensor.openuv_current_uv_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenUV Current UV index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'UV index',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openuv_current_uv_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.2342',
+  })
+# ---
+# name: test_sensors[sensor.openuv_current_uv_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'extreme',
+        'very_high',
+        'high',
+        'moderate',
+        'low',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openuv_current_uv_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Current UV level',
+    'platform': 'openuv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_uv_level',
+    'unique_id': '51.528308_-0.3817765_current_uv_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.openuv_current_uv_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'OpenUV Current UV level',
+      'options': list([
+        'extreme',
+        'very_high',
+        'high',
+        'moderate',
+        'low',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openuv_current_uv_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'very_high',
+  })
+# ---
+# name: test_sensors[sensor.openuv_max_uv_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openuv_max_uv_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Max UV index',
+    'platform': 'openuv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'max_uv_index',
+    'unique_id': '51.528308_-0.3817765_max_uv_index',
+    'unit_of_measurement': 'UV index',
+  })
+# ---
+# name: test_sensors[sensor.openuv_max_uv_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenUV Max UV index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'time': datetime.datetime(2018, 7, 30, 13, 7, 11, 505000, tzinfo=zoneinfo.ZoneInfo(key='America/Regina')),
+      'unit_of_measurement': 'UV index',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openuv_max_uv_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.3335',
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_1_safe_exposure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openuv_skin_type_1_safe_exposure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Skin type 1 safe exposure time',
+    'platform': 'openuv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'skin_type_1_safe_exposure_time',
+    'unique_id': '51.528308_-0.3817765_safe_exposure_time_type_1',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_1_safe_exposure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenUV Skin type 1 safe exposure time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openuv_skin_type_1_safe_exposure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_2_safe_exposure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openuv_skin_type_2_safe_exposure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Skin type 2 safe exposure time',
+    'platform': 'openuv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'skin_type_2_safe_exposure_time',
+    'unique_id': '51.528308_-0.3817765_safe_exposure_time_type_2',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_2_safe_exposure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenUV Skin type 2 safe exposure time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openuv_skin_type_2_safe_exposure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24',
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_3_safe_exposure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openuv_skin_type_3_safe_exposure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Skin type 3 safe exposure time',
+    'platform': 'openuv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'skin_type_3_safe_exposure_time',
+    'unique_id': '51.528308_-0.3817765_safe_exposure_time_type_3',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_3_safe_exposure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenUV Skin type 3 safe exposure time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openuv_skin_type_3_safe_exposure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32',
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_4_safe_exposure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openuv_skin_type_4_safe_exposure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Skin type 4 safe exposure time',
+    'platform': 'openuv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'skin_type_4_safe_exposure_time',
+    'unique_id': '51.528308_-0.3817765_safe_exposure_time_type_4',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_4_safe_exposure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenUV Skin type 4 safe exposure time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openuv_skin_type_4_safe_exposure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_5_safe_exposure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openuv_skin_type_5_safe_exposure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Skin type 5 safe exposure time',
+    'platform': 'openuv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'skin_type_5_safe_exposure_time',
+    'unique_id': '51.528308_-0.3817765_safe_exposure_time_type_5',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_5_safe_exposure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenUV Skin type 5 safe exposure time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openuv_skin_type_5_safe_exposure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65',
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_6_safe_exposure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openuv_skin_type_6_safe_exposure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Skin type 6 safe exposure time',
+    'platform': 'openuv',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'skin_type_6_safe_exposure_time',
+    'unique_id': '51.528308_-0.3817765_safe_exposure_time_type_6',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[sensor.openuv_skin_type_6_safe_exposure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenUV Skin type 6 safe exposure time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openuv_skin_type_6_safe_exposure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '121',
+  })
+# ---
