@@ -2,13 +2,7 @@
 
 from typing import Any
 
-from switchbot_api import (
-    CommonCommands,
-    Device,
-    Remote,
-    RGBWWLightCommands,
-    SwitchBotAPI,
-)
+from switchbot_api import CommonCommands, Device, RGBWWLightCommands, SwitchBotAPI
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -49,7 +43,7 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
     def __init__(
         self,
         api: SwitchBotAPI,
-        device: Device | Remote,
+        device: Device,
         coordinator: SwitchBotCoordinator,
     ) -> None:
         """Entity init."""
