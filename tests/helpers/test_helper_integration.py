@@ -156,18 +156,11 @@ def mock_helper_integration(
 ) -> None:
     """Mock the helper integration."""
 
-    def get_helper_entity_id() -> str | None:
-        """Get the helper entity ID."""
-        return entity_registry.async_get_entity_id(
-            "sensor", HELPER_DOMAIN, helper_config_entry.entry_id
-        )
-
     async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Mock setup entry."""
         async_handle_source_entity_changes(
             hass,
             helper_config_entry_id=helper_config_entry.entry_id,
-            get_helper_entity_id=get_helper_entity_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=source_entity_entry.device_id,
             source_entity_id_or_uuid=helper_config_entry.options["source"],
