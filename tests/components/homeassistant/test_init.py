@@ -663,8 +663,8 @@ async def test_deprecated_installation_issue_32bit_method(
             },
         ),
         patch(
-            "homeassistant.components.homeassistant.platform.architecture",
-            return_value=("32bit", ""),
+            "homeassistant.components.homeassistant._is_32_bit",
+            return_value=True,
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
@@ -702,8 +702,8 @@ async def test_deprecated_installation_issue_32bit(
             },
         ),
         patch(
-            "homeassistant.components.homeassistant.platform.architecture",
-            return_value=("32bit", ""),
+            "homeassistant.components.homeassistant._is_32_bit",
+            return_value=True,
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})

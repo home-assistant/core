@@ -1181,8 +1181,8 @@ async def test_deprecated_installation_issue_aarch64(
             },
         ),
         patch(
-            "homeassistant.components.hassio.platform.architecture",
-            return_value=("32bit", ""),
+            "homeassistant.components.hassio._is_32_bit",
+            return_value=True,
         ),
         patch(
             "homeassistant.components.hassio.get_os_info", return_value={"board": board}
@@ -1256,8 +1256,8 @@ async def test_deprecated_installation_issue_32bit_method(
             },
         ),
         patch(
-            "homeassistant.components.hassio.platform.architecture",
-            return_value=("32bit", ""),
+            "homeassistant.components.hassio._is_32_bit",
+            return_value=True,
         ),
         patch(
             "homeassistant.components.hassio.get_os_info",
@@ -1330,8 +1330,8 @@ async def test_deprecated_installation_issue_32bit_supervised(
             },
         ),
         patch(
-            "homeassistant.components.hassio.platform.architecture",
-            return_value=("32bit", ""),
+            "homeassistant.components.hassio._is_32_bit",
+            return_value=True,
         ),
         patch(
             "homeassistant.components.hassio.get_os_info",
@@ -1408,8 +1408,8 @@ async def test_deprecated_installation_issue_supported_board(
             },
         ),
         patch(
-            "homeassistant.components.hassio.platform.architecture",
-            return_value=("64bit", ""),
+            "homeassistant.components.hassio._is_32_bit",
+            return_value=False,
         ),
         patch(
             "homeassistant.components.hassio.get_os_info", return_value={"board": board}

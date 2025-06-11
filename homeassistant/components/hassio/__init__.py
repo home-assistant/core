@@ -8,8 +8,8 @@ from datetime import datetime
 from functools import partial
 import logging
 import os
-import platform
 import re
+import struct
 from typing import Any, NamedTuple
 
 from aiohasupervisor import SupervisorError
@@ -232,6 +232,11 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
         vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
     }
 )
+
+
+def _is_32_bit() -> bool:
+    size = struct.calcsize("P")
+    return size * 8 == 32
 
 
 class APIEndpointSettings(NamedTuple):
@@ -563,7 +568,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if os_info is None or info is None:
             return
         is_haos = info.get("hassos") is not None
-        bit32 = platform.architecture()[0] == "32bit"
+        bit32 = _is_32_bit()
         board = os_info.get("board")
         unsupported_board = board in {"tinker", "odroid-xu4", "rpi2"}
         unsupported_os_on_board = board in {"rpi3", "rpi4"}

@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
-import platform
+import struct
 from typing import Any
 
 import voluptuous as vol
@@ -93,6 +93,11 @@ DEPRECATION_URL = (
     "https://www.home-assistant.io/blog/2025/05/22/"
     "deprecating-core-and-supervised-installation-methods-and-32-bit-systems/"
 )
+
+
+def _is_32_bit() -> bool:
+    size = struct.calcsize("P")
+    return size * 8 == 32
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
@@ -404,7 +409,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     installation_type = info["installation_type"][15:]
     if installation_type in {"Core", "Container"}:
         deprecated_method = installation_type == "Core"
-        bit32 = platform.architecture()[0] == "32bit"
+        bit32 = _is_32_bit()
         arch = info["arch"]
         if arch in {"armv7", "armv7l"} and installation_type == "Container":
             ir.async_create_issue(
