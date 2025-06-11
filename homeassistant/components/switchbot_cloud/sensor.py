@@ -33,6 +33,25 @@ SENSOR_TYPE_POWER = "power"
 SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_CURRENT = "electricCurrent"
 
+# {
+#     'online': True,
+#     'version': 'V1.7',
+#     'switch1Status': 1,
+#     'switch1Voltage': 234.5,
+#     'switch1Power': 0,
+#     'switch1ElectricCurrent': 3,
+#     'switch1UsedElectricity': 0,
+#     'switch2Status': 1,
+#     'switch2Voltage': 234.5,
+#     'switch2Power': 0,
+#     'switch2ElectricCurrent': 3,
+#     'switch2UsedElectricity': 0,
+#     'deviceId': 'C04E30DF93A6',
+#     'deviceType': 'Relay Switch 2PM',
+#     'hubDeviceId': 'C04E30DF93A6'
+# }
+
+
 TEMPERATURE_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
     device_class=SensorDeviceClass.TEMPERATURE,
@@ -111,6 +130,11 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
     ),
+    "Relay Switch 2PM": (
+        POWER_DESCRIPTION,
+        VOLTAGE_DESCRIPTION,
+        CURRENT_DESCRIPTION_IN_MA,
+    ),
     "Plug Mini (US)": (
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_A,
@@ -146,12 +170,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
-
-    async_add_entities(
-        SwitchBotCloudSensor(data.api, device, coordinator, description)
-        for device, coordinator in data.devices.sensors
-        for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
-    )
+    entities_list: list[SwitchBotCloudSensor] = []
+    for device, coordinator in data.devices.sensors:
+        for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]:
+            entities_list.extend(
+                [SwitchBotCloudSensor(data.api, device, coordinator, description)]
+            )
+    async_add_entities(entities_list)
 
 
 class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
@@ -174,3 +199,37 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         if not self.coordinator.data:
             return
         self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+
+
+class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudEntity, SensorEntity):
+    """Representation of a SwitchBot Cloud Relay Switch 2PM sensor entity."""
+
+    def __init__(
+        self,
+        api: SwitchBotAPI,
+        device: Device,
+        coordinator: SwitchBotCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize SwitchBot Cloud sensor entity."""
+        super().__init__(api, device, coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{device.device_id}_{description.key}"
+
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        if not self.coordinator.data:
+            return
+        name: str | None = (
+            self._attr_device_info.get("name") if self._attr_device_info else None
+        )
+        if name is None:
+            return
+        index = int(name.split("")[-1])
+        self._reshape_coordinator_data(index)
+
+        self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+
+    def _reshape_coordinator_data(self, target: int) -> int:
+        assert target in [1, 2]
+        return target
