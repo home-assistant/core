@@ -88,7 +88,10 @@ def mock_pymodbus_fixture(do_exception, register_words):
     mock_pb.write_coil.return_value = read_result
     mock_pb.write_coils.return_value = read_result
     if do_exception:
-        exc = ModbusException("mocked pymodbus exception")
+        if isinstance(do_exception, ModbusException):
+            exc = do_exception
+        else:
+            exc = ModbusException("mocked pymodbus exception")
         mock_pb.read_coils.side_effect = exc
         mock_pb.read_discrete_inputs.side_effect = exc
         mock_pb.read_input_registers.side_effect = exc

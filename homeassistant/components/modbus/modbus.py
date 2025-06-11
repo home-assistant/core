@@ -13,7 +13,7 @@ from pymodbus.client import (
     AsyncModbusTcpClient,
     AsyncModbusUdpClient,
 )
-from pymodbus.exceptions import ModbusException
+from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.framer import FramerType
 from pymodbus.pdu import ModbusPDU
 import voluptuous as vol
@@ -395,6 +395,8 @@ class ModbusHub:
         except ModbusException as exception_error:
             error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
             self._log_error(error)
+            if isinstance(exception_error, ConnectionException):
+                self.hass.async_create_task(self.async_restart(), "hub-restart")
             return None
         if not result:
             error = (

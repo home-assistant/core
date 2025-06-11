@@ -18,7 +18,7 @@ import logging
 from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
-from pymodbus.exceptions import ModbusException
+from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 import pytest
 import voluptuous as vol
@@ -1327,3 +1327,44 @@ async def test_check_default_slave(
     assert mock_modbus.read_holding_registers.mock_calls
     first_call = mock_modbus.read_holding_registers.mock_calls[0]
     assert first_call.kwargs["slave"] == expected_slave_value
+
+
+@pytest.mark.parametrize(
+    ("do_domain", "do_group", "do_type", "do_scan_interval"),
+    [
+        (SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_HOLDING, 10),
+        # (SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_INPUT, 10),
+    ],
+)
+@pytest.mark.parametrize(
+    (
+        "do_return",
+        "do_exception",
+        "do_expect_state",
+    ),
+    [
+        (
+            ReadResult([1]),
+            ConnectionException(" Test Not connected"),
+            STATE_UNAVAILABLE,
+        ),
+        (
+            ReadResult([1]),
+            False,
+            1,
+        ),
+    ],
+)
+async def test_pb_read_auto_reconnect(
+    hass: HomeAssistant,
+    do_domain,
+    do_expect_state,
+    mock_modbus_read_pymodbus,
+) -> None:
+    """Run test for auto-connection in reading."""
+
+    # Check state
+    entity_id = f"{do_domain}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    state = hass.states.get(entity_id).state
+    assert hass.states.get(entity_id).state
+    assert state == do_expect_state
