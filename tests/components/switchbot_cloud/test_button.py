@@ -65,3 +65,57 @@ async def test_switchmode_bot_no_button_entity(
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     assert not hass.states.async_entity_ids(BUTTON_DOMAIN)
+
+
+async def test_garage_door_opener_open(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test press."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="button-id-1",
+            deviceName="button-1",
+            deviceType="Garage Door Opener",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [{"doorStatus": 1}, {"doorStatus": 1}]
+
+    await configure_integration(hass)
+
+    entity_id = "button.button_1"
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_send_command.assert_called()
+
+
+async def test_garage_door_opener_close(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test press."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="button-id-1",
+            deviceName="button-1",
+            deviceType="Garage Door Opener",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [{"doorStatus": 1}, {"doorStatus": 0}]
+
+    await configure_integration(hass)
+
+    entity_id = "button.button_1"
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_send_command.assert_called()
