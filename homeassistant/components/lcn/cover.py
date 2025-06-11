@@ -12,7 +12,6 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -25,13 +24,13 @@ from .const import (
     CONF_REVERSE_TIME,
 )
 from .entity import LcnEntity
-from .helpers import InputType
+from .helpers import InputType, LcnConfigEntry
 
 PARALLEL_UPDATES = 0
 
 
 def add_lcn_entities(
-    config_entry: ConfigEntry,
+    config_entry: LcnConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     entity_configs: Iterable[ConfigType],
 ) -> None:
@@ -48,7 +47,7 @@ def add_lcn_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LcnConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN cover entities from a config entry."""
@@ -79,7 +78,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
     _attr_is_opening = False
     _attr_assumed_state = True
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN cover."""
         super().__init__(config, config_entry)
 
@@ -186,7 +185,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
 
     positioning_mode: pypck.lcn_defs.MotorPositioningMode
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN cover."""
         super().__init__(config, config_entry)
 

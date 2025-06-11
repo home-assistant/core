@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Iterable
 from copy import deepcopy
+from dataclasses import dataclass
 import re
 from typing import cast
 
@@ -36,11 +38,23 @@ from .const import (
     DOMAIN,
 )
 
+
 # typing
+@dataclass
+class LcnData:
+    """Lcn runtime data."""
+
+    connection: pypck.connection.PchkConnectionManager
+    device_connections: dict[str, DeviceConnectionType]
+    add_entities_callbacks: dict[str, Callable[[Iterable[ConfigType]], None]]
+
+
 type AddressType = tuple[int, int, bool]
 type DeviceConnectionType = pypck.module.ModuleConnection | pypck.module.GroupConnection
 
 type InputType = type[pypck.inputs.Input]
+type LcnConfigEntry = ConfigEntry[LcnData]
+
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile(
@@ -60,7 +74,7 @@ DOMAIN_LOOKUP = {
 
 
 def get_device_connection(
-    hass: HomeAssistant, address: AddressType, config_entry: ConfigEntry
+    hass: HomeAssistant, address: AddressType, config_entry: LcnConfigEntry
 ) -> DeviceConnectionType:
     """Return a lcn device_connection."""
     host_connection = config_entry.runtime_data.connection
@@ -163,7 +177,7 @@ def purge_device_registry(
         device_registry.async_remove_device(device_id)
 
 
-def register_lcn_host_device(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+def register_lcn_host_device(hass: HomeAssistant, config_entry: LcnConfigEntry) -> None:
     """Register LCN host for given config_entry in device registry."""
     device_registry = dr.async_get(hass)
 
@@ -177,7 +191,7 @@ def register_lcn_host_device(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 
 def register_lcn_address_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: LcnConfigEntry
 ) -> None:
     """Register LCN modules and groups defined in config_entry as devices in device registry.
 
@@ -252,7 +266,7 @@ async def async_update_device_config(
 
 
 async def async_update_config_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: LcnConfigEntry
 ) -> None:
     """Fill missing values in config_entry with infos from LCN bus."""
     device_configs = deepcopy(config_entry.data[CONF_DEVICES])
@@ -272,7 +286,7 @@ async def async_update_config_entry(
 
 
 def get_device_config(
-    address: AddressType, config_entry: ConfigEntry
+    address: AddressType, config_entry: LcnConfigEntry
 ) -> ConfigType | None:
     """Return the device configuration for given address and ConfigEntry."""
     for device_config in config_entry.data[CONF_DEVICES]:

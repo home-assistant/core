@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
-from dataclasses import dataclass
 from functools import partial
 import logging
 
@@ -18,7 +16,6 @@ from pypck.connection import (
 )
 from pypck.lcn_defs import LcnEvent
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -51,8 +48,9 @@ from .const import (
 )
 from .helpers import (
     AddressType,
-    DeviceConnectionType,
     InputType,
+    LcnConfigEntry,
+    LcnData,
     async_update_config_entry,
     generate_unique_id,
     purge_device_registry,
@@ -67,15 +65,6 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-@dataclass
-class LcnData:
-    """Lcn runtime data."""
-
-    connection: PchkConnectionManager
-    device_connections: dict[str, DeviceConnectionType]
-    add_entities_callbacks: dict[str, Callable[[Iterable[ConfigType]], None]]
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LCN component."""
     async_setup_services(hass)
@@ -84,7 +73,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: LcnConfigEntry) -> bool:
     """Set up a connection to PCHK host from a config entry."""
     settings = {
         "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
@@ -150,7 +139,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: LcnConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -199,7 +190,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 
 async def async_migrate_entities(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: LcnConfigEntry
 ) -> None:
     """Migrate entity registry."""
 
@@ -221,7 +212,7 @@ async def async_migrate_entities(
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: LcnConfigEntry) -> bool:
     """Close connection to PCHK host represented by config_entry."""
     # forward unloading to platforms
     unload_ok = await hass.config_entries.async_unload_platforms(
@@ -235,7 +226,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 
 def async_host_event_received(
-    hass: HomeAssistant, config_entry: ConfigEntry, event: pypck.lcn_defs.LcnEvent
+    hass: HomeAssistant, config_entry: LcnConfigEntry, event: pypck.lcn_defs.LcnEvent
 ) -> None:
     """Process received event from LCN."""
     lcn_connection = config_entry.runtime_data.connection
@@ -261,7 +252,7 @@ def async_host_event_received(
 
 def async_host_input_received(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LcnConfigEntry,
     device_registry: dr.DeviceRegistry,
     inp: pypck.inputs.Input,
 ) -> None:
