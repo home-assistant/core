@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
-from telegram import Update, User
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, User
 from telegram.constants import ParseMode
 from telegram.error import (
     InvalidToken,
@@ -21,6 +21,7 @@ from homeassistant.components.telegram_bot import (
     ATTR_LONGITUDE,
     async_setup_entry,
 )
+from homeassistant.components.telegram_bot.bot import TelegramBotConfigEntry
 from homeassistant.components.telegram_bot.const import (
     ATTR_CALLBACK_QUERY_ID,
     ATTR_CAPTION,
@@ -38,6 +39,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
     ATTR_QUESTION,
     ATTR_REPLY_TO_MSGID,
+    ATTR_REPLYMARKUP,
     ATTR_STICKER_ID,
     ATTR_TARGET,
     ATTR_TIMEOUT,
@@ -109,23 +111,6 @@ async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> N
             },
         ),
         (
-            SERVICE_SEND_MESSAGE,
-            {
-                ATTR_MESSAGE: "test_message",
-                ATTR_KEYBOARD_INLINE: "command1:/cmd1,/cmd2,mock_link:https://mock_link",
-            },
-        ),
-        (
-            SERVICE_SEND_MESSAGE,
-            {
-                ATTR_MESSAGE: "test_message",
-                ATTR_KEYBOARD_INLINE: [
-                    [["command1", "/cmd1"]],
-                    [["mock_line", "https://mock_link"]],
-                ],
-            },
-        ),
-        (
             SERVICE_SEND_STICKER,
             {
                 ATTR_STICKER_ID: "1",
@@ -172,6 +157,82 @@ async def test_send_message(
 
     assert len(response["chats"]) == 1
     assert (response["chats"][0]["message_id"]) == 12345
+
+
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    [
+        (
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_KEYBOARD_INLINE: "command1:/cmd1,/cmd2,mock_link:https://mock_link",
+            },
+            InlineKeyboardMarkup(
+                # 1 row with 3 buttons
+                [
+                    [
+                        InlineKeyboardButton(callback_data="/cmd1", text="command1"),
+                        InlineKeyboardButton(callback_data="/cmd2", text="CMD2"),
+                        InlineKeyboardButton(url="https://mock_link", text="mock_link"),
+                    ]
+                ]
+            ),
+        ),
+        (
+            {
+                ATTR_MESSAGE: "test_message",
+                ATTR_KEYBOARD_INLINE: [
+                    [["command1", "/cmd1"]],
+                    [["mock_link", "https://mock_link"]],
+                ],
+            },
+            InlineKeyboardMarkup(
+                # 2 rows each with 1 button
+                [
+                    [InlineKeyboardButton(callback_data="/cmd1", text="command1")],
+                    [InlineKeyboardButton(url="https://mock_link", text="mock_link")],
+                ]
+            ),
+        ),
+    ],
+)
+async def test_send_message_with_inline_keyboard(
+    hass: HomeAssistant,
+    webhook_platform,
+    input: dict[str, Any],
+    expected: InlineKeyboardMarkup,
+) -> None:
+    """Test the send_message service. Tests any service that does not require files to be sent."""
+    context = Context()
+    events = async_capture_events(hass, "telegram_sent")
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        input,
+        blocking=True,
+        context=context,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].context == context
+
+    assert len(response["chats"]) == 1
+    assert (response["chats"][0]["message_id"]) == 12345
+
+    # retrieve the last message
+    config_entry_ids = hass.config_entries.async_entry_ids()
+    assert len(config_entry_ids) == 1
+    config_entry: TelegramBotConfigEntry = hass.config_entries.async_get_known_entry(
+        config_entry_ids[0]
+    )
+    last_message: dict[str, Any] = config_entry.runtime_data.last_message[123456]
+
+    assert last_message[ATTR_MESSAGEID] == 12345
+    reply_markup: InlineKeyboardMarkup = last_message[ATTR_REPLYMARKUP]
+    assert reply_markup == expected
 
 
 async def test_send_message_inline_keyboard_error(
