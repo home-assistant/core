@@ -190,6 +190,8 @@ async def async_setup_entry(
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     entities_list: list[SwitchBotCloudSensor | SwitchBotCloudRelaySwitch2PMSensor] = []
     for device, coordinator in data.devices.sensors:
+        if SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES.get(device.device_type) is None:
+            continue
         for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]:
             if device.device_type in ["Relay Switch 2PM"]:
                 entities_list.extend(
