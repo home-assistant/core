@@ -254,7 +254,9 @@ def _create_ui_light(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxLight
         group_address_xyy_color=conf.get_write(CONF_COLOR, CONF_GA_COLOR)
         if color_dpt == LightColorMode.XYY
         else None,
-        group_address_xyy_color_state=conf.get_write(CONF_COLOR, CONF_GA_COLOR)
+        group_address_xyy_color_state=conf.get_state_and_passive(
+            CONF_COLOR, CONF_GA_COLOR
+        )
         if color_dpt == LightColorMode.XYY
         else None,
         group_address_tunable_white=group_address_tunable_white,
