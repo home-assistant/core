@@ -11,13 +11,11 @@ from homematicip.base.functionalChannels import (
     FunctionalChannel,
 )
 from homematicip.device import (
-    BrandSwitchMeasuring,
     Device,
     EnergySensorsInterface,
     FloorTerminalBlock6,
     FloorTerminalBlock10,
     FloorTerminalBlock12,
-    FullFlushSwitchMeasuring,
     HeatingThermostat,
     HeatingThermostatCompact,
     HeatingThermostatEvo,
@@ -27,9 +25,9 @@ from homematicip.device import (
     MotionDetectorOutdoor,
     MotionDetectorPushButton,
     PassageDetector,
-    PlugableSwitchMeasuring,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
+    SwitchMeasuring,
     TemperatureDifferenceSensor2,
     TemperatureHumiditySensorDisplay,
     TemperatureHumiditySensorOutdoor,
@@ -153,15 +151,7 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
         PresenceDetectorIndoor: lambda device: [
             HomematicipIlluminanceSensor(hap, device),
         ],
-        PlugableSwitchMeasuring: lambda device: [
-            HomematicipPowerSensor(hap, device),
-            HomematicipEnergySensor(hap, device),
-        ],
-        BrandSwitchMeasuring: lambda device: [
-            HomematicipPowerSensor(hap, device),
-            HomematicipEnergySensor(hap, device),
-        ],
-        FullFlushSwitchMeasuring: lambda device: [
+        SwitchMeasuring: lambda device: [
             HomematicipPowerSensor(hap, device),
             HomematicipEnergySensor(hap, device),
         ],

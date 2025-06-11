@@ -650,3 +650,47 @@ async def test_options(
         assert mock_chat.call_count == 1
         args = mock_chat.call_args.kwargs
         assert args.get("options") == expected_options
+
+
+@pytest.mark.parametrize(
+    "think",
+    [False, True],
+    ids=["no_think", "think"],
+)
+async def test_reasoning_filter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    think: bool,
+) -> None:
+    """Test that think option is passed correctly to client."""
+
+    agent_id = mock_config_entry.entry_id
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            ollama.CONF_THINK: think,
+        },
+    )
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=stream_generator(
+            {"message": {"role": "assistant", "content": "test response"}}
+        ),
+    ) as mock_chat:
+        await conversation.async_converse(
+            hass,
+            "test message",
+            None,
+            Context(),
+            agent_id=agent_id,
+        )
+
+        # Assert called with the expected think value
+        for call in mock_chat.call_args_list:
+            kwargs = call.kwargs
+            assert kwargs.get("think") == think
