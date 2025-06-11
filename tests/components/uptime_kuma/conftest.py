@@ -1,10 +1,11 @@
 """Common fixtures for the Uptime Kuma tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, create_autospec, patch
+from unittest.mock import AsyncMock, create_autospec, patch
 
 import pytest
 from pythonkuma import MonitorType, UptimeKumaMonitor
+from pythonkuma.models import MonitorStatus
 
 from homeassistant.components.uptime_kuma.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -28,7 +29,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="uptime.example.org",
         data={
-            CONF_URL: "https://uptime.example.org",
+            CONF_URL: "https://uptime.example.org/",
             CONF_VERIFY_SSL: True,
             CONF_API_KEY: "apikey",
         },
@@ -44,11 +45,11 @@ def mock_pyuptimekuma() -> Generator[AsyncMock]:
         spec=UptimeKumaMonitor,
         monitor_cert_days_remaining=90,
         monitor_cert_is_valid=1,
-        monitor_hostname="null",
+        monitor_hostname=None,
         monitor_name="Monitor 1",
-        monitor_port="null",
+        monitor_port=None,
         monitor_response_time=120,
-        monitor_status=1,
+        monitor_status=MonitorStatus.UP,
         monitor_type=MonitorType.HTTP,
         monitor_url="https://example.org",
     )
@@ -56,24 +57,24 @@ def mock_pyuptimekuma() -> Generator[AsyncMock]:
         spec=UptimeKumaMonitor,
         monitor_cert_days_remaining=0,
         monitor_cert_is_valid=0,
-        monitor_hostname="null",
+        monitor_hostname=None,
         monitor_name="Monitor 2",
-        monitor_port="null",
+        monitor_port=None,
         monitor_response_time=28,
-        monitor_status=1,
+        monitor_status=MonitorStatus.UP,
         monitor_type=MonitorType.PORT,
-        monitor_url="null",
+        monitor_url=None,
     )
     monitor_3 = create_autospec(
         spec=UptimeKumaMonitor,
         monitor_cert_days_remaining=90,
         monitor_cert_is_valid=1,
-        monitor_hostname="null",
+        monitor_hostname=None,
         monitor_name="Monitor 3",
-        monitor_port="null",
+        monitor_port=None,
         monitor_response_time=120,
-        monitor_status=0,
-        monitor_type="json-query",
+        monitor_status=MonitorStatus.DOWN,
+        monitor_type=MonitorType.JSON_QUERY,
         monitor_url="https://down.example.org",
     )
 
@@ -88,7 +89,10 @@ def mock_pyuptimekuma() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
 
-        client.async_get_monitors.return_value = Mock(
-            data=[monitor_1, monitor_2, monitor_3]
-        )
+        client.metrics.return_value = {
+            "Monitor 1": monitor_1,
+            "Monitor 2": monitor_2,
+            "Monitor 3": monitor_3,
+        }
+
         yield client
