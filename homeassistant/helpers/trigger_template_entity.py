@@ -13,8 +13,10 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -389,3 +391,28 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         ManualTriggerEntity.__init__(self, hass, config)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
+
+    @callback
+    def _set_value_with_possible_timestamp(
+        self,
+        value: Any,
+        device_class: SensorDeviceClass | None,
+        variables: dict[str, Any],
+    ) -> None:
+        """Set value with possible timestamp.
+
+        Implementing class should call this last in update method to set the value
+        and then render all templates.
+        Ex: _set_value_with_possible_timestamp(value, device_class, variables)
+        """
+        if device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            self._attr_native_value = value
+        elif value is not None:
+            self._attr_native_value = async_parse_date_datetime(
+                value, self.entity_id, self.device_class
+            )
+
+        super()._process_manual_data(variables)
