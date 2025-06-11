@@ -19,6 +19,9 @@ from .coordinator import FeedReaderCoordinator
 
 LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 ATTR_CONTENT = "content"
 ATTR_DESCRIPTION = "description"
 ATTR_LINK = "link"
