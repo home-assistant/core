@@ -2566,7 +2566,6 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
                 "s2_unauthenticated_key": "new987",
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
-                "log_level": "info",
             },
             0,
         ),
@@ -2590,7 +2589,6 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
                 "s2_unauthenticated_key": "new987",
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
-                "log_level": "info",
             },
             1,
         ),
@@ -2704,7 +2702,6 @@ async def test_reconfigure_addon_running(
                 "s2_unauthenticated_key": "old987",
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
-                "log_level": "info",
             },
             {
                 "usb_path": "/test",
@@ -2714,7 +2711,6 @@ async def test_reconfigure_addon_running(
                 "s2_unauthenticated_key": "old987",
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
-                "log_level": "info",
             },
         ),
     ],
@@ -2832,7 +2828,6 @@ async def different_device_server_version(*args):
                 "s2_unauthenticated_key": "old987",
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
-                "log_level": "info",
             },
             {
                 "usb_path": "/new",
@@ -2842,7 +2837,6 @@ async def different_device_server_version(*args):
                 "s2_unauthenticated_key": "new987",
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
-                "log_level": "info",
             },
             0,
             different_device_server_version,
@@ -2960,7 +2954,6 @@ async def test_reconfigure_different_device(
                 "s2_unauthenticated_key": "old987",
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
-                "log_level": "info",
             },
             {
                 "usb_path": "/new",
@@ -2970,7 +2963,6 @@ async def test_reconfigure_different_device(
                 "s2_unauthenticated_key": "new987",
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
-                "log_level": "info",
             },
             0,
             [SupervisorError(), None],
@@ -2986,7 +2978,6 @@ async def test_reconfigure_different_device(
                 "s2_unauthenticated_key": "old987",
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
-                "log_level": "info",
             },
             {
                 "usb_path": "/new",
@@ -2996,7 +2987,6 @@ async def test_reconfigure_different_device(
                 "s2_unauthenticated_key": "new987",
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
-                "log_level": "info",
             },
             0,
             [
@@ -3113,7 +3103,6 @@ async def test_reconfigure_addon_running_server_info_failure(
         "s2_unauthenticated_key": "old987",
         "lr_s2_access_control_key": "old654",
         "lr_s2_authenticated_key": "old321",
-        "log_level": "info",
     }
     new_addon_options = {
         "usb_path": "/test",
@@ -3123,7 +3112,6 @@ async def test_reconfigure_addon_running_server_info_failure(
         "s2_unauthenticated_key": "old987",
         "lr_s2_access_control_key": "old654",
         "lr_s2_authenticated_key": "old321",
-        "log_level": "info",
     }
     addon_options.update(old_addon_options)
     entry = integration
@@ -3196,7 +3184,6 @@ async def test_reconfigure_addon_running_server_info_failure(
                 "s2_unauthenticated_key": "new987",
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
-                "log_level": "info",
             },
             0,
         ),
@@ -3220,7 +3207,6 @@ async def test_reconfigure_addon_running_server_info_failure(
                 "s2_unauthenticated_key": "new987",
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
-                "log_level": "info",
             },
             1,
         ),
