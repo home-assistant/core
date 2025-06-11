@@ -25,12 +25,6 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^cached_property$"),
         ),
     ],
-    "homeassistant.backports.functools": [
-        ObsoleteImportMatch(
-            reason="replaced by propcache.api.cached_property",
-            constant=re.compile(r"^cached_property$"),
-        ),
-    ],
     "homeassistant.components.light": [
         ObsoleteImportMatch(
             reason="replaced by ColorMode enum",
