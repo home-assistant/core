@@ -43,18 +43,15 @@ class ThinQMQTT:
 
     async def async_connect(self) -> bool:
         """Create a mqtt client and then try to connect."""
-        try:
-            self.client = await ThinQMQTTClient(
-                self.thinq_api, self.client_id, self.on_message_received
-            )
-            if self.client is None:
-                return False
 
-            # Connect to server and create certificate.
-            return await self.client.async_prepare_mqtt()
-        except (ThinQAPIException, TypeError, ValueError):
-            _LOGGER.exception("Failed to connect")
+        self.client = await ThinQMQTTClient(
+            self.thinq_api, self.client_id, self.on_message_received
+        )
+        if self.client is None:
             return False
+
+        # Connect to server and create certificate.
+        return await self.client.async_prepare_mqtt()
 
     async def async_disconnect(self, event: Event | None = None) -> None:
         """Unregister client and disconnects handlers."""

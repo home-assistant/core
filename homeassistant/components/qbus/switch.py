@@ -42,6 +42,7 @@ async def async_setup_entry(
 class QbusSwitch(QbusEntity, SwitchEntity):
     """Representation of a Qbus switch entity."""
 
+    _attr_name = None
     _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(self, mqtt_output: QbusMqttOutput) -> None:
@@ -57,7 +58,6 @@ class QbusSwitch(QbusEntity, SwitchEntity):
         state.write_value(True)
 
         await self._async_publish_output_state(state)
-        self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -65,7 +65,6 @@ class QbusSwitch(QbusEntity, SwitchEntity):
         state.write_value(False)
 
         await self._async_publish_output_state(state)
-        self._attr_is_on = False
 
     async def _state_received(self, msg: ReceiveMessage) -> None:
         output = self._message_factory.parse_output_state(

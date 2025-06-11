@@ -24,8 +24,8 @@ from .common import (
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+async def test_user(hass: HomeAssistant) -> None:
+    """Test user flow."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -56,8 +56,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_read_only(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+async def test_user_key_read_only(hass: HomeAssistant) -> None:
+    """Test user flow with read only key."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -87,8 +87,8 @@ async def test_form_read_only(hass: HomeAssistant) -> None:
         (UptimeRobotAuthenticationException, "invalid_api_key"),
     ],
 )
-async def test_form_exception_thrown(hass: HomeAssistant, exception, error_key) -> None:
-    """Test that we handle exceptions."""
+async def test_exception_thrown(hass: HomeAssistant, exception, error_key) -> None:
+    """Test user flow throwing exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -106,10 +106,8 @@ async def test_form_exception_thrown(hass: HomeAssistant, exception, error_key) 
     assert result2["errors"]["base"] == error_key
 
 
-async def test_form_api_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test we handle unexpected error."""
+async def test_api_error(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test expected API error is catch."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

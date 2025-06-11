@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from functools import partial
-from types import MappingProxyType
 from typing import Any
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
@@ -97,7 +97,7 @@ async def async_remove_config_entry_device(
     return True
 
 
-def configure_mydevolo(conf: dict[str, Any] | MappingProxyType[str, Any]) -> Mydevolo:
+def configure_mydevolo(conf: Mapping[str, Any]) -> Mydevolo:
     """Configure mydevolo."""
     mydevolo = Mydevolo()
     mydevolo.user = conf[CONF_USERNAME]

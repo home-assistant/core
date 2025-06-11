@@ -6,15 +6,16 @@ import json
 from typing import Any
 from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.netatmo.const import DOMAIN
 from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.aiohttp import MockRequest
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 COMMON_RESPONSE = {
@@ -53,7 +54,7 @@ async def snapshot_platform_entities(
         )
 
 
-async def fake_post_request(*args: Any, **kwargs: Any):
+async def fake_post_request(hass: HomeAssistant, *args: Any, **kwargs: Any):
     """Return fake data."""
     if "endpoint" not in kwargs:
         return "{}"
@@ -75,10 +76,12 @@ async def fake_post_request(*args: Any, **kwargs: Any):
 
     elif endpoint == "homestatus":
         home_id = kwargs.get("params", {}).get("home_id")
-        payload = json.loads(load_fixture(f"netatmo/{endpoint}_{home_id}.json"))
+        payload = json.loads(
+            await async_load_fixture(hass, f"{endpoint}_{home_id}.json", DOMAIN)
+        )
 
     else:
-        payload = json.loads(load_fixture(f"netatmo/{endpoint}.json"))
+        payload = json.loads(await async_load_fixture(hass, f"{endpoint}.json", DOMAIN))
 
     return AiohttpClientMockResponse(
         method="POST",

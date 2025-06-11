@@ -1,6 +1,9 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: |
+      The integration does not provide any actions.
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -10,7 +13,7 @@ rules:
   docs-actions:
     status: exempt
     comment: |
-      The integration has deprecated the actions, thus the documentation has been removed.
+      The integration does not provide any actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -26,10 +29,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      Raise ServiceValidationError in async_get_entry_for_service_call.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

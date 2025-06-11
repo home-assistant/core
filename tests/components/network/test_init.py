@@ -1,10 +1,13 @@
 """Test the Network Configuration."""
 
+from __future__ import annotations
+
 from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import network
 from homeassistant.components.network.const import (
@@ -17,6 +20,7 @@ from homeassistant.components.network.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import LOOPBACK_IPADDR, NO_LOOPBACK_IPADDR
@@ -801,3 +805,48 @@ async def test_websocket_network_url(
             "external": None,
             "cloud": None,
         }
+
+
+@pytest.mark.parametrize("mock_socket", [[]], indirect=True)
+@pytest.mark.usefixtures("mock_socket")
+async def test_repair_docker_host_network_not_docker(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test repair is not created when not in Docker."""
+    with patch("homeassistant.util.package.is_docker_env", return_value=False):
+        assert await async_setup_component(hass, "network", {})
+
+    assert not issue_registry.async_get_issue(DOMAIN, "docker_host_network")
+
+
+@pytest.mark.parametrize("mock_socket", [[]], indirect=True)
+@pytest.mark.usefixtures("mock_socket")
+async def test_repair_docker_host_network_with_host_networking(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test repair is not created when in Docker with host networking."""
+    with (
+        patch("homeassistant.util.package.is_docker_env", return_value=True),
+        patch("homeassistant.components.network.Path.exists", return_value=True),
+    ):
+        assert await async_setup_component(hass, "network", {})
+
+    assert not issue_registry.async_get_issue(DOMAIN, "docker_host_network")
+
+
+@pytest.mark.parametrize("mock_socket", [[]], indirect=True)
+@pytest.mark.usefixtures("mock_socket")
+async def test_repair_docker_host_network_without_host_networking(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test repair is created when in Docker without host networking."""
+    with (
+        patch("homeassistant.util.package.is_docker_env", return_value=True),
+        patch("homeassistant.components.network.Path.exists", return_value=False),
+    ):
+        assert await async_setup_component(hass, "network", {})
+
+    assert (issue := issue_registry.async_get_issue(DOMAIN, "docker_host_network"))
+    assert issue == snapshot

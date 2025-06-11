@@ -60,11 +60,11 @@
       "fields": {
         "sleep_minutes": {
           "name": "Sleep minutes",
-          "description": "The time to sleep in minutes."
+          "description": "The duration to sleep in minutes."
         },
         "revert_to_mode": {
           "name": "Revert to mode",
-          "description": "The mode to revert to after sleep_minutes has elapsed."
+          "description": "The mode to revert to after the 'Sleep minutes' duration has elapsed."
         }
       }
     },
@@ -78,7 +78,7 @@
     },
     "run_health_test": {
       "name": "Run health test",
-      "description": "Have the Flo device run a health test."
+      "description": "Requests the Flo device to run a health test."
     }
   }
 }

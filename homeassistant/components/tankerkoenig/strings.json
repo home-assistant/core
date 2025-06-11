@@ -5,7 +5,6 @@
         "data": {
           "name": "Region name",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "fuel_types": "Fuel types",
           "location": "[%key:common::config_flow::data::location%]",
           "stations": "Additional fuel stations",
           "radius": "Search radius"

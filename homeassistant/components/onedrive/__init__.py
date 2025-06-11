@@ -34,7 +34,7 @@ from .coordinator import (
     OneDriveRuntimeData,
     OneDriveUpdateCoordinator,
 )
-from .services import async_register_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR]
@@ -44,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OneDrive integration."""
-    async_register_services(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -105,11 +105,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         ) from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    async def update_listener(hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
-        await hass.config_entries.async_reload(entry.entry_id)
-
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     def async_notify_backup_listeners() -> None:
         for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):

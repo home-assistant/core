@@ -856,7 +856,7 @@ async def test_validation_gas(
                     "affected_entities": {("sensor.gas_consumption_1", "beers")},
                     "translation_placeholders": {
                         "energy_units": "GJ, kWh, MJ, MWh, Wh",
-                        "gas_units": "CCF, ft³, m³",
+                        "gas_units": "CCF, ft³, m³, L",
                     },
                 },
                 {
@@ -885,7 +885,7 @@ async def test_validation_gas(
                     "affected_entities": {("sensor.gas_price_2", "EUR/invalid")},
                     "translation_placeholders": {
                         "price_units": (
-                            "EUR/GJ, EUR/kWh, EUR/MJ, EUR/MWh, EUR/Wh, EUR/CCF, EUR/ft³, EUR/m³"
+                            "EUR/GJ, EUR/kWh, EUR/MJ, EUR/MWh, EUR/Wh, EUR/CCF, EUR/ft³, EUR/m³, EUR/L"
                         )
                     },
                 },
