@@ -24,7 +24,7 @@ def sensor_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_pyuptimekuma", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("mock_pythonkuma", "entity_registry_enabled_by_default")
 async def test_setup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

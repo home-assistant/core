@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from pyuptimekuma import UptimeKumaAuthenticationException, UptimeKumaException
+from pythonkuma import UptimeKumaAuthenticationException, UptimeKumaException
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_pyuptimekuma")
+@pytest.mark.usefixtures("mock_pythonkuma")
 async def test_entry_setup_unload(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -31,20 +31,20 @@ async def test_entry_setup_unload(
 @pytest.mark.parametrize(
     ("exception", "state"),
     [
-        (UptimeKumaAuthenticationException, ConfigEntryState.SETUP_RETRY),
+        (UptimeKumaAuthenticationException, ConfigEntryState.SETUP_ERROR),
         (UptimeKumaException, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_pyuptimekuma: AsyncMock,
-    exception: Exception | list[Exception | None],
+    mock_pythonkuma: AsyncMock,
+    exception: Exception,
     state: ConfigEntryState,
 ) -> None:
     """Test config entry not ready."""
 
-    mock_pyuptimekuma.metrics.side_effect = exception
+    mock_pythonkuma.metrics.side_effect = exception
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
