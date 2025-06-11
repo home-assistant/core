@@ -1181,6 +1181,10 @@ async def test_deprecated_installation_issue_aarch64(
             },
         ),
         patch(
+            "homeassistant.components.hassio.platform.architecture",
+            return_value=("32bit", ""),
+        ),
+        patch(
             "homeassistant.components.hassio.get_os_info", return_value={"board": board}
         ),
         patch(
@@ -1252,6 +1256,10 @@ async def test_deprecated_installation_issue_32bit_method(
             },
         ),
         patch(
+            "homeassistant.components.hassio.platform.architecture",
+            return_value=("32bit", ""),
+        ),
+        patch(
             "homeassistant.components.hassio.get_os_info",
             return_value={"board": "rpi3-64"},
         ),
@@ -1320,6 +1328,10 @@ async def test_deprecated_installation_issue_32bit_supervised(
                 "installation_type": "Home Assistant Supervised",
                 "arch": arch,
             },
+        ),
+        patch(
+            "homeassistant.components.hassio.platform.architecture",
+            return_value=("32bit", ""),
         ),
         patch(
             "homeassistant.components.hassio.get_os_info",
@@ -1394,6 +1406,10 @@ async def test_deprecated_installation_issue_supported_board(
                 "installation_type": "Home Assistant OS",
                 "arch": "aarch64",
             },
+        ),
+        patch(
+            "homeassistant.components.hassio.platform.architecture",
+            return_value=("64bit", ""),
         ),
         patch(
             "homeassistant.components.hassio.get_os_info", return_value={"board": board}

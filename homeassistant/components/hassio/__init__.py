@@ -8,6 +8,7 @@ from datetime import datetime
 from functools import partial
 import logging
 import os
+import platform
 import re
 from typing import Any, NamedTuple
 
@@ -562,20 +563,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if os_info is None or info is None:
             return
         is_haos = info.get("hassos") is not None
-        arch = system_info["arch"]
+        bit32 = platform.architecture()[0] == "32bit"
         board = os_info.get("board")
-        supported_board = board in {"rpi3", "rpi4", "tinker", "odroid-xu4", "rpi2"}
-        if is_haos and arch == "armv7" and supported_board:
+        unsupported_board = board in {"tinker", "odroid-xu4", "rpi2"}
+        unsupported_os_on_board = board in {"rpi3", "rpi4"}
+        if is_haos and bit32 and (unsupported_board or unsupported_os_on_board):
             issue_id = "deprecated_os_"
-            if board in {"rpi3", "rpi4"}:
+            if unsupported_os_on_board:
                 issue_id += "aarch64"
-            elif board in {"tinker", "odroid-xu4", "rpi2"}:
+            elif unsupported_board:
                 issue_id += "armv7"
             ir.async_create_issue(
                 hass,
                 "homeassistant",
                 issue_id,
-                breaks_in_ha_version="2025.12.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
@@ -584,9 +585,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "installation_guide": "https://www.home-assistant.io/installation/",
                 },
             )
-        deprecated_architecture = False
-        if arch in {"i386", "armhf"} or (arch == "armv7" and not supported_board):
-            deprecated_architecture = True
+        deprecated_architecture = bit32 and not (
+            unsupported_board or unsupported_os_on_board
+        )
         if not is_haos or deprecated_architecture:
             issue_id = "deprecated"
             if not is_haos:
@@ -597,14 +598,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass,
                 "homeassistant",
                 issue_id,
-                breaks_in_ha_version="2025.12.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key=issue_id,
                 translation_placeholders={
                     "installation_type": "OS" if is_haos else "Supervised",
-                    "arch": arch,
+                    "arch": system_info["arch"],
                 },
             )
         listener()

@@ -654,12 +654,18 @@ async def test_deprecated_installation_issue_32bit_method(
     arch: str,
 ) -> None:
     """Test deprecated installation issue."""
-    with patch(
-        "homeassistant.components.homeassistant.async_get_system_info",
-        return_value={
-            "installation_type": "Home Assistant Core",
-            "arch": arch,
-        },
+    with (
+        patch(
+            "homeassistant.components.homeassistant.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant Core",
+                "arch": arch,
+            },
+        ),
+        patch(
+            "homeassistant.components.homeassistant.platform.architecture",
+            return_value=("32bit", ""),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -687,12 +693,18 @@ async def test_deprecated_installation_issue_32bit(
     arch: str,
 ) -> None:
     """Test deprecated installation issue."""
-    with patch(
-        "homeassistant.components.homeassistant.async_get_system_info",
-        return_value={
-            "installation_type": "Home Assistant Container",
-            "arch": arch,
-        },
+    with (
+        patch(
+            "homeassistant.components.homeassistant.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant Container",
+                "arch": arch,
+            },
+        ),
+        patch(
+            "homeassistant.components.homeassistant.platform.architecture",
+            return_value=("32bit", ""),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()

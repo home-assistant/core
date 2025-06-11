@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
+import platform
 from typing import Any
 
 import voluptuous as vol
@@ -403,23 +404,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     installation_type = info["installation_type"][15:]
     if installation_type in {"Core", "Container"}:
         deprecated_method = installation_type == "Core"
+        bit32 = platform.architecture()[0] == "32bit"
         arch = info["arch"]
-        if arch == "armv7" and installation_type == "Container":
+        if arch in {"armv7", "armv7l"} and installation_type == "Container":
             ir.async_create_issue(
                 hass,
                 DOMAIN,
                 "deprecated_container_armv7",
-                breaks_in_ha_version="2025.12.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_container_armv7",
             )
-        deprecated_architecture = False
-        if arch in {"i386", "armhf"} or (
-            arch == "armv7" and installation_type != "Container"
-        ):
-            deprecated_architecture = True
+        deprecated_architecture = bit32 and not (
+            arch in {"armv7", "armv7l"} and installation_type == "Container"
+        )
         if deprecated_method or deprecated_architecture:
             issue_id = "deprecated"
             if deprecated_method:
@@ -430,7 +429,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hass,
                 DOMAIN,
                 issue_id,
-                breaks_in_ha_version="2025.12.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
