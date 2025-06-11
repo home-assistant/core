@@ -62,7 +62,7 @@ def async_device_info_to_link_from_device_id(
 def async_remove_stale_devices_links_keep_entity_device(
     hass: HomeAssistant,
     entry_id: str,
-    source_entity_id_or_uuid: str,
+    source_entity_id_or_uuid: str | None,
 ) -> None:
     """Remove entry_id from all devices except that of source_entity_id_or_uuid.
 
@@ -73,7 +73,9 @@ def async_remove_stale_devices_links_keep_entity_device(
     async_remove_stale_devices_links_keep_current_device(
         hass=hass,
         entry_id=entry_id,
-        current_device_id=async_entity_id_to_device_id(hass, source_entity_id_or_uuid),
+        current_device_id=async_entity_id_to_device_id(hass, source_entity_id_or_uuid)
+        if source_entity_id_or_uuid
+        else None,
     )
 
 

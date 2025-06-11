@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -34,10 +35,12 @@ BINARY_SENSORS: Final = (
     AmazonBinarySensorEntityDescription(
         key="online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda _device: _device.online,
     ),
     AmazonBinarySensorEntityDescription(
         key="bluetooth",
+        entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="bluetooth",
         is_on_fn=lambda _device: _device.bluetooth_state,
     ),
