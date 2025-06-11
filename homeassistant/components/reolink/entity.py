@@ -142,7 +142,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
 
     async def async_update(self) -> None:
         """Force full update from the generic entity update service."""
-        self._host.last_wake = 0
+        for channel in self._host.api.channels:
+            if self._host.api.supported(channel, "battery"):
+                self._host.last_wake[channel] = 0
         await super().async_update()
 
 
