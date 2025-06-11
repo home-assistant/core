@@ -1501,11 +1501,11 @@ class Entity(
             # EntityStateAttribute.RESTORED: True
             self.registry_entry.write_unavailable_state(self.hass)
         else:
-            self.hass.states.async_remove(self.entity_id, context=self._context)
             # The check for self.platform guards against integrations not using an
             # EntityComponent and can be removed in HA Core 2026.8
             if self.platform:
                 del entity_sources(self.hass)[self.entity_id]
+            self.hass.states.async_remove(self.entity_id, context=self._context)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
