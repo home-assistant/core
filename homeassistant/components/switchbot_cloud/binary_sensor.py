@@ -43,6 +43,11 @@ DOOR_OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     on_value="opened",
 )
 
+DOOR_CLOSED_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="doorStatus",
+    device_class=BinarySensorDeviceClass.DOOR,
+)
+
 BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock": (
         CALIBRATION_DESCRIPTION,
@@ -52,6 +57,7 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
     ),
+    "Garage Door Opener": (DOOR_CLOSED_DESCRIPTION,),
 }
 
 
@@ -63,13 +69,32 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
 
-    async_add_entities(
-        SwitchBotCloudBinarySensor(data.api, device, coordinator, description)
-        for device, coordinator in data.devices.binary_sensors
+    entities_list: list[
+        SwitchBotCloudBinarySensor | SwitchBotCloudDoorStatusSensor
+    ] = []
+
+    for device, coordinator in data.devices.binary_sensors:
         for description in BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[
             device.device_type
-        ]
-    )
+        ]:
+            if device.device_type in ["Garage Door Opener"]:
+                entities_list.extend(
+                    [
+                        SwitchBotCloudDoorStatusSensor(
+                            data.api, device, coordinator, description
+                        )
+                    ]
+                )
+            else:
+                entities_list.extend(
+                    [
+                        SwitchBotCloudBinarySensor(
+                            data.api, device, coordinator, description
+                        )
+                    ]
+                )
+
+    async_add_entities(entities_list)
 
 
 class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
@@ -94,8 +119,18 @@ class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return None
-
         return (
             self.coordinator.data.get(self.entity_description.key)
             == self.entity_description.on_value
         )
+
+
+class SwitchBotCloudDoorStatusSensor(SwitchBotCloudBinarySensor):
+    """Representation of a Switchbot |Garage Door Opener| DoorStatus for sensor."""
+
+    @property
+    def is_on(self) -> bool | None:
+        """Set attributes from coordinator data."""
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.get(self.entity_description.key) == 0
