@@ -1310,14 +1310,14 @@ async def test_deprecated_installation_issue_32bit_supervised(
         patch(
             "homeassistant.components.hassio.async_get_system_info",
             return_value={
-                "installation_type": "Home Assistant OS",
+                "installation_type": "Home Assistant Supervised",
                 "arch": arch,
             },
         ),
         patch(
             "homeassistant.components.homeassistant.async_get_system_info",
             return_value={
-                "installation_type": "Home Assistant OS",
+                "installation_type": "Home Assistant Supervised",
                 "arch": arch,
             },
         ),
