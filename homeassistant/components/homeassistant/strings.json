@@ -107,9 +107,9 @@
       "title": "Deprecation notice: 32-bit architecture",
       "description": "This system uses 32-bit hardware (`{arch}`), which has been deprecated and will no longer receive updates after the release of Home Assistant 2025.12. As your hardware is no longer capable of running newer versions of Home Assistant, you will need to migrate to new hardware."
     },
-    "deprecated_container_armv7": {
+    "deprecated_container": {
       "title": "[%key:component::homeassistant::issues::deprecated_architecture::title%]",
-      "description": "This system is running on a 32-bit operating system (`armv7`), which has been deprecated and will no longer receive updates after the release of Home Assistant 2025.12. Check if your system is capable of running a 64-bit operating system. If not, you will need to migrate to new hardware."
+      "description": "This system is running on a 32-bit operating system (`{arch}`), which has been deprecated and will no longer receive updates after the release of Home Assistant 2025.12. Check if your system is capable of running a 64-bit operating system. If not, you will need to migrate to new hardware."
     },
     "deprecated_os_aarch64": {
       "title": "[%key:component::homeassistant::issues::deprecated_architecture::title%]",
