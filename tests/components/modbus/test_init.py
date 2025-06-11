@@ -1350,7 +1350,7 @@ async def test_check_default_slave(
         (
             ReadResult([1]),
             False,
-            1,
+            "1",
         ),
     ],
 )
