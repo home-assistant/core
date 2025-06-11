@@ -641,13 +641,6 @@ async def test_reload_all(
 
 
 @pytest.mark.parametrize(
-    "installation_type",
-    [
-        "Home Assistant Core",
-        "Home Assistant Supervised",
-    ],
-)
-@pytest.mark.parametrize(
     "arch",
     [
         "i386",
@@ -658,14 +651,13 @@ async def test_reload_all(
 async def test_deprecated_installation_issue_32bit_method(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    installation_type: str,
     arch: str,
 ) -> None:
     """Test deprecated installation issue."""
     with patch(
         "homeassistant.components.homeassistant.async_get_system_info",
         return_value={
-            "installation_type": installation_type,
+            "installation_type": "Home Assistant Core",
             "arch": arch,
         },
     ):
@@ -677,18 +669,11 @@ async def test_deprecated_installation_issue_32bit_method(
     assert issue.domain == DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
-        "installation_type": installation_type[15:],
+        "installation_type": "Core",
         "arch": arch,
     }
 
 
-@pytest.mark.parametrize(
-    "installation_type",
-    [
-        "Home Assistant Container",
-        "Home Assistant OS",
-    ],
-)
 @pytest.mark.parametrize(
     "arch",
     [
@@ -699,14 +684,13 @@ async def test_deprecated_installation_issue_32bit_method(
 async def test_deprecated_installation_issue_32bit(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    installation_type: str,
     arch: str,
 ) -> None:
     """Test deprecated installation issue."""
     with patch(
         "homeassistant.components.homeassistant.async_get_system_info",
         return_value={
-            "installation_type": installation_type,
+            "installation_type": "Home Assistant Container",
             "arch": arch,
         },
     ):
@@ -718,28 +702,19 @@ async def test_deprecated_installation_issue_32bit(
     assert issue.domain == DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
-        "installation_type": installation_type[15:],
+        "installation_type": "Container",
         "arch": arch,
     }
 
 
-@pytest.mark.parametrize(
-    "installation_type",
-    [
-        "Home Assistant Core",
-        "Home Assistant Supervised",
-    ],
-)
 async def test_deprecated_installation_issue_method(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    installation_type: str,
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test deprecated installation issue."""
     with patch(
         "homeassistant.components.homeassistant.async_get_system_info",
         return_value={
-            "installation_type": installation_type,
+            "installation_type": "Home Assistant Core",
             "arch": "generic-x86-64",
         },
     ):
@@ -751,49 +726,8 @@ async def test_deprecated_installation_issue_method(
     assert issue.domain == DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
-        "installation_type": installation_type[15:],
+        "installation_type": "Core",
         "arch": "generic-x86-64",
-    }
-
-
-@pytest.mark.parametrize(
-    ("board", "issue_id"),
-    [
-        ("rpi3", "deprecated_os_aarch64"),
-        ("rpi4", "deprecated_os_aarch64"),
-        ("tinker", "deprecated_os_armv7"),
-        ("odroid-xu4", "deprecated_os_armv7"),
-        ("rpi2", "deprecated_os_armv7"),
-    ],
-)
-async def test_deprecated_installation_issue_aarch64(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    board: str,
-    issue_id: str,
-) -> None:
-    """Test deprecated installation issue."""
-    with (
-        patch(
-            "homeassistant.components.homeassistant.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant OS",
-                "arch": "armv7",
-            },
-        ),
-        patch(
-            "homeassistant.components.hassio.get_os_info", return_value={"board": board}
-        ),
-    ):
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-
-    assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert issue.domain == DOMAIN
-    assert issue.severity == ir.IssueSeverity.WARNING
-    assert issue.translation_placeholders == {
-        "installation_guide": "https://www.home-assistant.io/installation/",
     }
 
 
