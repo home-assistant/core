@@ -1,10 +1,10 @@
-"""Tests for the Amazon Devices integration."""
+"""Tests for the Alexa Devices integration."""
 
 from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.amazon_devices.const import DOMAIN
+from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 

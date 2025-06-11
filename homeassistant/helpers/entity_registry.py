@@ -1045,6 +1045,14 @@ class EntityRegistry(BaseRegistry):
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
         self.hass.verify_event_loop_thread("entity_registry.async_remove")
+        if entity_id not in self.entities:
+            # Allow attempts to remove an entity which does not exist. If this is
+            # not allowed, there will be races during cleanup where we iterate over
+            # lists of entities to remove, but there are listeners for entity
+            # registry events which delete entities at the same time.
+            # For example, if we clean up entities A and B, there might be a listener
+            # which deletes entity B when entity A is being removed.
+            return
         entity = self.entities.pop(entity_id)
         config_entry_id = entity.config_entry_id
         key = (entity.domain, entity.platform, entity.unique_id)

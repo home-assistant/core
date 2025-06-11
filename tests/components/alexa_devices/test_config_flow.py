@@ -1,11 +1,11 @@
-"""Tests for the Amazon Devices config flow."""
+"""Tests for the Alexa Devices config flow."""
 
 from unittest.mock import AsyncMock
 
 from aioamazondevices.exceptions import CannotAuthenticate, CannotConnect
 import pytest
 
-from homeassistant.components.amazon_devices.const import CONF_LOGIN_DATA, DOMAIN
+from homeassistant.components.alexa_devices.const import CONF_LOGIN_DATA, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant

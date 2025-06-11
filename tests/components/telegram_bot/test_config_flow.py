@@ -19,8 +19,8 @@ from homeassistant.components.telegram_bot.const import (
     ERROR_MESSAGE,
     ISSUE_DEPRECATED_YAML,
     ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR,
-    PARSER_HTML,
     PARSER_MD,
+    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     PLATFORM_WEBHOOKS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
@@ -56,13 +56,13 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            ATTR_PARSER: PARSER_HTML,
+            ATTR_PARSER: PARSER_PLAIN_TEXT,
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][ATTR_PARSER] == PARSER_HTML
+    assert result["data"][ATTR_PARSER] is None
 
 
 async def test_reconfigure_flow_broadcast(
