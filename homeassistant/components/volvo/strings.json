@@ -92,20 +92,20 @@
       "charging_connection_status": {
         "name": "Charging connection status",
         "state": {
-          "connection_status_connected_ac": "Connected AC",
-          "connection_status_connected_dc": "Connected DC",
-          "connection_status_disconnected": "[%key:common::state::disconnected%]",
-          "connection_status_fault": "[%key:common::state::error%]"
+          "connected_ac": "Connected AC",
+          "connected_dc": "Connected DC",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "fault": "[%key:common::state::error%]"
         }
       },
       "charging_system_status": {
         "name": "Charging status",
         "state": {
-          "charging_system_charging": "[%key:common::state::charging%]",
-          "charging_system_done": "Done",
-          "charging_system_fault": "[%key:common::state::error%]",
-          "charging_system_idle": "[%key:common::state::idle%]",
-          "charging_system_scheduled": "Scheduled"
+          "charging": "[%key:common::state::charging%]",
+          "done": "Done",
+          "fault": "[%key:common::state::error%]",
+          "idle": "[%key:common::state::idle%]",
+          "scheduled": "Scheduled"
         }
       },
       "distance_to_empty_battery": {

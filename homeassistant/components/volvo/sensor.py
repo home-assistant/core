@@ -39,19 +39,13 @@ from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_ke
 
 PARALLEL_UPDATES = 0
 
-# Entities having an "unknown" value should report None as the state
-_UNKNOWN_VALUES = [
-    "UNSPECIFIED",
-    "CONNECTION_STATUS_UNSPECIFIED",
-    "CHARGING_SYSTEM_UNSPECIFIED",
-]
-
 
 @dataclass(frozen=True, kw_only=True)
 class VolvoSensorDescription(VolvoEntityDescription, SensorEntityDescription):
     """Describes a Volvo sensor entity."""
 
     value_fn: Callable[[VolvoCarsValue], Any] | None = None
+    unit_fn: Callable[[VolvoCarsValue], Any] | None = None
     available_fn: Callable[[VolvoCarsVehicle], bool] = lambda vehicle: True
 
 
@@ -60,14 +54,22 @@ def _availability_status(field: VolvoCarsValue) -> str:
     return reason if reason else str(field.value)
 
 
-def _calculate_time_to_service(field: VolvoCarsValue) -> int:
-    value = int(field.value)
+def _determine_time_to_service_unit(field: VolvoCarsValue) -> UnitOfTime:
+    return (
+        UnitOfTime.MONTHS
+        if isinstance(field, VolvoCarsValueField) and field.unit == "months"
+        else UnitOfTime.DAYS
+    )
 
-    # Always express value in days
-    if isinstance(field, VolvoCarsValueField) and field.unit == "months":
-        return value * 30
 
-    return value
+def _remove_charging_system_prefix(field: VolvoCarsValue) -> str:
+    value = str(field.value)
+    return value.lower().removeprefix("charging_system_")
+
+
+def _remove_connection_status_prefix(field: VolvoCarsValue) -> str:
+    value = str(field.value)
+    return value.lower().removeprefix("connection_status_")
 
 
 _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
@@ -82,7 +84,6 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "car_in_use",
             "no_internet",
             "power_saving_mode",
-            "unspecified",
         ],
         value_fn=_availability_status,
     ),
@@ -176,12 +177,12 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="chargingConnectionStatus",
         device_class=SensorDeviceClass.ENUM,
         options=[
-            "connection_status_connected_ac",
-            "connection_status_connected_dc",
-            "connection_status_disconnected",
-            "connection_status_fault",
-            "connection_status_unspecified",
+            "connected_ac",
+            "connected_dc",
+            "disconnected",
+            "fault",
         ],
+        value_fn=_remove_connection_status_prefix,
         available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # recharge-status endpoint
@@ -201,13 +202,13 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="chargingSystemStatus",
         device_class=SensorDeviceClass.ENUM,
         options=[
-            "charging_system_charging",
-            "charging_system_done",
-            "charging_system_fault",
-            "charging_system_idle",
-            "charging_system_scheduled",
-            "charging_system_unspecified",
+            "charging",
+            "done",
+            "fault",
+            "idle",
+            "scheduled",
         ],
+        value_fn=_remove_charging_system_prefix,
         available_fn=lambda vehicle: vehicle.has_battery_engine(),
     ),
     # statistics endpoint
@@ -290,10 +291,9 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         key="time_to_service",
         translation_key="time_to_service",
         api_field="timeToService",
-        native_unit_of_measurement=UnitOfTime.DAYS,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_calculate_time_to_service,
+        unit_fn=_determine_time_to_service_unit,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -354,11 +354,17 @@ class VolvoSensor(VolvoEntity, SensorEntity):
         )
 
         if self.device_class == SensorDeviceClass.ENUM:
+            # Entities having an "unknown" value should report None as the state
             native_value = str(native_value)
             native_value = (
                 value_to_translation_key(native_value)
-                if native_value.upper() not in _UNKNOWN_VALUES
+                if native_value.upper() != "UNSPECIFIED"
                 else None
             )
 
         self._attr_native_value = native_value
+
+        if self.entity_description.unit_fn:
+            self._attr_native_unit_of_measurement = self.entity_description.unit_fn(
+                api_field
+            )
