@@ -79,12 +79,6 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        _LOGGER.info(
-            f"before async_turn_off self._attr_is_on = {self._attr_is_on},"
-            f"self._attr_brightness = {self._attr_brightness},"
-            f"self._attr_rgb_color = {self._attr_rgb_color},"
-            f"self._attr_color_temp_kelvin = {self._attr_color_temp_kelvin}"
-        )
         response = await self._api.get_status(self.unique_id)
         power: str | None = response.get("power")
         if power is None or "on" in power:
@@ -92,31 +86,13 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         else:
             pass
         self._attr_is_on = False
-        _LOGGER.info(
-            f"after async_turn_off self._attr_is_on = {self._attr_is_on},"
-            f"self._attr_brightness = {self._attr_brightness},"
-            f"self._attr_rgb_color = {self._attr_rgb_color},"
-            f"self._attr_color_temp_kelvin = {self._attr_color_temp_kelvin}"
-        )
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        _LOGGER.info(
-            f"before async_turn_on self._attr_is_on = {self._attr_is_on},"
-            f"self._attr_brightness = {self._attr_brightness},"
-            f"self._attr_rgb_color = {self._attr_rgb_color},"
-            f"self._attr_color_temp_kelvin = {self._attr_color_temp_kelvin}"
-        )
         brightness: int | None = kwargs.get("brightness")
         rgb_color: tuple[int, int, int] | None = kwargs.get("rgb_color")
         color_temp_kelvin: int | None = kwargs.get("color_temp_kelvin")
-        _LOGGER.info(
-            f"before async_turn_on "
-            f"brightness = {brightness},"
-            f"rgb_color = {rgb_color},"
-            f"color_temp_kelvin = {color_temp_kelvin}"
-        )
         if brightness is not None:
             self._attr_color_mode = ColorMode.RGB
             await self.send_api_command(
