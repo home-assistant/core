@@ -1758,7 +1758,7 @@ def _base_condition_validator(value: Any) -> Any:
     vol.Schema(
         {
             **CONDITION_BASE_SCHEMA,
-            CONF_CONDITION: vol.NotIn(BUILT_IN_CONDITIONS),
+            CONF_CONDITION: vol.All(str, vol.NotIn(BUILT_IN_CONDITIONS)),
         },
         extra=vol.ALLOW_EXTRA,
     )(value)
