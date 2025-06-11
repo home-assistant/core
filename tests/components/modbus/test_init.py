@@ -1333,7 +1333,6 @@ async def test_check_default_slave(
     ("do_domain", "do_group", "do_type", "do_scan_interval"),
     [
         (SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_HOLDING, 10),
-        # (SENSOR_DOMAIN, CONF_SENSORS, CALL_TYPE_REGISTER_INPUT, 10),
     ],
 )
 @pytest.mark.parametrize(
