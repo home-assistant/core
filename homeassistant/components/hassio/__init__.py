@@ -37,6 +37,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery_flow,
+    issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.deprecation import (
@@ -51,9 +52,11 @@ from homeassistant.helpers.hassio import (
     get_supervisor_ip as _get_supervisor_ip,
     is_hassio as _is_hassio,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.service_info.hassio import (
     HassioServiceInfo as _HassioServiceInfo,
 )
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
@@ -109,7 +112,7 @@ from .coordinator import (
     get_core_info,  # noqa: F401
     get_core_stats,  # noqa: F401
     get_host_info,  # noqa: F401
-    get_info,  # noqa: F401
+    get_info,
     get_issues_info,  # noqa: F401
     get_os_info,
     get_supervisor_info,  # noqa: F401
@@ -167,6 +170,11 @@ SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
 
 VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
+
+DEPRECATION_URL = (
+    "https://www.home-assistant.io/blog/2025/05/22/"
+    "deprecating-core-and-supervised-installation-methods-and-32-bit-systems/"
+)
 
 
 def valid_addon(value: Any) -> str:
@@ -545,6 +553,63 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
     await coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = coordinator
+
+    system_info = await async_get_system_info(hass)
+
+    def deprecated_setup_issue() -> None:
+        os_info = get_os_info(hass)
+        info = get_info(hass)
+        if os_info is None or info is None:
+            return
+        is_haos = info.get("hassos") is not None
+        arch = system_info["arch"]
+        board = os_info.get("board")
+        supported_board = board in {"rpi3", "rpi4", "tinker", "odroid-xu4", "rpi2"}
+        if is_haos and arch == "armv7" and supported_board:
+            issue_id = "deprecated_os_"
+            if board in {"rpi3", "rpi4"}:
+                issue_id += "aarch64"
+            elif board in {"tinker", "odroid-xu4", "rpi2"}:
+                issue_id += "armv7"
+            ir.async_create_issue(
+                hass,
+                "homeassistant",
+                issue_id,
+                breaks_in_ha_version="2025.12.0",
+                learn_more_url=DEPRECATION_URL,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key=issue_id,
+                translation_placeholders={
+                    "installation_guide": "https://www.home-assistant.io/installation/",
+                },
+            )
+        deprecated_architecture = False
+        if arch in {"i386", "armhf"} or (arch == "armv7" and not supported_board):
+            deprecated_architecture = True
+        if not is_haos or deprecated_architecture:
+            issue_id = "deprecated"
+            if not is_haos:
+                issue_id += "_method"
+            if deprecated_architecture:
+                issue_id += "_architecture"
+            ir.async_create_issue(
+                hass,
+                "homeassistant",
+                issue_id,
+                breaks_in_ha_version="2025.12.0",
+                learn_more_url=DEPRECATION_URL,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key=issue_id,
+                translation_placeholders={
+                    "installation_type": "OS" if is_haos else "Supervised",
+                    "arch": arch,
+                },
+            )
+        listener()
+
+    listener = coordinator.async_add_listener(deprecated_setup_issue)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

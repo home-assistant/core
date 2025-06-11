@@ -843,6 +843,20 @@
           "description": "ID of the chat where to delete the message."
         }
       }
+    },
+    "leave_chat": {
+      "name": "Leave chat",
+      "description": "Removes the bot from the chat.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to leave the chat."
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "Chat ID of the group from which the bot should be removed."
+        }
+      }
     }
   },
   "exceptions": {
@@ -854,6 +868,18 @@
     },
     "missing_allowed_chat_ids": {
       "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
+    },
+    "missing_input": {
+      "message": "{field} is required."
+    },
+    "failed_to_load_url": {
+      "message": "Failed to load URL: {error}"
+    },
+    "allowlist_external_dirs_error": {
+      "message": "File path has not been configured in allowlist_external_dirs."
+    },
+    "failed_to_load_file": {
+      "message": "Failed to load file: {error}"
     }
   },
   "issues": {

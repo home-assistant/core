@@ -374,6 +374,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         elif msgtype == SERVICE_DELETE_MESSAGE:
             await notify_service.delete_message(context=service.context, **kwargs)
+        elif msgtype == SERVICE_LEAVE_CHAT:
+            messages = await notify_service.leave_chat(
+                context=service.context, **kwargs
+            )
         else:
             await notify_service.edit_message(
                 msgtype, context=service.context, **kwargs
@@ -447,7 +451,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
     """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    entry.runtime_data.parse_mode = entry.options[ATTR_PARSER]
 
 
 async def async_unload_entry(

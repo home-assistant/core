@@ -289,6 +289,24 @@ def test_get_or_create_suggested_object_id_conflict_existing(
     assert entry.entity_id == "light.hue_1234_2"
 
 
+def test_remove(entity_registry: er.EntityRegistry) -> None:
+    """Test that we can remove an item."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+
+    assert not entity_registry.deleted_entities
+    assert list(entity_registry.entities) == [entry.entity_id]
+
+    # Remove the item
+    entity_registry.async_remove(entry.entity_id)
+    assert list(entity_registry.deleted_entities) == [("light", "hue", "1234")]
+    assert not entity_registry.entities
+
+    # Remove the item again
+    entity_registry.async_remove(entry.entity_id)
+    assert list(entity_registry.deleted_entities) == [("light", "hue", "1234")]
+    assert not entity_registry.entities
+
+
 def test_create_triggers_save(entity_registry: er.EntityRegistry) -> None:
     """Test that registering entry triggers a save."""
     with patch.object(entity_registry, "async_schedule_save") as mock_schedule_save:
@@ -583,23 +601,43 @@ async def test_load_bad_data(
             ],
             "deleted_entities": [
                 {
+                    "aliases": [],
+                    "area_id": None,
+                    "categories": {},
                     "config_entry_id": None,
                     "config_subentry_id": None,
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
+                    "device_class": None,
+                    "disabled_by": None,
                     "entity_id": "test.test3",
+                    "hidden_by": None,
+                    "icon": None,
                     "id": "00003",
+                    "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
+                    "name": None,
+                    "options": None,
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
                     "unique_id": 234,  # Should not load
                 },
                 {
+                    "aliases": [],
+                    "area_id": None,
+                    "categories": {},
                     "config_entry_id": None,
                     "config_subentry_id": None,
                     "created_at": "2024-02-14T12:00:00.900075+00:00",
+                    "device_class": None,
+                    "disabled_by": None,
                     "entity_id": "test.test4",
+                    "hidden_by": None,
+                    "icon": None,
                     "id": "00004",
+                    "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
+                    "name": None,
+                    "options": None,
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
                     "unique_id": ["also", "not", "valid"],  # Should not load
@@ -870,6 +908,33 @@ async def test_removing_area_id(entity_registry: er.EntityRegistry) -> None:
     assert entry_w_area != entry_wo_area
 
 
+async def test_removing_area_id_deleted_entity(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Make sure we can clear area id."""
+    entry1 = entity_registry.async_get_or_create("light", "hue", "5678")
+    entry2 = entity_registry.async_get_or_create("light", "hue", "1234")
+
+    entry1_w_area = entity_registry.async_update_entity(
+        entry1.entity_id, area_id="12345A"
+    )
+    entry2_w_area = entity_registry.async_update_entity(
+        entry2.entity_id, area_id="12345B"
+    )
+
+    entity_registry.async_remove(entry1.entity_id)
+    entity_registry.async_remove(entry2.entity_id)
+
+    entity_registry.async_clear_area_id("12345A")
+    entry1_restored = entity_registry.async_get_or_create("light", "hue", "5678")
+    entry2_restored = entity_registry.async_get_or_create("light", "hue", "1234")
+
+    assert not entry1_restored.area_id
+    assert entry2_restored.area_id == "12345B"
+    assert entry1_w_area != entry1_restored
+    assert entry2_w_area != entry2_restored
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) -> None:
     """Test migration from version 1.1."""
@@ -1119,12 +1184,22 @@ async def test_migration_1_11(
             ],
             "deleted_entities": [
                 {
+                    "aliases": [],
+                    "area_id": None,
+                    "categories": {},
                     "config_entry_id": None,
                     "config_subentry_id": None,
                     "created_at": "1970-01-01T00:00:00+00:00",
+                    "device_class": None,
+                    "disabled_by": None,
                     "entity_id": "test.deleted_entity",
+                    "hidden_by": None,
+                    "icon": None,
                     "id": "23456",
+                    "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": None,
+                    "options": {},
                     "orphaned_timestamp": None,
                     "platform": "super_duper_platform",
                     "unique_id": "very_very_unique",
@@ -2453,7 +2528,7 @@ async def test_restore_entity(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Make sure entity registry id is stable."""
+    """Make sure entity registry id is stable and user configurations are restored."""
     update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry = MockConfigEntry(
         domain="light",
@@ -2511,6 +2586,13 @@ async def test_restore_entity(
         config_entry=config_entry,
         config_subentry_id="mock-subentry-id-1-1",
     )
+    entry3 = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "abcd",
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
 
     # Apply user customizations
     entry1 = entity_registry.async_update_entity(
@@ -2532,8 +2614,9 @@ async def test_restore_entity(
 
     entity_registry.async_remove(entry1.entity_id)
     entity_registry.async_remove(entry2.entity_id)
+    entity_registry.async_remove(entry3.entity_id)
     assert len(entity_registry.entities) == 0
-    assert len(entity_registry.deleted_entities) == 2
+    assert len(entity_registry.deleted_entities) == 3
 
     # Re-add entities, integration has changed
     entry1_restored = entity_registry.async_get_or_create(
@@ -2557,32 +2640,46 @@ async def test_restore_entity(
         translation_key="translation_key_2",
         unit_of_measurement="unit_2",
     )
-    entry2_restored = entity_registry.async_get_or_create("light", "hue", "5678")
+    # Add back the second entity without config entry and with different
+    # disabled_by and hidden_by settings
+    entry2_restored = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
+    # Add back the third entity with different disabled_by and hidden_by settings
+    entry3_restored = entity_registry.async_get_or_create("light", "hue", "abcd")
 
-    assert len(entity_registry.entities) == 2
+    assert len(entity_registry.entities) == 3
     assert len(entity_registry.deleted_entities) == 0
     assert entry1 != entry1_restored
-    # entity_id and user customizations are not restored. new integration options are
+    # entity_id and user customizations are restored. new integration options are
     # respected.
     assert entry1_restored == er.RegistryEntry(
-        entity_id="light.suggested_2",
+        entity_id="light.custom_1",
         unique_id="1234",
         platform="hue",
+        aliases={"alias1", "alias2"},
+        area_id="12345A",
+        categories={"scope1": "id", "scope2": "id"},
         capabilities={"key2": "value2"},
         config_entry_id=config_entry.entry_id,
         config_subentry_id="mock-subentry-id-1-2",
         created_at=utcnow(),
-        device_class=None,
+        device_class="device_class_user",
         device_id=device_entry_2.id,
-        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+        disabled_by=er.RegistryEntryDisabler.USER,
         entity_category=EntityCategory.CONFIG,
         has_entity_name=False,
-        hidden_by=None,
-        icon=None,
+        hidden_by=er.RegistryEntryHider.USER,
+        icon="icon_user",
         id=entry1.id,
+        labels={"label1", "label2"},
         modified_at=utcnow(),
-        name=None,
-        options={"test_domain": {"key2": "value2"}},
+        name="Test Friendly Name",
+        options={"options_domain": {"key": "value"}, "test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -2594,14 +2691,21 @@ async def test_restore_entity(
     assert entry2 != entry2_restored
     # Config entry and subentry are not restored
     assert (
-        attr.evolve(entry2, config_entry_id=None, config_subentry_id=None)
+        attr.evolve(
+            entry2,
+            config_entry_id=None,
+            config_subentry_id=None,
+            disabled_by=None,
+            hidden_by=None,
+        )
         == entry2_restored
     )
+    assert entry3 == entry3_restored
 
     # Remove two of the entities again, then bump time
     entity_registry.async_remove(entry1_restored.entity_id)
     entity_registry.async_remove(entry2.entity_id)
-    assert len(entity_registry.entities) == 0
+    assert len(entity_registry.entities) == 1
     assert len(entity_registry.deleted_entities) == 2
     freezer.tick(timedelta(seconds=er.ORPHANED_ENTITY_KEEP_SECONDS + 1))
     async_fire_time_changed(hass)
@@ -2612,14 +2716,14 @@ async def test_restore_entity(
         "light", "hue", "1234", config_entry=config_entry
     )
     entry2_restored = entity_registry.async_get_or_create("light", "hue", "5678")
-    assert len(entity_registry.entities) == 2
+    assert len(entity_registry.entities) == 3
     assert len(entity_registry.deleted_entities) == 0
     assert entry1.id == entry1_restored.id
     assert entry2.id != entry2_restored.id
 
     # Remove the first entity, then its config entry, finally bump time
     entity_registry.async_remove(entry1_restored.entity_id)
-    assert len(entity_registry.entities) == 1
+    assert len(entity_registry.entities) == 2
     assert len(entity_registry.deleted_entities) == 1
     entity_registry.async_clear_config_entry(config_entry.entry_id)
     freezer.tick(timedelta(seconds=er.ORPHANED_ENTITY_KEEP_SECONDS + 1))
@@ -2630,39 +2734,36 @@ async def test_restore_entity(
     entry1_restored = entity_registry.async_get_or_create(
         "light", "hue", "1234", config_entry=config_entry
     )
-    assert len(entity_registry.entities) == 2
+    assert len(entity_registry.entities) == 3
     assert len(entity_registry.deleted_entities) == 0
     assert entry1.id != entry1_restored.id
 
     # Check the events
     await hass.async_block_till_done()
-    assert len(update_events) == 14
+    assert len(update_events) == 17
     assert update_events[0].data == {
         "action": "create",
         "entity_id": "light.suggested_1",
     }
     assert update_events[1].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[2].data["action"] == "update"
+    assert update_events[2].data == {"action": "create", "entity_id": "light.hue_abcd"}
     assert update_events[3].data["action"] == "update"
-    assert update_events[4].data == {"action": "remove", "entity_id": "light.custom_1"}
-    assert update_events[5].data == {"action": "remove", "entity_id": "light.hue_5678"}
+    assert update_events[4].data["action"] == "update"
+    assert update_events[5].data == {"action": "remove", "entity_id": "light.custom_1"}
+    assert update_events[6].data == {"action": "remove", "entity_id": "light.hue_5678"}
+    assert update_events[7].data == {"action": "remove", "entity_id": "light.hue_abcd"}
     # Restore entities the 1st time
-    assert update_events[6].data == {
-        "action": "create",
-        "entity_id": "light.suggested_2",
-    }
-    assert update_events[7].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[8].data == {
-        "action": "remove",
-        "entity_id": "light.suggested_2",
-    }
-    assert update_events[9].data == {"action": "remove", "entity_id": "light.hue_5678"}
+    assert update_events[8].data == {"action": "create", "entity_id": "light.custom_1"}
+    assert update_events[9].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[10].data == {"action": "create", "entity_id": "light.hue_abcd"}
+    assert update_events[11].data == {"action": "remove", "entity_id": "light.custom_1"}
+    assert update_events[12].data == {"action": "remove", "entity_id": "light.hue_5678"}
     # Restore entities the 2nd time
-    assert update_events[10].data == {"action": "create", "entity_id": "light.hue_1234"}
-    assert update_events[11].data == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[12].data == {"action": "remove", "entity_id": "light.hue_1234"}
+    assert update_events[13].data == {"action": "create", "entity_id": "light.custom_1"}
+    assert update_events[14].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[15].data == {"action": "remove", "entity_id": "light.custom_1"}
     # Restore entities the 3rd time
-    assert update_events[13].data == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[16].data == {"action": "create", "entity_id": "light.hue_1234"}
 
 
 async def test_async_migrate_entry_delete_self(
@@ -2763,6 +2864,49 @@ async def test_removing_labels(entity_registry: er.EntityRegistry) -> None:
     assert not entry_cleared_label2.labels
 
 
+async def test_removing_labels_deleted_entity(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Make sure we can clear labels."""
+    entry1 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
+    entry1 = entity_registry.async_update_entity(
+        entry1.entity_id, labels={"label1", "label2"}
+    )
+    entry2 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="1234"
+    )
+    entry2 = entity_registry.async_update_entity(entry2.entity_id, labels={"label3"})
+
+    entity_registry.async_remove(entry1.entity_id)
+    entity_registry.async_remove(entry2.entity_id)
+    entity_registry.async_clear_label_id("label1")
+    entry1_cleared_label1 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
+
+    entity_registry.async_remove(entry1.entity_id)
+    entity_registry.async_clear_label_id("label2")
+    entry1_cleared_label2 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
+    entry2_restored = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="1234"
+    )
+
+    assert entry1_cleared_label1
+    assert entry1_cleared_label2
+    assert entry1 != entry1_cleared_label1
+    assert entry1 != entry1_cleared_label2
+    assert entry1_cleared_label1 != entry1_cleared_label2
+    assert entry1.labels == {"label1", "label2"}
+    assert entry1_cleared_label1.labels == {"label2"}
+    assert not entry1_cleared_label2.labels
+    assert entry2 != entry2_restored
+    assert entry2_restored.labels == {"label3"}
+
+
 async def test_entries_for_label(entity_registry: er.EntityRegistry) -> None:
     """Test getting entity entries by label."""
     entity_registry.async_get_or_create(
@@ -2819,6 +2963,39 @@ async def test_removing_categories(entity_registry: er.EntityRegistry) -> None:
 
     entity_registry.async_clear_category_id("scope2", "id")
     entry_cleared_scope2 = entity_registry.async_get(entry.entity_id)
+
+    assert entry_cleared_scope1
+    assert entry_cleared_scope2
+    assert entry != entry_cleared_scope1
+    assert entry != entry_cleared_scope2
+    assert entry_cleared_scope1 != entry_cleared_scope2
+    assert entry.categories == {"scope1": "id", "scope2": "id"}
+    assert entry_cleared_scope1.categories == {"scope2": "id"}
+    assert not entry_cleared_scope2.categories
+
+
+async def test_removing_categories_deleted_entity(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Make sure we can clear categories."""
+    entry = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, categories={"scope1": "id", "scope2": "id"}
+    )
+
+    entity_registry.async_remove(entry.entity_id)
+    entity_registry.async_clear_category_id("scope1", "id")
+    entry_cleared_scope1 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
+
+    entity_registry.async_remove(entry.entity_id)
+    entity_registry.async_clear_category_id("scope2", "id")
+    entry_cleared_scope2 = entity_registry.async_get_or_create(
+        domain="light", platform="hue", unique_id="5678"
+    )
 
     assert entry_cleared_scope1
     assert entry_cleared_scope2
