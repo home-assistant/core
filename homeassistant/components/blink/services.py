@@ -21,7 +21,7 @@ SERVICE_SEND_PIN_SCHEMA = vol.Schema(
 )
 
 
-async def _send_pin(call: ServiceCall):
+async def _send_pin(call: ServiceCall) -> None:
     """Call blink to send new pin."""
     config_entry: BlinkConfigEntry | None
     for entry_id in call.data[ATTR_CONFIG_ENTRY_ID]:
