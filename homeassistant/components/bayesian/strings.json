@@ -69,7 +69,7 @@
       "step": {
         "user": {
           "title": "Add an observation",
-          "description": "'Observations' are the sensor or template values that are monitored and then combined in order to inform the Bayesian sensor's final probability. Each observation will update the proability of the Bayesian sensor if it is detected, or if it is not detected. If the state of the entity becomes `UNAVAILABLE` or `UNKOWN` it will be ignored. If more than one `state` or more than one `numeric_range` is configured for the same entity then inverse detections will be ignored.",
+          "description": "'Observations' are the sensor or template values that are monitored and then combined in order to inform the Bayesian sensor's final probability. Each observation will update the probability of the Bayesian sensor if it is detected, or if it is not detected. If the state of the entity becomes `unavailable` or `unknown` it will be ignored. If more than one state or more than one numeric range is configured for the same entity then inverse detections will be ignored.",
           "menu_options": {
             "state": "Add on observation for a sensor's state",
             "numeric_state": "Add an observation for a numeric range",
