@@ -87,20 +87,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [AssistSatelliteEntityFeature.START_CONVERSATION],
     )
     component.async_register_entity_service(
-        "get_response",
+        "ask_question",
         vol.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Optional("start_message"): str,
-                    vol.Optional("start_media_id"): str,
+                    vol.Optional("question"): str,
+                    vol.Optional("question_media_id"): str,
                     vol.Optional("preannounce"): bool,
                     vol.Optional("preannounce_media_id"): str,
                 }
             ),
-            cv.has_at_least_one_key("start_message", "start_media_id"),
+            cv.has_at_least_one_key("question", "question_media_id"),
         ),
-        "async_internal_get_response",
-        [AssistSatelliteEntityFeature.GET_RESPONSE],
+        "async_internal_ask_question",
+        [AssistSatelliteEntityFeature.ASK_QUESTION],
         supports_response=SupportsResponse.ONLY,
     )
     hass.data[CONNECTION_TEST_DATA] = {}

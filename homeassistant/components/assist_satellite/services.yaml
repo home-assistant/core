@@ -54,20 +54,20 @@ start_conversation:
       required: false
       selector:
         text:
-get_response:
+ask_question:
   target:
     entity:
       domain: assist_satellite
       supported_features:
-        - assist_satellite.AssistSatelliteEntityFeature.GET_RESPONSE
+        - assist_satellite.AssistSatelliteEntityFeature.ASK_QUESTION
   fields:
-    start_message:
+    question:
       required: false
-      example: "Please confirm with your PIN code."
+      example: "What kind of music would you like to play?"
       default: ""
       selector:
         text:
-    start_media_id:
+    question_media_id:
       required: false
       selector:
         text:
