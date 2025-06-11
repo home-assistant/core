@@ -66,7 +66,7 @@ def mock_token_entry(expires_at: int, scope: str) -> dict[str, Any]:
 
 @pytest.fixture(name="config_entry_id")
 def mock_config_entry_id() -> str | None:
-    """Provide a json fixture file to load for list media item api responses."""
+    """Provide a json fixture file to load a config entry ID."""
     return CONFIG_ENTRY_ID
 
 
@@ -97,7 +97,6 @@ def mock_config_and_subentry(
         data={
             "auth_implementation": DOMAIN,
             "token": token_entry,
-            "region_code": "de",
         },
         entry_id="123456789",
         subentries_data=[
@@ -105,7 +104,6 @@ def mock_config_and_subentry(
                 data={
                     "latitude": 48,
                     "longitude": 9,
-                    "region_code": "de",
                 },
                 subentry_id="ABCDEF",
                 subentry_type="location",

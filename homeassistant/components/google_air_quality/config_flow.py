@@ -32,6 +32,7 @@ from homeassistant.helpers.selector import LocationSelector
 from . import api
 from .const import CLOUD_PLATFORM_SCOPE, DOMAIN, OAUTH2_SCOPES
 
+_LOGGER = logging.getLogger(__name__)
 CONF_MAP = "map"
 
 
@@ -41,8 +42,6 @@ class OAuth2FlowHandler(
     """Config flow to handle Google Air Quality OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-
-    _oauth_data: dict[str, Any]
 
     @classmethod
     @callback
@@ -69,9 +68,8 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Store OAuth token data and prompt user to confirm or change coordinates."""
-        self._oauth_data = data
         token_info = data[CONF_TOKEN]
-        scopes = token_info.get("scope", "")
+        scopes = token_info["scope"]
 
         if CLOUD_PLATFORM_SCOPE not in scopes:
             return self.async_abort(
@@ -80,9 +78,7 @@ class OAuth2FlowHandler(
             )
 
         session = aiohttp_client.async_get_clientsession(self.hass)
-        auth = api.AsyncConfigFlowAuth(
-            session, self._oauth_data[CONF_TOKEN][CONF_ACCESS_TOKEN]
-        )
+        auth = api.AsyncConfigFlowAuth(session, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
         client = GoogleAirQualityApi(auth)
         try:
             user_resource_info = await client.get_user_info()
@@ -98,17 +94,12 @@ class OAuth2FlowHandler(
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=user_resource_info.name,
-            data=self._oauth_data,
+            data=data,
         )
 
 
 class LocationSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for adding and modifying a location."""
-
-    @property
-    def logger(self) -> logging.Logger:
-        """Return logger."""
-        return logging.getLogger(__name__)
 
     async def async_step_user(
         self,
@@ -129,12 +120,11 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             )
             auth = api.AsyncConfigEntryAuth(web_session, oauth_session)
             client = GoogleAirQualityApi(auth)
-            self._show_form_user()
             location = user_input[CONF_LOCATION]
             lat = location[CONF_LATITUDE]
             lon = location[CONF_LONGITUDE]
             try:
-                air_quality_data = await client.async_air_quality(lat, lon)
+                await client.async_air_quality(lat, lon)
             except NoDataForLocationError:
                 return self._show_form_user(
                     user_input,
@@ -146,7 +136,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                     description_placeholders={"message": str(ex)},
                 )
             except Exception:
-                self.logger.exception("Unknown error occurred")
+                _LOGGER.exception("Unknown error occurred")
                 return self.async_abort(reason="unknown")
 
             unique_id = f"{lat}_{lon}"
@@ -156,7 +146,6 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             data = {
                 CONF_LATITUDE: lat,
                 CONF_LONGITUDE: lon,
-                "region_code": air_quality_data.region_code,
             }
             result = self.async_create_entry(
                 title=f"Coordinates {lat}, {lon}",

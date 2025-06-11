@@ -12,12 +12,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import api
-from .const import DOMAIN
 from .coordinator import GoogleAirQualityConfigEntry, GoogleAirQualityUpdateCoordinator
-
-__all__ = [
-    "DOMAIN",
-]
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,

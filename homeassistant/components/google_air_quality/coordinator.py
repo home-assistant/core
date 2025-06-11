@@ -45,16 +45,14 @@ class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
-        self.subentry = config_entry.subentries[subentry_id]
-        self.subentry_id = subentry_id
+        subentry = config_entry.subentries[subentry_id]
+        self.lat = subentry.data[CONF_LATITUDE]
+        self.long = subentry.data[CONF_LONGITUDE]
 
     async def _async_update_data(self) -> AirQualityData:
         """Fetch air quality data for this coordinate."""
-        latitude = self.subentry.data[CONF_LATITUDE]
-        longitude = self.subentry.data[CONF_LONGITUDE]
-
         try:
-            return await self.client.async_air_quality(latitude, longitude)
+            return await self.client.async_air_quality(self.lat, self.long)
         except GoogleAirQualityApiError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

@@ -131,7 +131,6 @@ async def test_add_location_flow(
     assert dict(subentry.data) == {
         "latitude": 50.0,
         "longitude": 10.0,
-        "region_code": "de",
     }
     assert subentry.title == "Coordinates 50.0, 10.0"
 
