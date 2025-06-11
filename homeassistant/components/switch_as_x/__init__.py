@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 
-from .const import CONF_INVERT, CONF_TARGET_DOMAIN, DOMAIN
+from .const import CONF_INVERT, CONF_TARGET_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,9 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_handle_source_entity_changes(
             hass,
             helper_config_entry_id=entry.entry_id,
-            get_helper_entity_id=lambda: entity_registry.async_get_entity_id(
-                entry.options[CONF_TARGET_DOMAIN], DOMAIN, entry.entry_id
-            ),
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
             source_device_id=async_add_to_device(hass, entry, entity_id),
             source_entity_id_or_uuid=entry.options[CONF_ENTITY_ID],
