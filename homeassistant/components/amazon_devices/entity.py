@@ -12,7 +12,7 @@ from .coordinator import AmazonDevicesCoordinator
 
 
 class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
-    """Defines a base Alexa Devices Devices entity."""
+    """Defines a base Alexa Devices entity."""
 
     _attr_has_entity_name = True
 
