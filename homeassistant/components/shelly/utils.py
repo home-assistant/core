@@ -850,4 +850,4 @@ def remove_stale_blu_trv_devices(
             continue
 
         LOGGER.debug("Removing stale BLU TRV device %s", device.name)
-        dev_reg.async_remove_device(device.id)
+        dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
