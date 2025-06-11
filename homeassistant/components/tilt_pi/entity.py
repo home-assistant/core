@@ -29,11 +29,9 @@ class TiltEntity(CoordinatorEntity[TiltPiDataUpdateCoordinator]):
         )
 
     @property
-    def current_hydrometer(self) -> TiltHydrometerData | None:
+    def current_hydrometer(self) -> TiltHydrometerData:
         """Return the current hydrometer data for this entity."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.get(self._mac_id)
+        return self.coordinator.data[self._mac_id]
 
     @property
     def available(self) -> bool:
