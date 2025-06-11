@@ -1,4 +1,4 @@
-"""Amazon Devices tests const."""
+"""Alexa Devices tests const."""
 
 TEST_CODE = "023123"
 TEST_COUNTRY = "IT"

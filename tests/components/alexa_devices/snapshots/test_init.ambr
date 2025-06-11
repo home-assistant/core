@@ -13,7 +13,7 @@
     'id': <ANY>,
     'identifiers': set({
       tuple(
-        'amazon_devices',
+        'alexa_devices',
         'echo_test_serial_number',
       ),
     }),
