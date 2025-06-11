@@ -15,7 +15,6 @@ def async_handle_source_entity_changes(
     hass: HomeAssistant,
     *,
     helper_config_entry_id: str,
-    get_helper_entity_id: Callable[[], str | None],
     set_source_entity_id_or_uuid: Callable[[str], None],
     source_device_id: str | None,
     source_entity_id_or_uuid: str,
@@ -37,8 +36,6 @@ def async_handle_source_entity_changes(
       to no device, and the helper config entry removed from the old device. Then
       the helper config entry is reloaded.
 
-    :param get_helper_entity: A function which returns the helper entity's entity ID,
-        or None if the helper entity does not exist.
     :param set_source_entity_id_or_uuid: A function which updates the source entity
         ID or UUID, e.g., in the helper config entry options.
     :param source_entity_removed: A function which is called when the source entity
@@ -81,13 +78,14 @@ def async_handle_source_entity_changes(
             return
 
         # The source entity has been moved to a different device, update the helper
-        # helper entity to link to the new device and the helper device to include
-        # the helper config entry
-        helper_entity_id = get_helper_entity_id()
-        if helper_entity_id:
+        # entities to link to the new device and the helper device to include the
+        # helper config entry
+        for helper_entity in entity_registry.entities.get_entries_for_config_entry_id(
+            helper_config_entry_id
+        ):
             # Update the helper entity to link to the new device (or no device)
             entity_registry.async_update_entity(
-                helper_entity_id, device_id=source_entity_entry.device_id
+                helper_entity.entity_id, device_id=source_entity_entry.device_id
             )
 
         if source_entity_entry.device_id is not None:
