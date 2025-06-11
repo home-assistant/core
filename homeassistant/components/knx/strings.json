@@ -131,7 +131,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
+      "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal digits expected.",
       "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
       "invalid_ip_address": "Invalid IPv4 address.",
       "keyfile_invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
@@ -141,6 +141,20 @@
       "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
       "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
       "unsupported_tunnel_type": "Selected tunneling type not supported by gateway."
+    }
+  },
+  "exceptions": {
+    "integration_not_loaded": {
+      "message": "KNX integration is not loaded."
+    },
+    "service_exposure_remove_not_found": {
+      "message": "Could not find exposure for `{group_address}` to remove."
+    },
+    "service_send_invalid_payload": {
+      "message": "Invalid payload for `knx.send` service. {error}"
+    },
+    "service_send_invalid_type": {
+      "message": "Invalid type for `knx.send` service: {type}"
     }
   },
   "options": {
