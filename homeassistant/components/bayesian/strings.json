@@ -111,7 +111,7 @@
             "above": "Optional - the lower end of the numeric range. Values exactly matching this will not count",
             "below": "Optional - the upper end of the numeric range. Values exactly matching this will only count if more than one range is configured for the same entity.",
             "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_true%]",
-            "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_true%]"
+            "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_false%]"
           }
         },
         "template": {
