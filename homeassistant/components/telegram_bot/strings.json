@@ -106,11 +106,12 @@
         "webhooks": "Webhooks"
       }
     },
-    "parsers": {
+    "parse_mode": {
       "options": {
         "markdown": "Markdown (Legacy)",
         "markdownv2": "MarkdownV2",
-        "html": "HTML"
+        "html": "HTML",
+        "plain_text": "Plain text"
       }
     }
   },

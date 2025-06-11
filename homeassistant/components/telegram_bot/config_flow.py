@@ -54,6 +54,7 @@ from .const import (
     PARSER_HTML,
     PARSER_MD,
     PARSER_MD2,
+    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
@@ -126,8 +127,8 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
             ATTR_PARSER,
         ): SelectSelector(
             SelectSelectorConfig(
-                options=[PARSER_MD, PARSER_MD2, PARSER_HTML],
-                translation_key="parsers",
+                options=[PARSER_MD, PARSER_MD2, PARSER_HTML, PARSER_PLAIN_TEXT],
+                translation_key="parse_mode",
             )
         )
     }

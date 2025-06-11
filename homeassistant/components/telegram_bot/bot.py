@@ -232,13 +232,13 @@ class TelegramNotificationService:
         """Initialize the service."""
         self.app = app
         self.config = config
-        self._parsers = {
+        self._parsers: dict[str, str | None] = {
             PARSER_HTML: ParseMode.HTML,
             PARSER_MD: ParseMode.MARKDOWN,
             PARSER_MD2: ParseMode.MARKDOWN_V2,
             PARSER_PLAIN_TEXT: None,
         }
-        self._parse_mode = self._parsers.get(parser)
+        self._parse_mode = self._parsers[parser]
         self.bot = bot
         self.hass = hass
 
