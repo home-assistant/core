@@ -434,7 +434,7 @@ async def test_validate_entity(
     assert res["success"], res
     assert res["result"]["success"] is False
     # This shall test that a required key of the second GroupSelect schema is missing
-    # and not not yield the "extra keys not allowed" error of the first GroupSelect Schema
+    # and not yield the "extra keys not allowed" error of the first GroupSelect Schema
     assert res["result"]["errors"][0]["path"] == [
         "data",
         "knx",
