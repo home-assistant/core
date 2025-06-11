@@ -1,4 +1,4 @@
-"""Support for Amazon Alexa Devices."""
+"""Support for Alexa Devices."""
 
 from datetime import timedelta
 
@@ -23,7 +23,7 @@ type AmazonConfigEntry = ConfigEntry[AmazonDevicesCoordinator]
 
 
 class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
-    """Base coordinator for Amazon Alexa Devices."""
+    """Base coordinator for Alexa Devices."""
 
     config_entry: AmazonConfigEntry
 
