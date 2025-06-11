@@ -199,7 +199,6 @@ class EntityInfo(TypedDict):
     """Entity info."""
 
     domain: str
-    custom_component: bool
     config_entry: NotRequired[str]
 
 
@@ -1450,10 +1449,8 @@ class Entity(
 
         Not to be extended by integrations.
         """
-        is_custom_component = "custom_components" in type(self).__module__
         entity_info: EntityInfo = {
             "domain": self.platform.platform_name,
-            "custom_component": is_custom_component,
         }
         if self.platform.config_entry:
             entity_info["config_entry"] = self.platform.config_entry.entry_id
