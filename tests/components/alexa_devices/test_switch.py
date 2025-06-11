@@ -1,4 +1,4 @@
-"""Tests for the Amazon Devices switch platform."""
+"""Tests for the Alexa Devices switch platform."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -6,7 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.amazon_devices.coordinator import SCAN_INTERVAL
+from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -37,7 +37,7 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch("homeassistant.components.amazon_devices.PLATFORMS", [Platform.SWITCH]):
+    with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.SWITCH]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
