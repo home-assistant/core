@@ -103,7 +103,7 @@ def _is_32_bit() -> bool:
 
 async def _get_arch() -> str:
     async with aiofiles.open("/etc/apk/arch") as arch_file:
-        raw_arch = await arch_file.read()
+        raw_arch = (await arch_file.read()).strip()
     return {"x86": "i386"}.get(raw_arch, raw_arch)
 
 

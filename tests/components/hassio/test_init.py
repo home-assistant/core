@@ -1156,7 +1156,7 @@ def test_deprecated_constants(
         ("rpi2", "deprecated_os_armv7"),
     ],
 )
-async def test_deprecated_installation_issue_aarch64(
+async def test_deprecated_installation_issue_os_armv7(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     freezer: FrozenDateTimeFactory,
@@ -1167,13 +1167,6 @@ async def test_deprecated_installation_issue_aarch64(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.hassio.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant OS",
-                "arch": "armv7",
-            },
-        ),
-        patch(
             "homeassistant.components.homeassistant.async_get_system_info",
             return_value={
                 "installation_type": "Home Assistant OS",
@@ -1183,6 +1176,10 @@ async def test_deprecated_installation_issue_aarch64(
         patch(
             "homeassistant.components.hassio._is_32_bit",
             return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hassio._get_arch",
+            return_value="armv7",
         ),
         patch(
             "homeassistant.components.hassio.get_os_info", return_value={"board": board}

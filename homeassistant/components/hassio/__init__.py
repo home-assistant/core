@@ -239,6 +239,12 @@ def _is_32_bit() -> bool:
     return size * 8 == 32
 
 
+async def _get_arch() -> str:
+    async with aiofiles.open("/etc/apk/arch") as arch_file:
+        raw_arch = await arch_file.read()
+    return {"x86": "i386"}.get(raw_arch, raw_arch)
+
+
 class APIEndpointSettings(NamedTuple):
     """Settings for API endpoint."""
 
@@ -560,9 +566,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = coordinator
 
-    async with aiofiles.open("/etc/apk/arch") as arch_file:
-        raw_arch = await arch_file.read()
-    arch = {"x86": "i386"}.get(raw_arch, raw_arch)
+    arch = await _get_arch()
 
     def deprecated_setup_issue() -> None:
         os_info = get_os_info(hass)
