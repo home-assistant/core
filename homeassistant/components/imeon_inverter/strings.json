@@ -174,13 +174,13 @@
         "name": "Component temperature"
       },
       "monitoring_self_produced": {
-        "name": "Self produced"
+        "name": "Self-produced"
       },
       "monitoring_self_consumption": {
-        "name": "Self consumption"
+        "name": "Self-consumption"
       },
       "monitoring_self_sufficiency": {
-        "name": "Self sufficiency"
+        "name": "Self-sufficiency"
       },
       "monitoring_minute_building_consumption": {
         "name": "Building consumption"
@@ -201,7 +201,7 @@
         "name": "Timeline status",
         "state": {
           "com_lost": "Communication lost",
-          "com_ok": "Communiation Ok",
+          "com_ok": "Communication Ok",
           "warning_grid": "Warning grid",
           "warning_ond": "Warning inverter",
           "warning_soft": "Warning software",
@@ -226,9 +226,9 @@
           "warnings": "Warning",
           "error_unknown": "Unknown error",
           "errors": "Error",
-          "good_1": "Ok",
-          "good_2": "Ok",
-          "good_3": "Ok"
+          "good_1": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+          "good_2": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+          "good_3": "[%key:component::binary_sensor::entity_component::problem::state::off%]"
         },
         "state_attributes": {
           "options": {
@@ -259,9 +259,9 @@
               "warnings": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::warnings%]",
               "error_unknown": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::error_unknown%]",
               "errors": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::errors%]",
-              "good_1": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_1%]",
-              "good_2": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_2%]",
-              "good_3": "[%key:component::imeon_inverter::entity::sensor::timeline_type_msg::state::good_3%]"
+              "good_1": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "good_2": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "good_3": "[%key:component::binary_sensor::entity_component::problem::state::off%]"
             }
           }
         }
