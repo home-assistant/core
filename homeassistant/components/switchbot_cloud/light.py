@@ -6,7 +6,7 @@ from switchbot_api import CommonCommands, Device, RGBWWLightCommands, SwitchBotA
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import _LOGGER, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
@@ -50,18 +50,14 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         super().__init__(api, device, coordinator)
         if device.device_type not in "Strip Light":
             self._attr_supported_color_modes = {ColorMode.RGB, ColorMode.COLOR_TEMP}
-            _LOGGER.info(
-                "This entity is not Strip Light, May support RGB and COLOR_TEMP mode"
-            )
         else:
-            _LOGGER.info("This entity is Strip Light, only support RGB mode")
             self._attr_supported_color_modes = {ColorMode.RGB}
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return True if entity is on."""
-        response: dict | None = self.coordinator.data
-        assert response is not None
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        if self.coordinator.data is None:
+            return
+        response: dict = self.coordinator.data
         if self._attr_is_on is None:
             self._attr_color_mode = ColorMode.RGB
             power: str | None = response.get("power")
@@ -75,7 +71,6 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
                 else None
             )
             self._attr_color_temp_kelvin: int | None = response.get("colorTemperature")
-        return self._attr_is_on
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -83,8 +78,6 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         power: str | None = response.get("power")
         if power is None or "on" in power:
             await self.send_api_command(CommonCommands.OFF)
-        else:
-            pass
         self._attr_is_on = False
         self.async_write_ha_state()
 
@@ -119,35 +112,4 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
             self._attr_color_mode = ColorMode.RGB
             await self.send_api_command(CommonCommands.ON)
         self._attr_is_on = True
-        _LOGGER.info(
-            f"after async_turn_on self._attr_is_on = {self._attr_is_on},"
-            f"self._attr_brightness = {self._attr_brightness},"
-            f"self._attr_rgb_color = {self._attr_rgb_color},"
-            f"self._attr_color_temp_kelvin = {self._attr_color_temp_kelvin}"
-        )
         self.async_write_ha_state()
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        return self._attr_brightness
-
-    @property
-    def color_mode(self) -> ColorMode | str | None:
-        """Return the color mode of the light."""
-        return self._attr_color_mode
-
-    @property
-    def color_temp_kelvin(self) -> int | None:
-        """Return the CT color value in Kelvin."""
-        return self._attr_color_temp_kelvin
-
-    @property
-    def rgb_color(self) -> tuple[int, int, int] | None:
-        """Return the rgb color value [int, int, int]."""
-        return self._attr_rgb_color
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
-        """Flag supported color modes."""
-        return self._attr_supported_color_modes
