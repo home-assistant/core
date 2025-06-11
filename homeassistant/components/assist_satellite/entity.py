@@ -310,34 +310,34 @@ class AssistSatelliteEntity(entity.Entity):
         """Start a conversation from the satellite."""
         raise NotImplementedError
 
-    async def async_internal_get_response(
+    async def async_internal_ask_question(
         self,
-        start_message: str | None = None,
-        start_media_id: str | None = None,
+        question: str | None = None,
+        question_media_id: str | None = None,
         preannounce: bool = True,
         preannounce_media_id: str = PREANNOUNCE_URL,
     ) -> str | None:
-        """Get a user's response from the satellite.
+        """Ask a question and get a user's response from the satellite.
 
-        If start_media_id is not provided, message is synthesized to
-        audio with the selected pipeline.
+        If question_media_id is not provided, question is synthesized to audio
+        with the selected pipeline.
 
-        If start_media_id is provided, it is played directly. It is possible
+        If question_media_id is provided, it is played directly. It is possible
         to omit the message and the satellite will not show any text.
 
         If preannounce is True, a sound is played before the start message or media.
         If preannounce_media_id is provided, it overrides the default sound.
 
-        Calls async_get_response.
+        Calls async_ask_question.
         """
         await self._cancel_running_pipeline()
 
-        if start_message is None:
-            start_message = ""
+        if question is None:
+            question = ""
 
         announcement = await self._resolve_announcement_media_id(
-            start_message,
-            start_media_id,
+            question,
+            question_media_id,
             preannounce_media_id=preannounce_media_id if preannounce else None,
         )
 
@@ -348,15 +348,15 @@ class AssistSatelliteEntity(entity.Entity):
         self._set_state(AssistSatelliteState.RESPONDING)
 
         try:
-            return await self.async_get_response(announcement)
+            return await self.async_ask_question(announcement)
         finally:
             self._is_announcing = False
             self._set_state(AssistSatelliteState.IDLE)
 
-    async def async_get_response(
+    async def async_ask_question(
         self, start_announcement: AssistSatelliteAnnouncement
     ) -> str | None:
-        """Get a user's response from the satellite."""
+        """Ask a question and get a user's response from the satellite."""
         raise NotImplementedError
 
     async def async_accept_pipeline_from_satellite(

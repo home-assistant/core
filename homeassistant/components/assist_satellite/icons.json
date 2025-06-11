@@ -11,7 +11,7 @@
     "start_conversation": {
       "service": "mdi:forum"
     },
-    "get_response": {
+    "ask_question": {
       "service": "mdi:microphone-question"
     }
   }

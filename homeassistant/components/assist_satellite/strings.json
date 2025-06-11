@@ -60,17 +60,17 @@
         }
       }
     },
-    "get_response": {
-      "name": "Get response",
-      "description": "Gets a single response from the user.",
+    "ask_question": {
+      "name": "Ask question",
+      "description": "Asks a question and gets the user's response.",
       "fields": {
-        "start_message": {
-          "name": "Message",
-          "description": "The message to start with."
+        "question": {
+          "name": "Question",
+          "description": "The question to ask."
         },
-        "start_media_id": {
-          "name": "Media ID",
-          "description": "The media ID to start with instead of using text-to-speech."
+        "question_media_id": {
+          "name": "Question media ID",
+          "description": "The media ID of the question to use instead of text-to-speech."
         },
         "preannounce": {
           "name": "Preannounce",
