@@ -90,6 +90,4 @@ class TiltSensor(TiltEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the sensor value."""
-        if hydrometer := self.current_hydrometer:
-            return self.entity_description.value_fn(hydrometer)
-        return None
+        return self.entity_description.value_fn(self.current_hydrometer)
