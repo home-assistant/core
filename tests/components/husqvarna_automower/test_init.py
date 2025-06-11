@@ -33,6 +33,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 ADDITIONAL_NUMBER_ENTITIES = 1
 ADDITIONAL_SENSOR_ENTITIES = 2
 ADDITIONAL_SWITCH_ENTITIES = 1
+NUMBER_OF_ENTITIES_MOWER_2 = 11
 
 
 async def test_load_unload_entry(
@@ -250,7 +251,7 @@ async def test_coordinator_automatic_registry_cleanup(
 
     assert (
         len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
-        == current_entites - 12
+        == current_entites - NUMBER_OF_ENTITIES_MOWER_2
     )
     assert (
         len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
@@ -278,7 +279,10 @@ async def test_coordinator_automatic_registry_cleanup(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 12
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == NUMBER_OF_ENTITIES_MOWER_2
+    )
     assert (
         len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
         == current_devices - 1

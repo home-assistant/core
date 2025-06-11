@@ -255,6 +255,8 @@ def mock_button_device() -> Mock:
     climate.central_scene_event = [SceneEvent(1, "Pressed")]
     climate.actions = {}
     climate.interfaces = ["zwaveCentralScene"]
+    climate.battery_level = 100
+    climate.armed = False
     return climate
 
 

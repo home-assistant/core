@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
-from hass_nabucasa import AlreadyConnectedError, thingtalk
+from hass_nabucasa import AlreadyConnectedError
 from hass_nabucasa.auth import (
     InvalidTotpCode,
     MFARequired,
@@ -1743,70 +1743,6 @@ async def test_enable_alexa_state_report_fail(
 
     assert not response["success"]
     assert response["error"]["code"] == "alexa_relink"
-
-
-async def test_thingtalk_convert(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    setup_cloud: None,
-) -> None:
-    """Test that we can convert a query."""
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
-        return_value={"hello": "world"},
-    ):
-        await client.send_json(
-            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
-        )
-        response = await client.receive_json()
-
-    assert response["success"]
-    assert response["result"] == {"hello": "world"}
-
-
-async def test_thingtalk_convert_timeout(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    setup_cloud: None,
-) -> None:
-    """Test that we can convert a query."""
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
-        side_effect=TimeoutError,
-    ):
-        await client.send_json(
-            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
-        )
-        response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"]["code"] == "timeout"
-
-
-async def test_thingtalk_convert_internal(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    setup_cloud: None,
-) -> None:
-    """Test that we can convert a query."""
-    client = await hass_ws_client(hass)
-
-    with patch(
-        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
-        side_effect=thingtalk.ThingTalkConversionError("Did not understand"),
-    ):
-        await client.send_json(
-            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
-        )
-        response = await client.receive_json()
-
-    assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
-    assert response["error"]["message"] == "Did not understand"
 
 
 async def test_tts_info(

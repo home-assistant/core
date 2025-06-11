@@ -44,6 +44,9 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "water_running": { "name": "Water is flowing" }
+    },
     "switch": {
       "usb_ports": { "name": "USB ports" },
       "plug_1": { "name": "Plug 1" },
@@ -87,6 +90,12 @@
       },
       "water_meter_reading": {
         "name": "Water meter reading"
+      },
+      "water_meter_1_reading": {
+        "name": "Water meter 1 reading"
+      },
+      "water_meter_2_reading": {
+        "name": "Water meter 2 reading"
       }
     },
     "number": {
@@ -97,6 +106,12 @@
     "valve": {
       "meter_valve_state": {
         "name": "Valve state"
+      },
+      "meter_valve_1_state": {
+        "name": "Valve 1"
+      },
+      "meter_valve_2_state": {
+        "name": "Valve 2"
       }
     }
   },

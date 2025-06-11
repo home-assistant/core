@@ -94,8 +94,6 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     },
 }
 
-IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
-
 URL_PIN = (
     "https://developers.home-assistant.io/docs/"
     "creating_platform_code_review.html#1-requirements"
@@ -117,9 +115,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.71.0
-grpcio-status==1.71.0
-grpcio-reflection==1.71.0
+grpcio==1.72.1
+grpcio-status==1.72.1
+grpcio-reflection==1.72.1
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -172,13 +170,9 @@ pubnub!=6.4.0
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
 
-# pyOpenSSL 24.0.0 or later required to avoid import errors when
-# cryptography 42.0.0 is installed with botocore
-pyOpenSSL>=24.0.0
-
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==5.29.2
+protobuf==6.31.1
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -233,14 +227,6 @@ tenacity!=8.4.0
 # 5.0.0 breaks Timeout as a context manager
 # TypeError: 'Timeout' object does not support the context manager protocol
 async-timeout==4.0.3
-
-# aiofiles keeps getting downgraded by custom components
-# causing newer methods to not be available and breaking
-# some integrations at startup
-# https://github.com/home-assistant/core/issues/127529
-# https://github.com/home-assistant/core/issues/122508
-# https://github.com/home-assistant/core/issues/118004
-aiofiles>=24.1.0
 
 # multidict < 6.4.0 has memory leaks
 # https://github.com/aio-libs/multidict/issues/1134
@@ -429,7 +415,7 @@ def process_requirements(
     for req in module_requirements:
         if "://" in req:
             errors.append(f"{package}[Only pypi dependencies are allowed: {req}]")
-        if req.partition("==")[1] == "" and req not in IGNORE_PIN:
+        if req.partition("==")[1] == "":
             errors.append(f"{package}[Please pin requirement {req}, see {URL_PIN}]")
         reqs.setdefault(req, []).append(package)
 

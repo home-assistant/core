@@ -25,6 +25,8 @@ from .errors import HmipcConnectionError
 
 _LOGGER = logging.getLogger(__name__)
 
+type HomematicIPConfigEntry = ConfigEntry[HomematicipHAP]
+
 
 async def build_context_async(
     hass: HomeAssistant, hapid: str | None, authtoken: str | None
@@ -102,12 +104,15 @@ class HomematicipHAP:
 
     home: AsyncHome
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: HomematicIPConfigEntry
+    ) -> None:
         """Initialize HomematicIP Cloud connection."""
         self.hass = hass
         self.config_entry = config_entry
 
         self._ws_close_requested = False
+        self._ws_connection_closed = asyncio.Event()
         self._retry_task: asyncio.Task | None = None
         self._tries = 0
         self._accesspoint_connected = True
@@ -214,6 +219,8 @@ class HomematicipHAP:
             try:
                 await self.home.get_current_state_async()
                 hmip_events = self.home.enable_events()
+                self.home.set_on_connected_handler(self.ws_connected_handler)
+                self.home.set_on_disconnected_handler(self.ws_disconnected_handler)
                 tries = 0
                 await hmip_events
             except HmipConnectionError:
@@ -263,6 +270,18 @@ class HomematicipHAP:
             "Reset connection to access point id %s", self.config_entry.unique_id
         )
 
+    async def ws_connected_handler(self) -> None:
+        """Handle websocket connected."""
+        _LOGGER.debug("WebSocket connection to HomematicIP established")
+        if self._ws_connection_closed.is_set():
+            await self.get_state()
+            self._ws_connection_closed.clear()
+
+    async def ws_disconnected_handler(self) -> None:
+        """Handle websocket disconnection."""
+        _LOGGER.warning("WebSocket connection to HomematicIP closed")
+        self._ws_connection_closed.set()
+
     async def get_hap(
         self,
         hass: HomeAssistant,
@@ -286,6 +305,7 @@ class HomematicipHAP:
             raise HmipcConnectionError from err
         home.on_update(self.async_update)
         home.on_create(self.async_create_entity)
+
         hass.loop.create_task(self.async_connect())
 
         return home

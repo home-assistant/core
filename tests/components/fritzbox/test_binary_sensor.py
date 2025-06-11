@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from requests.exceptions import HTTPError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN

@@ -9,7 +9,7 @@
         }
       },
       "mfa": {
-        "description": "The TOTP secret below is not one of the 6 digit time-based numeric codes. It is a string of around 16 characters containing the shared secret that enables your authenticator app to generate the correct time-based code at the appropriate time. See the documentation.",
+        "description": "The TOTP secret below is not one of the 6-digit time-based numeric codes. It is a string of around 16 characters containing the shared secret that enables your authenticator app to generate the correct time-based code at the appropriate time. See the documentation.",
         "data": {
           "totp_secret": "TOTP secret"
         }

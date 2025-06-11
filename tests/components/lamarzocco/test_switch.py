@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from pylamarzocco.const import SmartStandByType
 from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,

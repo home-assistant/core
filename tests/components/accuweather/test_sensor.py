@@ -6,7 +6,7 @@ from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.accuweather.const import (
     UPDATE_INTERVAL_DAILY_FORECAST,
@@ -163,12 +163,12 @@ async def test_sensor_imperial_units(
 
     state = hass.states.get("sensor.home_wind_speed")
     assert state
-    assert state.state == "9.0"
+    assert float(state.state) == pytest.approx(9.00988)
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfSpeed.MILES_PER_HOUR
 
     state = hass.states.get("sensor.home_realfeel_temperature")
     assert state
-    assert state.state == "77.2"
+    assert state.state == "77.18"
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT
     )

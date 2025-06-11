@@ -12,7 +12,6 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
-    DOMAIN as CLIMATE_DOMAIN,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
@@ -26,7 +25,6 @@ from homeassistant.components.homematicip_cloud.climate import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.setup import async_setup_component
 
 from .helper import (
     HAPID,
@@ -34,14 +32,6 @@ from .helper import (
     async_manipulate_test_data,
     get_and_check_entity_basics,
 )
-
-
-async def test_manually_configured_platform(hass: HomeAssistant) -> None:
-    """Test that we do not set up an access point."""
-    assert await async_setup_component(
-        hass, CLIMATE_DOMAIN, {CLIMATE_DOMAIN: {"platform": HMIPC_DOMAIN}}
-    )
-    assert not hass.data.get(HMIPC_DOMAIN)
 
 
 async def test_hmip_heating_group_heat(

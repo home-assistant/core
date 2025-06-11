@@ -10,17 +10,15 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import refresh_system
+from . import HiveConfigEntry, refresh_system
 from .const import (
     ATTR_ONOFF,
     ATTR_TIME_PERIOD,
-    DOMAIN,
     SERVICE_BOOST_HOT_WATER,
     WATER_HEATER_MODES,
 )
@@ -46,12 +44,12 @@ SUPPORT_WATER_HEATER = [STATE_ECO, STATE_ON, STATE_OFF]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HiveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hive thermostat based on a config entry."""
 
-    hive = hass.data[DOMAIN][entry.entry_id]
+    hive = entry.runtime_data
     devices = hive.session.deviceList.get("water_heater")
     if devices:
         async_add_entities((HiveWaterHeater(hive, dev) for dev in devices), True)

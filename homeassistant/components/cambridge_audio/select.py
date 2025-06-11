@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
 from aiostreammagic import StreamMagicClient
-from aiostreammagic.models import DisplayBrightness
+from aiostreammagic.models import ControlBusMode, DisplayBrightness
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -75,6 +75,20 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
         load_fn=lambda client: len(client.audio_output.outputs) > 0,
         value_fn=_audio_output_value_fn,
         set_value_fn=_audio_output_set_value_fn,
+    ),
+    CambridgeAudioSelectEntityDescription(
+        key="control_bus_mode",
+        translation_key="control_bus_mode",
+        options=[
+            ControlBusMode.AMPLIFIER.value,
+            ControlBusMode.RECEIVER.value,
+            ControlBusMode.OFF.value,
+        ],
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda client: client.state.control_bus,
+        set_value_fn=lambda client, value: client.set_control_bus_mode(
+            ControlBusMode(value)
+        ),
     ),
 )
 
