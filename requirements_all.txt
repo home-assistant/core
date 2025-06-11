@@ -1167,7 +1167,7 @@ holidays==0.74
 home-assistant-frontend==20250531.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.5.28
+home-assistant-intents==2025.6.10
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.0.4
@@ -2589,7 +2589,7 @@ pywemo==1.4.0
 pywilight==0.0.74
 
 # homeassistant.components.wiz
-pywizlight==0.6.2
+pywizlight==0.6.3
 
 # homeassistant.components.wmspro
 pywmspro==0.2.2
