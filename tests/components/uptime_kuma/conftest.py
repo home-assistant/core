@@ -38,8 +38,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_pyuptimekuma() -> Generator[AsyncMock]:
-    """Mock pyuptimekuma client."""
+def mock_pythonkuma() -> Generator[AsyncMock]:
+    """Mock pythonkuma client."""
 
     monitor_1 = create_autospec(
         spec=UptimeKumaMonitor,

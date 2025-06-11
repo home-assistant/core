@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_pyuptimekuma")
+@pytest.mark.usefixtures("mock_pythonkuma")
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -54,7 +54,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 async def test_form_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_pyuptimekuma: AsyncMock,
+    mock_pythonkuma: AsyncMock,
     raise_error: Exception,
     text_error: str,
 ) -> None:
@@ -63,7 +63,7 @@ async def test_form_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_pyuptimekuma.metrics.side_effect = raise_error
+    mock_pythonkuma.metrics.side_effect = raise_error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -76,7 +76,7 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
-    mock_pyuptimekuma.metrics.side_effect = None
+    mock_pythonkuma.metrics.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -97,7 +97,7 @@ async def test_form_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_pyuptimekuma")
+@pytest.mark.usefixtures("mock_pythonkuma")
 async def test_form_already_configured(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
