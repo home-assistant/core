@@ -9,7 +9,9 @@
   "iot_class": "local_push",
   "loggers": ["aioshelly"],
   "quality_scale": "silver",
-  "requirements": ["aioshelly==13.6.0"],
+  "requirements": [
+    "git+https://github.com/home-assistant-libs/aioshelly.git@gen1-init#aioshelly==13.8.0"
+  ],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
