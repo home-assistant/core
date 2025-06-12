@@ -983,7 +983,7 @@ def _validate_credentials_input(
 ) -> None:
     if (
         authentication in (HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
-        and username is None
+        and not username
     ):
         raise ServiceValidationError(
             "Username is required.",
@@ -999,7 +999,7 @@ def _validate_credentials_input(
             HTTP_BEARER_AUTHENTICATION,
             HTTP_BEARER_AUTHENTICATION,
         )
-        and password is None
+        and not password
     ):
         raise ServiceValidationError(
             "Password is required.",
