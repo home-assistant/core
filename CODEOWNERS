@@ -1046,6 +1046,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/noaa_tides/ @jdelaney72
 /homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
 /tests/components/nobo_hub/ @echoromeo @oyvindwe
+/homeassistant/components/nomaiq/ @mnfjorge
+/tests/components/nomaiq/ @mnfjorge
 /homeassistant/components/nordpool/ @gjohansson-ST
 /tests/components/nordpool/ @gjohansson-ST
 /homeassistant/components/notify/ @home-assistant/core

@@ -4432,6 +4432,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "nomaiq": {
+      "name": "nomaiq",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "nordpool": {
       "name": "Nord Pool",
       "integration_type": "hub",

@@ -429,6 +429,7 @@ FLOWS = {
         "nmap_tracker",
         "nmbs",
         "nobo_hub",
+        "nomaiq",
         "nordpool",
         "notion",
         "ntfy",
