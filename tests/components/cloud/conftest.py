@@ -218,9 +218,9 @@ def mock_user_data() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_cloud_fixture(hass: HomeAssistant) -> CloudPreferences:
+async def mock_cloud_fixture(hass: HomeAssistant) -> CloudPreferences:
     """Fixture for cloud component."""
-    hass.loop.run_until_complete(mock_cloud(hass))
+    await mock_cloud(hass)
     return mock_cloud_prefs(hass, {})
 
 

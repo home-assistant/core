@@ -1,0 +1,6 @@
+{
+  "domain": "maytag",
+  "name": "Maytag",
+  "integration_type": "virtual",
+  "supported_by": "whirlpool"
+}

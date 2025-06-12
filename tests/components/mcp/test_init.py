@@ -76,17 +76,45 @@ async def test_init(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("side_effect"),
+    [
+        (httpx.TimeoutException("Some timeout")),
+        (httpx.HTTPStatusError("", request=None, response=httpx.Response(500))),
+        (httpx.HTTPStatusError("", request=None, response=httpx.Response(401))),
+        (httpx.HTTPError("Some HTTP error")),
+    ],
+)
 async def test_mcp_server_failure(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+    side_effect: Exception,
 ) -> None:
     """Test the integration fails to setup if the server fails initialization."""
+    mock_mcp_client.side_effect = side_effect
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_mcp_server_authentication_failure(
+    hass: HomeAssistant,
+    credential: None,
+    config_entry_with_auth: MockConfigEntry,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test the integration fails to setup if the server fails authentication."""
     mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "", request=None, response=httpx.Response(500)
+        "Authentication required", request=None, response=httpx.Response(401)
     )
 
-    with patch("homeassistant.components.mcp.coordinator.TIMEOUT", 1):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    assert config_entry_with_auth.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 async def test_list_tools_failure(

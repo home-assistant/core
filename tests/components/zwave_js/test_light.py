@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 
+import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.light import (
@@ -26,6 +27,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -40,6 +42,12 @@ from .common import (
 
 ZDB5100_ENTITY = "light.matrix_office"
 HSM200_V1_ENTITY = "light.hsm200"
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.LIGHT]
 
 
 async def test_light(

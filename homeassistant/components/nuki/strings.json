@@ -48,8 +48,8 @@
         "state_attributes": {
           "battery_critical": {
             "state": {
-              "on": "[%key:component::binary_sensor::entity_component::battery::state::on%]",
-              "off": "[%key:component::binary_sensor::entity_component::battery::state::off%]"
+              "on": "[%key:common::state::low%]",
+              "off": "[%key:common::state::normal%]"
             }
           }
         }

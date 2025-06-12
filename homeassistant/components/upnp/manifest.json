@@ -8,7 +8,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["async_upnp_client"],
-  "requirements": ["async-upnp-client==0.43.0", "getmac==0.9.5"],
+  "requirements": ["async-upnp-client==0.44.0", "getmac==0.9.5"],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"

@@ -57,6 +57,9 @@
       "bat_replacement_description": {
         "default": "mdi:battery-sync"
       },
+      "flow": {
+        "default": "mdi:pipe"
+      },
       "hepa_filter_condition": {
         "default": "mdi:filter-check"
       },
@@ -66,11 +69,35 @@
       "operational_state": {
         "default": "mdi:play-pause"
       },
+      "tank_volume": {
+        "default": "mdi:water-boiler"
+      },
+      "tank_percentage": {
+        "default": "mdi:water-boiler"
+      },
       "valve_position": {
         "default": "mdi:valve"
       },
       "battery_replacement_description": {
         "default": "mdi:battery-sync-outline"
+      },
+      "evse_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_supply_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_fault_state": {
+        "default": "mdi:ev-station"
+      },
+      "pump_control_mode": {
+        "default": "mdi:pipe-wrench"
+      },
+      "pump_speed": {
+        "default": "mdi:speedometer"
+      },
+      "pump_status": {
+        "default": "mdi:pump"
       }
     },
     "switch": {
@@ -80,6 +107,9 @@
           "on": "mdi:lock",
           "off": "mdi:lock-off"
         }
+      },
+      "evse_charging_switch": {
+        "default": "mdi:ev-station"
       }
     }
   }

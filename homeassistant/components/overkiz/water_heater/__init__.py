@@ -13,6 +13,9 @@ from ..entity import OverkizEntity
 from .atlantic_domestic_hot_water_production_mlb_component import (
     AtlanticDomesticHotWaterProductionMBLComponent,
 )
+from .atlantic_domestic_hot_water_production_v2_io_component import (
+    AtlanticDomesticHotWaterProductionV2IOComponent,
+)
 from .atlantic_pass_apc_dhw import AtlanticPassAPCDHW
 from .domestic_hot_water_production import DomesticHotWaterProduction
 from .hitachi_dhw import HitachiDHW
@@ -52,4 +55,5 @@ WIDGET_TO_WATER_HEATER_ENTITY = {
 
 CONTROLLABLE_NAME_TO_WATER_HEATER_ENTITY = {
     "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": AtlanticDomesticHotWaterProductionMBLComponent,
+    "io:AtlanticDomesticHotWaterProductionV2_CV4E_IOComponent": AtlanticDomesticHotWaterProductionV2IOComponent,
 }

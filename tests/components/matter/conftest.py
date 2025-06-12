@@ -43,6 +43,7 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock]:
             pytest.fail("Listen was not cancelled!")
 
         client.connect = AsyncMock(side_effect=connect)
+        client.check_node_update = AsyncMock(return_value=None)
         client.start_listening = AsyncMock(side_effect=listen)
         client.server_info = ServerInfoMessage(
             fabric_id=MOCK_FABRIC_ID,
@@ -76,6 +77,7 @@ async def integration_fixture(
         "air_purifier",
         "air_quality_sensor",
         "color_temperature_light",
+        "cooktop",
         "dimmable_light",
         "dimmable_plugin_unit",
         "door_lock",
@@ -86,14 +88,17 @@ async def integration_fixture(
         "eve_thermo",
         "eve_weather_sensor",
         "extended_color_light",
+        "extractor_hood",
         "fan",
         "flow_sensor",
         "generic_switch",
         "generic_switch_multi",
         "humidity_sensor",
+        "laundry_dryer",
         "leak_sensor",
         "light_sensor",
         "microwave_oven",
+        "mounted_dimmable_load_control_fixture",
         "multi_endpoint_light",
         "occupancy_sensor",
         "on_off_plugin_unit",
@@ -101,11 +106,17 @@ async def integration_fixture(
         "onoff_light_alt_name",
         "onoff_light_no_name",
         "onoff_light_with_levelcontrol_present",
+        "oven",
         "pressure_sensor",
+        "pump",
         "room_airconditioner",
         "silabs_dishwasher",
+        "silabs_evse_charging",
         "silabs_laundrywasher",
+        "silabs_refrigerator",
+        "silabs_water_heater",
         "smoke_detector",
+        "solar_power",
         "switch_unit",
         "temperature_sensor",
         "thermostat",

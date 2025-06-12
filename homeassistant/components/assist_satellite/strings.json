@@ -24,9 +24,13 @@
           "name": "Media ID",
           "description": "The media ID to announce instead of using text-to-speech."
         },
+        "preannounce": {
+          "name": "Preannounce",
+          "description": "Play a sound before the announcement."
+        },
         "preannounce_media_id": {
-          "name": "Preannounce Media ID",
-          "description": "The media ID to play before the announcement."
+          "name": "Preannounce media ID",
+          "description": "Custom media ID to play before the announcement."
         }
       }
     },
@@ -46,9 +50,13 @@
           "name": "Extra system prompt",
           "description": "Provide background information to the AI about the request."
         },
+        "preannounce": {
+          "name": "Preannounce",
+          "description": "Play a sound before the start message or media."
+        },
         "preannounce_media_id": {
-          "name": "Preannounce Media ID",
-          "description": "The media ID to play before the start message or media."
+          "name": "Preannounce media ID",
+          "description": "Custom media ID to play before the start message or media."
         }
       }
     }

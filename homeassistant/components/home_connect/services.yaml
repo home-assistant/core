@@ -64,7 +64,6 @@ set_program_and_options:
             - selected_program
     program:
       example: dishcare_dishwasher_program_auto2
-      required: true
       selector:
         select:
           mode: dropdown

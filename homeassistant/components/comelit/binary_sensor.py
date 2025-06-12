@@ -50,7 +50,6 @@ class ComelitVedoBinarySensorEntity(
         config_entry_entry_id: str,
     ) -> None:
         """Init sensor entity."""
-        self._api = coordinator.api
         self._zone_index = zone.index
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id

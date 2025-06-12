@@ -12,7 +12,8 @@ from synology_dsm.exceptions import SynologyDSMNotLoggedInException
 from homeassistant.const import CONF_MAC, CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
@@ -34,9 +35,19 @@ from .coordinator import (
     SynologyDSMData,
     SynologyDSMSwitchUpdateCoordinator,
 )
-from .service import async_setup_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Synology DSM component."""
+
+    async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) -> bool:
@@ -89,9 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
             details = EXCEPTION_UNKNOWN
         raise ConfigEntryNotReady(details) from err
 
-    # Services
-    await async_setup_services(hass)
-
     # For SSDP compat
     if not entry.data.get(CONF_MAC):
         hass.config_entries.async_update_entry(
@@ -123,6 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
     entry.runtime_data = SynologyDSMData(
         api=api,
         coordinator_central=coordinator_central,
+        coordinator_central_old_update_success=True,
         coordinator_cameras=coordinator_cameras,
         coordinator_switches=coordinator_switches,
     )
@@ -137,6 +146,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
 
         entry.async_on_unload(
             entry.async_on_state_change(async_notify_backup_listeners)
+        )
+
+        def async_check_last_update_success() -> None:
+            if (
+                last := coordinator_central.last_update_success
+            ) is not entry.runtime_data.coordinator_central_old_update_success:
+                entry.runtime_data.coordinator_central_old_update_success = last
+                async_notify_backup_listeners()
+
+        entry.runtime_data.coordinator_central.async_add_listener(
+            async_check_last_update_success
         )
 
     return True

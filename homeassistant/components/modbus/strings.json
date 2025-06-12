@@ -88,11 +88,11 @@
     },
     "duplicate_entity_entry": {
       "title": "Modbus {sub_1} address {sub_2} is duplicate, second entry not loaded.",
-      "description": "An address can only be associated with one entity, Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue."
+      "description": "An address can only be associated with one entity. Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue."
     },
     "duplicate_entity_name": {
       "title": "Modbus {sub_1} is duplicate, second entry not loaded.",
-      "description": "A entity name must be unique, Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue."
+      "description": "An entity name must be unique. Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue."
     },
     "no_entities": {
       "title": "Modbus {sub_1} contain no entities, entry not loaded.",
