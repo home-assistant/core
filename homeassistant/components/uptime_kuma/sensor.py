@@ -21,12 +21,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, HAS_CERT, HAS_HOST, HAS_PORT, HAS_URL
 from .coordinator import UptimeKumaConfigEntry, UptimeKumaDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
-
-STATUS_MAP = {0: "down", 1: "up", 2: "pending", 3: "maintenance"}
 
 
 class UptimeKumaSensor(StrEnum):
@@ -46,6 +44,7 @@ class UptimeKumaSensorEntityDescription(SensorEntityDescription):
     """Uptime Kuma sensor description."""
 
     value_fn: Callable[[UptimeKumaMonitor], StateType]
+    create_entity: Callable[[MonitorType], bool]
 
 
 SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
@@ -54,7 +53,8 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         translation_key=UptimeKumaSensor.CERT_DAYS_REMAINING,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
-        value_fn=lambda m: int(m.monitor_cert_days_remaining),
+        value_fn=lambda m: m.monitor_cert_days_remaining,
+        create_entity=lambda t: t in HAS_CERT,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.RESPONSE_TIME,
@@ -62,17 +62,17 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         value_fn=(
-            lambda m: int(m.monitor_response_time)
-            if m.monitor_response_time > -1
-            else None
+            lambda m: m.monitor_response_time if m.monitor_response_time > -1 else None
         ),
+        create_entity=lambda _: True,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.STATUS,
         translation_key=UptimeKumaSensor.STATUS,
         device_class=SensorDeviceClass.ENUM,
         options=[m.name.lower() for m in MonitorStatus],
-        value_fn=lambda m: STATUS_MAP.get(int(m.monitor_status)),
+        value_fn=lambda m: m.monitor_status.name.lower(),
+        create_entity=lambda _: True,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.TYPE,
@@ -81,27 +81,28 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         options=[m.name.lower() for m in MonitorType],
         value_fn=lambda m: m.monitor_type.name.lower(),
         entity_category=EntityCategory.DIAGNOSTIC,
+        create_entity=lambda _: True,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.URL,
         translation_key=UptimeKumaSensor.URL,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda m: m.monitor_url,
-        entity_registry_enabled_default=False,
+        create_entity=lambda t: t in HAS_URL,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.HOSTNAME,
         translation_key=UptimeKumaSensor.HOSTNAME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda m: m.monitor_hostname,
-        entity_registry_enabled_default=False,
+        create_entity=lambda t: t in HAS_HOST,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.PORT,
         translation_key=UptimeKumaSensor.PORT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda m: m.monitor_port,
-        entity_registry_enabled_default=False,
+        create_entity=lambda t: t in HAS_PORT,
     ),
 )
 
@@ -113,7 +114,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data
-    monitor_added: set[str] = set()
+    monitor_added: set[str | int] = set()
 
     @callback
     def add_entities() -> None:
@@ -125,6 +126,7 @@ async def async_setup_entry(
                 UptimeKumaSensorEntity(coordinator, monitor, description)
                 for description in SENSOR_DESCRIPTIONS
                 for monitor in new_monitor
+                if description.create_entity(coordinator.data[monitor].monitor_type)
             )
             monitor_added |= new_monitor
 
@@ -144,7 +146,7 @@ class UptimeKumaSensorEntity(
     def __init__(
         self,
         coordinator: UptimeKumaDataUpdateCoordinator,
-        monitor: str,
+        monitor: str | int,
         entity_description: UptimeKumaSensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
@@ -153,12 +155,12 @@ class UptimeKumaSensorEntity(
         self.monitor = monitor
         self.entity_description = entity_description
         self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{monitor}_{entity_description.key}"
+            f"{coordinator.config_entry.entry_id}_{monitor!s}_{entity_description.key}"
         )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             name=coordinator.data[monitor].monitor_name,
-            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{monitor}")},
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{monitor!s}")},
             manufacturer="Uptime Kuma",
             configuration_url=coordinator.config_entry.data[CONF_URL],
             sw_version=coordinator.api.version.version,
