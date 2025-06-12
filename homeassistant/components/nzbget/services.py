@@ -48,7 +48,7 @@ def set_speed(call: ServiceCall) -> None:
     _get_coordinator(call).nzbget.rate(call.data[ATTR_SPEED])
 
 
-def async_register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration-level services."""
 
     hass.services.async_register(DOMAIN, SERVICE_PAUSE, pause, schema=vol.Schema({}))
