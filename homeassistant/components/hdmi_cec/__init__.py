@@ -159,7 +159,7 @@ CONFIG_SCHEMA = vol.Schema(
                     ADDR_TUNER4,
                     ADDR_TV,
                     ADDR_UNKNOWN,
-                    ADDR_UNREGISTERED
+                    ADDR_UNREGISTERED,
                 ),
                 vol.Optional(CONF_TYPES, default={}): vol.Schema(
                     {cv.entity_id: vol.Any(MEDIA_PLAYER, SWITCH)}
@@ -219,9 +219,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         adapter = TcpAdapter(host, name=display_name, activate_source=False)
     else:
         adapter = CecAdapter(
-            name=display_name[:12],
-            activate_source=False,
-            device_type=device_type
+            name=display_name[:12], activate_source=False, device_type=device_type
         )
     hdmi_network = HDMINetwork(adapter, loop=loop)
 
@@ -257,7 +255,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
                 "cec_audio_status_requested",
                 {
                     "source": command.src,
-                }
+                },
             )
 
             _LOGGER.debug(
@@ -280,11 +278,13 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
                 {
                     "source": command.src,
                     "key_code": key_code,
-                }
+                },
             )
 
             _LOGGER.debug(
-                "Fired cec_keypress_received: source=%d key_code=%s", command.src, key_code
+                "Fired cec_keypress_received: source=%d key_code=%s",
+                command.src,
+                key_code
             )
 
         else:
