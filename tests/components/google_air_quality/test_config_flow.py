@@ -146,14 +146,12 @@ async def test_add_location_flow(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    subentry_id = list(config_entry.subentries)[0]
-    subentry = config_entry.subentries[subentry_id]
     assert result["data"] == {
         CONF_LATITUDE: 50.0,
         CONF_LONGITUDE: 10.0,
     }
-    assert subentry.title == "Straße Ohne Straßennamen, 88637 Buchheim, Deutschland"
-    assert subentry.unique_id == "50.0_10.0"
+    assert result["unique_id"] == "50.0_10.0"
+    assert result["title"] == "Straße Ohne Straßennamen, 88637 Buchheim, Deutschland"
 
 
 @pytest.mark.usefixtures(
@@ -289,6 +287,7 @@ async def test_no_data_for_location_shows_form(
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     mock_setup: Mock,
+    mock_api: Mock,
 ) -> None:
     """Show form with base error if no data is available for the location."""
     assert config_entry.state is ConfigEntryState.LOADED
@@ -312,6 +311,23 @@ async def test_no_data_for_location_shows_form(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
     assert result["errors"] == {"base": "no_data_for_location"}
+
+    mock_api.async_air_quality.side_effect = None
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_LOCATION: {
+                CONF_LATITUDE: 40.7128,
+                CONF_LONGITUDE: 134.0060,
+            }
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_LATITUDE: 40.7128,
+        CONF_LONGITUDE: 134.0060,
+    }
+    assert result["unique_id"] == "40.7128_134.006"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
