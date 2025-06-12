@@ -12,6 +12,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector
@@ -162,6 +163,7 @@ async def _validate_service(hass: HomeAssistant, config_entry_id: str) -> None:
         )
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the seventeentrack integration."""
 
