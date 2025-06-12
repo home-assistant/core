@@ -31,6 +31,7 @@ from .const import (
     DAILY,
     DOMAIN,
     HALF_HOURLY,
+    HALF_YEARLY,
     HOURLY,
     MONTHLY,
     QUARTER_HOURLY,
@@ -50,6 +51,7 @@ METER_TYPES = [
     MONTHLY,
     BIMONTHLY,
     QUARTERLY,
+    HALF_YEARLY,
     YEARLY,
 ]
 
