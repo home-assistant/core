@@ -330,6 +330,12 @@ class XiaomiGenericDevice(
         """Return the percentage based speed of the fan."""
         return None
 
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if device is on."""
+        # Base FanEntity uses percentage to determine if the device is on.
+        return self._attr_is_on
+
     async def async_turn_on(
         self,
         percentage: int | None = None,
