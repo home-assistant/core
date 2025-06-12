@@ -3506,9 +3506,6 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
     handler: str
 
-    _config_entry: ConfigEntry
-    """For compatibility only - to be removed in 2025.12"""
-
     @callback
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
@@ -3549,25 +3546,9 @@ class OptionsFlow(ConfigEntryBaseFlow):
         Please note that this is not available inside `__init__` method, and
         can only be referenced after initialisation.
         """
-        # For compatibility only - to be removed in 2025.12
-        if hasattr(self, "_config_entry"):
-            return self._config_entry
-
         if self.hass is None:
             raise ValueError("The config entry is not available during initialisation")
         return self.hass.config_entries.async_get_known_entry(self._config_entry_id)
-
-    @config_entry.setter
-    def config_entry(self, value: ConfigEntry) -> None:
-        """Set the config entry value."""
-        report_usage(
-            "sets option flow config_entry explicitly, which is deprecated",
-            core_behavior=ReportBehavior.ERROR,
-            core_integration_behavior=ReportBehavior.ERROR,
-            custom_integration_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.12",
-        )
-        self._config_entry = value
 
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
@@ -3587,6 +3568,15 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
             core_integration_behavior=ReportBehavior.ERROR,
             custom_integration_behavior=ReportBehavior.IGNORE,
         )
+
+    @property
+    def config_entry(self) -> ConfigEntry:
+        """Return the config entry linked to the current options flow.
+
+        Please note that this is not available inside `__init__` method, and
+        can only be referenced after initialisation.
+        """
+        return self._config_entry
 
     @property
     def options(self) -> dict[str, Any]:
