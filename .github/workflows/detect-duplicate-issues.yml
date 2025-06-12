@@ -233,7 +233,7 @@ jobs:
         if: steps.extract.outputs.should_continue == 'true' && steps.fetch_similar.outputs.has_similar == 'true'
         uses: actions/ai-inference@v1.1.0
         with:
-          model: openai/gpt-4o-mini
+          model: openai/gpt-4o
           system-prompt: |
             You are a Home Assistant issue duplicate detector. Your task is to identify TRUE DUPLICATES - issues that report the EXACT SAME problem, not just similar or related issues.
 
