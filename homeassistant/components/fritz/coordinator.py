@@ -104,6 +104,7 @@ class Device:
     name: str
     ssid: str | None
     wan_access: bool | None = None
+    speed: int | None = None
 
 
 class Interface(TypedDict):
@@ -478,6 +479,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     ip_address=attributes["IPAddress"],
                     ssid=None,
                     wan_access=wan_access_result,
+                    speed=attributes.get("X_AVM-DE_Speed"),
                 )
         else:
             for info in hosts_info:
@@ -923,6 +925,7 @@ class FritzDevice:
         self._name = name
         self._ssid: str | None = None
         self._wan_access: bool | None = False
+        self._speed: int | None = None
 
     def update(self, dev_info: Device, consider_home: float) -> None:
         """Update device info."""
@@ -948,6 +951,12 @@ class FritzDevice:
         self._ip_address = dev_info.ip_address
         self._ssid = dev_info.ssid
         self._wan_access = dev_info.wan_access
+        self._speed = dev_info.speed
+
+    @property
+    def speed(self) -> int | None:
+        """Return device speed."""
+        return self._speed
 
     @property
     def connected_to(self) -> str | None:
