@@ -446,7 +446,7 @@
         "name": "Tire pressure rear right"
       },
       "version": {
-        "name": "version"
+        "name": "Version"
       },
       "vin": {
         "name": "Vehicle"
