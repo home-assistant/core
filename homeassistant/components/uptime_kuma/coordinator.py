@@ -27,7 +27,7 @@ type UptimeKumaConfigEntry = ConfigEntry[UptimeKumaDataUpdateCoordinator]
 
 
 class UptimeKumaDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, UptimeKumaMonitor]]
+    DataUpdateCoordinator[dict[str | int, UptimeKumaMonitor]]
 ):
     """Update coordinator for Uptime Kuma."""
 
@@ -50,7 +50,7 @@ class UptimeKumaDataUpdateCoordinator(
             session, config_entry.data[CONF_URL], config_entry.data[CONF_API_KEY]
         )
 
-    async def _async_update_data(self) -> dict[str, UptimeKumaMonitor]:
+    async def _async_update_data(self) -> dict[str | int, UptimeKumaMonitor]:
         """Fetch the latest data from Uptime Kuma."""
 
         try:
