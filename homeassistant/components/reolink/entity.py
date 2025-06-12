@@ -187,9 +187,10 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             if mac := self._host.api.baichuan.mac_address(dev_ch):
                 connections.add((CONNECTION_NETWORK_MAC, mac))
 
-            conf_url = (
-                f"{self._conf_url}/?ch={dev_ch}" if self._conf_url is not None else None
-            )
+            if self._conf_url is None:
+                conf_url = None
+            else:
+                conf_url = f"{self._conf_url}/?ch={dev_ch}"
 
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._dev_id)},
