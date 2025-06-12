@@ -41,14 +41,12 @@ async def async_setup_entry(
     sensors: list[VegeHubSensor] = []
     coordinator = config_entry.runtime_data
 
-    # This is the index in the updates from the VegeHub that will correspond to
-    # each sensor.
-    update_index = count(0)
+    sensor_index = count(0)
 
     # Add each analog sensor input
     for _i in range(coordinator.vegehub.num_sensors):
         sensor = VegeHubSensor(
-            index=next(update_index),
+            index=next(sensor_index),
             coordinator=coordinator,
             description=SENSOR_TYPES["analog_sensor"],
         )
@@ -58,7 +56,7 @@ async def async_setup_entry(
     if not coordinator.vegehub.is_ac:
         sensors.append(
             VegeHubSensor(
-                index=next(update_index),
+                index=next(sensor_index),
                 coordinator=coordinator,
                 description=SENSOR_TYPES["battery_volts"],
             )
