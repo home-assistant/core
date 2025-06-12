@@ -1,6 +1,5 @@
 """Config flow for Tilt Pi integration."""
 
-import logging
 from typing import Any
 
 import aiohttp
@@ -13,8 +12,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_URL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):

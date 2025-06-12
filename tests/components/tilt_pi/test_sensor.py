@@ -4,9 +4,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tiltpi import TiltHydrometerData
 
 from homeassistant.components.tilt_pi.coordinator import TiltPiDataUpdateCoordinator
-from homeassistant.components.tilt_pi.model import TiltHydrometerData
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

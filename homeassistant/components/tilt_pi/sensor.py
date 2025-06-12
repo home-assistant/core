@@ -4,6 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final
 
+from tiltpi import TiltHydrometerData
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,7 +19,6 @@ from homeassistant.helpers.typing import StateType
 
 from .coordinator import TiltPiConfigEntry, TiltPiDataUpdateCoordinator
 from .entity import TiltEntity
-from .model import TiltHydrometerData
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0

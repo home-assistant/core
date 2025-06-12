@@ -1,11 +1,12 @@
 """Base entity for Tilt Pi integration."""
 
+from tiltpi import TiltHydrometerData
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import TiltPiDataUpdateCoordinator
-from .model import TiltHydrometerData
 
 
 class TiltEntity(CoordinatorEntity[TiltPiDataUpdateCoordinator]):

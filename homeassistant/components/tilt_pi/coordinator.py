@@ -2,7 +2,7 @@
 
 import logging
 
-from tiltpi import TiltPiClient, TiltPiError
+from tiltpi import TiltHydrometerData, TiltPiClient, TiltPiError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -11,7 +11,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import SCAN_INTERVAL
-from .model import TiltHydrometerData
 
 _LOGGER = logging.getLogger(__name__)
 

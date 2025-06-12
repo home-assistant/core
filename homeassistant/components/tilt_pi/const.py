@@ -7,6 +7,4 @@ from typing import Final
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN: Final = "tilt_pi"
-DEFAULT_PORT: Final = 1883
-NAME: Final = "Tilt Pi"
 SCAN_INTERVAL: Final = timedelta(seconds=60)
