@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Final
 
 from aioamazondevices.api import AmazonDevice, AmazonEchoApi
+from aioamazondevices.const import SPEAKER_GROUP_FAMILY
 
 from homeassistant.components.notify import NotifyEntity, NotifyEntityDescription
 from homeassistant.core import HomeAssistant
@@ -32,7 +33,7 @@ NOTIFY: Final = (
         key="speak",
         translation_key="speak",
         subkey="AUDIO_PLAYER",
-        is_supported=lambda _device: _device.device_family != "WHA",
+        is_supported=lambda _device: _device.device_family != SPEAKER_GROUP_FAMILY,
         method=lambda api, device, message: api.call_alexa_speak(device, message),
     ),
     AmazonNotifyEntityDescription(
