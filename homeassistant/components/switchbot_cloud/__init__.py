@@ -147,6 +147,9 @@ async def make_device_data(
         "K10+ Pro",
         "Robot Vacuum Cleaner S1",
         "Robot Vacuum Cleaner S1 Plus",
+        "Robot Vacuum Cleaner K10+ Pro Combo",
+        "K20+ ProFloor Cleaning Robot S10",
+        "S20",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True

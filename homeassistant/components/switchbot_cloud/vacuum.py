@@ -111,9 +111,51 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         self._attr_activity = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(switchbot_state)
 
 
+class SwitchBotCloudVacuumV2(SwitchBotCloudEntity, StateVacuumEntity):
+    """Representation of a SwitchBot vacuum."""
+
+    _attr_supported_features: VacuumEntityFeature = (
+        VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.PAUSE
+        | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.START
+        | VacuumEntityFeature.STATE
+    )
+
+    _attr_name = None
+    _attr_fan_speed_list: list[str] = list(
+        VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED.keys()
+    )
+
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
+        """Set fan speed."""
+
+    async def async_pause(self) -> None:
+        """Pause the cleaning task."""
+
+    async def async_return_to_base(self, **kwargs: Any) -> None:
+        """Set the vacuum cleaner to return to the dock."""
+
+    async def async_start(self) -> None:
+        """Start or resume the cleaning task."""
+
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        if not self.coordinator.data:
+            return
+
+
 @callback
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
-) -> SwitchBotCloudVacuum:
+) -> SwitchBotCloudVacuum | SwitchBotCloudVacuumV2:
     """Make a SwitchBotCloudVacuum."""
-    return SwitchBotCloudVacuum(api, device, coordinator)
+    if device.device_type in [
+        "K10+",
+        "K10+ Pro",
+        "Robot Vacuum Cleaner S1",
+        "Robot Vacuum Cleaner S1 Plus",
+    ]:
+        return SwitchBotCloudVacuum(api, device, coordinator)
+    return SwitchBotCloudVacuumV2(api, device, coordinator)
