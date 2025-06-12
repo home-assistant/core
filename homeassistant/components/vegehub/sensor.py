@@ -60,7 +60,7 @@ async def async_setup_entry(
             VegeHubSensor(
                 index=next(update_index),
                 coordinator=coordinator,
-                description=SENSOR_TYPES["battery"],
+                description=SENSOR_TYPES["battery_volts"],
             )
         )
 
@@ -91,4 +91,6 @@ class VegeHubSensor(VegeHubEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the sensor's current value."""
+        if not self.coordinator.data:
+            return None
         return self.coordinator.data.get(self.data_key)
