@@ -21,6 +21,7 @@ from .const import (
     CONF_MODEL,
     CONF_NUM_CTX,
     CONF_PROMPT,
+    CONF_THINK,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
@@ -33,6 +34,7 @@ __all__ = [
     "CONF_MODEL",
     "CONF_NUM_CTX",
     "CONF_PROMPT",
+    "CONF_THINK",
     "CONF_URL",
     "DOMAIN",
 ]

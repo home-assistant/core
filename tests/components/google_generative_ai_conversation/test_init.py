@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import CLIENT_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
+from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 
 from tests.common import MockConfigEntry
 
@@ -212,7 +212,7 @@ async def test_generate_content_service_error(
     with (
         patch(
             "google.genai.models.AsyncModels.generate_content",
-            side_effect=CLIENT_ERROR_500,
+            side_effect=API_ERROR_500,
         ),
         pytest.raises(
             HomeAssistantError,
@@ -311,7 +311,7 @@ async def test_generate_content_service_with_image_not_exists(
     ("side_effect", "state", "reauth"),
     [
         (
-            CLIENT_ERROR_500,
+            API_ERROR_500,
             ConfigEntryState.SETUP_ERROR,
             False,
         ),

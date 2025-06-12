@@ -65,6 +65,7 @@ homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
 homeassistant.components.alexa.*
+homeassistant.components.alexa_devices.*
 homeassistant.components.alpha_vantage.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.amberelectric.*
@@ -386,6 +387,7 @@ homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
 homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
+homeassistant.components.paperless_ngx.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*
 homeassistant.components.pegel_online.*

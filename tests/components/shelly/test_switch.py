@@ -42,6 +42,7 @@ async def test_block_device_services(
 ) -> None:
     """Test block device turn on/off services."""
     await init_integration(hass, 1)
+    # num_outputs is 2, device_name and channel name is used
     entity_id = "switch.test_name_channel_1"
 
     await hass.services.async_call(
@@ -192,7 +193,7 @@ async def test_block_restored_motion_switch_no_last_state(
 @pytest.mark.parametrize(
     ("model", "sleep", "entity", "unique_id"),
     [
-        (MODEL_1PM, 0, "switch.test_name_channel_1", "123456789ABC-relay_0"),
+        (MODEL_1PM, 0, "switch.test_name", "123456789ABC-relay_0"),
         (
             MODEL_MOTION,
             1000,
@@ -205,12 +206,15 @@ async def test_block_device_unique_ids(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
     mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
     model: str,
     sleep: int,
     entity: str,
     unique_id: str,
 ) -> None:
     """Test block device unique_ids."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    # num_outputs is 1, device name is used
     await init_integration(hass, 1, model=model, sleep_period=sleep)
 
     if sleep:
@@ -332,7 +336,7 @@ async def test_rpc_device_services(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
-    entity_id = "switch.test_switch_0"
+    entity_id = "switch.test_name_test_switch_0"
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
@@ -365,7 +369,7 @@ async def test_rpc_device_unique_ids(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
-    assert (entry := entity_registry.async_get("switch.test_switch_0"))
+    assert (entry := entity_registry.async_get("switch.test_name_test_switch_0"))
     assert entry.unique_id == "123456789ABC-switch:0"
 
 
@@ -386,11 +390,11 @@ async def test_rpc_device_switch_type_lights_mode(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for switch.test_switch_0 of Test name",
+            "Device communication error occurred while calling action for switch.test_name_test_switch_0 of Test name",
         ),
         (
             RpcCallError(-1, "error"),
-            "RPC call error occurred while calling action for switch.test_switch_0 of Test name",
+            "RPC call error occurred while calling action for switch.test_name_test_switch_0 of Test name",
         ),
     ],
 )
@@ -411,7 +415,7 @@ async def test_rpc_set_state_errors(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test_switch_0"},
+            {ATTR_ENTITY_ID: "switch.test_name_test_switch_0"},
             blocking=True,
         )
 
@@ -434,7 +438,7 @@ async def test_rpc_auth_error(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_switch_0"},
+        {ATTR_ENTITY_ID: "switch.test_name_test_switch_0"},
         blocking=True,
     )
 
@@ -476,8 +480,8 @@ async def test_wall_display_relay_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Wall Display in relay mode."""
-    climate_entity_id = "climate.test_name_thermostat_0"
-    switch_entity_id = "switch.test_switch_0"
+    climate_entity_id = "climate.test_name"
+    switch_entity_id = "switch.test_name_test_switch_0"
 
     config_entry = await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 

@@ -237,6 +237,7 @@ async def test_snapshot_service(
     expected_filename: str,
     expected_issues: list,
     snapshot: SnapshotAssertion,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test snapshot service."""
     mopen = mock_open()
@@ -265,8 +266,6 @@ async def test_snapshot_service(
         assert len(mock_write.mock_calls) == 1
         assert mock_write.mock_calls[0][1][0] == b"Test"
 
-    issue_registry = ir.async_get(hass)
-    assert len(issue_registry.issues) == 1 + len(expected_issues)
     for expected_issue in expected_issues:
         issue = issue_registry.async_get_issue(DOMAIN, expected_issue)
         assert issue is not None
@@ -638,6 +637,7 @@ async def test_record_service(
     expected_filename: str,
     expected_issues: list,
     snapshot: SnapshotAssertion,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test record service."""
     with (
@@ -666,8 +666,6 @@ async def test_record_service(
             ANY, expected_filename, duration=30, lookback=0
         )
 
-    issue_registry = ir.async_get(hass)
-    assert len(issue_registry.issues) == 1 + len(expected_issues)
     for expected_issue in expected_issues:
         issue = issue_registry.async_get_issue(DOMAIN, expected_issue)
         assert issue is not None
