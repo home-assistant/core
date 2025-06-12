@@ -135,16 +135,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
-    coordinators: dict[str, GoogleAirQualityUpdateCoordinator] = entry.runtime_data
+    coordinators = entry.runtime_data
 
     for subentry_id, subentry in entry.subentries.items():
         coordinator = coordinators[subentry_id]
         async_add_entities(
-            [
+            (
                 AirQualitySensorEntity(coordinator, description, subentry_id, subentry)
                 for description in AIR_QUALITY_SENSOR_TYPES
                 if description.exists_fn(coordinator.data)
-            ],
+            ),
             config_subentry_id=subentry_id,
         )
 
