@@ -315,20 +315,15 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             return []
 
         shared_data = self.hass.data[DOMAIN][SHARED_DATA]
+        leader_id = None
+        followers = []
 
-        # find the entity-id whose UUID matches the leader
-        leader_id = next(
-            ent_id
-            for ent_id, uuid in shared_data.entity_to_bridge.items()
-            if uuid == multiroom.leader.device.uuid
-        )
-
-        # collect followers (UUID string comparison)
-        followers = [
-            ent_id
-            for ent_id, uuid in shared_data.entity_to_bridge.items()
-            if uuid in {f.device.uuid for f in multiroom.followers}
-        ]
+        # find leader and followers
+        for ent_id, uuid in shared_data.entity_to_bridge.items():
+            if uuid == multiroom.leader.device.uuid:
+                leader_id = ent_id
+            elif uuid in {f.device.uuid for f in multiroom.followers}:
+                followers.append(ent_id)
 
         return [leader_id, *followers]
 
