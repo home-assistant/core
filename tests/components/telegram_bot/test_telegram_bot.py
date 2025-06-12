@@ -3,7 +3,7 @@
 import base64
 import io
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, mock_open, patch
 
 import pytest
 from telegram import Update
@@ -1003,4 +1003,10 @@ async def test_set_message_reaction(
         )
 
     await hass.async_block_till_done()
-    mock.assert_called_once()
+    mock.assert_called_once_with(
+        context=ANY,
+        chat_id=12345,
+        message_id=54321,
+        reaction=["👍"],
+        is_big=True,
+    )

@@ -796,12 +796,12 @@ class TelegramNotificationService:
     ) -> None:
         """Set the bot's reaction for a given message."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
-        message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
+        message_id, _ = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
 
         _LOGGER.debug(
             "Set reaction to message %s in chat ID %s to %s with params: %s",
-            message_id or inline_message_id,
+            message_id,
             chat_id,
             reaction,
             params,
