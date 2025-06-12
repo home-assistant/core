@@ -132,6 +132,9 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         switchbot_state = str(self.coordinator.data.get("workingStatus"))
         self._attr_activity = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(switchbot_state)
 
+        if self._attr_fan_speed is None:
+            self._attr_fan_speed = VACUUM_FAN_SPEED_QUIET
+
 
 class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
     """Representation of a SwitchBot vacuum."""
@@ -183,12 +186,6 @@ class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
             VacuumCleanerV2Commands.START_CLEAN,
             parameters=command_param,
         )
-
-    def _set_attributes(self) -> None:
-        """Set attributes from coordinator data."""
-        super()._set_attributes()
-        if self._attr_fan_speed is None:
-            self._attr_fan_speed = VACUUM_FAN_SPEED_QUIET
 
 
 @callback
