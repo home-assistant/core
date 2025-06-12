@@ -46,7 +46,6 @@ SENSOR_TYPES: Final[list[TiltEntityDescription]] = [
         key=ATTR_GRAVITY,
         translation_key="gravity",
         native_unit_of_measurement="SG",
-        icon="mdi:water",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.gravity,
     ),

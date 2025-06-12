@@ -25,7 +25,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water',
+    'original_icon': None,
     'original_name': 'Gravity',
     'platform': 'tilt_pi',
     'previous_unique_id': None,
@@ -40,7 +40,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Tilt Black Gravity',
-      'icon': 'mdi:water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'SG',
     }),
@@ -134,7 +133,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water',
+    'original_icon': None,
     'original_name': 'Gravity',
     'platform': 'tilt_pi',
     'previous_unique_id': None,
@@ -149,7 +148,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Tilt Yellow Gravity',
-      'icon': 'mdi:water',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'SG',
     }),
