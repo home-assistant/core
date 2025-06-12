@@ -40,7 +40,8 @@
         "name": "Activity"
       },
       "swing_count": {
-        "name": "Swing count"
+        "name": "Swing count",
+        "unit_of_measurement": "swings"
       }
     }
   }

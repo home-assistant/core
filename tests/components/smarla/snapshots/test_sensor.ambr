@@ -160,7 +160,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -188,14 +188,15 @@
     'supported_features': 0,
     'translation_key': 'swing_count',
     'unique_id': 'ABCD-swing_count',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'swings',
   })
 # ---
 # name: test_entities[sensor.smarla_swing_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smarla Swing count',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'swings',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smarla_swing_count',
