@@ -143,6 +143,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
 
         # Baichuan
         host_mock.baichuan = create_autospec(Baichuan)
+        host_mock.baichuan_only = False
         # Disable tcp push by default for tests
         host_mock.baichuan.port = TEST_BC_PORT
         host_mock.baichuan.events_active = False
