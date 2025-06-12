@@ -41,6 +41,7 @@ from .const import (
     DOMAIN,
     FIRMWARE,
     FIRMWARE_VERSION,
+    NABU_CASA_FIRMWARE_RELEASES_URL,
     RADIO_DEVICE,
     ZHA_DOMAIN,
     ZHA_HW_DISCOVERY_DATA,
@@ -104,6 +105,30 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
             )
 
         return self._async_flow_finished()
+
+    async def async_step_install_zigbee_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Zigbee firmware."""
+        return await self._install_firmware_step(
+            fw_update_url=NABU_CASA_FIRMWARE_RELEASES_URL,
+            fw_type="yellow_zigbee_ncp",
+            firmware_name="Zigbee",
+            expected_installed_firmware_type=ApplicationType.EZSP,
+            next_step_id="confirm_zigbee",
+        )
+
+    async def async_step_install_thread_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Thread firmware."""
+        return await self._install_firmware_step(
+            fw_update_url=NABU_CASA_FIRMWARE_RELEASES_URL,
+            fw_type="yellow_openthread_rcp",
+            firmware_name="OpenThread",
+            expected_installed_firmware_type=ApplicationType.SPINEL,
+            next_step_id="start_otbr_addon",
+        )
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
