@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -162,7 +163,7 @@ class AirQualitySensorEntity(
         coordinator: GoogleAirQualityUpdateCoordinator,
         description: AirQualitySensorEntityDescription,
         subentry_id: str,
-        subentry,
+        subentry: ConfigSubentry,
     ) -> None:
         """Set up Air Quality Sensors."""
         super().__init__(coordinator)

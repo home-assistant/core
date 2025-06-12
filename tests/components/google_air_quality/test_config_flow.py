@@ -1,6 +1,7 @@
 """Test the Google Air Quality config flow."""
 
 from collections.abc import Generator
+import datetime
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -8,7 +9,6 @@ from google_air_quality_api.exceptions import (
     GoogleAirQualityApiError,
     NoDataForLocationError,
 )
-from google_air_quality_api.model import UserInfoResult
 import pytest
 
 from homeassistant import config_entries
@@ -22,6 +22,8 @@ from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+
+from .conftest import CONFIG_ENTRY_ID, FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -65,6 +67,7 @@ def mock_token_request(
     )
 
 
+@pytest.mark.freeze_time(datetime.datetime(2025, 6, 12, tzinfo=datetime.UTC))
 @pytest.mark.usefixtures("current_request_with_host", "mock_api")
 @pytest.mark.parametrize("fixture_name", ["air_quality_data.json"])
 async def test_full_flow(
@@ -100,6 +103,22 @@ async def test_full_flow(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "auth_implementation": DOMAIN,
+        "token": {
+            "access_token": FAKE_ACCESS_TOKEN,
+            "refresh_token": FAKE_REFRESH_TOKEN,
+            "scope": [
+                "https://www.googleapis.com/auth/cloud-platform",
+                "https://www.googleapis.com/auth/userinfo.profile",
+            ],
+            "type": "Bearer",
+            "expires_at": 1749690000.0,
+            "expires_in": 3600,
+        },
+    }
+    assert result["title"] == "Test Name"
+    assert result["context"]["unique_id"] == CONFIG_ENTRY_ID
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -108,7 +127,6 @@ async def test_add_location_flow(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test add location subentry flow."""
-    await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.subentries.async_init(
@@ -130,11 +148,12 @@ async def test_add_location_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry_id = list(config_entry.subentries)[0]
     subentry = config_entry.subentries[subentry_id]
-    assert dict(subentry.data) == {
-        "latitude": 50.0,
-        "longitude": 10.0,
+    assert result["data"] == {
+        CONF_LATITUDE: 50.0,
+        CONF_LONGITUDE: 10.0,
     }
-    assert subentry.title == "Coordinates 50.0, 10.0"
+    assert subentry.title == "Straße Ohne Straßennamen, 88637 Buchheim, Deutschland"
+    assert subentry.unique_id == "50.0_10.0"
 
 
 @pytest.mark.usefixtures(
@@ -241,7 +260,7 @@ async def test_missing_scope(
 ) -> None:
     """Check if the scopes are there, before prestenting the map."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -255,8 +274,8 @@ async def test_missing_scope(
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == 200
 
-    step1 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert step1["type"] is FlowResultType.ABORT
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -272,8 +291,6 @@ async def test_no_data_for_location_shows_form(
     mock_setup: Mock,
 ) -> None:
     """Show form with base error if no data is available for the location."""
-
-    await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.subentries.async_init(
@@ -283,7 +300,7 @@ async def test_no_data_for_location_shows_form(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
-    step2 = await hass.config_entries.subentries.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
             CONF_LOCATION: {
@@ -292,9 +309,9 @@ async def test_no_data_for_location_shows_form(
             }
         },
     )
-    assert step2["type"] is FlowResultType.FORM
-    assert step2["step_id"] == SOURCE_USER
-    assert step2["errors"] == {"base": "no_data_for_location"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_USER
+    assert result["errors"] == {"base": "no_data_for_location"}
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -303,6 +320,7 @@ async def test_no_data_for_location_shows_form(
 async def test_already_configured(
     hass: HomeAssistant,
     config_and_subentry: MockConfigEntry,
+    config_entry_2: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     mock_api: Mock,
 ) -> None:
@@ -316,7 +334,7 @@ async def test_already_configured(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
-    step2 = await hass.config_entries.subentries.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
             CONF_LOCATION: {
@@ -325,7 +343,7 @@ async def test_already_configured(
             }
         },
     )
-    assert step2["type"] is FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
 
     result = await hass.config_entries.subentries.async_init(
         (config_and_subentry.entry_id, "location"),
@@ -334,7 +352,7 @@ async def test_already_configured(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
-    step2 = await hass.config_entries.subentries.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
             CONF_LOCATION: {
@@ -344,43 +362,13 @@ async def test_already_configured(
         },
     )
 
-    assert step2["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # Test adding a new main entry with the same coordinates
-    mock_api.get_user_info.return_value = UserInfoResult(
-        id=NEW_USER_ID,
-        name="New Test User",
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
 
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-        "&scope=https://www.googleapis.com/auth/cloud-platform"
-        "+https://www.googleapis.com/auth/userinfo.profile"
-        "&access_type=offline&prompt=consent"
-    )
-
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    new_entry = result["result"]
-    await hass.async_block_till_done()
+    config_entry_2.add_to_hass(hass)
     result = await hass.config_entries.subentries.async_init(
-        (new_entry.entry_id, "location"),
+        (config_entry_2.entry_id, "location"),
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
@@ -394,6 +382,5 @@ async def test_already_configured(
             }
         },
     )
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -23,6 +23,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 USER_IDENTIFIER = "user-identifier-1"
 CONFIG_ENTRY_ID = "user-identifier-1"
+CONFIG_ENTRY_ID_2 = "user-identifier-2"
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 FAKE_ACCESS_TOKEN = "some-access-token"
@@ -71,6 +72,12 @@ def mock_config_entry_id() -> str | None:
     return CONFIG_ENTRY_ID
 
 
+@pytest.fixture(name="config_entry_id_2")
+def mock_config_entry_id_2() -> str:
+    """Provide second config entry ID (different)."""
+    return CONFIG_ENTRY_ID_2
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry(
     config_entry_id: str, token_entry: dict[str, Any]
@@ -84,6 +91,22 @@ def mock_config_entry(
             "token": token_entry,
         },
         title="Erika Mustermann",
+    )
+
+
+@pytest.fixture(name="config_entry_2")
+def mock_config_entry_2(
+    config_entry_id_2: str, token_entry: dict[str, Any]
+) -> MockConfigEntry:
+    """Fixture for the second config entry (different ID)."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=config_entry_id_2,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": token_entry,
+        },
+        title="New Test User",
     )
 
 
