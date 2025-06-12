@@ -126,6 +126,7 @@ def _assert_form_result(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == expected_step_id
     if expected_errors is None:
+        # Handle both None and {} as valid "no errors" states (like other integrations)
         assert result.get("errors") in ({}, None)
     else:
         assert result.get("errors") == expected_errors
