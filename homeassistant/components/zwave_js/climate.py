@@ -501,7 +501,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         # can set it again when turning the device back on.
         if hvac_mode == HVACMode.OFF and self._current_mode.value != ThermostatMode.OFF:
             self._last_hvac_mode_id_before_off = self._current_mode.value
-        await self._async_set_value(self._current_mode, self._hvac_modes.get(hvac_mode))
+        await self._async_set_value(self._current_mode, self._hvac_modes[hvac_mode])
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
