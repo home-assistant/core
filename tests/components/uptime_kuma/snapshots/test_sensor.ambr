@@ -33,7 +33,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.CERT_DAYS_REMAINING: 'cert_days_remaining'>,
-    'unique_id': '123456789_Monitor 1_cert_days_remaining',
+    'unique_id': '123456789_1_cert_days_remaining',
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
@@ -109,7 +109,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.TYPE: 'type'>,
-    'unique_id': '123456789_Monitor 1_type',
+    'unique_id': '123456789_1_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -183,7 +183,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.HOSTNAME: 'hostname'>,
-    'unique_id': '123456789_Monitor 1_hostname',
+    'unique_id': '123456789_1_hostname',
     'unit_of_measurement': None,
   })
 # ---
@@ -231,7 +231,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.PORT: 'port'>,
-    'unique_id': '123456789_Monitor 1_port',
+    'unique_id': '123456789_1_port',
     'unit_of_measurement': None,
   })
 # ---
@@ -279,7 +279,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.URL: 'url'>,
-    'unique_id': '123456789_Monitor 1_url',
+    'unique_id': '123456789_1_url',
     'unit_of_measurement': None,
   })
 # ---
@@ -330,7 +330,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.RESPONSE_TIME: 'response_time'>,
-    'unique_id': '123456789_Monitor 1_response_time',
+    'unique_id': '123456789_1_response_time',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
 # ---
@@ -387,7 +387,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.STATUS: 'status'>,
-    'unique_id': '123456789_Monitor 1_status',
+    'unique_id': '123456789_1_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -445,7 +445,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.CERT_DAYS_REMAINING: 'cert_days_remaining'>,
-    'unique_id': '123456789_Monitor 2_cert_days_remaining',
+    'unique_id': '123456789_2_cert_days_remaining',
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
@@ -521,7 +521,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.TYPE: 'type'>,
-    'unique_id': '123456789_Monitor 2_type',
+    'unique_id': '123456789_2_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -595,7 +595,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.HOSTNAME: 'hostname'>,
-    'unique_id': '123456789_Monitor 2_hostname',
+    'unique_id': '123456789_2_hostname',
     'unit_of_measurement': None,
   })
 # ---
@@ -643,7 +643,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.PORT: 'port'>,
-    'unique_id': '123456789_Monitor 2_port',
+    'unique_id': '123456789_2_port',
     'unit_of_measurement': None,
   })
 # ---
@@ -691,7 +691,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.URL: 'url'>,
-    'unique_id': '123456789_Monitor 2_url',
+    'unique_id': '123456789_2_url',
     'unit_of_measurement': None,
   })
 # ---
@@ -742,7 +742,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.RESPONSE_TIME: 'response_time'>,
-    'unique_id': '123456789_Monitor 2_response_time',
+    'unique_id': '123456789_2_response_time',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
 # ---
@@ -799,7 +799,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.STATUS: 'status'>,
-    'unique_id': '123456789_Monitor 2_status',
+    'unique_id': '123456789_2_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -857,7 +857,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.CERT_DAYS_REMAINING: 'cert_days_remaining'>,
-    'unique_id': '123456789_Monitor 3_cert_days_remaining',
+    'unique_id': '123456789_3_cert_days_remaining',
     'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
@@ -933,7 +933,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.TYPE: 'type'>,
-    'unique_id': '123456789_Monitor 3_type',
+    'unique_id': '123456789_3_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -1007,7 +1007,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.HOSTNAME: 'hostname'>,
-    'unique_id': '123456789_Monitor 3_hostname',
+    'unique_id': '123456789_3_hostname',
     'unit_of_measurement': None,
   })
 # ---
@@ -1055,7 +1055,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.PORT: 'port'>,
-    'unique_id': '123456789_Monitor 3_port',
+    'unique_id': '123456789_3_port',
     'unit_of_measurement': None,
   })
 # ---
@@ -1103,7 +1103,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.URL: 'url'>,
-    'unique_id': '123456789_Monitor 3_url',
+    'unique_id': '123456789_3_url',
     'unit_of_measurement': None,
   })
 # ---
@@ -1154,7 +1154,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.RESPONSE_TIME: 'response_time'>,
-    'unique_id': '123456789_Monitor 3_response_time',
+    'unique_id': '123456789_3_response_time',
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
 # ---
@@ -1211,7 +1211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <UptimeKumaSensor.STATUS: 'status'>,
-    'unique_id': '123456789_Monitor 3_status',
+    'unique_id': '123456789_3_status',
     'unit_of_measurement': None,
   })
 # ---

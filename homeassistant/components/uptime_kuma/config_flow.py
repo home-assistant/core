@@ -35,7 +35,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             ),
         ),
         vol.Required(CONF_VERIFY_SSL, default=True): bool,
-        vol.Optional(CONF_API_KEY): str,
+        vol.Optional(CONF_API_KEY, default=""): str,
     }
 )
 
