@@ -9,6 +9,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -31,6 +32,7 @@ NUMBERS: list[SmarlaNumberEntityDescription] = [
         native_min_value=0,
         native_step=1,
         mode=NumberMode.SLIDER,
+        native_unit_of_measurement=PERCENTAGE,
     ),
 ]
 
@@ -53,9 +55,10 @@ class SmarlaNumber(SmarlaBaseEntity, NumberEntity):
     _property: Property[int]
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
-        return self._property.get()
+        v = self._property.get()
+        return float(v) if v is not None else None
 
     def set_native_value(self, value: float) -> None:
         """Update to the smarla device."""
