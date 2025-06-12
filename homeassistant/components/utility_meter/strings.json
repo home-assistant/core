@@ -49,7 +49,9 @@
     "cycle": {
       "options": {
         "none": "No cycle",
+        "every-five-minutes": "Every 5 minutes",
         "quarter-hourly": "Every 15 minutes",
+        "half-hourly": "Every 30 minutes",
         "hourly": "Hourly",
         "daily": "Daily",
         "weekly": "Weekly",
