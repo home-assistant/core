@@ -1133,7 +1133,7 @@ hass-splunk==0.1.1
 hassil==2.2.3
 
 # homeassistant.components.jewish_calendar
-hdate[astral]==1.1.1
+hdate[astral]==1.1.2
 
 # homeassistant.components.heatmiser
 heatmiserV3==2.0.3
@@ -2236,7 +2236,7 @@ pypaperless==4.1.0
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.8.6
+pypck==0.8.7
 
 # homeassistant.components.pglab
 pypglab==0.0.5
