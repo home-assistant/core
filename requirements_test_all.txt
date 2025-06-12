@@ -988,7 +988,7 @@ hass-nabucasa==0.101.0
 hassil==2.2.3
 
 # homeassistant.components.jewish_calendar
-hdate[astral]==1.1.1
+hdate[astral]==1.1.2
 
 # homeassistant.components.here_travel_time
 here-routing==1.0.1
@@ -1010,7 +1010,7 @@ hole==0.8.0
 holidays==0.74
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250531.2
+home-assistant-frontend==20250531.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.6.10
@@ -1857,7 +1857,7 @@ pypalazzetti==0.1.19
 pypaperless==4.1.0
 
 # homeassistant.components.lcn
-pypck==0.8.6
+pypck==0.8.7
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2022,7 +2022,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
-python-linkplay==0.2.11
+python-linkplay==0.2.12
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
