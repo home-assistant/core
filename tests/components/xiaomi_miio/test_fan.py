@@ -124,7 +124,7 @@ async def test_fan_status(
     model_code: str,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test pressing a fan turn_off action."""
+    """Test fan status."""
 
     config_entry = await setup_component(hass, model_code, "test_fan")
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
