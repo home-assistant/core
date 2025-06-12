@@ -13,7 +13,7 @@
       "wrong_token": "Checksum error, wrong token",
       "unknown_device": "The device model is not known, not able to set up the device using config flow.",
       "cloud_no_devices": "No devices found in this Xiaomi Home account.",
-      "cloud_credentials_incomplete": "Credentials incomplete, please fill in username, password and country",
+      "cloud_credentials_incomplete": "Credentials incomplete, please fill in username, password and server region",
       "cloud_login_error": "Could not log in to Xiaomi Home, check the credentials."
     },
     "flow_title": "{name}",
