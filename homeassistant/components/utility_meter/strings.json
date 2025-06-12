@@ -58,6 +58,7 @@
         "monthly": "Monthly",
         "bimonthly": "Every two months",
         "quarterly": "Quarterly",
+        "half-yearly": "Half Yearly",
         "yearly": "Yearly"
       }
     }
