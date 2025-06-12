@@ -179,4 +179,4 @@ class UptimeKumaSensorEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.monitor in self.coordinator.data and super().available
+        return super().available and self.monitor in self.coordinator.data
