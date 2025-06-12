@@ -58,7 +58,7 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         translation_key="swing_count",
         service="analyser",
         property="swing_count",
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 ]
 
@@ -88,7 +88,7 @@ class SmarlaSensor(SmarlaBaseEntity, SensorEntity):
     _property: Property[int]
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return the entity value to represent the entity state."""
         return self._property.get()
 
@@ -101,6 +101,10 @@ class SmarlaSensorMultiple(SmarlaBaseEntity, SensorEntity):
     _property: Property[list[int]]
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return the entity value to represent the entity state."""
-        return self._property.get()[self.entity_description.value_pos]
+        return (
+            p[self.entity_description.value_pos]
+            if (p := self._property.get())
+            else None
+        )

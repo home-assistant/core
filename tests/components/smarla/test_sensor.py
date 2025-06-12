@@ -18,23 +18,25 @@ SENSOR_ENTITIES = [
         "entity_id": "sensor.smarla_amplitude",
         "service": "analyser",
         "property": "oscillation",
-        "value_pos": 0,
+        "test_value": [1, 0],
     },
     {
         "entity_id": "sensor.smarla_period",
         "service": "analyser",
         "property": "oscillation",
-        "value_pos": 1,
+        "test_value": [0, 1],
     },
     {
         "entity_id": "sensor.smarla_activity",
         "service": "analyser",
         "property": "activity",
+        "test_value": 1,
     },
     {
         "entity_id": "sensor.smarla_swing_count",
         "service": "analyser",
         "property": "swing_count",
+        "test_value": 1,
     },
 ]
 
@@ -75,11 +77,7 @@ async def test_sensor_state_update(
 
     assert hass.states.get(entity_id).state == "0"
 
-    # Check if property has multiple values
-    if "value_pos" in entity_info:
-        mock_sensor_property.get.return_value[entity_info["value_pos"]] = 1
-    else:
-        mock_sensor_property.get.return_value = 1
+    mock_sensor_property.get.return_value = entity_info["test_value"]
 
     await update_property_listeners(mock_sensor_property)
     await hass.async_block_till_done()
