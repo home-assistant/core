@@ -22,6 +22,7 @@ PARALLEL_UPDATES = 1
 class AmazonNotifyEntityDescription(NotifyEntityDescription):
     """Alexa Devices notify entity description."""
 
+    is_supported: Callable[[AmazonDevice], bool] = lambda _device: True
     method: Callable[[AmazonEchoApi, AmazonDevice, str], Awaitable[None]]
     subkey: str
 
@@ -31,6 +32,7 @@ NOTIFY: Final = (
         key="speak",
         translation_key="speak",
         subkey="AUDIO_PLAYER",
+        is_supported=lambda _device: _device.device_family != "WHA",
         method=lambda api, device, message: api.call_alexa_speak(device, message),
     ),
     AmazonNotifyEntityDescription(
@@ -58,6 +60,7 @@ async def async_setup_entry(
         for sensor_desc in NOTIFY
         for serial_num in coordinator.data
         if sensor_desc.subkey in coordinator.data[serial_num].capabilities
+        and sensor_desc.is_supported(coordinator.data[serial_num])
     )
 
 
