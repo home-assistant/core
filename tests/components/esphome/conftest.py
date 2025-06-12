@@ -54,9 +54,9 @@ class MockGenericDeviceEntryType(Protocol):
     async def __call__(
         self,
         mock_client: APIClient,
-        entity_info: list[EntityInfo],
-        user_service: list[UserService],
-        states: list[EntityState],
+        entity_info: list[EntityInfo] | None = ...,
+        user_service: list[UserService] | None = ...,
+        states: list[EntityState] | None = ...,
         mock_storage: bool = ...,
     ) -> MockConfigEntry:
         """Mock an ESPHome device entry."""
@@ -685,9 +685,9 @@ async def mock_generic_device_entry(
 
     async def _mock_device_entry(
         mock_client: APIClient,
-        entity_info: list[EntityInfo],
-        user_service: list[UserService],
-        states: list[EntityState],
+        entity_info: list[EntityInfo] | None = None,
+        user_service: list[UserService] | None = None,
+        states: list[EntityState] | None = None,
         mock_storage: bool = False,
     ) -> MockConfigEntry:
         return (
@@ -695,8 +695,8 @@ async def mock_generic_device_entry(
                 hass,
                 mock_client,
                 {},
-                (entity_info, user_service),
-                states,
+                (entity_info or [], user_service or []),
+                states or [],
                 None,
                 hass_storage if mock_storage else None,
             )

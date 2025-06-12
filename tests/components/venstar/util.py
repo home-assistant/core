@@ -3,11 +3,12 @@
 import requests_mock
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.venstar.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 
 TEST_MODELS = ["t2k", "colortouch"]
 
@@ -23,19 +24,21 @@ def mock_venstar_devices(f):
             for model in TEST_MODELS:
                 m.get(
                     f"http://venstar-{model}.localdomain/",
-                    text=load_fixture(f"venstar/{model}_root.json"),
+                    text=await async_load_fixture(hass, f"{model}_root.json", DOMAIN),
                 )
                 m.get(
                     f"http://venstar-{model}.localdomain/query/info",
-                    text=load_fixture(f"venstar/{model}_info.json"),
+                    text=await async_load_fixture(hass, f"{model}_info.json", DOMAIN),
                 )
                 m.get(
                     f"http://venstar-{model}.localdomain/query/sensors",
-                    text=load_fixture(f"venstar/{model}_sensors.json"),
+                    text=await async_load_fixture(
+                        hass, f"{model}_sensors.json", DOMAIN
+                    ),
                 )
                 m.get(
                     f"http://venstar-{model}.localdomain/query/alerts",
-                    text=load_fixture(f"venstar/{model}_alerts.json"),
+                    text=await async_load_fixture(hass, f"{model}_alerts.json", DOMAIN),
                 )
             await f(hass)
 

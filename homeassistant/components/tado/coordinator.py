@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
-SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
+SCAN_MOBILE_DEVICE_INTERVAL = timedelta(minutes=5)
 
 
 class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
