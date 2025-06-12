@@ -75,7 +75,10 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         )
 
         http_s = "https" if self._host.api.use_https else "http"
-        self._conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
+        if self._host.api.baichuan_only:
+            self._conf_url = None
+        else:
+            self._conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
         self._dev_id = self._host.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._dev_id)},
@@ -184,6 +187,10 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             if mac := self._host.api.baichuan.mac_address(dev_ch):
                 connections.add((CONNECTION_NETWORK_MAC, mac))
 
+            conf_url = (
+                f"{self._conf_url}/?ch={dev_ch}" if self._conf_url is not None else None
+            )
+
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._dev_id)},
                 connections=connections,
@@ -195,7 +202,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 hw_version=self._host.api.camera_hardware_version(dev_ch),
                 sw_version=self._host.api.camera_sw_version(dev_ch),
                 serial_number=self._host.api.camera_uid(dev_ch),
-                configuration_url=f"{self._conf_url}/?ch={dev_ch}",
+                configuration_url=conf_url,
             )
 
     @property
