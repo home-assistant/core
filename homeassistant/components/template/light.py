@@ -524,8 +524,10 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
             ATTR_COLOR_TEMP_KELVIN in kwargs
             and (script := CONF_TEMPERATURE_ACTION) in self._action_scripts
         ):
+            kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            common_params[ATTR_COLOR_TEMP_KELVIN] = kelvin
             common_params["color_temp"] = color_util.color_temperature_kelvin_to_mired(
-                kwargs[ATTR_COLOR_TEMP_KELVIN]
+                kelvin
             )
 
             return (script, common_params)

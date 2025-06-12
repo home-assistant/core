@@ -25,7 +25,7 @@ from .const import (
 LOGGER = logging.getLogger(__name__)
 
 
-def async_register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for Hue integration."""
 
     async def hue_activate_scene(call: ServiceCall, skip_reload=True) -> None:
