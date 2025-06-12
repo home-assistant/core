@@ -225,7 +225,7 @@ async def async_setup_entry(
         JewishCalendarTimeSensor(config_entry, description)
         for description in TIME_SENSORS
     )
-    async_add_entities(sensors)
+    async_add_entities(sensors, update_before_add=True)
 
 
 class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
@@ -233,12 +233,7 @@ class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added to hass."""
-        await super().async_added_to_hass()
-        await self.async_update_data()
-
-    async def async_update_data(self) -> None:
+    async def async_update(self) -> None:
         """Update the state of the sensor."""
         now = dt_util.now()
         _LOGGER.debug("Now: %s Location: %r", now, self.data.location)
