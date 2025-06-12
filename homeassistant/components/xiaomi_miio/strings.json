@@ -29,7 +29,7 @@
           "cloud_country": "Server region",
           "manual": "Configure manually (not recommended)"
         },
-        "description": "Log in to the Xiaomi Home, see https://www.openhab.org/addons/bindings/miio/#country-servers for the server region to use."
+        "description": "Log in to Xiaomi Home, see https://www.openhab.org/addons/bindings/miio/#country-servers for the server region to use."
       },
       "select": {
         "data": {
