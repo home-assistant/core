@@ -103,8 +103,5 @@ class SmarlaSensorMultiple(SmarlaBaseEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the entity value to represent the entity state."""
-        return (
-            p[self.entity_description.value_pos]
-            if (p := self._property.get())
-            else None
-        )
+        v = self._property.get()
+        return v[self.entity_description.value_pos] if v is not None else None
