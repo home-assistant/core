@@ -220,9 +220,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterLevelControNumberEntityDescription(
-            key="LevelControlCurrentLevel",
+            key="pump_setpoint",
             native_unit_of_measurement=PERCENTAGE,
-            translation_key="level_control",
+            translation_key="pump_setpoint",
             native_max_value=100,
             native_min_value=0,
             native_step=10,
