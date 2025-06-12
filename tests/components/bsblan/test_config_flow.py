@@ -125,8 +125,7 @@ def _assert_form_result(
     """Assert that result is a FORM with correct step and optional errors."""
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == expected_step_id
-    if expected_errors:
-        assert result.get("errors") == expected_errors
+    assert result.get("errors") == expected_errors
 
 
 def _assert_abort_result(result, expected_reason: str):
