@@ -756,7 +756,7 @@ class TelegramNotificationService:
                 )
                 msg_ids[chat_id] = msg.id
             return msg_ids
-        return await self.send_file(SERVICE_SEND_STICKER, context, **kwargs)
+        return await self.send_file(SERVICE_SEND_STICKER, target, context, **kwargs)
 
     async def send_location(
         self,
