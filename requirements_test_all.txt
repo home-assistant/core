@@ -513,7 +513,7 @@ av==13.1.0
 axis==64
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial==1.4.7
+ayla-iot-unofficial==1.5.0
 
 # homeassistant.components.nomaiq
 ayla_iot_unofficial==1.5.0
