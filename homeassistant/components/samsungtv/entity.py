@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from wakeonlan import send_magic_packet
 
@@ -36,7 +36,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
         self._bridge = coordinator.bridge
         config_entry = coordinator.config_entry
         self._mac: str | None = config_entry.data.get(CONF_MAC)
-        self._host: str | None = config_entry.data.get(CONF_HOST)
+        self._host: str = config_entry.data[CONF_HOST]
         # Fallback for legacy models that doesn't have a API to retrieve MAC or SerialNumber
         self._attr_unique_id = config_entry.unique_id or config_entry.entry_id
         self._attr_device_info = DeviceInfo(
@@ -76,6 +76,9 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
 
     def _wake_on_lan(self) -> None:
         """Wake the device via wake on lan."""
+        if TYPE_CHECKING:
+            # wake on lan is only called when mac is defined
+            assert self._mac is not None
         send_magic_packet(self._mac, ip_address=self._host)
         # If the ip address changed since we last saw the device
         # broadcast a packet as well
