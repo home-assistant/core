@@ -2090,7 +2090,7 @@ python-technove==2.0.0
 python-telegram-bot[socks]==21.5
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.2.0rc1
+pythonkuma==0.2.0
 
 # homeassistant.components.tile
 pytile==2024.12.0

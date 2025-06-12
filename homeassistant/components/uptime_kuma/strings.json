@@ -65,7 +65,10 @@
           "mongodb": "MongoDB",
           "radius": "Radius",
           "redis": "Redis",
-          "tailscale_ping": "Tailscale Ping"
+          "tailscale_ping": "Tailscale Ping",
+          "snmp": "SNMP",
+          "smtp": "SMTP",
+          "rabbit_mq": "RabbitMQ"
         }
       },
       "url": {
