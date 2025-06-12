@@ -74,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> bool:
     """Unload a VegeHub config entry."""
+    webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     # Unload platforms
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

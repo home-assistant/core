@@ -20,7 +20,6 @@ class VegeHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The DataUpdateCoordinator for VegeHub."""
 
     config_entry: VegeHubConfigEntry
-    vegehub: VegeHub
 
     def __init__(
         self, hass: HomeAssistant, config_entry: VegeHubConfigEntry, vegehub: VegeHub
@@ -34,6 +33,7 @@ class VegeHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.vegehub = vegehub
         self.device_id = config_entry.unique_id
+        assert self.device_id is not None, "Config entry is missing unique_id"
 
     async def update_from_webhook(self, data: dict) -> None:
         """Process and update data from webhook."""

@@ -22,9 +22,9 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
     ),
-    "battery": SensorEntityDescription(
-        key="battery",
-        translation_key="battery",
+    "battery_volts": SensorEntityDescription(
+        key="battery_volts",
+        translation_key="battery_volts",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
@@ -70,10 +70,6 @@ async def async_setup_entry(
 class VegeHubSensor(VegeHubEntity, SensorEntity):
     """Class for VegeHub Analog Sensors."""
 
-    _attr_device_class = SensorDeviceClass.VOLTAGE
-    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
-    _attr_suggested_display_precision = 2
-
     def __init__(
         self,
         index: int,
@@ -84,7 +80,7 @@ class VegeHubSensor(VegeHubEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         # Set unique ID for pulling data from the coordinator
-        if description.key == "battery":
+        if description.key == "battery_volts":
             self.data_key = "battery"
         else:
             self.data_key = f"analog_{index}"
@@ -95,6 +91,4 @@ class VegeHubSensor(VegeHubEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the sensor's current value."""
-        if self.coordinator.data is None:
-            return None
         return self.coordinator.data.get(self.data_key)
