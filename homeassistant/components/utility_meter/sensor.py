@@ -76,6 +76,7 @@ from .const import (
     DATA_UTILITY,
     EVERY_FIVE_MINUTES,
     HALF_HOURLY,
+    HALF_YEARLY,
     HOURLY,
     MONTHLY,
     QUARTER_HOURLY,
@@ -96,6 +97,7 @@ PERIOD2CRON = {
     MONTHLY: "{minute} {hour} {day} * *",
     BIMONTHLY: "{minute} {hour} {day} */2 *",
     QUARTERLY: "{minute} {hour} {day} */3 *",
+    HALF_YEARLY: "{minute} {hour} {day} */6 *",
     YEARLY: "{minute} {hour} {day} 1/12 *",
 }
 
