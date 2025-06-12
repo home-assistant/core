@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     Platform,
     UnitOfElectricCurrent,
@@ -83,6 +84,14 @@ BOOST_STATE_MAP = {
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kUnknownEnumValue: None,
 }
 
+ESA_STATE_MAP = {
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOffline: "offline",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline: "online",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kFault: "fault",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPowerAdjustActive: "power_adjust_active",
+    clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kPaused: "paused",
+}
+
 EVSE_FAULT_STATE_MAP = {
     clusters.EnergyEvse.Enums.FaultStateEnum.kNoError: "no_error",
     clusters.EnergyEvse.Enums.FaultStateEnum.kMeterFailure: "meter_failure",
@@ -100,6 +109,16 @@ EVSE_FAULT_STATE_MAP = {
     clusters.EnergyEvse.Enums.FaultStateEnum.kLiveNeutralSwap: "live_neutral_swap",
     clusters.EnergyEvse.Enums.FaultStateEnum.kOverTemperature: "over_temperature",
     clusters.EnergyEvse.Enums.FaultStateEnum.kOther: "other",
+}
+
+PUMP_CONTROL_MODE_MAP = {
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantSpeed: "constant_speed",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantPressure: "constant_pressure",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kProportionalPressure: "proportional_pressure",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantFlow: "constant_flow",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kConstantTemperature: "constant_temperature",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kAutomatic: "automatic",
+    clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
 }
 
 
@@ -951,6 +970,21 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="TargetPositionLiftPercent100ths",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            translation_key="window_covering_target_position",
+            measurement_to_ha=lambda x: round((10000 - x) / 100),
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.WindowCovering.Attributes.TargetPositionLiftPercent100ths,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="EnergyEvseFaultState",
             translation_key="evse_fault_state",
             device_class=SensorDeviceClass.ENUM,
@@ -1060,5 +1094,45 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.WaterHeaterManagement.Attributes.EstimatedHeatRequired,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ESAState",
+            translation_key="esa_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(ESA_STATE_MAP.values()),
+            measurement_to_ha=ESA_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.DeviceEnergyManagement.Attributes.ESAState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PumpControlMode",
+            translation_key="pump_control_mode",
+            device_class=SensorDeviceClass.ENUM,
+            options=[
+                mode for mode in PUMP_CONTROL_MODE_MAP.values() if mode is not None
+            ],
+            measurement_to_ha=PUMP_CONTROL_MODE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.PumpConfigurationAndControl.Attributes.ControlMode,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PumpSpeed",
+            translation_key="pump_speed",
+            native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PumpConfigurationAndControl.Attributes.Speed,),
     ),
 ]

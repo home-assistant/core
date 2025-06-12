@@ -59,6 +59,12 @@
       "added_energy": {
         "name": "Added energy"
       },
+      "added_green_energy": {
+        "name": "Added green energy"
+      },
+      "added_grid_energy": {
+        "name": "Added grid energy"
+      },
       "added_discharged_energy": {
         "name": "Discharged energy"
       },
@@ -91,6 +97,21 @@
       "pause_resume": {
         "name": "Pause/resume"
       }
+    },
+    "select": {
+      "ecosmart": {
+        "name": "Solar charging",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "eco_mode": "Eco mode",
+          "full_solar": "Full solar"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_failed": {
+      "message": "Error communicating with Wallbox API"
     }
   }
 }
