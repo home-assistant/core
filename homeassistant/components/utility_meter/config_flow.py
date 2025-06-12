@@ -27,7 +27,7 @@ from .const import (
     CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFFS,
-    EVERY_5_MINUTES,
+    EVERY_FIVE_MINUTES,
     DAILY,
     DOMAIN,
     HALF_HOURLY,
@@ -41,7 +41,7 @@ from .const import (
 
 METER_TYPES = [
     "none",
-    EVERY_5_MINUTES,
+    EVERY_FIVE_MINUTES,
     QUARTER_HOURLY,
     HALF_HOURLY,
     HOURLY,
