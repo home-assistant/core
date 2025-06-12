@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
 from pyweatherflowudp.device import (
-    EVENT_LOAD_COMPLETE, 
+    EVENT_LOAD_COMPLETE,
     EVENT_RAIN_START,
     EVENT_STRIKE,
-    WeatherFlowDevice
+    WeatherFlowDevice,
 )
 from pyweatherflowudp.errors import ListenerError
 
@@ -56,9 +56,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 RAIN_START_EVENT,
                 {
                     "device_id": device.serial_number,
-                    "device_name": device.name if hasattr(device, 'name') else device.serial_number,
-                    "timestamp": data.get("timestamp") if isinstance(data, dict) else None,
-                }
+                    "device_name": device.name
+                    if hasattr(device, "name")
+                    else device.serial_number,
+                    "timestamp": data.get("timestamp")
+                    if isinstance(data, dict)
+                    else None,
+                },
             )
 
         @callback
@@ -68,9 +72,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Extract strike data if available
             strike_data = {
                 "device_id": device.serial_number,
-                "device_name": device.name if hasattr(device, 'name') else device.serial_number,
+                "device_name": device.name
+                if hasattr(device, "name")
+                else device.serial_number,
             }
-            
+
             # Add strike-specific data if available
             if isinstance(data, dict):
                 if "distance" in data:
@@ -79,17 +85,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     strike_data["energy"] = data["energy"]
                 if "timestamp" in data:
                     strike_data["timestamp"] = data["timestamp"]
-            
+
             # Fire event on Home Assistant event bus
             hass.bus.async_fire(STRIKE_EVENT, strike_data)
 
         # Register event listeners
-        entry.async_on_unload(
-            device.on(EVENT_RAIN_START, _handle_rain_start)
-        )
-        entry.async_on_unload(
-            device.on(EVENT_STRIKE, _handle_strike)
-        )
+        entry.async_on_unload(device.on(EVENT_RAIN_START, _handle_rain_start))
+        entry.async_on_unload(device.on(EVENT_STRIKE, _handle_strike))
 
         entry.async_on_unload(
             device.on(
