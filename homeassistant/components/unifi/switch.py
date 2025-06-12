@@ -52,7 +52,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN
 from .entity import (
     HandlerT,
     SubscriptionT,
@@ -367,14 +367,12 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) 
     def update_unique_id(obj_id: str, type_name: str) -> None:
         """Rework unique ID."""
         new_unique_id = f"{type_name}-{obj_id}"
-        if ent_reg.async_get_entity_id(SWITCH_DOMAIN, UNIFI_DOMAIN, new_unique_id):
+        if ent_reg.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, new_unique_id):
             return
 
         prefix, _, suffix = obj_id.partition("_")
         unique_id = f"{prefix}-{type_name}-{suffix}"
-        if entity_id := ent_reg.async_get_entity_id(
-            SWITCH_DOMAIN, UNIFI_DOMAIN, unique_id
-        ):
+        if entity_id := ent_reg.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id):
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
     for obj_id in hub.api.outlets:
