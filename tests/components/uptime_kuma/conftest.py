@@ -1,10 +1,10 @@
 """Common fixtures for the Uptime Kuma tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, create_autospec, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from pythonkuma import MonitorType, UptimeKumaMonitor
+from pythonkuma import MonitorType, UptimeKumaMonitor, UptimeKumaVersion
 from pythonkuma.models import MonitorStatus
 
 from homeassistant.components.uptime_kuma.const import DOMAIN
@@ -41,8 +41,8 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_pythonkuma() -> Generator[AsyncMock]:
     """Mock pythonkuma client."""
 
-    monitor_1 = create_autospec(
-        spec=UptimeKumaMonitor,
+    monitor_1 = UptimeKumaMonitor(
+        monitor_id=1,
         monitor_cert_days_remaining=90,
         monitor_cert_is_valid=1,
         monitor_hostname=None,
@@ -53,8 +53,8 @@ def mock_pythonkuma() -> Generator[AsyncMock]:
         monitor_type=MonitorType.HTTP,
         monitor_url="https://example.org",
     )
-    monitor_2 = create_autospec(
-        spec=UptimeKumaMonitor,
+    monitor_2 = UptimeKumaMonitor(
+        monitor_id=2,
         monitor_cert_days_remaining=0,
         monitor_cert_is_valid=0,
         monitor_hostname=None,
@@ -65,8 +65,8 @@ def mock_pythonkuma() -> Generator[AsyncMock]:
         monitor_type=MonitorType.PORT,
         monitor_url=None,
     )
-    monitor_3 = create_autospec(
-        spec=UptimeKumaMonitor,
+    monitor_3 = UptimeKumaMonitor(
+        monitor_id=3,
         monitor_cert_days_remaining=90,
         monitor_cert_is_valid=1,
         monitor_hostname=None,
@@ -90,9 +90,12 @@ def mock_pythonkuma() -> Generator[AsyncMock]:
         client = mock_client.return_value
 
         client.metrics.return_value = {
-            "Monitor 1": monitor_1,
-            "Monitor 2": monitor_2,
-            "Monitor 3": monitor_3,
+            1: monitor_1,
+            2: monitor_2,
+            3: monitor_3,
         }
+        client.version = UptimeKumaVersion(
+            version="2.0.0", major="2", minor="0", patch="0"
+        )
 
         yield client

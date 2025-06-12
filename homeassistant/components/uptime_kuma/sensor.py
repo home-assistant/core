@@ -144,28 +144,30 @@ class UptimeKumaSensorEntity(
     def __init__(
         self,
         coordinator: UptimeKumaDataUpdateCoordinator,
-        monitor_name: str,
+        monitor: str,
         entity_description: UptimeKumaSensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
+
         super().__init__(coordinator)
-        self.monitor_name = monitor_name
+        self.monitor = monitor
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{monitor_name}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{monitor}_{entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            name=monitor_name,
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_{monitor_name}")
-            },
+            name=coordinator.data[monitor].monitor_name,
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{monitor}")},
             manufacturer="Uptime Kuma",
             configuration_url=coordinator.config_entry.data[CONF_URL],
+            sw_version=coordinator.api.version.version,
         )
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        if (monitor := self.coordinator.data.get(self.monitor_name)) and (
+        if (monitor := self.coordinator.data.get(self.monitor)) and (
             value := self.entity_description.value_fn(monitor)
         ) != "null":
             return value
@@ -175,4 +177,4 @@ class UptimeKumaSensorEntity(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.monitor_name in self.coordinator.data and super().available
+        return self.monitor in self.coordinator.data and super().available
