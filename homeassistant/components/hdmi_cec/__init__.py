@@ -284,7 +284,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
             _LOGGER.debug(
                 "Fired cec_keypress_received: source=%d key_code=%s",
                 command.src,
-                key_code
+                key_code,
             )
 
         else:
