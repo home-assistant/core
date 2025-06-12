@@ -7,6 +7,10 @@ from homeassistant.config_entries import ConfigEntry
 DOMAIN = "weatherflow"
 LOGGER = logging.getLogger(__package__)
 
+# Events fired on the Home Assistant bus
+RAIN_START_EVENT = f"{DOMAIN}_rain_start"
+STRIKE_EVENT = f"{DOMAIN}_strike"
+
 
 def format_dispatch_call(config_entry: ConfigEntry) -> str:
     """Construct a dispatch call from a ConfigEntry."""
