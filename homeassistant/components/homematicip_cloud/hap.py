@@ -211,6 +211,14 @@ class HomematicipHAP:
         for device in self.home.devices:
             device.fire_update_event()
 
+    async def async_connect(self, home: AsyncHome) -> None:
+        """Connect to HomematicIP Cloud Websocket."""
+        await home.enable_events()
+
+        home.set_on_connected_handler(self.ws_connected_handler)
+        home.set_on_disconnected_handler(self.ws_disconnected_handler)
+        home.set_on_reconnect_handler(self.ws_reconnected_handler)
+
     async def async_reset(self) -> bool:
         """Close the websocket connection."""
         self._ws_close_requested = True
@@ -254,14 +262,6 @@ class HomematicipHAP:
             reason,
         )
         self._ws_connection_closed.set()
-
-    async def async_connect(self, home: AsyncHome) -> None:
-        """Connect to HomematicIP Cloud Websocket."""
-        await home.enable_events()
-
-        home.set_on_connected_handler(self.ws_connected_handler)
-        home.set_on_disconnected_handler(self.ws_disconnected_handler)
-        home.set_on_reconnect_handler(self.ws_reconnected_handler)
 
     async def get_hap(
         self,
