@@ -11,7 +11,7 @@ WEEKLY = "weekly"
 MONTHLY = "monthly"
 BIMONTHLY = "bimonthly"
 QUARTERLY = "quarterly"
-HALFYEARLY = "half-yearly"
+HALF_YEARLY = "half-yearly"
 YEARLY = "yearly"
 
 METER_TYPES = [
@@ -24,7 +24,7 @@ METER_TYPES = [
     MONTHLY,
     BIMONTHLY,
     QUARTERLY,
-    HALFYEARLY,
+    HALF_YEARLY,
     YEARLY,
 ]
 
