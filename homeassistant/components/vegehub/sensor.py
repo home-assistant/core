@@ -91,6 +91,6 @@ class VegeHubSensor(VegeHubEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the sensor's current value."""
-        if not self.coordinator.data:
+        if self.coordinator.data is None:
             return None
         return self.coordinator.data.get(self.data_key)
