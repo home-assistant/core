@@ -29,6 +29,7 @@ async def async_setup_platform(
     configured_zones = discovery_info["zones"]
 
     entities = []
+    controller = hass.data[DATA_EVL].controller
     for zone_num in configured_zones:
         entity_config_data = ZONE_SCHEMA(configured_zones[zone_num])
         zone_name = f"{entity_config_data[CONF_ZONENAME]}_bypass"
@@ -38,8 +39,8 @@ async def async_setup_platform(
             hass,
             zone_num,
             zone_name,
-            hass.data[DATA_EVL].alarm_state["zone"][zone_num],
-            hass.data[DATA_EVL],
+            controller.alarm_state["zone"][zone_num],
+            controller,
         )
         entities.append(entity)
 

@@ -1,6 +1,7 @@
 """Support for Envisalink devices."""
 
 import asyncio
+from dataclasses import dataclass
 import logging
 
 from pyenvisalink import EnvisalinkAlarmPanel
@@ -13,17 +14,16 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DATA_EVL, DOMAIN
+from .services import async_setup_services
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "envisalink"
-
-DATA_EVL = "envisalink"
 
 CONF_EVL_KEEPALIVE = "keepalive_interval"
 CONF_EVL_PORT = "port"
@@ -95,16 +95,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_CUSTOM_FUNCTION = "invoke_custom_function"
-ATTR_CUSTOM_FUNCTION = "pgm"
-ATTR_PARTITION = "partition"
 
-SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_CUSTOM_FUNCTION): cv.string,
-        vol.Required(ATTR_PARTITION): cv.string,
-    }
-)
+@dataclass
+class EnvisalinkData:
+    """Data class for Envisalink integration."""
+
+    controller: EnvisalinkAlarmPanel
+    code: str | None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -139,7 +136,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         connection_timeout,
         False,
     )
-    hass.data[DATA_EVL] = controller
+    hass.data[DATA_EVL] = EnvisalinkData(controller=controller, code=code)
 
     @callback
     def async_login_fail_callback(data):
@@ -188,12 +185,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Shutting down Envisalink")
         controller.stop()
 
-    async def handle_custom_function(call: ServiceCall) -> None:
-        """Handle custom/PGM service."""
-        custom_function = call.data.get(ATTR_CUSTOM_FUNCTION)
-        partition = call.data.get(ATTR_PARTITION)
-        controller.command_output(code, partition, custom_function)
-
     controller.callback_zone_timer_dump = async_zones_updated_callback
     controller.callback_zone_state_change = async_zones_updated_callback
     controller.callback_partition_state_change = async_partition_updated_callback
@@ -238,8 +229,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # Zone bypass switches are not currently created due to an issue with some panels.
         # These switches will be re-added in the future after some further refactoring of the integration.
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA
-    )
+    async_setup_services(hass)
 
     return True

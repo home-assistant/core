@@ -34,14 +34,15 @@ async def async_setup_platform(
     configured_partitions = discovery_info["partitions"]
 
     entities = []
+    controller = hass.data[DATA_EVL].controller
     for part_num in configured_partitions:
         entity_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
         entity = EnvisalinkSensor(
             hass,
             entity_config_data[CONF_PARTITIONNAME],
             part_num,
-            hass.data[DATA_EVL].alarm_state["partition"][part_num],
-            hass.data[DATA_EVL],
+            controller.alarm_state["partition"][part_num],
+            controller,
         )
 
         entities.append(entity)
