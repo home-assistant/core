@@ -27,8 +27,11 @@ from .const import (
     CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFFS,
+    EVERY_FIVE_MINUTES,
     DAILY,
     DOMAIN,
+    HALF_HOURLY,
+    HALF_YEARLY,
     HOURLY,
     MONTHLY,
     QUARTER_HOURLY,
@@ -39,13 +42,16 @@ from .const import (
 
 METER_TYPES = [
     "none",
+    EVERY_FIVE_MINUTES,
     QUARTER_HOURLY,
+    HALF_HOURLY,
     HOURLY,
     DAILY,
     WEEKLY,
     MONTHLY,
     BIMONTHLY,
     QUARTERLY,
+    HALF_YEARLY,
     YEARLY,
 ]
 
