@@ -615,7 +615,12 @@
         "name": "Last operation duration"
       },
       "water_level": {
-        "name": "Water level"
+        "name": "Water level",
+        "state": {
+          "level_1": "Low",
+          "level_2": "Medium",
+          "level_3": "Full"
+        }
       },
       "total_watering_time": {
         "name": "Total watering time"
