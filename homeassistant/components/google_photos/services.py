@@ -77,7 +77,7 @@ def _read_file_contents(
     return results
 
 
-def async_register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register Google Photos services."""
 
     async def async_handle_upload(call: ServiceCall) -> ServiceResponse:
