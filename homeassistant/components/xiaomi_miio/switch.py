@@ -789,7 +789,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
         return self._icon
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true when state is known."""
         return self._available
 

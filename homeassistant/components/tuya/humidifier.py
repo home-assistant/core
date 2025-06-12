@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -165,11 +166,11 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
         return round(self._current_humidity.scale_value(current_humidity))
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._send_command([{"code": self._switch_dpcode, "value": True}])
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._send_command([{"code": self._switch_dpcode, "value": False}])
 

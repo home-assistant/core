@@ -7,7 +7,7 @@ import zoneinfo
 from aioautomower.model import MowerAttributes, MowerModes, MowerStates
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN, Platform

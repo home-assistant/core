@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pyatmo
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
 from homeassistant.components.camera import CameraState

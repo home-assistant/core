@@ -1875,7 +1875,6 @@ async def help_test_entity_icon_and_entity_picture(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     domain: str,
     config: ConfigType,
-    default_entity_picture: str | None = None,
 ) -> None:
     """Test entity picture and icon."""
     await mqtt_mock_entry()
@@ -1895,7 +1894,7 @@ async def help_test_entity_icon_and_entity_picture(
     state = hass.states.get(entity_id)
     assert entity_id is not None and state
     assert state.attributes.get("icon") is None
-    assert state.attributes.get("entity_picture") == default_entity_picture
+    assert state.attributes.get("entity_picture") is None
 
     # Discover an entity with an entity picture set
     unique_id = "veryunique2"
@@ -1922,7 +1921,7 @@ async def help_test_entity_icon_and_entity_picture(
     state = hass.states.get(entity_id)
     assert entity_id is not None and state
     assert state.attributes.get("icon") == "mdi:emoji-happy-outline"
-    assert state.attributes.get("entity_picture") == default_entity_picture
+    assert state.attributes.get("entity_picture") is None
 
 
 async def help_test_publishing_with_custom_encoding(

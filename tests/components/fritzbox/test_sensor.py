@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from requests.exceptions import HTTPError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN

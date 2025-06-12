@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientResponseError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import PROCESS_ACTION, PROGRAM_ID
 from homeassistant.components.vacuum import (

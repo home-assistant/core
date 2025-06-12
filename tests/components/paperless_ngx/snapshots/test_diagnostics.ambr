@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'data': dict({
+      'character_count': 99999,
+      'correspondent_count': 99,
+      'current_asn': 99,
+      'document_file_type_counts': list([
+        dict({
+          'mime_type': 'application/pdf',
+          'mime_type_count': 998,
+        }),
+        dict({
+          'mime_type': 'image/png',
+          'mime_type_count': 1,
+        }),
+      ]),
+      'document_type_count': 99,
+      'documents_inbox': 9,
+      'documents_total': 999,
+      'inbox_tag': 9,
+      'inbox_tags': list([
+        9,
+      ]),
+      'storage_path_count': 9,
+      'tag_count': 99,
+    }),
+  })
+# ---

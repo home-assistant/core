@@ -109,6 +109,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "F44E38*",
     },
     {
+        "domain": "bosch_alarm",
+        "macaddress": "000463*",
+    },
+    {
         "domain": "broadlink",
         "registered_devices": True,
     },

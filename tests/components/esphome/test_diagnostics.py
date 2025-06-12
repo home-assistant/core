@@ -5,7 +5,7 @@ from unittest.mock import ANY
 
 from aioesphomeapi import APIClient
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components import bluetooth

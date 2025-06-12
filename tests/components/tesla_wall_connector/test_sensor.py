@@ -59,19 +59,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
     ]
 
     mock_vitals_first_update = get_vitals_mock()
-    mock_vitals_first_update.evse_state = 1
-    mock_vitals_first_update.handle_temp_c = 25.51
-    mock_vitals_first_update.pcba_temp_c = 30.5
-    mock_vitals_first_update.mcu_temp_c = 42.0
-    mock_vitals_first_update.grid_v = 230.15
-    mock_vitals_first_update.grid_hz = 50.021
-    mock_vitals_first_update.voltageA_v = 230.1
-    mock_vitals_first_update.voltageB_v = 231
-    mock_vitals_first_update.voltageC_v = 232.1
-    mock_vitals_first_update.currentA_a = 10
-    mock_vitals_first_update.currentB_a = 11.1
-    mock_vitals_first_update.currentC_a = 12
-    mock_vitals_first_update.session_energy_wh = 1234.56
 
     mock_vitals_second_update = get_vitals_mock()
     mock_vitals_second_update.evse_state = 3

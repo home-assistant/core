@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[amax_3000][sensor.area1_burglary_alarm_issues-entry]
+# name: test_sensor[None-amax_3000][sensor.area1_burglary_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -33,7 +33,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[amax_3000][sensor.area1_burglary_alarm_issues-state]
+# name: test_sensor[None-amax_3000][sensor.area1_burglary_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Burglary alarm issues',
@@ -46,7 +46,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[amax_3000][sensor.area1_faulting_points-entry]
+# name: test_sensor[None-amax_3000][sensor.area1_faulting_points-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -80,7 +80,7 @@
     'unit_of_measurement': 'points',
   })
 # ---
-# name: test_sensor[amax_3000][sensor.area1_faulting_points-state]
+# name: test_sensor[None-amax_3000][sensor.area1_faulting_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Faulting points',
@@ -94,7 +94,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensor[amax_3000][sensor.area1_fire_alarm_issues-entry]
+# name: test_sensor[None-amax_3000][sensor.area1_fire_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -128,7 +128,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[amax_3000][sensor.area1_fire_alarm_issues-state]
+# name: test_sensor[None-amax_3000][sensor.area1_fire_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Fire alarm issues',
@@ -141,7 +141,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[amax_3000][sensor.area1_gas_alarm_issues-entry]
+# name: test_sensor[None-amax_3000][sensor.area1_gas_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -175,7 +175,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[amax_3000][sensor.area1_gas_alarm_issues-state]
+# name: test_sensor[None-amax_3000][sensor.area1_gas_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Gas alarm issues',
@@ -188,196 +188,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[b5512][sensor.area1_burglary_alarm_issues-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.area1_burglary_alarm_issues',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Burglary alarm issues',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'alarms_burglary',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms_burglary',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[b5512][sensor.area1_burglary_alarm_issues-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Burglary alarm issues',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.area1_burglary_alarm_issues',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_issues',
-  })
-# ---
-# name: test_sensor[b5512][sensor.area1_faulting_points-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.area1_faulting_points',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Faulting points',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'faulting_points',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_faulting_points',
-    'unit_of_measurement': 'points',
-  })
-# ---
-# name: test_sensor[b5512][sensor.area1_faulting_points-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Faulting points',
-      'unit_of_measurement': 'points',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.area1_faulting_points',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensor[b5512][sensor.area1_fire_alarm_issues-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.area1_fire_alarm_issues',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Fire alarm issues',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'alarms_fire',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms_fire',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[b5512][sensor.area1_fire_alarm_issues-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Fire alarm issues',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.area1_fire_alarm_issues',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_issues',
-  })
-# ---
-# name: test_sensor[b5512][sensor.area1_gas_alarm_issues-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.area1_gas_alarm_issues',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Gas alarm issues',
-    'platform': 'bosch_alarm',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'alarms_gas',
-    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms_gas',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[b5512][sensor.area1_gas_alarm_issues-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Gas alarm issues',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.area1_gas_alarm_issues',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_issues',
-  })
-# ---
-# name: test_sensor[solution_3000][sensor.area1_burglary_alarm_issues-entry]
+# name: test_sensor[None-b5512][sensor.area1_burglary_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -411,7 +222,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[solution_3000][sensor.area1_burglary_alarm_issues-state]
+# name: test_sensor[None-b5512][sensor.area1_burglary_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Burglary alarm issues',
@@ -424,7 +235,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[solution_3000][sensor.area1_faulting_points-entry]
+# name: test_sensor[None-b5512][sensor.area1_faulting_points-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -458,7 +269,7 @@
     'unit_of_measurement': 'points',
   })
 # ---
-# name: test_sensor[solution_3000][sensor.area1_faulting_points-state]
+# name: test_sensor[None-b5512][sensor.area1_faulting_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Faulting points',
@@ -472,7 +283,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensor[solution_3000][sensor.area1_fire_alarm_issues-entry]
+# name: test_sensor[None-b5512][sensor.area1_fire_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -506,7 +317,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[solution_3000][sensor.area1_fire_alarm_issues-state]
+# name: test_sensor[None-b5512][sensor.area1_fire_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Fire alarm issues',
@@ -519,7 +330,7 @@
     'state': 'no_issues',
   })
 # ---
-# name: test_sensor[solution_3000][sensor.area1_gas_alarm_issues-entry]
+# name: test_sensor[None-b5512][sensor.area1_gas_alarm_issues-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -553,7 +364,196 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[solution_3000][sensor.area1_gas_alarm_issues-state]
+# name: test_sensor[None-b5512][sensor.area1_gas_alarm_issues-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Area1 Gas alarm issues',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.area1_gas_alarm_issues',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_issues',
+  })
+# ---
+# name: test_sensor[None-solution_3000][sensor.area1_burglary_alarm_issues-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.area1_burglary_alarm_issues',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Burglary alarm issues',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarms_burglary',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms_burglary',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[None-solution_3000][sensor.area1_burglary_alarm_issues-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Area1 Burglary alarm issues',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.area1_burglary_alarm_issues',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_issues',
+  })
+# ---
+# name: test_sensor[None-solution_3000][sensor.area1_faulting_points-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.area1_faulting_points',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Faulting points',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'faulting_points',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_faulting_points',
+    'unit_of_measurement': 'points',
+  })
+# ---
+# name: test_sensor[None-solution_3000][sensor.area1_faulting_points-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Area1 Faulting points',
+      'unit_of_measurement': 'points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.area1_faulting_points',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensor[None-solution_3000][sensor.area1_fire_alarm_issues-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.area1_fire_alarm_issues',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fire alarm issues',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarms_fire',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms_fire',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[None-solution_3000][sensor.area1_fire_alarm_issues-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Area1 Fire alarm issues',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.area1_fire_alarm_issues',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_issues',
+  })
+# ---
+# name: test_sensor[None-solution_3000][sensor.area1_gas_alarm_issues-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.area1_gas_alarm_issues',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gas alarm issues',
+    'platform': 'bosch_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarms_gas',
+    'unique_id': '01JQ917ACKQ33HHM7YCFXYZX51_area_1_alarms_gas',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[None-solution_3000][sensor.area1_gas_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Gas alarm issues',

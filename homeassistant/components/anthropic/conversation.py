@@ -326,6 +326,7 @@ class AnthropicConversationEntity(
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_supports_streaming = True
 
     def __init__(self, entry: AnthropicConfigEntry) -> None:
         """Initialize the agent."""

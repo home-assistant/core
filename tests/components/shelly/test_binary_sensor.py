@@ -6,7 +6,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_MOTION
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER

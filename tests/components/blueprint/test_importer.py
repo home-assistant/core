@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.blueprint import importer
 from homeassistant.core import HomeAssistant

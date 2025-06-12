@@ -433,6 +433,66 @@
     'state': 'off',
   })
 # ---
+# name: test_selects[door_lock][select.mock_door_lock_sound_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_sound_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound volume',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_sound_volume',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[door_lock][select.mock_door_lock_sound_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Sound volume',
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_sound_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'silent',
+  })
+# ---
 # name: test_selects[door_lock_with_unbolt][select.mock_door_lock_power_on_behavior_on_startup-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -491,6 +551,66 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_sound_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_sound_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound volume',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_sound_volume',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_sound_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Sound volume',
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_sound_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'silent',
   })
 # ---
 # name: test_selects[eve_energy_plug][select.eve_energy_plug_power_on_behavior_on_startup-entry]

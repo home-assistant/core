@@ -6,7 +6,7 @@ from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.const import MODEL_I3
 import pytest
 from pytest_unordered import unordered
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,

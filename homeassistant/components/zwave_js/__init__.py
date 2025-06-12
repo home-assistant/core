@@ -105,6 +105,7 @@ from .const import (
     CONF_USE_ADDON,
     DATA_CLIENT,
     DOMAIN,
+    DRIVER_READY_TIMEOUT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
@@ -135,7 +136,6 @@ from .services import ZWaveServices
 
 CONNECT_TIMEOUT = 10
 DATA_DRIVER_EVENTS = "driver_events"
-DRIVER_READY_TIMEOUT = 60
 
 CONFIG_SCHEMA = vol.Schema(
     {

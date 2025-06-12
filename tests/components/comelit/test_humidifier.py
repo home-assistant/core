@@ -7,7 +7,7 @@ from aiocomelit.api import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.comelit.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.humidifier import (
@@ -91,7 +91,7 @@ async def test_humidifier_data_update(
     freezer: FrozenDateTimeFactory,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
-    val: list[Any, Any],
+    val: list[list[Any]],
     mode: str,
     humidity: float,
 ) -> None:
@@ -146,7 +146,7 @@ async def test_humidifier_data_update_bad_data(
             status=0,
             human_status="off",
             type="climate",
-            val="bad_data",
+            val="bad_data",  # type: ignore[arg-type]
             protected=0,
             zone="Living room",
             power=0.0,
