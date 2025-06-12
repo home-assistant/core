@@ -2,7 +2,7 @@
 
 DOMAIN = "utility_meter"
 
-EVERY_5_MINUTES = "every-5-minutes"
+EVERY_FIVE_MINUTES = "every-five-minutes"
 HALF_HOURLY = "half-hourly"
 QUARTER_HOURLY = "quarter-hourly"
 HOURLY = "hourly"
@@ -14,7 +14,7 @@ QUARTERLY = "quarterly"
 YEARLY = "yearly"
 
 METER_TYPES = [
-    EVERY_5_MINUTES,
+    EVERY_FIVE_MINUTES,
     QUARTER_HOURLY,
     HOURLY,
     DAILY,
