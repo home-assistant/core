@@ -85,7 +85,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'LQI (DE) Category',
+    'original_name': 'LQI (DE) category',
     'platform': 'google_air_quality',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -99,7 +99,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': '48_9 LQI (DE) Category',
+      'friendly_name': '48_9 LQI (DE) category',
       'options': list([
         'very_good_air_quality',
         'good_air_quality',
@@ -147,7 +147,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'LQI (DE) Dominant Pollutant',
+    'original_name': 'LQI (DE) dominant pollutant',
     'platform': 'google_air_quality',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -161,7 +161,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': '48_9 LQI (DE) Dominant Pollutant',
+      'friendly_name': '48_9 LQI (DE) dominant pollutant',
       'options': list([
         'no2',
         'o3',
@@ -471,7 +471,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'UAQI Category',
+    'original_name': 'UAQI category',
     'platform': 'google_air_quality',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -485,7 +485,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': '48_9 UAQI Category',
+      'friendly_name': '48_9 UAQI category',
       'options': list([
         'excellent_air_quality',
         'good_air_quality',
@@ -536,7 +536,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'UAQI Dominant Pollutant',
+    'original_name': 'UAQI dominant pollutant',
     'platform': 'google_air_quality',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -550,7 +550,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': '48_9 UAQI Dominant Pollutant',
+      'friendly_name': '48_9 UAQI dominant pollutant',
       'options': list([
         'co',
         'no2',

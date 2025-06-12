@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from google_air_quality_api.api import GoogleAirQualityApi
 from google_air_quality_api.model import AirQualityData, UserInfoResult
+from google_air_quality_api.model_reverse_geocoding import PlacesResponse
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -164,6 +165,10 @@ def mock_client_api(
     mock_api.async_air_quality_multiple.return_value = [parsed_data]
     mock_api.async_air_quality.return_value = AirQualityData.from_dict(responses)
     mock_api.async_air_quality.side_effect = api_error
+    reverse_geocode_data = load_json_object_fixture("reverse_geocoding.json", DOMAIN)
+    mock_api.async_reverse_geocode.return_value = PlacesResponse.from_dict(
+        reverse_geocode_data
+    )
     mock_api.get_user_info.return_value = UserInfoResult(
         id=user_identifier,
         name="Test Name",

@@ -148,8 +148,13 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_LATITUDE: lat,
                 CONF_LONGITUDE: lon,
             }
+            try:
+                geo_data = await client.async_reverse_geocode(lat, lon)
+                title = geo_data.results[0].formatted_address
+            except Exception:  # noqa: BLE001
+                title = f"Coordinates {lat}, {lon}"
             result = self.async_create_entry(
-                title=f"Coordinates {lat}, {lon}",
+                title=title,
                 data=data,
                 unique_id=unique_id,
             )
