@@ -1028,7 +1028,7 @@ huawei-lte-api==1.11.0
 huum==0.7.12
 
 # homeassistant.components.hyperion
-hyperion-py==0.7.5
+hyperion-py==0.7.6
 
 # homeassistant.components.iaqualink
 iaqualink==0.5.3
@@ -1857,7 +1857,7 @@ pypalazzetti==0.1.19
 pypaperless==4.1.0
 
 # homeassistant.components.lcn
-pypck==0.8.6
+pypck==0.8.7
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2195,7 +2195,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.13.5
+reolink-aio==0.14.0
 
 # homeassistant.components.rflink
 rflink==0.0.66
