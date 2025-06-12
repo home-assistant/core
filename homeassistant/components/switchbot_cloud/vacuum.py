@@ -1,8 +1,15 @@
 """Support for SwitchBot vacuum."""
 
+from enum import StrEnum
 from typing import Any
 
-from switchbot_api import Device, Remote, SwitchBotAPI, VacuumCommands
+from switchbot_api import (
+    Device,
+    Remote,
+    SwitchBotAPI,
+    VacuumCleanerV2Commands,
+    VacuumCommands,
+)
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -38,6 +45,14 @@ async def async_setup_entry(
     )
 
 
+class CleanMode(StrEnum):
+    """Clean mode for Vacuum."""
+
+    SWEEP = "sweep"
+    MOP = "mop"
+    SWEEP_MOP = "sweep_mop"
+
+
 VACUUM_SWITCHBOT_STATE_TO_HA_STATE: dict[str, VacuumActivity] = {
     "StandBy": VacuumActivity.IDLE,
     "Clearing": VacuumActivity.CLEANING,
@@ -56,6 +71,13 @@ VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED: dict[str, str] = {
     VACUUM_FAN_SPEED_STANDARD: "1",
     VACUUM_FAN_SPEED_STRONG: "2",
     VACUUM_FAN_SPEED_MAX: "3",
+}
+
+VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED_V2: dict[str, str] = {
+    VACUUM_FAN_SPEED_QUIET: "1",
+    VACUUM_FAN_SPEED_STANDARD: "2",
+    VACUUM_FAN_SPEED_STRONG: "3",
+    VACUUM_FAN_SPEED_MAX: "4",
 }
 
 
@@ -111,39 +133,52 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         self._attr_activity = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(switchbot_state)
 
 
-class SwitchBotCloudVacuumV2(SwitchBotCloudEntity, StateVacuumEntity):
+class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
     """Representation of a SwitchBot vacuum."""
 
-    _attr_supported_features: VacuumEntityFeature = (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.FAN_SPEED
-        | VacuumEntityFeature.PAUSE
-        | VacuumEntityFeature.RETURN_HOME
-        | VacuumEntityFeature.START
-        | VacuumEntityFeature.STATE
-    )
-
-    _attr_name = None
     _attr_fan_speed_list: list[str] = list(
-        VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED.keys()
+        VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED_V2.keys()
     )
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
+        self._attr_fan_speed = fan_speed
+        if fan_speed in VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED_V2:
+            await self.send_api_command(
+                VacuumCleanerV2Commands.CHANGE_PARAM,
+                parameters={
+                    "fanLevel": VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED_V2[fan_speed],
+                    "waterLevel": "1",
+                    "times": "1",
+                },
+            )
+        self.async_write_ha_state()
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
+        await self.send_api_command(VacuumCleanerV2Commands.PAUSE)
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
+        await self.send_api_command(VacuumCleanerV2Commands.DOCK)
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
-
-    def _set_attributes(self) -> None:
-        """Set attributes from coordinator data."""
-        if not self.coordinator.data:
-            return
+        assert self.fan_speed in VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED_V2
+        command_param: dict[str, Any] = {
+            "action": CleanMode.SWEEP.value,
+            "param": {
+                "fanLevel": VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED_V2[self.fan_speed],
+                "times": "1",
+            },
+        }
+        model: str | None = self.device_info.get("model") if self.device_info else None
+        if model and model in ["S20", "Floor Cleaning Robot S10"]:
+            command_param["param"]["waterLevel"] = "1"
+        await self.send_api_command(
+            VacuumCleanerV2Commands.START_CLEAN,
+            parameters=command_param,
+        )
 
 
 @callback
