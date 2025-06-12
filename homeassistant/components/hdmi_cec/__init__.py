@@ -12,6 +12,21 @@ from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
 from pycec.const import (
     ADDR_AUDIOSYSTEM,
     ADDR_BROADCAST,
+    ADDR_FREEUSE,
+    ADDR_PLAYBACKDEVICE1,
+    ADDR_PLAYBACKDEVICE2,
+    ADDR_PLAYBACKDEVICE3,
+    ADDR_RECORDINGDEVICE1,
+    ADDR_RECORDINGDEVICE2,
+    ADDR_RECORDINGDEVICE3,
+    ADDR_RESERVED1,
+    ADDR_RESERVED2,
+    ADDR_TUNER1,
+    ADDR_TUNER2,
+    ADDR_TUNER3,
+    ADDR_TUNER4,
+    ADDR_TV,
+    ADDR_UNKNOWN,
     ADDR_UNREGISTERED,
     KEY_MUTE_OFF,
     KEY_MUTE_ON,
@@ -114,6 +129,7 @@ DEVICE_SCHEMA: vol.Schema = vol.Schema(
 )
 
 CONF_DISPLAY_NAME = "osd_name"
+CONF_DEVICE_TYPE = "device_type"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -125,6 +141,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER),
                 vol.Optional(CONF_HOST): cv.string,
                 vol.Optional(CONF_DISPLAY_NAME): cv.string,
+                vol.Optional(CONF_DEVICE_TYPE): vol.Any(ADDR_AUDIOSYSTEM, ADDR_BROADCAST, ADDR_FREEUSE, ADDR_PLAYBACKDEVICE1, ADDR_PLAYBACKDEVICE2, ADDR_PLAYBACKDEVICE3, ADDR_RECORDINGDEVICE1, ADDR_RECORDINGDEVICE2, ADDR_RECORDINGDEVICE3, ADDR_RESERVED1, ADDR_RESERVED2, ADDR_TUNER1, ADDR_TUNER2, ADDR_TUNER3, ADDR_TUNER4, ADDR_TV, ADDR_UNKNOWN, ADDR_UNREGISTERED),
                 vol.Optional(CONF_TYPES, default={}): vol.Schema(
                     {cv.entity_id: vol.Any(MEDIA_PLAYER, SWITCH)}
                 ),
@@ -178,10 +195,11 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     )
     host = base_config[DOMAIN].get(CONF_HOST)
     display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME, DEFAULT_DISPLAY_NAME)
+    device_type = base_config[DOMAIN].get(CONF_DEVICE_TYPE, ADDR_RECORDINGDEVICE1)
     if host:
         adapter = TcpAdapter(host, name=display_name, activate_source=False)
     else:
-        adapter = CecAdapter(name=display_name[:12], activate_source=False)
+        adapter = CecAdapter(name=display_name[:12], activate_source=False, device_type=device_type)
     hdmi_network = HDMINetwork(adapter, loop=loop)
 
     def _adapter_watchdog(now=None):
@@ -200,6 +218,69 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         return event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog_job)
 
     hdmi_network.set_initialized_callback(_async_initialized_callback)
+
+    @callback
+    def handle_cec_command(command: CecCommand):
+        """Unified handler for CEC commands: GIVE_AUDIO_STATUS and keypress events."""
+        _LOGGER.debug("Received CEC command: opcode=0x%02X from src=%d", command.cmd, command.src)
+
+        if command.cmd == 0x71:  # GIVE_AUDIO_STATUS
+            _LOGGER.warning("Received GIVE_AUDIO_STATUS from %d", command.src)
+
+            # Broadcast request on Home Assistant bus
+            hass.bus.fire("cec_audio_status_requested", {
+                "source": command.src,
+            })
+
+            _LOGGER.debug("Fired cec_audio_status_requested event from source %d", command.src)
+
+        elif command.cmd == 0x44:  # User Control Pressed / Keypress
+            if command.att and len(command.att) >= 1:
+                key_code = command.att[0]
+            else:
+                key_code = None
+
+            _LOGGER.warning("Received key press from %d: key code = %s", command.src, key_code)
+
+            # Fire Home Assistant event with key press details
+            hass.bus.fire("cec_keypress_received", {
+                "source": command.src,
+                "key_code": key_code,
+            })
+
+            _LOGGER.debug("Fired cec_keypress_received: source=%d key_code=%s", command.src, key_code)
+
+        else:
+            _LOGGER.debug("Unhandled CEC command opcode: 0x%02X", command.cmd)
+
+    # Register the callback
+    hdmi_network.set_command_callback(handle_cec_command)
+
+    def send_audio_status_event(event):
+        """Handle HA event to send REPORT_AUDIO_STATUS CEC command."""
+        data = event.data
+        level = int(data.get("level", 50))  # Default to 50 if not specified
+        muted = bool(data.get("muted", False))
+        destination = int(data.get("destination", 0))
+
+        # Compose the status byte (mute bit in MSB)
+        status_byte = level | (0x80 if muted else 0x00)
+
+        cmd = CecCommand(
+            src=adapter.get_logical_address(),
+            dst=destination,
+            cmd=0x7A,
+            att=[status_byte]
+        )
+
+        _LOGGER.info(
+            "Sending REPORT_AUDIO_STATUS to %d: volume=%d, muted=%s (0x%02X)",
+            destination, level, muted, status_byte
+        )
+
+        hdmi_network.send_command(cmd)
+
+    hass.bus.listen("cec_send_audio_status", send_audio_status_event)
 
     def _volume(call: ServiceCall) -> None:
         """Increase/decrease volume and mute/unmute system."""
