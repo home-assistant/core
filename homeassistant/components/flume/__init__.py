@@ -5,24 +5,17 @@ from __future__ import annotations
 from pyflume import FlumeAuth, FlumeDeviceList
 from requests import Session
 from requests.exceptions import RequestException
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import BASE_TOKEN_FILENAME, DOMAIN, PLATFORMS
 from .coordinator import (
@@ -30,14 +23,15 @@ from .coordinator import (
     FlumeNotificationDataUpdateCoordinator,
     FlumeRuntimeData,
 )
+from .services import async_setup_services
 
-SERVICE_LIST_NOTIFICATIONS = "list_notifications"
-CONF_CONFIG_ENTRY = "config_entry"
-LIST_NOTIFICATIONS_SERVICE_SCHEMA = vol.All(
-    {
-        vol.Required(CONF_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-    },
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up integration."""
+    async_setup_services(hass)
+    return True
 
 
 def _setup_entry(
@@ -90,7 +84,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlumeConfigEntry) -> boo
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    setup_service(hass)
 
     return True
 
@@ -99,28 +92,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: FlumeConfigEntry) -> bo
     """Unload a config entry."""
     entry.runtime_data.http_session.close()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-def setup_service(hass: HomeAssistant) -> None:
-    """Add the services for the flume integration."""
-
-    @callback
-    def list_notifications(call: ServiceCall) -> ServiceResponse:
-        """Return the user notifications."""
-        entry_id: str = call.data[CONF_CONFIG_ENTRY]
-        entry: FlumeConfigEntry | None = hass.config_entries.async_get_entry(entry_id)
-        if not entry:
-            raise ValueError(f"Invalid config entry: {entry_id}")
-        if not entry.state == ConfigEntryState.LOADED:
-            raise ValueError(f"Config entry not loaded: {entry_id}")
-        return {
-            "notifications": entry.runtime_data.notifications_coordinator.notifications  # type: ignore[dict-item]
-        }
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_LIST_NOTIFICATIONS,
-        list_notifications,
-        schema=LIST_NOTIFICATIONS_SERVICE_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
