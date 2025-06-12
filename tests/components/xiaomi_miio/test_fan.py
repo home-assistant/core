@@ -25,28 +25,10 @@ from . import TEST_MAC
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-
-@pytest.fixture(
-    name="model_code",
-    params=[
-        "dmaker.fan.p5",
-        "dmaker.fan.p18",
-    ],
-)
-def get_model_code(request: pytest.FixtureRequest) -> str:
-    """Parametrize model code."""
-    return request.param
-
-
-@pytest.fixture(autouse=True)
-def setup_device(model_code: str) -> Generator[MagicMock]:
-    """Initialize test xiaomi_miio for fan entity."""
-
-    mock_fan = MagicMock()
-
-    if model_code == "dmaker.fan.p5":
-        patch_class = "homeassistant.components.xiaomi_miio.FanP5"
-        mock_status = FanStatusP5(
+_MODEL_INFORMATION = {
+    "dmaker.fan.p5": {
+        "patch_class": "homeassistant.components.xiaomi_miio.FanP5",
+        "mock_status": FanStatusP5(
             {
                 "roll_angle": 60,
                 "beep_sound": False,
@@ -58,10 +40,11 @@ def setup_device(model_code: str) -> Generator[MagicMock]:
                 "roll_enable": False,
                 "speed": 64,
             }
-        )
-    elif model_code == "dmaker.fan.p18":
-        patch_class = "homeassistant.components.xiaomi_miio.FanMiot"
-        mock_status = FanStatusMiot(
+        ),
+    },
+    "dmaker.fan.p18": {
+        "patch_class": "homeassistant.components.xiaomi_miio.FanMiot",
+        "mock_status": FanStatusMiot(
             {
                 "swing_mode_angle": 90,
                 "buzzer": False,
@@ -73,21 +56,41 @@ def setup_device(model_code: str) -> Generator[MagicMock]:
                 "swing_mode": False,
                 "fan_speed": 100,
             }
-        )
+        ),
+    },
+}
+
+
+@pytest.fixture(
+    name="model_code",
+    params=_MODEL_INFORMATION.keys(),
+)
+def get_model_code(request: pytest.FixtureRequest) -> str:
+    """Parametrize model code."""
+    return request.param
+
+
+@pytest.fixture(autouse=True)
+def setup_device(model_code: str) -> Generator[MagicMock]:
+    """Initialize test xiaomi_miio for fan entity."""
+
+    model_information = _MODEL_INFORMATION[model_code]
+
+    mock_fan = MagicMock()
+    mock_fan.status = Mock(return_value=model_information["mock_status"])
 
     with (
         patch(
             "homeassistant.components.xiaomi_miio.get_platforms",
             return_value=[Platform.FAN],
         ),
-        patch(patch_class) as mock_fan_cls,
+        patch(model_information["patch_class"]) as mock_fan_cls,
         patch.dict(
             MODEL_TO_CLASS_MAP,
             {model_code: mock_fan_cls} if model_code in MODEL_TO_CLASS_MAP else {},
         ),
     ):
         mock_fan_cls.return_value = mock_fan
-        mock_fan.status = Mock(return_value=mock_status)
         yield mock_fan
 
 
