@@ -147,9 +147,11 @@ class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
             await self.send_api_command(
                 VacuumCleanerV2Commands.CHANGE_PARAM,
                 parameters={
-                    "fanLevel": VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED_V2[fan_speed],
-                    "waterLevel": "1",
-                    "times": "1",
+                    "fanLevel": int(
+                        VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED_V2[fan_speed]
+                    ),
+                    "waterLevel": 1,
+                    "times": 1,
                 },
             )
         self.async_write_ha_state()
@@ -168,17 +170,25 @@ class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
         command_param: dict[str, Any] = {
             "action": CleanMode.SWEEP.value,
             "param": {
-                "fanLevel": VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED_V2[self.fan_speed],
-                "times": "1",
+                "fanLevel": int(
+                    VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED_V2[self.fan_speed]
+                ),
+                "times": 1,
             },
         }
         model: str | None = self.device_info.get("model") if self.device_info else None
-        if model and model in ["S20", "Floor Cleaning Robot S10"]:
-            command_param["param"]["waterLevel"] = "1"
+        if model and model in ["S20", "Robot Vacuum Cleaner S10"]:
+            command_param["param"]["waterLevel"] = 1
         await self.send_api_command(
             VacuumCleanerV2Commands.START_CLEAN,
             parameters=command_param,
         )
+
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        super()._set_attributes()
+        if self._attr_fan_speed is None:
+            self._attr_fan_speed = VACUUM_FAN_SPEED_QUIET
 
 
 @callback
