@@ -1,9 +1,10 @@
 {
   "domain": "nomaiq",
-  "name": "nomaiq",
+  "name": "NomaIQ",
   "codeowners": ["@mnfjorge"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nomaiq",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
   "requirements": ["ayla_iot_unofficial==1.5.0"]
