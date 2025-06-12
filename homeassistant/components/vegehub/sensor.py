@@ -77,7 +77,7 @@ class VegeHubSensor(VegeHubEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        # Set unique ID for pulling data from the coordinator
+        # Set data key for pulling data from the coordinator
         if description.key == "battery_volts":
             self.data_key = "battery"
         else:
