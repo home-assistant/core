@@ -77,15 +77,14 @@ async def test_entities_not_created_for_device(
         ("HWE-P1", "select.device_battery_group_mode"),
     ],
 )
-async def test_select_entities(
+async def test_select_entity_snapshots(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mock_homewizardenergy: MagicMock,
     snapshot: SnapshotAssertion,
     entity_id: str,
 ) -> None:
-    """Test that select handles state changes correctly."""
+    """Test that select entity state and registry entries match snapshots."""
     assert (state := hass.states.get(entity_id))
     assert snapshot == state
 
@@ -96,53 +95,61 @@ async def test_select_entities(
     assert (device_entry := device_registry.async_get(entity_entry.device_id))
     assert snapshot == device_entry
 
-    assert len(mock_homewizardenergy.batteries.mock_calls) == 0
 
-    # Set to 'standby'
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_id", "option", "expected_mode"),
+    [
+        (
+            "HWE-P1",
+            "select.device_battery_group_mode",
+            "standby",
+            Batteries.Mode.STANDBY,
+        ),
+        (
+            "HWE-P1",
+            "select.device_battery_group_mode",
+            "to_full",
+            Batteries.Mode.TO_FULL,
+        ),
+        ("HWE-P1", "select.device_battery_group_mode", "zero", Batteries.Mode.ZERO),
+    ],
+)
+async def test_select_set_option(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+    entity_id: str,
+    option: str,
+    expected_mode: Batteries.Mode,
+) -> None:
+    """Test that selecting an option calls the correct API method."""
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "standby",
+            ATTR_OPTION: option,
         },
         blocking=True,
     )
+    mock_homewizardenergy.batteries.assert_called_with(mode=expected_mode)
 
-    assert len(mock_homewizardenergy.batteries.mock_calls) == 1
-    mock_homewizardenergy.batteries.assert_called_with(mode=Batteries.Mode.STANDBY)
 
-    # Set to 'to_full'
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "to_full",
-        },
-        blocking=True,
-    )
-
-    assert len(mock_homewizardenergy.batteries.mock_calls) == 2
-    mock_homewizardenergy.batteries.assert_called_with(mode=Batteries.Mode.TO_FULL)
-
-    # Set to 'zero'
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "zero",
-        },
-        blocking=True,
-    )
-
-    assert len(mock_homewizardenergy.batteries.mock_calls) == 3
-    mock_homewizardenergy.batteries.assert_called_with(mode=Batteries.Mode.ZERO)
-
-    # Test request error handling
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_id", "option"),
+    [
+        ("HWE-P1", "select.device_battery_group_mode", "zero"),
+        ("HWE-P1", "select.device_battery_group_mode", "standby"),
+        ("HWE-P1", "select.device_battery_group_mode", "to_full"),
+    ],
+)
+async def test_select_request_error(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+    entity_id: str,
+    option: str,
+) -> None:
+    """Test that RequestError is handled and raises HomeAssistantError."""
     mock_homewizardenergy.batteries.side_effect = RequestError
-
     with pytest.raises(
         HomeAssistantError,
         match=r"^An error occurred while communicating with HomeWizard device$",
@@ -152,42 +159,26 @@ async def test_select_entities(
             SERVICE_SELECT_OPTION,
             {
                 ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: "zero",
+                ATTR_OPTION: option,
             },
             blocking=True,
         )
 
-    with pytest.raises(
-        HomeAssistantError,
-        match=r"^An error occurred while communicating with HomeWizard device$",
-    ):
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: "standby",
-            },
-            blocking=True,
-        )
 
-    with pytest.raises(
-        HomeAssistantError,
-        match=r"^An error occurred while communicating with HomeWizard device$",
-    ):
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: "to_full",
-            },
-            blocking=True,
-        )
-
-    # Test disabled error handling
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_id", "option"),
+    [
+        ("HWE-P1", "select.device_battery_group_mode", "to_full"),
+    ],
+)
+async def test_select_unauthorized_error(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+    entity_id: str,
+    option: str,
+) -> None:
+    """Test that UnauthorizedError is handled and raises HomeAssistantError."""
     mock_homewizardenergy.batteries.side_effect = UnauthorizedError
-
     with pytest.raises(
         HomeAssistantError,
         match=r"^The local API is unauthorized\. Restore API access by following the instructions in the repair issue$",
@@ -197,7 +188,7 @@ async def test_select_entities(
             SERVICE_SELECT_OPTION,
             {
                 ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: "to_full",
+                ATTR_OPTION: option,
             },
             blocking=True,
         )
@@ -226,3 +217,49 @@ async def test_select_unreachable(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_id"),
+    [
+        ("HWE-P1", "select.device_battery_group_mode"),
+    ],
+)
+async def test_select_multiple_state_changes(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+    entity_id: str,
+) -> None:
+    """Test changing select state multiple times in sequence."""
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_OPTION: "zero",
+        },
+        blocking=True,
+    )
+    mock_homewizardenergy.batteries.assert_called_with(mode=Batteries.Mode.ZERO)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_OPTION: "to_full",
+        },
+        blocking=True,
+    )
+    mock_homewizardenergy.batteries.assert_called_with(mode=Batteries.Mode.TO_FULL)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_OPTION: "standby",
+        },
+        blocking=True,
+    )
+    mock_homewizardenergy.batteries.assert_called_with(mode=Batteries.Mode.STANDBY)

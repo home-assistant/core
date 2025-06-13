@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_select_entities[HWE-P1-select.device_battery_group_mode]
+# name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_mode]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Battery group mode',
@@ -17,7 +17,7 @@
     'state': 'zero',
   })
 # ---
-# name: test_select_entities[HWE-P1-select.device_battery_group_mode].1
+# name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_mode].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -58,7 +58,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_entities[HWE-P1-select.device_battery_group_mode].2
+# name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_mode].2
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
