@@ -199,9 +199,11 @@ def _create_google_tool_response_content(
 
 
 def _convert_content(
-    content: conversation.UserContent
-    | conversation.AssistantContent
-    | conversation.SystemContent,
+    content: (
+        conversation.UserContent
+        | conversation.AssistantContent
+        | conversation.SystemContent
+    ),
 ) -> Content:
     """Convert HA content to Google content."""
     if content.role != "assistant" or not content.tool_calls:
@@ -381,6 +383,29 @@ class GoogleGenerativeAIConversationEntity(
         except conversation.ConverseError as err:
             return err.as_conversation_result()
 
+        await self._async_handle_chat_log(chat_log)
+
+        response = intent.IntentResponse(language=user_input.language)
+        if not isinstance(chat_log.content[-1], conversation.AssistantContent):
+            LOGGER.error(
+                "Last content in chat log is not an AssistantContent: %s. This could be due to the model not returning a valid response",
+                chat_log.content[-1],
+            )
+            raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE}")
+        response.async_set_speech(chat_log.content[-1].content or "")
+        return conversation.ConversationResult(
+            response=response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
+        )
+
+    async def _async_handle_chat_log(
+        self,
+        chat_log: conversation.ChatLog,
+    ) -> None:
+        """Generate an answer for the chat log."""
+        options = self.entry.options
+
         tools: list[Tool | Callable[..., Any]] | None = None
         if chat_log.llm_api:
             tools = [
@@ -499,7 +524,9 @@ class GoogleGenerativeAIConversationEntity(
         chat = self._genai_client.aio.chats.create(
             model=model_name, history=messages, config=generateContentConfig
         )
-        chat_request: str | list[Part] = user_input.text
+        user_message = chat_log.content[-1]
+        assert isinstance(user_message, conversation.UserContent)
+        chat_request: str | list[Part] = user_message.content
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
@@ -519,7 +546,7 @@ class GoogleGenerativeAIConversationEntity(
                 [
                     content
                     async for content in chat_log.async_add_delta_content_stream(
-                        user_input.agent_id,
+                        self.entity_id,
                         _transform_stream(chat_response_generator),
                     )
                     if isinstance(content, conversation.ToolResultContent)
@@ -528,20 +555,6 @@ class GoogleGenerativeAIConversationEntity(
 
             if not chat_log.unresponded_tool_results:
                 break
-
-        response = intent.IntentResponse(language=user_input.language)
-        if not isinstance(chat_log.content[-1], conversation.AssistantContent):
-            LOGGER.error(
-                "Last content in chat log is not an AssistantContent: %s. This could be due to the model not returning a valid response",
-                chat_log.content[-1],
-            )
-            raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE}")
-        response.async_set_speech(chat_log.content[-1].content or "")
-        return conversation.ConversationResult(
-            response=response,
-            conversation_id=chat_log.conversation_id,
-            continue_conversation=chat_log.continue_conversation,
-        )
 
     async def _async_entry_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry
