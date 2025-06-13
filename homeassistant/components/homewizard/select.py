@@ -1,4 +1,4 @@
-"""Support for HomeWizard battery mode select."""
+"""Support for HomeWizard select platform."""
 
 from __future__ import annotations
 
