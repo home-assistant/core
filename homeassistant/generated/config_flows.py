@@ -344,6 +344,7 @@ FLOWS = {
         "lg_netcast",
         "lg_soundbar",
         "lg_thinq",
+        "librehardwaremonitor",
         "lidarr",
         "lifx",
         "linear_garage_door",
