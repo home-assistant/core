@@ -55,19 +55,30 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             info = InMemoryAccountInfo()
             b2_api = B2Api(info)
 
+            def _authorize_and_get_bucket() -> None:
+                """Authorize account and get bucket by name."""
+                b2_api.authorize_account(
+                    "production",
+                    user_input[CONF_KEY_ID],
+                    user_input[CONF_APPLICATION_KEY],
+                )
+                b2_api.get_bucket_by_name(user_input[CONF_BUCKET])
+
             try:
+                await self.hass.async_add_executor_job(_authorize_and_get_bucket)
 
-                def authorize_and_get_bucket() -> None:
-                    """Authorize account and get bucket by name."""
-                    b2_api.authorize_account(
-                        "production",
-                        user_input[CONF_KEY_ID],
-                        user_input[CONF_APPLICATION_KEY],
-                    )
-                    b2_api.get_bucket_by_name(user_input[CONF_BUCKET])
-
-                await self.hass.async_add_executor_job(authorize_and_get_bucket)
-
+            except exception.Unauthorized:
+                errors["base"] = "invalid_credentials"
+            except exception.RestrictedBucket as err:
+                placeholders["restricted_bucket_name"] = err.bucket_name
+                errors[CONF_BUCKET] = "restricted_bucket"
+            except exception.NonExistentBucket:
+                errors[CONF_BUCKET] = "invalid_bucket_name"
+            except exception.ConnectionReset:
+                errors["base"] = "cannot_connect"
+            except exception.MissingAccountData:
+                errors["base"] = "invalid_credentials"
+            else:
                 allowed = b2_api.account_info.get_allowed()
 
                 # Check if capabilities contains 'writeFiles' and 'listFiles' and 'deleteFiles' and 'readFiles'
@@ -84,6 +95,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                     ):
                         errors["base"] = "invalid_capability"
 
+                    # Check if prefix is valid
                     prefix: str = user_input[CONF_PREFIX]
                     allowed_prefix = cast(str, allowed.get("namePrefix", ""))
                     if allowed_prefix and not prefix.startswith(allowed_prefix):
@@ -93,18 +105,6 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                     if prefix and not prefix.endswith("/"):
                         user_input[CONF_PREFIX] = f"{prefix}/"
 
-            except exception.Unauthorized:
-                errors["base"] = "invalid_credentials"
-            except exception.RestrictedBucket as err:
-                placeholders["restricted_bucket_name"] = err.bucket_name
-                errors[CONF_BUCKET] = "restricted_bucket"
-            except exception.NonExistentBucket:
-                errors[CONF_BUCKET] = "invalid_bucket_name"
-            except exception.ConnectionReset:
-                errors["base"] = "cannot_connect"
-            except exception.MissingAccountData:
-                errors["base"] = "invalid_credentials"
-            else:
                 if not errors:
                     return self.async_create_entry(
                         title=user_input[CONF_BUCKET], data=user_input
