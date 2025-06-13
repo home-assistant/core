@@ -211,3 +211,6 @@ multidict>=6.4.2
 # Stable Alpine current only ships cargo 1.83.0
 # No wheels upstream available for armhf & armv7
 rpds-py==0.24.0
+
+# Temporary pin to fix CI failures
+pycares==4.8.0
