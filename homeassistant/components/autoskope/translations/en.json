@@ -27,14 +27,14 @@
             },
             "user": {
                 "data": {
-                    "host": "Host (Optional)",
+                    "host": "Host (optional)",
                     "password": "Password",
                     "username": "Username"
                 },
                 "data_description": {
                     "host": "The hostname or IP address of your Autoskope API endpoint. Defaults to the standard Autoskope cloud service if left blank.",
                     "password": "The password for your Autoskope account.",
-                    "username": "The username used to login to your Autoskope account."
+                    "username": "The username for your Autoskope account"
                 },
                 "description": "Enter your Autoskope credentials.",
                 "title": "Connect to Autoskope"
@@ -48,11 +48,11 @@
         },
         "invalid_auth": {
             "description": "Authentication with Autoskope failed for user {username}. Please re-authenticate the integration with the correct password.",
-            "title": "Invalid Autoskope Authentication"
+            "title": "Invalid Autoskope authentication"
         },
         "low_battery": {
             "description": "The battery voltage for vehicle {vehicle_name} ({vehicle_id}) is low ({value}V). Consider checking or replacing the battery.",
-            "title": "Low Vehicle Battery ({vehicle_name})"
+            "title": "Low vehicle battery ({vehicle_name})"
         }
     }
 }
