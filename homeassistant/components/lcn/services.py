@@ -16,6 +16,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -438,6 +439,7 @@ SERVICES = (
 )
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for LCN."""
     for service_name, service in SERVICES:
