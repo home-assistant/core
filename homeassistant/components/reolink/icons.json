@@ -172,6 +172,9 @@
       "floodlight_brightness": {
         "default": "mdi:spotlight-beam"
       },
+      "ir_brightness": {
+        "default": "mdi:led-off"
+      },
       "volume": {
         "default": "mdi:volume-high",
         "state": {
@@ -461,6 +464,12 @@
       },
       "doorbell_button_sound": {
         "default": "mdi:volume-high"
+      },
+      "hardwired_chime_enabled": {
+        "default": "mdi:bell",
+        "state": {
+          "off": "mdi:bell-off"
+        }
       },
       "hdr": {
         "default": "mdi:hdr"

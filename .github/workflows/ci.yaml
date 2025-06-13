@@ -40,7 +40,7 @@ env:
   CACHE_VERSION: 2
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2025.6"
+  HA_SHORT_VERSION: "2025.7"
   DEFAULT_PYTHON: "3.13"
   ALL_PYTHON_VERSIONS: "['3.13']"
   # 10.3 is the oldest supported version
@@ -360,7 +360,7 @@ jobs:
       - name: Run ruff
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
+          pre-commit run --hook-stage manual ruff-check --all-files --show-diff-on-failure
         env:
           RUFF_OUTPUT_FORMAT: github
 

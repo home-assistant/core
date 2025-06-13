@@ -15,9 +15,8 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN
-from .coordinator import DevoloDataUpdateCoordinator
+from .coordinator import DevoloDataUpdateCoordinator, DevoloHomeNetworkConfigEntry
 
 type _DataType = (
     LogicalNetwork
