@@ -23,7 +23,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
 
     api: HomeWizardEnergy
 
-    is_battery = entry.unique_id.startswith("HWE-BAT") if entry.unique_id else False
+    is_battery = (
+        True  # entry.unique_id.startswith("HWE-BAT") if entry.unique_id else False
+    )
 
     if (token := entry.data.get(CONF_TOKEN)) and is_battery:
         api = HomeWizardEnergyV2(
