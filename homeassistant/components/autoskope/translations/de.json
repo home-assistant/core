@@ -1,0 +1,58 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mit Autoskope verbinden",
+        "description": "Gib deine Autoskope-Anmeldedaten ein.",
+        "data": {
+          "username": "Benutzername",
+          "password": "Passwort",
+          "host": "Host (Optional)"
+        },
+        "data_description": {
+          "username": "Der Benutzername für dein Autoskope-Konto.",
+          "password": "Das Passwort für dein Autoskope-Konto.",
+          "host": "Der Hostname oder die IP-Adresse deines Autoskope-API-Endpunkts. Standardmäßig der Autoskope-Cloud-Dienst, wenn leer gelassen."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Autoskope neu authentifizieren ({name})",
+        "description": "Die Authentifizierung für Autoskope ist fehlgeschlagen. Bitte gib dein Passwort erneut ein.",
+        "data": {
+          "password": "Passwort"
+        },
+        "description_placeholders": {
+          "name": "Autoskope"
+        }
+      },
+      "reconfigure": {
+        "title": "Autoskope neu konfigurieren",
+        "description": "Um den Host oder Benutzernamen ({username}@{host}) zu ändern, entferne bitte diese Integration und füge sie mit den neuen Details erneut hinzu. Passwortänderungen können über den Neuauthentifizierungsablauf vorgenommen werden, falls dazu aufgefordert wird."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "Neukonfiguration vermerkt. Es wurden keine Änderungen vorgenommen."
+    }
+  },
+  "issues": {
+    "cannot_connect": {
+      "title": "Verbindung zu Autoskope fehlgeschlagen",
+      "description": "Home Assistant konnte keine Verbindung zur Autoskope-API unter {host} herstellen. Bitte überprüfe die Verbindungsdetails und stelle sicher, dass der API-Endpunkt erreichbar ist.\n\nFehler: {error}"
+    },
+    "invalid_auth": {
+      "title": "Ungültige Autoskope-Authentifizierung",
+      "description": "Die Authentifizierung bei Autoskope für Benutzer {username} ist fehlgeschlagen. Bitte authentifiziere die Integration mit dem korrekten Passwort erneut."
+    },
+    "low_battery": {
+      "title": "Niedrige Fahrzeugbatterie ({vehicle_name})",
+      "description": "Die Batteriespannung für das Fahrzeug {vehicle_name} ({vehicle_id}) ist niedrig ({value}V). Erwäge, die Batterie zu überprüfen oder auszutauschen."
+    }
+  }
+}
