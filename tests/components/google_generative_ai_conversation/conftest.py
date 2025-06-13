@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.google_generative_ai_conversation.conversation import (
+from homeassistant.components.google_generative_ai_conversation.entity import (
     CONF_USE_GOOGLE_SEARCH_TOOL,
 )
 from homeassistant.config_entries import ConfigEntry
