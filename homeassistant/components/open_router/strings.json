@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "An OpenRouter API key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "config_subentries": {
+    "model": {
+      "step": {
+        "user": {
+          "description": "Configure the new model",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]"
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add model"
+      },
+      "entry_type": "Model"
+    }
+  }
+}
