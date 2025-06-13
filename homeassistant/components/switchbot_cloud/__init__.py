@@ -29,6 +29,7 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.LOCK,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -45,6 +46,7 @@ class SwitchbotDevices:
     )
     buttons: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     climates: list[tuple[Remote, SwitchBotCoordinator]] = field(default_factory=list)
+    covers: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     switches: list[tuple[Device | Remote, SwitchBotCoordinator]] = field(
         default_factory=list
     )
@@ -171,6 +173,17 @@ async def make_device_data(
                 devices_data.buttons.append((device, coordinator))
             else:
                 devices_data.switches.append((device, coordinator))
+
+    if isinstance(device, Device) and device.device_type in [
+        "Curtain",
+        "Curtain3",
+        "Roller Shade",
+        "Blind Tilt",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.covers.append((device, coordinator))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
