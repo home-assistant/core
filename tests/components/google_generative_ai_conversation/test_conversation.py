@@ -1,6 +1,5 @@
 """Tests for the Google Generative AI Conversation integration conversation platform."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
@@ -39,25 +38,6 @@ def mock_ulid_tools():
     """Mock generated ULIDs for tool calls."""
     with patch("homeassistant.helpers.llm.ulid_now", return_value="mock-tool-call"):
         yield
-
-
-@pytest.fixture
-def mock_send_message_stream() -> Generator[AsyncMock]:
-    """Mock stream response."""
-
-    async def mock_generator(stream):
-        for value in stream:
-            yield value
-
-    with patch(
-        "google.genai.chats.AsyncChat.send_message_stream",
-        AsyncMock(),
-    ) as mock_send_message_stream:
-        mock_send_message_stream.side_effect = lambda **kwargs: mock_generator(
-            mock_send_message_stream.return_value.pop(0)
-        )
-
-        yield mock_send_message_stream
 
 
 @pytest.mark.parametrize(

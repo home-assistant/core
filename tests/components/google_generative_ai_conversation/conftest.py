@@ -1,6 +1,7 @@
 """Tests helpers."""
 
-from unittest.mock import Mock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -77,3 +78,22 @@ async def mock_init_component(
 async def setup_ha(hass: HomeAssistant) -> None:
     """Set up Home Assistant."""
     assert await async_setup_component(hass, "homeassistant", {})
+
+
+@pytest.fixture
+def mock_send_message_stream() -> Generator[AsyncMock]:
+    """Mock stream response."""
+
+    async def mock_generator(stream):
+        for value in stream:
+            yield value
+
+    with patch(
+        "google.genai.chats.AsyncChat.send_message_stream",
+        AsyncMock(),
+    ) as mock_send_message_stream:
+        mock_send_message_stream.side_effect = lambda **kwargs: mock_generator(
+            mock_send_message_stream.return_value.pop(0)
+        )
+
+        yield mock_send_message_stream

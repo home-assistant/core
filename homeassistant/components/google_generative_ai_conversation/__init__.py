@@ -46,6 +46,7 @@ CONF_FILENAMES = "filenames"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (
+    Platform.AI_TASK,
     Platform.CONVERSATION,
     Platform.TTS,
 )
