@@ -26,11 +26,8 @@ class PicnicServiceException(Exception):
     """Exception for Picnic services."""
 
 
-async def async_register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for the Picnic integration, if not registered yet."""
-
-    if hass.services.has_service(DOMAIN, SERVICE_ADD_PRODUCT_TO_CART):
-        return
 
     async def async_add_product_service(call: ServiceCall):
         api_client = await get_api_client(hass, call.data[ATTR_CONFIG_ENTRY_ID])

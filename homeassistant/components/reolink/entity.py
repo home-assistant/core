@@ -82,7 +82,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
             connections={(CONNECTION_NETWORK_MAC, self._host.api.mac_address)},
             name=self._host.api.nvr_name,
             model=self._host.api.model,
-            model_id=self._host.api.item_number,
+            model_id=self._host.api.item_number(),
             manufacturer=self._host.api.manufacturer,
             hw_version=self._host.api.hardware_version,
             sw_version=self._host.api.sw_version,
@@ -142,7 +142,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
 
     async def async_update(self) -> None:
         """Force full update from the generic entity update service."""
-        self._host.last_wake = 0
+        for channel in self._host.api.channels:
+            if self._host.api.supported(channel, "battery"):
+                self._host.last_wake[channel] = 0
         await super().async_update()
 
 
@@ -188,6 +190,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 via_device=(DOMAIN, self._host.unique_id),
                 name=self._host.api.camera_name(dev_ch),
                 model=self._host.api.camera_model(dev_ch),
+                model_id=self._host.api.item_number(dev_ch),
                 manufacturer=self._host.api.manufacturer,
                 hw_version=self._host.api.camera_hardware_version(dev_ch),
                 sw_version=self._host.api.camera_sw_version(dev_ch),

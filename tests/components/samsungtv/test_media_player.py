@@ -409,7 +409,7 @@ async def test_update_ws_connection_failure(
         patch.object(
             remote_websocket,
             "start_listening",
-            side_effect=ConnectionFailure('{"event": "ms.voiceApp.hide"}'),
+            side_effect=ConnectionFailure({"event": "ms.voiceApp.hide"}),
         ),
         patch.object(remote_websocket, "is_alive", return_value=False),
     ):
@@ -419,8 +419,39 @@ async def test_update_ws_connection_failure(
 
     assert (
         "Unexpected ConnectionFailure trying to get remote for fake_host, please "
-        'report this issue: ConnectionFailure(\'{"event": "ms.voiceApp.hide"}\')'
+        "report this issue: ConnectionFailure({'event': 'ms.voiceApp.hide'})"
         in caplog.text
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("rest_api")
+async def test_update_ws_connection_failure_channel_timeout(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    remote_websocket: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Testing update tv connection failure exception."""
+    await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
+
+    with (
+        patch.object(
+            remote_websocket,
+            "start_listening",
+            side_effect=ConnectionFailure({"event": "ms.channel.timeOut"}),
+        ),
+        patch.object(remote_websocket, "is_alive", return_value=False),
+    ):
+        freezer.tick(timedelta(minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        "Channel timeout occurred trying to get remote for fake_host: "
+        "ConnectionFailure({'event': 'ms.channel.timeOut'})" in caplog.text
     )
 
     state = hass.states.get(ENTITY_ID)
