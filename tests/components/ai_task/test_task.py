@@ -4,12 +4,54 @@ from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.ai_task import async_generate_text
+from homeassistant.components.ai_task import DATA_PREFERENCES, async_generate_text
 from homeassistant.components.conversation import async_get_chat_log
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import chat_session
 
 from .conftest import TEST_ENTITY_ID
+
+
+async def test_run_task_preferred_entity(
+    hass: HomeAssistant,
+    init_components: None,
+) -> None:
+    """Test running a task with an unknown entity."""
+    preferences = hass.data[DATA_PREFERENCES]
+
+    with pytest.raises(
+        ValueError, match="No entity_id provided and no preferred entity set"
+    ):
+        await async_generate_text(
+            hass,
+            task_name="Test Task",
+            instructions="Test prompt",
+        )
+
+    preferences.async_set_preferences(gen_text_entity_id="ai_task.unknown")
+
+    with pytest.raises(ValueError, match="AI Task entity ai_task.unknown not found"):
+        await async_generate_text(
+            hass,
+            task_name="Test Task",
+            instructions="Test prompt",
+        )
+
+    preferences.async_set_preferences(gen_text_entity_id=TEST_ENTITY_ID)
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    result = await async_generate_text(
+        hass,
+        task_name="Test Task",
+        instructions="Test prompt",
+    )
+    assert result.result == "Mock result"
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNKNOWN
 
 
 async def test_run_text_task_unknown_entity(
