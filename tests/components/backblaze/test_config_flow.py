@@ -4,12 +4,12 @@ from unittest.mock import patch
 
 from b2sdk.v2 import exception
 
-from homeassistant import config_entries
 from homeassistant.components.backblaze.const import (
     CONF_APPLICATION_KEY,
     CONF_KEY_ID,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -24,7 +24,7 @@ async def _async_start_flow(
     key_id: str,
     application_key: str,
     user_input: dict[str, str] | None = None,
-) -> config_entries.ConfigFlowResult:
+) -> ConfigFlowResult:
     """Initialize the config flow."""
     if user_input is None:
         user_input = USER_INPUT
@@ -32,9 +32,11 @@ async def _async_start_flow(
     user_input[CONF_KEY_ID] = key_id
     user_input[CONF_APPLICATION_KEY] = application_key
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {}
 
     return await hass.config_entries.flow.async_configure(
         result["flow_id"],
