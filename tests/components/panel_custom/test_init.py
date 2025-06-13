@@ -1,7 +1,5 @@
 """The tests for the panel_custom component."""
 
-from unittest.mock import Mock, patch
-
 from homeassistant import setup
 from homeassistant.components import frontend, panel_custom
 from homeassistant.core import HomeAssistant
@@ -22,14 +20,13 @@ async def test_webcomponent_custom_path_not_found(hass: HomeAssistant) -> None:
         }
     }
 
-    with patch("os.path.isfile", Mock(return_value=False)):
-        result = await setup.async_setup_component(hass, "panel_custom", config)
-        assert not result
+    result = await setup.async_setup_component(hass, "panel_custom", config)
+    assert not result
 
-        panels = hass.data.get(frontend.DATA_PANELS, [])
+    panels = hass.data.get(frontend.DATA_PANELS, [])
 
-        assert panels
-        assert "nice_url" not in panels
+    assert panels
+    assert "nice_url" not in panels
 
 
 async def test_js_webcomponent(hass: HomeAssistant) -> None:
