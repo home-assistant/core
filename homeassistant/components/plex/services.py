@@ -23,17 +23,20 @@ REFRESH_LIBRARY_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__package__)
 
 
+async def _async_refresh_library_service(service_call: ServiceCall) -> None:
+    await service_call.hass.async_add_executor_job(
+        refresh_library, service_call.hass, service_call
+    )
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for the Plex component."""
 
-    async def async_refresh_library_service(service_call: ServiceCall) -> None:
-        await hass.async_add_executor_job(refresh_library, hass, service_call)
-
     hass.services.async_register(
         DOMAIN,
         SERVICE_REFRESH_LIBRARY,
-        async_refresh_library_service,
+        _async_refresh_library_service,
         schema=REFRESH_LIBRARY_SCHEMA,
     )
 
