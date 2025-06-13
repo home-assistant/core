@@ -71,23 +71,17 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
         self._attr_name = name
         self._origin = origin
         self._destination = destination
-        self.coordinator = coordinator
 
     async def async_added_to_hass(self) -> None:
         """Handle when the entity is added to Home Assistant."""
         await super().async_added_to_hass()
-
-        if self.coordinator.data is not None:
-            duration = self.coordinator.data["duration"]
-            self._attr_native_value = round(duration) if duration is not None else None
-            self.async_write_ha_state()
+        self._handle_coordinator_update()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.coordinator.data is not None:
-            duration = self.coordinator.data["duration"]
-            self._attr_native_value = round(duration) if duration is not None else None
+        if self.coordinator.data["duration"] is not None:
+            self._attr_native_value = round(self.coordinator.data["duration"])
             self.async_write_ha_state()
 
     @property

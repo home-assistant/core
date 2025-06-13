@@ -3,7 +3,7 @@
 import asyncio
 import logging
 
-from pywaze.route_calculator import WazeRouteCalculator, WRCError
+from pywaze.route_calculator import CalcRoutesResponse, WazeRouteCalculator, WRCError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -134,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             else service.data[CONF_DESTINATION]
         )
 
-        response = None
+        response: list[CalcRoutesResponse] = []
         try:
             response = await async_get_travel_times(
                 client=client,
@@ -153,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         except WRCError as err:
             _LOGGER.warning("Error communicating with Waze API: %s", err)
 
-        if response is None:
+        if not response:
             _LOGGER.warning("No routes found")
 
         return {"routes": [vars(route) for route in response]} if response else None

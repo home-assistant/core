@@ -43,8 +43,8 @@ SECONDS_BETWEEN_API_CALLS = 0.5
 class WazeTravelTimeData(TypedDict):
     """WazeTravelTime Data Type Dictionary."""
 
-    origin: str
-    destination: str
+    origin: str | None
+    destination: str | None
     duration: float | None
     distance: float | None
     route: str | None
@@ -87,8 +87,8 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
             or destination_coordinates is None
         ):
             return WazeTravelTimeData(
-                origin=self._origin,
-                destination=self._destination,
+                origin=None,
+                destination=None,
                 duration=None,
                 distance=None,
                 route=None,
@@ -162,7 +162,7 @@ async def async_get_travel_times(
     units: Literal["metric", "imperial"] = "metric",
     incl_filters: Collection[str] | None = None,
     excl_filters: Collection[str] | None = None,
-) -> list[CalcRoutesResponse] | None:
+) -> list[CalcRoutesResponse]:
     """Get all available routes."""
 
     incl_filters = incl_filters or ()
@@ -173,7 +173,7 @@ async def async_get_travel_times(
         origin,
         destination,
     )
-    routes = []
+    routes: list[CalcRoutesResponse] = []
     vehicle_type = "" if vehicle_type.upper() == "CAR" else vehicle_type.upper()
 
     routes = await client.calc_routes(
@@ -238,8 +238,5 @@ async def async_get_travel_times(
             for route in filtered_routes
             if route.distance is not None
         ]
-
-        if len(filtered_routes) < 1:
-            return None
 
     return filtered_routes
