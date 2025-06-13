@@ -2631,9 +2631,14 @@ def ordinal(value):
     )
 
 
-def from_json(value):
+def from_json(value, default=_SENTINEL):
     """Convert a JSON string to an object."""
-    return json_loads(value)
+    try:
+        return json_loads(value)
+    except JSON_DECODE_EXCEPTIONS:
+        if default is _SENTINEL:
+            raise_no_default("from_json", value)
+        return default
 
 
 def _to_json_default(obj: Any) -> None:
