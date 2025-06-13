@@ -269,3 +269,26 @@ async def test_select_multiple_state_changes(
         blocking=True,
     )
     mock_homewizardenergy.batteries.assert_called_with(mode=Batteries.Mode.STANDBY)
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_ids"),
+    [
+        (
+            "HWE-P1",
+            [
+                "select.device_battery_group_mode",
+            ],
+        ),
+    ],
+)
+async def test_disabled_by_default_selects(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_ids: list[str]
+) -> None:
+    """Test the disabled by default selects."""
+    for entity_id in entity_ids:
+        assert not hass.states.get(entity_id)
+
+        assert (entry := entity_registry.async_get(entity_id))
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
