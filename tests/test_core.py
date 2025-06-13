@@ -328,10 +328,12 @@ async def test_async_create_task_schedule_coroutine() -> None:
         patch.object(loop, "call_soon") as mock_loop_call_soon,
         patch.object(loop, "create_task") as mock_loop_create_task,
     ):
-        ha.HomeAssistant.async_create_task_internal(hass, job(), eager_start=False)
+        coro = job()
+        ha.HomeAssistant.async_create_task_internal(hass, coro, eager_start=False)
         assert mock_loop_call_soon.call_count == 0
         assert mock_loop_create_task.call_count == 1
         assert hass.add_job.call_count == 0
+        await coro
 
 
 async def test_async_create_task_eager_start_schedule_coroutine() -> None:
@@ -355,13 +357,15 @@ async def test_async_create_task_schedule_coroutine_with_name() -> None:
     async def job():
         pass
 
+    coro = job()
     task = ha.HomeAssistant.async_create_task_internal(
-        hass, job(), "named task", eager_start=False
+        hass, coro, "named task", eager_start=False
     )
     assert hass.loop.call_soon.call_count == 0
     assert hass.loop.create_task.call_count == 1
     assert hass.add_job.call_count == 0
     assert "named task" in str(task)
+    await coro
 
 
 async def test_async_run_eager_hass_job_calls_callback() -> None:
