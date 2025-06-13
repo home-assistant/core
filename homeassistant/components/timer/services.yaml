@@ -37,4 +37,28 @@ change:
       selector:
         text:
 
+at_least:
+  target:
+    entity:
+      domain: timer
+  fields:
+    duration:
+      default: 0
+      required: true
+      example: "00:01:00 or 60"
+      selector:
+        text:
+
+at_most:
+  target:
+    entity:
+      domain: timer
+  fields:
+    duration:
+      default: 0
+      required: true
+      example: "00:01:00 or 60"
+      selector:
+        text:
+
 reload:
