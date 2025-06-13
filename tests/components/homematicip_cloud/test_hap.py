@@ -258,7 +258,7 @@ async def test_async_connect(
     hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
 ) -> None:
     """Test async_connect."""
-    hass.config.components.add(DOMAIN)
+    hass.config.components.add(HMIPC_DOMAIN)
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
 
