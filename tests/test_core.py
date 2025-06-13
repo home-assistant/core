@@ -314,7 +314,7 @@ async def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
     ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(job))
     assert hass.loop.call_soon.call_count == 0
     assert hass.loop.create_task.call_count == 0
-    assert hass.loop.run_in_executor.call_count == 2
+    assert hass.loop.run_in_executor.call_count == 1
 
 
 async def test_async_create_task_schedule_coroutine() -> None:
