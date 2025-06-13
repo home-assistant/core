@@ -6,7 +6,7 @@ from bring_api import BringNotificationType
 import voluptuous as vol
 
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -35,6 +35,7 @@ async def _async_send_message(call: ServiceCall) -> None:
     )
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up actions for bring integration."""
 
