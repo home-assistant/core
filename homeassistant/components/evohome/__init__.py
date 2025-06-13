@@ -36,7 +36,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.service import verify_domain_entity_control
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -162,12 +162,12 @@ def setup_service_functions(
     It appears that all TCC-compatible systems support the same three zones modes.
     """
 
-    @verify_domain_control(hass, DOMAIN)
+    @verify_domain_entity_control(DOMAIN)
     async def force_refresh(call: ServiceCall) -> None:
         """Obtain the latest state data via the vendor's RESTful API."""
         await coordinator.async_refresh()
 
-    @verify_domain_control(hass, DOMAIN)
+    @verify_domain_entity_control(DOMAIN)
     async def set_system_mode(call: ServiceCall) -> None:
         """Set the system mode."""
         assert coordinator.tcs is not None  # mypy
@@ -179,7 +179,7 @@ def setup_service_functions(
         }
         async_dispatcher_send(hass, DOMAIN, payload)
 
-    @verify_domain_control(hass, DOMAIN)
+    @verify_domain_entity_control(DOMAIN)
     async def set_zone_override(call: ServiceCall) -> None:
         """Set the zone override (setpoint)."""
         entity_id = call.data[ATTR_ENTITY_ID]
