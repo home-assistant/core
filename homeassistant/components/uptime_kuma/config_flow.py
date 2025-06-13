@@ -49,10 +49,10 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
             url = URL(user_input[CONF_URL])
             self._async_abort_entries_match({CONF_URL: url.human_repr()})
 
+            session = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
             uptime_kuma = UptimeKuma(session, url, user_input[CONF_API_KEY])
 
             try:
