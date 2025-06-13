@@ -16,6 +16,8 @@ HAS_PORT = {
     MonitorType.GAMEDIG,
     MonitorType.MQTT,
     MonitorType.RADIUS,
+    MonitorType.SNMP,
+    MonitorType.SMTP,
 }
 HAS_HOST = HAS_PORT | {
     MonitorType.PING,
