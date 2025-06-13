@@ -1,7 +1,7 @@
 {
   "domain": "blue_current",
   "name": "Blue Current",
-  "codeowners": ["@Floris272", "@gleeuwen"],
+  "codeowners": ["@gleeuwen", "@NickKoepr", "@jtodorova23"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/blue_current",
   "iot_class": "cloud_push",

@@ -12,6 +12,8 @@ from homeassistant.util.enum import try_parse_enum
 
 from .entity import EsphomeEntity, platform_async_setup_entry
 
+PARALLEL_UPDATES = 0
+
 
 class EsphomeEvent(EsphomeEntity[EventInfo, Event], EventEntity):
     """An event implementation for ESPHome."""

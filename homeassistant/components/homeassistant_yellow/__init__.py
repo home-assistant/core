@@ -90,16 +90,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 minor_version=2,
             )
 
-        if config_entry.minor_version == 2:
-            # Add a `firmware_version` key
+        if config_entry.minor_version <= 3:
+            # Add a `firmware_version` key if it doesn't exist to handle entries created
+            # with minor version 1.3 where the firmware version was not set.
             hass.config_entries.async_update_entry(
                 config_entry,
                 data={
                     **config_entry.data,
-                    FIRMWARE_VERSION: None,
+                    FIRMWARE_VERSION: config_entry.data.get(FIRMWARE_VERSION),
                 },
                 version=1,
-                minor_version=3,
+                minor_version=4,
             )
 
         _LOGGER.debug(

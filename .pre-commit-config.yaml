@@ -1,8 +1,8 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.0
+    rev: v0.11.12
     hooks:
-      - id: ruff
+      - id: ruff-check
         args:
           - --fix
       - id: ruff-format
@@ -30,7 +30,7 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.35.1
+    rev: v1.37.1
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier

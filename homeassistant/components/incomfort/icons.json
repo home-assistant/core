@@ -32,6 +32,7 @@
           "sensor_test": "mdi:thermometer-check",
           "central_heating": "mdi:radiator",
           "standby": "mdi:water-boiler-off",
+          "off": "mdi:water-boiler-off",
           "postrun_boyler": "mdi:water-boiler-auto",
           "service": "mdi:progress-wrench",
           "tapwater": "mdi:faucet",

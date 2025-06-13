@@ -1,14 +1,12 @@
 """Basic checks for HomeKit sensor."""
 
 from collections.abc import Callable
-from unittest.mock import patch
 
-from aiohomekit.model import Accessory, Transport
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.protocol.statuscodes import HapStatusCode
-from aiohomekit.testing import FakePairing
 import pytest
 
 from homeassistant.components.homekit_controller.sensor import (
@@ -406,34 +404,36 @@ def test_thread_status_to_str() -> None:
     assert thread_status_to_str(ThreadStatus.DISABLED) == "disabled"
 
 
-@pytest.mark.usefixtures("enable_bluetooth", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "enable_bluetooth",
+    "entity_registry_enabled_by_default",
+    "fake_ble_discovery",
+    "fake_ble_pairing",
+)
 async def test_rssi_sensor(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
     """Test an rssi sensor."""
     inject_bluetooth_service_info(hass, TEST_DEVICE_SERVICE_INFO)
 
-    class FakeBLEPairing(FakePairing):
-        """Fake BLE pairing."""
-
-        @property
-        def transport(self):
-            return Transport.BLE
-
-    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
-        # Any accessory will do for this test, but we need at least
-        # one or the rssi sensor will not be created
-        await setup_test_component(
-            hass,
-            get_next_aid(),
-            create_battery_level_sensor,
-            suffix="battery",
-            connection="BLE",
-        )
-        assert hass.states.get("sensor.testdevice_signal_strength").state == "-56"
+    # Any accessory will do for this test, but we need at least
+    # one or the rssi sensor will not be created
+    await setup_test_component(
+        hass,
+        get_next_aid(),
+        create_battery_level_sensor,
+        suffix="battery",
+        connection="BLE",
+    )
+    assert hass.states.get("sensor.testdevice_signal_strength").state == "-56"
 
 
-@pytest.mark.usefixtures("enable_bluetooth", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "enable_bluetooth",
+    "entity_registry_enabled_by_default",
+    "fake_ble_discovery",
+    "fake_ble_pairing",
+)
 async def test_migrate_rssi_sensor_unique_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -449,24 +449,16 @@ async def test_migrate_rssi_sensor_unique_id(
 
     inject_bluetooth_service_info(hass, TEST_DEVICE_SERVICE_INFO)
 
-    class FakeBLEPairing(FakePairing):
-        """Fake BLE pairing."""
-
-        @property
-        def transport(self):
-            return Transport.BLE
-
-    with patch("aiohomekit.testing.FakePairing", FakeBLEPairing):
-        # Any accessory will do for this test, but we need at least
-        # one or the rssi sensor will not be created
-        await setup_test_component(
-            hass,
-            get_next_aid(),
-            create_battery_level_sensor,
-            suffix="battery",
-            connection="BLE",
-        )
-        assert hass.states.get("sensor.renamed_rssi").state == "-56"
+    # Any accessory will do for this test, but we need at least
+    # one or the rssi sensor will not be created
+    await setup_test_component(
+        hass,
+        get_next_aid(),
+        create_battery_level_sensor,
+        suffix="battery",
+        connection="BLE",
+    )
+    assert hass.states.get("sensor.renamed_rssi").state == "-56"
 
     assert (
         entity_registry.async_get(rssi_sensor.entity_id).unique_id

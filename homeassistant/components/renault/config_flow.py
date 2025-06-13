@@ -11,7 +11,11 @@ from renault_api.const import AVAILABLE_LOCALES
 from renault_api.gigya.exceptions import GigyaException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, DOMAIN
@@ -46,6 +50,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
         Ask the user for API keys.
         """
         errors: dict[str, str] = {}
+        suggested_values: Mapping[str, Any] | None = None
         if user_input:
             locale = user_input[CONF_LOCALE]
             self.renault_config.update(user_input)
@@ -64,9 +69,15 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 if login_success:
                     return await self.async_step_kamereon()
                 errors["base"] = "invalid_credentials"
+            suggested_values = user_input
+        elif self.source == SOURCE_RECONFIGURE:
+            suggested_values = self._get_reconfigure_entry().data
+
         return self.async_show_form(
             step_id="user",
-            data_schema=USER_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                USER_SCHEMA, suggested_values
+            ),
             errors=errors,
         )
 
@@ -76,6 +87,14 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
         """Select Kamereon account."""
         if user_input:
             await self.async_set_unique_id(user_input[CONF_KAMEREON_ACCOUNT_ID])
+            if self.source == SOURCE_RECONFIGURE:
+                self._abort_if_unique_id_mismatch()
+                self.renault_config.update(user_input)
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=self.renault_config,
+                )
+
             self._abort_if_unique_id_configured()
 
             self.renault_config.update(user_input)
@@ -128,3 +147,9 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
         )
+
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_user()

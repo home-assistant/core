@@ -5,7 +5,27 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from homeassistant.core import HomeAssistant, callback
+import psutil_home_assistant as ha_psutil
+
+from homeassistant.components import websocket_api
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+
+
+@dataclass
+class HardwareData:
+    """Hardware data."""
+
+    hardware_platform: dict[str, HardwareProtocol]
+    system_status: SystemStatus
+
+
+@dataclass(slots=True)
+class SystemStatus:
+    """System status."""
+
+    ha_psutil: ha_psutil
+    remove_periodic_timer: CALLBACK_TYPE | None
+    subscribers: set[tuple[websocket_api.ActiveConnection, int]]
 
 
 @dataclass(slots=True)

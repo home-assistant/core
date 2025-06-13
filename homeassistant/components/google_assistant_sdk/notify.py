@@ -5,12 +5,15 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_LANGUAGE_CODE, DOMAIN
-from .helpers import async_send_text_commands, default_language_code
+from .helpers import (
+    GoogleAssistantSDKConfigEntry,
+    async_send_text_commands,
+    default_language_code,
+)
 
 # https://support.google.com/assistant/answer/9071582?hl=en
 LANG_TO_BROADCAST_COMMAND = {
@@ -59,7 +62,9 @@ class BroadcastNotificationService(BaseNotificationService):
             return
 
         # There can only be 1 entry (config_flow has single_instance_allowed)
-        entry: ConfigEntry = self.hass.config_entries.async_entries(DOMAIN)[0]
+        entry: GoogleAssistantSDKConfigEntry = self.hass.config_entries.async_entries(
+            DOMAIN
+        )[0]
         language_code = entry.options.get(
             CONF_LANGUAGE_CODE, default_language_code(self.hass)
         )

@@ -21,6 +21,8 @@ from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoo
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import get_device_entry_gen, get_rpc_key_ids
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

@@ -378,7 +378,7 @@ def _get_annotation(item: Any) -> tuple[str, int | str] | None:
     if not hasattr(item, "__config_file__"):
         return None
 
-    return (getattr(item, "__config_file__"), getattr(item, "__line__", "?"))
+    return (item.__config_file__, getattr(item, "__line__", "?"))
 
 
 def _get_by_path(data: dict | list, items: list[Hashable]) -> Any:
