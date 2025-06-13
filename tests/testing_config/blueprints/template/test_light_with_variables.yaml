@@ -11,7 +11,7 @@ blueprint:
           domain: sensor
 variables:
   sensor: !input sensor
-switch:
+light:
   availability: "{{ sensor | has_value }}"
   state: "{{ is_state(sensor,'on') }}"
   turn_on: []

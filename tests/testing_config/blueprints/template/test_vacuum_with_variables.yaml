@@ -11,8 +11,7 @@ blueprint:
           domain: sensor
 variables:
   sensor: !input sensor
-switch:
+vacuum:
   availability: "{{ sensor | has_value }}"
-  state: "{{ is_state(sensor,'on') }}"
-  turn_on: []
-  turn_off: []
+  state: "{{ states(sensor) }}"
+  start: []
