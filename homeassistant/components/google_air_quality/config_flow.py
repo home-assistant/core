@@ -1,6 +1,5 @@
 """Config flow for Google Air Quality."""
 
-import asyncio
 import logging
 from typing import Any
 
@@ -151,7 +150,8 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             try:
                 geo_data = await client.async_reverse_geocode(lat, lon)
                 title = geo_data.results[0].formatted_address
-            except Exception:  # noqa: BLE001
+            except (GoogleAirQualityApiError, ValueError, IndexError):
+                _LOGGER.exception("Could not resolve address for %s,%s:", lat, lon)
                 title = f"Coordinates {lat}, {lon}"
             result = self.async_create_entry(
                 title=title,
@@ -160,7 +160,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             )
 
             async def reload_later() -> None:
-                await asyncio.sleep(0)
+                await hass.async_block_till_done()
                 await self.hass.config_entries.async_reload(entry.entry_id)
 
             self.hass.async_create_task(reload_later())

@@ -7,7 +7,7 @@ rules:
   has-entity-name: done
   action-setup:
     status: exempt
-    comment: Integration does not have actrions
+    comment: Integration does not have actions
   appropriate-polling: done
   test-before-configure: done
   entity-event-setup:
@@ -22,7 +22,7 @@ rules:
   config-flow-test-coverage: done
   docs-actions:
     status: exempt
-    comment: Integration does not have actrions
+    comment: Integration does not have actions
   runtime-data: done
 
   # Silver

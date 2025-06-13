@@ -180,7 +180,6 @@ class AirQualitySensorEntity(
         self._attr_translation_placeholders = {
             "local_aqi": coordinator.data.indexes[1].display_name
         }
-        self.subentry_id = subentry_id
 
     @property
     def native_value(self) -> StateType:
