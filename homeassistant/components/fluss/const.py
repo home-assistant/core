@@ -3,4 +3,4 @@
 import logging
 
 DOMAIN = "fluss"
-LOGGER = logging.getLogger(DOMAIN)
+LOGGER = logging.getLogger(__package__)

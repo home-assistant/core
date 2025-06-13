@@ -6,9 +6,16 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from fluss_api import (
+    FlussApiClient,
+    FlussApiClientAuthenticationError,
+    FlussApiClientCommunicationError,
+    FlussApiClientError,
+)
 from fluss_api.main import FlussApiClient
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
@@ -22,11 +29,19 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        api: FlussApiClient,
         api_key: str,
     ) -> None:
         """Initialize the coordinator."""
-        self.api = api
+        try:
+            self.api = FlussApiClient(api_key)
+        except FlussApiClientAuthenticationError as e:
+            raise ConfigEntryAuthFailed from e
+        except (FlussApiClientCommunicationError, FlussApiClientError) as e:
+            raise ConfigEntryNotReady from e
+        except Exception as e:
+            raise ConfigEntryNotReady(
+                f"Failed to initialize Fluss API client: {e}"
+            ) from e
         super().__init__(
             hass,
             _LOGGER,
@@ -38,5 +53,5 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch data from the Fluss API."""
         try:
             return await self.api.async_get_devices()
-        except Exception as err:
-            raise UpdateFailed(f"Error fetching Fluss data: {err}") from err
+        except FlussApiClientError as err:
+            raise UpdateFailed(f"Error fetching Fluss devices: {err}") from err

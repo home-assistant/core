@@ -39,10 +39,9 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         errors: dict[str, str] = {}
-
+        session = async_get_clientsession(self.hass)
         if user_input is not None:
             try:
-                session = async_get_clientsession(self.hass)
                 FlussApiClient(user_input[CONF_API_KEY], session=session)
             except FlussApiClientCommunicationError:
                 errors["base"] = "cannot_connect"

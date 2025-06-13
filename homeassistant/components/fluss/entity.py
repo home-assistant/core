@@ -2,45 +2,32 @@
 
 import logging
 
-from fluss_api import FlussApiClientCommunicationError
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity, EntityDescription
+from .coordinator import FlussDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class FlussEntity(Entity):
+class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
     """Base class for Fluss entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        device: object,
-        entry: ConfigEntry,
+        coordinator: FlussDataUpdateCoordinator,
+        device_id: str,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize the entity."""
-        self.hass = hass
-        self.device = device
-        self.entry = entry
+        super().__init__(coordinator)
+        self.device_id = device_id
         self.entity_description = entity_description
+        self._attr_unique_id = f"{device_id}_{entity_description.key}"
 
-    def _update_entry_data(self) -> None:
-        """Update the entry data if necessary."""
-        new_address = getattr(self.device, "unique_id", None)
-        new_data = {**self.entry.data, "address": new_address}
-
-        if new_data != self.entry.data:
-            self.hass.config_entries.async_update_entry(self.entry, data=new_data)
-
-    async def async_update(self):
-        """Fetch new state data for the entity."""
-        _LOGGER.debug("Updating FlussEntity: %s", self.device)
-        try:
-            await self.device.async_update()
-        except FlussApiClientCommunicationError:
-            _LOGGER.error("Failed to update device: %s", self.device)
+    @property
+    def device(self) -> dict | None:
+        """Return the device data from the coordinator."""
+        return self.coordinator.data.get(self.device_id)

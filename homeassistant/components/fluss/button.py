@@ -21,18 +21,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fluss Devices, filtering out any invalid payloads."""
-    coordinator: FlussDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     devices = coordinator.data.get("devices", [])
 
     entities: list[FlussButton] = []
     for device in devices:
         if not isinstance(device, dict):
-            _LOGGER.warning("Skipping non-dict device: %s", device)
             continue
 
         device_id = device.get("deviceId")
         if device_id is None:
-            _LOGGER.warning("Skipping Fluss device without deviceId: %s", device)
+            _LOGGER.debug("Skipping Fluss device without deviceId: %s", device)
             continue
 
         entities.append(FlussButton(coordinator, device))
