@@ -5,11 +5,64 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.conversation import async_get_chat_log
-from homeassistant.components.llm_task import LLMTaskType, async_run_task
+from homeassistant.components.llm_task import (
+    DATA_PREFERENCES,
+    LLMTaskType,
+    async_run_task,
+)
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import chat_session
 
 from .conftest import TEST_ENTITY_ID
+
+
+@pytest.mark.parametrize("task_type", [LLMTaskType.SUMMARY, LLMTaskType.GENERATE])
+async def test_run_task_preferred_entity(
+    hass: HomeAssistant,
+    init_components: None,
+    task_type: LLMTaskType,
+) -> None:
+    """Test running a task with an unknown entity."""
+    preferences = hass.data[DATA_PREFERENCES]
+    preferences_key = f"{task_type.value}_entity_id"
+
+    with pytest.raises(
+        ValueError,
+        match="No entity_id provided and no preferred entity set for this task type",
+    ):
+        await async_run_task(
+            hass,
+            task_name="Test Task",
+            task_type=task_type,
+            prompt="Test prompt",
+        )
+
+    preferences.async_set_preferences(**{preferences_key: "llm_task.unknown"})
+
+    with pytest.raises(ValueError, match="LLM Task entity llm_task.unknown not found"):
+        await async_run_task(
+            hass,
+            task_name="Test Task",
+            task_type=task_type,
+            prompt="Test prompt",
+        )
+
+    preferences.async_set_preferences(**{preferences_key: TEST_ENTITY_ID})
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    result = await async_run_task(
+        hass,
+        task_name="Test Task",
+        task_type=task_type,
+        prompt="Test prompt",
+    )
+    assert result.result == "Mock result"
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNKNOWN
 
 
 async def test_run_task_unknown_entity(

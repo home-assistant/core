@@ -6,18 +6,30 @@ from dataclasses import dataclass
 
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_COMPONENT, LLMTaskType
+from .const import DATA_COMPONENT, DATA_PREFERENCES, LLMTaskType
 
 
 async def async_run_task(
     hass: HomeAssistant,
     *,
     task_name: str,
-    entity_id: str,
+    entity_id: str | None = None,
     task_type: LLMTaskType,
     prompt: str,
 ) -> LLMTaskResult:
     """Run a task in the LLM Task integration."""
+    if entity_id is None:
+        preferences = hass.data[DATA_PREFERENCES]
+        if task_type == LLMTaskType.SUMMARY:
+            entity_id = preferences.summary_entity_id
+        elif task_type == LLMTaskType.GENERATE:
+            entity_id = preferences.generate_entity_id
+
+    if entity_id is None:
+        raise ValueError(
+            "No entity_id provided and no preferred entity set for this task type"
+        )
+
     entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
     if entity is None:
         raise ValueError(f"LLM Task entity {entity_id} not found")

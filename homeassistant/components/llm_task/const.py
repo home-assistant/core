@@ -10,10 +10,12 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
+    from . import LLMTaskPreferences
     from .entity import LLMTaskEntity
 
 DOMAIN = "llm_task"
 DATA_COMPONENT: HassKey[EntityComponent[LLMTaskEntity]] = HassKey(DOMAIN)
+DATA_PREFERENCES: HassKey[LLMTaskPreferences] = HassKey("llm_task_preferences")
 
 DEFAULT_SYSTEM_PROMPT = (
     "You are a Home Assistant expert and help users with their tasks."
