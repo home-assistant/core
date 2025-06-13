@@ -40,6 +40,11 @@
       "timesync": {
         "name": "Sync time"
       }
+    },
+    "select": {
+      "audio_output_hardware_mode": {
+        "name": "Audio output hardware mode"
+      }
     }
   },
   "exceptions": {
