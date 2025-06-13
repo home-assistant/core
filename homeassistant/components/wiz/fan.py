@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, ClassVar
 
-from propcache.api import cached_property
 from pywizlight.bulblibrary import BulbType, Features
 
 from homeassistant.components.fan import (
@@ -15,6 +14,7 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -43,6 +43,8 @@ class WizFanEntity(WizEntity, FanEntity):
 
     _attr_name = None
 
+    is_on: ClassVar = ToggleEntity.is_on
+
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize a WiZ fan."""
         super().__init__(wiz_data, name)
@@ -64,11 +66,6 @@ class WizFanEntity(WizEntity, FanEntity):
         self._attr_speed_count = bulb_type.fan_speed_range
 
         self._async_update_attrs()
-
-    @cached_property
-    def is_on(self) -> bool | None:
-        """Return True if entity is on."""
-        return self._attr_is_on
 
     @callback
     def _async_update_attrs(self) -> None:
@@ -92,9 +89,9 @@ class WizFanEntity(WizEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if preset_mode == PRESET_MODE_BREEZE:
-            await self._device.fan_set_state(mode=2)
-            await self.coordinator.async_request_refresh()
+        # preset_mode == PRESET_MODE_BREEZE:
+        await self._device.fan_set_state(mode=2)
+        await self.coordinator.async_request_refresh()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
