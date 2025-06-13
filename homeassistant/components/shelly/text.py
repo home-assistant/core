@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from aioshelly.const import RPC_GENERATIONS
 
@@ -28,6 +28,8 @@ from .utils import (
     get_virtual_component_ids,
 )
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RpcTextDescription(RpcEntityDescription, TextEntityDescription):
@@ -38,7 +40,6 @@ RPC_TEXT_ENTITIES: Final = {
     "text": RpcTextDescription(
         key="text",
         sub_key="value",
-        has_entity_name=True,
     ),
 }
 
@@ -76,14 +77,12 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
     """Represent a RPC text entity."""
 
     entity_description: RpcTextDescription
+    attribute_value: str | None
     _id: int
 
     @property
     def native_value(self) -> str | None:
         """Return value of sensor."""
-        if TYPE_CHECKING:
-            assert isinstance(self.attribute_value, str | None)
-
         return self.attribute_value
 
     @rpc_call

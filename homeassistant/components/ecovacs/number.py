@@ -25,7 +25,7 @@ from .entity import (
     EcovacsEntity,
     EventT,
 )
-from .util import get_supported_entitites
+from .util import get_supported_entities
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -87,7 +87,7 @@ async def async_setup_entry(
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
-    entities: list[EcovacsEntity] = get_supported_entitites(
+    entities: list[EcovacsEntity] = get_supported_entities(
         controller, EcovacsNumberEntity, ENTITY_DESCRIPTIONS
     )
     if entities:

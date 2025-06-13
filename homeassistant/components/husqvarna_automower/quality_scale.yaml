@@ -67,7 +67,9 @@ rules:
   reconfiguration-flow:
     status: exempt
     comment: no configuration possible
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: no issues available
   stale-devices: done
 
   # Platinum

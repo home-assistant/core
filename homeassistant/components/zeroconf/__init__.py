@@ -36,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
 from homeassistant.setup import async_when_setup_or_start
 
+from . import websocket_api
 from .const import DOMAIN, ZEROCONF_TYPE
 from .discovery import (  # noqa: F401
     DATA_DISCOVERY,
@@ -198,6 +199,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await discovery.async_setup()
     hass.data[DATA_DISCOVERY] = discovery
+    websocket_api.async_setup(hass)
 
     async def _async_zeroconf_hass_start(hass: HomeAssistant, comp: str) -> None:
         """Expose Home Assistant on zeroconf when it starts.

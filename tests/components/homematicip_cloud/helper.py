@@ -15,7 +15,7 @@ from homematicip.device import Device
 from homematicip.group import Group
 from homematicip.home import Home
 
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_IS_GROUP,
     ATTR_MODEL_TYPE,
@@ -116,11 +116,11 @@ class HomeFactory:
             "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.get_hap",
             return_value=mock_home,
         ):
-            assert await async_setup_component(self.hass, HMIPC_DOMAIN, {})
+            assert await async_setup_component(self.hass, DOMAIN, {})
 
         await self.hass.async_block_till_done()
 
-        hap = self.hass.data[HMIPC_DOMAIN][HAPID]
+        hap = self.hmip_config_entry.runtime_data
         mock_home.on_update(hap.async_update)
         mock_home.on_create(hap.async_create_entity)
         return hap

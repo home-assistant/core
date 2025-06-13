@@ -16,6 +16,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -77,7 +78,8 @@ def _read_file_contents(
     return results
 
 
-def async_register_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register Google Photos services."""
 
     async def async_handle_upload(call: ServiceCall) -> ServiceResponse:
@@ -152,11 +154,10 @@ def async_register_services(hass: HomeAssistant) -> None:
             }
         return None
 
-    if not hass.services.has_service(DOMAIN, UPLOAD_SERVICE):
-        hass.services.async_register(
-            DOMAIN,
-            UPLOAD_SERVICE,
-            async_handle_upload,
-            schema=UPLOAD_SERVICE_SCHEMA,
-            supports_response=SupportsResponse.OPTIONAL,
-        )
+    hass.services.async_register(
+        DOMAIN,
+        UPLOAD_SERVICE,
+        async_handle_upload,
+        schema=UPLOAD_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
+    )

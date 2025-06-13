@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import (
@@ -32,6 +32,7 @@ from .coordinator import (
     LaMarzoccoRuntimeData,
     LaMarzoccoScheduleUpdateCoordinator,
     LaMarzoccoSettingsUpdateCoordinator,
+    LaMarzoccoStatisticsUpdateCoordinator,
 )
 
 PLATFORMS = [
@@ -56,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     assert entry.unique_id
     serial = entry.unique_id
 
-    client = async_create_clientsession(hass)
+    client = async_get_clientsession(hass)
     cloud_client = LaMarzoccoCloudClient(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
@@ -69,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="authentication_failed"
         ) from ex
-    except RequestNotSuccessful as ex:
+    except (RequestNotSuccessful, TimeoutError) as ex:
         _LOGGER.debug(ex, exc_info=True)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="api_error"
@@ -140,12 +141,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         LaMarzoccoConfigUpdateCoordinator(hass, entry, device),
         LaMarzoccoSettingsUpdateCoordinator(hass, entry, device),
         LaMarzoccoScheduleUpdateCoordinator(hass, entry, device),
+        LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device),
     )
 
     await asyncio.gather(
         coordinators.config_coordinator.async_config_entry_first_refresh(),
         coordinators.settings_coordinator.async_config_entry_first_refresh(),
         coordinators.schedule_coordinator.async_config_entry_first_refresh(),
+        coordinators.statistics_coordinator.async_config_entry_first_refresh(),
     )
 
     entry.runtime_data = coordinators

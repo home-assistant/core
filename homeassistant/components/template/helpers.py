@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.singleton import singleton
 
-from .const import DOMAIN, TEMPLATE_BLUEPRINT_SCHEMA
+from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 
 DATA_BLUEPRINTS = "template_blueprints"
@@ -54,6 +54,9 @@ async def _reload_blueprint_templates(hass: HomeAssistant, blueprint_path: str) 
 @callback
 def async_get_blueprints(hass: HomeAssistant) -> blueprint.DomainBlueprints:
     """Get template blueprints."""
+    # pylint: disable-next=import-outside-toplevel
+    from .config import TEMPLATE_BLUEPRINT_SCHEMA
+
     return blueprint.DomainBlueprints(
         hass,
         DOMAIN,

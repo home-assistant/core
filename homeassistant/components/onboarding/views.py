@@ -197,7 +197,7 @@ class UserOnboardingView(_BaseOnboardingStepView):
                 {"username": data["username"]}
             )
             await hass.auth.async_link_user(user, credentials)
-            if "person" in hass.config.components:
+            if await async_wait_component(hass, "person"):
                 await person.async_create_person(hass, data["name"], user_id=user.id)
 
             # Create default areas using the users supplied language.

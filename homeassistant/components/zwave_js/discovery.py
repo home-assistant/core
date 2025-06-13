@@ -1204,7 +1204,7 @@ DISCOVERY_SCHEMAS = [
             property={RESET_METER_PROPERTY},
             type={ValueType.BOOLEAN},
         ),
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category=EntityCategory.CONFIG,
     ),
     ZWaveDiscoverySchema(
         platform=Platform.BINARY_SENSOR,

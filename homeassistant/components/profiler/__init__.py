@@ -256,7 +256,7 @@ async def async_setup_entry(  # noqa: C901
         """Log all scheduled in the event loop."""
         with _increase_repr_limit():
             handle: asyncio.Handle
-            for handle in getattr(hass.loop, "_scheduled"):
+            for handle in getattr(hass.loop, "_scheduled"):  # noqa: B009
                 if not handle.cancelled():
                     _LOGGER.critical("Scheduled: %s", handle)
 

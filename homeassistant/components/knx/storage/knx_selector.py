@@ -43,7 +43,20 @@ class GASelector:
         self._add_group_addresses(schema)
         self._add_passive(schema)
         self._add_dpt(schema)
-        return vol.Schema(schema)
+        return vol.Schema(
+            vol.All(
+                schema,
+                vol.Schema(  # one group address shall be included
+                    vol.Any(
+                        {vol.Required(CONF_GA_WRITE): vol.IsTrue()},
+                        {vol.Required(CONF_GA_STATE): vol.IsTrue()},
+                        {vol.Required(CONF_GA_PASSIVE): vol.IsTrue()},
+                        msg="At least one group address must be set",
+                    ),
+                    extra=vol.ALLOW_EXTRA,
+                ),
+            )
+        )
 
     def _add_group_addresses(self, schema: dict[vol.Marker, Any]) -> None:
         """Add basic group address items to the schema."""
