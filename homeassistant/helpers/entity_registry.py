@@ -920,6 +920,8 @@ class EntityRegistry(BaseRegistry):
         if entity_id:
             return self.async_update_entity(
                 entity_id,
+                disabled_by=disabled_by,
+                hidden_by=hidden_by,
                 capabilities=capabilities,
                 config_entry_id=config_entry_id,
                 config_subentry_id=config_subentry_id,
