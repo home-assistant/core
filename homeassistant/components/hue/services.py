@@ -25,46 +25,47 @@ from .const import (
 LOGGER = logging.getLogger(__name__)
 
 
+async def _hue_activate_scene(call: ServiceCall, skip_reload=True) -> None:
+    """Handle activation of Hue scene."""
+    # Get parameters
+    group_name = call.data[ATTR_GROUP_NAME]
+    scene_name = call.data[ATTR_SCENE_NAME]
+    transition = call.data.get(ATTR_TRANSITION)
+    dynamic = call.data.get(ATTR_DYNAMIC, False)
+
+    # Call the set scene function on each bridge
+    entries: list[HueConfigEntry] = call.hass.config_entries.async_loaded_entries(
+        DOMAIN
+    )
+    tasks = [
+        hue_activate_scene_v1(entry.runtime_data, group_name, scene_name, transition)
+        if entry.runtime_data.api_version == 1
+        else hue_activate_scene_v2(
+            entry.runtime_data, group_name, scene_name, transition, dynamic
+        )
+        for entry in entries
+    ]
+    results = await asyncio.gather(*tasks)
+
+    # Did *any* bridge succeed?
+    # Note that we'll get a "True" value for a successful call
+    if True not in results:
+        LOGGER.warning(
+            "No bridge was able to activate scene %s in group %s",
+            scene_name,
+            group_name,
+        )
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for Hue integration."""
-
-    async def hue_activate_scene(call: ServiceCall, skip_reload=True) -> None:
-        """Handle activation of Hue scene."""
-        # Get parameters
-        group_name = call.data[ATTR_GROUP_NAME]
-        scene_name = call.data[ATTR_SCENE_NAME]
-        transition = call.data.get(ATTR_TRANSITION)
-        dynamic = call.data.get(ATTR_DYNAMIC, False)
-
-        # Call the set scene function on each bridge
-        entries: list[HueConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
-        tasks = [
-            hue_activate_scene_v1(
-                entry.runtime_data, group_name, scene_name, transition
-            )
-            if entry.runtime_data.api_version == 1
-            else hue_activate_scene_v2(
-                entry.runtime_data, group_name, scene_name, transition, dynamic
-            )
-            for entry in entries
-        ]
-        results = await asyncio.gather(*tasks)
-
-        # Did *any* bridge succeed?
-        # Note that we'll get a "True" value for a successful call
-        if True not in results:
-            LOGGER.warning(
-                "No bridge was able to activate scene %s in group %s",
-                scene_name,
-                group_name,
-            )
 
     # Register a local handler for scene activation
     hass.services.async_register(
         DOMAIN,
         SERVICE_HUE_ACTIVATE_SCENE,
-        verify_domain_control(hass, DOMAIN)(hue_activate_scene),
+        verify_domain_control(hass, DOMAIN)(_hue_activate_scene),
         schema=vol.Schema(
             {
                 vol.Required(ATTR_GROUP_NAME): cv.string,
