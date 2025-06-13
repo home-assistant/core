@@ -40,7 +40,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 8
+STORAGE_VERSION_MINOR = 9
 
 
 class _AreaStoreData(TypedDict):
@@ -52,6 +52,7 @@ class _AreaStoreData(TypedDict):
     icon: str | None
     id: str
     labels: list[str]
+    motion_entity_id: str | None
     name: str
     picture: str | None
     temperature_entity_id: str | None
@@ -82,6 +83,7 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     icon: str | None
     id: str
     labels: set[str] = field(default_factory=set)
+    motion_entity_id: str | None
     picture: str | None
     temperature_entity_id: str | None
     _cache: dict[str, Any] = field(default_factory=dict, compare=False, init=False)
@@ -98,6 +100,7 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
                     "humidity_entity_id": self.humidity_entity_id,
                     "icon": self.icon,
                     "labels": list(self.labels),
+                    "motion_entity_id": self.motion_entity_id,
                     "name": self.name,
                     "picture": self.picture,
                     "temperature_entity_id": self.temperature_entity_id,
@@ -156,6 +159,11 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                 for area in old_data["areas"]:
                     area["humidity_entity_id"] = None
                     area["temperature_entity_id"] = None
+
+            if old_minor_version < 9:
+                # Version 1.9 adds motion_entity_id
+                for area_data in old_data["areas"]:
+                    area_data["motion_entity_id"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -278,6 +286,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         humidity_entity_id: str | None = None,
         icon: str | None = None,
         labels: set[str] | None = None,
+        motion_entity_id: str | None = None,
         picture: str | None = None,
         temperature_entity_id: str | None = None,
     ) -> AreaEntry:
@@ -293,6 +302,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         if humidity_entity_id is not None:
             _validate_humidity_entity(self.hass, humidity_entity_id)
 
+        if motion_entity_id is not None:
+            _validate_motion_entity(self.hass, motion_entity_id)
+
         if temperature_entity_id is not None:
             _validate_temperature_entity(self.hass, temperature_entity_id)
 
@@ -303,6 +315,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             icon=icon,
             id=self._generate_id(name),
             labels=labels or set(),
+            motion_entity_id=motion_entity_id,
             name=name,
             picture=picture,
             temperature_entity_id=temperature_entity_id,
@@ -345,6 +358,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         humidity_entity_id: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
+        motion_entity_id: str | None | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
         temperature_entity_id: str | None | UndefinedType = UNDEFINED,
@@ -357,6 +371,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             humidity_entity_id=humidity_entity_id,
             icon=icon,
             labels=labels,
+            motion_entity_id=motion_entity_id,
             name=name,
             picture=picture,
             temperature_entity_id=temperature_entity_id,
@@ -381,6 +396,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         humidity_entity_id: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
+        motion_entity_id: str | None | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
         temperature_entity_id: str | None | UndefinedType = UNDEFINED,
@@ -396,6 +412,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 ("humidity_entity_id", humidity_entity_id),
                 ("icon", icon),
                 ("labels", labels),
+                ("motion_entity_id", motion_entity_id),
                 ("picture", picture),
                 ("temperature_entity_id", temperature_entity_id),
             )
@@ -404,6 +421,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
 
         if "humidity_entity_id" in new_values and humidity_entity_id is not None:
             _validate_humidity_entity(self.hass, new_values["humidity_entity_id"])
+
+        if "motion_entity_id" in new_values and motion_entity_id is not None:
+            _validate_motion_entity(self.hass, new_values["motion_entity_id"])
 
         if "temperature_entity_id" in new_values and temperature_entity_id is not None:
             _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
@@ -440,6 +460,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     icon=area["icon"],
                     id=area["id"],
                     labels=set(area["labels"]),
+                    motion_entity_id=area["motion_entity_id"],
                     name=area["name"],
                     picture=area["picture"],
                     temperature_entity_id=area["temperature_entity_id"],
@@ -462,6 +483,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     "icon": entry.icon,
                     "id": entry.id,
                     "labels": list(entry.labels),
+                    "motion_entity_id": entry.motion_entity_id,
                     "name": entry.name,
                     "picture": entry.picture,
                     "temperature_entity_id": entry.temperature_entity_id,
@@ -569,3 +591,18 @@ def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> None:
         or state.attributes.get(ATTR_DEVICE_CLASS) != SensorDeviceClass.HUMIDITY
     ):
         raise ValueError(f"Entity {entity_id} is not a humidity sensor")
+
+
+def _validate_motion_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Validate motion entity."""
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+
+    if not (state := hass.states.get(entity_id)):
+        raise ValueError(f"Entity {entity_id} does not exist")
+
+    if (
+        state.domain != "binary_sensor"
+        or state.attributes.get(ATTR_DEVICE_CLASS) != BinarySensorDeviceClass.MOTION
+    ):
+        raise ValueError(f"Entity {entity_id} is not a motion binary_sensor")
