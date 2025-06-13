@@ -9,7 +9,7 @@ from pypaperless.exceptions import (
     PaperlessInvalidTokenError,
 )
 
-from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -25,6 +25,7 @@ from .coordinator import (
     PaperlessStatisticCoordinator,
     PaperlessStatusCoordinator,
 )
+from .helper import get_ssl_context
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
@@ -66,9 +67,12 @@ async def _get_paperless_api(
 ) -> Paperless:
     """Create and initialize paperless-ngx API."""
 
+    ssl_context = await get_ssl_context(hass, entry.data[CONF_VERIFY_SSL])
+
     api = Paperless(
         entry.data[CONF_URL],
         entry.data[CONF_API_KEY],
+        request_args={"ssl": ssl_context},
         session=async_get_clientsession(hass),
     )
 
@@ -102,3 +106,20 @@ async def _get_paperless_api(
         ) from err
     else:
         return api
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: PaperlessConfigEntry
+) -> bool:
+    """Migrate config entry to a new version."""
+
+    entry_data = {**config_entry.data}
+
+    if config_entry.minor_version < 2:
+        entry_data[CONF_VERIFY_SSL] = True
+
+    hass.config_entries.async_update_entry(
+        config_entry, data=entry_data, minor_version=2, version=1
+    )
+
+    return True

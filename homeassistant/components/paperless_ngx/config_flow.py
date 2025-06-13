@@ -16,21 +16,25 @@ from pypaperless.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
+from .helper import get_ssl_context
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): str,
         vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
 
 class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Paperless-ngx."""
+
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -86,6 +90,9 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_URL: user_input[CONF_URL]
                     if user_input is not None
                     else entry.data[CONF_URL],
+                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL]
+                    if user_input is not None
+                    else entry.data[CONF_VERIFY_SSL],
                 },
             ),
             errors=errors,
@@ -122,12 +129,15 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _validate_input(self, user_input: dict[str, str]) -> dict[str, str]:
+    async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         errors: dict[str, str] = {}
+
+        ssl_context = await get_ssl_context(self.hass, user_input[CONF_VERIFY_SSL])
 
         client = Paperless(
             user_input[CONF_URL],
             user_input[CONF_API_KEY],
+            request_args={"ssl": ssl_context},
             session=async_get_clientsession(self.hass),
         )
 
