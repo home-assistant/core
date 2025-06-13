@@ -9,11 +9,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.ekeybionyx import (
-    DOMAIN as EKEYBIONYX_DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-)
+from homeassistant.components.ekeybionyx import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.components.ekeybionyx.const import SCOPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -33,7 +29,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "application_credentials", {})
     await async_import_client_credential(
         hass,
-        EKEYBIONYX_DOMAIN,
+        DOMAIN,
         ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
@@ -50,7 +46,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        EKEYBIONYX_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -108,8 +104,8 @@ async def test_full_flow(
                 "url": "http://localhost:8123",
             },
         )
-    assert len(hass.config_entries.async_entries(EKEYBIONYX_DOMAIN)) == 1
-    assert hass.config_entries.async_entries(EKEYBIONYX_DOMAIN)[0].data == {
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert hass.config_entries.async_entries(DOMAIN)[0].data == {
         "webhooks": [
             {
                 "webhook_id": "1234567890",
@@ -135,7 +131,7 @@ async def test_no_own_system(
 ) -> None:
     """Check no own System flow."""
     result = await hass.config_entries.flow.async_init(
-        EKEYBIONYX_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -168,7 +164,7 @@ async def test_no_own_system(
     )
     flow = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert len(hass.config_entries.async_entries(EKEYBIONYX_DOMAIN)) == 0
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
     assert flow.get("type") is FlowResultType.ABORT
     assert flow.get("reason") == "no_own_systems"
@@ -184,7 +180,7 @@ async def test_no_availible_webhooks(
 ) -> None:
     """Check no own System flow."""
     result = await hass.config_entries.flow.async_init(
-        EKEYBIONYX_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -217,7 +213,7 @@ async def test_no_availible_webhooks(
     )
     flow = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert len(hass.config_entries.async_entries(EKEYBIONYX_DOMAIN)) == 0
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
     assert flow.get("type") is FlowResultType.ABORT
     assert flow.get("reason") == "no_availible_webhooks"
@@ -235,7 +231,7 @@ async def test_cleanup(
 ) -> None:
     """Check no own System flow."""
     result = await hass.config_entries.flow.async_init(
-        EKEYBIONYX_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -271,7 +267,7 @@ async def test_cleanup(
 
     flow2 = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
 
-    assert len(hass.config_entries.async_entries(EKEYBIONYX_DOMAIN)) == 0
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
     assert flow2.get("type") is FlowResultType.ABORT
     assert flow2.get("reason") == "webhook_deletion_requested"
@@ -287,7 +283,7 @@ async def test_error_on_setup(
 ) -> None:
     """Check no own System flow."""
     result = await hass.config_entries.flow.async_init(
-        EKEYBIONYX_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -320,7 +316,7 @@ async def test_error_on_setup(
     )
     flow = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert len(hass.config_entries.async_entries(EKEYBIONYX_DOMAIN)) == 0
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
     assert flow.get("type") is FlowResultType.ABORT
     assert flow.get("reason") == "cannot_connect"
