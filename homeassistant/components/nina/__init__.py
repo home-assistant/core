@@ -11,15 +11,14 @@ from .const import (
     CONF_AREA_FILTER,
     CONF_FILTER_CORONA,
     CONF_HEADLINE_FILTER,
-    DOMAIN,
     NO_MATCH_REGEX,
 )
-from .coordinator import NINADataUpdateCoordinator
+from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
 
 PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
     if CONF_HEADLINE_FILTER not in entry.data:
         filter_regex = NO_MATCH_REGEX
@@ -41,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
