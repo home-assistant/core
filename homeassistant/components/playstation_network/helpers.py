@@ -76,6 +76,10 @@ class PlaystationNetwork:
         } & SUPPORTED_PLATFORMS
 
         data.presence = self.user.get_presence()
+
+        # check legacy platforms if owned
+        if LEGACY_PLATFORMS & data.registered_platforms:
+            self.legacy_profile = self.client.get_profile_legacy()
         return data
 
     async def get_data(self) -> PlaystationNetworkData:
@@ -114,12 +118,7 @@ class PlaystationNetwork:
 
             data.active_sessions[session.platform] = session
 
-        # check legacy platforms if owned
-        if LEGACY_PLATFORMS & data.registered_platforms:
-            assert self.client is not None
-            self.legacy_profile = await self.hass.async_add_executor_job(
-                self.client.get_profile_legacy
-            )
+        if self.legacy_profile:
             presence = self.legacy_profile["profile"].get("presences", [])
             game_title_info = presence[0] if presence else {}
             session = SessionData()
