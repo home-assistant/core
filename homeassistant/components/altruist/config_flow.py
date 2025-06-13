@@ -19,9 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Altruist."""
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self.device: AltruistDeviceModel | None = None
+    device: AltruistDeviceModel
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -90,7 +88,6 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
-        assert self.device
         if user_input is not None:
             return self.async_create_entry(
                 title=self.device.id,

@@ -27,6 +27,8 @@ type AltruistConfigEntry = ConfigEntry[AltruistDataUpdateCoordinator]
 class AltruistDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
     """Coordinates data updates for Altruist sensors."""
 
+    client: AltruistClient
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -41,7 +43,6 @@ class AltruistDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             name=f"Altruist {device_id}",
             update_interval=UPDATE_INTERVAL,
         )
-        self.client: AltruistClient | None = None
         self._ip_address = config_entry.data[CONF_IP_ADDRESS]
 
     async def _async_setup(self) -> None:
@@ -54,7 +55,6 @@ class AltruistDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             raise ConfigEntryNotReady("Error in Altruist setup") from e
 
     async def _async_update_data(self) -> dict[str, str]:
-        assert self.client
         try:
             fetched_data = await self.client.fetch_data()
         except AltruistError as ex:
