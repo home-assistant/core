@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.playstation_network.config_flow import (
     PSNAWPAuthenticationError,
     PSNAWPError,
@@ -26,7 +25,7 @@ MOCK_DATA_ADVANCED_STEP = {CONF_NPSSO: NPSSO_TOKEN}
 async def test_manual_config(hass: HomeAssistant, mock_psnawpapi: MagicMock) -> None:
     """Test creating via manual configuration."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -88,25 +87,20 @@ async def test_form_failures(
     First we generate an error and after fixing it, we are still able to submit.
     """
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_psnawpapi.user.side_effect = raise_error
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_NPSSO: NPSSO_TOKEN},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_NPSSO: NPSSO_TOKEN},
     )
 
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": text_error}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
 
     mock_psnawpapi.user.side_effect = None
     result = await hass.config_entries.flow.async_configure(
@@ -129,16 +123,10 @@ async def test_parse_npsso_token_failures(
     mock_psnawp_npsso.parse_npsso_token.side_effect = PSNAWPInvalidTokenError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_USER},
         data={CONF_NPSSO: NPSSO_TOKEN_INVALID_JSON},
     )
     assert result["errors"] == {"base": "invalid_account"}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
 
     mock_psnawp_npsso.parse_npsso_token.side_effect = None
     result = await hass.config_entries.flow.async_configure(
