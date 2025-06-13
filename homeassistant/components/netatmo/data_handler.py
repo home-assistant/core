@@ -393,7 +393,7 @@ class NetatmoDataHandler:
                 continue
 
             for signal in netatmo_type_signal_map.get(module.device_category, []):
-                _LOGGER.debug("Module %s dispatched as %s", module.name, signal_name)
+                _LOGGER.debug("Module %s dispatched as %s", module.name, signal_home)
                 async_dispatcher_send(
                     self.hass,
                     signal,
