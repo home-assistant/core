@@ -31,10 +31,10 @@ class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, TiltHydrometer
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Tilt Pi",
             update_interval=SCAN_INTERVAL,
         )
-        self.config_entry = config_entry
         session = async_get_clientsession(hass)
         self._api = TiltPiClient(
             host=config_entry.data[CONF_HOST],
@@ -47,6 +47,7 @@ class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, TiltHydrometer
         """Fetch data from Tilt Pi and return as a dict keyed by mac_id."""
         try:
             hydrometers = await self._api.get_hydrometers()
-            return {h.mac_id: h for h in hydrometers}
         except TiltPiError as err:
             raise UpdateFailed(f"Error communicating with Tilt Pi: {err}") from err
+
+        return {h.mac_id: h for h in hydrometers}

@@ -2,10 +2,9 @@
 
 from tiltpi import TiltHydrometerData
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import TiltPiDataUpdateCoordinator
 
 
@@ -23,7 +22,7 @@ class TiltEntity(CoordinatorEntity[TiltPiDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._mac_id = hydrometer.mac_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, hydrometer.mac_id)},
+            connections={(CONNECTION_NETWORK_MAC, hydrometer.mac_id)},
             name=f"Tilt {hydrometer.color}",
             manufacturer="Tilt Hydrometer",
             model=f"{hydrometer.color} Tilt Hydrometer",
