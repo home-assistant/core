@@ -36,7 +36,7 @@
     'supported_features': 0,
     'translation_key': 'intensity',
     'unique_id': 'ABCD-intensity',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_entities[number.smarla_intensity-state]
@@ -47,12 +47,13 @@
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.smarla_intensity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '1.0',
   })
 # ---
