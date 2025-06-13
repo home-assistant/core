@@ -39,13 +39,13 @@ async def test_form_user_step_invalid_ip(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_IP_ADDRESS: "invalid_ip"},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_ip"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_ip"}
 
 
 async def test_form_user_step_cannot_connect_then_recovers(
@@ -68,15 +68,15 @@ async def test_form_user_step_cannot_connect_then_recovers(
     assert result2["errors"] == {"base": "no_device_found"}
 
     # Second attempt recovers with a valid client
-    result3 = await hass.config_entries.flow.async_configure(
+    result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_IP_ADDRESS: "192.168.1.100"},
     )
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "5366960e8b18"
-    assert result3["result"].unique_id == "5366960e8b18"
-    assert result3["data"] == {
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "5366960e8b18"
+    assert result2["result"].unique_id == "5366960e8b18"
+    assert result2["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
     }
 
@@ -89,14 +89,14 @@ async def test_form_user_step_success(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_IP_ADDRESS: "192.168.1.100"},
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "5366960e8b18"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "5366960e8b18"
+    assert result["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
     }
 
@@ -116,13 +116,13 @@ async def test_form_user_step_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_IP_ADDRESS: "192.168.1.100"},
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_zeroconf_discovery(
@@ -171,12 +171,12 @@ async def test_zeroconf_discovery_confirm(
         data=ZEROCONF_DISCOVERY,
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "5366960e8b18"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "5366960e8b18"
+    assert result["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
     }
