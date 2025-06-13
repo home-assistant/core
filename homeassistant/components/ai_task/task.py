@@ -6,18 +6,30 @@ from dataclasses import dataclass
 
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_COMPONENT, GenTextTaskType
+from .const import DATA_COMPONENT, DATA_PREFERENCES, GenTextTaskType
 
 
 async def async_generate_text(
     hass: HomeAssistant,
     *,
     task_name: str,
-    entity_id: str,
+    entity_id: str | None = None,
     task_type: GenTextTaskType,
     instructions: str,
 ) -> GenTextTaskResult:
     """Run a task in the AI Task integration."""
+    if entity_id is None:
+        preferences = hass.data[DATA_PREFERENCES]
+        if task_type == GenTextTaskType.SUMMARY:
+            entity_id = preferences.gen_text_summary_entity_id
+        elif task_type == GenTextTaskType.GENERATE:
+            entity_id = preferences.gen_text_generate_entity_id
+
+    if entity_id is None:
+        raise ValueError(
+            "No entity_id provided and no preferred entity set for this task type"
+        )
+
     entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
     if entity is None:
         raise ValueError(f"AI Task entity {entity_id} not found")
