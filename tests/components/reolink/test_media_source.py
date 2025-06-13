@@ -141,6 +141,7 @@ async def test_browsing(
     entry_id = config_entry.entry_id
     reolink_connect.supported.return_value = 1
     reolink_connect.model = "Reolink TrackMix PoE"
+    reolink_connect.is_nvr = False
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(entry_id) is True
