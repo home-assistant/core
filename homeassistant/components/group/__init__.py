@@ -71,6 +71,7 @@ PLATFORMS = [
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
 ]
 
