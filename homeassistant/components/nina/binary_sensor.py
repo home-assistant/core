@@ -40,7 +40,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entries."""
 
-    coordinator: NINADataUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     regions: dict[str, str] = config_entry.data[CONF_REGIONS]
     message_slots: int = config_entry.data[CONF_MESSAGE_SLOTS]
