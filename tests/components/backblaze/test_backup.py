@@ -95,6 +95,8 @@ async def test_agents_list_backups(
             },
             "failed_agent_ids": [],
             "with_automatic_settings": None,
+            "failed_addons": [],
+            "failed_folders": [],
         }
     ]
 
@@ -131,6 +133,8 @@ async def test_agents_get_backup(
         },
         "failed_agent_ids": [],
         "with_automatic_settings": None,
+        "failed_addons": [],
+        "failed_folders": [],
     }
 
 
