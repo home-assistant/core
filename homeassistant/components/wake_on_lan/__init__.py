@@ -2,7 +2,6 @@
 
 from functools import partial
 import logging
-from typing import Any
 
 import voluptuous as vol
 import wakeonlan
@@ -35,11 +34,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def send_magic_packet(call: ServiceCall) -> None:
         """Send magic packet to wake up a device."""
-        mac_address: str = call.data[CONF_MAC]
-        broadcast_address: str | None = call.data.get(CONF_BROADCAST_ADDRESS)
-        broadcast_port: int | None = call.data.get(CONF_BROADCAST_PORT)
+        mac_address = call.data.get(CONF_MAC)
+        broadcast_address = call.data.get(CONF_BROADCAST_ADDRESS)
+        broadcast_port = call.data.get(CONF_BROADCAST_PORT)
 
-        service_kwargs: dict[str, Any] = {}
+        service_kwargs = {}
         if broadcast_address is not None:
             service_kwargs["ip_address"] = broadcast_address
         if broadcast_port is not None:
@@ -53,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         await hass.async_add_executor_job(
-            partial(wakeonlan.send_magic_packet, mac_address, **service_kwargs)
+            partial(wakeonlan.send_magic_packet, mac_address, **service_kwargs)  # type: ignore[arg-type]
         )
 
     hass.services.async_register(
