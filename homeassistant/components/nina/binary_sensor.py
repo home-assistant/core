@@ -30,17 +30,17 @@ from .const import (
     CONF_REGIONS,
     DOMAIN,
 )
-from .coordinator import NINADataUpdateCoordinator
+from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NinaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entries."""
 
-    coordinator: NINADataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     regions: dict[str, str] = config_entry.data[CONF_REGIONS]
     message_slots: int = config_entry.data[CONF_MESSAGE_SLOTS]
