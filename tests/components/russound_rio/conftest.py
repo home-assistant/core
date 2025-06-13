@@ -34,7 +34,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def mock_russound_client() -> Generator[AsyncMock]:
     """Mock the Russound RIO client."""
     with (
