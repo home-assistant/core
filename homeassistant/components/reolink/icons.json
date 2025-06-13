@@ -172,6 +172,9 @@
       "floodlight_brightness": {
         "default": "mdi:spotlight-beam"
       },
+      "ir_brightness": {
+        "default": "mdi:led-off"
+      },
       "volume": {
         "default": "mdi:volume-high",
         "state": {
