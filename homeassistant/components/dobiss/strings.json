@@ -25,7 +25,7 @@
         "data": {
           "invert_binary_sensor": "Invert binary sensor state",
           "ignore_zigbee_devices": "Ignore Zigbee devices",
-          "send_end_position_cover": "Set Cover End position after move",
+          "send_end_position_cover": "Set cover end position after move",
           "cover_closetime": "Time it takes for covers to close completely (0 to disable)",
           "use_timed_covers": "Configure supported covers as timed covers"
         }
@@ -34,8 +34,8 @@
   },
   "services": {
     "turn_on": {
-      "name": "Turn On Output",
-      "description": "Turn a Dobiss output on, with optional brightness or delay",
+      "name": "Turn on output",
+      "description": "Turns a Dobiss output on, with optional brightness or delay",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -60,8 +60,8 @@
       }
     },
     "action_request": {
-      "name": "Action Request",
-      "description": "Send a direct action command to the Dobiss NXT server",
+      "name": "Request action",
+      "description": "Sends a direct action command to the Dobiss NXT server",
       "fields": {
         "address": {
           "name": "Address",
@@ -86,8 +86,8 @@
       }
     },
     "status_request": {
-      "name": "Status Request",
-      "description": "Query current status of a Dobiss device",
+      "name": "Request status",
+      "description": "Queries the current status of a Dobiss device",
       "fields": {
         "address": {
           "name": "Address",
@@ -100,8 +100,8 @@
       }
     },
     "force_update": {
-      "name": "Force Update",
-      "description": "Trigger a refresh of all device states"
+      "name": "Force update",
+      "description": "Triggers a refresh of all device states"
     }
   }
 }
