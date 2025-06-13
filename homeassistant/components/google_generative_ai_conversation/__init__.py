@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import mimetypes
 from pathlib import Path
+from types import MappingProxyType
 
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
@@ -37,9 +38,11 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_CHAT_MODEL,
     CONF_PROMPT,
+    DEFAULT_AI_TASK_NAME,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
+    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
     TIMEOUT_MILLIS,
 )
@@ -50,6 +53,7 @@ CONF_FILENAMES = "filenames"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (
+    Platform.AI_TASK,
     Platform.CONVERSATION,
     Platform.TTS,
 )
@@ -280,3 +284,25 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 options={},
                 version=2,
             )
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    if entry.version == 2 and entry.minor_version == 0:
+        # Migrate from version 2.0 to 2.1
+        # Add AI Task subentry with default options
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
+                subentry_type="ai_task",
+                title=DEFAULT_AI_TASK_NAME,
+                unique_id=None,
+            ),
+        )
+        hass.config_entries.async_update_entry(entry, minor_version=1)
+        return True
+
+    return False

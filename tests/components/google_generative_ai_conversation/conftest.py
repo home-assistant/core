@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -28,13 +29,20 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             "api_key": "bla",
         },
         version=2,
+        minor_version=1,
         subentries_data=[
             {
                 "data": {},
                 "subentry_type": "conversation",
                 "title": DEFAULT_CONVERSATION_NAME,
                 "unique_id": None,
-            }
+            },
+            {
+                "data": {},
+                "subentry_type": "ai_task",
+                "title": DEFAULT_AI_TASK_NAME,
+                "unique_id": None,
+            },
         ],
     )
     entry.runtime_data = Mock()

@@ -2,11 +2,16 @@
 
 import logging
 
+from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.helpers import llm
+
 DOMAIN = "google_generative_ai_conversation"
 LOGGER = logging.getLogger(__package__)
 CONF_PROMPT = "prompt"
 
 DEFAULT_CONVERSATION_NAME = "Google AI Conversation"
+DEFAULT_AI_TASK_NAME = "Google AI Task"
+
 
 ATTR_MODEL = "model"
 CONF_RECOMMENDED = "recommended"
@@ -31,3 +36,13 @@ RECOMMENDED_USE_GOOGLE_SEARCH_TOOL = False
 
 TIMEOUT_MILLIS = 10000
 FILE_POLLING_INTERVAL_SECONDS = 0.05
+
+RECOMMENDED_CONVERSATION_OPTIONS = {
+    CONF_RECOMMENDED: True,
+    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+    CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
+}
+
+RECOMMENDED_AI_TASK_OPTIONS = {
+    CONF_RECOMMENDED: True,
+}
