@@ -12,7 +12,7 @@
           "key_id": "Key ID to connect to Backblaze",
           "application_key": "Application key to connect to Backblaze",
           "bucket": "Bucket must already exist and be writable by the provided credentials.",
-          "prefix": "Prefix folder to store back files in. Leave empty to store in the root."
+          "prefix": "Directory path to store backup files in. Leave empty to store in the root."
         },
         "title": "Add Backblaze backup"
       }
