@@ -12,6 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_PASSKEY, DEFAULT_PORT, DOMAIN
 
@@ -21,12 +22,14 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    host: str
-    port: int
-    mac: str
-    passkey: str | None = None
-    username: str | None = None
-    password: str | None = None
+    def __init__(self) -> None:
+        """Initialize BSBLan flow."""
+        self.host: str | None = None
+        self.port: int = DEFAULT_PORT
+        self.mac: str | None = None
+        self.passkey: str | None = None
+        self.username: str | None = None
+        self.password: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -41,6 +44,68 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.username = user_input.get(CONF_USERNAME)
         self.password = user_input.get(CONF_PASSWORD)
 
+        return await self._validate_and_create()
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle Zeroconf discovery."""
+
+        self.host = str(discovery_info.ip_address)
+        self.port = discovery_info.port or DEFAULT_PORT
+
+        # Try to get MAC from properties first (for future compatibility)
+        self.mac = discovery_info.properties.get("mac")
+
+        # If MAC not found in properties, try to parse from raw TXT records
+        if not self.mac and hasattr(discovery_info, "properties_raw"):
+            for key in discovery_info.properties_raw:
+                if key.startswith(b"mac="):
+                    self.mac = key[4:].decode("utf-8")
+                    break
+
+        # If still no MAC found, abort the discovery flow
+        if not self.mac:
+            return self.async_abort(reason="no_mac_address")
+
+        # Check if the device is already configured using MAC
+        await self.async_set_unique_id(format_mac(self.mac))
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: self.host,
+                CONF_PORT: self.port,
+            }
+        )
+
+        # Proceed to get credentials
+        self.context["title_placeholders"] = {"name": f"BSBLAN {self.host}"}
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle getting credentials for discovered device."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="discovery_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional(CONF_PASSKEY): str,
+                        vol.Optional(CONF_USERNAME): str,
+                        vol.Optional(CONF_PASSWORD): str,
+                    }
+                ),
+                description_placeholders={"host": str(self.host)},
+            )
+
+        self.passkey = user_input.get(CONF_PASSKEY)
+        self.username = user_input.get(CONF_USERNAME)
+        self.password = user_input.get(CONF_PASSWORD)
+
+        return await self._validate_and_create()
+
+    async def _validate_and_create(self) -> ConfigFlowResult:
+        """Validate device connection and create entry."""
         try:
             await self._get_bsblan_info()
         except BSBLANError:
@@ -67,6 +132,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_create_entry(self) -> ConfigFlowResult:
+        """Create the config entry."""
         return self.async_create_entry(
             title=format_mac(self.mac),
             data={
@@ -79,7 +145,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def _get_bsblan_info(self, raise_on_progress: bool = True) -> None:
-        """Get device information from an BSBLAN device."""
+        """Get device information from a BSBLAN device."""
         config = BSBLANConfig(
             host=self.host,
             passkey=self.passkey,
