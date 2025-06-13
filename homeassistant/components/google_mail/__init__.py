@@ -27,7 +27,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google Mail integration."""
     hass.data.setdefault(DOMAIN, {})[DATA_HASS_CONFIG] = config
 
-    await async_setup_services(hass)
+    async_setup_services(hass)
 
     return True
 
