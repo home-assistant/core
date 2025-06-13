@@ -138,7 +138,7 @@ def b2_fixture():
 def mock_config_entry(b2_fixture: Any) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        entry_id="test",
+        entry_id="c6dd4663ec2c75fe04701be54c03f27b",
         title="test",
         domain=DOMAIN,
         data={
