@@ -1,0 +1,220 @@
+# + in comment indicates requirement for quality scale
+# - in comment indicates issue to be fixed, not impacting quality scale
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      Integration does not provide custom services.
+  appropriate-polling:
+    status: done
+    comment: |
+      Uses DataUpdateCoordinator with a fixed 60s interval (coordinator.py).
+  brands:
+    status: done
+    comment: |
+      Brand 'Autoskope' is included (manifest.json, logo files).
+  common-modules:
+    status: done
+    comment: |
+      Uses standard integration structure (const.py, models.py, coordinator.py, etc.).
+  config-flow-test-coverage:
+    status: done
+    comment: |
+      Full test coverage provided (test_config_flow.py).
+  config-flow:
+    status: done
+    comment: |
+      Integration is set up via the UI (config_flow.py).
+      Uses `data_description` for field context (strings.json, translations).
+      Uses `ConfigEntry.data` for credentials/host; no options defined.
+  dependency-transparency:
+    status: done
+    comment: |
+      Dependencies are declared in manifest.json.
+  docs-actions:
+    status: exempt
+    comment: |
+      Integration does not provide custom services.
+  docs-high-level-description:
+    status: done
+    comment: |
+      Documentation includes a high-level description.
+  docs-installation-instructions:
+    status: done
+    comment: |
+      Documentation provides step-by-step installation instructions.
+  docs-removal-instructions:
+    status: done
+    comment: |
+      Documentation provides removal instructions.
+  entity-event-setup:
+    status: done
+    comment: |
+      Handled by CoordinatorEntity base class (device_tracker.py).
+  entity-unique-id:
+    status: done
+    comment: |
+      Entities use the vehicle ID from the API as the base for unique IDs (device_tracker.py).
+  has-entity-name:
+    status: done
+    comment: |
+      Uses has_entity_name = True for proper entity naming (device_tracker.py:33).
+  runtime-data:
+    status: done
+    comment: |
+      Coordinator/API instance stored in hass.data[DOMAIN] (__init__.py).
+  test-before-configure:
+    status: done
+    comment: |
+      `validate_input` tests connection/authentication during config flow (config_flow.py).
+  test-before-setup:
+    status: done
+    comment: |
+      `api.authenticate` is called during `async_setup_entry` (__init__.py).
+  unique-config-entry:
+    status: done
+    comment: |
+      Config flow checks current entries based on username@host to prevent duplicates (config_flow.py).
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      Integration does not provide custom services.
+  config-entry-unloading:
+    status: done
+    comment: |
+      Implements `async_unload_entry` (__init__.py).
+  docs-configuration-parameters:
+    status: done
+    comment: |
+      Documentation describes UI configuration options.
+  docs-installation-parameters:
+    status: done
+    comment: |
+      Documentation describes UI installation parameters.
+  entity-unavailable:
+    status: done
+    comment: |
+      Implemented via the `available` property and CoordinatorEntity base class (device_tracker.py, coordinator.py).
+  integration-owner:
+    status: done
+    comment: |
+      Integration owner is specified in manifest.json.
+  log-when-unavailable:
+    status: done
+    comment: |
+      Coordinator logs errors on update failures (coordinator.py).
+  parallel-updates:
+    status: done
+    comment: |
+      `PARALLEL_UPDATES = 0` is set (device_tracker.py).
+  reauthentication-flow:
+    status: done
+    comment: |
+      Implements `async_step_reauth` and `async_step_reauth_confirm` for UI reauthentication (config_flow.py).
+  test-coverage:
+    status: done
+    comment: |
+      Test coverage is 95% as confirmed in comprehensive test suite.
+
+  # Gold
+  devices:
+    status: done
+    comment: |
+      Creates devices for vehicles via `DeviceInfo` (device_tracker.py).
+  diagnostics:
+    status: done
+    comment: |
+      Implements `async_get_config_entry_diagnostics` (diagnostics.py).
+  discovery-update-info:
+    status: exempt
+    comment: |
+      Integration does not use discovery.
+  discovery:
+    status: exempt
+    comment: |
+      Integration does not use discovery.
+  docs-data-update:
+    status: done
+    comment: |
+      Documentation describes how data is updated.
+  docs-examples:
+    status: done
+    comment: |
+      Documentation provides automation examples.
+  docs-known-limitations:
+    status: done
+    comment: |
+      Documentation describes known limitations.
+  docs-supported-devices:
+    status: done
+    comment: |
+      Documentation describes known supported devices.
+  docs-supported-functions:
+    status: done
+    comment: |
+      Documentation describes supported functionality, entities, and platforms.
+  docs-troubleshooting:
+    status: done
+    comment: |
+      Documentation provides troubleshooting information.
+  docs-use-cases:
+    status: done
+    comment: |
+      Documentation describes use cases via examples.
+  dynamic-devices:
+    status: done
+    comment: |
+      Coordinator pattern handles vehicles appearing/disappearing; `async_setup_entry` creates entities based on current data (coordinator.py, device_tracker.py).
+  entity-category:
+    status: done
+    comment: |
+      Default category (None) is appropriate for DeviceTrackerEntity (device_tracker.py).
+  entity-device-class:
+    status: done
+    comment: |
+      DeviceTrackerEntity uses `device_class` implicitly based on the platform.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      Only one entity type (device_tracker) is created, making this not applicable.
+  entity-translations:
+    status: done
+    comment: |
+      Uses the device name from the API; no specific entity translation keys needed (device_tracker.py).
+  exception-translations:
+    status: done
+    comment: |
+      Config flow errors use translation keys (config_flow.py, strings.json).
+  icon-translations:
+    status: done
+    comment: |
+      Icons are set directly in code based on state; state translation keys are not used for icons (device_tracker.py).
+  reconfiguration-flow:
+    status: done
+    comment: |
+      Reauthentication flow handles password updates; host/username changes require re-adding the integration (config_flow.py).
+  repair-issues:
+    status: todo
+    comment: |
+      Repair issues functionality needs to be implemented
+  stale-devices:
+    status: done
+    comment: |
+      Entities become unavailable if vehicle disappears from coordinator data; Home Assistant handles device cleanup (device_tracker.py, coordinator.py).
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: |
+      All API calls use async/await and aiohttp sessions.
+  inject-websession:
+    status: done
+    comment: |
+      API client uses `async_get_clientsession(hass)` for HTTP requests (__init__.py, config_flow.py).
+  strict-typing:
+    status: todo
+    comment: |
+      autoskope_client library needs py.typed file for PEP 561 compliance.
