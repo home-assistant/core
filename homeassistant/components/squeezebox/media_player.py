@@ -247,11 +247,6 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.available and super().available
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device-specific attributes."""
         return {

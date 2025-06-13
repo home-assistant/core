@@ -316,9 +316,6 @@
     },
     "unsupported_firmware": {
       "message": "[%key:component::plugwise::config::error::unsupported%]"
-    },
-    "unsupported_hvac_mode_requested": {
-      "message": "Unsupported mode {hvac_mode} requested, valid modes are: {hvac_modes}."
     }
   }
 }

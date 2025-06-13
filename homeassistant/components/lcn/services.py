@@ -438,7 +438,7 @@ SERVICES = (
 )
 
 
-async def register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for LCN."""
     for service_name, service in SERVICES:
         hass.services.async_register(

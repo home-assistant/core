@@ -10,6 +10,8 @@
         'pushAlarm': 7,
       }),
     }),
+    'Baichuan only': False,
+    'Baichuan port': 5678,
     'Chimes': dict({
       '12345678': dict({
         'channel': 0,

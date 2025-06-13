@@ -16,8 +16,6 @@ LR_ADDON_VERSION = AwesomeVersion("0.5.0")
 USER_AGENT = {APPLICATION_NAME: HA_VERSION}
 
 CONF_ADDON_DEVICE = "device"
-CONF_ADDON_EMULATE_HARDWARE = "emulate_hardware"
-CONF_ADDON_LOG_LEVEL = "log_level"
 CONF_ADDON_NETWORK_KEY = "network_key"
 CONF_ADDON_S0_LEGACY_KEY = "s0_legacy_key"
 CONF_ADDON_S2_ACCESS_CONTROL_KEY = "s2_access_control_key"

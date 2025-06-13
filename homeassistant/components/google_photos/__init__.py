@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import api
 from .const import DOMAIN
 from .coordinator import GooglePhotosConfigEntry, GooglePhotosUpdateCoordinator
-from .services import async_register_services
+from .services import async_setup_services
 
 __all__ = ["DOMAIN"]
 
@@ -24,7 +24,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Google Photos integration."""
 
-    async_register_services(hass)
+    async_setup_services(hass)
 
     return True
 

@@ -117,32 +117,29 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update router data."""
         _LOGGER.debug("Polling Vodafone Station host: %s", self._host)
+
         try:
-            try:
-                await self.api.login()
-                raw_data_devices = await self.api.get_devices_data()
-                data_sensors = await self.api.get_sensor_data()
-                await self.api.logout()
-            except exceptions.CannotAuthenticate as err:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="cannot_authenticate",
-                    translation_placeholders={"error": repr(err)},
-                ) from err
-            except (
-                exceptions.CannotConnect,
-                exceptions.AlreadyLogged,
-                exceptions.GenericLoginError,
-                JSONDecodeError,
-            ) as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="update_failed",
-                    translation_placeholders={"error": repr(err)},
-                ) from err
-        except (ConfigEntryAuthFailed, UpdateFailed):
-            await self.api.close()
-            raise
+            await self.api.login()
+            raw_data_devices = await self.api.get_devices_data()
+            data_sensors = await self.api.get_sensor_data()
+            await self.api.logout()
+        except exceptions.CannotAuthenticate as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_authenticate",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except (
+            exceptions.CannotConnect,
+            exceptions.AlreadyLogged,
+            exceptions.GenericLoginError,
+            JSONDecodeError,
+        ) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
         utc_point_in_time = dt_util.utcnow()
         data_devices = {

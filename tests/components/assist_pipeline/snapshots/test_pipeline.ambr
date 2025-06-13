@@ -311,6 +311,12 @@
     }),
     dict({
       'data': dict({
+        'tts_start_streaming': True,
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
         'chat_log_delta': dict({
           'content': '?',
         }),
@@ -468,6 +474,12 @@
             }),
           ]),
         }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_start_streaming': True,
       }),
       'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
     }),

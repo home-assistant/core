@@ -26,7 +26,7 @@ class PicnicServiceException(Exception):
     """Exception for Picnic services."""
 
 
-async def async_register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for the Picnic integration, if not registered yet."""
 
     async def async_add_product_service(call: ServiceCall):

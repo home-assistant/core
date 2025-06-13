@@ -86,7 +86,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_register_services(hass: HomeAssistant) -> None:  # noqa: C901
+def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Register services used by insteon component."""
 
     save_lock = asyncio.Lock()

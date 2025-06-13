@@ -16,7 +16,7 @@ from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import Trigger, TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import (
@@ -251,3 +251,29 @@ async def async_attach_trigger(
     _create_zwave_listeners()
 
     return async_remove
+
+
+class EventTrigger(Trigger):
+    """Z-Wave JS event trigger."""
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        """Initialize trigger."""
+        self._config = config
+        self._hass = hass
+
+    @classmethod
+    async def async_validate_trigger_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return await async_validate_trigger_config(hass, config)
+
+    async def async_attach_trigger(
+        self,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
+        return await async_attach_trigger(
+            self._hass, self._config, action, trigger_info
+        )

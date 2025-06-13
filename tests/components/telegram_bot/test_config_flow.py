@@ -19,8 +19,8 @@ from homeassistant.components.telegram_bot.const import (
     ERROR_MESSAGE,
     ISSUE_DEPRECATED_YAML,
     ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR,
-    PARSER_HTML,
     PARSER_MD,
+    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     PLATFORM_WEBHOOKS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
@@ -56,13 +56,13 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            ATTR_PARSER: PARSER_HTML,
+            ATTR_PARSER: PARSER_PLAIN_TEXT,
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][ATTR_PARSER] == PARSER_HTML
+    assert result["data"][ATTR_PARSER] is None
 
 
 async def test_reconfigure_flow_broadcast(
@@ -413,7 +413,7 @@ async def test_subentry_flow_chat_error(
     with patch(
         "homeassistant.components.telegram_bot.config_flow.Bot.get_chat",
         return_value=ChatFullInfo(
-            id=1234567890,
+            id=123456,
             title="mock title",
             first_name="mock first_name",
             type="PRIVATE",
@@ -423,7 +423,7 @@ async def test_subentry_flow_chat_error(
     ):
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input={CONF_CHAT_ID: 1234567890},
+            user_input={CONF_CHAT_ID: 123456},
         )
         await hass.async_block_till_done()
 

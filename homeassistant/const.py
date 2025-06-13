@@ -562,7 +562,7 @@ ATTR_STATE: Final = "state"
 ATTR_EDITABLE: Final = "editable"
 ATTR_OPTION: Final = "option"
 
-# The entity has been restored with restore state
+# The entity state has been partially restored by the entity registry
 ATTR_RESTORED: Final = "restored"
 
 # Bitfield of supported component features for the entity

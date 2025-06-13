@@ -1,6 +1,5 @@
 """Support for Telegram bots using webhooks."""
 
-import datetime as dt
 from http import HTTPStatus
 from ipaddress import IPv4Network, ip_address
 import logging
@@ -8,7 +7,7 @@ import secrets
 import string
 
 from telegram import Bot, Update
-from telegram.error import NetworkError, TimedOut
+from telegram.error import NetworkError, TelegramError
 from telegram.ext import ApplicationBuilder, TypeHandler
 
 from homeassistant.components.http import HomeAssistantView
@@ -98,9 +97,9 @@ class PushBot(BaseTelegramBot):
                     api_kwargs={"secret_token": self.secret_token},
                     connect_timeout=5,
                 )
-            except TimedOut:
+            except TelegramError:
                 retry_num += 1
-                _LOGGER.warning("Timeout trying to set webhook (retry #%d)", retry_num)
+                _LOGGER.warning("Error trying to set webhook (retry #%d)", retry_num)
 
         return False
 
@@ -113,16 +112,7 @@ class PushBot(BaseTelegramBot):
         """Query telegram and register the URL for our webhook."""
         current_status = await self.bot.get_webhook_info()
         # Some logging of Bot current status:
-        last_error_date = getattr(current_status, "last_error_date", None)
-        if (last_error_date is not None) and (isinstance(last_error_date, int)):
-            last_error_date = dt.datetime.fromtimestamp(last_error_date)
-            _LOGGER.debug(
-                "Telegram webhook last_error_date: %s. Status: %s",
-                last_error_date,
-                current_status,
-            )
-        else:
-            _LOGGER.debug("telegram webhook status: %s", current_status)
+        _LOGGER.debug("telegram webhook status: %s", current_status)
 
         result = await self._try_to_set_webhook()
         if result:

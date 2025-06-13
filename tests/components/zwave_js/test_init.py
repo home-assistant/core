@@ -1692,27 +1692,6 @@ async def test_replace_different_node(
         (DOMAIN, multisensor_6_device_id_ext),
     }
 
-    ws_client = await hass_ws_client(hass)
-
-    # Simulate the driver not being ready to ensure that the device removal handler
-    # does not crash
-    driver = client.driver
-    client.driver = None
-
-    response = await ws_client.remove_device(hank_device.id, integration.entry_id)
-    assert not response["success"]
-
-    client.driver = driver
-
-    # Attempting to remove the hank device should pass, but removing the multisensor should not
-    response = await ws_client.remove_device(hank_device.id, integration.entry_id)
-    assert response["success"]
-
-    response = await ws_client.remove_device(
-        multisensor_6_device.id, integration.entry_id
-    )
-    assert not response["success"]
-
 
 async def test_node_model_change(
     hass: HomeAssistant,

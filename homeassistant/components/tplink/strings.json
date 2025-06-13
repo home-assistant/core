@@ -487,9 +487,6 @@
     "unexpected_device": {
       "message": "Unexpected device found at {host}; expected {expected}, found {found}"
     },
-    "unsupported_mode": {
-      "message": "Tried to set unsupported mode: {mode}"
-    },
     "invalid_alarm_duration": {
       "message": "Invalid duration {duration} available: 1-{duration_max}s"
     }

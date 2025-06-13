@@ -144,8 +144,8 @@ httpcore==1.0.9
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.2.6
-pandas~=2.2.3
+numpy==2.3.0
+pandas==2.3.0
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
@@ -170,7 +170,7 @@ iso4217!=1.10.20220401
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==6.30.2
+protobuf==6.31.1
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -225,14 +225,6 @@ tenacity!=8.4.0
 # 5.0.0 breaks Timeout as a context manager
 # TypeError: 'Timeout' object does not support the context manager protocol
 async-timeout==4.0.3
-
-# aiofiles keeps getting downgraded by custom components
-# causing newer methods to not be available and breaking
-# some integrations at startup
-# https://github.com/home-assistant/core/issues/127529
-# https://github.com/home-assistant/core/issues/122508
-# https://github.com/home-assistant/core/issues/118004
-aiofiles>=24.1.0
 
 # multidict < 6.4.0 has memory leaks
 # https://github.com/aio-libs/multidict/issues/1134

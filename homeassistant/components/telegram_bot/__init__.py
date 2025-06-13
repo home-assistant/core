@@ -8,7 +8,7 @@ from types import ModuleType
 from typing import Any
 
 from telegram import Bot
-from telegram.error import InvalidToken
+from telegram.error import InvalidToken, TelegramError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -26,7 +26,11 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -370,6 +374,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         elif msgtype == SERVICE_DELETE_MESSAGE:
             await notify_service.delete_message(context=service.context, **kwargs)
+        elif msgtype == SERVICE_LEAVE_CHAT:
+            messages = await notify_service.leave_chat(
+                context=service.context, **kwargs
+            )
         else:
             await notify_service.edit_message(
                 msgtype, context=service.context, **kwargs
@@ -418,6 +426,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
         await bot.get_me()
     except InvalidToken as err:
         raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
+    except TelegramError as err:
+        raise ConfigEntryNotReady from err
 
     p_type: str = entry.data[CONF_PLATFORM]
 
@@ -441,7 +451,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
     """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    entry.runtime_data.parse_mode = entry.options[ATTR_PARSER]
 
 
 async def async_unload_entry(
