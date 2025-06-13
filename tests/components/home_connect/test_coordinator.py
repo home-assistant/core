@@ -247,6 +247,7 @@ async def test_coordinator_update_failing(
     getattr(client, mock_method).assert_called()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
 @pytest.mark.parametrize(
     ("event_type", "event_key", "event_value", ATTR_ENTITY_ID),
@@ -288,7 +289,7 @@ async def test_event_listener(
     assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(entity_id)
-
+    assert state
     event_message = EventMessage(
         appliance.ha_id,
         event_type,
@@ -310,8 +311,7 @@ async def test_event_listener(
 
     new_state = hass.states.get(entity_id)
     assert new_state
-    if state is not None:
-        assert new_state.state != state.state
+    assert new_state.state != state.state
 
     # Following, we are gonna check that the listeners are clean up correctly
     new_entity_id = entity_id + "_new"

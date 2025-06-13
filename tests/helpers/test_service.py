@@ -32,6 +32,7 @@ from homeassistant.core import (
     HassJob,
     HomeAssistant,
     ServiceCall,
+    ServiceResponse,
     SupportsResponse,
 )
 from homeassistant.helpers import (
@@ -1646,6 +1647,33 @@ async def test_register_admin_service(
     )
     assert len(calls) == 1
     assert calls[0].context.user_id == hass_admin_user.id
+
+
+@pytest.mark.parametrize(
+    "supports_response",
+    [SupportsResponse.ONLY, SupportsResponse.OPTIONAL],
+)
+async def test_register_admin_service_return_response(
+    hass: HomeAssistant, supports_response: SupportsResponse
+) -> None:
+    """Test the register admin service for a service that returns response data."""
+
+    async def mock_service(call: ServiceCall) -> ServiceResponse:
+        """Service handler coroutine."""
+        assert call.return_response
+        return {"test-reply": "test-value1"}
+
+    service.async_register_admin_service(
+        hass, "test", "test", mock_service, supports_response=supports_response
+    )
+    result = await hass.services.async_call(
+        "test",
+        "test",
+        service_data={},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {"test-reply": "test-value1"}
 
 
 async def test_domain_control_not_async(hass: HomeAssistant, mock_entities) -> None:

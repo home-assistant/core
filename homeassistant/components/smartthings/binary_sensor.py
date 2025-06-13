@@ -80,6 +80,14 @@ CAPABILITY_TO_SENSORS: dict[
             entity_category=EntityCategory.DIAGNOSTIC,
         )
     },
+    Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE: {
+        Attribute.OPERATING_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.OPERATING_STATE,
+            translation_key="keep_fresh_mode_active",
+            is_on_key="running",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+    },
     Capability.FILTER_STATUS: {
         Attribute.FILTER_STATUS: SmartThingsBinarySensorEntityDescription(
             key=Attribute.FILTER_STATUS,

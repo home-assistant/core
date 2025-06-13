@@ -42,7 +42,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -227,6 +227,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._set_supported_features()
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
         self._prev_time: float = 0
+        self._source_list_mapping: dict[str, str] = {}
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -292,6 +293,20 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState(player.state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
+        # active source and source list (translate to HA source names)
+        source_mappings: dict[str, str] = {}
+        active_source_name: str | None = None
+        for source in player.source_list:
+            if source.id == player.active_source:
+                active_source_name = source.name
+            if source.passive:
+                # ignore passive sources because HA does not differentiate between
+                # active and passive sources
+                continue
+            source_mappings[source.name] = source.id
+        self._attr_source_list = list(source_mappings.keys())
+        self._source_list_mapping = source_mappings
+        self._attr_source = active_source_name
 
         group_members: list[str] = []
         if player.group_childs:
@@ -458,6 +473,16 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
         await self.mass.players.player_command_ungroup(self.player_id)
+
+    @catch_musicassistant_error
+    async def async_select_source(self, source: str) -> None:
+        """Select input source."""
+        source_id = self._source_list_mapping.get(source)
+        if source_id is None:
+            raise ServiceValidationError(
+                f"Source '{source}' not found for player {self.name}"
+            )
+        await self.mass.players.player_command_select_source(self.player_id, source_id)
 
     @catch_musicassistant_error
     async def _async_handle_play_media(
@@ -735,4 +760,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         if self.player.power_control != PLAYER_CONTROL_NONE:
             supported_features |= MediaPlayerEntityFeature.TURN_ON
             supported_features |= MediaPlayerEntityFeature.TURN_OFF
+        if PlayerFeature.SELECT_SOURCE in self.player.supported_features:
+            supported_features |= MediaPlayerEntityFeature.SELECT_SOURCE
         self._attr_supported_features = supported_features

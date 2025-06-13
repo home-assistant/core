@@ -68,7 +68,7 @@ from .const import (
     MOCK_SSDP_DATA_RENDERING_CONTROL_ST,
 )
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 RESULT_ALREADY_CONFIGURED = "already_configured"
 RESULT_ALREADY_IN_PROGRESS = "already_in_progress"
@@ -896,8 +896,8 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
 async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     """Test starting a flow from dhcp."""
     # Even though it is named "wifiMac", it matches the mac of the wired connection
-    rest_api.rest_device_info.return_value = load_json_object_fixture(
-        "device_info_UE43LS003.json", DOMAIN
+    rest_api.rest_device_info.return_value = await async_load_json_object_fixture(
+        hass, "device_info_UE43LS003.json", DOMAIN
     )
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
@@ -1301,14 +1301,15 @@ async def test_update_old_entry(hass: HomeAssistant) -> None:
     assert entry2.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
-@pytest.mark.usefixtures(
-    "remote_websocket", "rest_api", "remote_encrypted_websocket_failing"
-)
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
 async def test_update_missing_mac_unique_id_added_from_dhcp(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac and unique id added."""
-    entry = MockConfigEntry(domain=DOMAIN, data=ENTRYDATA_LEGACY, unique_id=None)
+    # Incorrect MAC cleanup introduced in #110599, can be removed in 2026.3
+    entry_data = deepcopy(ENTRYDATA_WEBSOCKET)
+    del entry_data[CONF_MAC]
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

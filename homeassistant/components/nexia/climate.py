@@ -34,7 +34,6 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -42,7 +41,6 @@ from .const import (
     ATTR_DEHUMIDIFY_SETPOINT,
     ATTR_HUMIDIFY_SETPOINT,
     ATTR_RUN_MODE,
-    DOMAIN,
 )
 from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
@@ -183,8 +181,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._attr_supported_features = NEXIA_SUPPORTED
         if self._has_humidify_support or self._has_dehumidify_support:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
-        if self._has_emergency_heat:
-            self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
         self._attr_preset_modes = zone.get_presets()
         self._attr_fan_modes = thermostat.get_fan_modes()
         self._attr_hvac_modes = HVAC_MODES
@@ -388,11 +384,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         self._signal_zone_update()
 
     @property
-    def is_aux_heat(self) -> bool:
-        """Emergency heat state."""
-        return self._thermostat.is_emergency_heat_active()
-
-    @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
         if not self._has_relative_humidity:
@@ -413,36 +404,6 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         """Set the preset mode."""
         await self._zone.set_preset(preset_mode)
         self._signal_zone_update()
-
-    async def async_turn_aux_heat_off(self) -> None:
-        """Turn Aux Heat off."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2025.4.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
-        await self._thermostat.set_emergency_heat(False)
-        self._signal_thermostat_update()
-
-    async def async_turn_aux_heat_on(self) -> None:
-        """Turn Aux Heat on."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2025.4.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
-        await self._thermostat.set_emergency_heat(True)
-        self._signal_thermostat_update()
 
     async def async_turn_off(self) -> None:
         """Turn off the zone."""
