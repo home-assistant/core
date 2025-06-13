@@ -211,7 +211,7 @@ aiodhcpwatcher==1.2.0
 aiodiscover==2.7.0
 
 # homeassistant.components.dnsip
-aiodns==3.4.0
+aiodns==3.5.0
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -1019,7 +1019,7 @@ home-assistant-frontend==20250531.3
 home-assistant-intents==2025.6.10
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.4
+homematicip==2.0.5
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -2013,7 +2013,7 @@ python-google-drive-api==0.1.0
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==8.3.3
+python-homewizard-energy==9.1.1
 
 # homeassistant.components.izone
 python-izone==1.2.9

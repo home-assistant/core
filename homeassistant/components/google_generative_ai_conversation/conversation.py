@@ -391,7 +391,7 @@ class GoogleGenerativeAIConversationEntity(
                 "Last content in chat log is not an AssistantContent: %s. This could be due to the model not returning a valid response",
                 chat_log.content[-1],
             )
-            raise HomeAssistantError(f"{ERROR_GETTING_RESPONSE}")
+            raise HomeAssistantError(ERROR_GETTING_RESPONSE)
         response.async_set_speech(chat_log.content[-1].content or "")
         return conversation.ConversationResult(
             response=response,
