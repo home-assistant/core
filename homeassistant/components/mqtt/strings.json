@@ -181,11 +181,13 @@
           "data": {
             "platform": "Type of entity",
             "name": "Entity name",
+            "entity_category": "Entity category",
             "entity_picture": "Entity picture"
           },
           "data_description": {
             "platform": "The type of the entity to configure.",
             "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device](https://www.home-assistant.io/integrations/mqtt/#naming-of-mqtt-entities).",
+            "entity_category": "The category of the entity to configure. Leave empty to set it to `None` to [mark it as main feature of the MQTT device](https://developers.home-assistant.io/docs/core/entity/#registry-properties). An entity with a category will not be exposed to cloud, Alexa, or Google Assistant components, nor included in indirect service calls to devices or areas.",
             "entity_picture": "An URL to a picture to be assigned."
           }
         },
@@ -651,6 +653,7 @@
         "options_not_allowed_with_state_class_or_uom": "The 'Options' setting is not allowed when state class or unit of measurement are used",
         "options_device_class_enum": "The 'Options' setting must be used with the Enumeration device class. If you continue, the existing options will be reset",
         "options_with_enum_device_class": "Configure options for the enumeration sensor",
+        "sensor_entity_category_must_not_be_config": "Sensor entities can not be categorized as configurable",
         "uom_required_for_device_class": "The selected device class requires a unit"
       }
     }
@@ -885,6 +888,12 @@
       "options": {
         "outlet": "[%key:component::switch::entity_component::outlet::name%]",
         "switch": "[%key:component::switch::title%]"
+      }
+    },
+    "entity_category": {
+      "options": {
+        "config": "Config",
+        "diagnostic": "Diagnostic"
       }
     },
     "light_schema": {
