@@ -25,16 +25,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
     info = InMemoryAccountInfo()
     b2_api = B2Api(info)
 
+    def _authorize_and_get_bucket() -> Bucket:
+        b2_api.authorize_account(
+            "production",
+            entry.data[CONF_KEY_ID],
+            entry.data[CONF_APPLICATION_KEY],
+        )
+        return b2_api.get_bucket_by_name(entry.data[CONF_BUCKET])
+
     try:
-
-        def _authorize_and_get_bucket() -> Bucket:
-            b2_api.authorize_account(
-                "production",
-                entry.data[CONF_KEY_ID],
-                entry.data[CONF_APPLICATION_KEY],
-            )
-            return b2_api.get_bucket_by_name(entry.data[CONF_BUCKET])
-
         bucket = await hass.async_add_executor_job(_authorize_and_get_bucket)
 
     except exception.Unauthorized as err:
