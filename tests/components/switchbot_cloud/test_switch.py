@@ -13,6 +13,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -108,3 +109,73 @@ async def test_pressmode_bot_no_switch_entity(
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
+
+
+async def test_switch_no_coordinator_data(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test turn on and turn off."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="relay-switch-id-1",
+            deviceName="relay-switch-2",
+            deviceType="Relay Switch 2PM",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.return_value = {"switchStatus": 0}
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "switch.relay_switch_2_1"
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_switch_no_coordinator_data2(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test turn on and turn off."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="relay-switch-id-1",
+            deviceName="relay-switch-2",
+            deviceType="Relay Switch 2PM",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.return_value = None
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "switch.relay_switch_2_1"
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+    assert hass.states.get(entity_id).state == STATE_OFF

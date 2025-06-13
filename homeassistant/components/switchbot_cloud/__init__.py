@@ -143,6 +143,31 @@ async def make_device_data(
         devices_data.sensors.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in [
+        "Relay Switch 2PM",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+
+        device_switch_1: Device = Device(
+            deviceId=f"{device.device_id}-1",
+            deviceName=f"{device.device_name}-1",
+            deviceType=device.device_type,
+            hubDeviceId=device.hub_device_id,
+        )
+        device_switch_2: Device = Device(
+            deviceId=f"{device.device_id}-2",
+            deviceName=f"{device.device_name}-2",
+            deviceType=device.device_type,
+            hubDeviceId=device.hub_device_id,
+        )
+
+        devices_data.sensors.append((device_switch_1, coordinator))
+        devices_data.sensors.append((device_switch_2, coordinator))
+        devices_data.switches.append((device_switch_1, coordinator))
+        devices_data.switches.append((device_switch_2, coordinator))
+
+    if isinstance(device, Device) and device.device_type in [
         "K10+",
         "K10+ Pro",
         "Robot Vacuum Cleaner S1",
@@ -153,12 +178,22 @@ async def make_device_data(
         )
         devices_data.vacuums.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type.startswith("Smart Lock"):
+    if isinstance(device, Device) and device.device_type in [
+        "Smart Lock Pro",
+        "Smart Lock",
+    ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.locks.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
+        devices_data.binary_sensors.append((device, coordinator))
+
+    if isinstance(device, Device) and device.device_type in ["Garage Door Opener"]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id, True
+        )
+        devices_data.buttons.append((device, coordinator))
         devices_data.binary_sensors.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in ["Bot"]:
