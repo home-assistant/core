@@ -8,6 +8,7 @@ from switchbot_api import (
     CurtainCommands,
     Device,
     Remote,
+    RollerShadeCommands,
     SwitchBotAPI,
 )
 
@@ -197,12 +198,6 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
         self._attr_current_cover_tilt_position = percent
         self.async_write_ha_state()
 
-        # if self.unique_id.endswith("7F"):
-        #     print("_set_attributes percent:", position)
-        #     print(
-        #         "_set_attributes position:", self.coordinator.data.get("slidePosition")
-        #     )
-
 
 class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
     """Representation of a SwitchBot Cover."""
@@ -210,59 +205,44 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
     _attr_name = None
     _attr_is_closed: bool | None = None
 
-    _attr_supported_features: CoverEntityFeature = CoverEntityFeature.SET_POSITION
+    _attr_supported_features: CoverEntityFeature = (
+        CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+    )
 
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self.send_api_command(RollerShadeCommands.SET_POSITION, parameters=str(0))
+        self._attr_current_cover_position = 100
+        self._attr_is_closed = True
+        self.async_write_ha_state()
 
-#     async def async_open_cover(self, **kwargs: Any) -> None:
-#         """Open the cover."""
-#         print("async_open_cover was call")
-#         print(kwargs)
-#         await self.send_api_command(CommonCommands.ON)
-#         self._attr_is_closed = False
-#         self.async_write_ha_state()
-#
-#     async def async_close_cover(self, **kwargs: Any) -> None:
-#         """Close cover."""
-#         model: str | None = self.device_info.get("model")
-#         await self.send_api_command(CommonCommands.ON)
-#         self._attr_is_closed = True
-#         self.async_write_ha_state()
-#
-#     async def async_set_cover_position(self, **kwargs: Any) -> None:
-#         """Move the cover to a specific position."""
-#         print("async_set_cover_position was call")
-#         print(kwargs)
-#         position:int|None = kwargs.get("position")
-#         if position is None:
-#             return
-#         model: str | None = self.device_info.get("model")
-#         print("model",model)
-#         if model and model in ["Roller Shade"]:
-#             await self.send_api_command(RollerShadeCommands.SET_POSITION, parameters=str(position))
-#         else:
-#             await self.send_api_command(CurtainCommands.SET_POSITION, parameters=str(position))
-#         self._attr_current_cover_position = position
-#         self.async_write_ha_state()
-#
-#
-#     async def async_stop_cover(self, **kwargs: Any) -> None:
-#         """Stop the cover."""
-#         print("async_stop_cover was call")
-#         print(kwargs)
-#         await self.send_api_command(CurtainCommands.PAUSE)
-#
-#     # def _set_attributes(self) -> None:
-#     #     print("_set_attributes was call",self.coordinator.data)
-#     #     if self.coordinator.data is None:
-#     #         return
-#     #     model: str | None = self.device_info.get("model")
-#     #     if model and model in ["Roller Shade"]:
-#     #         self._attr_supported_features: CoverEntityFeature = CoverEntityFeature.SET_POSITION
-#     #
-#     #     self._attr_current_cover_position = self.coordinator.data.get("SlidePosition")
-#     #     print(self.current_cover_position)
-#
-#
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close cover."""
+        await self.send_api_command(
+            RollerShadeCommands.SET_POSITION, parameters=str(100)
+        )
+        self._attr_current_cover_position = 0
+        self._attr_is_closed = False
+        self.async_write_ha_state()
+
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position."""
+        position: int | None = kwargs.get("position")
+        if position is None:
+            return
+        await self.send_api_command(
+            RollerShadeCommands.SET_POSITION, parameters=str(100 - position)
+        )
+        self._attr_current_cover_position = position
+
+        if position == 0:
+            self._attr_is_closed = True
+        else:
+            self._attr_is_closed = False
+
+        self.async_write_ha_state()
 
 
 def _async_make_entity(
