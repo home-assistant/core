@@ -2,14 +2,33 @@
 
 from __future__ import annotations
 
+import voluptuous as vol
+
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import TessieConfigEntry
+from .const import (
+    ATTR_DESTINATION,
+    ATTR_LATITUDE,
+    ATTR_LOCALE,
+    ATTR_LONGITUDE,
+    SERVICE_SET_NAVIGATION,
+)
 from .entity import TessieEntity
 from .models import TessieVehicleData
+
+NAV_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Optional(ATTR_DESTINATION): cv.string,
+        vol.Optional(ATTR_LATITUDE): vol.Coerce(float),
+        vol.Optional(ATTR_LONGITUDE): vol.Coerce(float),
+        vol.Optional(ATTR_LOCALE, default="en-US"): cv.string,
+    }
+)
 
 PARALLEL_UPDATES = 0
 
@@ -29,6 +48,13 @@ async def async_setup_entry(
             TessieDeviceTrackerRouteEntity,
         )
         for vehicle in data.vehicles
+    )
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_NAVIGATION,
+        NAV_SCHEMA,
+        "async_set_navigation",
     )
 
 
