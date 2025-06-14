@@ -14,6 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
+from homeassistant.util.color import RGBColor
 
 from tests.common import (
     MockConfigEntry,
@@ -44,10 +45,16 @@ class MockCalendarEntity(CalendarEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, name: str, events: list[CalendarEvent] | None = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        events: list[CalendarEvent] | None = None,
+        color: RGBColor | None = None,
+    ) -> None:
         """Initialize entity."""
         self._attr_name = name.capitalize()
         self._events = events or []
+        self._attr_color = color
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -198,4 +205,7 @@ def create_test_entities() -> list[MockCalendarEntity]:
     )
     entity2.async_get_events = AsyncMock(wraps=entity2.async_get_events)
 
-    return [entity1, entity2]
+    entity3 = MockCalendarEntity("Calendar 3", [], color=RGBColor(255, 0, 0))
+    entity3.async_get_events = AsyncMock(wraps=entity3.async_get_events)
+
+    return [entity1, entity2, entity3]
