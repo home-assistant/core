@@ -166,12 +166,18 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
         # Set current solar charging mode
-        eco_smart_enabled = data[CHARGER_DATA_KEY][CHARGER_ECO_SMART_KEY][
-            CHARGER_ECO_SMART_STATUS_KEY
-        ]
-        eco_smart_mode = data[CHARGER_DATA_KEY][CHARGER_ECO_SMART_KEY][
-            CHARGER_ECO_SMART_MODE_KEY
-        ]
+        eco_smart_enabled = (
+            data[CHARGER_DATA_KEY]
+            .get(CHARGER_ECO_SMART_KEY, {})
+            .get(CHARGER_ECO_SMART_STATUS_KEY)
+        )
+
+        eco_smart_mode = (
+            data[CHARGER_DATA_KEY]
+            .get(CHARGER_ECO_SMART_KEY, {})
+            .get(CHARGER_ECO_SMART_MODE_KEY)
+        )
+
         if eco_smart_enabled is False:
             data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.OFF
         elif eco_smart_mode == 0:
