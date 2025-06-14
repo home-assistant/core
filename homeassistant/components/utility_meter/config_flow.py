@@ -29,6 +29,9 @@ from .const import (
     CONF_TARIFFS,
     DAILY,
     DOMAIN,
+    EVERY_FIVE_MINUTES,
+    HALF_HOURLY,
+    HALF_YEARLY,
     HOURLY,
     MONTHLY,
     QUARTER_HOURLY,
@@ -39,13 +42,16 @@ from .const import (
 
 METER_TYPES = [
     "none",
+    EVERY_FIVE_MINUTES,
     QUARTER_HOURLY,
+    HALF_HOURLY,
     HOURLY,
     DAILY,
     WEEKLY,
     MONTHLY,
     BIMONTHLY,
     QUARTERLY,
+    HALF_YEARLY,
     YEARLY,
 ]
 
