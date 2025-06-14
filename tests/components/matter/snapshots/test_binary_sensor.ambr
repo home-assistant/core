@@ -517,6 +517,7 @@
     'original_name': 'Door alarm',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dishwasher_alarm_door',
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-1-DishwasherAlarmDoorError-93-2',
@@ -534,7 +535,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensors[silabs_dishwasher][binary_sensor.dishwasher_inflow_alarm-entry]
@@ -565,6 +566,7 @@
     'original_name': 'Inflow alarm',
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dishwasher_alarm_inflow',
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-1-DishwasherAlarmInflowError-93-2',
@@ -582,7 +584,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_charging_status-entry]
