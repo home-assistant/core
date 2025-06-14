@@ -297,14 +297,8 @@ class HomematicipTiltStateSensor(HomematicipGenericEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state."""
-        if hasattr(self.functional_channel, "tiltState"):
-            return (
-                self.functional_channel.tiltState.lower()
-                if self.functional_channel.tiltState is not None
-                else None
-            )
-
-        return None
+        tilt_state = getattr(self.functional_channel, "tiltState", None)
+        return tilt_state.lower() if tilt_state is not None else None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
