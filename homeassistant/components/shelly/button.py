@@ -239,7 +239,9 @@ class ShellyButton(ShellyBaseButton):
             )
         else:
             self._attr_device_info = get_rpc_device_info(
-                coordinator.device, coordinator.mac
+                coordinator.device,
+                coordinator.mac,
+                suggested_area=coordinator.suggested_area,
             )
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}

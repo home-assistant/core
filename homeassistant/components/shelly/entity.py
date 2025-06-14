@@ -405,7 +405,10 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         super().__init__(coordinator)
         self.key = key
         self._attr_device_info = get_rpc_device_info(
-            coordinator.device, coordinator.mac, key
+            coordinator.device,
+            coordinator.mac,
+            key,
+            suggested_area=coordinator.suggested_area,
         )
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
@@ -698,7 +701,10 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self.entity_description = description
 
         self._attr_device_info = get_rpc_device_info(
-            coordinator.device, coordinator.mac, key
+            coordinator.device,
+            coordinator.mac,
+            key,
+            suggested_area=coordinator.suggested_area,
         )
         self._attr_unique_id = self._attr_unique_id = (
             f"{coordinator.mac}-{key}-{attribute}"

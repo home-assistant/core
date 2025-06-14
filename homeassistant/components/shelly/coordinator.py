@@ -114,6 +114,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         self.device = device
         self.device_id: str | None = None
         self._pending_platforms: list[Platform] | None = None
+        self.suggested_area: str | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
         # The device has come online at least once. In the case of a sleeping RPC
@@ -176,6 +177,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
             configuration_url=f"http://{get_host(self.config_entry.data[CONF_HOST])}:{get_http_port(self.config_entry.data)}",
         )
+        self.suggested_area = device_entry.area_id
         self.device_id = device_entry.id
 
     async def shutdown(self) -> None:
