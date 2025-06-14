@@ -142,14 +142,12 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         percent: int | None = kwargs.get("tilt_position")
-        if percent is None:
-            return
-
-        await self.send_api_command(
-            BlindTiltCommands.SET_POSITION,
-            parameters=f"{self._attr_direction};{percent}",
-        )
-        self.async_write_ha_state()
+        if percent is not None:
+            await self.send_api_command(
+                BlindTiltCommands.SET_POSITION,
+                parameters=f"{self._attr_direction};{percent}",
+            )
+            self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover."""
