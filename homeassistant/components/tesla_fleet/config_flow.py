@@ -7,7 +7,6 @@ import logging
 import re
 from typing import Any, cast
 
-from cryptography.hazmat.primitives import serialization
 import jwt
 from tesla_fleet_api import TeslaFleetApi
 from tesla_fleet_api.const import SERVERS
@@ -88,7 +87,7 @@ class OAuth2FlowHandler(
             user_scope=False,
             vehicle_scope=False,
         )
-        await self.api.get_private_key()
+        await self.api.get_private_key(self.hass.config.path("tesla_fleet.key"))
         await self.api.partner_login(
             implementation.client_id, implementation.client_secret
         )
@@ -96,10 +95,13 @@ class OAuth2FlowHandler(
         return await self.async_step_domain_input()
 
     async def async_step_domain_input(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Handle domain input step."""
-        errors = {}
+
+        errors = errors or {}
 
         if user_input is not None:
             domain = user_input["domain"].strip().lower()
@@ -130,20 +132,11 @@ class OAuth2FlowHandler(
         assert self.api.private_key
         assert self.domain
 
-        local_public_key = self.api.private_key.public_key()
-        local_pem = local_public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
-        ).decode("utf-8")
-
-        # Get the raw EC point in uncompressed format (what Tesla expects)
-        local_raw = local_public_key.public_bytes(
-            encoding=serialization.Encoding.X962,
-            format=serialization.PublicFormat.UncompressedPoint,
-        ).hex()
-
         errors = {}
-        description_placeholders = {"domain": self.domain, "pem": local_pem}
+        description_placeholders = {
+            "public_key_url": f"https://{self.domain}/.well-known/appspecific/com.tesla.3p.public-key.pem",
+            "pem": self.api.public_pem,
+        }
 
         try:
             register_response = await self.api.partner.register(self.domain)
@@ -155,13 +148,18 @@ class OAuth2FlowHandler(
 
             if not registered_public_key:
                 errors["base"] = "public_key_not_found"
-            elif registered_public_key.lower() != local_raw.lower():
+            elif (
+                registered_public_key.lower()
+                != self.api.public_uncompressed_point.lower()
+            ):
                 errors["base"] = "public_key_mismatch"
             else:
                 return await self.async_step_registration_complete()
 
         except PreconditionFailed:
-            errors["base"] = "precondition_failed"
+            return await self.async_step_domain_input(
+                errors={"domain": "precondition_failed"}
+            )
         except InvalidResponse:
             errors["base"] = "invalid_response"
         except TeslaFleetError as e:
@@ -178,7 +176,7 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show completion and virtual key installation."""
-        if user_input and self.uid and self.data:
+        if user_input is not None and self.uid and self.data:
             return self.async_create_entry(title=self.uid, data=self.data)
 
         if not self.domain:
@@ -194,7 +192,6 @@ class OAuth2FlowHandler(
                         error_correction_level=QrErrorCorrectionLevel.QUARTILE,
                     )
                 ),
-                vol.Optional("complete"): bool,
             }
         )
 
