@@ -61,10 +61,7 @@ rules:
     status: done
     comment: |
       The entities are categorized well by using default category.
-  entity-device-class:
-    status: exempt
-    comment: |
-      There is no appropriate sensor device class for standard gravity readings.
+  entity-device-class: done
   entity-disabled-by-default:
     status: exempt
     comment: No disabled entities implemented
