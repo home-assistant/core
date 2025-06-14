@@ -10,7 +10,6 @@ from tesla_fleet_api.const import Scope
 DOMAIN = "tesla_fleet"
 
 CONF_REFRESH_TOKEN = "refresh_token"
-CONF_DOMAIN = "domain"
 
 LOGGER = logging.getLogger(__package__)
 
