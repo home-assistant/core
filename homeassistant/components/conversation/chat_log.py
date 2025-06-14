@@ -395,7 +395,6 @@ class ChatLog:
         llm_context = llm.LLMContext(
             platform=conversing_domain,
             context=user_input.context,
-            user_prompt=user_input.text,
             language=user_input.language,
             assistant=DOMAIN,
             device_id=user_input.device_id,
