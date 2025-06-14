@@ -1,8 +1,8 @@
 set_navigation:
   target:
     entity:
-      integration: tessie
-      device_class: car
+      - integration: tessie
+        domain: device_tracker
   fields:
     destination:
       example: "1600 Amphitheatre Pkwy, Mountain View, CA"
