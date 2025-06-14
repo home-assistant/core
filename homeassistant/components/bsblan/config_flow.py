@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
-from bsblan import BSBLAN, BSBLANConfig, BSBLANError
+from bsblan import BSBLAN, BSBLANAuthError, BSBLANConfig, BSBLANError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -43,23 +44,152 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._get_bsblan_info()
+        except BSBLANAuthError:
+            return self._show_setup_form({"base": "invalid_auth"}, user_input)
         except BSBLANError:
             return self._show_setup_form({"base": "cannot_connect"})
 
         return self._async_create_entry()
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth flow."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation flow."""
+        existing_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        assert existing_entry
+
+        if user_input is None:
+            # Preserve existing values as defaults
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_PASSKEY,
+                            default=existing_entry.data.get(
+                                CONF_PASSKEY, vol.UNDEFINED
+                            ),
+                        ): str,
+                        vol.Optional(
+                            CONF_USERNAME,
+                            default=existing_entry.data.get(
+                                CONF_USERNAME, vol.UNDEFINED
+                            ),
+                        ): str,
+                        vol.Optional(
+                            CONF_PASSWORD,
+                            default=vol.UNDEFINED,
+                        ): str,
+                    }
+                ),
+            )
+
+        # Use existing host and port, update auth credentials
+        self.host = existing_entry.data[CONF_HOST]
+        self.port = existing_entry.data[CONF_PORT]
+        self.passkey = user_input.get(CONF_PASSKEY) or existing_entry.data.get(
+            CONF_PASSKEY
+        )
+        self.username = user_input.get(CONF_USERNAME) or existing_entry.data.get(
+            CONF_USERNAME
+        )
+        self.password = user_input.get(CONF_PASSWORD)
+
+        try:
+            await self._get_bsblan_info()
+        except BSBLANAuthError:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_PASSKEY,
+                            default=user_input.get(CONF_PASSKEY, vol.UNDEFINED),
+                        ): str,
+                        vol.Optional(
+                            CONF_USERNAME,
+                            default=user_input.get(CONF_USERNAME, vol.UNDEFINED),
+                        ): str,
+                        vol.Optional(
+                            CONF_PASSWORD,
+                            default=vol.UNDEFINED,
+                        ): str,
+                    }
+                ),
+                errors={"base": "invalid_auth"},
+            )
+        except BSBLANError:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_PASSKEY,
+                            default=user_input.get(CONF_PASSKEY, vol.UNDEFINED),
+                        ): str,
+                        vol.Optional(
+                            CONF_USERNAME,
+                            default=user_input.get(CONF_USERNAME, vol.UNDEFINED),
+                        ): str,
+                        vol.Optional(
+                            CONF_PASSWORD,
+                            default=vol.UNDEFINED,
+                        ): str,
+                    }
+                ),
+                errors={"base": "cannot_connect"},
+            )
+
+        # Update the config entry with new auth data
+        new_data = existing_entry.data.copy()
+        if self.passkey is not None:
+            new_data[CONF_PASSKEY] = self.passkey
+        if self.username is not None:
+            new_data[CONF_USERNAME] = self.username
+        if self.password is not None:
+            new_data[CONF_PASSWORD] = self.password
+
+        return self.async_update_reload_and_abort(
+            existing_entry, data=new_data, reason="reauth_successful"
+        )
+
     @callback
-    def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:
+    def _show_setup_form(
+        self, errors: dict | None = None, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
+        # Preserve user input if provided, otherwise use defaults
+        defaults = user_input or {}
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Optional(CONF_PASSKEY): str,
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
+                    vol.Required(
+                        CONF_HOST, default=defaults.get(CONF_HOST, vol.UNDEFINED)
+                    ): str,
+                    vol.Optional(
+                        CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)
+                    ): int,
+                    vol.Optional(
+                        CONF_PASSKEY, default=defaults.get(CONF_PASSKEY, vol.UNDEFINED)
+                    ): str,
+                    vol.Optional(
+                        CONF_USERNAME,
+                        default=defaults.get(CONF_USERNAME, vol.UNDEFINED),
+                    ): str,
+                    vol.Optional(
+                        CONF_PASSWORD,
+                        default=defaults.get(CONF_PASSWORD, vol.UNDEFINED),
+                    ): str,
                 }
             ),
             errors=errors or {},
@@ -95,9 +225,12 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             format_mac(self.mac), raise_on_progress=raise_on_progress
         )
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: self.host,
-                CONF_PORT: self.port,
-            }
-        )
+
+        # Skip unique ID configured check during reauth flows
+        if self.source != SOURCE_REAUTH:
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: self.host,
+                    CONF_PORT: self.port,
+                }
+            )
