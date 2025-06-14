@@ -2673,7 +2673,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.19.3
+rokuecp==0.19.5
 
 # homeassistant.components.romy
 romy==0.0.10
@@ -2900,7 +2900,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.1.1
+tesla-fleet-api==1.1.3
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
