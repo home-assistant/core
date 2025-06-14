@@ -138,7 +138,11 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
     _attr_is_closed: bool | None = None
     _attr_percent: int | None = None
 
-    _attr_supported_features: CoverEntityFeature = CoverEntityFeature.SET_TILT_POSITION
+    _attr_supported_features: CoverEntityFeature = (
+        CoverEntityFeature.SET_TILT_POSITION
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+    )
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -151,6 +155,22 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
             parameters=f"{self._attr_direction};{percent}",
         )
         self.async_write_ha_state()
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self.send_api_command(BlindTiltCommands.FULLY_OPEN)
+        self._attr_is_closed = False
+        self.async_write_ha_state()
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        if self._attr_direction is not None:
+            if "up" in self._attr_direction:
+                await self.send_api_command(BlindTiltCommands.CLOSE_UP)
+            else:
+                await self.send_api_command(BlindTiltCommands.CLOSE_DOWN)
+            self._attr_is_closed = True
+            self.async_write_ha_state()
 
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
@@ -167,14 +187,14 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
         else:
             self._attr_is_closed = False
         if position > 50:
-            position = 100 - ((position - 50) * 2)
+            percent = 100 - ((position - 50) * 2)
         else:
-            position = 100 - (50 - position) * 2
+            percent = 100 - (50 - position) * 2
         self._attr_direction = self.coordinator.data.get("direction")
         if self._attr_direction is not None:
             self._attr_direction = self._attr_direction.lower()
-        self._attr_current_cover_position = position
-        self._attr_current_cover_tilt_position = position
+        self._attr_current_cover_position = percent
+        self._attr_current_cover_tilt_position = percent
         self.async_write_ha_state()
 
         # if self.unique_id.endswith("7F"):
