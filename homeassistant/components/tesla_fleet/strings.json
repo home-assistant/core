@@ -13,17 +13,12 @@
       "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "invalid_domain": "Invalid domain format. Please enter a valid domain name.",
-      "verification_system_error": "System error during verification. Please check your system permissions and try again.",
-      "verification_data_error": "Data error during verification. Please check your domain configuration.",
-      "verification_still_failed": "Verification still failed for some regions. Please ensure the public key file is correctly hosted.",
-      "pem_generation_system_error": "System error generating public key file. Please check system permissions.",
-      "pem_generation_data_error": "Data error generating public key file. Please try again.",
       "public_key_not_found": "Public key not found in registration response. Please try again.",
       "public_key_mismatch": "The public key hosted at your domain does not match the expected key. Please ensure the correct public key is hosted at the specified location.",
       "precondition_failed": "A precondition has failed. Please refer to the documentation for troubleshooting.",
-      "invalid_response": "The domain was rejected by Tesla"
+      "invalid_response": "The domain was rejected by Tesla",
+      "unknown_error": "An unknown error occurred: {error}"
     },
     "step": {
       "domain_input": {
@@ -39,7 +34,7 @@
       },
       "registration_complete": {
         "title": "Command Signing",
-        "description": "To enable command signing, you must visit the following URL on a mobile device with the Tesla App installed to setup a virtual key:\n\n{virtual_key_url}\n\n[![QR Code](https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={virtual_key_url})]({virtual_key_url})"
+        "description": "To enable command signing, you must visit the following URL on a mobile device with the Tesla App installed to setup a virtual key:\n\n{virtual_key_url}"
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",

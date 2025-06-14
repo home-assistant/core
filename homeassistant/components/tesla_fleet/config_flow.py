@@ -21,6 +21,11 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    QrCodeSelector,
+    QrCodeSelectorConfig,
+    QrErrorCorrectionLevel,
+)
 
 from .const import DOMAIN, LOGGER
 from .oauth import TeslaUserImplementation
@@ -120,11 +125,10 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle domain registration for both regions."""
-        if not self.domain:
-            return await self.async_step_domain_input()
 
         assert self.api
         assert self.api.private_key
+        assert self.domain
 
         local_public_key = self.api.private_key.public_key()
         local_pem = local_public_key.public_bytes(
@@ -139,6 +143,7 @@ class OAuth2FlowHandler(
         ).hex()
 
         errors = {}
+        description_placeholders = {"domain": self.domain, "pem": local_pem}
 
         try:
             register_response = await self.api.partner.register(self.domain)
@@ -160,12 +165,12 @@ class OAuth2FlowHandler(
         except InvalidResponse:
             errors["base"] = "invalid_response"
         except TeslaFleetError as e:
-            # Unexpected error that will not be translated
-            errors["base"] = e.message
+            errors["base"] = "unknown_error"
+            description_placeholders["error"] = e.message
 
         return self.async_show_form(
             step_id="domain_registration",
-            description_placeholders={"domain": self.domain, "pem": local_pem},
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 
@@ -179,10 +184,25 @@ class OAuth2FlowHandler(
         if not self.domain:
             return await self.async_step_domain_input()
 
+        virtual_key_url = f"https://www.tesla.com/_ak/{self.domain}"
+        data_schema = vol.Schema({}).extend(
+            {
+                vol.Optional("qr_code"): QrCodeSelector(
+                    config=QrCodeSelectorConfig(
+                        data=virtual_key_url,
+                        scale=6,
+                        error_correction_level=QrErrorCorrectionLevel.QUARTILE,
+                    )
+                ),
+                vol.Optional("complete"): bool,
+            }
+        )
+
         return self.async_show_form(
             step_id="registration_complete",
+            data_schema=data_schema,
             description_placeholders={
-                "virtual_key_url": f"https://www.tesla.com/_ak/{self.domain}",
+                "virtual_key_url": virtual_key_url,
             },
         )
 
