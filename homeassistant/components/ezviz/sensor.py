@@ -88,7 +88,20 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     entities = []
     
-    for camera, sensors in coordinator.data.items():
+    entities = [
+    EzvizSensor(coordinator, camera, sensor)
+    for camera, sensors in coordinator.data.items()
+    for sensor, value in sensors.items()
+    if sensor in SENSOR_TYPES and value is not None
+]
+
+# Add optional attributes if present
+entities += [
+    EzvizSensor(coordinator, camera, optional_key)
+    for camera, sensors in coordinator.data.items()
+    for optional_key in ["powerStatus", "OnlineStatus"]
+    if optional_key in sensors.get("optionals", {})
+]
         for sensor, value in sensors.items():
             if sensor in SENSOR_TYPES and value is not None:
                 entities.append(EzvizSensor(coordinator, camera, sensor))
