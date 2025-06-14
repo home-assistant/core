@@ -132,7 +132,6 @@ class Eq3NumberEntity(Eq3Entity, NumberEntity):
         """Return the state of the entity."""
 
         if TYPE_CHECKING:
-            assert self._thermostat.status is not None
             assert self._thermostat.status.presets is not None
 
         return self.entity_description.value_func(self._thermostat.status.presets)
@@ -147,7 +146,7 @@ class Eq3NumberEntity(Eq3Entity, NumberEntity):
         """Return whether the entity is available."""
 
         return (
-            self._thermostat.status is not None
+            super().available
             and self._thermostat.status.presets is not None
             and self._attr_available
         )

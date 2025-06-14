@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from eq3btsmart import Eq3Exception
 from eq3btsmart.const import Eq3Event
 
 from homeassistant.core import callback
@@ -50,13 +51,13 @@ class Eq3Entity(Entity):
         """Run when entity about to be added to hass."""
 
         self._thermostat.register_callback(
-            Eq3Event.DEVICE_DATA_RECEIVED, self._async_on_updated
+            Eq3Event.DEVICE_DATA_RECEIVED, self._async_on_device_updated
         )
         self._thermostat.register_callback(
-            Eq3Event.STATUS_RECEIVED, self._async_on_updated
+            Eq3Event.STATUS_RECEIVED, self._async_on_status_updated
         )
         self._thermostat.register_callback(
-            Eq3Event.SCHEDULE_RECEIVED, self._async_on_updated
+            Eq3Event.SCHEDULE_RECEIVED, self._async_on_status_updated
         )
 
         self.async_on_remove(
@@ -78,17 +79,24 @@ class Eq3Entity(Entity):
         """Run when entity will be removed from hass."""
 
         self._thermostat.unregister_callback(
-            Eq3Event.DEVICE_DATA_RECEIVED, self._async_on_updated
+            Eq3Event.DEVICE_DATA_RECEIVED, self._async_on_device_updated
         )
         self._thermostat.unregister_callback(
-            Eq3Event.STATUS_RECEIVED, self._async_on_updated
+            Eq3Event.STATUS_RECEIVED, self._async_on_status_updated
         )
         self._thermostat.unregister_callback(
-            Eq3Event.SCHEDULE_RECEIVED, self._async_on_updated
+            Eq3Event.SCHEDULE_RECEIVED, self._async_on_status_updated
         )
 
-    def _async_on_updated(self, data: Any) -> None:
-        """Handle updated data from the thermostat."""
+    @callback
+    def _async_on_status_updated(self, data: Any) -> None:
+        """Handle updated status from the thermostat."""
+
+        self.async_write_ha_state()
+
+    @callback
+    def _async_on_device_updated(self, data: Any) -> None:
+        """Handle updated device data from the thermostat."""
 
         self.async_write_ha_state()
 
@@ -105,3 +113,14 @@ class Eq3Entity(Entity):
 
         self._attr_available = True
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Whether the entity is available."""
+
+        try:
+            _ = self._thermostat.status
+        except Eq3Exception:
+            return False
+
+        return self._attr_available

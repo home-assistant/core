@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from eq3btsmart.models import Status
 
@@ -75,8 +74,5 @@ class Eq3SensorEntity(Eq3Entity, SensorEntity):
     @property
     def native_value(self) -> int | datetime | None:
         """Return the value reported by the sensor."""
-
-        if TYPE_CHECKING:
-            assert self._thermostat.status is not None
 
         return self.entity_description.value_func(self._thermostat.status)

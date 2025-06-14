@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from eq3btsmart import Thermostat
 from eq3btsmart.const import EQ3_DEFAULT_AWAY_TEMP, Eq3OperationMode
@@ -106,8 +106,5 @@ class Eq3SwitchEntity(Eq3Entity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-
-        if TYPE_CHECKING:
-            assert self._thermostat.status is not None
 
         return self.entity_description.value_func(self._thermostat.status)

@@ -79,15 +79,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     _target_temperature: float | None = None
 
     @callback
-    def _async_on_updated(self, data: Any) -> None:
-        """Handle updated data from the thermostat."""
-
-        self._async_on_status_updated()
-        self._async_on_device_updated()
-        super()._async_on_updated(data)
-
-    @callback
-    def _async_on_status_updated(self) -> None:
+    def _async_on_status_updated(self, data: Any) -> None:
         """Handle updated status from the thermostat."""
 
         self._target_temperature = self._thermostat.status.target_temperature
@@ -96,9 +88,10 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         self._attr_target_temperature = self._get_target_temperature()
         self._attr_preset_mode = self._get_current_preset_mode()
         self._attr_hvac_action = self._get_current_hvac_action()
+        super()._async_on_status_updated(data)
 
     @callback
-    def _async_on_device_updated(self) -> None:
+    def _async_on_device_updated(self, data: Any) -> None:
         """Handle updated device data from the thermostat."""
 
         device_registry = dr.async_get(self.hass)
@@ -110,6 +103,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
                 sw_version=str(self._thermostat.device_data.firmware_version),
                 serial_number=self._thermostat.device_data.device_serial,
             )
+        super()._async_on_device_updated(data)
 
     def _get_current_temperature(self) -> float | None:
         """Return the current temperature."""
