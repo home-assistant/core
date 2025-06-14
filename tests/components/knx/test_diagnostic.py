@@ -21,7 +21,7 @@ from homeassistant.components.knx.const import (
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
     DEFAULT_ROUTING_IA,
-    DOMAIN as KNX_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -84,7 +84,7 @@ async def test_diagnostic_redact(
     """Test diagnostics redacting data."""
     mock_config_entry: MockConfigEntry = MockConfigEntry(
         title="KNX",
-        domain=KNX_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
             CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,

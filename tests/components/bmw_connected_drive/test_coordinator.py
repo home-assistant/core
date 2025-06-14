@@ -11,7 +11,7 @@ from bimmer_connected.models import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
+from homeassistant.components.bmw_connected_drive import DOMAIN
 from homeassistant.components.bmw_connected_drive.const import (
     CONF_REFRESH_TOKEN,
     SCAN_INTERVALS,
@@ -140,7 +140,7 @@ async def test_auth_failed_as_update_failed(
 
     # Verify that no issues are raised and no reauth flow is initialized
     assert len(issue_registry.issues) == 0
-    assert len(hass.config_entries.flow.async_progress_by_handler(BMW_DOMAIN)) == 0
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 0
 
 
 @pytest.mark.usefixtures("bmw_fixture")
@@ -190,13 +190,13 @@ async def test_auth_failed_init_reauth(
 
     reauth_issue = issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN,
-        f"config_entry_reauth_{BMW_DOMAIN}_{config_entry.entry_id}",
+        f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}",
     )
     assert reauth_issue.active is True
 
     # Check if reauth flow is initialized correctly
     flow = hass.config_entries.flow.async_get(reauth_issue.data["flow_id"])
-    assert flow["handler"] == BMW_DOMAIN
+    assert flow["handler"] == DOMAIN
     assert flow["context"]["source"] == "reauth"
     assert flow["context"]["unique_id"] == config_entry.unique_id
 
@@ -233,12 +233,12 @@ async def test_captcha_reauth(
 
     reauth_issue = issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN,
-        f"config_entry_reauth_{BMW_DOMAIN}_{config_entry.entry_id}",
+        f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}",
     )
     assert reauth_issue.active is True
 
     # Check if reauth flow is initialized correctly
     flow = hass.config_entries.flow.async_get(reauth_issue.data["flow_id"])
-    assert flow["handler"] == BMW_DOMAIN
+    assert flow["handler"] == DOMAIN
     assert flow["context"]["source"] == "reauth"
     assert flow["context"]["unique_id"] == config_entry.unique_id
