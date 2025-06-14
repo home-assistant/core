@@ -146,6 +146,7 @@ async def test_full_flow_with_domain_registration(
         mock_api.private_key = mock_private_key
         mock_api.get_private_key = AsyncMock()
         mock_api.partner_login = AsyncMock()
+        mock_api.public_uncompressed_point = "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
         mock_api.partner.register.return_value = {
             "response": {
                 "public_key": "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
@@ -158,7 +159,7 @@ async def test_full_flow_with_domain_registration(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_input"
 
-        # Enter domain - this should automatically go to registration_complete on success
+        # Enter domain - this should automatically register and go to registration_complete
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"domain": "example.com"}
         )
@@ -166,9 +167,7 @@ async def test_full_flow_with_domain_registration(
         assert result["step_id"] == "registration_complete"
 
         # Complete flow - provide user input to complete registration
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"complete": True}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UNIQUE_ID
@@ -233,7 +232,8 @@ async def test_domain_input_invalid_domain(
         assert result["step_id"] == "domain_input"
         assert result["errors"] == {"domain": "invalid_domain"}
 
-        # Enter valid domain - this should succeed and go to registration_complete
+        # Enter valid domain - this should automatically register and go to registration_complete
+        mock_api.public_uncompressed_point = "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
         mock_api.partner.register.return_value = {
             "response": {
                 "public_key": "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
@@ -249,7 +249,6 @@ async def test_domain_input_invalid_domain(
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
-        (PreconditionFailed, "precondition_failed"),
         (InvalidResponse, "invalid_response"),
         (TeslaFleetError("Custom error"), "unknown_error"),
     ],
@@ -264,7 +263,7 @@ async def test_domain_registration_errors(
     side_effect,
     expected_error,
 ) -> None:
-    """Test domain registration with errors."""
+    """Test domain registration with errors that stay on domain_registration step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -299,6 +298,7 @@ async def test_domain_registration_errors(
         mock_api.private_key = mock_private_key
         mock_api.get_private_key = AsyncMock()
         mock_api.partner_login = AsyncMock()
+        mock_api.public_uncompressed_point = "test_point"
         mock_api.partner.register.side_effect = side_effect
         mock_api_class.return_value = mock_api
 
@@ -315,6 +315,65 @@ async def test_domain_registration_errors(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_registration"
         assert result["errors"] == {"base": expected_error}
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_domain_registration_precondition_failed(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    access_token: str,
+    mock_private_key,
+) -> None:
+    """Test domain registration with PreconditionFailed redirects to domain_input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with (
+        patch(
+            "homeassistant.components.tesla_fleet.config_flow.TeslaFleetApi"
+        ) as mock_api_class,
+    ):
+        mock_api = AsyncMock()
+        mock_api.private_key = mock_private_key
+        mock_api.get_private_key = AsyncMock()
+        mock_api.partner_login = AsyncMock()
+        mock_api.public_uncompressed_point = "test_point"
+        mock_api.partner.register.side_effect = PreconditionFailed
+        mock_api_class.return_value = mock_api
+
+        # Complete OAuth
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        # Enter domain - this should go to domain_registration and then fail back to domain_input
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"domain": "example.com"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "domain_input"
+        assert result["errors"] == {"domain": "precondition_failed"}
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -360,6 +419,7 @@ async def test_domain_registration_public_key_not_found(
         mock_api.private_key = mock_private_key
         mock_api.get_private_key = AsyncMock()
         mock_api.partner_login = AsyncMock()
+        mock_api.public_uncompressed_point = "test_point"
         mock_api.partner.register.return_value = {"response": {}}
         mock_api_class.return_value = mock_api
 
@@ -418,6 +478,7 @@ async def test_domain_registration_public_key_mismatch(
         mock_api.private_key = mock_private_key
         mock_api.get_private_key = AsyncMock()
         mock_api.partner_login = AsyncMock()
+        mock_api.public_uncompressed_point = "expected_key"
         mock_api.partner.register.return_value = {
             "response": {"public_key": "different_key"}
         }

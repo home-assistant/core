@@ -115,6 +115,9 @@ class OAuth2FlowHandler(
 
         return self.async_show_form(
             step_id="domain_input",
+            description_placeholders={
+                "dashboard": "https://developer.tesla.com/en_AU/dashboard/"
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required("domain"): str,

@@ -24,7 +24,7 @@
     "step": {
       "domain_input": {
         "title": "Tesla Fleet Domain Registration",
-        "description": "Enter the domain that will host your public key. This must be related to the origin domain you used during registration.",
+        "description": "Enter the domain that will host your public key. This must be related to the origin domain you used during registration at {dashboard}.",
         "data": {
           "domain": "Domain"
         }
