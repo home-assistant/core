@@ -1,9 +1,10 @@
 """Common fixtures for the Tilt Pi tests."""
 
-from unittest.mock import MagicMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from tiltpi import TiltPiClient
+from tiltpi import TiltColor, TiltHydrometerData
 
 from homeassistant.components.tilt_pi.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -29,6 +30,31 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_tiltpi_client() -> MagicMock:
-    """Mock TiltPi client."""
-    return MagicMock(spec=TiltPiClient)
+def mock_tiltpi_client() -> Generator[AsyncMock]:
+    """Mock a TiltPi client."""
+    with (
+        patch(
+            "homeassistant.components.tilt_pi.coordinator.TiltPiClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.tilt_pi.config_flow.TiltPiClient",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.get_hydrometers.return_value = [
+            TiltHydrometerData(
+                mac_id="00:1A:2B:3C:4D:5E",
+                color=TiltColor.BLACK,
+                temperature=55.0,
+                gravity=1.010,
+            ),
+            TiltHydrometerData(
+                mac_id="00:1s:99:f1:d2:4f",
+                color=TiltColor.YELLOW,
+                temperature=68.0,
+                gravity=1.015,
+            ),
+        ]
+        yield client

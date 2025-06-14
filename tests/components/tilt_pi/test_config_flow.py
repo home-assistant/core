@@ -1,6 +1,6 @@
 """Test the Tilt config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock
 
 from homeassistant import config_entries
 from homeassistant.components.tilt_pi.const import DOMAIN
@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 async def test_async_step_user_gets_form_and_creates_entry(
     hass: HomeAssistant,
-    mock_tiltpi_client: MagicMock,
+    mock_tiltpi_client: AsyncMock,
 ) -> None:
     """Test that the we can view the form and that the config flow creates an entry."""
     result = await hass.config_entries.flow.async_init(
@@ -24,20 +24,16 @@ async def test_async_step_user_gets_form_and_creates_entry(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.tilt_pi.config_flow.TiltPiClient",
-        return_value=mock_tiltpi_client,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_URL: "http://192.168.1.123:1880"},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_URL: "http://192.168.1.123:1880"},
+    )
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == {
-            CONF_HOST: "192.168.1.123",
-            CONF_PORT: 1880,
-        }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.123",
+        CONF_PORT: 1880,
+    }
 
 
 async def test_abort_if_already_configured(
@@ -65,7 +61,7 @@ async def test_abort_if_already_configured(
 
 async def test_async_step_user_error_invalid_host(
     hass: HomeAssistant,
-    mock_tiltpi_client: MagicMock,
+    mock_tiltpi_client: AsyncMock,
 ) -> None:
     """Test error shown when user submits invalid host."""
     result = await hass.config_entries.flow.async_init(
@@ -73,22 +69,18 @@ async def test_async_step_user_error_invalid_host(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    with patch(
-        "homeassistant.components.tilt_pi.config_flow.TiltPiClient",
-        return_value=mock_tiltpi_client,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_URL: "not-a-valid-url"},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_URL: "not-a-valid-url"},
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"url": "invalid_host"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"url": "invalid_host"}
 
 
 async def test_successful_recovery_after_connection_error(
     hass: HomeAssistant,
-    mock_tiltpi_client: MagicMock,
+    mock_tiltpi_client: AsyncMock,
 ) -> None:
     """Test error shown when connection fails."""
     result = await hass.config_entries.flow.async_init(
@@ -97,28 +89,20 @@ async def test_successful_recovery_after_connection_error(
     )
 
     # Simulate a connection error by raising a TimeoutError
-    with patch(
-        "homeassistant.components.tilt_pi.config_flow.TiltPiClient.get_hydrometers",
-        side_effect=TimeoutError(),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_URL: "http://192.168.1.123:1880"},
-        )
-
+    mock_tiltpi_client.get_hydrometers.side_effect = TimeoutError()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_URL: "http://192.168.1.123:1880"},
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Simulate successful connection on retry
-    with patch(
-        "homeassistant.components.tilt_pi.config_flow.TiltPiClient",
-        return_value=mock_tiltpi_client,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_URL: "http://192.168.1.123:1880"},
-        )
-
+    mock_tiltpi_client.get_hydrometers.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_URL: "http://192.168.1.123:1880"},
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "192.168.1.123",
