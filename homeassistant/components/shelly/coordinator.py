@@ -181,6 +181,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
             configuration_url=f"http://{get_host(self.config_entry.data[CONF_HOST])}:{get_http_port(self.config_entry.data)}",
         )
+        # We want to use the main device area as the suggested area for sub-devices.
         if (area_id := device_entry.area_id) is not None:
             area_registry = ar.async_get(self.hass)
             if (area := area_registry.async_get_area(area_id)) is not None:
