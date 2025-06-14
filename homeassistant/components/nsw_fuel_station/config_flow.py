@@ -15,9 +15,9 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import SCAN_INTERVAL, StationPriceData, fetch_station_price_data
+from . import StationPriceData, fetch_station_price_data
 from .const import CONF_STATION_ID, DOMAIN, INPUT_SEARCH_TERM, INPUT_STATION_ID
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,28 +32,7 @@ class NswFuelStationConfigFlow(ConfigFlow, domain=DOMAIN):
     fuel_types: list[str]
     stations: list[nsw_fuel.Station]
     selected_station: nsw_fuel.Station
-    data: StationPriceData
-
-    async def _setup_coordinator(self):
-        client = nsw_fuel.FuelCheckClient()
-
-        async def async_update_data():
-            return await self.hass.async_add_executor_job(
-                fetch_station_price_data, client
-            )
-
-        coordinator = DataUpdateCoordinator(
-            self.hass,
-            _LOGGER,
-            config_entry=None,
-            name="sensor",
-            update_interval=SCAN_INTERVAL,
-            update_method=async_update_data,
-        )
-        self.hass.data[DOMAIN] = coordinator
-
-        await coordinator.async_refresh()
-        self.data = coordinator.data
+    data: StationPriceData | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -61,7 +40,14 @@ class NswFuelStationConfigFlow(ConfigFlow, domain=DOMAIN):
         """Display the initial UI form."""
         errors: dict[str, str] = {}
 
-        await self._setup_coordinator()
+        client = nsw_fuel.FuelCheckClient()
+        self.data = None
+        try:
+            self.data = await self.hass.async_add_executor_job(
+                fetch_station_price_data, client
+            )
+        except UpdateFailed as e:
+            _LOGGER.error("Error fetching data from NSW Fuel API: %s", e)
         if self.data is None:
             return self.async_abort(reason="fetch_failed")
 
