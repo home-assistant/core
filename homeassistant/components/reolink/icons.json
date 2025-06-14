@@ -488,6 +488,12 @@
         "state": {
           "on": "mdi:eye-off"
         }
+      },
+      "privacy_mask": {
+        "default": "mdi:eye",
+        "state": {
+          "on": "mdi:eye-off"
+        }
       }
     }
   },
