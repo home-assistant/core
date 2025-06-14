@@ -808,7 +808,10 @@ def get_blu_trv_device_info(
 
 
 def get_block_device_info(
-    device: BlockDevice, mac: str, block: Block | None = None
+    device: BlockDevice,
+    mac: str,
+    block: Block | None = None,
+    suggested_area: str | None = None,
 ) -> DeviceInfo:
     """Return device info for Block device."""
     if (
@@ -823,6 +826,7 @@ def get_block_device_info(
         identifiers={(DOMAIN, f"{mac}-{block.description}")},
         name=get_block_sub_device_name(device, block),
         manufacturer="Shelly",
+        suggested_area=suggested_area,
         via_device=(DOMAIN, mac),
     )
 
