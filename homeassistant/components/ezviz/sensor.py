@@ -66,6 +66,16 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="last_alarm_type_name",
         translation_key="last_alarm_type_name",
     ),
+    "Record_Mode": SensorEntityDescription(
+        key="Record_Mode",
+        translation_key="record_mode",
+        entity_registry_enabled_default=False,
+    ),
+    "battery_camera_work_mode": SensorEntityDescription(
+        key="battery_camera_work_mode",
+        translation_key="battery_camera_work_mode",
+        entity_registry_enabled_default=False,
+    ),
     "powerStatus": SensorEntityDescription(
         key="powerStatus",
         translation_key="power_status",
@@ -104,7 +114,14 @@ async def async_setup_entry(
         for optional_key in ["powerStatus", "OnlineStatus"]
         if optional_key in sensors.get("optionals", {})
     ]
-    
+
+    # Add Record_Mode. This data looks like {"mode" : <value>}
+    entities += [
+        EzvizSensor(coordinator, camera, "mode")
+        for camera, sensors in coordinator.data.items()
+        if "mode" in sensors.get("optionals", {}).get("Record_Mode", {})
+    ]
+        
     async_add_entities(entities)
 
 
