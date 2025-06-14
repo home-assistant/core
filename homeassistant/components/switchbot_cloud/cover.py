@@ -70,12 +70,6 @@ class SwitchBotCloudCover(SwitchBotCloudEntity, CoverEntity):
         self._attr_current_cover_tilt_position = position
         self.async_write_ha_state()
 
-        # if self.unique_id.endswith("7F"):
-        #     print(self.coordinator.data)
-        #     print(position)
-        #     print(self.is_closed)
-        #     print(self.state)
-
 
 class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
     """Representation of a SwitchBot Cover."""
