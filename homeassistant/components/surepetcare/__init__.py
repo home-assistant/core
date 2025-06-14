@@ -20,6 +20,7 @@ from .const import (
     ATTR_LOCATION,
     ATTR_LOCK_STATE,
     ATTR_PET_NAME,
+    CONF_CREATE_PET_SELECT,
     DOMAIN,
     SERVICE_SET_LOCK_STATE,
     SERVICE_SET_PET_LOCATION,
@@ -49,6 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
+    if entry.data.get(CONF_CREATE_PET_SELECT):
+        PLATFORMS.append(Platform.SELECT)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     lock_state_service_schema = vol.Schema(
