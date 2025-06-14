@@ -1779,11 +1779,11 @@ async def test_chat_log_tts_streaming(
                 conversation_input,
             ) as chat_log,
         ):
-            await chat_log.async_update_llm_data(
-                conversing_domain="test",
-                user_input=conversation_input,
+            await chat_log.async_provide_llm_data(
+                conversation_input.as_llm_context("test"),
                 user_llm_hass_api="assist",
                 user_llm_prompt=None,
+                user_extra_system_prompt=conversation_input.extra_system_prompt,
             )
             async for _content in chat_log.async_add_delta_content_stream(
                 agent_id, stream_llm_response()

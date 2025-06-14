@@ -60,6 +60,7 @@ class Platform(StrEnum):
     IMAGE = "image"
     IMAGE_PROCESSING = "image_processing"
     LAWN_MOWER = "lawn_mower"
+    LLM_TASK = "llm_task"
     LIGHT = "light"
     LOCK = "lock"
     MEDIA_PLAYER = "media_player"
