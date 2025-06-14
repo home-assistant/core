@@ -44,6 +44,9 @@ BLOCK_MAX_TRANSITION_TIME_MS: Final = 5000
 # min RPC light transition time in seconds (max=10800, limited by light entity to 6553)
 RPC_MIN_TRANSITION_TIME_SEC = 0.5
 
+# time in seconds between two cover state updates when moving
+RPC_COVER_UPDATE_TIME_SEC = 1.0
+
 RGBW_MODELS: Final = (
     MODEL_BULB,
     MODEL_RGBW2,
