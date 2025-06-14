@@ -24,12 +24,6 @@
           "station_id": "Select station"
         },
         "submit": "Select"
-      },
-      "select_fuel": {
-        "description": "Choose fuel types to display",
-        "data": {
-          "fuel_types": "Fuel types"
-        }
       }
     }
   }

@@ -33,23 +33,6 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the NSW Fuel Station platform."""
-    client = nsw_fuel.FuelCheckClient()
-
-    async def async_update_data():
-        return await hass.async_add_executor_job(fetch_station_price_data, client)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=None,
-        name="sensor",
-        update_interval=SCAN_INTERVAL,
-        update_method=async_update_data,
-    )
-    hass.data[DOMAIN] = coordinator
-
-    await coordinator.async_refresh()
-
     if "sensor" not in config:
         return True
 
@@ -86,7 +69,7 @@ async def async_setup_entry(
     )
     hass.data[DOMAIN] = coordinator
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -106,7 +89,7 @@ class StationPriceData:
     """Data structure for O(1) price and name lookups."""
 
     stations: dict[int, nsw_fuel.Station]
-    prices: dict[tuple[int, str], float]
+    prices: dict[int, dict[str, float]]
     fuel_types: dict[str, str]
 
 
@@ -119,11 +102,14 @@ def fetch_station_price_data(
         reference_data = client.get_reference_data()
         # Restructure prices and station details to be indexed by station code
         # for O(1) lookup
+        prices: dict[int, dict[str, float]] = {}
+        for p in raw_price_data.prices:
+            station_prices = prices.setdefault(p.station_code, {})
+            station_prices[p.fuel_type] = p.price
+            prices[p.station_code] = station_prices
         return StationPriceData(
             stations={s.code: s for s in raw_price_data.stations},
-            prices={
-                (p.station_code, p.fuel_type): p.price for p in raw_price_data.prices
-            },
+            prices=prices,
             fuel_types={f.code: f.name for f in reference_data.fuel_types},
         )
 

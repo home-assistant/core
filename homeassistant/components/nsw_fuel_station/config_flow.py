@@ -8,12 +8,7 @@ from typing import Any
 import nsw_fuel
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_POLL,
-    ConfigFlow,
-    ConfigFlowResult,
-)
-from homeassistant.helpers import config_validation as cv
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -23,23 +18,15 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SCAN_INTERVAL, StationPriceData, fetch_station_price_data
-from .const import (
-    CONF_FUEL_TYPES,
-    CONF_STATION_ID,
-    DOMAIN,
-    INPUT_FUEL_TYPES,
-    INPUT_SEARCH_TERM,
-    INPUT_STATION_ID,
-)
+from .const import CONF_STATION_ID, DOMAIN, INPUT_SEARCH_TERM, INPUT_STATION_ID
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
+class NswFuelStationConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fuel Check integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     config_type: str | None
     fuel_types: list[str]
@@ -117,7 +104,12 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(str(station_id))
             self._abort_if_unique_id_configured()
             if "base" not in errors:
-                return await self.async_step_select_fuel()
+                return self.async_create_entry(
+                    title=self.selected_station.name,
+                    data={
+                        CONF_STATION_ID: self.selected_station.code,
+                    },
+                )
 
         return self.async_show_form(
             step_id="select_station",
@@ -140,40 +132,6 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_select_fuel(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Show the fuel type selection form."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.selected_station.name,
-                data={
-                    CONF_STATION_ID: self.selected_station.code,
-                    CONF_FUEL_TYPES: user_input[INPUT_FUEL_TYPES],
-                },
-            )
-
-        valid_fuel_types = {
-            fuel_type: self.data.fuel_types.get(fuel_type, fuel_type)
-            for station_code, fuel_type in self.data.prices
-            if station_code == self.selected_station.code
-        }
-
-        if len(valid_fuel_types) < 1:
-            return self.async_abort(reason="no_fuel_types")
-
-        return self.async_show_form(
-            step_id="select_fuel",
-            errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(INPUT_FUEL_TYPES): cv.multi_select(valid_fuel_types),
-                }
-            ),
-        )
-
     async def async_step_import(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -181,22 +139,12 @@ class FuelCheckConfigFlow(ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_abort(reason="no_config")
         station_id = user_input[INPUT_STATION_ID]
-        data = {
-            CONF_STATION_ID: station_id,
-            CONF_FUEL_TYPES: user_input[INPUT_FUEL_TYPES],
-        }
         await self.async_set_unique_id(str(station_id))
         self._abort_if_unique_id_configured()
 
-        await self._setup_coordinator()
-        if self.data is None:
-            return self.async_abort(reason="fetch_failed")
-
-        station = self.data.stations.get(station_id)
-        if station is None:
-            return self.async_abort(reason="no_matching_stations")
-
         return self.async_create_entry(
-            title=station.name,
-            data=data,
+            title=f"Station {station_id}",
+            data={
+                CONF_STATION_ID: station_id,
+            },
         )

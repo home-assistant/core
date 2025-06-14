@@ -20,7 +20,6 @@ from .const import (
     ATTR_STATION_ADDRESS,
     ATTR_STATION_ID,
     ATTR_STATION_NAME,
-    CONF_FUEL_TYPES,
     CONF_STATION_ID,
     DOMAIN,
 )
@@ -36,7 +35,6 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     sensors = []
     station_id = entry.data[CONF_STATION_ID]
-    fuel_types = entry.data[CONF_FUEL_TYPES]
 
     coordinator = hass.data[DOMAIN]
     await coordinator.async_refresh()
@@ -45,16 +43,29 @@ async def async_setup_entry(
         _LOGGER.error("Initial fuel station price data not available")
         return
 
-    for fuel_type in fuel_types:
-        if coordinator.data.prices.get((station_id, fuel_type)) is None:
-            _LOGGER.error(
-                "Fuel station price data not available for station %d and fuel type %s",
-                station_id,
-                fuel_type,
-            )
-            continue
+    station_data = coordinator.data.stations.get(station_id)
 
-        sensors.append(StationPriceSensor(coordinator, station_id, fuel_type))
+    if station_data is None:
+        _LOGGER.error("No data found for station %d", station_id)
+        return
+
+    hass.config_entries.async_update_entry(
+        entry=entry,
+        title=station_data.name,
+    )
+
+    station_prices = coordinator.data.prices.get(station_id)
+
+    if station_prices is None:
+        _LOGGER.error(
+            "Fuel station price data not available for station %d",
+            station_id,
+        )
+        return
+
+    for fuel_type in station_prices:
+        sensors.append(StationPriceSensor(coordinator, station_id, fuel_type))  # noqa: PERF401
+
     async_add_entities(sensors)
 
 
@@ -86,11 +97,12 @@ class StationPriceSensor(
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if self.coordinator.data is None:
+        if self.coordinator.data is None or self.coordinator.data.prices is None:
             return None
 
-        prices = self.coordinator.data.prices
-        return prices.get((self._station_id, self._fuel_type))
+        return self.coordinator.data.prices.get(self._station_id, {}).get(
+            self._fuel_type
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, int | str]:

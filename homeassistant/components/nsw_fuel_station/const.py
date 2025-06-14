@@ -2,7 +2,6 @@
 
 DOMAIN = "nsw_fuel_station"
 
-INPUT_FUEL_TYPES = "fuel_types"
 INPUT_STATION_ID = "station_id"
 INPUT_SEARCH_TERM = "search_string"
 
