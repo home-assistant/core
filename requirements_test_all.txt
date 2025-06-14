@@ -984,6 +984,7 @@ habluetooth==3.49.0
 # homeassistant.components.cloud
 hass-nabucasa==0.101.0
 
+# homeassistant.components.assist_conversation
 # homeassistant.components.conversation
 hassil==2.2.3
 
@@ -1012,7 +1013,7 @@ holidays==0.74
 # homeassistant.components.frontend
 home-assistant-frontend==20250531.3
 
-# homeassistant.components.conversation
+# homeassistant.components.assist_conversation
 home-assistant-intents==2025.6.10
 
 # homeassistant.components.homematicip_cloud
