@@ -9,7 +9,7 @@ from pypaperless.exceptions import (
     PaperlessInvalidTokenError,
 )
 
-from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -69,7 +69,7 @@ async def _get_paperless_api(
     api = Paperless(
         entry.data[CONF_URL],
         entry.data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
+        session=async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL]),
     )
 
     try:
@@ -102,3 +102,20 @@ async def _get_paperless_api(
         ) from err
     else:
         return api
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: PaperlessConfigEntry
+) -> bool:
+    """Migrate config entry to a new version."""
+
+    entry_data = {**config_entry.data}
+
+    if config_entry.minor_version < 2:
+        entry_data[CONF_VERIFY_SSL] = True
+
+    hass.config_entries.async_update_entry(
+        config_entry, data=entry_data, minor_version=2, version=1
+    )
+
+    return True
