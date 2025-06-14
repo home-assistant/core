@@ -143,7 +143,16 @@ class OAuth2FlowHandler(
 
         try:
             register_response = await self.api.partner.register(self.domain)
-
+        except PreconditionFailed:
+            return await self.async_step_domain_input(
+                errors={"domain": "precondition_failed"}
+            )
+        except InvalidResponse:
+            errors["base"] = "invalid_response"
+        except TeslaFleetError as e:
+            errors["base"] = "unknown_error"
+            description_placeholders["error"] = e.message
+        else:
             # Get public key from response
             registered_public_key = register_response.get("response", {}).get(
                 "public_key"
@@ -158,16 +167,6 @@ class OAuth2FlowHandler(
                 errors["base"] = "public_key_mismatch"
             else:
                 return await self.async_step_registration_complete()
-
-        except PreconditionFailed:
-            return await self.async_step_domain_input(
-                errors={"domain": "precondition_failed"}
-            )
-        except InvalidResponse:
-            errors["base"] = "invalid_response"
-        except TeslaFleetError as e:
-            errors["base"] = "unknown_error"
-            description_placeholders["error"] = e.message
 
         return self.async_show_form(
             step_id="domain_registration",
