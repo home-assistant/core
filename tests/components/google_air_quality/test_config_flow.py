@@ -121,14 +121,24 @@ async def test_full_flow(
     assert result["context"]["unique_id"] == CONFIG_ENTRY_ID
 
 
+@pytest.mark.parametrize(
+    ("api_error_reverse_geocode", "title"),
+    [
+        (None, "Straße Ohne Straßennamen, 88637 Buchheim, Deutschland"),
+        (GoogleAirQualityApiError("some error"), "Coordinates 50.0, 10.0"),
+    ],
+)
 @pytest.mark.usefixtures("setup_integration")
 async def test_add_location_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    mock_api: Mock,
+    api_error_reverse_geocode: Exception | None,
+    title: str,
 ) -> None:
     """Test add location subentry flow."""
     assert config_entry.state is ConfigEntryState.LOADED
-
+    mock_api.async_reverse_geocode.side_effect = api_error_reverse_geocode
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, "location"),
         context={"source": SOURCE_USER},
@@ -151,7 +161,7 @@ async def test_add_location_flow(
         CONF_LONGITUDE: 10.0,
     }
     assert result["unique_id"] == "50.0_10.0"
-    assert result["title"] == "Straße Ohne Straßennamen, 88637 Buchheim, Deutschland"
+    assert result["title"] == title
 
 
 @pytest.mark.usefixtures(

@@ -160,6 +160,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             )
 
             async def reload_later() -> None:
+                """Reload the config entry after the subentry is created."""
                 await hass.async_block_till_done()
                 await self.hass.config_entries.async_reload(entry.entry_id)
 
