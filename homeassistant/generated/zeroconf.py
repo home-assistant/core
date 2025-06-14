@@ -342,6 +342,11 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_altruist._tcp.local.": [
+        {
+            "domain": "altruist",
+        },
+    ],
     "_amzn-alexa._tcp.local.": [
         {
             "domain": "roomba",
