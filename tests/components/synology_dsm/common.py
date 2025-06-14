@@ -144,8 +144,33 @@ def mock_dsm_external_usb_devices_usb1() -> dict[str, SynoCoreExternalUSBDevice]
 
 
 def mock_dsm_external_usb_devices_usb2() -> dict[str, SynoCoreExternalUSBDevice]:
-    """Mock SynologyDSM external USB device with USB Disk 2."""
+    """Mock SynologyDSM external USB device with USB Disk 1 and USB Disk 2."""
     return {
+        "usb1": SynoCoreExternalUSBDevice(
+            {
+                "dev_id": "usb1",
+                "dev_type": "usbDisk",
+                "dev_title": "USB Disk 1",
+                "producer": "Western Digital Technologies, Inc.",
+                "product": "easystore 264D",
+                "formatable": True,
+                "progress": "",
+                "status": "normal",
+                "total_size_mb": 15259648,
+                "partitions": [
+                    {
+                        "dev_fstype": "ntfs",
+                        "filesystem": "ntfs",
+                        "name_id": "usb1p1",
+                        "partition_title": "USB Disk 1 Partition 1",
+                        "share_name": "usbshare2",
+                        "status": "normal",
+                        "total_size_mb": 15259646,
+                        "used_size_mb": 5942441,
+                    }
+                ],
+            }
+        ),
         "usb2": SynoCoreExternalUSBDevice(
             {
                 "dev_id": "usb2",

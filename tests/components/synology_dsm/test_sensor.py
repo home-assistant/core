@@ -1,9 +1,7 @@
 """Tests for Synology DSM USB."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.synology_dsm.const import DOMAIN
@@ -14,7 +12,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -28,7 +25,7 @@ from .common import (
 )
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -39,7 +36,11 @@ def mock_dsm_with_usb():
         dsm.update = AsyncMock(return_value=True)
 
         dsm.surveillance_station.update = AsyncMock(return_value=True)
-        dsm.upgrade.update = AsyncMock(return_value=True)
+        dsm.upgrade = Mock(
+            available_version=None,
+            available_version_details=None,
+            update=AsyncMock(return_value=True),
+        )
         dsm.network = Mock(
             update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
         )
@@ -51,6 +52,7 @@ def mock_dsm_with_usb():
             get_volume=mock_dsm_storage_get_volume,
             volume_disk_temp_avg=Mock(return_value=32),
             volume_size_used=Mock(return_value=12000138625024),
+            volume_percentage_used=Mock(return_value=38),
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
@@ -60,6 +62,7 @@ def mock_dsm_with_usb():
             get_devices=mock_dsm_external_usb_devices_usb1(),
         )
         dsm.logout = AsyncMock(return_value=True)
+        dsm.mock_entry = MockConfigEntry()
         yield dsm
 
 
@@ -106,6 +109,8 @@ async def setup_dsm_with_usb(
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
+        mock_dsm_with_usb.mock_entry = entry
 
         yield mock_dsm_with_usb
 
@@ -198,46 +203,44 @@ async def test_external_usb(
     assert sensor.attributes["attribution"] == "Data provided by Synology"
 
 
-async def test_external_usb_availability(
+async def test_external_usb_new_device(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
     setup_dsm_with_usb: MagicMock,
 ) -> None:
-    """Test Synology DSM USB sensors availability."""
+    """Test Synology DSM USB adding new device."""
 
-    # Coordinator refresh
-    # Mock the get_devices method to simulate a USB disk being removed and another being added
+    # Mock the get_devices method to simulate a USB disk being added
     setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb2()
-    freezer.tick(timedelta(minutes=15))
-    async_fire_time_changed(hass)
+    # Coordinator refresh
+    await setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central.async_request_refresh()
     await hass.async_block_till_done()
 
-    # Test USB Disk 1 status sensor is unavailable
+    # Test USB Disk 1 status sensor
     sensor = hass.states.get("sensor.nas_meontheinternet_com_usb_disk_1_status")
     assert sensor is not None
-    assert sensor.state == STATE_UNAVAILABLE
+    assert sensor.state == "normal"
 
-    # Test USB Disk 1 Partition 1 size sensor is unavailable
+    # Test USB Disk 1 Partition 1 size sensor
     sensor = hass.states.get(
         "sensor.nas_meontheinternet_com_usb_disk_1_partition_1_partition_size"
     )
     assert sensor is not None
-    assert sensor.state == STATE_UNAVAILABLE
+    assert sensor.state == "14901.998046875"
 
-    # Test USB Disk 1 Partition 1 partition used space sensor is unavailable
+    # Test USB Disk 1 Partition 1 partition used space sensor
     sensor = hass.states.get(
         "sensor.nas_meontheinternet_com_usb_disk_1_partition_1_partition_used_space"
     )
     assert sensor is not None
-    assert sensor.state == STATE_UNAVAILABLE
+    assert sensor.state == "5803.1650390625"
 
-    # Test USB Disk 1 Partition 1 partition used sensor is unavailable
+    # Test USB Disk 1 Partition 1 partition used sensor
     sensor = hass.states.get(
         "sensor.nas_meontheinternet_com_usb_disk_1_partition_1_partition_used"
     )
     assert sensor is not None
-    assert sensor.state == STATE_UNAVAILABLE
+    assert sensor.state == "38.9"
 
     # Test USB Disk 2 status sensor
     sensor = hass.states.get("sensor.nas_meontheinternet_com_usb_disk_2_status")
