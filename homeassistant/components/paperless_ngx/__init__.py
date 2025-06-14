@@ -25,7 +25,6 @@ from .coordinator import (
     PaperlessStatisticCoordinator,
     PaperlessStatusCoordinator,
 )
-from .helper import get_ssl_context
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
@@ -67,13 +66,10 @@ async def _get_paperless_api(
 ) -> Paperless:
     """Create and initialize paperless-ngx API."""
 
-    ssl_context = await get_ssl_context(hass, entry.data[CONF_VERIFY_SSL])
-
     api = Paperless(
         entry.data[CONF_URL],
         entry.data[CONF_API_KEY],
-        request_args={"ssl": ssl_context},
-        session=async_get_clientsession(hass),
+        session=async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL]),
     )
 
     try:

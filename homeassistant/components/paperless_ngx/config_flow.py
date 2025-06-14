@@ -20,7 +20,6 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
-from .helper import get_ssl_context
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -132,13 +131,10 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         errors: dict[str, str] = {}
 
-        ssl_context = await get_ssl_context(self.hass, user_input[CONF_VERIFY_SSL])
-
         client = Paperless(
             user_input[CONF_URL],
             user_input[CONF_API_KEY],
-            request_args={"ssl": ssl_context},
-            session=async_get_clientsession(self.hass),
+            session=async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL]),
         )
 
         try:
