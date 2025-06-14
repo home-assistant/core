@@ -15,6 +15,9 @@
       },
       "tilt": {
         "default": "mdi:spirit-level"
+      },
+      "valve_state": {
+        "default": "mdi:radiator-disabled"
       }
     },
     "button": {
@@ -91,6 +94,12 @@
       },
       "temperature": {
         "default": "mdi:thermometer"
+      },
+      "temperature_correction": {
+        "default": "mdi:thermometer-lines"
+      },
+      "backlight_brightness": {
+        "default": "mdi:lightbulb-outline"
       }
     },
     "select": {
@@ -156,6 +165,9 @@
       },
       "target_humidity": {
         "default": "mdi:water-percent"
+      },
+      "sensor_choose": {
+        "default": "mdi:thermostat-cog"
       }
     },
     "sensor": {
@@ -340,6 +352,15 @@
       },
       "energy_saving": {
         "default": "mdi:leaf"
+      },
+      "keypad_sound": {
+        "default": "mdi:volume-medium"
+      },
+      "economy_mode": {
+        "default": "mdi:leaf"
+      },
+      "frost_protection": {
+        "default": "mdi:snowflake-thermometer"
       },
       "open_window_detection": {
         "default": "mdi:window-open"
