@@ -38,7 +38,6 @@ async def test_async_step_user_creates_entry(
             result["flow_id"],
             user_input={CONF_URL: "http://192.168.1.123:1880"},
         )
-        await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {
