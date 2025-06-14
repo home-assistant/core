@@ -6,7 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pysmartthings import Attribute, Capability
 from pysmartthings.models import HealthStatus
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPES
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform

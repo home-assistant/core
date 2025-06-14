@@ -22,6 +22,7 @@ from homeassistant.const import CONF_LLM_HASS_API, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -41,10 +42,12 @@ from .const import (
     CONF_MODEL,
     CONF_NUM_CTX,
     CONF_PROMPT,
+    CONF_THINK,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
     DEFAULT_NUM_CTX,
+    DEFAULT_THINK,
     DEFAULT_TIMEOUT,
     DOMAIN,
     MAX_NUM_CTX,
@@ -280,6 +283,12 @@ def ollama_config_option_schema(
                 min=-1, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
             )
         ),
+        vol.Optional(
+            CONF_THINK,
+            description={
+                "suggested_value": options.get("think", DEFAULT_THINK),
+            },
+        ): BooleanSelector(),
     }
 
 

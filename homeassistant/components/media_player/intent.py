@@ -336,6 +336,6 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
 
         # Success
         response = intent_obj.create_response()
-        response.async_set_speech_slots({"media": first_result})
+        response.async_set_speech_slots({"media": first_result.as_dict()})
         response.response_type = intent.IntentResponseType.ACTION_DONE
         return response

@@ -24,6 +24,7 @@ from .const import (
     CONF_MODEL,
     CONF_NUM_CTX,
     CONF_PROMPT,
+    CONF_THINK,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_NUM_CTX,
@@ -89,9 +90,11 @@ def _parse_tool_args(arguments: dict[str, Any]) -> dict[str, Any]:
 
 
 def _convert_content(
-    chat_content: conversation.Content
-    | conversation.ToolResultContent
-    | conversation.AssistantContent,
+    chat_content: (
+        conversation.Content
+        | conversation.ToolResultContent
+        | conversation.AssistantContent
+    ),
 ) -> ollama.Message:
     """Create tool response content."""
     if isinstance(chat_content, conversation.ToolResultContent):
@@ -172,6 +175,7 @@ class OllamaConversationEntity(
     """Ollama conversation agent."""
 
     _attr_has_entity_name = True
+    _attr_supports_streaming = True
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the agent."""
@@ -214,9 +218,6 @@ class OllamaConversationEntity(
         """Call the API."""
         settings = {**self.entry.data, **self.entry.options}
 
-        client = self.hass.data[DOMAIN][self.entry.entry_id]
-        model = settings[CONF_MODEL]
-
         try:
             await chat_log.async_update_llm_data(
                 DOMAIN,
@@ -226,6 +227,31 @@ class OllamaConversationEntity(
             )
         except conversation.ConverseError as err:
             return err.as_conversation_result()
+
+        await self._async_handle_chat_log(chat_log)
+
+        # Create intent response
+        intent_response = intent.IntentResponse(language=user_input.language)
+        if not isinstance(chat_log.content[-1], conversation.AssistantContent):
+            raise TypeError(
+                f"Unexpected last message type: {type(chat_log.content[-1])}"
+            )
+        intent_response.async_set_speech(chat_log.content[-1].content or "")
+        return conversation.ConversationResult(
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
+        )
+
+    async def _async_handle_chat_log(
+        self,
+        chat_log: conversation.ChatLog,
+    ) -> None:
+        """Generate an answer for the chat log."""
+        settings = {**self.entry.data, **self.entry.options}
+
+        client = self.hass.data[DOMAIN][self.entry.entry_id]
+        model = settings[CONF_MODEL]
 
         tools: list[dict[str, Any]] | None = None
         if chat_log.llm_api:
@@ -253,6 +279,7 @@ class OllamaConversationEntity(
                     # keep_alive requires specifying unit. In this case, seconds
                     keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
                     options={CONF_NUM_CTX: settings.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
+                    think=settings.get(CONF_THINK),
                 )
             except (ollama.RequestError, ollama.ResponseError) as err:
                 _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
@@ -264,26 +291,13 @@ class OllamaConversationEntity(
                 [
                     _convert_content(content)
                     async for content in chat_log.async_add_delta_content_stream(
-                        user_input.agent_id, _transform_stream(response_generator)
+                        self.entity_id, _transform_stream(response_generator)
                     )
                 ]
             )
 
             if not chat_log.unresponded_tool_results:
                 break
-
-        # Create intent response
-        intent_response = intent.IntentResponse(language=user_input.language)
-        if not isinstance(chat_log.content[-1], conversation.AssistantContent):
-            raise TypeError(
-                f"Unexpected last message type: {type(chat_log.content[-1])}"
-            )
-        intent_response.async_set_speech(chat_log.content[-1].content or "")
-        return conversation.ConversationResult(
-            response=intent_response,
-            conversation_id=chat_log.conversation_id,
-            continue_conversation=chat_log.continue_conversation,
-        )
 
     def _trim_history(self, message_history: MessageHistory, max_messages: int) -> None:
         """Trims excess messages from a single history.
