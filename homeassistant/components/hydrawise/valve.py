@@ -12,12 +12,10 @@ from homeassistant.components.valve import (
     ValveEntityDescription,
     ValveEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import HydrawiseUpdateCoordinators
+from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
 
 VALVE_TYPES: tuple[ValveEntityDescription, ...] = (
@@ -30,11 +28,11 @@ VALVE_TYPES: tuple[ValveEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HydrawiseConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hydrawise valve platform."""
-    coordinators: HydrawiseUpdateCoordinators = hass.data[DOMAIN][config_entry.entry_id]
+    coordinators = config_entry.runtime_data
     async_add_entities(
         HydrawiseValve(coordinators.main, description, controller, zone_id=zone.id)
         for controller in coordinators.main.data.controllers.values()

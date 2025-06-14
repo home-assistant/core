@@ -39,6 +39,7 @@ class MockHeos(Heos):
         self.player_clear_queue: AsyncMock = AsyncMock()
         self.player_get_queue: AsyncMock = AsyncMock()
         self.player_get_quick_selects: AsyncMock = AsyncMock()
+        self.player_move_queue_item: AsyncMock = AsyncMock()
         self.player_play_next: AsyncMock = AsyncMock()
         self.player_play_previous: AsyncMock = AsyncMock()
         self.player_play_queue: AsyncMock = AsyncMock()

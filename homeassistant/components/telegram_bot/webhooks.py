@@ -1,21 +1,23 @@
 """Support for Telegram bots using webhooks."""
 
-import datetime as dt
 from http import HTTPStatus
-from ipaddress import ip_address
+from ipaddress import IPv4Network, ip_address
 import logging
 import secrets
 import string
 
-from telegram import Update
-from telegram.error import TimedOut
-from telegram.ext import Application, TypeHandler
+from telegram import Bot, Update
+from telegram.error import NetworkError, TelegramError
+from telegram.ext import ApplicationBuilder, TypeHandler
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.network import get_url
 
-from . import CONF_TRUSTED_NETWORKS, CONF_URL, BaseTelegramBotEntity
+from .bot import BaseTelegramBot, TelegramBotConfigEntry
+from .const import CONF_TRUSTED_NETWORKS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +26,9 @@ REMOVE_WEBHOOK_URL = ""
 SECRET_TOKEN_LENGTH = 32
 
 
-async def async_setup_platform(hass, bot, config):
+async def async_setup_platform(
+    hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
+) -> BaseTelegramBot | None:
     """Set up the Telegram webhooks platform."""
 
     # Generate an ephemeral secret token
@@ -33,45 +37,55 @@ async def async_setup_platform(hass, bot, config):
 
     pushbot = PushBot(hass, bot, config, secret_token)
 
-    if not pushbot.webhook_url.startswith("https"):
-        _LOGGER.error("Invalid telegram webhook %s must be https", pushbot.webhook_url)
-        return False
-
     await pushbot.start_application()
     webhook_registered = await pushbot.register_webhook()
     if not webhook_registered:
-        return False
+        raise ConfigEntryNotReady("Failed to register webhook with Telegram")
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.stop_application)
     hass.http.register_view(
         PushBotView(
             hass,
             bot,
             pushbot.application,
-            config[CONF_TRUSTED_NETWORKS],
+            _get_trusted_networks(config),
             secret_token,
         )
     )
-    return True
+    return pushbot
 
 
-class PushBot(BaseTelegramBotEntity):
+def _get_trusted_networks(config: TelegramBotConfigEntry) -> list[IPv4Network]:
+    trusted_networks_str: list[str] = config.data[CONF_TRUSTED_NETWORKS]
+    return [IPv4Network(trusted_network) for trusted_network in trusted_networks_str]
+
+
+class PushBot(BaseTelegramBot):
     """Handles all the push/webhook logic and passes telegram updates to `self.handle_update`."""
 
-    def __init__(self, hass, bot, config, secret_token):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        bot: Bot,
+        config: TelegramBotConfigEntry,
+        secret_token: str,
+    ) -> None:
         """Create Application before calling super()."""
         self.bot = bot
-        self.trusted_networks = config[CONF_TRUSTED_NETWORKS]
+        self.trusted_networks = _get_trusted_networks(config)
         self.secret_token = secret_token
         # Dumb Application that just gets our updates to our handler callback (self.handle_update)
-        self.application = Application.builder().bot(bot).updater(None).build()
+        self.application = ApplicationBuilder().bot(bot).updater(None).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))
         super().__init__(hass, config)
 
-        self.base_url = config.get(CONF_URL) or get_url(
+        self.base_url = config.data.get(CONF_URL) or get_url(
             hass, require_ssl=True, allow_internal=False
         )
         self.webhook_url = f"{self.base_url}{TELEGRAM_WEBHOOK_URL}"
+
+    async def shutdown(self) -> None:
+        """Shutdown the app."""
+        await self.stop_application()
 
     async def _try_to_set_webhook(self):
         _LOGGER.debug("Registering webhook URL: %s", self.webhook_url)
@@ -83,9 +97,9 @@ class PushBot(BaseTelegramBotEntity):
                     api_kwargs={"secret_token": self.secret_token},
                     connect_timeout=5,
                 )
-            except TimedOut:
+            except TelegramError:
                 retry_num += 1
-                _LOGGER.warning("Timeout trying to set webhook (retry #%d)", retry_num)
+                _LOGGER.warning("Error trying to set webhook (retry #%d)", retry_num)
 
         return False
 
@@ -98,16 +112,7 @@ class PushBot(BaseTelegramBotEntity):
         """Query telegram and register the URL for our webhook."""
         current_status = await self.bot.get_webhook_info()
         # Some logging of Bot current status:
-        last_error_date = getattr(current_status, "last_error_date", None)
-        if (last_error_date is not None) and (isinstance(last_error_date, int)):
-            last_error_date = dt.datetime.fromtimestamp(last_error_date)
-            _LOGGER.debug(
-                "Telegram webhook last_error_date: %s. Status: %s",
-                last_error_date,
-                current_status,
-            )
-        else:
-            _LOGGER.debug("telegram webhook status: %s", current_status)
+        _LOGGER.debug("telegram webhook status: %s", current_status)
 
         result = await self._try_to_set_webhook()
         if result:
@@ -127,7 +132,10 @@ class PushBot(BaseTelegramBotEntity):
     async def deregister_webhook(self):
         """Query telegram and deregister the URL for our webhook."""
         _LOGGER.debug("Deregistering webhook URL")
-        await self.bot.delete_webhook()
+        try:
+            await self.bot.delete_webhook()
+        except NetworkError:
+            _LOGGER.error("Failed to deregister webhook URL")
 
 
 class PushBotView(HomeAssistantView):
@@ -137,7 +145,14 @@ class PushBotView(HomeAssistantView):
     url = TELEGRAM_WEBHOOK_URL
     name = "telegram_webhooks"
 
-    def __init__(self, hass, bot, application, trusted_networks, secret_token):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        bot: Bot,
+        application,
+        trusted_networks: list[IPv4Network],
+        secret_token: str,
+    ) -> None:
         """Initialize by storing stuff needed for setting up our webhook endpoint."""
         self.hass = hass
         self.bot = bot

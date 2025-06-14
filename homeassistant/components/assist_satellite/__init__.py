@@ -60,7 +60,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 {
                     vol.Optional("message"): str,
                     vol.Optional("media_id"): str,
-                    vol.Optional("preannounce_media_id"): vol.Any(str, None),
+                    vol.Optional("preannounce"): bool,
+                    vol.Optional("preannounce_media_id"): str,
                 }
             ),
             cv.has_at_least_one_key("message", "media_id"),
@@ -75,7 +76,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 {
                     vol.Optional("start_message"): str,
                     vol.Optional("start_media_id"): str,
-                    vol.Optional("preannounce_media_id"): vol.Any(str, None),
+                    vol.Optional("preannounce"): bool,
+                    vol.Optional("preannounce_media_id"): str,
                     vol.Optional("extra_system_prompt"): str,
                 }
             ),

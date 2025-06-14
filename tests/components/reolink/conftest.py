@@ -77,6 +77,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.check_new_firmware.return_value = False
         host_mock.unsubscribe.return_value = True
         host_mock.logout.return_value = True
+        host_mock.is_nvr = True
         host_mock.is_hub = False
         host_mock.mac_address = TEST_MAC
         host_mock.uid = TEST_UID
@@ -98,7 +99,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.sw_upload_progress.return_value = 100
         host_mock.manufacturer = "Reolink"
         host_mock.model = TEST_HOST_MODEL
-        host_mock.item_number = TEST_ITEM_NUMBER
+        host_mock.item_number.return_value = TEST_ITEM_NUMBER
         host_mock.camera_model.return_value = TEST_CAM_MODEL
         host_mock.camera_name.return_value = TEST_NVR_NAME
         host_mock.camera_hardware_version.return_value = "IPC_00001"
@@ -137,9 +138,12 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.daynight_state.return_value = "Black&White"
         host_mock.hub_alarm_tone_id.return_value = 1
         host_mock.hub_visitor_tone_id.return_value = 1
+        host_mock.recording_packing_time_list = ["30 Minutes", "60 Minutes"]
+        host_mock.recording_packing_time = "60 Minutes"
 
         # Baichuan
         host_mock.baichuan = create_autospec(Baichuan)
+        host_mock.baichuan_only = False
         # Disable tcp push by default for tests
         host_mock.baichuan.port = TEST_BC_PORT
         host_mock.baichuan.events_active = False

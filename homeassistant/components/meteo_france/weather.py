@@ -162,6 +162,11 @@ class MeteoFranceWeather(
         return self.coordinator.data.current_forecast["wind"]["speed"]
 
     @property
+    def native_wind_gust_speed(self):
+        """Return the wind gust speed."""
+        return self.coordinator.data.current_forecast["wind"].get("gust")
+
+    @property
     def wind_bearing(self):
         """Return the wind bearing."""
         wind_bearing = self.coordinator.data.current_forecast["wind"]["direction"]

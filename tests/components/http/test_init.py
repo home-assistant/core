@@ -22,7 +22,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
-from tests.common import async_fire_time_changed
+from tests.common import async_call_logger_set_level, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 
@@ -505,27 +505,21 @@ async def test_logging(
         )
     )
     hass.states.async_set("logging.entity", "hello")
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"aiohttp.access": "info"},
-        blocking=True,
-    )
-    client = await hass_client()
-    response = await client.get("/api/states/logging.entity")
-    assert response.status == HTTPStatus.OK
+    async with async_call_logger_set_level(
+        "aiohttp.access", "INFO", hass=hass, caplog=caplog
+    ):
+        client = await hass_client()
+        response = await client.get("/api/states/logging.entity")
+        assert response.status == HTTPStatus.OK
 
-    assert "GET /api/states/logging.entity" in caplog.text
-    caplog.clear()
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"aiohttp.access": "warning"},
-        blocking=True,
-    )
-    response = await client.get("/api/states/logging.entity")
-    assert response.status == HTTPStatus.OK
-    assert "GET /api/states/logging.entity" not in caplog.text
+        assert "GET /api/states/logging.entity" in caplog.text
+        caplog.clear()
+    async with async_call_logger_set_level(
+        "aiohttp.access", "WARNING", hass=hass, caplog=caplog
+    ):
+        response = await client.get("/api/states/logging.entity")
+        assert response.status == HTTPStatus.OK
+        assert "GET /api/states/logging.entity" not in caplog.text
 
 
 async def test_register_static_paths(

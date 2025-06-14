@@ -60,7 +60,6 @@ from .core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
 from .helpers.entity_values import EntityValues
-from .helpers.frame import ReportBehavior, report_usage
 from .helpers.storage import Store
 from .helpers.typing import UNDEFINED, UndefinedType
 from .util import dt as dt_util, location
@@ -581,9 +580,7 @@ class Config:
         self.all_components: set[str] = set()
 
         # Set of loaded components
-        self.components: _ComponentSet = _ComponentSet(
-            self.top_level_components, self.all_components
-        )
+        self.components = _ComponentSet(self.top_level_components, self.all_components)
 
         # API (HTTP) server configuration
         self.api: ApiConfig | None = None
@@ -709,26 +706,6 @@ class Config:
     async def async_set_time_zone(self, time_zone_str: str) -> None:
         """Help to set the time zone."""
         if time_zone := await dt_util.async_get_time_zone(time_zone_str):
-            self.time_zone = time_zone_str
-            dt_util.set_default_time_zone(time_zone)
-        else:
-            raise ValueError(f"Received invalid time zone {time_zone_str}")
-
-    def set_time_zone(self, time_zone_str: str) -> None:
-        """Set the time zone.
-
-        This is a legacy method that should not be used in new code.
-        Use async_set_time_zone instead.
-
-        It will be removed in Home Assistant 2025.6.
-        """
-        report_usage(
-            "sets the time zone using set_time_zone instead of async_set_time_zone",
-            core_integration_behavior=ReportBehavior.ERROR,
-            custom_integration_behavior=ReportBehavior.ERROR,
-            breaks_in_ha_version="2025.6",
-        )
-        if time_zone := dt_util.get_time_zone(time_zone_str):
             self.time_zone = time_zone_str
             dt_util.set_default_time_zone(time_zone)
         else:
@@ -889,17 +866,17 @@ class Config:
                         # pylint: disable-next=import-outside-toplevel
                         from .components.frontend import storage as frontend_store
 
-                        _, owner_data = await frontend_store.async_user_store(
+                        owner_store = await frontend_store.async_user_store(
                             self.hass, owner.id
                         )
 
                         if (
-                            "language" in owner_data
-                            and "language" in owner_data["language"]
+                            "language" in owner_store.data
+                            and "language" in owner_store.data["language"]
                         ):
                             with suppress(vol.InInvalid):
                                 data["language"] = cv.language(
-                                    owner_data["language"]["language"]
+                                    owner_store.data["language"]["language"]
                                 )
                 # pylint: disable-next=broad-except
                 except Exception:

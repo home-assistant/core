@@ -1,0 +1,159 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_autonomy": {
+        "default": "mdi:battery-clock"
+      },
+      "battery_charge_time": {
+        "default": "mdi:battery-charging"
+      },
+      "battery_power": {
+        "default": "mdi:battery"
+      },
+      "battery_soc": {
+        "default": "mdi:battery-charging-100"
+      },
+      "battery_stored": {
+        "default": "mdi:battery"
+      },
+      "grid_current_l1": {
+        "default": "mdi:current-ac"
+      },
+      "grid_current_l2": {
+        "default": "mdi:current-ac"
+      },
+      "grid_current_l3": {
+        "default": "mdi:current-ac"
+      },
+      "grid_frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "grid_voltage_l1": {
+        "default": "mdi:flash"
+      },
+      "grid_voltage_l2": {
+        "default": "mdi:flash"
+      },
+      "grid_voltage_l3": {
+        "default": "mdi:flash"
+      },
+      "input_power_l1": {
+        "default": "mdi:power-socket"
+      },
+      "input_power_l2": {
+        "default": "mdi:power-socket"
+      },
+      "input_power_l3": {
+        "default": "mdi:power-socket"
+      },
+      "input_power_total": {
+        "default": "mdi:power-plug"
+      },
+      "inverter_charging_current_limit": {
+        "default": "mdi:current-dc"
+      },
+      "inverter_injection_power_limit": {
+        "default": "mdi:power-socket"
+      },
+      "meter_power": {
+        "default": "mdi:power-plug"
+      },
+      "meter_power_protocol": {
+        "default": "mdi:protocol"
+      },
+      "output_current_l1": {
+        "default": "mdi:current-ac"
+      },
+      "output_current_l2": {
+        "default": "mdi:current-ac"
+      },
+      "output_current_l3": {
+        "default": "mdi:current-ac"
+      },
+      "output_frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "output_power_l1": {
+        "default": "mdi:power-socket"
+      },
+      "output_power_l2": {
+        "default": "mdi:power-socket"
+      },
+      "output_power_l3": {
+        "default": "mdi:power-socket"
+      },
+      "output_power_total": {
+        "default": "mdi:power-plug"
+      },
+      "output_voltage_l1": {
+        "default": "mdi:flash"
+      },
+      "output_voltage_l2": {
+        "default": "mdi:flash"
+      },
+      "output_voltage_l3": {
+        "default": "mdi:flash"
+      },
+      "pv_consumed": {
+        "default": "mdi:solar-power"
+      },
+      "pv_injected": {
+        "default": "mdi:solar-power"
+      },
+      "pv_power_1": {
+        "default": "mdi:solar-power"
+      },
+      "pv_power_2": {
+        "default": "mdi:solar-power"
+      },
+      "pv_power_total": {
+        "default": "mdi:solar-power"
+      },
+      "temp_air_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "temp_component_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "monitoring_building_consumption": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "monitoring_economy_factor": {
+        "default": "mdi:chart-bar"
+      },
+      "monitoring_grid_consumption": {
+        "default": "mdi:transmission-tower"
+      },
+      "monitoring_grid_injection": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "monitoring_grid_power_flow": {
+        "default": "mdi:power-plug"
+      },
+      "monitoring_self_consumption": {
+        "default": "mdi:percent"
+      },
+      "monitoring_self_sufficiency": {
+        "default": "mdi:percent"
+      },
+      "monitoring_solar_production": {
+        "default": "mdi:solar-power"
+      },
+      "monitoring_minute_building_consumption": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "monitoring_minute_grid_consumption": {
+        "default": "mdi:transmission-tower"
+      },
+      "monitoring_minute_grid_injection": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "monitoring_minute_grid_power_flow": {
+        "default": "mdi:power-plug"
+      },
+      "monitoring_minute_solar_production": {
+        "default": "mdi:solar-power"
+      }
+    }
+  }
+}

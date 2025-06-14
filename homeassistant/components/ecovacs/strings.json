@@ -176,9 +176,9 @@
       "water_amount": {
         "name": "Water flow level",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "medium": "Medium",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
           "ultrahigh": "Ultrahigh"
         }
       },
@@ -229,9 +229,9 @@
         "state_attributes": {
           "fan_speed": {
             "state": {
+              "normal": "[%key:common::state::normal%]",
               "max": "Max",
               "max_plus": "Max+",
-              "normal": "Normal",
               "quiet": "Quiet"
             }
           },

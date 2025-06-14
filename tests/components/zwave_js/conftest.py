@@ -1,6 +1,7 @@
 """Provide common Z-Wave JS fixtures."""
 
 import asyncio
+from collections.abc import Generator
 import copy
 import io
 from typing import Any, cast
@@ -15,6 +16,7 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant.components.zwave_js import PLATFORMS
 from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js.helpers import SERVER_VERSION_TIMEOUT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
@@ -509,6 +511,15 @@ def aeotec_smart_switch_7_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="zcombo_smoke_co_alarm_state")
+def zcombo_smoke_co_alarm_state_fixture() -> NodeDataType:
+    """Load node with fixture data for ZCombo-G Smoke/CO Alarm."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("zcombo_smoke_co_alarm_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -554,6 +565,7 @@ def mock_client_fixture(
         client.connect = AsyncMock(side_effect=connect)
         client.listen = AsyncMock(side_effect=listen)
         client.disconnect = AsyncMock(side_effect=disconnect)
+        client.disable_server_logging = MagicMock()
         client.driver = Driver(
             client, copy.deepcopy(controller_state), copy.deepcopy(log_config_state)
         )
@@ -575,6 +587,44 @@ def mock_client_fixture(
         client.async_send_command.side_effect = async_send_command_side_effect
 
         yield client
+
+
+@pytest.fixture(name="server_version_side_effect")
+def server_version_side_effect_fixture() -> Any | None:
+    """Return the server version side effect."""
+    return None
+
+
+@pytest.fixture(name="get_server_version", autouse=True)
+def mock_get_server_version(
+    server_version_side_effect: Any | None, server_version_timeout: int
+) -> Generator[AsyncMock]:
+    """Mock server version."""
+    version_info = VersionInfo(
+        driver_version="mock-driver-version",
+        server_version="mock-server-version",
+        home_id=1234,
+        min_schema_version=0,
+        max_schema_version=1,
+    )
+    with (
+        patch(
+            "homeassistant.components.zwave_js.helpers.get_server_version",
+            side_effect=server_version_side_effect,
+            return_value=version_info,
+        ) as mock_version,
+        patch(
+            "homeassistant.components.zwave_js.helpers.SERVER_VERSION_TIMEOUT",
+            new=server_version_timeout,
+        ),
+    ):
+        yield mock_version
+
+
+@pytest.fixture(name="server_version_timeout")
+def mock_server_version_timeout() -> int:
+    """Patch the timeout for getting server version."""
+    return SERVER_VERSION_TIMEOUT
 
 
 @pytest.fixture(name="multisensor_6")
@@ -833,7 +883,11 @@ async def integration_fixture(
     platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org"},
+        unique_id=str(client.driver.controller.home_id),
+    )
     entry.add_to_hass(hass)
     with patch("homeassistant.components.zwave_js.PLATFORMS", platforms):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -1250,5 +1304,15 @@ def aeotec_smart_switch_7_fixture(
 ) -> Node:
     """Load node for Aeotec Smart Switch 7."""
     node = Node(client, aeotec_smart_switch_7_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zcombo_smoke_co_alarm")
+def zcombo_smoke_co_alarm_fixture(
+    client: MagicMock, zcombo_smoke_co_alarm_state: NodeDataType
+) -> Node:
+    """Load node for ZCombo-G Smoke/CO Alarm."""
+    node = Node(client, zcombo_smoke_co_alarm_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

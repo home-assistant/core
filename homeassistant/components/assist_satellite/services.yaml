@@ -15,6 +15,11 @@ announce:
       required: false
       selector:
         text:
+    preannounce:
+      required: false
+      default: true
+      selector:
+        boolean:
     preannounce_media_id:
       required: false
       selector:
@@ -40,6 +45,11 @@ start_conversation:
       required: false
       selector:
         text:
+    preannounce:
+      required: false
+      default: true
+      selector:
+        boolean:
     preannounce_media_id:
       required: false
       selector:

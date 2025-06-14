@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import partial
 import logging
 from types import MappingProxyType
@@ -52,7 +53,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
-    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
     CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
 }
 
@@ -134,9 +135,8 @@ class AnthropicOptionsFlow(OptionsFlow):
 
         if user_input is not None:
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
-                if user_input[CONF_LLM_HASS_API] == "none":
-                    user_input.pop(CONF_LLM_HASS_API)
-
+                if not user_input.get(CONF_LLM_HASS_API):
+                    user_input.pop(CONF_LLM_HASS_API, None)
                 if user_input.get(
                     CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET
                 ) >= user_input.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
@@ -151,12 +151,16 @@ class AnthropicOptionsFlow(OptionsFlow):
                 options = {
                     CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
                     CONF_PROMPT: user_input[CONF_PROMPT],
-                    CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
+                    CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API),
                 }
 
         suggested_values = options.copy()
         if not suggested_values.get(CONF_PROMPT):
             suggested_values[CONF_PROMPT] = llm.DEFAULT_INSTRUCTIONS_PROMPT
+        if (
+            suggested_llm_apis := suggested_values.get(CONF_LLM_HASS_API)
+        ) and isinstance(suggested_llm_apis, str):
+            suggested_values[CONF_LLM_HASS_API] = [suggested_llm_apis]
 
         schema = self.add_suggested_values_to_schema(
             vol.Schema(anthropic_config_option_schema(self.hass, options)),
@@ -172,28 +176,22 @@ class AnthropicOptionsFlow(OptionsFlow):
 
 def anthropic_config_option_schema(
     hass: HomeAssistant,
-    options: dict[str, Any] | MappingProxyType[str, Any],
+    options: Mapping[str, Any],
 ) -> dict:
     """Return a schema for Anthropic completion options."""
     hass_apis: list[SelectOptionDict] = [
-        SelectOptionDict(
-            label="No control",
-            value="none",
-        )
-    ]
-    hass_apis.extend(
         SelectOptionDict(
             label=api.name,
             value=api.id,
         )
         for api in llm.async_get_apis(hass)
-    )
+    ]
 
     schema = {
         vol.Optional(CONF_PROMPT): TemplateSelector(),
-        vol.Optional(CONF_LLM_HASS_API, default="none"): SelectSelector(
-            SelectSelectorConfig(options=hass_apis)
-        ),
+        vol.Optional(
+            CONF_LLM_HASS_API,
+        ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
         vol.Required(
             CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
         ): bool,

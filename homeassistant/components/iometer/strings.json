@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Setup your IOmeter device for local data",
+        "description": "Set up your IOmeter device for local data",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
@@ -21,7 +21,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {

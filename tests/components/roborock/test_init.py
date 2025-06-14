@@ -3,6 +3,7 @@
 from copy import deepcopy
 from http import HTTPStatus
 import pathlib
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -20,7 +21,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
-from .mock_data import HOME_DATA, NETWORK_INFO, NETWORK_INFO_2
+from .mock_data import (
+    HOME_DATA,
+    NETWORK_INFO,
+    NETWORK_INFO_2,
+    ROBOROCK_RRUID,
+    USER_EMAIL,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
@@ -47,7 +54,7 @@ async def test_config_entry_not_ready(
     """Test that when coordinator update fails, entry retries."""
     with (
         patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         ),
         patch(
             "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
@@ -64,7 +71,7 @@ async def test_config_entry_not_ready_home_data(
     """Test that when we fail to get home data, entry retries."""
     with (
         patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
             side_effect=RoborockException(),
         ),
         patch(
@@ -157,7 +164,7 @@ async def test_reauth_started(
 ) -> None:
     """Test reauth flow started."""
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         side_effect=RoborockInvalidCredentials(),
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -242,7 +249,7 @@ async def test_not_supported_protocol(
     home_data_copy = deepcopy(HOME_DATA)
     home_data_copy.received_devices[0].pv = "random"
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         return_value=home_data_copy,
     ):
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
@@ -260,7 +267,7 @@ async def test_not_supported_a01_device(
     home_data_copy = deepcopy(HOME_DATA)
     home_data_copy.products[2].category = "random"
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         return_value=home_data_copy,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -275,7 +282,7 @@ async def test_invalid_user_agreement(
 ) -> None:
     """Test that we fail setting up if the user agreement is out of date."""
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         side_effect=RoborockInvalidUserAgreement(),
     ):
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
@@ -292,7 +299,7 @@ async def test_no_user_agreement(
 ) -> None:
     """Test that we fail setting up if the user has no agreement."""
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         side_effect=RoborockNoUserAgreement(),
     ):
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
@@ -300,6 +307,7 @@ async def test_no_user_agreement(
         assert mock_roborock_entry.error_reason_translation_key == "no_user_agreement"
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_stale_device(
     hass: HomeAssistant,
     bypass_api_fixture,
@@ -322,7 +330,7 @@ async def test_stale_device(
 
     with (
         patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
             return_value=hd,
         ),
         patch(
@@ -341,6 +349,7 @@ async def test_stale_device(
     # therefore not deleted.
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_no_stale_device(
     hass: HomeAssistant,
     bypass_api_fixture,
@@ -369,3 +378,25 @@ async def test_no_stale_device(
         mock_roborock_entry.entry_id
     )
     assert len(new_devices) == 6  # 2 for each robot, 1 for A01, 1 for Zeo
+
+
+async def test_migrate_config_entry_unique_id(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    config_entry_data: dict[str, Any],
+) -> None:
+    """Test migrating the config entry unique id."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=USER_EMAIL,
+        data=config_entry_data,
+        version=1,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == ROBOROCK_RRUID

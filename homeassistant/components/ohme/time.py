@@ -1,8 +1,9 @@
 """Platform for time."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import time
+from typing import Any
 
 from ohme import ApiException, OhmeApiClient
 
@@ -22,7 +23,7 @@ PARALLEL_UPDATES = 1
 class OhmeTimeDescription(OhmeEntityDescription, TimeEntityDescription):
     """Class describing Ohme time entities."""
 
-    set_fn: Callable[[OhmeApiClient, time], Awaitable[None]]
+    set_fn: Callable[[OhmeApiClient, time], Coroutine[Any, Any, bool]]
     value_fn: Callable[[OhmeApiClient], time]
 
 

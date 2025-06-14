@@ -22,6 +22,7 @@ from .const import SCAN_INTERNET_INTERVAL
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
+PARALLEL_UPDATES = 0
 SCAN_INTERVAL = SCAN_INTERNET_INTERVAL
 
 
