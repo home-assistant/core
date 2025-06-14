@@ -123,24 +123,36 @@ class MediaType(StrEnum):
     """Media type for media player entities."""
 
     ALBUM = "album"
+    ALBUMS = "albums"
     APP = "app"
     APPS = "apps"
     ARTIST = "artist"
+    ARTISTS = "artists"
     CHANNEL = "channel"
     CHANNELS = "channels"
     COMPOSER = "composer"
     CONTRIBUTING_ARTIST = "contributing_artist"
     EPISODE = "episode"
+    FAVORITE = "favorite"
+    FAVORITES = "favorites"
     GAME = "game"
+    GAMES = "games"
     GENRE = "genre"
+    GENRES = "genres"
     IMAGE = "image"
+    IMAGES = "images"
     MOVIE = "movie"
+    MOVIES = "movies"
     MUSIC = "music"
     PLAYLIST = "playlist"
+    PLAYLISTS = "playlists"
     PODCAST = "podcast"
+    PODCASTS = "podcasts"
     SEASON = "season"
     TRACK = "track"
+    TRACKS = "tracks"
     TVSHOW = "tvshow"
+    TVSHOWS = "tvshows"
     URL = "url"
     VIDEO = "video"
 
@@ -148,9 +160,11 @@ class MediaType(StrEnum):
 # These MEDIA_TYPE_* constants are deprecated as of Home Assistant 2022.10.
 # Please use the MediaType enum instead.
 _DEPRECATED_MEDIA_TYPE_ALBUM = DeprecatedConstantEnum(MediaType.ALBUM, "2025.10")
+_DEPRECATED_MEDIA_TYPE_ALBUMS = DeprecatedConstantEnum(MediaType.ALBUMS, "2025.10")
 _DEPRECATED_MEDIA_TYPE_APP = DeprecatedConstantEnum(MediaType.APP, "2025.10")
 _DEPRECATED_MEDIA_TYPE_APPS = DeprecatedConstantEnum(MediaType.APPS, "2025.10")
 _DEPRECATED_MEDIA_TYPE_ARTIST = DeprecatedConstantEnum(MediaType.ARTIST, "2025.10")
+_DEPRECATED_MEDIA_TYPE_ARTISTS = DeprecatedConstantEnum(MediaType.ARTISTS, "2025.10")
 _DEPRECATED_MEDIA_TYPE_CHANNEL = DeprecatedConstantEnum(MediaType.CHANNEL, "2025.10")
 _DEPRECATED_MEDIA_TYPE_CHANNELS = DeprecatedConstantEnum(MediaType.CHANNELS, "2025.10")
 _DEPRECATED_MEDIA_TYPE_COMPOSER = DeprecatedConstantEnum(MediaType.COMPOSER, "2025.10")
@@ -158,16 +172,30 @@ _DEPRECATED_MEDIA_TYPE_CONTRIBUTING_ARTIST = DeprecatedConstantEnum(
     MediaType.CONTRIBUTING_ARTIST, "2025.10"
 )
 _DEPRECATED_MEDIA_TYPE_EPISODE = DeprecatedConstantEnum(MediaType.EPISODE, "2025.10")
+_DEPRECATED_MEDIA_TYPE_FAVORITE = DeprecatedConstantEnum(MediaType.FAVORITE, "2025.10")
+_DEPRECATED_MEDIA_TYPE_FAVORITES = DeprecatedConstantEnum(
+    MediaType.FAVORITES, "2025.10"
+)
 _DEPRECATED_MEDIA_TYPE_GAME = DeprecatedConstantEnum(MediaType.GAME, "2025.10")
+_DEPRECATED_MEDIA_TYPE_GAMES = DeprecatedConstantEnum(MediaType.GAMES, "2025.10")
 _DEPRECATED_MEDIA_TYPE_GENRE = DeprecatedConstantEnum(MediaType.GENRE, "2025.10")
+_DEPRECATED_MEDIA_TYPE_GENRES = DeprecatedConstantEnum(MediaType.GENRES, "2025.10")
 _DEPRECATED_MEDIA_TYPE_IMAGE = DeprecatedConstantEnum(MediaType.IMAGE, "2025.10")
+_DEPRECATED_MEDIA_TYPE_IMAGES = DeprecatedConstantEnum(MediaType.IMAGES, "2025.10")
 _DEPRECATED_MEDIA_TYPE_MOVIE = DeprecatedConstantEnum(MediaType.MOVIE, "2025.10")
+_DEPRECATED_MEDIA_TYPE_MOVIES = DeprecatedConstantEnum(MediaType.MOVIES, "2025.10")
 _DEPRECATED_MEDIA_TYPE_MUSIC = DeprecatedConstantEnum(MediaType.MUSIC, "2025.10")
 _DEPRECATED_MEDIA_TYPE_PLAYLIST = DeprecatedConstantEnum(MediaType.PLAYLIST, "2025.10")
+_DEPRECATED_MEDIA_TYPE_PLAYLISTS = DeprecatedConstantEnum(
+    MediaType.PLAYLISTS, "2025.10"
+)
 _DEPRECATED_MEDIA_TYPE_PODCAST = DeprecatedConstantEnum(MediaType.PODCAST, "2025.10")
+_DEPRECATED_MEDIA_TYPE_PODCASTS = DeprecatedConstantEnum(MediaType.PODCASTS, "2025.10")
 _DEPRECATED_MEDIA_TYPE_SEASON = DeprecatedConstantEnum(MediaType.SEASON, "2025.10")
 _DEPRECATED_MEDIA_TYPE_TRACK = DeprecatedConstantEnum(MediaType.TRACK, "2025.10")
+_DEPRECATED_MEDIA_TYPE_TRACKS = DeprecatedConstantEnum(MediaType.TRACKS, "2025.10")
 _DEPRECATED_MEDIA_TYPE_TVSHOW = DeprecatedConstantEnum(MediaType.TVSHOW, "2025.10")
+_DEPRECATED_MEDIA_TYPE_TVSHOWS = DeprecatedConstantEnum(MediaType.TVSHOWS, "2025.10")
 _DEPRECATED_MEDIA_TYPE_URL = DeprecatedConstantEnum(MediaType.URL, "2025.10")
 _DEPRECATED_MEDIA_TYPE_VIDEO = DeprecatedConstantEnum(MediaType.VIDEO, "2025.10")
 
