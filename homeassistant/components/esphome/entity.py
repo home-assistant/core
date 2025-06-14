@@ -248,7 +248,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
         if entity_info.name:
-            self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
+            self.entity_id = f"{domain}.{device_info.name}_{entity_info.name}"
         else:
             # https://github.com/home-assistant/core/issues/132532
             # If name is not set, ESPHome will use the sanitized friendly name
