@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import dns.asyncresolver
 import dns.rdata
 import dns.rdataclass
 import dns.rdatatype
@@ -22,20 +23,23 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-def load_dnspython_rdata_classes() -> None:
-    """Load dnspython rdata classes used by mcstatus."""
+def prevent_dnspython_blocking_operations() -> None:
+    """Prevent dnspython blocking operations by pre-loading required data."""
+
+    # Blocking import: https://github.com/rthalley/dnspython/issues/1083
     for rdtype in dns.rdatatype.RdataType:
         if not dns.rdatatype.is_metatype(rdtype) or rdtype == dns.rdatatype.OPT:
             dns.rdata.get_rdata_class(dns.rdataclass.IN, rdtype)  # type: ignore[no-untyped-call]
+
+    # Blocking open: https://github.com/rthalley/dnspython/issues/1200
+    dns.asyncresolver.get_default_resolver()
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: MinecraftServerConfigEntry
 ) -> bool:
     """Set up Minecraft Server from a config entry."""
-
-    # Workaround to avoid blocking imports from dnspython (https://github.com/rthalley/dnspython/issues/1083)
-    await hass.async_add_executor_job(load_dnspython_rdata_classes)
+    await hass.async_add_executor_job(prevent_dnspython_blocking_operations)
 
     # Create coordinator instance and store it.
     coordinator = MinecraftServerCoordinator(hass, entry)
