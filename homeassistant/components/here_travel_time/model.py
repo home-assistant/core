@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import time
+from datetime import datetime
 from typing import TypedDict
 
 
@@ -21,16 +21,12 @@ class HERETravelTimeData(TypedDict):
 
 
 @dataclass
-class HERETravelTimeConfig:
-    """Configuration for HereTravelTimeDataUpdateCoordinator."""
+class HERETravelTimeAPIParams:
+    """Configuration for polling the HERE API."""
 
-    destination_latitude: float | None
-    destination_longitude: float | None
-    destination_entity_id: str | None
-    origin_latitude: float | None
-    origin_longitude: float | None
-    origin_entity_id: str | None
+    destination: list[str]
+    origin: list[str]
     travel_mode: str
     route_mode: str
-    arrival: time | None
-    departure: time | None
+    arrival: datetime | None
+    departure: datetime | None
