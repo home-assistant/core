@@ -30,14 +30,10 @@ class PicnicServiceException(Exception):
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for the Picnic integration, if not registered yet."""
 
-    async def async_add_product_service(call: ServiceCall):
-        api_client = await get_api_client(hass, call.data[ATTR_CONFIG_ENTRY_ID])
-        await handle_add_product(hass, api_client, call)
-
     hass.services.async_register(
         DOMAIN,
         SERVICE_ADD_PRODUCT_TO_CART,
-        async_add_product_service,
+        _async_add_product_service,
         schema=vol.Schema(
             {
                 vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
@@ -47,6 +43,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             }
         ),
     )
+
+
+async def _async_add_product_service(call: ServiceCall):
+    api_client = await get_api_client(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    await handle_add_product(call.hass, api_client, call)
 
 
 async def get_api_client(hass: HomeAssistant, config_entry_id: str) -> PicnicAPI:
