@@ -51,7 +51,7 @@ async def test_device_diagnostics(
     )
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "rts://****-****-6867/16756006")}
+        identifiers={(DOMAIN, "rts://1234-5678-1234/16756006")}
     )
     assert device is not None
 
