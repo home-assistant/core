@@ -1,6 +1,6 @@
 """Config flow tests for the Telegram Bot integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from telegram import ChatFullInfo, User
 from telegram.constants import AccentColor
@@ -305,10 +305,19 @@ async def test_reauth_flow(
 
     # test: valid
 
-    with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
-        return_value=User(123456, "Testbot", True),
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
+            return_value=User(123456, "Testbot", True),
+        ),
+        patch(
+            "homeassistant.components.telegram_bot.webhooks.PushBot",
+        ) as mock_pushbot,
     ):
+        mock_pushbot.return_value.start_application = AsyncMock()
+        mock_pushbot.return_value.register_webhook = AsyncMock()
+        mock_pushbot.return_value.shutdown = AsyncMock()
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: "new mock api key"},
