@@ -258,6 +258,9 @@
     "not_valid_preset_mode": {
       "message": "Preset mode {mode} is not valid. Valid preset modes are: {modes}."
     },
+    "not_valid_hvac_mode": {
+      "message": "HVAC mode {mode} is not valid. Valid HVAC modes are: {modes}."
+    },
     "not_valid_swing_mode": {
       "message": "Swing mode {mode} is not valid. Valid swing modes are: {modes}."
     },
