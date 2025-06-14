@@ -23,7 +23,7 @@
     },
     "step": {
       "domain_input": {
-        "title": "Tesla Fleet Domain Registration",
+        "title": "Tesla Fleet domain registration",
         "description": "Enter the domain that will host your public key. This must be related to the origin domain you used during registration at {dashboard}.",
         "data": {
           "domain": "Domain"
@@ -34,8 +34,8 @@
         "description": "You must host the public key at:\n\n{public_key_url}\n\n```\n{pem}\n```"
       },
       "registration_complete": {
-        "title": "Command Signing",
-        "description": "To enable command signing, you must open the Tesla app, select your vehicle, and then visit the following URL to setup a virtual key. You must repeat this process for each vehicle.\n\n{virtual_key_url}"
+        "title": "Command signing",
+        "description": "To enable command signing, you must open the Tesla app, select your vehicle, and then visit the following URL to set up a virtual key. You must repeat this process for each vehicle.\n\n{virtual_key_url}"
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
