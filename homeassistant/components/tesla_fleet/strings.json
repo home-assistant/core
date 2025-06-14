@@ -22,6 +22,15 @@
       "unknown_error": "An unknown error occurred: {error}"
     },
     "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
+      },
       "domain_input": {
         "title": "Tesla Fleet domain registration",
         "description": "Enter the domain that will host your public key. This must be related to the origin domain you used during registration at {dashboard}.",
