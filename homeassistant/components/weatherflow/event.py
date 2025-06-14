@@ -108,11 +108,7 @@ class WeatherFlowRainStartEventEntity(_WeatherFlowEventEntity):
     def _handle_event(self, event) -> None:
         self._trigger_event(
             "rain_start",
-            {
-                "timestamp": event.timestamp.isoformat()
-                if getattr(event, "timestamp", None)
-                else None
-            },
+            {},
         )
         self.async_write_ha_state()
 
@@ -136,10 +132,6 @@ class WeatherFlowLightningStrikeEventEntity(_WeatherFlowEventEntity):
     def _handle_event(self, event) -> None:
         self._trigger_event(
             "strike",
-            {
-                "timestamp": event.timestamp.isoformat()
-                if getattr(event, "timestamp", None)
-                else None
-            },
+            {},
         )
         self.async_write_ha_state()
