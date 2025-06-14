@@ -502,6 +502,7 @@ homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.technove.*
 homeassistant.components.tedee.*
+homeassistant.components.telegram_bot.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
 homeassistant.components.threshold.*

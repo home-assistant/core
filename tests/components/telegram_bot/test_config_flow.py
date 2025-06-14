@@ -275,12 +275,12 @@ async def test_create_entry(
 
 
 async def test_reauth_flow(
-    hass: HomeAssistant, mock_webhooks_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_broadcast_config_entry: MockConfigEntry
 ) -> None:
     """Test a reauthentication flow."""
-    mock_webhooks_config_entry.add_to_hass(hass)
+    mock_broadcast_config_entry.add_to_hass(hass)
 
-    result = await mock_webhooks_config_entry.start_reauth_flow(
+    result = await mock_broadcast_config_entry.start_reauth_flow(
         hass, data={CONF_API_KEY: "dummy"}
     )
     assert result["step_id"] == "reauth_confirm"
@@ -317,7 +317,7 @@ async def test_reauth_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_webhooks_config_entry.data[CONF_API_KEY] == "new mock api key"
+    assert mock_broadcast_config_entry.data[CONF_API_KEY] == "new mock api key"
 
 
 async def test_subentry_flow(
