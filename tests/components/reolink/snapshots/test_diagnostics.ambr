@@ -144,6 +144,10 @@
         '0': 1,
         'null': 1,
       }),
+      'GetMask': dict({
+        '0': 1,
+        'null': 1,
+      }),
       'GetMdAlarm': dict({
         '0': 1,
         'null': 1,
