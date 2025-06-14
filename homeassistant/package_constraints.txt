@@ -2,7 +2,7 @@
 
 aiodhcpwatcher==1.2.0
 aiodiscover==2.7.0
-aiodns==3.4.0
+aiodns==3.5.0
 aiofiles==24.1.0
 aiohasupervisor==0.3.1
 aiohttp-asyncmdnsresolver==0.1.1
@@ -39,7 +39,7 @@ habluetooth==3.49.0
 hass-nabucasa==0.101.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250531.2
+home-assistant-frontend==20250531.3
 home-assistant-intents==2025.6.10
 httpx==0.28.1
 ifaddr==0.2.0
@@ -131,7 +131,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.5
+pydantic==2.11.6
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1

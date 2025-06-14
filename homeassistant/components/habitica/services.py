@@ -35,6 +35,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -249,6 +250,7 @@ def get_config_entry(hass: HomeAssistant, entry_id: str) -> HabiticaConfigEntry:
     return entry
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Set up services for Habitica integration."""
 
