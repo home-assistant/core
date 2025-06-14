@@ -529,5 +529,29 @@
     "command_failed": {
       "message": "Command failed, {message}"
     }
+  },
+  "services": {
+    "set_navigation": {
+      "name": "Set navigation",
+      "description": "Set navigation to a destination. Either provide a destination string or latitude and longitude.",
+      "fields": {
+        "destination": {
+          "name": "Destination",
+          "description": "The destination to navigate to, e.g., '1600 Amphitheatre Pkwy, Mountain View, CA'."
+        },
+        "latitude": {
+          "name": "Latitude",
+          "description": "The latitude of the destination."
+        },
+        "longitude": {
+          "name": "Longitude",
+          "description": "The longitude of the destination."
+        },
+        "locale": {
+          "name": "Locale",
+          "description": "The locale to use for the navigation, e.g., 'en-US'."
+        }
+      }
+    }
   }
 }

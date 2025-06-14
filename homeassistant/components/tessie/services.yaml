@@ -1,0 +1,24 @@
+set_navigation:
+  target:
+    entity:
+      integration: tessie
+      device_class: car
+  fields:
+    destination:
+      example: "1600 Amphitheatre Pkwy, Mountain View, CA"
+      selector:
+        text:
+    latitude:
+      selector:
+        number:
+          min: -90
+          max: 90
+    longitude:
+      selector:
+        number:
+          min: -180
+          max: 180
+    locale:
+      default: "en-US"
+      selector:
+        text:

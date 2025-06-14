@@ -259,5 +259,10 @@
         }
       }
     }
+  },
+  "services": {
+    "set_navigation": {
+      "service": "mdi:navigation"
+    }
   }
 }
