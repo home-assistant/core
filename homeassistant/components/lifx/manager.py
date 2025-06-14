@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiolifx_effects
 from aiolifx_themes.painter import ThemePainter
@@ -31,8 +31,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .const import _ATTR_COLOR_TEMP, ATTR_THEME, DATA_LIFX_MANAGER, DOMAIN
-from .coordinator import LIFXUpdateCoordinator, Light
+from .coordinator import LIFXUpdateCoordinator
 from .util import convert_8_to_16, find_hsbk
+
+if TYPE_CHECKING:
+    from aiolifx.aiolifx import Light
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -426,8 +429,8 @@ class LIFXManager:
     ) -> None:
         """Start the firmware-based Sky effect."""
         palette = kwargs.get(ATTR_PALETTE)
+        theme = Theme()
         if palette is not None:
-            theme = Theme()
             for hsbk in palette:
                 theme.add_hsbk(hsbk[0], hsbk[1], hsbk[2], hsbk[3])
 
