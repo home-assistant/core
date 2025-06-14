@@ -107,7 +107,7 @@ OPTIONS_FLOW = {
 }
 
 
-class StatisticsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
+class HistoryStatsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for History stats."""
 
     config_flow = CONFIG_FLOW
