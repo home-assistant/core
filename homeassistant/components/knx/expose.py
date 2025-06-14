@@ -1,4 +1,4 @@
-"""Exposures to KNX bus."""
+"""Expose Home Assistant entity states to KNX."""
 
 from __future__ import annotations
 
