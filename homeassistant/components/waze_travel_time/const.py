@@ -5,6 +5,8 @@ from __future__ import annotations
 DOMAIN = "waze_travel_time"
 SEMAPHORE = "semaphore"
 
+CONSECUTIVE_FAILURE_THRESHOLD = 5
+
 CONF_DESTINATION = "destination"
 CONF_ORIGIN = "origin"
 CONF_INCL_FILTER = "incl_filter"
