@@ -260,7 +260,7 @@ SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
             cv.positive_int, vol.All(cv.string, "last")
         ),
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
-        vol.Required(ATTR_REACTION): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(ATTR_REACTION): cv.string,
         vol.Optional(ATTR_IS_BIG, default=False): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA,

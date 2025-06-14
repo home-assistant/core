@@ -996,7 +996,7 @@ async def test_set_message_reaction(
             {
                 ATTR_CHAT_ID: 12345,
                 ATTR_MESSAGEID: 54321,
-                "reaction": ["👍"],
+                "reaction": "👍",
                 "is_big": True,
             },
             blocking=True,
@@ -1007,6 +1007,6 @@ async def test_set_message_reaction(
         context=ANY,
         chat_id=12345,
         message_id=54321,
-        reaction=["👍"],
+        reaction="👍",
         is_big=True,
     )

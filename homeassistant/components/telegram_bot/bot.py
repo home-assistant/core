@@ -789,7 +789,7 @@ class TelegramNotificationService:
     async def set_message_reaction(
         self,
         chat_id: int,
-        reaction: list[str],
+        reaction: str,
         is_big: bool = False,
         context: Context | None = None,
         **kwargs,

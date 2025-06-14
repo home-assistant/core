@@ -806,7 +806,7 @@ set_message_reaction:
         text:
     reaction:
       required: true
-      example: ["👍"]
+      example: 👍
       selector:
         text:
     is_big:
