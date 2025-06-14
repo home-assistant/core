@@ -19,6 +19,7 @@ class TeslaUserImplementation(AuthImplementation):
         self, hass: HomeAssistant, auth_domain: str, credential: ClientCredential
     ) -> None:
         """Initialize user Oauth2 implementation."""
+
         super().__init__(
             hass,
             auth_domain,
