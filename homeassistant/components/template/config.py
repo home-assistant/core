@@ -160,7 +160,6 @@ CONFIG_SECTION_SCHEMA = vol.All(
         DOMAIN_ALARM_CONTROL_PANEL,
         DOMAIN_BUTTON,
         DOMAIN_FAN,
-        DOMAIN_LOCK,
         DOMAIN_VACUUM,
     ),
 )
