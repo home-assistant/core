@@ -167,8 +167,8 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
             destination_name = names[0]["value"]
         return HERETravelTimeData(
             attribution=None,
-            duration=round(duration / 60),
-            duration_in_traffic=round(duration_in_traffic / 60),
+            duration=duration / 60,
+            duration_in_traffic=duration_in_traffic / 60,
             distance=distance,
             origin=f"{mapped_origin_lat},{mapped_origin_lon}",
             destination=f"{mapped_destination_lat},{mapped_destination_lon}",
@@ -276,8 +276,8 @@ class HERETransitDataUpdateCoordinator(
         )
         return HERETravelTimeData(
             attribution=attribution,
-            duration=round(duration / 60),
-            duration_in_traffic=round(duration / 60),
+            duration=duration / 60,
+            duration_in_traffic=duration / 60,
             distance=distance,
             origin=f"{mapped_origin_lat},{mapped_origin_lon}",
             destination=f"{mapped_destination_lat},{mapped_destination_lon}",
