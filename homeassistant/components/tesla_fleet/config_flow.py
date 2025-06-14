@@ -4,14 +4,26 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+import re
+from typing import Any, cast
 
+from cryptography.hazmat.primitives import serialization
 import jwt
+from tesla_fleet_api import TeslaFleetApi
+from tesla_fleet_api.const import SERVERS
+from tesla_fleet_api.exceptions import (
+    InvalidResponse,
+    PreconditionFailed,
+    TeslaFleetError,
+)
+import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
+from .oauth import TeslaUserImplementation
 
 
 class OAuth2FlowHandler(
@@ -21,36 +33,158 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
+    def __init__(self) -> None:
+        """Initialize config flow."""
+        super().__init__()
+        self.domain: str | None = None
+        self.registration_status: dict[str, bool] = {}
+        self.tesla_apis: dict[str, TeslaFleetApi] = {}
+        self.failed_regions: list[str] = []
+        self.data: dict[str, Any] = {}
+        self.uid: str | None = None
+        self.api: TeslaFleetApi | None = None
+
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a flow start."""
-        return await super().async_step_user()
-
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
-
+        """Handle OAuth completion and proceed to domain registration."""
         token = jwt.decode(
             data["token"]["access_token"], options={"verify_signature": False}
         )
-        uid = token["sub"]
 
-        await self.async_set_unique_id(uid)
+        self.data = data
+        self.uid = token["sub"]
+        server = SERVERS[token["ou_code"].lower()]
+
+        await self.async_set_unique_id(self.uid)
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
             )
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=uid, data=data)
+
+        # OAuth done, setup a Partner API connection
+        implementation = cast(TeslaUserImplementation, self.flow_impl)
+
+        session = async_get_clientsession(self.hass)
+        self.api = TeslaFleetApi(
+            session=session,
+            server=server,
+            partner_scope=True,
+            charging_scope=False,
+            energy_scope=False,
+            user_scope=False,
+            vehicle_scope=False,
+        )
+        await self.api.get_private_key()
+        await self.api.partner_login(
+            implementation.client_id, implementation.client_secret
+        )
+
+        return await self.async_step_domain_input()
+
+    async def async_step_domain_input(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle domain input step."""
+        errors = {}
+
+        if user_input is not None:
+            domain = user_input["domain"].strip().lower()
+
+            # Validate domain format
+            if not self._is_valid_domain(domain):
+                errors["domain"] = "invalid_domain"
+            else:
+                self.domain = domain
+                return await self.async_step_domain_registration()
+
+        return self.async_show_form(
+            step_id="domain_input",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("domain"): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_domain_registration(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle domain registration for both regions."""
+        if not self.domain:
+            return await self.async_step_domain_input()
+
+        assert self.api
+        assert self.api.private_key
+
+        local_public_key = self.api.private_key.public_key()
+        local_pem = local_public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        ).decode("utf-8")
+
+        # Get the raw EC point in uncompressed format (what Tesla expects)
+        local_raw = local_public_key.public_bytes(
+            encoding=serialization.Encoding.X962,
+            format=serialization.PublicFormat.UncompressedPoint,
+        ).hex()
+
+        errors = {}
+
+        try:
+            register_response = await self.api.partner.register(self.domain)
+
+            # Get public key from response
+            registered_public_key = register_response.get("response", {}).get(
+                "public_key"
+            )
+
+            if not registered_public_key:
+                errors["base"] = "public_key_not_found"
+            elif registered_public_key.lower() != local_raw.lower():
+                errors["base"] = "public_key_mismatch"
+            else:
+                return await self.async_step_registration_complete()
+
+        except PreconditionFailed:
+            errors["base"] = "precondition_failed"
+        except InvalidResponse:
+            errors["base"] = "invalid_response"
+        except TeslaFleetError as e:
+            # Unexpected error that will not be translated
+            errors["base"] = e.message
+
+        return self.async_show_form(
+            step_id="domain_registration",
+            description_placeholders={"domain": self.domain, "pem": local_pem},
+            errors=errors,
+        )
+
+    async def async_step_registration_complete(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show completion and virtual key installation."""
+        if user_input and self.uid and self.data:
+            return self.async_create_entry(title=self.uid, data=self.data)
+
+        if not self.domain:
+            return await self.async_step_domain_input()
+
+        return self.async_show_form(
+            step_id="registration_complete",
+            description_placeholders={
+                "virtual_key_url": f"https://www.tesla.com/_ak/{self.domain}",
+            },
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -67,4 +201,11 @@ class OAuth2FlowHandler(
                 step_id="reauth_confirm",
                 description_placeholders={"name": "Tesla Fleet"},
             )
-        return await self.async_step_user()
+        # For reauth, skip domain registration and go straight to OAuth
+        return await super().async_step_user()
+
+    def _is_valid_domain(self, domain: str) -> bool:
+        """Validate domain format."""
+        # Basic domain validation regex
+        domain_pattern = re.compile(r"^(?:[a-zA-Z0-9]+\.)+[a-zA-Z0-9-]+$")
+        return bool(domain_pattern.match(domain))
