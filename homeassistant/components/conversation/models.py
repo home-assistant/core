@@ -7,7 +7,9 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from homeassistant.core import Context
-from homeassistant.helpers import intent
+from homeassistant.helpers import intent, llm
+
+from .const import DOMAIN
 
 
 @dataclass(frozen=True)
@@ -55,6 +57,16 @@ class ConversationInput:
             "agent_id": self.agent_id,
             "extra_system_prompt": self.extra_system_prompt,
         }
+
+    def as_llm_context(self, conversing_domain: str) -> llm.LLMContext:
+        """Return input as an LLM context."""
+        return llm.LLMContext(
+            platform=conversing_domain,
+            context=self.context,
+            language=self.language,
+            assistant=DOMAIN,
+            device_id=self.device_id,
+        )
 
 
 @dataclass(slots=True)
