@@ -11,22 +11,14 @@ from homeassistant.const import (
     EVENT_LOGGING_CHANGED,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .common import async_generate_device_list
-from .const import (
-    DOMAIN,
-    SERVICE_UPDATE_DEVS,
-    VS_COORDINATOR,
-    VS_DEVICES,
-    VS_DISCOVERY,
-    VS_LISTENERS,
-    VS_MANAGER,
-)
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_LISTENERS, VS_MANAGER
 from .coordinator import VeSyncDataCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -85,25 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.data[DOMAIN][VS_LISTENERS] = cleanup
 
-    async def async_new_device_discovery(service: ServiceCall) -> None:
-        """Discover if new devices should be added."""
-        manager = hass.data[DOMAIN][VS_MANAGER]
-        devices = hass.data[DOMAIN][VS_DEVICES]
-
-        new_devices = await async_generate_device_list(hass, manager)
-
-        device_set = set(new_devices)
-        new_devices = list(device_set.difference(devices))
-        if new_devices and devices:
-            devices.extend(new_devices)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_DEVICES), new_devices)
-            return
-        if new_devices and not devices:
-            devices.extend(new_devices)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
-    )
+    async_setup_services(hass)
 
     return True
 

@@ -4,8 +4,12 @@ from unittest.mock import Mock, patch
 
 from pyvesync import VeSync
 
-from homeassistant.components.vesync import SERVICE_UPDATE_DEVS, async_setup_entry
-from homeassistant.components.vesync.const import DOMAIN, VS_DEVICES, VS_MANAGER
+from homeassistant.components.vesync.const import (
+    DOMAIN,
+    SERVICE_UPDATE_DEVS,
+    VS_DEVICES,
+    VS_MANAGER,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -36,7 +40,7 @@ async def test_async_setup_entry__no_devices(
 ) -> None:
     """Test setup connects to vesync and creates empty config when no devices."""
     with patch.object(hass.config_entries, "async_forward_entry_setups") as setups_mock:
-        assert await async_setup_entry(hass, config_entry)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Assert platforms loaded
         await hass.async_block_till_done()
         assert setups_mock.call_count == 1
@@ -68,7 +72,7 @@ async def test_async_setup_entry__loads_fans(
     }
 
     with patch.object(hass.config_entries, "async_forward_entry_setups") as setups_mock:
-        assert await async_setup_entry(hass, config_entry)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Assert platforms loaded
         await hass.async_block_till_done()
         assert setups_mock.call_count == 1
@@ -101,7 +105,7 @@ async def test_async_new_device_discovery(
 
     # Mock discovery of new fan which would get added to VS_DEVICES.
     with patch(
-        "homeassistant.components.vesync.async_generate_device_list",
+        "homeassistant.components.vesync.services.async_generate_device_list",
         return_value=[fan],
     ):
         await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
@@ -113,7 +117,7 @@ async def test_async_new_device_discovery(
     # Mock discovery of new humidifier which would invoke discovery in all platforms.
     # The mocked humidifier needs to have all properties populated for correct processing.
     with patch(
-        "homeassistant.components.vesync.async_generate_device_list",
+        "homeassistant.components.vesync.services.async_generate_device_list",
         return_value=[humidifier],
     ):
         await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
