@@ -38,6 +38,7 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
             connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
             manufacturer="EHEIM",
             model=device.device_type.model_name,
+            model_id=device.tank_config,
             identifiers={(DOMAIN, device.mac_address)},
             suggested_area=device.aquarium_name,
             sw_version=device.sw_version,

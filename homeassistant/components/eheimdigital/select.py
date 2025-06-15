@@ -5,8 +5,9 @@ from dataclasses import dataclass
 from typing import Generic, TypeVar, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
+from eheimdigital.professionel5e import EheimDigitalProfessionel5e
 from eheimdigital.device import EheimDigitalDevice
-from eheimdigital.types import FilterMode
+from eheimdigital.types import FilterMode, FilterModeProf
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -47,6 +48,25 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
 )
 
 
+PROFESSIONEL5E_DESCRIPTIONS: tuple[
+    EheimDigitalSelectDescription[EheimDigitalProfessionel5e], ...
+] = (
+    EheimDigitalSelectDescription[EheimDigitalProfessionel5e](
+        key="filter_mode",
+        translation_key="filter_mode",
+        value_fn=(
+            lambda device: device.filter_mode.name.lower()
+            if device.filter_mode is not None
+            else None
+        ),
+        set_value_fn=(
+            lambda device, value: device.set_filter_mode(FilterModeProf[value.upper()])
+        ),
+        options=[name.lower() for name in FilterModeProf.__members__],
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EheimDigitalConfigEntry,
@@ -67,6 +87,13 @@ async def async_setup_entry(
                         coordinator, device, description
                     )
                     for description in CLASSICVARIO_DESCRIPTIONS
+                )
+            elif isinstance(device, EheimDigitalProfessionel5e):
+                entities.extend(
+                    EheimDigitalSelect[EheimDigitalProfessionel5e](
+                        coordinator, device, description
+                    )
+                    for description in PROFESSIONEL5E_DESCRIPTIONS
                 )
 
         async_add_entities(entities)

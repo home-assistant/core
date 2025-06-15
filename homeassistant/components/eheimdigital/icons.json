@@ -4,11 +4,26 @@
       "manual_speed": {
         "default": "mdi:pump"
       },
+      "constant_flow": {
+        "default": "mdi:wave"
+      },
       "day_speed": {
         "default": "mdi:weather-sunny"
       },
       "night_speed": {
         "default": "mdi:moon-waning-crescent"
+      },
+      "high_pulse_speed": {
+        "default": "mdi:speedometer"
+      },
+      "low_pulse_speed": {
+        "default": "mdi:speedometer-slow"
+      },
+      "high_pulse_time": {
+        "default": "mdi:timer"
+      },
+      "low_pulse_time": {
+        "default": "mdi:timer"
       },
       "temperature_offset": {
         "default": "mdi:thermometer"
@@ -29,6 +44,9 @@
       },
       "service_hours": {
         "default": "mdi:wrench-clock"
+      },
+      "operating_time": {
+        "default": "mdi:clock-start"
       },
       "error_code": {
         "default": "mdi:alert-octagon",

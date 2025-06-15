@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Generic, TypeVar, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
+from eheimdigital.professionel5e import EheimDigitalProfessionel5e
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.heater import EheimDigitalHeater
 from eheimdigital.types import HeaterUnit
@@ -71,6 +72,84 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.night_speed,
         set_value_fn=lambda device, value: device.set_night_speed(int(value)),
+    ),
+)
+
+PROFESSIONEL5E_DESCRIPTIONS: tuple[
+    EheimDigitalNumberDescription[EheimDigitalProfessionel5e], ...
+] = (
+    EheimDigitalNumberDescription[EheimDigitalProfessionel5e](
+        key="manual_speed",
+        translation_key="manual_speed",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_min_value=35,
+        native_max_value=80,
+        value_fn=lambda device: device.manual_speed,
+        set_value_fn=lambda device, value: device.set_manual_speed(int(value)),
+    ),
+    EheimDigitalNumberDescription[EheimDigitalProfessionel5e](
+        key="constant_flow",
+        translation_key="constant_flow",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_max_value=14,
+        value_fn=lambda device: device.const_flow,
+        set_value_fn=lambda device, value: device.set_const_flow(int(value)),
+    ),
+    EheimDigitalNumberDescription[EheimDigitalProfessionel5e](
+        key="day_speed",
+        translation_key="day_speed",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_max_value=14,
+        value_fn=lambda device: device.day_speed,
+        set_value_fn=lambda device, value: device.set_day_speed(int(value)),
+    ),
+    EheimDigitalNumberDescription[EheimDigitalProfessionel5e](
+        key="night_speed",
+        translation_key="night_speed",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_max_value=14,
+        value_fn=lambda device: device.night_speed,
+        set_value_fn=lambda device, value: device.set_night_speed(int(value)),
+    ),
+    EheimDigitalNumberDescription[EheimDigitalProfessionel5e](
+        key="high_pulse_speed",
+        translation_key="high_pulse_speed",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_max_value=14,
+        value_fn=lambda device: device.high_pulse_speed,
+        set_value_fn=lambda device, value: device.set_high_pulse_speed(int(value)),
+    ),
+    EheimDigitalNumberDescription[EheimDigitalProfessionel5e](
+        key="low_pulse_speed",
+        translation_key="low_pulse_speed",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_max_value=14,
+        value_fn=lambda device: device.low_pulse_speed,
+        set_value_fn=lambda device, value: device.set_low_pulse_speed(int(value)),
+    ),
+    EheimDigitalNumberDescription[EheimDigitalProfessionel5e](
+        key="high_pulse_time",
+        translation_key="high_pulse_time",
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=5,
+        native_max_value=200000,
+        value_fn=lambda device: device.high_pulse_time,
+        set_value_fn=lambda device, value: device.set_high_pulse_time(int(value)),
+    ),
+    EheimDigitalNumberDescription[EheimDigitalProfessionel5e](
+        key="low_pulse_time",
+        translation_key="low_pulse_time",
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=5,
+        native_max_value=200000,
+        value_fn=lambda device: device.low_pulse_time,
+        set_value_fn=lambda device, value: device.set_low_pulse_time(int(value)),
     ),
 )
 
@@ -144,6 +223,13 @@ async def async_setup_entry(
                         coordinator, device, description
                     )
                     for description in CLASSICVARIO_DESCRIPTIONS
+                )
+            if isinstance(device, EheimDigitalProfessionel5e):
+                entities.extend(
+                    EheimDigitalNumber[EheimDigitalProfessionel5e](
+                        coordinator, device, description
+                    )
+                    for description in PROFESSIONEL5E_DESCRIPTIONS
                 )
             if isinstance(device, EheimDigitalHeater):
                 entities.extend(
