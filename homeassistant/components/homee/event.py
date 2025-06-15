@@ -1,6 +1,6 @@
 """The homee event platform."""
 
-from pyHomee.const import AttributeType
+from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute
 
 from homeassistant.components.event import (
@@ -17,7 +17,19 @@ from .entity import HomeeEntity
 PARALLEL_UPDATES = 0
 
 
+REMOTE_PROFILES = [
+    NodeProfile.REMOTE,
+    NodeProfile.TWO_BUTTON_REMOTE,
+    NodeProfile.THREE_BUTTON_REMOTE,
+    NodeProfile.FOUR_BUTTON_REMOTE,
+]
+
 EVENT_DESCRIPTIONS: dict[AttributeType, EventEntityDescription] = {
+    AttributeType.BUTTON_STATE: EventEntityDescription(
+        key="button_state",
+        device_class=EventDeviceClass.BUTTON,
+        event_types=["upper", "lower", "released"],
+    ),
     AttributeType.UP_DOWN_REMOTE: EventEntityDescription(
         key="up_down_remote",
         device_class=EventDeviceClass.BUTTON,
@@ -48,7 +60,9 @@ async def async_setup_entry(
         HomeeEvent(attribute, config_entry, EVENT_DESCRIPTIONS[attribute.type])
         for node in config_entry.runtime_data.nodes
         for attribute in node.attributes
-        if attribute.type in EVENT_DESCRIPTIONS and not attribute.editable
+        if attribute.type in EVENT_DESCRIPTIONS
+        and node.profile in REMOTE_PROFILES
+        and not attribute.editable
     )
 
 
@@ -79,6 +93,5 @@ class HomeeEvent(HomeeEntity, EventEntity):
     @callback
     def _event_triggered(self, event: HomeeAttribute) -> None:
         """Handle a homee event."""
-        if event.type == AttributeType.UP_DOWN_REMOTE:
-            self._trigger_event(self.event_types[int(event.current_value)])
-            self.schedule_update_ha_state()
+        self._trigger_event(self.event_types[int(event.current_value)])
+        self.schedule_update_ha_state()

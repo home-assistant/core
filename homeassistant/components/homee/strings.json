@@ -160,6 +160,30 @@
       }
     },
     "event": {
+      "button_state": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "upper": "Upper button",
+              "lower": "Lower button",
+              "released": "Released"
+            }
+          }
+        }
+      },
+      "button_state_instance": {
+        "name": "Button {instance}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "upper": "Upper button",
+              "lower": "Lower button",
+              "released": "Released"
+            }
+          }
+        }
+      },
       "up_down_remote": {
         "name": "Up/down remote",
         "state_attributes": {
