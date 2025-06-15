@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from open_meteo import Forecast
+from open_meteo import AirQuality, Forecast
 import pytest
 
 from homeassistant.components.open_meteo.const import DOMAIN
@@ -37,14 +37,15 @@ def mock_setup_entry() -> Generator[None]:
 @pytest.fixture
 def mock_open_meteo(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked Open-Meteo client."""
-    fixture: str = "forecast.json"
-    if hasattr(request, "param") and request.param:
-        fixture = request.param
+    forecast_fixture: str = "forecast.json"
+    air_quality_fixture: str = "air_quality.json"
 
-    forecast = Forecast.from_json(load_fixture(fixture, DOMAIN))
+    forecast = Forecast.from_json(load_fixture(forecast_fixture, DOMAIN))
+    air_quality = AirQuality.from_json(load_fixture(air_quality_fixture, DOMAIN))
     with patch(
         "homeassistant.components.open_meteo.coordinator.OpenMeteo", autospec=True
     ) as open_meteo_mock:
         open_meteo = open_meteo_mock.return_value
         open_meteo.forecast.return_value = forecast
+        open_meteo.air_quality.return_value = air_quality
         yield open_meteo
