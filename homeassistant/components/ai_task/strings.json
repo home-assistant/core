@@ -1,0 +1,26 @@
+{
+  "services": {
+    "generate_text": {
+      "name": "Generate text",
+      "description": "Use AI to run a task that generates text.",
+      "fields": {
+        "task_name": {
+          "name": "Task Name",
+          "description": "Name of the task."
+        },
+        "task_type": {
+          "name": "Task Type",
+          "description": "Type of the task."
+        },
+        "prompt": {
+          "name": "Prompt",
+          "description": "Prompt for the LLM."
+        },
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "Entity ID to run the task on. If not provided, the preferred entity will be used."
+        }
+      }
+    }
+  }
+}
