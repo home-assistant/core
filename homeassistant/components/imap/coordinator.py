@@ -175,12 +175,8 @@ class ImapMessage:
 
     @property
     def text(self) -> str:
-        """Get the message text from the email.
-
-        Will look for text/plain or use/ text/html if not found.
-        """
+        """Get the message text from the email."""
         message_text: str | None = None
-        message_html: str | None = None
         message_untyped_text: str | None = None
 
         part: Message
@@ -188,9 +184,6 @@ class ImapMessage:
             if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
                 if message_text is None:
                     message_text = self._decode_payload(part)
-            elif part.get_content_type() == "text/html":
-                if message_html is None:
-                    message_html = self._decode_payload(part)
             elif (
                 part.get_content_type().startswith("text")
                 and message_untyped_text is None
@@ -200,13 +193,24 @@ class ImapMessage:
         if message_text is not None and message_text.strip():
             return message_text
 
-        if message_html:
-            return message_html
-
         if message_untyped_text:
             return message_untyped_text
 
         return str(self.email_message.get_payload())
+
+    @property
+    def html(self) -> str:
+        """Get the message html from the email."""
+        message_html: str | None = None
+
+        part: Message
+        for part in self.email_message.walk():
+            if part.get_content_type() == "text/html":
+                if message_html is None:
+                    message_html = self._decode_payload(part)
+        if message_html is None:
+            return ""
+        return message_html
 
 
 class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
