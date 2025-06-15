@@ -7,6 +7,7 @@ from openai import (
     APIConnectionError,
     AuthenticationError,
     BadRequestError,
+    PermissionDeniedError,
     RateLimitError,
 )
 from openai.types.image import Image
@@ -29,37 +30,101 @@ from tests.common import MockConfigEntry
             {"prompt": "Picture of a dog"},
             {
                 "prompt": "Picture of a dog",
+                "size": "auto",
+                "quality": "auto",
+                "background": "auto",
+                "moderation": "auto",
+            },
+        ),
+        (
+            {
+                "prompt": "Picture of a dog on grass with children playing on background",
+                "size": "1024x1792",
+                "quality": "hd",
+                "style": "vivid",
+                "background": "transparent",
+            },
+            {
+                "prompt": "Picture of a dog on grass with children playing on background",
+                "size": "1024x1536",
+                "quality": "high",
+                "background": "transparent",
+                "moderation": "auto",
+            },
+        ),
+        (
+            {
+                "prompt": "Picture of a cat",
+                "size": "1792x1024",
+                "quality": "standard",
+                "style": "natural",
+                "background": "opaque",
+                "moderation": "low",
+            },
+            {
+                "prompt": "Picture of a cat",
+                "size": "1536x1024",
+                "quality": "medium",
+                "background": "opaque",
+                "moderation": "low",
+            },
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "size": "auto",
+                "quality": "auto",
+                "background": "auto",
+                "moderation": "auto",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "auto",
+                "quality": "auto",
+                "background": "auto",
+                "moderation": "auto",
+            },
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
                 "size": "1024x1024",
-                "quality": "standard",
-                "style": "vivid",
+                "quality": "low",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1024",
+                "quality": "low",
+                "background": "auto",
+                "moderation": "auto",
             },
         ),
         (
             {
                 "prompt": "Picture of a dog",
-                "size": "1024x1792",
-                "quality": "hd",
-                "style": "vivid",
+                "size": "1024x1536",
+                "quality": "medium",
             },
             {
                 "prompt": "Picture of a dog",
-                "size": "1024x1792",
-                "quality": "hd",
-                "style": "vivid",
+                "size": "1024x1536",
+                "quality": "medium",
+                "background": "auto",
+                "moderation": "auto",
             },
         ),
         (
             {
                 "prompt": "Picture of a dog",
-                "size": "1792x1024",
-                "quality": "standard",
-                "style": "natural",
+                "size": "1536x1024",
+                "quality": "high",
             },
             {
                 "prompt": "Picture of a dog",
-                "size": "1792x1024",
-                "quality": "standard",
-                "style": "natural",
+                "size": "1536x1024",
+                "quality": "high",
+                "background": "auto",
+                "moderation": "auto",
             },
         ),
     ],
@@ -73,8 +138,8 @@ async def test_generate_image_service(
 ) -> None:
     """Test generate image service."""
     service_data["config_entry"] = mock_config_entry.entry_id
-    expected_args["model"] = "dall-e-3"
-    expected_args["response_format"] = "url"
+    expected_args["model"] = "gpt-image-1"
+    expected_args["output_format"] = "png"
     expected_args["n"] = 1
 
     with patch(
@@ -83,9 +148,9 @@ async def test_generate_image_service(
             created=1700000000,
             data=[
                 Image(
-                    b64_json=None,
-                    revised_prompt="A clear and detailed picture of an ordinary canine",
-                    url="A",
+                    b64_json="QQ==",
+                    revised_prompt="",
+                    url=None,
                 )
             ],
         ),
@@ -99,11 +164,157 @@ async def test_generate_image_service(
         )
 
     assert response == {
-        "url": "A",
-        "revised_prompt": "A clear and detailed picture of an ordinary canine",
+        "url": "http://10.10.10.10:8123/api/openai_conversation/images/1700000000_0.png",
+        "revised_prompt": expected_args["prompt"],
     }
     assert len(mock_create.mock_calls) == 1
     assert mock_create.mock_calls[0][2] == expected_args
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_args"),
+    [
+        (
+            {"prompt": "Picture of a dog"},
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1024",
+                "quality": "hd",
+                "style": "vivid",
+            },
+        ),
+        (
+            {
+                "prompt": "Picture of a dog on grass with children playing on background",
+                "size": "1024x1792",
+                "quality": "hd",
+                "style": "vivid",
+                "background": "transparent",
+            },
+            {
+                "prompt": "Picture of a dog on grass with children playing on background",
+                "size": "1024x1792",
+                "quality": "hd",
+                "style": "vivid",
+            },
+        ),
+        (
+            {
+                "prompt": "Picture of a cat",
+                "size": "1792x1024",
+                "quality": "standard",
+                "style": "natural",
+            },
+            {
+                "prompt": "Picture of a cat",
+                "size": "1792x1024",
+                "quality": "standard",
+                "style": "natural",
+            },
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "size": "auto",
+                "quality": "auto",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1024",
+                "quality": "hd",
+                "style": "vivid",
+            },
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1024",
+                "quality": "low",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1024",
+                "quality": "standard",
+                "style": "vivid",
+            },
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1536",
+                "quality": "medium",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1024x1792",
+                "quality": "standard",
+                "style": "vivid",
+            },
+        ),
+        (
+            {
+                "prompt": "Picture of a dog",
+                "size": "1536x1024",
+                "quality": "high",
+            },
+            {
+                "prompt": "Picture of a dog",
+                "size": "1792x1024",
+                "quality": "hd",
+                "style": "vivid",
+            },
+        ),
+    ],
+)
+async def test_generate_image_service_fallback_dalle(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    service_data,
+    expected_args,
+) -> None:
+    """Test generate image service fallback to DELL-E if model not available."""
+    service_data["config_entry"] = mock_config_entry.entry_id
+    expected_args["model"] = "dall-e-3"
+    expected_args["response_format"] = "b64_json"
+    expected_args["n"] = 1
+
+    with patch(
+        "openai.resources.images.AsyncImages.generate",
+        side_effect=[
+            PermissionDeniedError(
+                response=httpx.Response(
+                    status_code=403, request=httpx.Request(method="GET", url="")
+                ),
+                body=None,
+                message="Your organization must be verified to use the model `gpt-image-1`. Please go to: https://platform.openai.com/settings/organization/general and click on Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate.",
+            ),
+            ImagesResponse(
+                created=1700000000,
+                data=[
+                    Image(
+                        b64_json="QQ==",
+                        revised_prompt="A clear and detailed picture of an ordinary canine",
+                        url=None,
+                    )
+                ],
+            ),
+        ],
+    ) as mock_create:
+        response = await hass.services.async_call(
+            "openai_conversation",
+            "generate_image",
+            service_data,
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == {
+        "url": "http://10.10.10.10:8123/api/openai_conversation/images/1700000000_0.png",
+        "revised_prompt": "A clear and detailed picture of an ordinary canine",
+    }
+    assert len(mock_create.mock_calls) == 2
+    assert mock_create.call_args.kwargs == expected_args
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -150,7 +361,7 @@ async def test_generate_image_service_error(
                 ],
             ),
         ),
-        pytest.raises(HomeAssistantError, match="No image returned"),
+        pytest.raises(HomeAssistantError, match="No image data returned"),
     ):
         await hass.services.async_call(
             "openai_conversation",
