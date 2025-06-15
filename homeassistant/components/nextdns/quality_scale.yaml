@@ -11,7 +11,9 @@ rules:
   config-flow-test-coverage:
     status: todo
     comment: Tests should end with the creation of a config entry or an abort.
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: Data description is missing.
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -78,7 +80,7 @@ rules:
   icon-translations: done
   reconfiguration-flow:
     status: exempt
-    comment: There is no parameter that can be changed.
+    comment: Only parameter that could be changed profile_id would force a new config entry.
   repair-issues:
     status: exempt
     comment: This integration doesn't have any cases where raising an issue is needed.
