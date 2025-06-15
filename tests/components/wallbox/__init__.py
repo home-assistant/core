@@ -215,7 +215,10 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-async def setup_integration_no_eco_mode(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+
+async def setup_integration_no_eco_mode(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test wallbox sensor class setup."""
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
@@ -236,6 +239,7 @@ async def setup_integration_no_eco_mode(hass: HomeAssistant, entry: MockConfigEn
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+
 
 async def setup_integration_select(
     hass: HomeAssistant, entry: MockConfigEntry, response

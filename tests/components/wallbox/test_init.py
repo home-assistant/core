@@ -140,6 +140,7 @@ async def test_wallbox_refresh_failed_read_only(
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
 
+
 async def test_wallbox_setup_load_entry_no_eco_mode(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
@@ -150,5 +151,3 @@ async def test_wallbox_setup_load_entry_no_eco_mode(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
-
-
