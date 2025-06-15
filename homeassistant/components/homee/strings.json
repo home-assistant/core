@@ -161,7 +161,7 @@
     },
     "event": {
       "button_state": {
-        "name": "Button",
+        "name": "Switch",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -173,7 +173,7 @@
         }
       },
       "button_state_instance": {
-        "name": "Button {instance}",
+        "name": "Switch {instance}",
         "state_attributes": {
           "event_type": {
             "state": {

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_event_snapshot[event.remote_control_button_1-entry]
+# name: test_event_snapshot[event.remote_control_switch_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.remote_control_button_1',
+    'entity_id': 'event.remote_control_switch_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30,7 +30,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button 1',
+    'original_name': 'Switch 1',
     'platform': 'homee',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -40,7 +40,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_event_snapshot[event.remote_control_button_1-state]
+# name: test_event_snapshot[event.remote_control_switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -50,17 +50,17 @@
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Button 1',
+      'friendly_name': 'Remote Control Switch 1',
     }),
     'context': <ANY>,
-    'entity_id': 'event.remote_control_button_1',
+    'entity_id': 'event.remote_control_switch_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_event_snapshot[event.remote_control_button_2-entry]
+# name: test_event_snapshot[event.remote_control_switch_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -79,7 +79,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.remote_control_button_2',
+    'entity_id': 'event.remote_control_switch_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -91,7 +91,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button 2',
+    'original_name': 'Switch 2',
     'platform': 'homee',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -101,7 +101,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_event_snapshot[event.remote_control_button_2-state]
+# name: test_event_snapshot[event.remote_control_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -111,10 +111,10 @@
         'lower',
         'released',
       ]),
-      'friendly_name': 'Remote Control Button 2',
+      'friendly_name': 'Remote Control Switch 2',
     }),
     'context': <ANY>,
-    'entity_id': 'event.remote_control_button_2',
+    'entity_id': 'event.remote_control_switch_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

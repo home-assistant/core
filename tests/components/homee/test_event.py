@@ -35,7 +35,7 @@ from tests.common import MockConfigEntry, snapshot_platform
             ],
         ),
         (
-            "event.remote_control_button_2",
+            "event.remote_control_switch_2",
             3,
             ["upper", "lower", "released"],
         ),
