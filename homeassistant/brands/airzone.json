@@ -1,5 +1,5 @@
 {
   "domain": "airzone",
   "name": "Airzone",
-  "integrations": ["airzone", "airzone_cloud"]
+  "integrations": ["airzone", "airzone_cloud", "airzone_mqtt"]
 }
