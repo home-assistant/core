@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bsblan import BSBLAN, BSBLANConfig, BSBLANError
+from bsblan import BSBLAN, BSBLANAuthError, BSBLANConfig, BSBLANError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -43,23 +43,42 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._get_bsblan_info()
+        except BSBLANAuthError:
+            return self._show_setup_form({"base": "invalid_auth"}, user_input)
         except BSBLANError:
             return self._show_setup_form({"base": "cannot_connect"})
 
         return self._async_create_entry()
 
     @callback
-    def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:
+    def _show_setup_form(
+        self, errors: dict | None = None, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
+        # Preserve user input if provided, otherwise use defaults
+        defaults = user_input or {}
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Optional(CONF_PASSKEY): str,
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
+                    vol.Required(
+                        CONF_HOST, default=defaults.get(CONF_HOST, vol.UNDEFINED)
+                    ): str,
+                    vol.Optional(
+                        CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)
+                    ): int,
+                    vol.Optional(
+                        CONF_PASSKEY, default=defaults.get(CONF_PASSKEY, vol.UNDEFINED)
+                    ): str,
+                    vol.Optional(
+                        CONF_USERNAME,
+                        default=defaults.get(CONF_USERNAME, vol.UNDEFINED),
+                    ): str,
+                    vol.Optional(
+                        CONF_PASSWORD,
+                        default=defaults.get(CONF_PASSWORD, vol.UNDEFINED),
+                    ): str,
                 }
             ),
             errors=errors or {},
