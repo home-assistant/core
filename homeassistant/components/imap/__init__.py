@@ -202,7 +202,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entry_id: str = call.data[CONF_ENTRY]
         uid: str = call.data[CONF_UID]
         _LOGGER.debug(
-            "Fetch text and HTML for message %s. Entry: %s",
+            "Fetch text for message %s. Entry: %s",
             uid,
             entry_id,
         )
@@ -220,7 +220,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await client.close()
         return {
             "text": message.text,
-            "html": message.html,
             "sender": message.sender,
             "subject": message.subject,
             "uid": uid,
