@@ -36,7 +36,6 @@ from .const import (
     CONF_TRANSITION,
     CONF_VALUE,
     CONF_VARIABLE,
-    DEVICE_CONNECTIONS,
     DOMAIN,
     LED_PORTS,
     LED_STATUS,
@@ -77,9 +76,18 @@ class LcnServiceCall:
                 translation_placeholders={"device_id": device_id},
             )
 
-        return self.hass.data[DOMAIN][device.primary_config_entry][DEVICE_CONNECTIONS][
-            device_id
-        ]
+        if (
+            device.primary_config_entry is None
+            or (
+                config_entry := self.hass.config_entries.async_get_entry(
+                    device.primary_config_entry
+                )
+            )
+            is None
+        ):
+            return None
+
+        return config_entry.runtime_data.device_connections[device_id]
 
     async def async_call_service(self, service: ServiceCall) -> ServiceResponse:
         """Execute service call."""
