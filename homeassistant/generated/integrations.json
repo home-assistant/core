@@ -7625,6 +7625,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "zbox_hub": {
+      "name": "Z-Box Hub",
+      "integration_type": "virtual",
+      "supported_by": "fibaro"
+    },
     "zengge": {
       "name": "Zengge",
       "integration_type": "hub",
