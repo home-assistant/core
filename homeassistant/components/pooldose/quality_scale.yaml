@@ -1,42 +1,54 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: This integration does not provide any actions.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide any actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: This integration does not subscribe to any events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data:
     status: exempt
-    comment: This integration does not connect to any device or service.
+    comment: This integration does not store any runtime data.
   test-before-configure: done
-  test-before-setup:
-    status: exempt
-    comment: This integration does not connect to any device or service.
+  test-before-setup: done
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
-  entity-unavailable: todo
-  integration-owner: todo
-  log-when-unavailable: todo
-  parallel-updates: todo
-  reauthentication-flow: todo
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide any actions.
+  config-entry-unloading:
+    status: exempt
+    comment: This integration does provide any runtime data that needs to be preserved during unloading.
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: exempt
+    comment: This integration uses a central coordinator to manage updates, which is not compatible with parallel updates.
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not need authentication for the local API.
   test-coverage: todo
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo

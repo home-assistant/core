@@ -43,6 +43,19 @@ async def test_coordinator_handles_api_error(hass: HomeAssistant) -> None:
         await coordinator._async_update_data()
 
 
+@pytest.mark.asyncio
+async def test_coordinator_update_failed(hass: HomeAssistant) -> None:
+    """Test that the coordinator raises UpdateFailed on update failure."""
+
+    class DummyApi:
+        async def async_update(self):
+            raise Exception("fail")  # noqa: TRY002
+
+    coordinator = PooldoseCoordinator(hass, DummyApi(), datetime.timedelta(seconds=10))
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+
 async def _async_update_data(self):
     """Fetch data from the Pooldose API."""
     try:

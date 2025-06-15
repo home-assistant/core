@@ -25,3 +25,4 @@ class PooldoseEntity(CoordinatorEntity):
         self._key = key
         self._attr_device_info = device_info_dict
         self._attr_entity_registry_enabled_default = enabled_by_default
+        self._attr_has_entity_name = True

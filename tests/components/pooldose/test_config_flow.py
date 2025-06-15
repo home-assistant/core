@@ -219,3 +219,24 @@ class TestPooldoseConfigFlow:
         assert valid is False
         assert placeholders["api_version_is"] == "old"
         assert placeholders["api_version_should"] == APIVERSION
+
+    @pytest.mark.asyncio
+    async def test_config_flow_unknown_error(self, hass: HomeAssistant) -> None:
+        """Test that the config flow handles unknown exceptions gracefully."""
+
+        async def raise_exc(*args, **kwargs):
+            raise Exception  # noqa: TRY002
+
+        with patch(
+            "homeassistant.components.pooldose.config_flow.get_device_info",
+            side_effect=raise_exc,
+        ):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": "user"}
+            )
+            user_input = {CONF_HOST: "1.2.3.4"}
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input
+            )
+            assert result2["type"] == "form"
+            assert result2["errors"]["base"] == "unknown"

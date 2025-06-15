@@ -7,6 +7,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 class PooldoseCoordinator(DataUpdateCoordinator):
     """Coordinator for Pooldose API."""
@@ -26,4 +29,12 @@ class PooldoseCoordinator(DataUpdateCoordinator):
         try:
             return await self.api.get_instant_values()
         except Exception as err:
-            raise UpdateFailed(f"Error fetching data: {err}") from err
+            _LOGGER.warning(
+                "Pooldose update failed, entities will be unavailable: %s", err
+            )
+            raise UpdateFailed from err
+
+    @property
+    def available(self) -> bool:
+        """Return True if coordinator is available."""
+        return self.last_update_success

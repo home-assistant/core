@@ -77,10 +77,19 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         error_placeholders = None
         if user_input is not None:
             host = user_input[CONF_HOST]
-            info = await get_device_info(host)
-            if not info:
+            try:
+                info = await get_device_info(host)
+            except (aiohttp.ClientError, TimeoutError, OSError) as err:
+                _LOGGER.error("Failed to fetch device info from %s: %s", host, err)
                 errors["base"] = "cannot_connect"
-            else:
+                info = None
+            except Exception:
+                _LOGGER.exception("Unexpected exception during device info fetch")
+                errors["base"] = "unknown"
+                info = None
+            if not info and "base" not in errors:
+                errors["base"] = "cannot_connect"
+            elif info:
                 api_ver = info["APIVERSION_GATEWAY"]
                 valid, placeholders = validate_api_version(api_ver)
                 if not valid:
@@ -92,7 +101,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
                     entry_data = {CONF_HOST: host, CONF_SERIALNUMBER: serial_number}
                     return self.async_create_entry(
-                        title=f"PoolDose - S/N {serial_number}", data=entry_data
+                        title=f"PoolDose {serial_number}", data=entry_data
                     )
 
         return self.async_show_form(

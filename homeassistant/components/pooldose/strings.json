@@ -4,7 +4,6 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "serialnumber": "Serial number",
           "scan_interval": "Poll intervall",
           "timeout": "Connection timeout"
         },
@@ -23,6 +22,23 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "New poll intervall",
+          "timeout": "New connection timeout"
+        },
+        "data_description": {
+          "scan_interval": "In seconds, default is 600",
+          "timeout": "in seconds, default is 30"
+        }
+      }
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
