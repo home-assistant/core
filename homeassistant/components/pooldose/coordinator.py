@@ -3,7 +3,7 @@
 import logging
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,4 +23,7 @@ class PooldoseCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data from the Pooldose API."""
-        return await self.api.get_instant_values()
+        try:
+            return await self.api.get_instant_values()
+        except Exception as err:
+            raise UpdateFailed(f"Error fetching data: {err}") from err

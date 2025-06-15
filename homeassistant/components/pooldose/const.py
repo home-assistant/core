@@ -32,9 +32,7 @@ def device_info(info: dict | None) -> DeviceInfo:
         serial_number=info.get("SERIAL_NUMBER"),
         sw_version=info.get("SOFTWAREVERSION_GATEWAY"),
         hw_version=info.get("FIRMWARERELEASE_DEVICE"),
-        connections={
-            (CONNECTION_NETWORK_MAC, str(info.get("MAC"))),
-        },
+        connections={(CONNECTION_NETWORK_MAC, str(info.get("MAC")))},
         configuration_url=f"http://{info.get('IP')}/index.html",
     )
 
@@ -314,7 +312,7 @@ NUMBER_MAP: dict[
     "pool_ph_target": (
         "pool_ph_target",
         "PDPR1H1HAW100_FW539187_w_1ekeiqfat",
-        {"min": 6.0, "max": 8.0, "unit": "pH", "resolution": 0.1},
+        {"min": 6.0, "max": 8.0, "unit": "pH", "step": 0.1},
         EntityCategory.CONFIG,
         None,  # device_class
         True,
@@ -322,7 +320,7 @@ NUMBER_MAP: dict[
     "pool_orp_target": (
         "pool_orp_target",
         "PDPR1H1HAW100_FW539187_w_1eklgnjk2",
-        {"min": 400, "max": 850, "unit": "mV", "resolution": 50},
+        {"min": 400, "max": 850, "unit": "mV", "step": 50},
         EntityCategory.CONFIG,
         None,  # device_class
         True,

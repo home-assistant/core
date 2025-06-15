@@ -12,12 +12,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import SENSOR_MAP, STATIC_SENSOR_KEYS, VALUE_CONVERSION_TABLE, device_info
+from .entity import PooldoseEntity
 
 
 async def async_setup_entry(
@@ -74,7 +72,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PooldoseSensor(CoordinatorEntity, SensorEntity):
+class PooldoseSensor(PooldoseEntity, SensorEntity):
     """Sensor entity for Seko Pooldose API."""
 
     _attr_has_entity_name = True
@@ -94,16 +92,19 @@ class PooldoseSensor(CoordinatorEntity, SensorEntity):
         enabled_by_default: bool = True,
     ) -> None:
         """Initialize a PooldoseSensor entity."""
-        super().__init__(coordinator)
-        self._api = api
-        self._attr_translation_key = translation_key
-        self._attr_unique_id = f"{serialnumber}_{key}"
-        self._key = key
+        super().__init__(
+            coordinator,
+            api,
+            translation_key,
+            uid,
+            key,
+            serialnumber,
+            device_info(device_info_dict),
+            enabled_by_default,
+        )
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_entity_category = entity_category
-        self._attr_device_info = device_info(device_info_dict)
-        self._attr_entity_registry_enabled_default = enabled_by_default
 
     @property
     def native_value(self) -> float | int | str | None:
@@ -114,13 +115,12 @@ class PooldoseSensor(CoordinatorEntity, SensorEntity):
             ]["current"]
         except (KeyError, TypeError):
             return None
-        # Value conversion if mapping exists
         if self._key in VALUE_CONVERSION_TABLE:
             return VALUE_CONVERSION_TABLE[self._key].get(str(value), value)
         return value
 
 
-class PooldoseStaticSensor(CoordinatorEntity, SensorEntity):
+class PooldoseStaticSensor(PooldoseEntity, SensorEntity):
     """Static sensor entity for Pooldose device info."""
 
     _attr_has_entity_name = True
@@ -138,14 +138,18 @@ class PooldoseStaticSensor(CoordinatorEntity, SensorEntity):
         enabled_by_default: bool = True,
     ) -> None:
         """Initialize a static Pooldose sensor entity."""
-        super().__init__(coordinator)
-        self._attr_translation_key = translation_key
-        self._attr_unique_id = f"{serialnumber}_{key}"
-        self._key = key
+        super().__init__(
+            coordinator,
+            api,
+            translation_key,
+            uid,
+            key,
+            serialnumber,
+            device_info(device_info_dict),
+            enabled_by_default,
+        )
         self._attr_entity_category = entity_category
         self._device_info_dict = device_info_dict
-        self._attr_device_info = device_info(device_info_dict)
-        self._attr_entity_registry_enabled_default = enabled_by_default
 
     @property
     def native_value(self) -> str | None:

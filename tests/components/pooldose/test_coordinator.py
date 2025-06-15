@@ -41,3 +41,11 @@ async def test_coordinator_handles_api_error(hass: HomeAssistant) -> None:
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
+
+
+async def _async_update_data(self):
+    """Fetch data from the Pooldose API."""
+    try:
+        return await self.api.get_instant_values()
+    except Exception as err:
+        raise UpdateFailed(f"Error fetching data: {err}") from err

@@ -10,12 +10,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import NUMBER_MAP, device_info
+from .entity import PooldoseEntity
 
 
 async def async_setup_entry(
@@ -57,7 +55,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PooldoseNumber(CoordinatorEntity, NumberEntity):
+class PooldoseNumber(PooldoseEntity, NumberEntity):
     """Number entity for Seko Pooldose API."""
 
     _attr_has_entity_name = True
@@ -77,19 +75,22 @@ class PooldoseNumber(CoordinatorEntity, NumberEntity):
         enabled_by_default: bool = True,
     ) -> None:
         """Initialize a PooldoseNumber entity."""
-        super().__init__(coordinator)
-        self._api = api
-        self._attr_translation_key = translation_key
-        self._attr_unique_id = f"{serialnumber}_{key}"
-        self._key = key
+        super().__init__(
+            coordinator,
+            api,
+            translation_key,
+            uid,
+            key,
+            serialnumber,
+            device_info(device_info_dict),
+            enabled_by_default,
+        )
         self._attr_native_min_value = float(defaults["min"])
         self._attr_native_max_value = float(defaults["max"])
         self._attr_native_unit_of_measurement = str(defaults["unit"])
-        self._attr_native_step = float(defaults["resolution"])
+        self._attr_native_step = float(defaults["step"])
         self._attr_entity_category = entity_category
         self._attr_device_class = device_class
-        self._attr_device_info = device_info(device_info_dict)
-        self._attr_entity_registry_enabled_default = enabled_by_default
 
     @property
     def native_value(self) -> float | int | None:

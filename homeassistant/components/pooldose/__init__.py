@@ -47,18 +47,22 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
             url = f"http://{host}/api/v1/network/wifi/getStation"
             timeout = aiohttp.ClientTimeout(total=5)
             async with session.post(url, headers=headers, timeout=timeout) as resp:
-                pass
+                data = await resp.json()
         except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
-            # server always returns bad result due to a bug, however, result can be parsed...
+            # server sometimes returns bad response due to an internal bug, however result can be parsed...
             text = str(err)
             text = text.replace("\\\\n", "").replace("\\\\t", "")
             json_start = text.find("{")
             json_end = text.rfind("}") + 1
             if json_start != -1 and json_end != -1:
                 data = json.loads(text[json_start:json_end])
-                device_info["SSID"] = data.get("SSID")
-                device_info["MAC"] = data.get("MAC")
-                device_info["IP"] = data.get("IP")
+
+        try:
+            device_info["SSID"] = data.get("SSID")
+            device_info["MAC"] = data.get("MAC")
+            device_info["IP"] = data.get("IP")
+        except json.JSONDecodeError as err:
+            _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
 
         await asyncio.sleep(1)
         # Network Info
@@ -89,6 +93,7 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
         except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
             _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
 
+        await asyncio.sleep(1)
         # InfoRelease
         try:
             url = f"http://{host}/api/v1/infoRelease"
@@ -109,6 +114,7 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
         except (TimeoutError, aiohttp.ClientError, json.JSONDecodeError) as err:
             _LOGGER.error("Failed to fetch device info from %s: %s", url, err)
 
+        await asyncio.sleep(1)
         # Model Info from /api/v1/debug/config
         try:
             url = f"http://{host}/api/v1/debug/config"

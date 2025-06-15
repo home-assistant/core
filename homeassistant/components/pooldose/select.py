@@ -12,12 +12,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import SELECT_MAP, SELECT_OPTION_CONVERSION, device_info
+from .entity import PooldoseEntity
 
 
 async def async_setup_entry(
@@ -56,7 +54,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PooldoseSelect(CoordinatorEntity, SelectEntity):
+class PooldoseSelect(PooldoseEntity, SelectEntity):
     """Select entity for controlling Seko Pooldose API select options."""
 
     _attr_has_entity_name = True
@@ -75,17 +73,20 @@ class PooldoseSelect(CoordinatorEntity, SelectEntity):
         enabled_by_default: bool = True,
     ) -> None:
         """Initialize the PooldoseSelect entity."""
-        super().__init__(coordinator)
-        self._api = api
-        self._attr_translation_key = translation_key
-        self._attr_unique_id = f"{serialnumber}_{key}"
-        self._key = key
+        super().__init__(
+            coordinator,
+            api,
+            translation_key,
+            uid,
+            key,
+            serialnumber,
+            device_info(device_info_dict),
+            enabled_by_default,
+        )
         self._raw_options = options
         self._options_map = {str(val): label for val, label in options}
         self._reverse_map = {label: str(val) for val, label in options}
         self._attr_entity_category = entity_category
-        self._attr_device_info = device_info(device_info_dict)
-        self._attr_entity_registry_enabled_default = enabled_by_default
 
         # Use conversion table for user-friendly labels
         self._conversion = SELECT_OPTION_CONVERSION.get(uid, {})

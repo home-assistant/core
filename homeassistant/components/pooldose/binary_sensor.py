@@ -4,9 +4,9 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import BINARY_SENSOR_MAP, device_info
+from .entity import PooldoseEntity
 
 
 async def async_setup_entry(
@@ -46,7 +46,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PooldoseBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class PooldoseBinarySensor(PooldoseEntity, BinarySensorEntity):
     """Binary sensor entity for Pooldose API."""
 
     _attr_has_entity_name = True
@@ -65,15 +65,18 @@ class PooldoseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         enabled_by_default: bool = True,
     ) -> None:
         """Initialize a PooldoseBinarySensor entity."""
-        super().__init__(coordinator)
-        self._api = api
-        self._attr_translation_key = translation_key
-        self._attr_unique_id = f"{serialnumber}_{key}"
-        self._key = key
+        super().__init__(
+            coordinator,
+            api,
+            translation_key,
+            uid,
+            key,
+            serialnumber,
+            device_info(device_info_dict),
+            enabled_by_default,
+        )
         self._attr_entity_category = entity_category
         self._attr_device_class = device_class
-        self._attr_device_info = device_info(device_info_dict)
-        self._attr_entity_registry_enabled_default = enabled_by_default
 
     @property
     def is_on(self) -> bool | None:
@@ -87,6 +90,7 @@ class PooldoseBinarySensor(CoordinatorEntity, BinarySensorEntity):
             if isinstance(value, dict) and "current" in value:
                 # Example: "F" (False), "O" (On/True)
                 return value["current"] == "F"
-            return None  # noqa: TRY300
+            else:  # noqa: RET505
+                return None
         except (KeyError, TypeError):
             return None
