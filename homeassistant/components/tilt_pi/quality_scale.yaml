@@ -6,9 +6,7 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency:
-    status: exempt
-    comment: No new dependencies.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: |
@@ -73,6 +71,6 @@ rules:
   stale-devices: todo
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: todo
   strict-typing: todo
