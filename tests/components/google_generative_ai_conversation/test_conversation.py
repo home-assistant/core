@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import UserContent
-from homeassistant.components.google_generative_ai_conversation.conversation import (
+from homeassistant.components.google_generative_ai_conversation.entity import (
     ERROR_GETTING_RESPONSE,
     _escape_decode,
     _format_schema,
