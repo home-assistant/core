@@ -6,6 +6,7 @@ from datetime import time
 from typing import Generic, TypeVar, final, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
+from eheimdigital.professionel5e import EheimDigitalProfessionel5e
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.heater import EheimDigitalHeater
 
@@ -41,6 +42,25 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
         set_value_fn=lambda device, value: device.set_day_start_time(value),
     ),
     EheimDigitalTimeDescription[EheimDigitalClassicVario](
+        key="night_start_time",
+        translation_key="night_start_time",
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda device: device.night_start_time,
+        set_value_fn=lambda device, value: device.set_night_start_time(value),
+    ),
+)
+
+PROFESSIONEL5E_DESCRIPTIONS: tuple[
+    EheimDigitalTimeDescription[EheimDigitalProfessionel5e], ...
+] = (
+    EheimDigitalTimeDescription[EheimDigitalProfessionel5e](
+        key="day_start_time",
+        translation_key="day_start_time",
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda device: device.day_start_time,
+        set_value_fn=lambda device, value: device.set_day_start_time(value),
+    ),
+    EheimDigitalTimeDescription[EheimDigitalProfessionel5e](
         key="night_start_time",
         translation_key="night_start_time",
         entity_category=EntityCategory.CONFIG,
@@ -87,6 +107,13 @@ async def async_setup_entry(
                         coordinator, device, description
                     )
                     for description in CLASSICVARIO_DESCRIPTIONS
+                )
+            if isinstance(device, EheimDigitalProfessionel5e):
+                entities.extend(
+                    EheimDigitalTime[EheimDigitalProfessionel5e](
+                        coordinator, device, description
+                    )
+                    for description in PROFESSIONEL5E_DESCRIPTIONS
                 )
             if isinstance(device, EheimDigitalHeater):
                 entities.extend(

@@ -51,11 +51,26 @@
       "manual_speed": {
         "name": "Manual speed"
       },
+      "constant_flow": {
+        "name": "Constant flow"
+      },
       "day_speed": {
         "name": "Day speed"
       },
       "night_speed": {
         "name": "Night speed"
+      },
+      "high_pulse_speed": {
+        "name": "High pulse speed"
+      },
+      "low_pulse_speed": {
+        "name": "Low pulse speed"
+      },
+      "high_pulse_time": {
+        "name": "High pulse time"
+      },
+      "low_pulse_time": {
+        "name": "Low pulse time"
       },
       "temperature_offset": {
         "name": "Temperature offset"
@@ -71,9 +86,19 @@
       "filter_mode": {
         "name": "Filter mode",
         "state": {
+          "constant": "Constant",
           "manual": "Manual",
           "pulse": "Pulse",
           "bio": "Bio"
+        }
+      }
+    },
+    "switch": {
+      "filter_active": {
+        "name": "Filter active",
+        "state": {
+          "on": "Filter active",
+          "off": "Filter inactive"
         }
       }
     },
@@ -82,7 +107,10 @@
         "name": "Current speed"
       },
       "service_hours": {
-        "name": "Remaining hours until service"
+        "name": "Remaining time until service"
+      },
+      "operating_time": {
+        "name": "Operating time"
       },
       "error_code": {
         "name": "Error code",

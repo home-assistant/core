@@ -5,12 +5,13 @@ from dataclasses import dataclass
 from typing import Generic, TypeVar, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
+from eheimdigital.professionel5e import EheimDigitalProfessionel5e
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.types import FilterErrorCode
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.components.sensor.const import SensorDeviceClass
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, UnitOfFrequency, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -63,6 +64,38 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
 )
 
 
+PROFESSIONEL_DESCRIPTIONS: tuple[
+    EheimDigitalSensorDescription[EheimDigitalProfessionel5e], ...
+] = (
+    EheimDigitalSensorDescription[EheimDigitalProfessionel5e](
+        key="current_speed",
+        translation_key="current_speed",
+        value_fn=lambda device: device.current_speed,
+        device_class=SensorDeviceClass.FREQUENCY,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        suggested_display_precision=1,
+    ),
+    EheimDigitalSensorDescription[EheimDigitalProfessionel5e](
+        key="service_hours",
+        translation_key="service_hours",
+        value_fn=lambda device: device.service_hours,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_unit_of_measurement=UnitOfTime.DAYS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    EheimDigitalSensorDescription[EheimDigitalProfessionel5e](
+        key="operating_time",
+        translation_key="operating_time",
+        value_fn=lambda device: device.operating_time,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.DAYS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EheimDigitalConfigEntry,
@@ -83,6 +116,13 @@ async def async_setup_entry(
                         coordinator, device, description
                     )
                     for description in CLASSICVARIO_DESCRIPTIONS
+                ]
+            elif isinstance(device, EheimDigitalProfessionel5e):
+                entities += [
+                    EheimDigitalSensor[EheimDigitalProfessionel5e](
+                        coordinator, device, description
+                    )
+                    for description in PROFESSIONEL_DESCRIPTIONS
                 ]
 
         async_add_entities(entities)
