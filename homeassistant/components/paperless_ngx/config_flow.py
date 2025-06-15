@@ -33,8 +33,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Paperless-ngx."""
 
-    MINOR_VERSION = 2
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -134,7 +132,9 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
         client = Paperless(
             user_input[CONF_URL],
             user_input[CONF_API_KEY],
-            session=async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL]),
+            session=async_get_clientsession(
+                self.hass, user_input.get(CONF_VERIFY_SSL, True)
+            ),
         )
 
         try:
