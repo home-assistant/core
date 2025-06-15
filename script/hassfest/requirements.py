@@ -277,11 +277,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"}
     },
-    "rflink": {
-        # https://github.com/aequitas/python-rflink/issues/78
-        # rflink > pyserial-asyncio
-        "rflink": {"pyserial-asyncio", "async-timeout"}
-    },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
     "roborock": {"python-roborock": {"async-timeout"}},
