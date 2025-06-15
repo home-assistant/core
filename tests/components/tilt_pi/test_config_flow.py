@@ -59,7 +59,7 @@ async def test_abort_if_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_async_step_user_error_invalid_host(
+async def test_successful_recovery_after_invalid_host(
     hass: HomeAssistant,
     mock_tiltpi_client: AsyncMock,
 ) -> None:
@@ -69,13 +69,24 @@ async def test_async_step_user_error_invalid_host(
         context={"source": config_entries.SOURCE_USER},
     )
 
+    # Simulate a invalid host error by providing an invalid URL
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_URL: "not-a-valid-url"},
     )
-
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"url": "invalid_host"}
+
+    # Demonstrate successful connection on retry
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_URL: "http://192.168.1.123:1880"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.123",
+        CONF_PORT: 1880,
+    }
 
 
 async def test_successful_recovery_after_connection_error(
