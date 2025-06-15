@@ -23,6 +23,7 @@ async def test_binary_sensor(
     """Test states of binary sensors."""
     with patch("homeassistant.components.apcupsd.PLATFORMS", [Platform.BINARY_SENSOR]):
         config_entry = await async_init_integration(hass, status=MOCK_STATUS)
+
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
