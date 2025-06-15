@@ -277,6 +277,24 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         elif source == Source.BLUETOOTH.value:
             _LOGGER.debug("Selecting source Bluetooth")
             self._device.select_source_bluetooth()
+
+        # Support a wider range of sources.
+        # See https://github.com/home-assistant/core/issues/141776 for more details.
+        elif "." in source:
+            parts = source.split(".")
+            sourceAccount = "" if len(parts) == 1 else parts[1]
+
+            # Use Python hackery to avoid necessary changes to upstream dependency.
+            class AdhocSource:
+                value = parts[0]
+
+            if sourceAccount:
+                _LOGGER.debug(f"Selecting source {parts[0]}.{sourceAccount}")
+            else:
+                _LOGGER.debug(f"Selecting source {parts[0]}")
+
+            self._device.select_content_item(AdhocSource, sourceAccount)
+
         else:
             _LOGGER.warning("Source %s is not supported", source)
 
