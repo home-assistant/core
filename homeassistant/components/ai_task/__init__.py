@@ -2,8 +2,17 @@
 
 import logging
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    HassJobType,
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, storage
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
@@ -36,6 +45,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_PREFERENCES] = AITaskPreferences(hass)
     await hass.data[DATA_PREFERENCES].async_load()
     async_setup_conversation_http(hass)
+    hass.services.async_register(
+        DOMAIN,
+        "generate_text",
+        async_service_generate_text,
+        schema=vol.Schema(
+            {
+                vol.Required("task_name"): cv.string,
+                vol.Optional("entity_id"): cv.entity_id,
+                vol.Required("instructions"): cv.string,
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+        job_type=HassJobType.Coroutinefunction,
+    )
     return True
 
 
@@ -47,6 +70,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+
+
+async def async_service_generate_text(call: ServiceCall) -> ServiceResponse:
+    """Run the run task service."""
+    result = await async_generate_text(hass=call.hass, **call.data)
+    return result.as_dict()  # type: ignore[return-value]
 
 
 class AITaskPreferences:
