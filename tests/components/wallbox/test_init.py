@@ -14,6 +14,7 @@ from . import (
     setup_integration,
     setup_integration_connection_error,
     setup_integration_read_only,
+    setup_integration_no_eco_mode,
     test_response,
 )
 
@@ -138,3 +139,16 @@ async def test_wallbox_refresh_failed_read_only(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+async def test_wallbox_setup_load_entry_no_eco_mode(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test Wallbox Unload."""
+
+    await setup_integration_no_eco_mode(hass, entry)
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+
