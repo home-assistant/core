@@ -54,3 +54,33 @@ start_conversation:
       required: false
       selector:
         text:
+ask_question:
+  target:
+    entity:
+      domain: assist_satellite
+      supported_features:
+        - assist_satellite.AssistSatelliteEntityFeature.ASK_QUESTION
+  fields:
+    question:
+      required: false
+      example: "What kind of music would you like to play?"
+      default: ""
+      selector:
+        text:
+    question_media_id:
+      required: false
+      selector:
+        text:
+    preannounce:
+      required: false
+      default: true
+      selector:
+        boolean:
+    preannounce_media_id:
+      required: false
+      selector:
+        text:
+    answers:
+      required: false
+      selector:
+        object:

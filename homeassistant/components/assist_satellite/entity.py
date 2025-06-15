@@ -4,11 +4,15 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
 import contextlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
 import time
 from typing import Any, Literal, final
+
+from hassil import Intents, recognize
+from hassil.expression import Expression, ListReference, Sequence
+from hassil.intents import WildcardSlotList
 
 from homeassistant.components import conversation, media_source, stt, tts
 from homeassistant.components.assist_pipeline import (
@@ -105,6 +109,42 @@ class AssistSatelliteAnnouncement:
     """Media ID to be played before announcement."""
 
 
+@dataclass
+class AssistSatellitePossibleAnswer:
+    """Possible answer to a question."""
+
+    id: str
+    """Id of answer that will be matched in a script or automation."""
+
+    sentences: list[str]
+    """List of hassil sentence templates for this answer."""
+
+
+@dataclass
+class AssistSatelliteQuestion:
+    """Question that needs an answer."""
+
+    announcement: AssistSatelliteAnnouncement
+    """Details of question announcement."""
+
+    answers: list[AssistSatellitePossibleAnswer]
+    """List of possible answers to the question."""
+
+
+@dataclass
+class AssistSatelliteAnswer:
+    """Answer to a question."""
+
+    id: str | None
+    """Matched answer id or None if no answer was matched."""
+
+    sentence: str
+    """Raw sentence text from user response."""
+
+    slots: dict[str, Any] = field(default_factory=dict)
+    """Matched slots from answer."""
+
+
 class AssistSatelliteEntity(entity.Entity):
     """Entity encapsulating the state and functionality of an Assist satellite."""
 
@@ -120,6 +160,7 @@ class AssistSatelliteEntity(entity.Entity):
     _is_announcing = False
     _extra_system_prompt: str | None = None
     _wake_word_intercept_future: asyncio.Future[str | None] | None = None
+    _stt_intercept_future: asyncio.Future[str | None] | None = None
     _attr_tts_options: dict[str, Any] | None = None
     _pipeline_task: asyncio.Task | None = None
 
@@ -308,6 +349,121 @@ class AssistSatelliteEntity(entity.Entity):
     ) -> None:
         """Start a conversation from the satellite."""
         raise NotImplementedError
+
+    async def async_internal_ask_question(
+        self,
+        question: str | None = None,
+        question_media_id: str | None = None,
+        preannounce: bool = True,
+        preannounce_media_id: str = PREANNOUNCE_URL,
+        answers: list[dict[str, Any]] | None = None,
+    ) -> AssistSatelliteAnswer | None:
+        """Ask a question and get a user's response from the satellite.
+
+        If question_media_id is not provided, question is synthesized to audio
+        with the selected pipeline.
+
+        If question_media_id is provided, it is played directly. It is possible
+        to omit the message and the satellite will not show any text.
+
+        If preannounce is True, a sound is played before the start message or media.
+        If preannounce_media_id is provided, it overrides the default sound.
+
+        Calls async_ask_question.
+        """
+        await self._cancel_running_pipeline()
+
+        if question is None:
+            question = ""
+
+        if answers is None:
+            answers = []
+
+        announcement = await self._resolve_announcement_media_id(
+            question,
+            question_media_id,
+            preannounce_media_id=preannounce_media_id if preannounce else None,
+        )
+
+        if self._is_announcing:
+            raise SatelliteBusyError
+
+        self._is_announcing = True
+        self._set_state(AssistSatelliteState.RESPONDING)
+
+        try:
+            return await self.async_ask_question(
+                AssistSatelliteQuestion(
+                    announcement=announcement,
+                    answers=[
+                        AssistSatellitePossibleAnswer(
+                            id=answer["id"], sentences=answer["sentences"]
+                        )
+                        for answer in answers
+                    ],
+                )
+            )
+        finally:
+            self._is_announcing = False
+            self._set_state(AssistSatelliteState.IDLE)
+
+    async def async_ask_question(
+        self, question: AssistSatelliteQuestion
+    ) -> AssistSatelliteAnswer | None:
+        """Ask a question and get a user's answer from the satellite."""
+        raise NotImplementedError
+
+    def question_response_to_answer(
+        self, response_text: str, question: AssistSatelliteQuestion
+    ) -> AssistSatelliteAnswer:
+        """Match text to a pre-defined set of answers."""
+        if not question.answers:
+            # Only return raw text
+            return AssistSatelliteAnswer(id=None, sentence=response_text)
+
+        # Build intents and match
+        intents = Intents.from_dict(
+            {
+                "language": self.hass.config.language,
+                "intents": {
+                    "QuestionIntent": {
+                        "data": [
+                            {
+                                "sentences": answer.sentences,
+                                "metadata": {"answer_id": answer.id},
+                            }
+                            for answer in question.answers
+                        ]
+                    }
+                },
+            }
+        )
+
+        # Assume slot list references are wildcards
+        wildcard_names: set[str] = set()
+        for intent in intents.intents.values():
+            for intent_data in intent.data:
+                for sentence in intent_data.sentences:
+                    _collect_list_references(sentence, wildcard_names)
+
+        for wildcard_name in wildcard_names:
+            intents.slot_lists[wildcard_name] = WildcardSlotList(wildcard_name)
+
+        # Match response text
+        result = recognize(response_text, intents)
+        if result is None:
+            # No match
+            return AssistSatelliteAnswer(id=None, sentence=response_text)
+
+        assert result.intent_metadata
+        return AssistSatelliteAnswer(
+            id=result.intent_metadata["answer_id"],
+            sentence=response_text,
+            slots={
+                entity_name: entity.value
+                for entity_name, entity in result.entities.items()
+            },
+        )
 
     async def async_accept_pipeline_from_satellite(
         self,
@@ -577,3 +733,15 @@ class AssistSatelliteEntity(entity.Entity):
             media_id_source=media_id_source,
             preannounce_media_id=preannounce_media_id,
         )
+
+
+def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
+    """Collect list reference names recursively."""
+    if isinstance(expression, Sequence):
+        seq: Sequence = expression
+        for item in seq.items:
+            _collect_list_references(item, list_names)
+    elif isinstance(expression, ListReference):
+        # {list}
+        list_ref: ListReference = expression
+        list_names.add(list_ref.slot_name)
