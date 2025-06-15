@@ -421,7 +421,10 @@ async def async_setup_entry(
     # periodical (or manual) self test since last daemon restart. It might not be available
     # when we set up the integration, and we do not know if it would ever be available. Here we
     # add it anyway and mark it as unknown initially.
-    for resource in available_resources | {LAST_S_TEST}:
+    #
+    # We sort the resources to ensure deterministic entity creation order, which generally helps
+    # in tests and entity registry consistency.
+    for resource in sorted(available_resources | {LAST_S_TEST}):
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue
