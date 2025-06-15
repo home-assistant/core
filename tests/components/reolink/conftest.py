@@ -10,6 +10,7 @@ from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import (
+    CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
@@ -194,6 +195,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_ONLY: False,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
