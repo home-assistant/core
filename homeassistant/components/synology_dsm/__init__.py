@@ -37,6 +37,8 @@ from .coordinator import (
 )
 from .services import async_setup_services
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -47,6 +49,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_setup_services(hass)
 
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Synology DSM services."""
+    await async_setup_services(hass)
     return True
 
 
