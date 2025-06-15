@@ -2654,6 +2654,7 @@ async def test_migrate_of_incompatible_config_entry(
         "config_subentries_data",
         "mock_device_user_input",
         "mock_entity_user_input",
+        "mock_entity_failed_user_input",
         "mock_entity_details_user_input",
         "mock_entity_details_failed_user_input",
         "mock_mqtt_user_input",
@@ -2665,6 +2666,16 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
             {"name": "Hatch"},
+            (
+                (
+                    (
+                        {"entity_category": "config"},
+                        {
+                            "entity_category": "sensor_entity_category_must_not_be_config"
+                        },
+                    ),
+                )
+            ),
             {"device_class": "door"},
             (),
             {
@@ -2684,6 +2695,7 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_BUTTON_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
             {"name": "Restart"},
+            (),
             {"device_class": "restart"},
             (),
             {
@@ -2704,6 +2716,7 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_COVER_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Blind"},
+            (),
             {"device_class": "blind"},
             (),
             {
@@ -2790,6 +2803,7 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_FAN_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Breezer"},
+            (),
             {
                 "fan_feature_speed": True,
                 "fan_feature_preset_modes": True,
@@ -2941,6 +2955,7 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
             {"name": "Milkman alert"},
+            (),
             None,
             None,
             {
@@ -2960,6 +2975,7 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {},
+            (),
             None,
             None,
             {
@@ -2979,6 +2995,16 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_SENSOR_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Energy"},
+            (
+                (
+                    (
+                        {"entity_category": "config"},
+                        {
+                            "entity_category": "sensor_entity_category_must_not_be_config"
+                        },
+                    ),
+                )
+            ),
             {"device_class": "enum", "options": ["low", "medium", "high"]},
             (
                 (
@@ -3035,6 +3061,7 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Energy"},
+            (),
             {
                 "state_class": "measurement",
             },
@@ -3057,6 +3084,7 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Outlet"},
+            (),
             {"device_class": "outlet"},
             (),
             {
@@ -3085,6 +3113,7 @@ async def test_migrate_of_incompatible_config_entry(
             MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
             {"name": "Basic light"},
+            (),
             {},
             {},
             {
@@ -3146,6 +3175,7 @@ async def test_subentry_configflow(
     config_subentries_data: dict[str, Any],
     mock_device_user_input: dict[str, Any],
     mock_entity_user_input: dict[str, Any],
+    mock_entity_failed_user_input: tuple[tuple[dict[str, Any], dict[str, str]],],
     mock_entity_details_user_input: dict[str, Any],
     mock_entity_details_failed_user_input: tuple[
         tuple[dict[str, Any], dict[str, str]],
@@ -3201,6 +3231,16 @@ async def test_subentry_configflow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "entity"
+
+    # First test platform validators if set of test
+    for failed_user_input, failed_errors in mock_entity_failed_user_input:
+        # Test an invalid entity details user input case
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={"platform": component["platform"]} | failed_user_input,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == failed_errors
 
     # Try again with valid data
     result = await hass.config_entries.subentries.async_configure(
@@ -3906,9 +3946,26 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
             {
                 "command_topic": "test-topic2",
             },
-        )
+        ),
+        (
+            (
+                ConfigSubentryData(
+                    data=MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
+                    subentry_type="device",
+                    title="Mock subentry",
+                ),
+            ),
+            {
+                "platform": "notify",
+                "name": "The second notifier",
+                "entity_category": "config",
+            },
+            {
+                "command_topic": "test-topic2",
+            },
+        ),
     ],
-    ids=["notify_notify"],
+    ids=["notify_notify_no_entity_category", "notify_notify_entity_category"],
 )
 async def test_subentry_reconfigure_add_entity(
     hass: HomeAssistant,
