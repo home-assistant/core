@@ -13,8 +13,8 @@ from . import (
     authorisation_response,
     setup_integration,
     setup_integration_connection_error,
-    setup_integration_read_only,
     setup_integration_no_eco_mode,
+    setup_integration_read_only,
     test_response,
 )
 
