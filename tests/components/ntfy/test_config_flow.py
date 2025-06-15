@@ -12,7 +12,12 @@ from aiontfy.exceptions import (
 )
 import pytest
 
-from homeassistant.components.ntfy.const import CONF_TOPIC, DOMAIN, SECTION_AUTH
+from homeassistant.components.ntfy.const import (
+    CONF_TOPIC,
+    DOMAIN,
+    SECTION_AUTH,
+    SECTION_FILTER,
+)
 from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
 from homeassistant.const import (
     CONF_NAME,
@@ -204,7 +209,10 @@ async def test_add_topic_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: "mytopic"},
+        user_input={
+            CONF_TOPIC: "mytopic",
+            SECTION_FILTER: {},
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry_id = list(config_entry.subentries)[0]
@@ -252,14 +260,21 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: ""},
+        user_input={
+            CONF_TOPIC: "",
+            SECTION_FILTER: {},
+        },
     )
 
     mock_random.assert_called_once()
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: "randomtopic", CONF_NAME: "mytopic"},
+        user_input={
+            CONF_TOPIC: "randomtopic",
+            CONF_NAME: "mytopic",
+            SECTION_FILTER: {},
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -306,7 +321,10 @@ async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> Non
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: "invalid,topic"},
+        user_input={
+            CONF_TOPIC: "invalid,topic",
+            SECTION_FILTER: {},
+        },
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -314,7 +332,10 @@ async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> Non
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: "mytopic"},
+        user_input={
+            CONF_TOPIC: "mytopic",
+            SECTION_FILTER: {},
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -360,7 +381,10 @@ async def test_topic_already_configured(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: "mytopic"},
+        user_input={
+            CONF_TOPIC: "mytopic",
+            SECTION_FILTER: {},
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
