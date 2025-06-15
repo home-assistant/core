@@ -10,10 +10,15 @@ import logging
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_TIMEOUT, SOFTWARE_VERSION
+from .const import (
+    CONF_SERIALNUMBER,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TIMEOUT,
+    SOFTWARE_VERSION,
+)
 from .coordinator import PooldoseCoordinator
 from .pooldose_api import PooldoseAPIClient
 
@@ -121,11 +126,26 @@ async def async_update_device_info(host: str) -> dict[str, str | None]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Seko Pooldose from a config entry."""
-    config = entry.data
-    host = config["host"]
-    serial = config["serialnumber"]
-    scan_interval = config.get("scan_interval", DEFAULT_SCAN_INTERVAL)
-    timeout = config.get("timeout", DEFAULT_TIMEOUT)
+    # config = entry.data
+    # host = config[CONF_HOST]
+    # serial = config[CONF_SERIALNUMBER]
+    # scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    # timeout = config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+
+    # Obtain values, preferring options (re‑configure) over static data
+    host = entry.options.get(CONF_HOST, entry.data[CONF_HOST])
+    serial = entry.data[CONF_SERIALNUMBER]  # serial never changes
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    timeout = entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+
+    # host = entry.options.get(CONF_HOST)
+    # serial = entry.options.get(CONF_SERIALNUMBER)
+    # scan_interval = entry.options.get(
+    #     CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    # )
+    # timeout = entry.options.get(
+    #     CONF_TIMEOUT, entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+    # )
 
     api = PooldoseAPIClient(
         host=host,

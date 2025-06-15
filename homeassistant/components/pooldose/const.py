@@ -397,5 +397,7 @@ SELECT_OPTION_CONVERSION: dict[str, dict[str, str]] = {
     }
 }
 
+# DEFAULT_HOST = "KOMMSPOT"  # Default host for Pooldose device, used in config flow
+
 # for testing only:
 DEFAULT_HOST = "192.168.178.137"

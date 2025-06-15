@@ -9,7 +9,7 @@
           "timeout": "Connection timeout"
         },
         "data_description": {
-          "host": "Host name or IP address of the PoolDose device",
+          "host": "Host name or IP address of the PoolDose device. \nThe device password must be set to default (0000).",
           "scan_interval": "In seconds, default is 600",
           "timeout": "in seconds, default is 30"
         }
