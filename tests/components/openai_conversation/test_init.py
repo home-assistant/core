@@ -24,7 +24,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("service_data", "expected_args", "filename"),
+    ("service_data", "expected_args"),
     [
         (
             {"prompt": "Picture of a dog"},
@@ -35,7 +35,6 @@ from tests.common import MockConfigEntry
                 "background": "auto",
                 "moderation": "auto",
             },
-            "Picture_of_a_dog_1700000000.png",
         ),
         (
             {
@@ -52,7 +51,6 @@ from tests.common import MockConfigEntry
                 "background": "transparent",
                 "moderation": "auto",
             },
-            "0a628e3f1e39d68196687ea03bc8d564_1700000000.png",
         ),
         (
             {
@@ -70,7 +68,6 @@ from tests.common import MockConfigEntry
                 "background": "opaque",
                 "moderation": "low",
             },
-            "Picture_of_a_cat_1700000000.png",
         ),
         (
             {
@@ -87,7 +84,6 @@ from tests.common import MockConfigEntry
                 "background": "auto",
                 "moderation": "auto",
             },
-            "Picture_of_a_dog_1700000000.png",
         ),
         (
             {
@@ -102,7 +98,6 @@ from tests.common import MockConfigEntry
                 "background": "auto",
                 "moderation": "auto",
             },
-            "Picture_of_a_dog_1700000000.png",
         ),
         (
             {
@@ -117,7 +112,6 @@ from tests.common import MockConfigEntry
                 "background": "auto",
                 "moderation": "auto",
             },
-            "Picture_of_a_dog_1700000000.png",
         ),
         (
             {
@@ -132,7 +126,6 @@ from tests.common import MockConfigEntry
                 "background": "auto",
                 "moderation": "auto",
             },
-            "Picture_of_a_dog_1700000000.png",
         ),
     ],
 )
@@ -142,7 +135,6 @@ async def test_generate_image_service(
     mock_init_component,
     service_data,
     expected_args,
-    filename,
 ) -> None:
     """Test generate image service."""
     service_data["config_entry"] = mock_config_entry.entry_id
@@ -150,26 +142,19 @@ async def test_generate_image_service(
     expected_args["output_format"] = "png"
     expected_args["n"] = 1
 
-    with (
-        patch(
-            "openai.resources.images.AsyncImages.generate",
-            return_value=ImagesResponse(
-                created=1700000000,
-                data=[
-                    Image(
-                        b64_json="QQ==",
-                        revised_prompt="",
-                        url=None,
-                    )
-                ],
-            ),
-        ) as mock_create,
-        patch("builtins.open", mock_open()) as mock_file,
-        patch(
-            "homeassistant.components.openai_conversation.async_sign_path",
-            side_effect=lambda _, url, _2: url + "?authSig=bla",
+    with patch(
+        "openai.resources.images.AsyncImages.generate",
+        return_value=ImagesResponse(
+            created=1700000000,
+            data=[
+                Image(
+                    b64_json="QQ==",
+                    revised_prompt="",
+                    url=None,
+                )
+            ],
         ),
-    ):
+    ) as mock_create:
         response = await hass.services.async_call(
             "openai_conversation",
             "generate_image",
@@ -178,15 +163,8 @@ async def test_generate_image_service(
             return_response=True,
         )
 
-    assert mock_file.call_count == 1
-    assert str(mock_file.mock_calls[0].args[0]).endswith(
-        f"media/openai_conversation/{filename}"
-    )
-    assert mock_file.mock_calls[0].args[1] == "wb"
-    mock_file().write.assert_called_once_with(b"A")
-
     assert response == {
-        "url": f"http://10.10.10.10:8123/media/local/openai_conversation/{filename}?authSig=bla",
+        "url": "http://10.10.10.10:8123/api/openai_conversation/images/1700000000_0.png",
         "revised_prompt": expected_args["prompt"],
     }
     assert len(mock_create.mock_calls) == 1
@@ -194,7 +172,7 @@ async def test_generate_image_service(
 
 
 @pytest.mark.parametrize(
-    ("service_data", "expected_args", "filename"),
+    ("service_data", "expected_args"),
     [
         (
             {"prompt": "Picture of a dog"},
@@ -204,7 +182,6 @@ async def test_generate_image_service(
                 "quality": "hd",
                 "style": "vivid",
             },
-            "Picture_of_a_dog_1700000000.png",
         ),
         (
             {
@@ -220,7 +197,6 @@ async def test_generate_image_service(
                 "quality": "hd",
                 "style": "vivid",
             },
-            "0a628e3f1e39d68196687ea03bc8d564_1700000000.png",
         ),
         (
             {
@@ -235,7 +211,6 @@ async def test_generate_image_service(
                 "quality": "standard",
                 "style": "natural",
             },
-            "Picture_of_a_cat_1700000000.png",
         ),
         (
             {
@@ -249,7 +224,6 @@ async def test_generate_image_service(
                 "quality": "hd",
                 "style": "vivid",
             },
-            "Picture_of_a_dog_1700000000.png",
         ),
         (
             {
@@ -263,7 +237,6 @@ async def test_generate_image_service(
                 "quality": "standard",
                 "style": "vivid",
             },
-            "Picture_of_a_dog_1700000000.png",
         ),
         (
             {
@@ -277,7 +250,6 @@ async def test_generate_image_service(
                 "quality": "standard",
                 "style": "vivid",
             },
-            "Picture_of_a_dog_1700000000.png",
         ),
         (
             {
@@ -291,7 +263,6 @@ async def test_generate_image_service(
                 "quality": "hd",
                 "style": "vivid",
             },
-            "Picture_of_a_dog_1700000000.png",
         ),
     ],
 )
@@ -301,7 +272,6 @@ async def test_generate_image_service_fallback_dalle(
     mock_init_component,
     service_data,
     expected_args,
-    filename,
 ) -> None:
     """Test generate image service fallback to DELL-E if model not available."""
     service_data["config_entry"] = mock_config_entry.entry_id
@@ -309,35 +279,28 @@ async def test_generate_image_service_fallback_dalle(
     expected_args["response_format"] = "b64_json"
     expected_args["n"] = 1
 
-    with (
-        patch(
-            "openai.resources.images.AsyncImages.generate",
-            side_effect=[
-                PermissionDeniedError(
-                    response=httpx.Response(
-                        status_code=403, request=httpx.Request(method="GET", url="")
-                    ),
-                    body=None,
-                    message="Your organization must be verified to use the model `gpt-image-1`. Please go to: https://platform.openai.com/settings/organization/general and click on Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate.",
+    with patch(
+        "openai.resources.images.AsyncImages.generate",
+        side_effect=[
+            PermissionDeniedError(
+                response=httpx.Response(
+                    status_code=403, request=httpx.Request(method="GET", url="")
                 ),
-                ImagesResponse(
-                    created=1700000000,
-                    data=[
-                        Image(
-                            b64_json="QQ==",
-                            revised_prompt="A clear and detailed picture of an ordinary canine",
-                            url=None,
-                        )
-                    ],
-                ),
-            ],
-        ) as mock_create,
-        patch("builtins.open", mock_open()) as mock_file,
-        patch(
-            "homeassistant.components.openai_conversation.async_sign_path",
-            side_effect=lambda _, url, _2: url + "?authSig=bla",
-        ),
-    ):
+                body=None,
+                message="Your organization must be verified to use the model `gpt-image-1`. Please go to: https://platform.openai.com/settings/organization/general and click on Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate.",
+            ),
+            ImagesResponse(
+                created=1700000000,
+                data=[
+                    Image(
+                        b64_json="QQ==",
+                        revised_prompt="A clear and detailed picture of an ordinary canine",
+                        url=None,
+                    )
+                ],
+            ),
+        ],
+    ) as mock_create:
         response = await hass.services.async_call(
             "openai_conversation",
             "generate_image",
@@ -346,15 +309,8 @@ async def test_generate_image_service_fallback_dalle(
             return_response=True,
         )
 
-    assert mock_file.call_count == 1
-    assert str(mock_file.mock_calls[0].args[0]).endswith(
-        f"media/openai_conversation/{filename}"
-    )
-    assert mock_file.mock_calls[0].args[1] == "wb"
-    mock_file().write.assert_called_once_with(b"A")
-
     assert response == {
-        "url": f"http://10.10.10.10:8123/media/local/openai_conversation/{filename}?authSig=bla",
+        "url": "http://10.10.10.10:8123/api/openai_conversation/images/1700000000_0.png",
         "revised_prompt": "A clear and detailed picture of an ordinary canine",
     }
     assert len(mock_create.mock_calls) == 2

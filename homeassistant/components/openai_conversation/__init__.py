@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import base64
-from datetime import timedelta
-import hashlib
+from datetime import datetime, timedelta
+from functools import partial
+from io import BytesIO
 from mimetypes import guess_file_type
 from pathlib import Path
 
+from aiohttp import web
 import openai
 from openai.types.images_response import ImagesResponse
 from openai.types.responses import (
@@ -19,9 +21,10 @@ from openai.types.responses import (
     ResponseInputParam,
     ResponseInputTextParam,
 )
+from PIL import Image
 import voluptuous as vol
 
-from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import (
@@ -40,10 +43,10 @@ from homeassistant.helpers import (
     issue_registry as ir,
     selector,
 )
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import raise_if_invalid_path
 
 from .const import (
     CONF_CHAT_MODEL,
@@ -53,14 +56,17 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    DATA_IMAGES,
     DOMAIN,
-    IMAGE_AUTH_EXPIRY_TIME,
+    IMAGE_EXPIRY_TIME,
     LOGGER,
+    MAX_IMAGES,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    ImageData,
 )
 
 SERVICE_GENERATE_IMAGE = "generate_image"
@@ -79,6 +85,24 @@ def encode_file(file_path: str) -> tuple[str, str]:
         mime_type = "application/octet-stream"
     with open(file_path, "rb") as image_file:
         return (mime_type, base64.b64encode(image_file.read()).decode("utf-8"))
+
+
+def _cleanup_images(image_storage: dict[str, ImageData], num_to_remove: int) -> None:
+    """Remove old images to keep the storage size under the limit."""
+    if num_to_remove <= 0:
+        return
+
+    if num_to_remove >= len(image_storage):
+        image_storage.clear()
+        return
+
+    sorted_images = sorted(
+        image_storage.items(),
+        key=lambda item: item[1].timestamp,
+    )
+
+    for filename, _ in sorted_images[:num_to_remove]:
+        image_storage.pop(filename, None)
 
 
 async def _render_image(call: ServiceCall) -> ServiceResponse:
@@ -182,49 +206,44 @@ async def _render_image(call: ServiceCall) -> ServiceResponse:
             translation_key="generate_image_deprecated_params",
         )
 
-    if not response.data or not response.data[0].b64_json:
+    if not response.data:
         raise HomeAssistantError("No image data returned")
 
-    if len(call.data[CONF_PROMPT]) <= 32:
-        filename = f"{call.data[CONF_PROMPT].replace(' ', '_').replace('/', '_').replace('.', '_')}_{response.created}.png"
-    else:
-        filename = f"{hashlib.md5(call.data[CONF_PROMPT].encode('utf-8')).hexdigest()}_{response.created}.png"
+    IMAGE_STORAGE = call.hass.data.setdefault(DATA_IMAGES, {})
 
-    if DOMAIN in call.hass.config.media_dirs:
-        source_dir_id = DOMAIN
-        base_path = call.hass.config.media_dirs[source_dir_id]
-        directory = Path(base_path)
-        media_path = f"/media/{DOMAIN}/{filename}"
-        file_path = directory / filename
-    else:
-        source_dir_id = list(call.hass.config.media_dirs)[0]
-        base_path = call.hass.config.media_dirs[source_dir_id]
-        directory = Path(base_path, DOMAIN)
-        file_path = directory / filename
-        media_path = f"/media/{source_dir_id}/{DOMAIN}/{filename}"
+    if len(IMAGE_STORAGE) + len(response.data) > MAX_IMAGES:
+        _cleanup_images(
+            IMAGE_STORAGE, len(response.data) + len(IMAGE_STORAGE) - MAX_IMAGES
+        )
 
-    raise_if_invalid_path(str(file_path))
+    for idx, response_data in enumerate(response.data):
+        if not response_data.b64_json:
+            raise HomeAssistantError("No image data returned")
 
-    def save_image(b64_json: str, path: Path) -> None:
-        """Save image to file."""
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "wb") as image_file:
-            image_file.write(base64.b64decode(b64_json))
+        if not response_data.revised_prompt:
+            response_data.revised_prompt = call.data[CONF_PROMPT]
 
-    await call.hass.async_add_executor_job(
-        save_image, response.data[0].b64_json, file_path
-    )
+        filename = f"{response.created}_{idx}.{model_args.get('output_format', 'png')}"
 
-    LOGGER.debug("Image saved to %s", file_path)
+        IMAGE_STORAGE[filename] = ImageData(
+            data=base64.b64decode(response_data.b64_json),
+            timestamp=response.created,
+            mime_type=f"image/{model_args.get('output_format', 'png')}",
+            title=response_data.revised_prompt,
+        )
 
-    response.data[0].url = get_url(call.hass) + async_sign_path(
-        call.hass,
-        media_path,
-        timedelta(seconds=IMAGE_AUTH_EXPIRY_TIME),
-    )
+        def _purge_image(filename: str, now: datetime) -> None:
+            """Remove image from storage."""
+            IMAGE_STORAGE.pop(filename, None)
 
-    if not response.data[0].revised_prompt:
-        response.data[0].revised_prompt = call.data[CONF_PROMPT]
+        if IMAGE_EXPIRY_TIME > 0:
+            async_track_point_in_time(
+                call.hass,
+                partial(_purge_image, filename),
+                datetime.now() + timedelta(seconds=IMAGE_EXPIRY_TIME),
+            )
+
+        response_data.url = get_url(call.hass) + f"/api/{DOMAIN}/images/{filename}"
 
     return response.data[0].model_dump(exclude={"b64_json"})
 
@@ -378,6 +397,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.ONLY,
     )
 
+    hass.http.register_view(ImageView)
+    hass.http.register_view(ThumbnailView)
+
     return True
 
 
@@ -409,3 +431,62 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload OpenAI."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+class ImageView(HomeAssistantView):
+    """View to generated images."""
+
+    url = f"/api/{DOMAIN}/images/{{filename}}"
+    name = f"api:{DOMAIN}/images"
+    requires_auth = False
+
+    async def get(
+        self,
+        request: web.Request,
+        filename: str,
+    ) -> web.Response:
+        """Serve image."""
+        hass = request.app[KEY_HASS]
+        IMAGE_STORAGE = hass.data.setdefault(DATA_IMAGES, {})
+        image_data = IMAGE_STORAGE.get(filename)
+
+        if image_data is None:
+            raise web.HTTPNotFound
+
+        return web.Response(
+            body=image_data.data,
+            content_type=image_data.mime_type,
+        )
+
+
+class ThumbnailView(HomeAssistantView):
+    """View to generated images."""
+
+    url = f"/api/{DOMAIN}/thumbnails/{{filename}}"
+    name = f"api:{DOMAIN}/thumbnails"
+    requires_auth = False
+
+    async def get(
+        self,
+        request: web.Request,
+        filename: str,
+    ) -> web.Response:
+        """Serve image."""
+        hass = request.app[KEY_HASS]
+        IMAGE_STORAGE = hass.data.setdefault(DATA_IMAGES, {})
+        image_data = IMAGE_STORAGE.get(filename)
+
+        if image_data is None:
+            raise web.HTTPNotFound
+
+        if image_data.thumbnail is None:
+            image = Image.open(BytesIO(image_data.data))
+            image.thumbnail((256, 256))
+            image_bytes = BytesIO()
+            image.save(image_bytes, format=image_data.mime_type.split("/")[-1].upper())
+            image_data.thumbnail = image_bytes.getvalue()
+
+        return web.Response(
+            body=image_data.thumbnail,
+            content_type=image_data.mime_type,
+        )
