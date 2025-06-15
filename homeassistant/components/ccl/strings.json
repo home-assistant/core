@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up your Bresser weather station?"
+        "description": "Ready to set up your weather station?"
       }
     },
     "create_entry": {
