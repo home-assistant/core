@@ -10,7 +10,7 @@
         "data_description": {
           "url": "URL to connect to the Paperless-ngx instance",
           "api_key": "API key to connect to the Paperless-ngx API",
-          "verify_ssl": "Verify the SSL certificate of the Paperless-ngx instance"
+          "verify_ssl": "Verify the SSL certificate of the Paperless-ngx instance. Disable this option if you’re using a self-signed certificate."
         },
         "title": "Add Paperless-ngx instance"
       },

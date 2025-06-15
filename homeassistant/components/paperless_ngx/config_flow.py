@@ -79,18 +79,19 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(entry, data=user_input)
 
+        if user_input is not None:
+            suggested_values = user_input
+        else:
+            suggested_values = {
+                CONF_URL: entry.data[CONF_URL],
+                CONF_VERIFY_SSL: entry.data.get(CONF_VERIFY_SSL, True),
+            }
+
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA,
-                suggested_values={
-                    CONF_URL: user_input[CONF_URL]
-                    if user_input is not None
-                    else entry.data[CONF_URL],
-                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL]
-                    if user_input is not None
-                    else entry.data.get(CONF_VERIFY_SSL, True),
-                },
+                suggested_values=suggested_values,
             ),
             errors=errors,
         )
