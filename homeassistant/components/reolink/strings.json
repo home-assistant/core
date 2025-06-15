@@ -960,6 +960,9 @@
       },
       "privacy_mode": {
         "name": "Privacy mode"
+      },
+      "privacy_mask": {
+        "name": "Privacy mask"
       }
     }
   }
