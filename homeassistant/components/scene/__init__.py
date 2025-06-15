@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import functools as ft
 import importlib
 import logging
@@ -77,7 +78,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_TURN_ON,
         {ATTR_TRANSITION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))},
-        "_async_activate",
+        "_async_internal_activate",
     )
 
     return True
@@ -97,6 +98,7 @@ class Scene(RestoreEntity):
     """A scene is a group of entities and the states we want them to be."""
 
     _attr_should_poll = False
+    _activate_method: Callable[..., Awaitable[None]] | None = None
     __last_activated: str | None = None
 
     @property
@@ -107,15 +109,22 @@ class Scene(RestoreEntity):
             return None
         return self.__last_activated
 
+    async def _async_internal_activate(self, **kwargs: Any) -> None:
+        """Activate scene."""
+        if self._activate_method is None:
+            self._set_activated()
+            await self.async_activate(**kwargs)
+        else:
+            await self._activate_method(**kwargs)
+
     @final
-    async def _async_activate(self, **kwargs: Any) -> None:
-        """Activate scene.
+    def _set_activated(self) -> None:
+        """Call when the scene has been activated.
 
         Should not be overridden, handle setting last press timestamp.
         """
         self.__last_activated = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
-        await self.async_activate(**kwargs)
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the scene is added to hass."""
