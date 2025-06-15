@@ -89,7 +89,7 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
                     else entry.data[CONF_URL],
                     CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL]
                     if user_input is not None
-                    else entry.data[CONF_VERIFY_SSL],
+                    else entry.data.get(CONF_VERIFY_SSL, True),
                 },
             ),
             errors=errors,
