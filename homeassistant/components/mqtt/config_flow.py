@@ -66,6 +66,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_DISCOVERY,
     CONF_EFFECT,
+    CONF_ENTITY_CATEGORY,
     CONF_HOST,
     CONF_NAME,
     CONF_OPTIMISTIC,
@@ -84,6 +85,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
@@ -411,6 +413,14 @@ SUBENTRY_AVAILABILITY_SCHEMA = vol.Schema(
         ): TEXT_SELECTOR,
     }
 )
+ENTITY_CATEGORY_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[category.value for category in EntityCategory],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_ENTITY_CATEGORY,
+        sort=True,
+    )
+)
 
 # Sensor specific selectors
 SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
@@ -604,6 +614,18 @@ def validate_fan_platform_config(config: dict[str, Any]) -> dict[str, str]:
 
 
 @callback
+def validate_binary_sensor_platform_config(
+    config: dict[str, Any],
+) -> dict[str, str]:
+    """Validate the binary sensor sensor entity_category."""
+    errors: dict[str, str] = {}
+    if config.get(CONF_ENTITY_CATEGORY) == EntityCategory.CONFIG:
+        errors[CONF_ENTITY_CATEGORY] = "sensor_entity_category_must_not_be_config"
+
+    return errors
+
+
+@callback
 def validate_sensor_platform_config(
     config: dict[str, Any],
 ) -> dict[str, str]:
@@ -647,6 +669,9 @@ def validate_sensor_platform_config(
         and config.get(CONF_UNIT_OF_MEASUREMENT) not in STATE_CLASS_UNITS[state_class]
     ):
         errors[CONF_UNIT_OF_MEASUREMENT] = "invalid_uom_for_state_class"
+
+    if config.get(CONF_ENTITY_CATEGORY) == EntityCategory.CONFIG:
+        errors[CONF_ENTITY_CATEGORY] = "sensor_entity_category_must_not_be_config"
 
     return errors
 
@@ -728,6 +753,11 @@ COMMON_ENTITY_FIELDS: dict[str, PlatformField] = {
         selector=TEXT_SELECTOR,
         required=False,
         exclude_from_reconfig=True,
+        default=None,
+    ),
+    CONF_ENTITY_CATEGORY: PlatformField(
+        selector=ENTITY_CATEGORY_SELECTOR,
+        required=False,
         default=None,
     ),
     CONF_ENTITY_PICTURE: PlatformField(
@@ -1855,7 +1885,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
     str,
     Callable[[dict[str, Any]], dict[str, str]] | None,
 ] = {
-    Platform.BINARY_SENSOR.value: None,
+    Platform.BINARY_SENSOR.value: validate_binary_sensor_platform_config,
     Platform.BUTTON.value: None,
     Platform.COVER.value: validate_cover_platform_config,
     Platform.FAN.value: validate_fan_platform_config,
@@ -1995,13 +2025,12 @@ def validate_user_input(
             )
 
     if config_validator is not None:
-        if TYPE_CHECKING:
-            assert component_data is not None
-
         errors |= config_validator(
-            calculate_merged_config(
+            merged_user_input
+            if component_data is None
+            else calculate_merged_config(
                 merged_user_input, data_schema_fields, component_data
-            ),
+            )
         )
 
     return merged_user_input, errors
@@ -2751,8 +2780,16 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             entity_name_label = f" ({name})" if name is not None else ""
         data_schema = data_schema_from_fields(data_schema_fields, reconfig=reconfig)
         if user_input is not None:
+            platform: str = (
+                user_input[CONF_PLATFORM]
+                if component_data is None
+                else component_data[CONF_PLATFORM]
+            )
             merged_user_input, errors = validate_user_input(
-                user_input, data_schema_fields, component_data=component_data
+                user_input,
+                data_schema_fields,
+                component_data=component_data,
+                config_validator=ENTITY_CONFIG_VALIDATOR[platform],
             )
             if not errors:
                 if self._component_id is None:
