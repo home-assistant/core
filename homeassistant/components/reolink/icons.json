@@ -220,6 +220,9 @@
       "ai_animal_sensitivity": {
         "default": "mdi:paw"
       },
+      "cry_sensitivity": {
+        "default": "mdi:emoticon-cry-outline"
+      },
       "crossline_sensitivity": {
         "default": "mdi:fence"
       },
