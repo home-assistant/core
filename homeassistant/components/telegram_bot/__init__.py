@@ -69,6 +69,7 @@ from .const import (
     ATTR_VERIFY_SSL,
     CONF_ALLOWED_CHAT_IDS,
     CONF_BOT_COUNT,
+    CONF_CHAT_ID,
     CONF_CONFIG_ENTRY_ID,
     CONF_PROXY_PARAMS,
     CONF_PROXY_URL,
@@ -324,15 +325,49 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 service.hass.config_entries.async_entries(DOMAIN)
             )
 
+            if len(config_entries) == 0:
+                raise ServiceValidationError(
+                    "No Telegram Bot config entries found. Please set up a Telegram Bot first.",
+                    translation_domain=DOMAIN,
+                    translation_key="no_config_entries",
+                )
             if len(config_entries) == 1:
                 config_entry = config_entries[0]
+            else:
+                # Multiple config entries: try to find matching bot
+                target = kwargs.get(ATTR_TARGET)
+                if target is not None:
+                    # Convert single target to list for consistent handling
+                    if isinstance(target, int):
+                        target = [target]
 
-            if len(config_entries) > 1:
-                raise ServiceValidationError(
-                    "Multiple config entries found. Please specify the Telegram bot to use.",
-                    translation_domain=DOMAIN,
-                    translation_key="multiple_config_entry",
-                )
+                    # Find config entries that contain any of the target chat_ids
+                    matching_entries = []
+                    for entry in config_entries:
+                        if hasattr(entry, "runtime_data") and entry.runtime_data:
+                            entry_chat_ids = [
+                                subentry.data[CONF_CHAT_ID]
+                                for subentry in entry.subentries.values()
+                            ]
+                            if any(chat_id in entry_chat_ids for chat_id in target):
+                                matching_entries.append(entry)
+
+                    if len(matching_entries) >= 1:
+                        # Use the first matching entry
+                        config_entry = matching_entries[0]
+                    else:
+                        raise ServiceValidationError(
+                            "No config entry found for the specified target chat IDs.",
+                            translation_domain=DOMAIN,
+                            translation_key="no_matching_target",
+                        )
+                else:
+                    # No specific target: error out
+                    raise ServiceValidationError(
+                        "Multiple config entries found. Please specify the Telegram bot to use.",
+                        translation_domain=DOMAIN,
+                        translation_key="multiple_config_entry",
+                    )
 
         if not config_entry or not hasattr(config_entry, "runtime_data"):
             raise ServiceValidationError(
