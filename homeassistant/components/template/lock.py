@@ -31,10 +31,9 @@ from .const import CONF_PICTURE, DOMAIN
 from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
+    make_template_entity_common_modern_schema,
     rewrite_common_legacy_to_modern_conf,
 )
 
@@ -57,17 +56,13 @@ LOCK_SCHEMA = vol.All(
         {
             vol.Optional(CONF_CODE_FORMAT): cv.template,
             vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_NAME): cv.template,
             vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_PICTURE): cv.template,
             vol.Required(CONF_STATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
         }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
+    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 )
 
 
@@ -313,9 +308,7 @@ class TemplateLock(TemplateEntity, AbstractTemplateLock):
         unique_id: str | None,
     ) -> None:
         """Initialize the lock."""
-        TemplateEntity.__init__(
-            self, hass, config=config, fallback_name=DEFAULT_NAME, unique_id=unique_id
-        )
+        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
         AbstractTemplateLock.__init__(self, config)
         name = self._attr_name
         if TYPE_CHECKING:
