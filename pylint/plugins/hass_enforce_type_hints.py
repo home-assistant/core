@@ -2872,40 +2872,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
             ],
         ),
-        ClassTypeHintMatch(
-            base_class="StateVacuumEntity",
-            matches=[
-                TypeHintMatch(
-                    function_name="state",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
-                    function_name="start",
-                    return_type=None,
-                    has_async_counterpart=True,
-                ),
-                TypeHintMatch(
-                    function_name="pause",
-                    return_type=None,
-                    has_async_counterpart=True,
-                ),
-                TypeHintMatch(
-                    function_name="async_turn_on",
-                    kwargs_type="Any",
-                    return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_turn_off",
-                    kwargs_type="Any",
-                    return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_toggle",
-                    kwargs_type="Any",
-                    return_type=None,
-                ),
-            ],
-        ),
     ],
     "water_heater": [
         ClassTypeHintMatch(

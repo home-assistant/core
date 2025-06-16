@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 import logging
+from typing import Any
 
 from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
@@ -127,7 +128,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             self.battery_level,
         )
 
-    async def async_start(self, **kwargs) -> None:
+    async def async_start(self, **kwargs: Any) -> None:
         """Start the device."""
         if self.data.current_state == State.SLEEP:
             value = State.WAKE_UP
@@ -143,7 +144,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             self.coordinator.api.async_set_clean_operation_mode(self.property_id, value)
         )
 
-    async def async_pause(self, **kwargs) -> None:
+    async def async_pause(self, **kwargs: Any) -> None:
         """Pause the device."""
         _LOGGER.debug(
             "[%s:%s] async_pause", self.coordinator.device_name, self.property_id
@@ -154,7 +155,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             )
         )
 
-    async def async_return_to_base(self, **kwargs) -> None:
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
         _LOGGER.debug(
             "[%s:%s] async_return_to_base",
