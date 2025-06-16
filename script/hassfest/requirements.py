@@ -36,7 +36,9 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
     "pytz": "CalVer",
+    "requests": "SemVer",
     "typing_extensions": "SemVer",
+    "urllib3": "SemVer",
     "yarl": "SemVer",
 }
 PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
@@ -48,10 +50,6 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # scipy version closely linked to numpy
         # geocachingapi > reverse_geocode > scipy > numpy
         "scipy": {"numpy"}
-    },
-    "mealie": {
-        # https://github.com/joostlek/python-mealie/pull/490
-        "aiomealie": {"awesomeversion"}
     },
 }
 
@@ -332,10 +330,6 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "bluetooth": {
         # https://github.com/hbldh/bleak/pull/1718 (not yet released)
         "homeassistant": {"bleak"}
-    },
-    "eq3btsmart": {
-        # https://github.com/EuleMitKeule/eq3btsmart/releases/tag/2.0.0
-        "homeassistant": {"eq3btsmart"}
     },
     "python_script": {
         # Security audits are needed for each Python version
