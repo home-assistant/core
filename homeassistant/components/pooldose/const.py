@@ -10,8 +10,10 @@ from homeassistant.const import EntityCategory, UnitOfVolume
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 
 DOMAIN = "pooldose"
+
 DEFAULT_TIMEOUT = 30  # seconds
 DEFAULT_SCAN_INTERVAL = 600  # seconds
+DEFAULT_HOST = "KOMMSPOT"  # Default host for Pooldose device, used in config flow
 
 CONF_SERIALNUMBER = "serialnumber"
 
@@ -394,8 +396,3 @@ SELECT_OPTION_CONVERSION: dict[str, dict[str, str]] = {
         "PDPR1H1HAW100_FW539187_COMBO_w_1eklinki6_LITER": UnitOfVolume.LITERS,
     }
 }
-
-# DEFAULT_HOST = "KOMMSPOT"  # Default host for Pooldose device, used in config flow
-
-# for testing only:
-DEFAULT_HOST = "192.168.178.137"

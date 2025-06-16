@@ -1,6 +1,6 @@
 {
   "domain": "pooldose",
-  "name": "Seko PoolDose",
+  "name": "SEKO PoolDose",
   "codeowners": ["@lmaertin"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pooldose",
