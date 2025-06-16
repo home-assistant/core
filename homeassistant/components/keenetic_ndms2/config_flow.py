@@ -192,9 +192,13 @@ class KeeneticOptionsFlowHandler(OptionsFlow):
                 ): int,
                 vol.Required(
                     CONF_INTERFACES,
-                    default=self.config_entry.options.get(
-                        CONF_INTERFACES, [DEFAULT_INTERFACE]
-                    ),
+                    default=[
+                        item
+                        for item in self.config_entry.options.get(
+                            CONF_INTERFACES, [DEFAULT_INTERFACE]
+                        )
+                        if item in self._interface_options
+                    ],
                 ): cv.multi_select(self._interface_options),
                 vol.Optional(
                     CONF_TRY_HOTSPOT,
