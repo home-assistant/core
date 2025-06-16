@@ -23,7 +23,6 @@ from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NextDnsConfigEntry
 from .const import (
@@ -34,6 +33,7 @@ from .const import (
     ATTR_STATUS,
 )
 from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
+from .entity import NextDnsEntity
 
 PARALLEL_UPDATES = 1
 
@@ -297,12 +297,8 @@ async def async_setup_entry(
     )
 
 
-class NextDnsSensor(
-    CoordinatorEntity[NextDnsUpdateCoordinator[CoordinatorDataT]], SensorEntity
-):
+class NextDnsSensor(NextDnsEntity, SensorEntity):
     """Define an NextDNS sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -311,7 +307,6 @@ class NextDnsSensor(
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
         self._attr_native_value = description.value(coordinator.data)
         self.entity_description: NextDnsSensorEntityDescription = description

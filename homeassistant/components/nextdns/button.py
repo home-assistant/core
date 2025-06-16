@@ -11,11 +11,11 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NextDnsConfigEntry
 from .const import DOMAIN
 from .coordinator import NextDnsUpdateCoordinator
+from .entity import NextDnsEntity
 
 PARALLEL_UPDATES = 1
 
@@ -37,12 +37,8 @@ async def async_setup_entry(
     async_add_entities([NextDnsButton(coordinator, CLEAR_LOGS_BUTTON)])
 
 
-class NextDnsButton(
-    CoordinatorEntity[NextDnsUpdateCoordinator[AnalyticsStatus]], ButtonEntity
-):
+class NextDnsButton(NextDnsEntity, ButtonEntity):
     """Define an NextDNS button."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -51,7 +47,6 @@ class NextDnsButton(
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
         self.entity_description = description
 

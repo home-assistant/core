@@ -15,10 +15,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NextDnsConfigEntry
 from .coordinator import NextDnsUpdateCoordinator
+from .entity import NextDnsEntity
 
 PARALLEL_UPDATES = 1
 
@@ -61,12 +61,9 @@ async def async_setup_entry(
     )
 
 
-class NextDnsBinarySensor(
-    CoordinatorEntity[NextDnsUpdateCoordinator[ConnectionStatus]], BinarySensorEntity
-):
+class NextDnsBinarySensor(NextDnsEntity, BinarySensorEntity):
     """Define an NextDNS binary sensor."""
 
-    _attr_has_entity_name = True
     entity_description: NextDnsBinarySensorEntityDescription
 
     def __init__(
@@ -76,7 +73,6 @@ class NextDnsBinarySensor(
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
         self._attr_is_on = description.state(coordinator.data, coordinator.profile_id)
         self.entity_description = description
