@@ -225,20 +225,10 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pymonoprice > pyserial-asyncio
         "pymonoprice": {"pyserial-asyncio"}
     },
-    "mysensors": {
-        # https://github.com/theolind/pymysensors/issues/818
-        # pymysensors > pyserial-asyncio
-        "pymysensors": {"pyserial-asyncio"}
-    },
     "mystrom": {
         # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
         # python-mystrom > setuptools
         "python-mystrom": {"setuptools"}
-    },
-    "ness_alarm": {
-        # https://github.com/nickw444/nessclient/issues/73
-        # nessclient > pyserial-asyncio
-        "nessclient": {"pyserial-asyncio"}
     },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
