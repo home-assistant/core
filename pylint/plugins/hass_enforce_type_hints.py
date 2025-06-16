@@ -2789,12 +2789,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
-            base_class="ToggleEntity",
-            matches=_TOGGLE_ENTITY_MATCH,
-        ),
-        ClassTypeHintMatch(
-            base_class="_BaseVacuum",
+            base_class="StateVacuumEntity",
             matches=[
+                TypeHintMatch(
+                    function_name="activity",
+                    return_type=["VacuumActivity", None],
+                ),
                 TypeHintMatch(
                     function_name="battery_level",
                     return_type=["int", None],
@@ -2817,6 +2817,18 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="stop",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="start",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="pause",
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
