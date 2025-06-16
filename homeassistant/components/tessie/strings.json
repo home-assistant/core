@@ -547,7 +547,7 @@
     },
     "navigation_gps_request": {
       "name": "Set navigation GPS coordinates",
-      "description": "Set navigation to some GPS coordinates.",
+      "description": "Sends destination GPS coordinates to the onboard navigation system.",
       "fields": {
         "gps": {
           "description": "The GPS coordinates of the destination to navigate to.",
