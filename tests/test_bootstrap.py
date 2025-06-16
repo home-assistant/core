@@ -88,11 +88,15 @@ async def test_async_enable_logging(
     config_log_file_pattern = get_test_config_dir("home-assistant.log*")
     arg_log_file_pattern = "test.log*"
 
+    def cleanup_log_files() -> None:
+        """Remove all log files."""
+        for f in glob.glob(config_log_file_pattern):
+            os.remove(f)
+        for f in glob.glob(arg_log_file_pattern):
+            os.remove(f)
+
     # Ensure we start with a clean slate
-    for f in glob.glob(arg_log_file_pattern):
-        os.remove(f)
-    for f in glob.glob(config_log_file_pattern):
-        os.remove(f)
+    cleanup_log_files()
     assert len(glob.glob(config_log_file_pattern)) == 0
     assert len(glob.glob(arg_log_file_pattern)) == 0
 
@@ -121,10 +125,31 @@ async def test_async_enable_logging(
 
     assert "Error rolling over log file" in caplog.text
 
-    for f in glob.glob(arg_log_file_pattern):
-        os.remove(f)
-    for f in glob.glob(config_log_file_pattern):
-        os.remove(f)
+    cleanup_log_files()
+
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "1"}),
+        patch("logging.getLogger"),
+        patch(
+            "homeassistant.bootstrap.async_activate_log_queue_handler"
+        ) as mock_async_activate_log_queue_handler,
+    ):
+        await bootstrap.async_enable_logging(hass)
+        mock_async_activate_log_queue_handler.assert_called_once()
+        # On Supervisor, the default log file should not be created
+        assert len(glob.glob(config_log_file_pattern)) == 0
+
+        mock_async_activate_log_queue_handler.reset_mock()
+        await bootstrap.async_enable_logging(
+            hass,
+            log_rotate_days=5,
+            log_file="test.log",
+        )
+        mock_async_activate_log_queue_handler.assert_called_once()
+        # Even on Supervisor, the log file should be created if explicitly set
+        assert len(glob.glob(arg_log_file_pattern)) > 0
+
+    cleanup_log_files()
 
 
 async def test_load_hassio(hass: HomeAssistant) -> None:
