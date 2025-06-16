@@ -9,11 +9,9 @@ from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
     DOMAIN,
     AssistSatelliteAnnouncement,
-    AssistSatelliteAnswer,
     AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityFeature,
-    AssistSatelliteQuestion,
     AssistSatelliteWakeWord,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -73,7 +71,6 @@ class MockAssistSatellite(AssistSatelliteEntity):
             max_active_wake_words=1,
         )
         self.start_conversations = []
-        self.question_response_text = ""
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
@@ -102,12 +99,6 @@ class MockAssistSatellite(AssistSatelliteEntity):
             (self._conversation_id, self._extra_system_prompt, start_announcement)
         )
 
-    async def async_ask_question(
-        self, question: AssistSatelliteQuestion
-    ) -> AssistSatelliteAnswer | None:
-        """Ask a question and get a user's answer from the satellite."""
-        return self.question_response_to_answer(self.question_response_text, question)
-
 
 @pytest.fixture
 def entity() -> MockAssistSatellite:
@@ -115,8 +106,7 @@ def entity() -> MockAssistSatellite:
     return MockAssistSatellite(
         "Test Entity",
         AssistSatelliteEntityFeature.ANNOUNCE
-        | AssistSatelliteEntityFeature.START_CONVERSATION
-        | AssistSatelliteEntityFeature.ASK_QUESTION,
+        | AssistSatelliteEntityFeature.START_CONVERSATION,
     )
 
 

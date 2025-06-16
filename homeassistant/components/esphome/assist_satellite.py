@@ -13,7 +13,6 @@ from typing import Any, cast
 import wave
 
 from aioesphomeapi import (
-    APIConnectionError,
     MediaPlayerFormatPurpose,
     MediaPlayerSupportedFormat,
     VoiceAssistantAnnounceFinished,
@@ -38,7 +37,6 @@ from homeassistant.components.intent import (
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -123,9 +121,6 @@ class EsphomeAssistSatellite(
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._tts_streaming_task: asyncio.Task | None = None
         self._udp_server: VoiceAssistantUDPServer | None = None
-
-        # For ASK_QUESTION supported feature
-        self._ask_question_future: asyncio.Future[str | None] | None = None
 
         # Empty config. Updated when added to HA.
         self._satellite_config = assist_satellite.AssistSatelliteConfiguration(
@@ -258,7 +253,6 @@ class EsphomeAssistSatellite(
         if feature_flags & VoiceAssistantFeature.START_CONVERSATION:
             self._attr_supported_features |= (
                 assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
-                | assist_satellite.AssistSatelliteEntityFeature.ASK_QUESTION
             )
 
         # Update wake word select when config is updated
@@ -277,18 +271,6 @@ class EsphomeAssistSatellite(
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
-        if (self._ask_question_future is not None) and (
-            not self._ask_question_future.done()
-        ):
-            # Use STT text as result unless RUN_END is reached first.
-            if (event.type == PipelineEventType.STT_END) and event.data:
-                self._ask_question_future.set_result(
-                    event.data.get("stt_output", {}).get("text")
-                )
-            elif event.type == PipelineEventType.RUN_END:
-                # No text
-                self._ask_question_future.set_result(None)
-
         try:
             event_type = _VOICE_ASSISTANT_EVENT_TYPES.from_hass(event.type)
         except KeyError:
@@ -357,7 +339,7 @@ class EsphomeAssistSatellite(
             }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_RUN_START:
             assert event.data is not None
-            if tts_output := event.data.get("tts_output"):
+            if tts_output := event.data["tts_output"]:
                 path = tts_output["url"]
                 url = async_process_play_media_url(self.hass, path)
                 data_to_send = {"url": url}
@@ -385,28 +367,6 @@ class EsphomeAssistSatellite(
         """Start a conversation from the satellite."""
         await self._do_announce(start_announcement, run_pipeline_after=True)
 
-    async def async_ask_question(
-        self, question: assist_satellite.AssistSatelliteQuestion
-    ) -> assist_satellite.AssistSatelliteAnswer | None:
-        """Ask a question and get a user's response from the satellite."""
-        self._ask_question_future = asyncio.Future()
-
-        try:
-            await self._do_announce(question.announcement, run_pipeline_after=True)
-            response_text = await self._ask_question_future
-            return self.question_response_to_answer(response_text or "", question)
-        except APIConnectionError as error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="error_communicating_with_device",
-                translation_placeholders={
-                    "device_name": self._device_info.name,
-                    "error": str(error),
-                },
-            ) from error
-        finally:
-            self._ask_question_future = None
-
     async def _do_announce(
         self,
         announcement: assist_satellite.AssistSatelliteAnnouncement,
@@ -417,7 +377,7 @@ class EsphomeAssistSatellite(
         Optionally run a voice pipeline after the announcement has finished.
         """
         _LOGGER.debug(
-            "Waiting for announcement to finish (message=%s, media_id=%s)",
+            "Waiting for announcement to finished (message=%s, media_id=%s)",
             announcement.message,
             announcement.media_id,
         )
@@ -504,10 +464,7 @@ class EsphomeAssistSatellite(
         else:
             start_stage = PipelineStage.STT
 
-        if self._ask_question_future is not None:
-            end_stage = PipelineStage.STT
-        else:
-            end_stage = PipelineStage.TTS
+        end_stage = PipelineStage.TTS
 
         if feature_flags & VoiceAssistantFeature.SPEAKER:
             # Stream WAV audio

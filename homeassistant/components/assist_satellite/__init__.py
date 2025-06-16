@@ -33,7 +33,6 @@ from .entity import (
     AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityDescription,
-    AssistSatelliteQuestion,
     AssistSatelliteWakeWord,
 )
 from .errors import SatelliteBusyError
@@ -47,7 +46,6 @@ __all__ = [
     "AssistSatelliteEntity",
     "AssistSatelliteEntityDescription",
     "AssistSatelliteEntityFeature",
-    "AssistSatelliteQuestion",
     "AssistSatelliteWakeWord",
     "SatelliteBusyError",
 ]
@@ -121,7 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.has_at_least_one_key("question", "question_media_id"),
         ),
         "async_internal_ask_question",
-        [AssistSatelliteEntityFeature.ASK_QUESTION],
+        [AssistSatelliteEntityFeature.START_CONVERSATION],
         supports_response=SupportsResponse.ONLY,
     )
     hass.data[CONNECTION_TEST_DATA] = {}

@@ -59,7 +59,7 @@ ask_question:
     entity:
       domain: assist_satellite
       supported_features:
-        - assist_satellite.AssistSatelliteEntityFeature.ASK_QUESTION
+        - assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
   fields:
     question:
       required: false

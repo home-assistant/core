@@ -762,14 +762,40 @@ async def test_ask_question(
     """Test asking a question on a device and matching an answer."""
     entity_id = "assist_satellite.test_entity"
     question_text = "What kind of music would you like to listen to?"
-    entity.question_response_text = response_text
 
-    original_ask_question = entity.async_ask_question
+    await async_update_pipeline(
+        hass, async_get_pipeline(hass), stt_engine="test-stt-engine", stt_language="en"
+    )
 
-    async def async_ask_question(question):
+    async def speech_to_text(self, *args, **kwargs):
+        self.process_event(
+            PipelineEvent(
+                PipelineEventType.STT_END, {"stt_output": {"text": response_text}}
+            )
+        )
+
+        return response_text
+
+    original_start_conversation = entity.async_start_conversation
+
+    async def async_start_conversation(start_announcement):
         # Verify state change
         assert entity.state == AssistSatelliteState.RESPONDING
-        return await original_ask_question(question)
+        await original_start_conversation(start_announcement)
+
+        audio_stream = object()
+        with (
+            patch(
+                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.prepare_speech_to_text"
+            ),
+            patch(
+                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.speech_to_text",
+                speech_to_text,
+            ),
+        ):
+            await entity.async_accept_pipeline_from_satellite(
+                audio_stream, start_stage=PipelineStage.STT
+            )
 
     with (
         patch(
@@ -791,7 +817,7 @@ async def test_ask_question(
                 mime_type="audio/mp3",
             ),
         ),
-        patch.object(entity, "async_ask_question", new=async_ask_question),
+        patch.object(entity, "async_start_conversation", new=async_start_conversation),
     ):
         response = await hass.services.async_call(
             "assist_satellite",

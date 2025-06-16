@@ -32,6 +32,3 @@ class AssistSatelliteEntityFeature(IntFlag):
 
     START_CONVERSATION = 2
     """Device supports starting conversations."""
-
-    ASK_QUESTION = 4
-    """Device supports asking the user a question and getting a response."""

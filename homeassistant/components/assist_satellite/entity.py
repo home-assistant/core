@@ -110,28 +110,6 @@ class AssistSatelliteAnnouncement:
 
 
 @dataclass
-class AssistSatellitePossibleAnswer:
-    """Possible answer to a question."""
-
-    id: str
-    """Id of answer that will be matched in a script or automation."""
-
-    sentences: list[str]
-    """List of hassil sentence templates for this answer."""
-
-
-@dataclass
-class AssistSatelliteQuestion:
-    """Question that needs an answer."""
-
-    announcement: AssistSatelliteAnnouncement
-    """Details of question announcement."""
-
-    answers: list[AssistSatellitePossibleAnswer]
-    """List of possible answers to the question."""
-
-
-@dataclass
 class AssistSatelliteAnswer:
     """Answer to a question."""
 
@@ -163,6 +141,7 @@ class AssistSatelliteEntity(entity.Entity):
     _stt_intercept_future: asyncio.Future[str | None] | None = None
     _attr_tts_options: dict[str, Any] | None = None
     _pipeline_task: asyncio.Task | None = None
+    _ask_question_future: asyncio.Future[str | None] | None = None
 
     __assist_satellite_state = AssistSatelliteState.IDLE
 
@@ -390,34 +369,27 @@ class AssistSatelliteEntity(entity.Entity):
 
         self._is_announcing = True
         self._set_state(AssistSatelliteState.RESPONDING)
+        self._ask_question_future = asyncio.Future()
 
         try:
-            return await self.async_ask_question(
-                AssistSatelliteQuestion(
-                    announcement=announcement,
-                    answers=[
-                        AssistSatellitePossibleAnswer(
-                            id=answer["id"], sentences=answer["sentences"]
-                        )
-                        for answer in answers
-                    ],
-                )
+            # Wait for announcement to finish
+            await self.async_start_conversation(announcement)
+
+            # Wait for response text
+            response_text = (await self._ask_question_future) or ""
+            return self._question_response_to_answer(
+                response_text, {answer["id"]: answer["sentences"] for answer in answers}
             )
         finally:
             self._is_announcing = False
             self._set_state(AssistSatelliteState.IDLE)
+            self._ask_question_future = None
 
-    async def async_ask_question(
-        self, question: AssistSatelliteQuestion
-    ) -> AssistSatelliteAnswer | None:
-        """Ask a question and get a user's answer from the satellite."""
-        raise NotImplementedError
-
-    def question_response_to_answer(
-        self, response_text: str, question: AssistSatelliteQuestion
+    def _question_response_to_answer(
+        self, response_text: str, answers: dict[str, list[str]]
     ) -> AssistSatelliteAnswer:
         """Match text to a pre-defined set of answers."""
-        if not question.answers:
+        if not answers:
             # Only return raw text
             return AssistSatelliteAnswer(id=None, sentence=response_text)
 
@@ -429,10 +401,10 @@ class AssistSatelliteEntity(entity.Entity):
                     "QuestionIntent": {
                         "data": [
                             {
-                                "sentences": answer.sentences,
-                                "metadata": {"answer_id": answer.id},
+                                "sentences": answer_sentences,
+                                "metadata": {"answer_id": answer_id},
                             }
-                            for answer in question.answers
+                            for answer_id, answer_sentences in answers.items()
                         ]
                     }
                 },
@@ -506,6 +478,11 @@ class AssistSatelliteEntity(entity.Entity):
                 self._wake_word_intercept_future.set_result(wake_word_phrase)
             self._internal_on_pipeline_event(PipelineEvent(PipelineEventType.RUN_END))
             return
+
+        if (self._ask_question_future is not None) and (
+            start_stage == PipelineStage.STT
+        ):
+            end_stage = PipelineStage.STT
 
         device_id = self.registry_entry.device_id if self.registry_entry else None
 
@@ -589,6 +566,16 @@ class AssistSatelliteEntity(entity.Entity):
                 self._set_state(AssistSatelliteState.IDLE)
         elif event.type is PipelineEventType.STT_START:
             self._set_state(AssistSatelliteState.LISTENING)
+        elif event.type is PipelineEventType.STT_END:
+            # Intercepting text for ask question
+            if (
+                (self._ask_question_future is not None)
+                and (not self._ask_question_future.done())
+                and event.data
+            ):
+                self._ask_question_future.set_result(
+                    event.data.get("stt_output", {}).get("text")
+                )
         elif event.type is PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
         elif event.type is PipelineEventType.TTS_START:
@@ -598,6 +585,12 @@ class AssistSatelliteEntity(entity.Entity):
         elif event.type is PipelineEventType.RUN_END:
             if not self._run_has_tts:
                 self._set_state(AssistSatelliteState.IDLE)
+
+            if (self._ask_question_future is not None) and (
+                not self._ask_question_future.done()
+            ):
+                # No text for ask question
+                self._ask_question_future.set_result(None)
 
         self.on_pipeline_event(event)
 
