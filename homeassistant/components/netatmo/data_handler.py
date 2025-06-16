@@ -373,7 +373,7 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
             ],
-            NetatmoDeviceCategory.opening: [NETATMO_CREATE_DOOR_TAG],
+            #NetatmoDeviceCategory.opening: [NETATMO_CREATE_DOOR_TAG],
             NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
             NetatmoDeviceCategory.shutter: [
                 NETATMO_CREATE_COVER,
@@ -414,6 +414,18 @@ class NetatmoDataHandler:
                         module,
                         home.entity_id,
                         WEATHER,
+                    ),
+                )
+            if module.device_category is NetatmoDeviceCategory.opening:
+                _LOGGER.debug("Module %s dispatched as opening category", module.name)
+                async_dispatcher_send(
+                    self.hass,
+                    NETATMO_CREATE_DOOR_TAG,
+                    NetatmoDevice(
+                        self,
+                        module,
+                        home.entity_id,
+                        DOOR_TAG,
                     ),
                 )
 
