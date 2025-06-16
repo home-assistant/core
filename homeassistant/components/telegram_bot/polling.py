@@ -19,7 +19,7 @@ async def async_setup_platform(
     """Set up the Telegram polling platform."""
     pollbot = PollBot(hass, bot, config)
 
-    config.async_create_task(hass, pollbot.start_polling(), "polling telegram bot")
+    await pollbot.start_polling()
 
     return pollbot
 

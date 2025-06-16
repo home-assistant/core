@@ -4,6 +4,11 @@
       "smart_mode": {
         "default": "mdi:refresh-auto"
       }
+    },
+    "number": {
+      "intensity": {
+        "default": "mdi:sine-wave"
+      }
     }
   }
 }
