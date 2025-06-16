@@ -859,3 +859,27 @@ AIR_PURIFIER_TABLE_VOC_SERVICE_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+EVAPORATIVE_HUMIDIFIER_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Evaporative Humidifier",
+    manufacturer_data={
+        2409: b"\xa0\xa3\xb3,\x9c\xe68\x86\x88\xb5\x99\x12\x10\x1b\x00\x85]",
+    },
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"#\x00\x00\x15\x1c\x00"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Evaporative Humidifier",
+        manufacturer_data={
+            2409: b"\xa0\xa3\xb3,\x9c\xe68\x86\x88\xb5\x99\x12\x10\x1b\x00\x85]",
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"#\x00\x00\x15\x1c\x00"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Evaporative Humidifier"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
