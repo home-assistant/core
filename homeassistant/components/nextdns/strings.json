@@ -11,10 +11,10 @@
       },
       "profiles": {
         "data": {
-          "profile": "Profile"
+          "profile_name": "Profile"
         },
         "data_description": {
-          "profile": "NextDNS configuration profile you want to integrate"
+          "profile_name": "NextDNS configuration profile you want to integrate"
         }
       },
       "reauth_confirm": {
