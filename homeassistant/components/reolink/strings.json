@@ -532,6 +532,9 @@
       "floodlight_brightness": {
         "name": "Floodlight turn on brightness"
       },
+      "ir_brightness": {
+        "name": "Infrared light brightness"
+      },
       "volume": {
         "name": "Volume"
       },
@@ -567,6 +570,9 @@
       },
       "ai_animal_sensitivity": {
         "name": "AI animal sensitivity"
+      },
+      "cry_sensitivity": {
+        "name": "Baby cry sensitivity"
       },
       "crossline_sensitivity": {
         "name": "AI crossline {zone_name} sensitivity"
@@ -954,6 +960,9 @@
       },
       "privacy_mode": {
         "name": "Privacy mode"
+      },
+      "privacy_mask": {
+        "name": "Privacy mask"
       }
     }
   }

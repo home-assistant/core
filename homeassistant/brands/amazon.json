@@ -3,7 +3,7 @@
   "name": "Amazon",
   "integrations": [
     "alexa",
-    "amazon_devices",
+    "alexa_devices",
     "amazon_polly",
     "aws",
     "aws_s3",

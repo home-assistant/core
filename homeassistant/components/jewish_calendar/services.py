@@ -15,6 +15,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -39,6 +40,7 @@ OMER_SCHEMA = vol.Schema(
 )
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Jewish Calendar services."""
 
