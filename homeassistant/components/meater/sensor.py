@@ -170,6 +170,7 @@ async def async_setup_entry(
 
     # Add a subscriber to the coordinator to discover new temperature probes
     coordinator.async_add_listener(async_update_data)
+    async_update_data()
 
 
 class MeaterProbeTemperature(SensorEntity, CoordinatorEntity[MeaterCoordinator]):
