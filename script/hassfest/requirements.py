@@ -225,11 +225,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pymonoprice > pyserial-asyncio
         "pymonoprice": {"pyserial-asyncio"}
     },
-    "mysensors": {
-        # https://github.com/theolind/pymysensors/issues/818
-        # pymysensors > pyserial-asyncio
-        "pymysensors": {"pyserial-asyncio"}
-    },
     "mystrom": {
         # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
         # python-mystrom > setuptools
