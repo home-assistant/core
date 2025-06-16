@@ -33,14 +33,14 @@ from .const import (
     ATTR_STATUS,
 )
 from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
-from .entity import NextDnsEntity
+from .entity import NextDnsEntity, NextDnsEntityDescription
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
 class NextDnsSensorEntityDescription(
-    SensorEntityDescription, Generic[CoordinatorDataT]
+    NextDnsEntityDescription, SensorEntityDescription, Generic[CoordinatorDataT]
 ):
     """NextDNS sensor entity description."""
 
@@ -300,16 +300,16 @@ async def async_setup_entry(
 class NextDnsSensor(NextDnsEntity, SensorEntity):
     """Define an NextDNS sensor."""
 
+    entity_description: NextDnsSensorEntityDescription
+
     def __init__(
         self,
         coordinator: NextDnsUpdateCoordinator[CoordinatorDataT],
-        description: NextDnsSensorEntityDescription,
+        description: NextDnsSensorEntityDescription[CoordinatorDataT],
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
+        super().__init__(coordinator, description)
         self._attr_native_value = description.value(coordinator.data)
-        self.entity_description: NextDnsSensorEntityDescription = description
 
     @callback
     def _handle_coordinator_update(self) -> None:

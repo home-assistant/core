@@ -19,13 +19,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import NextDnsConfigEntry
 from .const import DOMAIN
 from .coordinator import NextDnsUpdateCoordinator
-from .entity import NextDnsEntity
+from .entity import NextDnsEntity, NextDnsEntityDescription
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class NextDnsSwitchEntityDescription(SwitchEntityDescription):
+class NextDnsSwitchEntityDescription(NextDnsEntityDescription, SwitchEntityDescription):
     """NextDNS switch entity description."""
 
     state: Callable[[Settings], bool]
@@ -547,10 +547,8 @@ class NextDnsSwitch(NextDnsEntity, SwitchEntity):
         description: NextDnsSwitchEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
+        super().__init__(coordinator, description)
         self._attr_is_on = description.state(coordinator.data)
-        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
