@@ -533,7 +533,7 @@
   "services": {
     "navigation_request": {
       "name": "Set navigation destination",
-      "description": "Set navigation to a destination.",
+      "description": "Sends a destination address to the onboard navigation system.",
       "fields": {
         "destination": {
           "name": "Destination",
