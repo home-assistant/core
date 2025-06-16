@@ -393,12 +393,18 @@ class NetatmoDataHandler:
         for module in home.modules.values():
             if not module.device_category:
                 _LOGGER.debug(
-                    "Module %s skipped because of missing category", module.name
+                    "Module %s skipped beacuse of missing category", module.name
                 )
                 continue
 
             for signal in netatmo_type_signal_map.get(module.device_category, []):
-                _LOGGER.debug("Module %s dispatched as %s", module.name, signal_home)
+                _LOGGER.debug(
+                    "Module %s dispatched as %s category by %s to publisher %s",
+                    module.name,
+                    module.device_category,
+                    signal,
+                    signal_home,
+                )
                 async_dispatcher_send(
                     self.hass,
                     signal,
@@ -426,10 +432,14 @@ class NetatmoDataHandler:
                     ),
                 )
             if module.device_category is NetatmoDeviceCategory.opening:
-                _LOGGER.debug("Module %s dispatched as opening category", module.name)
+                _LOGGER.debug(
+                    "Module %s dispatched as opening category to publisher %s",
+                    module.name,
+                    DOOR_TAG,
+                )
                 async_dispatcher_send(
                     self.hass,
-                    NETATMO_CREATE_DOOR_TAG,
+                    NETATMO_CREATE_WEATHER_SENSOR,
                     NetatmoDevice(
                         self,
                         module,
