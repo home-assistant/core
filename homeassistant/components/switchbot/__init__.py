@@ -92,6 +92,12 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.AIR_PURIFIER.value: [Platform.FAN, Platform.SENSOR],
     SupportedModels.AIR_PURIFIER_TABLE.value: [Platform.FAN, Platform.SENSOR],
+    SupportedModels.GARAGE_DOOR_OPENER.value: [
+        Platform.BINARY_SENSOR,
+        Platform.SWITCH,
+        Platform.SENSOR,
+    ],
+    SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -117,6 +123,8 @@ CLASS_BY_DEVICE = {
     SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLock,
     SupportedModels.AIR_PURIFIER.value: switchbot.SwitchbotAirPurifier,
     SupportedModels.AIR_PURIFIER_TABLE.value: switchbot.SwitchbotAirPurifier,
+    SupportedModels.GARAGE_DOOR_OPENER.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.RELAY_SWITCH_2PM.value: switchbot.SwitchbotRelaySwitch2PM,
 }
 
 
