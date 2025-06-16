@@ -43,6 +43,18 @@ DOOR_OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     on_value="opened",
 )
 
+MOVE_DETECTED_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="moveDetected",
+    device_class=BinarySensorDeviceClass.MOTION,
+)
+
+IS_LIGHT_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="brightness",
+    device_class=BinarySensorDeviceClass.LIGHT,
+    on_value="bright",
+)
+
+
 BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock": (
         CALIBRATION_DESCRIPTION,
@@ -52,6 +64,12 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
     ),
+    "Motion Sensor": (MOVE_DETECTED_DESCRIPTION,),
+    "Contact Sensor": (
+        MOVE_DETECTED_DESCRIPTION,
+        IS_LIGHT_DESCRIPTION,
+    ),
+    "Hub 3": (MOVE_DETECTED_DESCRIPTION,),
 }
 
 
