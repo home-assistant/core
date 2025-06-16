@@ -175,10 +175,11 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         eco_smart_mode = (
             data[CHARGER_DATA_KEY]
             .get(CHARGER_ECO_SMART_KEY, {})
-            .get(CHARGER_ECO_SMART_MODE_KEY)
+            .get(CHARGER_ECO_SMART_MODE_KEY,-1)
         )
-
-        if eco_smart_enabled is False:
+        if eco_smart_mode == -1:
+            data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.DISABLED
+        elif eco_smart_enabled is False:
             data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.OFF
         elif eco_smart_mode == 0:
             data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.ECO_MODE
