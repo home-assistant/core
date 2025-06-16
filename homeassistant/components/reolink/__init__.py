@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
+from time import time
 from typing import Any
 
 from reolink_aio.api import RETRY_ATTEMPTS
@@ -28,7 +30,13 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
+from .const import (
+    BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
+    CONF_BC_PORT,
+    CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_USE_HTTPS,
+    DOMAIN,
+)
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
@@ -150,6 +158,10 @@ async def async_setup_entry(
 
         if host.api.new_devices and config_entry.state == ConfigEntryState.LOADED:
             # Their are new cameras/chimes connected, reload to add them.
+            _LOGGER.debug(
+                "Reloading Reolink %s to add new device (capabilities)",
+                host.api.nvr_name,
+            )
             hass.async_create_task(
                 hass.config_entries.async_reload(config_entry.entry_id)
             )
@@ -216,6 +228,32 @@ async def async_setup_entry(
 
     hass.http.register_view(PlaybackProxyView(hass))
 
+    await register_callbacks(host, device_coordinator, hass)
+
+    # ensure host device is setup before connected camera devices that use via_device
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, host.unique_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
+    )
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(entry_update_listener)
+    )
+
+    return True
+
+
+async def register_callbacks(
+    host: ReolinkHost,
+    device_coordinator: DataUpdateCoordinator[None],
+    hass: HomeAssistant,
+) -> None:
+    """Register update callbacks."""
+
     async def refresh(*args: Any) -> None:
         """Request refresh of coordinator."""
         await device_coordinator.async_request_refresh()
@@ -229,17 +267,29 @@ async def async_setup_entry(
                 host.cancel_refresh_privacy_mode = async_call_later(hass, 2, refresh)
         host.privacy_mode = host.api.baichuan.privacy_mode()
 
+    def generate_async_camera_wake(channel: int) -> Callable[[], None]:
+        def async_camera_wake() -> None:
+            """Request update when a battery camera wakes up."""
+            if (
+                not host.api.sleeping(channel)
+                and time() - host.last_wake[channel]
+                > BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
+            ):
+                hass.loop.create_task(device_coordinator.async_request_refresh())
+
+        return async_camera_wake
+
     host.api.baichuan.register_callback(
         "privacy_mode_change", async_privacy_mode_change, 623
     )
-
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(entry_update_listener)
-    )
-
-    return True
+    for channel in host.api.channels:
+        if host.api.supported(channel, "battery"):
+            host.api.baichuan.register_callback(
+                f"camera_{channel}_wake",
+                generate_async_camera_wake(channel),
+                145,
+                channel,
+            )
 
 
 async def entry_update_listener(
@@ -258,6 +308,9 @@ async def async_unload_entry(
     await host.stop()
 
     host.api.baichuan.unregister_callback("privacy_mode_change")
+    for channel in host.api.channels:
+        if host.api.supported(channel, "battery"):
+            host.api.baichuan.unregister_callback(f"camera_{channel}_wake")
     if host.cancel_refresh_privacy_mode is not None:
         host.cancel_refresh_privacy_mode()
 

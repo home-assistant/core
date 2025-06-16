@@ -70,7 +70,7 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         supported_fn=lambda coordinator: (
-            coordinator.device.dashboard.model_name != ModelName.GS3_MP
+            coordinator.device.dashboard.model_name is not ModelName.GS3_MP
         ),
     ),
     LaMarzoccoBinarySensorEntityDescription(

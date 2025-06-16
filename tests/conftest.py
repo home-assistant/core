@@ -330,18 +330,18 @@ def long_repr_strings() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def enable_event_loop_debug(event_loop: asyncio.AbstractEventLoop) -> None:
+def enable_event_loop_debug() -> None:
     """Enable event loop debug mode."""
-    event_loop.set_debug(True)
+    asyncio.get_event_loop().set_debug(True)
 
 
 @pytest.fixture(autouse=True)
 def verify_cleanup(
-    event_loop: asyncio.AbstractEventLoop,
     expected_lingering_tasks: bool,
     expected_lingering_timers: bool,
 ) -> Generator[None]:
     """Verify that the test has cleaned up resources correctly."""
+    event_loop = asyncio.get_event_loop()
     threads_before = frozenset(threading.enumerate())
     tasks_before = asyncio.all_tasks(event_loop)
     yield
@@ -382,8 +382,10 @@ def verify_cleanup(
     # Verify no threads where left behind.
     threads = frozenset(threading.enumerate()) - threads_before
     for thread in threads:
-        assert isinstance(thread, threading._DummyThread) or thread.name.startswith(
-            "waitpid-"
+        assert (
+            isinstance(thread, threading._DummyThread)
+            or thread.name.startswith("waitpid-")
+            or "_run_safe_shutdown_loop" in thread.name
         )
 
     try:
@@ -492,9 +494,7 @@ def aiohttp_client_cls() -> type[CoalescingClient]:
 
 
 @pytest.fixture
-def aiohttp_client(
-    event_loop: asyncio.AbstractEventLoop,
-) -> Generator[ClientSessionGenerator]:
+def aiohttp_client() -> Generator[ClientSessionGenerator]:
     """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
 
     Remove this when upgrading to 4.x as aiohttp_client_cls
@@ -504,7 +504,7 @@ def aiohttp_client(
     aiohttp_client(server, **kwargs)
     aiohttp_client(raw_server, **kwargs)
     """
-    loop = event_loop
+    loop = asyncio.get_event_loop()
     clients = []
 
     async def go(

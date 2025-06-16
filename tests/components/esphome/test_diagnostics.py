@@ -52,9 +52,6 @@ async def test_diagnostics_with_dashboard_data(
     )
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
     )
     await MockDashboardRefresh(hass).async_refresh()
     result = await get_diagnostics_for_config_entry(
@@ -95,6 +92,7 @@ async def test_diagnostics_with_bluetooth(
                 "scanning": True,
                 "source": "AA:BB:CC:DD:EE:FC",
                 "start_time": ANY,
+                "raw_advertisement_data": {},
                 "time_since_last_device_detection": {},
                 "type": "ESPHomeScanner",
             },
