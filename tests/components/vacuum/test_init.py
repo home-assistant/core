@@ -443,7 +443,7 @@ async def test_vacuum_log_deprecated_battery_properties(
     config_flow_fixture: None,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test incorrectly using battery properties logs watning."""
+    """Test incorrectly using battery properties logs warning."""
 
     class MockLegacyVacuum(MockVacuum):
         """Mocked vacuum entity."""
@@ -492,6 +492,13 @@ async def test_vacuum_log_deprecated_battery_properties(
         " please report it to the author of the 'test' custom integration"
         in caplog.text
     )
+    assert (
+        "Detected that custom integration 'test' is setting the battery_level which has been deprecated."
+        " Integration test should implement a sensor instead with a correct device class and link it"
+        " to the same device. This will stop working in Home Assistant 2026.7,"
+        " please report it to the author of the 'test' custom integration"
+        in caplog.text
+    )
 
 
 @pytest.mark.usefixtures("mock_as_custom_component")
@@ -531,9 +538,17 @@ async def test_vacuum_log_deprecated_battery_properties_using_attr(
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
+    entity.start()
 
     assert (
         "Detected that custom integration 'test' is setting the battery_level which has been deprecated."
+        " Integration test should implement a sensor instead with a correct device class and link it to"
+        " the same device. This will stop working in Home Assistant 2026.7,"
+        " please report it to the author of the 'test' custom integration"
+        in caplog.text
+    )
+    assert (
+        "Detected that custom integration 'test' is setting the battery_icon which has been deprecated."
         " Integration test should implement a sensor instead with a correct device class and link it to"
         " the same device. This will stop working in Home Assistant 2026.7,"
         " please report it to the author of the 'test' custom integration"
@@ -547,6 +562,13 @@ async def test_vacuum_log_deprecated_battery_properties_using_attr(
     # Test we only log once
     assert (
         "Detected that custom integration 'test' is setting the battery_level which has been deprecated."
+        " Integration test should implement a sensor instead with a correct device class and link it to"
+        " the same device. This will stop working in Home Assistant 2026.7,"
+        " please report it to the author of the 'test' custom integration"
+        not in caplog.text
+    )
+    assert (
+        "Detected that custom integration 'test' is setting the battery_icon which has been deprecated."
         " Integration test should implement a sensor instead with a correct device class and link it to"
         " the same device. This will stop working in Home Assistant 2026.7,"
         " please report it to the author of the 'test' custom integration"
