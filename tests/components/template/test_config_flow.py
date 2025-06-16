@@ -82,6 +82,18 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "binary_sensor",
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+            },
+            "unknown",  # With delay_on, binary sensor starts as unknown until delay expires
+            {"one": "on", "two": "off"},
+            {},
+            {"delay_on": {"seconds": 5}, "delay_off": {"seconds": 3}},
+            {"delay_on": {"seconds": 5}, "delay_off": {"seconds": 3}},
+            {},
+        ),
+        (
             "sensor",
             {
                 "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
@@ -277,6 +289,12 @@ async def test_config_flow(
             {},
         ),
         (
+            "binary_sensor",
+            {"state": "{{ false }}"},
+            {"delay_on": {"seconds": 2}, "delay_off": {"seconds": 1}},
+            {"delay_on": {"seconds": 2}, "delay_off": {"seconds": 1}},
+        ),
+        (
             "switch",
             {"value_template": "{{ false }}"},
             {},
@@ -431,6 +449,21 @@ async def test_config_flow_device(
             {"one": "on", "two": "off"},
             {},
             {},
+            "state",
+        ),
+        (
+            "binary_sensor",
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+            },
+            {
+                "state": "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}",
+            },
+            # Because of delay_on, the binary sensor statuses will both be "unknown" before and after the option updates.
+            ["unknown", "unknown"],
+            {"one": "on", "two": "off"},
+            {"delay_on": {"seconds": 10}, "delay_off": {"seconds": 5}},
+            {"delay_on": {"seconds": 10}, "delay_off": {"seconds": 5}},
             "state",
         ),
         (
@@ -1322,6 +1355,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"state": "{{ states('select.one') }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
+        ),
+        (
+            "binary_sensor",
+            {"state": "{{ false }}"},
+            {"delay_on": {"seconds": 4}, "delay_off": {"seconds": 2}},
+            {"delay_on": {"seconds": 4}, "delay_off": {"seconds": 2}},
         ),
         (
             "switch",
