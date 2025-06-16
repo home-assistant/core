@@ -303,7 +303,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-10-20T23:59:58+00:00',
+    'state': '2023-10-20T23:59:28+00:00',
   })
 # ---
 # name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_time_remaining-entry]
@@ -351,7 +351,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-10-21T00:01:02+00:00',
+    'state': '2023-10-21T00:00:32+00:00',
   })
 # ---
 # name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_internal-entry]
