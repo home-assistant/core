@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Literal
 
-from hole import Hole
+from hole import Hole, HoleV5, HoleV6
 from hole.exceptions import HoleError
 
 from homeassistant.config_entries import ConfigEntry
@@ -188,6 +188,34 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
+def api_by_version(
+    hass: HomeAssistant,
+    entry: dict[str, Any],
+    version: int,
+    password: str | None = None,
+) -> HoleV5 | HoleV6:
+    """Create an API object by version number."""
+
+    if password is None:
+        password = entry.get(CONF_API_KEY)
+    session = async_get_clientsession(hass, entry[CONF_VERIFY_SSL])
+    hole_kwargs = {
+        "host": entry[CONF_HOST],
+        "session": session,
+        "location": entry[CONF_LOCATION],
+        "verify_tls": entry[CONF_VERIFY_SSL],
+        "version": version,
+    }
+    if version == 5:
+        hole_kwargs["tls"] = entry.get(CONF_SSL)
+        hole_kwargs["api_token"] = password
+    elif version == 6:
+        hole_kwargs["protocol"] = "https" if entry.get(CONF_SSL) else "http"
+        hole_kwargs["password"] = password
+
+    return Hole(**hole_kwargs)
+
+
 async def determine_api_version(
     hass: HomeAssistant, entry: dict[str, Any]
 ) -> Literal[5, 6]:
@@ -198,15 +226,8 @@ async def determine_api_version(
     version 5 returns an empty list in response to unauthenticated requests.
     Because we are using endpoints that are not designed for this purpose, we should log liberally to help with debugging.
     """
-    session = async_get_clientsession(hass, entry[CONF_VERIFY_SSL])
-    holeV6 = Hole(
-        host=entry[CONF_HOST],
-        session=session,
-        location=entry[CONF_LOCATION],
-        protocol="https" if entry[CONF_SSL] else "http",
-        password="wrong_password",
-        version=6,
-    )
+
+    holeV6 = api_by_version(hass, entry, 6, password="wrong_password")
     try:
         await holeV6.authenticate()
     # Ideally python-hole would raise a specific exception for authentication failures
@@ -227,16 +248,7 @@ async def determine_api_version(
             holeV6.base_url,
             err,
         )
-
-    holeV5 = Hole(
-        host=entry[CONF_HOST],
-        session=session,
-        location=entry[CONF_LOCATION],
-        tls=entry[CONF_SSL],
-        verify_tls=entry[CONF_VERIFY_SSL],
-        api_token="wrong_token",
-        version=5,
-    )
+    holeV5 = api_by_version(hass, entry, 5, password="wrong_token")
     try:
         await holeV5.get_data()
         if holeV5.data == []:

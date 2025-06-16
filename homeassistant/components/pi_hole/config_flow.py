@@ -6,7 +6,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from hole import Hole, HoleV5, HoleV6
 from hole.exceptions import HoleError
 import voluptuous as vol
 
@@ -21,9 +20,8 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import determine_api_version
+from . import api_by_version, determine_api_version
 from .const import (
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -135,35 +133,13 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _api_by_version(
-        self,
-        version: int,
-    ) -> HoleV5 | HoleV6:
-        """Create an API object by version number."""
-        session = async_get_clientsession(self.hass, self._config[CONF_VERIFY_SSL])
-        hole_kwargs = {
-            "host": self._config[CONF_HOST],
-            "session": session,
-            "location": self._config[CONF_LOCATION],
-            "verify_tls": self._config[CONF_VERIFY_SSL],
-            "version": version,
-        }
-        if version == 5:
-            hole_kwargs["tls"] = self._config.get(CONF_SSL)
-            hole_kwargs["api_token"] = self._config.get(CONF_API_KEY)
-        if version == 6:
-            hole_kwargs["protocol"] = "https" if self._config.get(CONF_SSL) else "http"
-            hole_kwargs["password"] = self._config.get(CONF_API_KEY)
-
-        return Hole(**hole_kwargs)
-
     async def _async_try_connect(self) -> dict[str, str]:
         """Try to connect to the Pi-hole API and determine the version."""
         try:
             version = await determine_api_version(hass=self.hass, entry=self._config)
         except HoleError:
             return {"base": "cannot_connect"}
-        pi_hole = self._api_by_version(version)
+        pi_hole = api_by_version(self.hass, self._config, version)
 
         if version == 6:
             try:
