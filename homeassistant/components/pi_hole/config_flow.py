@@ -174,7 +174,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Failed authenticating with pihole API version: %s", 6)
                 return {CONF_API_KEY: "invalid_auth"}
 
-        if version == 5:
+        elif version == 5:
             try:
                 await pi_hole.get_data()
                 if pi_hole.data is not None and "error" in pi_hole.data:
