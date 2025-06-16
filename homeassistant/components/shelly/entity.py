@@ -362,7 +362,10 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         self.block = block
         self._attr_name = get_block_entity_name(coordinator.device, block)
         self._attr_device_info = get_block_device_info(
-            coordinator.device, coordinator.mac, block
+            coordinator.device,
+            coordinator.mac,
+            block,
+            suggested_area=coordinator.suggested_area,
         )
         self._attr_unique_id = f"{coordinator.mac}-{block.description}"
 
@@ -405,7 +408,10 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         super().__init__(coordinator)
         self.key = key
         self._attr_device_info = get_rpc_device_info(
-            coordinator.device, coordinator.mac, key
+            coordinator.device,
+            coordinator.mac,
+            key,
+            suggested_area=coordinator.suggested_area,
         )
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
@@ -521,7 +527,9 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
         )
         self._attr_unique_id = f"{coordinator.mac}-{attribute}"
         self._attr_device_info = get_block_device_info(
-            coordinator.device, coordinator.mac
+            coordinator.device,
+            coordinator.mac,
+            suggested_area=coordinator.suggested_area,
         )
         self._last_value = None
 
@@ -630,7 +638,10 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
         self.entity_description = description
 
         self._attr_device_info = get_block_device_info(
-            coordinator.device, coordinator.mac, block
+            coordinator.device,
+            coordinator.mac,
+            block,
+            suggested_area=coordinator.suggested_area,
         )
 
         if block is not None:
@@ -698,7 +709,10 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self.entity_description = description
 
         self._attr_device_info = get_rpc_device_info(
-            coordinator.device, coordinator.mac, key
+            coordinator.device,
+            coordinator.mac,
+            key,
+            suggested_area=coordinator.suggested_area,
         )
         self._attr_unique_id = self._attr_unique_id = (
             f"{coordinator.mac}-{key}-{attribute}"

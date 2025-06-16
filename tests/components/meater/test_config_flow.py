@@ -23,7 +23,9 @@ def mock_client():
 @pytest.fixture
 def mock_meater(mock_client):
     """Mock the meater library."""
-    with patch("homeassistant.components.meater.MeaterApi.authenticate") as mock_:
+    with patch(
+        "homeassistant.components.meater.coordinator.MeaterApi.authenticate"
+    ) as mock_:
         mock_.side_effect = mock_client
         yield mock_
 
