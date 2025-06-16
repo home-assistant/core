@@ -59,9 +59,9 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices:
-      status: exempt
-      comment: |
-          Device type integration
+    status: exempt
+    comment: |
+      Device type integration
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: todo
@@ -73,9 +73,9 @@ rules:
     status: exempt
     comment: No known use cases for repair issues or flows, yet
   stale-devices:
-       status: exempt
-      comment: |
-          Device type integration
+    status: exempt
+    comment: |
+      Device type integration
 
   # Platinum
   async-dependency: done
