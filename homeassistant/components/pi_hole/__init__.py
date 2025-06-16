@@ -201,6 +201,7 @@ async def determine_api_version(
     )
     try:
         await holeV6.authenticate()
+    # Ideally python-hole would raise a specific exception for authentication failures
     except HoleError as ex_v6:
         if str(ex_v6) == "Authentication failed: Invalid password":
             _LOGGER.debug(
