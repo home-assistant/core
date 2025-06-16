@@ -1,4 +1,4 @@
-"""Test the Kostal Plenticore Solar Inverter select platform."""
+"""Test the Kostal Plenticore Solar Inverter switch platform."""
 
 from pykoplenti import SettingsData
 
