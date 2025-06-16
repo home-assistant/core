@@ -250,11 +250,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # opower > arrow > types-python-dateutil
         "arrow": {"types-python-dateutil"}
     },
-    "osoenergy": {
-        # https://github.com/osohotwateriot/apyosohotwaterapi/pull/4
-        # pyosoenergyapi > unasync > setuptools
-        "unasync": {"setuptools"}
-    },
     "ovo_energy": {
         # https://github.com/timmo001/ovoenergy/issues/132
         # ovoenergy > incremental > setuptools
