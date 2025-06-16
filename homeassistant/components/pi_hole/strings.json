@@ -33,7 +33,7 @@
   "issues": {
     "v5_to_v6_migration": {
       "title": "Recent migration from Pi-hole API v5 to v6",
-      "description": "We have detected that you have likely updated you Pi-hole to a version 6 API from version 5. Some sensors are different in the new API as the daily sensors have been removed and your old API token will be invalid, please provide your new app password by following the re-authentication process in repairs or in Settings -> Devices & services -> Pi-hole"
+      "description": "You've likely updated your Pi-hole to API v6 from v5. Some sensors changed in the new API, the daily sensors were removed, and your old API token is invalid. Provide your new app password by re-authenticating in repairs or in **Settings -> Devices & services -> Pi-hole**."
     }
   },
   "entity": {
