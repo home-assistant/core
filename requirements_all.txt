@@ -2350,7 +2350,7 @@ pysmarty2==0.10.2
 pysmhi==1.0.2
 
 # homeassistant.components.edl21
-pysml==0.0.12
+pysml==0.1.5
 
 # homeassistant.components.smlight
 pysmlight==0.2.6

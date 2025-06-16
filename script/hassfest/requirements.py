@@ -109,11 +109,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "devialet": {"async-upnp-client": {"async-timeout"}},
     "dlna_dmr": {"async-upnp-client": {"async-timeout"}},
     "dlna_dms": {"async-upnp-client": {"async-timeout"}},
-    "edl21": {
-        # https://github.com/mtdcr/pysml/issues/21
-        # pysml > pyserial-asyncio
-        "pysml": {"pyserial-asyncio", "async-timeout"},
-    },
     "efergy": {
         # https://github.com/tkdrob/pyefergy/issues/46
         # pyefergy > codecov
