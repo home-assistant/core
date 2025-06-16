@@ -148,12 +148,12 @@ async def test_sensor(
     await hass.async_block_till_done()
 
     duration = hass.states.get("sensor.test_duration")
-    assert duration.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
+    assert duration.attributes.get("unit_of_measurement") == UnitOfTime.SECONDS
     assert duration.attributes.get(ATTR_ICON) == icon
-    assert duration.state == "26"
+    assert duration.state == "1571"
 
     assert float(hass.states.get("sensor.test_distance").state) == pytest.approx(13.682)
-    assert hass.states.get("sensor.test_duration_in_traffic").state == "30"
+    assert hass.states.get("sensor.test_duration_in_traffic").state == "1776"
     assert hass.states.get("sensor.test_origin").state == "22nd St NW"
     assert (
         hass.states.get("sensor.test_origin").attributes.get(ATTR_LATITUDE)
@@ -501,13 +501,13 @@ async def test_restore_state(hass: HomeAssistant) -> None:
                     "1234",
                     attributes={
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfTime.MINUTES,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfTime.SECONDS,
                         ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                     },
                 ),
                 {
                     "native_value": 1234,
-                    "native_unit_of_measurement": UnitOfTime.MINUTES,
+                    "native_unit_of_measurement": UnitOfTime.SECONDS,
                     "icon": "mdi:car",
                     "last_reset": last_reset,
                 },
@@ -518,13 +518,13 @@ async def test_restore_state(hass: HomeAssistant) -> None:
                     "5678",
                     attributes={
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfTime.MINUTES,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfTime.SECONDS,
                         ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                     },
                 ),
                 {
                     "native_value": 5678,
-                    "native_unit_of_measurement": UnitOfTime.MINUTES,
+                    "native_unit_of_measurement": UnitOfTime.SECONDS,
                     "icon": "mdi:car",
                     "last_reset": last_reset,
                 },
@@ -597,12 +597,12 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     # restore from cache
     state = hass.states.get("sensor.test_duration")
     assert state.state == "1234"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.MINUTES
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.SECONDS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     state = hass.states.get("sensor.test_duration_in_traffic")
     assert state.state == "5678"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.MINUTES
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.SECONDS
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     state = hass.states.get("sensor.test_distance")
@@ -799,10 +799,10 @@ async def test_multiple_sections(
     await hass.async_block_till_done()
 
     duration = hass.states.get("sensor.test_duration")
-    assert duration.state == "18"
+    assert duration.state == "1109"
 
     assert float(hass.states.get("sensor.test_distance").state) == pytest.approx(3.583)
-    assert hass.states.get("sensor.test_duration_in_traffic").state == "18"
+    assert hass.states.get("sensor.test_duration_in_traffic").state == "1109"
     assert hass.states.get("sensor.test_origin").state == "Chemin de Halage"
     assert (
         hass.states.get("sensor.test_origin").attributes.get(ATTR_LATITUDE)
