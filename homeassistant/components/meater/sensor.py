@@ -30,8 +30,8 @@ from .const import DOMAIN
 class MeaterSensorEntityDescription(SensorEntityDescription):
     """Describes meater sensor entity."""
 
-    available: Callable[[MeaterProbe | None], bool]
     value: Callable[[MeaterProbe], datetime | float | str | None]
+    requires_cook: bool = False
 
 
 def _elapsed_time_to_timestamp(probe: MeaterProbe) -> datetime | None:
@@ -60,7 +60,6 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda probe: probe is not None,
         value=lambda probe: probe.ambient_temperature,
     ),
     # Internal temperature (probe tip)
@@ -70,14 +69,13 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda probe: probe is not None,
         value=lambda probe: probe.internal_temperature,
     ),
     # Name of selected meat in user language or user given custom name
     MeaterSensorEntityDescription(
         key="cook_name",
         translation_key="cook_name",
-        available=lambda probe: probe is not None and probe.cook is not None,
+        requires_cook=True,
         value=lambda probe: probe.cook.name if probe.cook else None,
     ),
     # One of Not Started, Configured, Started, Ready For Resting, Resting,
@@ -85,7 +83,7 @@ SENSOR_TYPES = (
     MeaterSensorEntityDescription(
         key="cook_state",
         translation_key="cook_state",
-        available=lambda probe: probe is not None and probe.cook is not None,
+        requires_cook=True,
         value=lambda probe: probe.cook.state if probe.cook else None,
     ),
     # Target temperature
@@ -95,10 +93,12 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda probe: probe is not None and probe.cook is not None,
-        value=lambda probe: probe.cook.target_temperature
-        if probe.cook and hasattr(probe.cook, "target_temperature")
-        else None,
+        requires_cook=True,
+        value=(
+            lambda probe: probe.cook.target_temperature
+            if probe.cook and hasattr(probe.cook, "target_temperature")
+            else None
+        ),
     ),
     # Peak temperature
     MeaterSensorEntityDescription(
@@ -107,10 +107,12 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda probe: probe is not None and probe.cook is not None,
-        value=lambda probe: probe.cook.peak_temperature
-        if probe.cook and hasattr(probe.cook, "peak_temperature")
-        else None,
+        requires_cook=True,
+        value=(
+            lambda probe: probe.cook.peak_temperature
+            if probe.cook and hasattr(probe.cook, "peak_temperature")
+            else None
+        ),
     ),
     # Remaining time in seconds. When unknown/calculating default is used. Default: -1
     # Exposed as a TIMESTAMP sensor where the timestamp is current time + remaining time.
@@ -118,7 +120,7 @@ SENSOR_TYPES = (
         key="cook_time_remaining",
         translation_key="cook_time_remaining",
         device_class=SensorDeviceClass.TIMESTAMP,
-        available=lambda probe: probe is not None and probe.cook is not None,
+        requires_cook=True,
         value=_remaining_time_to_timestamp,
     ),
     # Time since the start of cook in seconds. Default: 0. Exposed as a TIMESTAMP sensor
@@ -127,7 +129,7 @@ SENSOR_TYPES = (
         key="cook_time_elapsed",
         translation_key="cook_time_elapsed",
         device_class=SensorDeviceClass.TIMESTAMP,
-        available=lambda probe: probe is not None and probe.cook is not None,
+        requires_cook=True,
         value=_elapsed_time_to_timestamp,
     ),
 )
@@ -178,7 +180,10 @@ class MeaterProbeTemperature(SensorEntity, CoordinatorEntity[MeaterCoordinator])
     entity_description: MeaterSensorEntityDescription
 
     def __init__(
-        self, coordinator, device_id, description: MeaterSensorEntityDescription
+        self,
+        coordinator: MeaterCoordinator,
+        device_id: str,
+        description: MeaterSensorEntityDescription,
     ) -> None:
         """Initialise the sensor."""
         super().__init__(coordinator)
@@ -197,20 +202,24 @@ class MeaterProbeTemperature(SensorEntity, CoordinatorEntity[MeaterCoordinator])
         self.entity_description = description
 
     @property
-    def native_value(self):
-        """Return the temperature of the probe."""
-        if not (device := self.coordinator.data.get(self.device_id)):
-            return None
+    def probe(self) -> MeaterProbe:
+        """Return the probe."""
+        return self.coordinator.data[self.device_id]
 
-        return self.entity_description.value(device)
+    @property
+    def native_value(self) -> datetime | float | str | None:
+        """Return the temperature of the probe."""
+        return self.entity_description.value(self.probe)
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         # See if the device was returned from the API. If not, it's offline
         return (
-            self.coordinator.last_update_success
-            and self.entity_description.available(
-                self.coordinator.data.get(self.device_id)
+            super().available
+            and self.device_id in self.coordinator.data
+            and (
+                not self.entity_description.requires_cook
+                or self.coordinator.data[self.device_id].cook is not None
             )
         )
