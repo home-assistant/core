@@ -18,17 +18,35 @@
       "init": {
         "data": {
           "prompt": "Instructions",
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+          "recommended": "Recommended model settings"
+        },
+        "data_description": {
+          "prompt": "Instruct how the LLM should respond. This can be a template."
+        }
+      },
+      "advanced": {
+        "title": "Advanced settings",
+        "data": {
           "chat_model": "[%key:common::generic::model%]",
           "max_tokens": "Maximum tokens to return in response",
           "temperature": "Temperature",
-          "top_p": "Top P",
-          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
-          "recommended": "Recommended model settings",
-          "reasoning_effort": "Reasoning effort"
+          "top_p": "Top P"
+        }
+      },
+      "model": {
+        "title": "Model-specific options",
+        "data": {
+          "reasoning_effort": "Reasoning effort",
+          "web_search": "Enable web search",
+          "search_context_size": "Search context size",
+          "user_location": "Include home location"
         },
         "data_description": {
-          "prompt": "Instruct how the LLM should respond. This can be a template.",
-          "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt (for certain reasoning models)"
+          "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
+          "web_search": "Allow the model to search the web for the latest information before generating a response",
+          "search_context_size": "High level guidance for the amount of context window space to use for the search",
+          "user_location": "Refine search results based on geography"
         }
       }
     },
@@ -39,9 +57,16 @@
   "selector": {
     "reasoning_effort": {
       "options": {
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
+      }
+    },
+    "search_context_size": {
+      "options": {
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
       }
     }
   },
@@ -75,7 +100,7 @@
     },
     "generate_content": {
       "name": "Generate content",
-      "description": "Sends a conversational query to ChatGPT including any attached image files",
+      "description": "Sends a conversational query to ChatGPT including any attached image or PDF files",
       "fields": {
         "config_entry": {
           "name": "Config entry",

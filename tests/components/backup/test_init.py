@@ -6,11 +6,13 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
+from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotFound
 
 from .common import setup_backup_integration
 
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
@@ -141,3 +143,17 @@ async def test_create_automatic_service(
         )
 
     generate_backup.assert_called_once_with(**expected_kwargs)
+
+
+async def test_setup_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup backup config entry."""
+    await setup_backup_integration(hass, with_hassio=False)
+    entry = MockConfigEntry(domain=DOMAIN, source=SOURCE_SYSTEM)
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.backup.PLATFORMS", return_value=[]):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED

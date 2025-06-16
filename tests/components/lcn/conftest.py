@@ -88,7 +88,7 @@ def create_config_entry(
 
     title = entry_data[CONF_HOST]
     return MockConfigEntry(
-        entry_id=fixture_filename,
+        entry_id=fixture_filename.replace(".", "_"),
         domain=DOMAIN,
         title=title,
         data=entry_data,

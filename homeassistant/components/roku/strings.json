@@ -47,7 +47,7 @@
         "name": "Supports AirPlay"
       },
       "supports_ethernet": {
-        "name": "Supports ethernet"
+        "name": "Supports Ethernet"
       },
       "supports_find_remote": {
         "name": "Supports find remote"

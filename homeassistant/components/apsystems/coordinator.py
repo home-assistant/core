@@ -43,6 +43,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
 
     config_entry: ApSystemsConfigEntry
     device_version: str
+    battery_system: bool
 
     def __init__(
         self,
@@ -68,6 +69,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         self.api.max_power = device_info.maxPower
         self.api.min_power = device_info.minPower
         self.device_version = device_info.devVer
+        self.battery_system = device_info.isBatterySystem
 
     async def _async_update_data(self) -> ApSystemsSensorData:
         try:

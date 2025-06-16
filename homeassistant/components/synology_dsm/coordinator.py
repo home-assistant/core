@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, Concatenate
@@ -26,6 +27,20 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class SynologyDSMData:
+    """Data for the synology_dsm integration."""
+
+    api: SynoApi
+    coordinator_central: SynologyDSMCentralUpdateCoordinator
+    coordinator_central_old_update_success: bool
+    coordinator_cameras: SynologyDSMCameraUpdateCoordinator | None
+    coordinator_switches: SynologyDSMSwitchUpdateCoordinator | None
+
+
+type SynologyDSMConfigEntry = ConfigEntry[SynologyDSMData]
 
 
 def async_re_login_on_expired[_T: SynologyDSMUpdateCoordinator[Any], **_P, _R](
@@ -57,12 +72,12 @@ def async_re_login_on_expired[_T: SynologyDSMUpdateCoordinator[Any], **_P, _R](
 class SynologyDSMUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator base class for synology_dsm."""
 
-    config_entry: ConfigEntry
+    config_entry: SynologyDSMConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: SynologyDSMConfigEntry,
         api: SynoApi,
         update_interval: timedelta,
     ) -> None:
@@ -85,7 +100,7 @@ class SynologyDSMSwitchUpdateCoordinator(
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: SynologyDSMConfigEntry,
         api: SynoApi,
     ) -> None:
         """Initialize DataUpdateCoordinator for switch devices."""
@@ -116,7 +131,7 @@ class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator[None]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: SynologyDSMConfigEntry,
         api: SynoApi,
     ) -> None:
         """Initialize DataUpdateCoordinator for central device."""
@@ -136,7 +151,7 @@ class SynologyDSMCameraUpdateCoordinator(
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: SynologyDSMConfigEntry,
         api: SynoApi,
     ) -> None:
         """Initialize DataUpdateCoordinator for cameras."""

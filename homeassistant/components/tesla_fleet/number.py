@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -33,7 +33,7 @@ PARALLEL_UPDATES = 0
 class TeslaFleetNumberVehicleEntityDescription(NumberEntityDescription):
     """Describes TeslaFleet Number entity."""
 
-    func: Callable[[VehicleSpecific, float], Awaitable[Any]]
+    func: Callable[[VehicleFleet, float], Awaitable[Any]]
     native_min_value: float
     native_max_value: float
     min_key: str | None = None
@@ -74,7 +74,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetNumberVehicleEntityDescription, ...] = (
 class TeslaFleetNumberBatteryEntityDescription(NumberEntityDescription):
     """Describes TeslaFleet Number entity."""
 
-    func: Callable[[EnergySpecific, float], Awaitable[Any]]
+    func: Callable[[EnergySite, float], Awaitable[Any]]
     requires: str | None = None
 
 

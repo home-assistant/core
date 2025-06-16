@@ -62,6 +62,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
         except (ClientError, TimeoutError):
             return self.async_abort(reason="cannot_connect")
         except Exception:  # noqa: BLE001
+            LOGGER.exception("Unknown exception occurred")
             return self.async_abort(reason="unknown")
         await self.async_set_unique_id(hub.main.mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})

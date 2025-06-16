@@ -1,9 +1,13 @@
 """Tests helpers."""
 
-from unittest.mock import Mock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from homeassistant.components.google_generative_ai_conversation.entity import (
+    CONF_USE_GOOGLE_SEARCH_TOOL,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
@@ -42,6 +46,23 @@ async def mock_config_entry_with_assist(
 
 
 @pytest.fixture
+async def mock_config_entry_with_google_search(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Mock a config entry with assist."""
+    with patch("google.genai.models.AsyncModels.get"):
+        hass.config_entries.async_update_entry(
+            mock_config_entry,
+            options={
+                CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+                CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
+        )
+        await hass.async_block_till_done()
+    return mock_config_entry
+
+
+@pytest.fixture
 async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: ConfigEntry
 ) -> None:
@@ -57,3 +78,22 @@ async def mock_init_component(
 async def setup_ha(hass: HomeAssistant) -> None:
     """Set up Home Assistant."""
     assert await async_setup_component(hass, "homeassistant", {})
+
+
+@pytest.fixture
+def mock_send_message_stream() -> Generator[AsyncMock]:
+    """Mock stream response."""
+
+    async def mock_generator(stream):
+        for value in stream:
+            yield value
+
+    with patch(
+        "google.genai.chats.AsyncChat.send_message_stream",
+        AsyncMock(),
+    ) as mock_send_message_stream:
+        mock_send_message_stream.side_effect = lambda **kwargs: mock_generator(
+            mock_send_message_stream.return_value.pop(0)
+        )
+
+        yield mock_send_message_stream

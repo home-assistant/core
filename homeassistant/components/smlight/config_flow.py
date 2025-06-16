@@ -51,14 +51,13 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             self.client = Api2(self._host, session=async_get_clientsession(self.hass))
 
             try:
-                info = await self.client.get_info()
-                self._host = str(info.device_ip)
-                self._device_name = str(info.hostname)
-
-                if info.model not in Devices:
-                    return self.async_abort(reason="unsupported_device")
-
                 if not await self._async_check_auth_required(user_input):
+                    info = await self.client.get_info()
+                    self._device_name = str(info.hostname)
+
+                    if info.model not in Devices:
+                        return self.async_abort(reason="unsupported_device")
+
                     return await self._async_complete_entry(user_input)
             except SmlightConnectionError:
                 errors["base"] = "cannot_connect"
@@ -79,7 +78,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 if not await self._async_check_auth_required(user_input):
                     info = await self.client.get_info()
-                    self._host = str(info.device_ip)
                     self._device_name = str(info.hostname)
 
                     if info.model not in Devices:
@@ -128,13 +126,13 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                info = await self.client.get_info()
-
-                if info.model not in Devices:
-                    return self.async_abort(reason="unsupported_device")
-
                 if not await self._async_check_auth_required(user_input):
-                    return await self._async_complete_entry(user_input)
+                    info = await self.client.get_info()
+
+                    if info.model not in Devices:
+                        return self.async_abort(reason="unsupported_device")
+
+                return await self._async_complete_entry(user_input)
 
             except SmlightConnectionError:
                 return self.async_abort(reason="cannot_connect")

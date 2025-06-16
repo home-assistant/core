@@ -87,6 +87,7 @@ async def test_validate_db_schema_fix_float_issue(
         "created_ts DOUBLE PRECISION",
         "start_ts DOUBLE PRECISION",
         "mean DOUBLE PRECISION",
+        "mean_weight DOUBLE PRECISION",
         "min DOUBLE PRECISION",
         "max DOUBLE PRECISION",
         "last_reset_ts DOUBLE PRECISION",

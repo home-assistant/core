@@ -10,6 +10,8 @@
         'pushAlarm': 7,
       }),
     }),
+    'Baichuan only': False,
+    'Baichuan port': 5678,
     'Chimes': dict({
       '12345678': dict({
         'channel': 0,
@@ -62,6 +64,18 @@
       0,
     ]),
     'cmd list': dict({
+      '208': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '296': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '299': dict({
+        '0': 1,
+        'null': 1,
+      }),
       'DingDongOpt': dict({
         '0': 2,
         'null': 2,
@@ -134,6 +148,10 @@
         '0': 1,
         'null': 1,
       }),
+      'GetMask': dict({
+        '0': 1,
+        'null': 1,
+      }),
       'GetMdAlarm': dict({
         '0': 1,
         'null': 1,
@@ -165,6 +183,9 @@
       'GetRec': dict({
         '0': 1,
         'null': 2,
+      }),
+      'GetScene': dict({
+        'null': 1,
       }),
       'GetStateLight': dict({
         'null': 1,

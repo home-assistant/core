@@ -12,7 +12,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from homeassistant.components.backup import BackupManager, ManagerStateEvent
+    from homeassistant.components.backup import (
+        BackupManager,
+        BackupPlatformEvent,
+        ManagerStateEvent,
+    )
 
 DATA_BACKUP: HassKey[BackupData] = HassKey("backup_data")
 DATA_MANAGER: HassKey[BackupManager] = HassKey("backup")
@@ -24,6 +28,9 @@ class BackupData:
 
     backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = field(
         default_factory=list
+    )
+    backup_platform_event_subscriptions: list[Callable[[BackupPlatformEvent], None]] = (
+        field(default_factory=list)
     )
     manager_ready: asyncio.Future[None] = field(default_factory=asyncio.Future)
 
@@ -67,4 +74,21 @@ def async_subscribe_events(
         backup_event_subscriptions.remove(on_event)
 
     backup_event_subscriptions.append(on_event)
+    return remove_subscription
+
+
+@callback
+def async_subscribe_platform_events(
+    hass: HomeAssistant,
+    on_event: Callable[[BackupPlatformEvent], None],
+) -> Callable[[], None]:
+    """Subscribe to backup platform events."""
+    backup_platform_event_subscriptions = hass.data[
+        DATA_BACKUP
+    ].backup_platform_event_subscriptions
+
+    def remove_subscription() -> None:
+        backup_platform_event_subscriptions.remove(on_event)
+
+    backup_platform_event_subscriptions.append(on_event)
     return remove_subscription

@@ -7,6 +7,9 @@ import sys
 from types import TracebackType
 from typing import Any, Self
 
+# httpx dynamically imports httpcore, so we need to import it
+# to avoid it being imported later when the event loop is running
+import httpcore  # noqa: F401
 import httpx
 
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__

@@ -51,6 +51,32 @@ async def test_motion_sensor(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+async def test_smart_ai_sensor(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test smart ai binary sensor entity."""
+    reolink_connect.model = TEST_HOST_MODEL
+    reolink_connect.baichuan.smart_ai_state.return_value = True
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BINARY_SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.BINARY_SENSOR}.{TEST_NVR_NAME}_crossline_zone1_person"
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    reolink_connect.baichuan.smart_ai_state.return_value = False
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
 async def test_tcp_callback(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

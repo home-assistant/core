@@ -16,16 +16,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER
 
+type IntellifireConfigEntry = ConfigEntry[IntellifireDataUpdateCoordinator]
+
 
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData]):
     """Class to manage the polling of the fireplace API."""
 
-    config_entry: ConfigEntry
+    config_entry: IntellifireConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: IntellifireConfigEntry,
         fireplace: UnifiedFireplace,
     ) -> None:
         """Initialize the Coordinator."""

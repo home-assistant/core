@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/airzone_cloud",
   "iot_class": "cloud_push",
   "loggers": ["aioairzone_cloud"],
-  "requirements": ["aioairzone-cloud==0.6.10"]
+  "requirements": ["aioairzone-cloud==0.6.12"]
 }

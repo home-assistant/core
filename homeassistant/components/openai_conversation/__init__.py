@@ -7,21 +7,16 @@ from mimetypes import guess_file_type
 from pathlib import Path
 
 import openai
-from openai.types.chat.chat_completion import ChatCompletion
-from openai.types.chat.chat_completion_content_part_image_param import (
-    ChatCompletionContentPartImageParam,
-    ImageURL,
-)
-from openai.types.chat.chat_completion_content_part_param import (
-    ChatCompletionContentPartParam,
-)
-from openai.types.chat.chat_completion_content_part_text_param import (
-    ChatCompletionContentPartTextParam,
-)
-from openai.types.chat.chat_completion_user_message_param import (
-    ChatCompletionUserMessageParam,
-)
 from openai.types.images_response import ImagesResponse
+from openai.types.responses import (
+    EasyInputMessageParam,
+    Response,
+    ResponseInputFileParam,
+    ResponseInputImageParam,
+    ResponseInputMessageContentListParam,
+    ResponseInputParam,
+    ResponseInputTextParam,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,10 +39,18 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_CHAT_MODEL,
     CONF_FILENAMES,
+    CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_REASONING_EFFORT,
+    CONF_TEMPERATURE,
+    CONF_TOP_P,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_REASONING_EFFORT,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TOP_P,
 )
 
 SERVICE_GENERATE_IMAGE = "generate_image"
@@ -98,6 +101,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except openai.OpenAIError as err:
             raise HomeAssistantError(f"Error generating image: {err}") from err
 
+        if not response.data or not response.data[0].url:
+            raise HomeAssistantError("No image returned")
+
         return response.data[0].model_dump(exclude={"b64_json"})
 
     async def send_prompt(call: ServiceCall) -> ServiceResponse:
@@ -112,17 +118,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_placeholders={"config_entry": entry_id},
             )
 
-        model: str = entry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model: str = entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
         client: openai.AsyncClient = entry.runtime_data
 
-        prompt_parts: list[ChatCompletionContentPartParam] = [
-            ChatCompletionContentPartTextParam(
-                type="text",
-                text=call.data[CONF_PROMPT],
-            )
+        content: ResponseInputMessageContentListParam = [
+            ResponseInputTextParam(type="input_text", text=call.data[CONF_PROMPT])
         ]
 
-        def append_files_to_prompt() -> None:
+        def append_files_to_content() -> None:
             for filename in call.data[CONF_FILENAMES]:
                 if not hass.config.is_allowed_path(filename):
                     raise HomeAssistantError(
@@ -133,51 +136,65 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 if not Path(filename).exists():
                     raise HomeAssistantError(f"`{filename}` does not exist")
                 mime_type, base64_file = encode_file(filename)
-                if "image/" not in mime_type:
+                if "image/" in mime_type:
+                    content.append(
+                        ResponseInputImageParam(
+                            type="input_image",
+                            image_url=f"data:{mime_type};base64,{base64_file}",
+                            detail="auto",
+                        )
+                    )
+                elif "application/pdf" in mime_type:
+                    content.append(
+                        ResponseInputFileParam(
+                            type="input_file",
+                            filename=filename,
+                            file_data=f"data:{mime_type};base64,{base64_file}",
+                        )
+                    )
+                else:
                     raise HomeAssistantError(
-                        "Only images are supported by the OpenAI API,"
-                        f"`{filename}` is not an image file"
+                        "Only images and PDF are supported by the OpenAI API,"
+                        f"`{filename}` is not an image file or PDF"
                     )
-                prompt_parts.append(
-                    ChatCompletionContentPartImageParam(
-                        type="image_url",
-                        image_url=ImageURL(
-                            url=f"data:{mime_type};base64,{base64_file}"
-                        ),
-                    )
-                )
 
         if CONF_FILENAMES in call.data:
-            await hass.async_add_executor_job(append_files_to_prompt)
+            await hass.async_add_executor_job(append_files_to_content)
 
-        messages: list[ChatCompletionUserMessageParam] = [
-            ChatCompletionUserMessageParam(
-                role="user",
-                content=prompt_parts,
-            )
+        messages: ResponseInputParam = [
+            EasyInputMessageParam(type="message", role="user", content=content)
         ]
 
         try:
-            response: ChatCompletion = await client.chat.completions.create(
-                model=model,
-                messages=messages,
-                n=1,
-                response_format={
-                    "type": "json_object",
-                },
-            )
+            model_args = {
+                "model": model,
+                "input": messages,
+                "max_output_tokens": entry.options.get(
+                    CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
+                ),
+                "top_p": entry.options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                "temperature": entry.options.get(
+                    CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+                ),
+                "user": call.context.user_id,
+                "store": False,
+            }
+
+            if model.startswith("o"):
+                model_args["reasoning"] = {
+                    "effort": entry.options.get(
+                        CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+                    )
+                }
+
+            response: Response = await client.responses.create(**model_args)
 
         except openai.OpenAIError as err:
             raise HomeAssistantError(f"Error generating content: {err}") from err
         except FileNotFoundError as err:
             raise HomeAssistantError(f"Error generating content: {err}") from err
 
-        response_text: str = ""
-        for response_choice in response.choices:
-            if response_choice.message.content is not None:
-                response_text += response_choice.message.content.strip()
-
-        return {"text": response_text}
+        return {"text": response.output_text}
 
     hass.services.async_register(
         DOMAIN,

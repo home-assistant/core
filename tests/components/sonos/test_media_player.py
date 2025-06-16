@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 from soco.data_structures import SearchResult
 from sonos_websocket.exception import SonosWebsocketError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -27,7 +27,8 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.components.sonos.const import (
-    DOMAIN as SONOS_DOMAIN,
+    DOMAIN,
+    MEDIA_TYPE_DIRECTORY,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
@@ -182,6 +183,19 @@ async def test_entity_basic(
                 "play_pos": 0,
             },
         ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/elton%20john",
+            MediaPlayerEnqueue.REPLACE,
+            {
+                "title": None,
+                "item_id": "S://192.168.1.1/music/elton%20john",
+                "clear_queue": 1,
+                "position": None,
+                "play": 1,
+                "play_pos": 0,
+            },
+        ),
     ],
 )
 async def test_play_media_library(
@@ -246,6 +260,11 @@ async def test_play_media_library(
             "UnknownContent",
             "A:ALBUM/UnknowAlbum",
             "Sonos does not support media content type: UnknownContent",
+        ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/error",
+            "Could not find media in library: S://192.168.1.1/music/error",
         ),
     ],
 )
@@ -692,6 +711,7 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-radio:ST%3aetc",
                 "play_uri_title": "James Taylor Radio",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="100c2068ST%3a1683194971234567890" parentID="10fe2064myStations" restricted="true"><dc:title>James Taylor Radio</dc:title><upnp:class>object.item.audioItem.audioBroadcast.#station</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON60423_X_#Svc60423-99999999-Token</desc></item></DIDL-Lite>',
             },
         ),
         (
@@ -700,6 +720,16 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
                 "play_uri_title": "66 - Watercolors",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10090120Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-9999-9999-9999-4bc8e2cdccce" parentID="10086064live%3f93b0b9cb-9999-9999-9999-bcf75971fcfe" restricted="false"><dc:title>66 - Watercolors</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON9479_X_#Svc9479-99999999-Token</desc></item></DIDL-Lite>',
+            },
+        ),
+        (
+            "American Tall Tales",
+            {
+                "play_uri": 1,
+                "play_uri_uri": "x-rincon-cpcontainer:101340c8reftitle%C9F27_com?sid=239&flags=16584&sn=5",
+                "play_uri_title": "American Tall Tales",
+                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="101340c8reftitleC9F27_com" parentID="101340c8reftitleC9F27_com" restricted="true"><dc:title>American Tall Tales</dc:title><upnp:class>object.item.audioItem.audioBook</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON61191_X_#Svc6-0-Token</desc></item></DIDL-Lite>',
             },
         ),
     ],
@@ -726,6 +756,7 @@ async def test_select_source_play_uri(
     soco_mock.play_uri.assert_called_with(
         result.get("play_uri_uri"),
         title=result.get("play_uri_title"),
+        meta=result.get("play_uri_meta"),
         timeout=LONG_SERVICE_TIMEOUT,
     )
 
@@ -981,7 +1012,7 @@ async def test_play_media_favorite_item_id(
 async def _setup_hass(hass: HomeAssistant):
     await async_setup_component(
         hass,
-        SONOS_DOMAIN,
+        DOMAIN,
         {
             "sonos": {
                 "media_player": {
@@ -1006,7 +1037,7 @@ async def test_service_snapshot_restore(
         "homeassistant.components.sonos.speaker.Snapshot.snapshot"
     ) as mock_snapshot:
         await hass.services.async_call(
-            SONOS_DOMAIN,
+            DOMAIN,
             SERVICE_SNAPSHOT,
             {
                 ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
@@ -1019,7 +1050,7 @@ async def test_service_snapshot_restore(
         "homeassistant.components.sonos.speaker.Snapshot.restore"
     ) as mock_restore:
         await hass.services.async_call(
-            SONOS_DOMAIN,
+            DOMAIN,
             SERVICE_RESTORE,
             {
                 ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
@@ -1196,7 +1227,7 @@ async def test_media_get_queue(
     """Test getting the media queue."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     result = await hass.services.async_call(
-        SONOS_DOMAIN,
+        DOMAIN,
         SERVICE_GET_QUEUE,
         {
             ATTR_ENTITY_ID: "media_player.zone_a",

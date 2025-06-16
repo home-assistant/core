@@ -1,10 +1,10 @@
 image: ghcr.io/home-assistant/{arch}-homeassistant
 build_from:
-  aarch64: ghcr.io/home-assistant/aarch64-homeassistant-base:2025.02.1
-  armhf: ghcr.io/home-assistant/armhf-homeassistant-base:2025.02.1
-  armv7: ghcr.io/home-assistant/armv7-homeassistant-base:2025.02.1
-  amd64: ghcr.io/home-assistant/amd64-homeassistant-base:2025.02.1
-  i386: ghcr.io/home-assistant/i386-homeassistant-base:2025.02.1
+  aarch64: ghcr.io/home-assistant/aarch64-homeassistant-base:2025.05.0
+  armhf: ghcr.io/home-assistant/armhf-homeassistant-base:2025.05.0
+  armv7: ghcr.io/home-assistant/armv7-homeassistant-base:2025.05.0
+  amd64: ghcr.io/home-assistant/amd64-homeassistant-base:2025.05.0
+  i386: ghcr.io/home-assistant/i386-homeassistant-base:2025.05.0
 codenotary:
   signer: notary@home-assistant.io
   base_image: notary@home-assistant.io
@@ -19,4 +19,4 @@ labels:
   org.opencontainers.image.authors: The Home Assistant Authors
   org.opencontainers.image.url: https://www.home-assistant.io/
   org.opencontainers.image.documentation: https://www.home-assistant.io/docs/
-  org.opencontainers.image.licenses: Apache License 2.0
+  org.opencontainers.image.licenses: Apache-2.0

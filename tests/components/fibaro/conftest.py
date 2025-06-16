@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
+from pyfibaro.fibaro_device import SceneEvent
 import pytest
 
 from homeassistant.components.fibaro import CONF_IMPORT_PLUGINS, DOMAIN
@@ -69,6 +70,11 @@ def mock_power_sensor() -> Mock:
     }
     sensor.actions = {}
     sensor.has_central_scene_event = False
+    sensor.raw_data = {
+        "fibaro_id": 1,
+        "name": "Test sensor",
+        "properties": {"power": 6.6, "password": "mysecret"},
+    }
     value_mock = Mock()
     value_mock.has_value = False
     value_mock.is_bool_value = False
@@ -77,8 +83,8 @@ def mock_power_sensor() -> Mock:
 
 
 @pytest.fixture
-def mock_cover() -> Mock:
-    """Fixture for a cover."""
+def mock_positionable_cover() -> Mock:
+    """Fixture for a positionable cover."""
     cover = Mock()
     cover.fibaro_id = 3
     cover.parent_fibaro_id = 0
@@ -107,6 +113,42 @@ def mock_cover() -> Mock:
 
 
 @pytest.fixture
+def mock_cover() -> Mock:
+    """Fixture for a cover supporting slats but without positioning."""
+    cover = Mock()
+    cover.fibaro_id = 4
+    cover.parent_fibaro_id = 0
+    cover.name = "Test cover"
+    cover.room_id = 1
+    cover.dead = False
+    cover.visible = True
+    cover.enabled = True
+    cover.type = "com.fibaro.baseShutter"
+    cover.base_type = "com.fibaro.actor"
+    cover.properties = {"manufacturer": ""}
+    cover.actions = {
+        "open": 0,
+        "close": 0,
+        "stop": 0,
+        "rotateSlatsUp": 0,
+        "rotateSlatsDown": 0,
+        "stopSlats": 0,
+    }
+    cover.supported_features = {}
+    value_mock = Mock()
+    value_mock.has_value = False
+    cover.value = value_mock
+    value2_mock = Mock()
+    value2_mock.has_value = False
+    cover.value_2 = value2_mock
+    state_mock = Mock()
+    state_mock.has_value = True
+    state_mock.str_value.return_value = "closed"
+    cover.state = state_mock
+    return cover
+
+
+@pytest.fixture
 def mock_light() -> Mock:
     """Fixture for a dimmmable light."""
     light = Mock()
@@ -122,6 +164,40 @@ def mock_light() -> Mock:
     light.properties = {"manufacturer": ""}
     light.actions = {"setValue": 1, "on": 0, "off": 0}
     light.supported_features = {}
+    light.raw_data = {"fibaro_id": 3, "name": "Test light", "properties": {"value": 20}}
+    value_mock = Mock()
+    value_mock.has_value = True
+    value_mock.int_value.return_value = 20
+    light.value = value_mock
+    return light
+
+
+@pytest.fixture
+def mock_zigbee_light() -> Mock:
+    """Fixture for a dimmmable zigbee light."""
+    light = Mock()
+    light.fibaro_id = 12
+    light.parent_fibaro_id = 0
+    light.name = "Test light"
+    light.room_id = 1
+    light.dead = False
+    light.visible = True
+    light.enabled = True
+    light.type = "com.fibaro.multilevelSwitch"
+    light.base_type = "com.fibaro.binarySwitch"
+    light.properties = {
+        "manufacturer": "",
+        "isLight": True,
+        "interfaces": ["autoTurnOff", "favoritePosition", "light", "zigbee"],
+    }
+    light.actions = {"setValue": 1, "toggle": 0, "turnOn": 0, "turnOff": 0}
+    light.supported_features = {}
+    light.has_interface.return_value = False
+    light.raw_data = {
+        "fibaro_id": 12,
+        "name": "Test light",
+        "properties": {"value": 20},
+    }
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.int_value.return_value = 20
@@ -228,6 +304,28 @@ def mock_fan_device() -> Mock:
     climate.actions = {"setFanMode": 1}
     climate.supported_modes = [0, 1, 2]
     climate.mode = 1
+    return climate
+
+
+@pytest.fixture
+def mock_button_device() -> Mock:
+    """Fixture for a button device."""
+    climate = Mock()
+    climate.fibaro_id = 8
+    climate.parent_fibaro_id = 0
+    climate.name = "Test button"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.remoteController"
+    climate.base_type = "com.fibaro.actor"
+    climate.properties = {"manufacturer": ""}
+    climate.central_scene_event = [SceneEvent(1, "Pressed")]
+    climate.actions = {}
+    climate.interfaces = ["zwaveCentralScene"]
+    climate.battery_level = 100
+    climate.armed = False
     return climate
 
 

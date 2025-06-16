@@ -1,7 +1,5 @@
 """Test Qbus light entities."""
 
-import json
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
@@ -10,11 +8,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.util.json import JsonObjectType
 
-from .const import TOPIC_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
 
 # 186 = 73% (rounded)
@@ -44,16 +39,9 @@ _LIGHT_ENTITY_ID = "light.media_room"
 async def test_light(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
-    mock_config_entry: MockConfigEntry,
-    payload_config: JsonObjectType,
+    setup_integration: None,
 ) -> None:
     """Test turning on and off."""
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    async_fire_mqtt_message(hass, TOPIC_CONFIG, json.dumps(payload_config))
-    await hass.async_block_till_done()
 
     # Switch ON
     mqtt_mock.reset_mock()

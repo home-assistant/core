@@ -31,7 +31,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -88,6 +92,9 @@ class ShellyEntryData:
     rest: ShellyRestCoordinator | None = None
     rpc: ShellyRpcCoordinator | None = None
     rpc_poll: ShellyRpcPollingCoordinator | None = None
+    rpc_script_events: dict[int, list[str]] | None = None
+    rpc_supports_scripts: bool | None = None
+    rpc_zigbee_enabled: bool | None = None
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
@@ -111,6 +118,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         self.device = device
         self.device_id: str | None = None
         self._pending_platforms: list[Platform] | None = None
+        self.suggested_area: str | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
         # The device has come online at least once. In the case of a sleeping RPC
@@ -173,6 +181,11 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
             configuration_url=f"http://{get_host(self.config_entry.data[CONF_HOST])}:{get_http_port(self.config_entry.data)}",
         )
+        # We want to use the main device area as the suggested area for sub-devices.
+        if (area_id := device_entry.area_id) is not None:
+            area_registry = ar.async_get(self.hass)
+            if (area := area_registry.async_get_area(area_id)) is not None:
+                self.suggested_area = area.name
         self.device_id = device_entry.id
 
     async def shutdown(self) -> None:
@@ -377,14 +390,23 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         if self.sleep_period:
             # Sleeping device, no point polling it, just mark it unavailable
             raise UpdateFailed(
-                f"Sleeping device did not update within {self.sleep_period} seconds interval"
+                translation_domain=DOMAIN,
+                translation_key="update_error_sleeping_device",
+                translation_placeholders={
+                    "device": self.name,
+                    "period": str(self.sleep_period),
+                },
             )
 
         LOGGER.debug("Polling Shelly Block Device - %s", self.name)
         try:
             await self.device.update()
         except DeviceConnectionError as err:
-            raise UpdateFailed(repr(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"device": self.name},
+            ) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
 
@@ -469,7 +491,11 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 return
             await self.device.update_shelly()
         except (DeviceConnectionError, MacAddressMismatchError) as err:
-            raise UpdateFailed(repr(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"device": self.name},
+            ) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
         else:
@@ -635,7 +661,12 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if self.sleep_period:
             # Sleeping device, no point polling it, just mark it unavailable
             raise UpdateFailed(
-                f"Sleeping device did not update within {self.sleep_period} seconds interval"
+                translation_domain=DOMAIN,
+                translation_key="update_error_sleeping_device",
+                translation_placeholders={
+                    "device": self.name,
+                    "period": str(self.sleep_period),
+                },
             )
 
         async with self._connection_lock:
@@ -643,7 +674,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 return
 
             if not await self._async_device_connect_task():
-                raise UpdateFailed("Device reconnect error")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_error_reconnect_error",
+                    translation_placeholders={"device": self.name},
+                )
 
     async def _async_disconnected(self, reconnect: bool) -> None:
         """Handle device disconnected."""
@@ -693,7 +728,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         is updated.
         """
         if not self.sleep_period:
-            await self._async_connect_ble_scanner()
+            if (
+                self.config_entry.runtime_data.rpc_supports_scripts
+                and not self.config_entry.runtime_data.rpc_zigbee_enabled
+            ):
+                await self._async_connect_ble_scanner()
         else:
             await self._async_setup_outbound_websocket()
 
@@ -819,13 +858,21 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
     async def _async_update_data(self) -> None:
         """Fetch data."""
         if not self.device.connected:
-            raise UpdateFailed("Device disconnected")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error_device_disconnected",
+                translation_placeholders={"device": self.name},
+            )
 
         LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
         try:
             await self.device.poll()
         except (DeviceConnectionError, RpcCallError) as err:
-            raise UpdateFailed(f"Device disconnected: {err!r}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"device": self.name},
+            ) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
 
