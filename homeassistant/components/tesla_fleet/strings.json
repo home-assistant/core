@@ -17,7 +17,7 @@
       "invalid_domain": "Invalid domain format. Please enter a valid domain name.",
       "public_key_not_found": "Public key not found.",
       "public_key_mismatch": "The public key hosted at your domain does not match the expected key. Please ensure the correct public key is hosted at the specified location.",
-      "precondition_failed": "The domain is not associated with the application's origin domain.",
+      "precondition_failed": "The domain does not match the application's allowed origins.",
       "invalid_response": "The registration was rejected by Tesla",
       "unknown_error": "An unknown error occurred: {error}"
     },
@@ -33,7 +33,7 @@
       },
       "domain_input": {
         "title": "Tesla Fleet domain registration",
-        "description": "Enter the domain that will host your public key. This must be related to the origin domain you used during registration at {dashboard}.",
+        "description": "Enter the domain that will host your public key. This is typically the domain of the origin you specified during registration at {dashboard}.",
         "data": {
           "domain": "Domain"
         }
