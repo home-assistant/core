@@ -2,54 +2,34 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass, replace
 import datetime
 import logging
+from collections.abc import Callable
+from dataclasses import dataclass, replace
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
-from pyenphase import (
-    EnvoyACBPower,
-    EnvoyBatteryAggregate,
-    EnvoyEncharge,
-    EnvoyEnchargeAggregate,
-    EnvoyEnchargePower,
-    EnvoyEnpower,
-    EnvoyInverter,
-    EnvoySystemConsumption,
-    EnvoySystemProduction,
-)
+from pyenphase import (EnvoyACBPower, EnvoyBatteryAggregate, EnvoyEncharge,
+                       EnvoyEnchargeAggregate, EnvoyEnchargePower,
+                       EnvoyEnpower, EnvoyInverter, EnvoySystemConsumption,
+                       EnvoySystemProduction)
 from pyenphase.const import PHASENAMES
-from pyenphase.models.meters import (
-    CtMeterStatus,
-    CtState,
-    CtStatusFlags,
-    CtType,
-    EnvoyMeterData,
-)
+from pyenphase.models.meters import (CtMeterStatus, CtState, CtStatusFlags,
+                                     CtType, EnvoyMeterData)
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    PERCENTAGE,
-    EntityCategory,
-    UnitOfApparentPower,
-    UnitOfElectricCurrent,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfFrequency,
-    UnitOfPower,
-    UnitOfTemperature,
-)
+from homeassistant.components.sensor import (SensorDeviceClass, SensorEntity,
+                                             SensorEntityDescription,
+                                             SensorStateClass)
+from homeassistant.const import (PERCENTAGE, EntityCategory,
+                                 UnitOfApparentPower, UnitOfElectricCurrent,
+                                 UnitOfElectricPotential, UnitOfEnergy,
+                                 UnitOfFrequency, UnitOfPower,
+                                 UnitOfTemperature, UnitOfTime)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import \
+    AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -79,6 +59,103 @@ INVERTER_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=attrgetter("last_report_watts"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="dc_voltage",
+        translation_key="dc_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("dc_voltage"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="dc_current",
+        translation_key="dc_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("dc_current"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="ac_voltage",
+        translation_key="ac_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("ac_voltage"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="ac_current",
+        translation_key="ac_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("ac_current"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="ac_frequency",
+        translation_key="ac_frequency",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("ac_frequency"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="temperature",
+        translation_key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("temperature"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="lifetime_energy",
+        translation_key="lifetime_energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("lifetime_energy"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="energy_today",
+        translation_key="energy_today",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("energy_today"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="last_report_duration",
+        translation_key="last_report_duration",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("last_report_duration"),
+    ),
+    EnvoyInverterSensorEntityDescription(
+        key="energy_produced",
+        translation_key="energy_produced",
+        native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("energy_produced"),
     ),
     EnvoyInverterSensorEntityDescription(
         key=LAST_REPORTED_KEY,
@@ -1355,6 +1432,27 @@ class EnvoyAcbBatteryPowerEntity(EnvoySensorBaseEntity):
 class EnvoyAcbBatteryEnergyEntity(EnvoySystemSensorEntity):
     """Envoy combined ACB and Ensemble Battery Aggregate energy sensor entity."""
 
+    entity_description: EnvoyAcbBatterySensorEntityDescription
+
+    @property
+    def native_value(self) -> int | str:
+        """Return the state of the aggregate energy sensors."""
+        acb = self.data.acb_power
+        assert acb is not None
+        return self.entity_description.value_fn(acb)
+
+
+class AggregateBatteryEntity(EnvoySystemSensorEntity):
+    """Envoy combined ACB and Ensemble Battery Aggregate sensor entity."""
+
+    entity_description: EnvoyAggregateBatterySensorEntityDescription
+
+    @property
+    def native_value(self) -> int:
+        """Return the state of the aggregate sensors."""
+        battery_aggregate = self.data.battery_aggregate
+        assert battery_aggregate is not None
+        return self.entity_description.value_fn(battery_aggregate)
     entity_description: EnvoyAcbBatterySensorEntityDescription
 
     @property

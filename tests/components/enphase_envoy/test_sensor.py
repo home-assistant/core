@@ -770,6 +770,26 @@ async def test_sensor_inverter_data(
         assert dt_util.parse_datetime(
             last_reported.state
         ) == dt_util.utc_from_timestamp(inverter.last_report_date)
+        assert (voltage := hass.states.get(f"{entity_base}_{sn}_voltage"))
+        assert (voltage.state) == "unknown"
+        assert (current := hass.states.get(f"{entity_base}_{sn}_current"))
+        assert (current.state) == "unknown"
+        assert (voltage_2 := hass.states.get(f"{entity_base}_{sn}_voltage_2"))
+        assert (voltage_2.state) == "unknown"
+        assert (current_2 := hass.states.get(f"{entity_base}_{sn}_current_2"))
+        assert (current_2.state) == "unknown"
+        assert (frequency := hass.states.get(f"{entity_base}_{sn}_frequency"))
+        assert (frequency.state) == "unknown"
+        assert (temperature := hass.states.get(f"{entity_base}_{sn}_temperature"))
+        assert (temperature.state) == "unknown"
+        assert (energy := hass.states.get(f"{entity_base}_{sn}_energy"))
+        assert (energy.state) == "unknown"
+        assert (energy_2 := hass.states.get(f"{entity_base}_{sn}_energy_2"))
+        assert (energy_2.state) == "unknown"
+        assert (energy_3 := hass.states.get(f"{entity_base}_{sn}_energy_3"))
+        assert (energy_3.state) == "unknown"
+        assert (duration := hass.states.get(f"{entity_base}_{sn}_duration"))
+        assert (duration.state) == "unknown"
 
 
 @pytest.mark.parametrize(
@@ -797,9 +817,22 @@ async def test_sensor_inverter_disabled_by_integration(
     INVERTER_BASE = f"{Platform.SENSOR}.inverter"
 
     assert all(
-        f"{INVERTER_BASE}_{sn}_last_reported"
+        f"{INVERTER_BASE}_{sn}_{key}"
         in integration_disabled_entities(entity_registry, config_entry)
         for sn in mock_envoy.data.inverters
+        for key in (
+            "voltage",
+            "current",
+            "voltage_2",
+            "current_2",
+            "frequency",
+            "temperature",
+            "energy",
+            "energy_2",
+            "duration",
+            "energy_3",
+            "last_reported",
+        )
     )
 
 
