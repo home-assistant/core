@@ -277,11 +277,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"}
     },
-    "rflink": {
-        # https://github.com/aequitas/python-rflink/issues/78
-        # rflink > pyserial-asyncio
-        "rflink": {"pyserial-asyncio", "async-timeout"}
-    },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
     "roborock": {"python-roborock": {"async-timeout"}},
@@ -330,10 +325,6 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "bluetooth": {
         # https://github.com/hbldh/bleak/pull/1718 (not yet released)
         "homeassistant": {"bleak"}
-    },
-    "eq3btsmart": {
-        # https://github.com/EuleMitKeule/eq3btsmart/releases/tag/2.0.0
-        "homeassistant": {"eq3btsmart"}
     },
     "python_script": {
         # Security audits are needed for each Python version

@@ -170,7 +170,7 @@ aioairzone-cloud==0.6.12
 aioairzone==1.0.0
 
 # homeassistant.components.alexa_devices
-aioamazondevices==3.1.2
+aioamazondevices==3.1.4
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -610,7 +610,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.12.4
+bthome-ble==3.13.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.6
@@ -775,7 +775,7 @@ epion==0.0.3
 epson-projector==0.5.1
 
 # homeassistant.components.eq3btsmart
-eq3btsmart==1.4.1
+eq3btsmart==2.1.0
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.3.0
@@ -1240,7 +1240,7 @@ monzopy==1.4.2
 mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.27
+motionblinds==0.6.28
 
 # homeassistant.components.motionblinds_ble
 motionblindsble==0.1.3
@@ -1488,7 +1488,7 @@ py-madvr2==1.6.32
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==2.2.0
+py-nextbusnext==2.3.0
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -1759,7 +1759,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2024.0.0
+pylitterbot==2024.2.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.24.0
@@ -1860,7 +1860,7 @@ pypalazzetti==0.1.19
 pypaperless==4.1.0
 
 # homeassistant.components.lcn
-pypck==0.8.7
+pypck==0.8.8
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2198,16 +2198,16 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.14.0
+reolink-aio==0.14.1
 
 # homeassistant.components.rflink
-rflink==0.0.66
+rflink==0.0.67
 
 # homeassistant.components.ring
 ring-doorbell==0.9.13
 
 # homeassistant.components.roku
-rokuecp==0.19.3
+rokuecp==0.19.5
 
 # homeassistant.components.romy
 romy==0.0.10
@@ -2386,7 +2386,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.1.1
+tesla-fleet-api==1.2.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2

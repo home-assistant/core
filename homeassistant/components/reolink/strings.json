@@ -571,6 +571,9 @@
       "ai_animal_sensitivity": {
         "name": "AI animal sensitivity"
       },
+      "cry_sensitivity": {
+        "name": "Baby cry sensitivity"
+      },
       "crossline_sensitivity": {
         "name": "AI crossline {zone_name} sensitivity"
       },
