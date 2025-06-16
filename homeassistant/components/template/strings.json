@@ -26,10 +26,14 @@
           "device_id": "[%key:common::config_flow::data::device%]",
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]"
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "delay_on": "Delay turning on",
+          "delay_off": "Delay turning off"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
+          "delay_on": "Time to wait before this binary sensor turns on.",
+          "delay_off": "Time to wait before this binary sensor turns off."
         },
         "title": "Template binary sensor"
       },
@@ -154,10 +158,14 @@
       "binary_sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]"
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "delay_on": "[%key:component::template::config::step::binary_sensor::data::delay_on%]",
+          "delay_off": "[%key:component::template::config::step::binary_sensor::data::delay_off%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
+          "delay_on": "[%key:component::template::config::step::binary_sensor::data_description::delay_on%]",
+          "delay_off": "[%key:component::template::config::step::binary_sensor::data_description::delay_off%]"
         },
         "title": "[%key:component::template::config::step::binary_sensor::title%]"
       },
