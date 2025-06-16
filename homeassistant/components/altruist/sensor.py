@@ -192,12 +192,11 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for passed config_entry in HA."""
     coordinator: AltruistDataUpdateCoordinator = config_entry.runtime_data
-    if coordinator.client is not None:
-        async_add_entities(
-            AltruistSensor(coordinator, sensor_description)
-            for sensor_description in SENSOR_DESCRIPTIONS
-            if sensor_description.key in coordinator.client.sensor_names
-        )
+    async_add_entities(
+        AltruistSensor(coordinator, sensor_description)
+        for sensor_description in SENSOR_DESCRIPTIONS
+        if sensor_description.key in coordinator.client.sensor_names
+    )
 
 
 class AltruistSensor(CoordinatorEntity[AltruistDataUpdateCoordinator], SensorEntity):
