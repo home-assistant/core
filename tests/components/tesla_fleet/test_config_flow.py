@@ -17,6 +17,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.tesla_fleet.config_flow import OAuth2FlowHandler
 from homeassistant.components.tesla_fleet.const import (
     AUTHORIZE_URL,
+    CONF_DOMAIN,
     DOMAIN,
     SCOPES,
     TOKEN_URL,
@@ -161,7 +162,7 @@ async def test_full_flow_with_domain_registration(
 
         # Enter domain - this should automatically register and go to registration_complete
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"domain": "example.com"}
+            result["flow_id"], {CONF_DOMAIN: "example.com"}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "registration_complete"
@@ -226,11 +227,11 @@ async def test_domain_input_invalid_domain(
 
         # Enter invalid domain
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"domain": "invalid-domain"}
+            result["flow_id"], {CONF_DOMAIN: "invalid-domain"}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_input"
-        assert result["errors"] == {"domain": "invalid_domain"}
+        assert result["errors"] == {CONF_DOMAIN: "invalid_domain"}
 
         # Enter valid domain - this should automatically register and go to registration_complete
         mock_api.public_uncompressed_point = "0404112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff112233445566778899aabbccddeeff1122"
@@ -240,7 +241,7 @@ async def test_domain_input_invalid_domain(
             }
         }
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"domain": "example.com"}
+            result["flow_id"], {CONF_DOMAIN: "example.com"}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "registration_complete"
@@ -310,7 +311,7 @@ async def test_domain_registration_errors(
             "homeassistant.helpers.translation.async_get_translations", return_value={}
         ):
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {"domain": "example.com"}
+                result["flow_id"], {CONF_DOMAIN: "example.com"}
             )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_registration"
@@ -369,11 +370,11 @@ async def test_domain_registration_precondition_failed(
 
         # Enter domain - this should go to domain_registration and then fail back to domain_input
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"domain": "example.com"}
+            result["flow_id"], {CONF_DOMAIN: "example.com"}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_input"
-        assert result["errors"] == {"domain": "precondition_failed"}
+        assert result["errors"] == {CONF_DOMAIN: "precondition_failed"}
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -428,7 +429,7 @@ async def test_domain_registration_public_key_not_found(
 
         # Enter domain - this should fail and stay on domain_registration
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"domain": "example.com"}
+            result["flow_id"], {CONF_DOMAIN: "example.com"}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_registration"
@@ -489,7 +490,7 @@ async def test_domain_registration_public_key_mismatch(
 
         # Enter domain - this should fail and stay on domain_registration
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"domain": "example.com"}
+            result["flow_id"], {CONF_DOMAIN: "example.com"}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_registration"

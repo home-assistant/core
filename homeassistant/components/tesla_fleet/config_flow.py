@@ -26,7 +26,7 @@ from homeassistant.helpers.selector import (
     QrErrorCorrectionLevel,
 )
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_DOMAIN, DOMAIN, LOGGER
 from .oauth import TeslaUserImplementation
 
 
@@ -104,11 +104,11 @@ class OAuth2FlowHandler(
         errors = errors or {}
 
         if user_input is not None:
-            domain = user_input["domain"].strip().lower()
+            domain = user_input[CONF_DOMAIN].strip().lower()
 
             # Validate domain format
             if not self._is_valid_domain(domain):
-                errors["domain"] = "invalid_domain"
+                errors[CONF_DOMAIN] = "invalid_domain"
             else:
                 self.domain = domain
                 return await self.async_step_domain_registration()
@@ -120,7 +120,7 @@ class OAuth2FlowHandler(
             },
             data_schema=vol.Schema(
                 {
-                    vol.Required("domain"): str,
+                    vol.Required(CONF_DOMAIN): str,
                 }
             ),
             errors=errors,
@@ -145,7 +145,7 @@ class OAuth2FlowHandler(
             register_response = await self.api.partner.register(self.domain)
         except PreconditionFailed:
             return await self.async_step_domain_input(
-                errors={"domain": "precondition_failed"}
+                errors={CONF_DOMAIN: "precondition_failed"}
             )
         except InvalidResponse:
             errors["base"] = "invalid_response"
