@@ -6,17 +6,12 @@ import pytest
 
 import homeassistant
 from homeassistant.components import pi_hole
+from homeassistant.components.pi_hole.const import VERSION_6_RESPONSE_TO_5_ERROR
 from homeassistant.const import CONF_API_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
-from . import (
-    CONFIG_DATA_DEFAULTS,
-    V6_RESPONSE_TO_V5_ENPOINT,
-    ZERO_DATA,
-    _create_mocked_hole,
-    _patch_init_hole,
-)
+from . import CONFIG_DATA_DEFAULTS, ZERO_DATA, _create_mocked_hole, _patch_init_hole
 
 from tests.common import MockConfigEntry
 
@@ -46,14 +41,19 @@ async def test_change_api_5_to_6(
         assert pihole_data.api == mocked_hole.instances[-1]
         pihole_data.api.get_data = AsyncMock(
             side_effect=lambda: setattr(
-                pihole_data.api, "data", V6_RESPONSE_TO_V5_ENPOINT
+                pihole_data.api,
+                "data",
+                {"error": VERSION_6_RESPONSE_TO_5_ERROR, "took": 0.0001430511474609375},
             )
         )
 
         # Now trigger the update
         with pytest.raises(homeassistant.exceptions.ConfigEntryAuthFailed):
             await pihole_data.coordinator.update_method()
-        assert pihole_data.api.data == V6_RESPONSE_TO_V5_ENPOINT
+        assert pihole_data.api.data == {
+            "error": VERSION_6_RESPONSE_TO_5_ERROR,
+            "took": 0.0001430511474609375,
+        }
 
         # ensure an issue is created for the API version change
         assert len(issue_registry.issues) == 1

@@ -104,15 +104,6 @@ ZERO_DATA_V6 = {
     "took": 0,
 }
 
-V6_RESPONSE_TO_V5_ENPOINT = {
-    "error": {
-        "key": "bad_request",
-        "message": "Bad request",
-        "hint": "The API is hosted at pi.hole/api, not pi.hole/admin/api",
-    },
-    "took": 0.0001430511474609375,
-}
-
 SAMPLE_VERSIONS_WITH_UPDATES = {
     "core_current": "v5.5",
     "core_latest": "v5.6",
