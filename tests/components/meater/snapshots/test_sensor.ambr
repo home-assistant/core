@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[sensor.meater_probe_40a72384_ambient_temperature-entry]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_ambient-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,8 +14,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meater_probe_40a72384_ambient_temperature',
-    'has_entity_name': True,
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_ambient',
+    'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -29,7 +29,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Ambient temperature',
+    'original_name': None,
     'platform': 'meater',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -39,23 +39,22 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.meater_probe_40a72384_ambient_temperature-state]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_ambient-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Meater Probe 40a72384 Ambient temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meater_probe_40a72384_ambient_temperature',
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_ambient',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '28.0',
   })
 # ---
-# name: test_entities[sensor.meater_probe_40a72384_cook_state-entry]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_name-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -68,8 +67,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meater_probe_40a72384_cook_state',
-    'has_entity_name': True,
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_name',
+    'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -80,55 +79,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cook state',
-    'platform': 'meater',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'cook_state',
-    'unique_id': '40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58-cook_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[sensor.meater_probe_40a72384_cook_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Meater Probe 40a72384 Cook state',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.meater_probe_40a72384_cook_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Started',
-  })
-# ---
-# name: test_entities[sensor.meater_probe_40a72384_cooking-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.meater_probe_40a72384_cooking',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Cooking',
+    'original_name': None,
     'platform': 'meater',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -138,20 +89,19 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.meater_probe_40a72384_cooking-state]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Meater Probe 40a72384 Cooking',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meater_probe_40a72384_cooking',
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_name',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Whole chicken',
   })
 # ---
-# name: test_entities[sensor.meater_probe_40a72384_internal_temperature-entry]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_peak_temp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -166,8 +116,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meater_probe_40a72384_internal_temperature',
-    'has_entity_name': True,
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_peak_temp',
+    'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -181,63 +131,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Internal temperature',
-    'platform': 'meater',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'internal',
-    'unique_id': '40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58-internal',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_entities[sensor.meater_probe_40a72384_internal_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Meater Probe 40a72384 Internal temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.meater_probe_40a72384_internal_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.0',
-  })
-# ---
-# name: test_entities[sensor.meater_probe_40a72384_peak_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.meater_probe_40a72384_peak_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Peak temperature',
+    'original_name': None,
     'platform': 'meater',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -247,23 +141,69 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.meater_probe_40a72384_peak_temperature-state]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_peak_temp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Meater Probe 40a72384 Peak temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meater_probe_40a72384_peak_temperature',
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_peak_temp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '27.0',
   })
 # ---
-# name: test_entities[sensor.meater_probe_40a72384_target_temperature-entry]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_state',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'meater',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cook_state',
+    'unique_id': '40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58-cook_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Started',
+  })
+# ---
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_target_temp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -278,8 +218,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meater_probe_40a72384_target_temperature',
-    'has_entity_name': True,
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_target_temp',
+    'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -293,7 +233,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Target temperature',
+    'original_name': None,
     'platform': 'meater',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -303,23 +243,22 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.meater_probe_40a72384_target_temperature-state]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_target_temp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Meater Probe 40a72384 Target temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meater_probe_40a72384_target_temperature',
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_target_temp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.0',
   })
 # ---
-# name: test_entities[sensor.meater_probe_40a72384_time_elapsed-entry]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_time_elapsed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -332,8 +271,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meater_probe_40a72384_time_elapsed',
-    'has_entity_name': True,
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_time_elapsed',
+    'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -344,7 +283,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Time elapsed',
+    'original_name': None,
     'platform': 'meater',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -354,21 +293,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.meater_probe_40a72384_time_elapsed-state]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_time_elapsed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Meater Probe 40a72384 Time elapsed',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meater_probe_40a72384_time_elapsed',
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_time_elapsed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-10-20T23:59:58+00:00',
+    'state': '2023-10-20T23:59:28+00:00',
   })
 # ---
-# name: test_entities[sensor.meater_probe_40a72384_time_remaining-entry]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_time_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -381,8 +319,8 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.meater_probe_40a72384_time_remaining',
-    'has_entity_name': True,
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_time_remaining',
+    'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -393,7 +331,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Time remaining',
+    'original_name': None,
     'platform': 'meater',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -403,17 +341,71 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.meater_probe_40a72384_time_remaining-state]
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_time_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Meater Probe 40a72384 Time remaining',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.meater_probe_40a72384_time_remaining',
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_time_remaining',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-10-21T00:01:02+00:00',
+    'state': '2023-10-21T00:00:32+00:00',
+  })
+# ---
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_internal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_internal',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'meater',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'internal',
+    'unique_id': '40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58-internal',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_internal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_internal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26.0',
   })
 # ---
