@@ -24,13 +24,7 @@ from .pooldose_api import PooldoseAPIClient
 
 _LOGGER = logging.getLogger(__name__)
 
-_PLATFORMS: list[Platform] = [
-    Platform.SENSOR,
-    Platform.BINARY_SENSOR,
-    Platform.NUMBER,
-    Platform.SWITCH,
-    Platform.SELECT,
-]
+_PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 """Configure the Seko Pooldose entry."""
 

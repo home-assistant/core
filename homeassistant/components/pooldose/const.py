@@ -4,9 +4,8 @@ All entity maps include an 'enabled_by_default' boolean as last tuple value.
 This controls if the entity is enabled by default in the entity registry.
 """
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import EntityCategory, UnitOfVolume
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 
 DOMAIN = "pooldose"
@@ -221,114 +220,6 @@ STATIC_SENSOR_KEYS: set[str] = {
     "APIVERSION_GATEWAY",
 }
 
-SWITCHES: dict[
-    str, tuple[str, str, str, str, EntityCategory | None, str | None, bool]
-] = {
-    "stop_pool_dosing": (
-        "stop_pool_dosing",
-        "PDPR1H1HAW100_FW539187_w_1emtltkel",
-        "F",
-        "O",
-        None,
-        None,  # device_class
-        True,
-    ),
-    "circulation_detection": (
-        "circulation_detection",
-        "PDPR1H1HAW100_FW539187_w_1eklft47q",
-        "F",
-        "O",
-        EntityCategory.CONFIG,
-        None,  # device_class
-        True,
-    ),
-    "frequency_input": (
-        "frequency_input",
-        "PDPR1H1HAW100_FW539187_w_1eklft5qt",
-        "F",
-        "O",
-        EntityCategory.CONFIG,
-        None,  # device_class
-        False,
-    ),
-}
-
-BINARY_SENSOR_MAP: dict[
-    str, tuple[str, str, EntityCategory | None, str | None, bool]
-] = {
-    "pool_circulation_state": (
-        "pool_circulation_state",
-        "PDPR1H1HAW100_FW539187_w_1ekga097n",
-        None,
-        BinarySensorDeviceClass.RUNNING,
-        True,
-    ),
-    "pool_ph_level_ok": (
-        "pool_ph_level_ok",
-        "PDPR1H1HAW100_FW539187_w_1eklf77pm",
-        None,
-        None,
-        True,
-    ),
-    "pool_orp_level_ok": (
-        "pool_orp_level_ok",
-        "PDPR1H1HAW100_FW539187_w_1eo04bcr2",
-        None,
-        None,
-        True,
-    ),
-    "pool_flow_rate_ok": (
-        "pool_flow_rate_ok",
-        "PDPR1H1HAW100_FW539187_w_1eo04nc5n",
-        None,
-        None,
-        False,
-    ),
-    "pool_alarm_relay": (
-        "pool_alarm_relay",
-        "PDPR1H1HAW100_FW539187_w_1eklffdl0",
-        EntityCategory.DIAGNOSTIC,
-        None,
-        False,
-    ),
-    "pool_relay_aux1_ph": (
-        "pool_relay_aux1_ph",
-        "PDPR1H1HAW100_FW539187_w_1eoi2rv4h",
-        EntityCategory.DIAGNOSTIC,
-        None,
-        True,
-    ),
-    "pool_relay_aux2_orpcl": (
-        "pool_relay_aux2_orpcl",
-        "PDPR1H1HAW100_FW539187_w_1eoi2s16b",
-        EntityCategory.DIAGNOSTIC,
-        None,
-        True,
-    ),
-}
-
-NUMBER_MAP: dict[
-    str,
-    tuple[str, str, dict[str, float | str], EntityCategory | None, str | None, bool],
-] = {
-    "pool_ph_target": (
-        "pool_ph_target",
-        "PDPR1H1HAW100_FW539187_w_1ekeiqfat",
-        {"min": 6.0, "max": 8.0, "unit": "pH", "step": 0.1},
-        EntityCategory.CONFIG,
-        None,  # device_class
-        True,
-    ),
-    "pool_orp_target": (
-        "pool_orp_target",
-        "PDPR1H1HAW100_FW539187_w_1eklgnjk2",
-        {"min": 400, "max": 850, "unit": "mV", "step": 50},
-        EntityCategory.CONFIG,
-        None,  # device_class
-        True,
-    ),
-}
-
 VALUE_CONVERSION_TABLE: dict[str, dict[str, str]] = {
     # pH Type Dosing
     "PDPR1H1HAW100_FW539187_w_1eklg44ro": {
@@ -365,34 +256,4 @@ VALUE_CONVERSION_TABLE: dict[str, dict[str, str]] = {
         "|PDPR1H1HAW100_FW539187_LABEL_w_1eklh8i5t_REFERENCE|": "reference",
         "|PDPR1H1HAW100_FW539187_LABEL_w_1eklh8i5t_1_POINT|": "1_point",
     },
-}
-
-SELECT_MAP: dict[
-    str,
-    tuple[
-        str,  # entity_id
-        str,  # key
-        list[tuple[int, str]],  # options (value, translation_key)
-        EntityCategory | None,
-        bool,  # enabled_by_default
-    ],
-] = {
-    "pool_water_meter_unit": (
-        "pool_water_meter_unit",
-        "PDPR1H1HAW100_FW539187_w_1eklinki6",
-        [
-            (0, "PDPR1H1HAW100_FW539187_COMBO_w_1eklinki6_M_"),
-            (1, "PDPR1H1HAW100_FW539187_COMBO_w_1eklinki6_LITER"),
-        ],
-        EntityCategory.CONFIG,
-        False,
-    ),
-}
-
-# Conversion table for select options to user-friendly labels
-SELECT_OPTION_CONVERSION: dict[str, dict[str, str]] = {
-    "pool_water_meter_unit": {
-        "PDPR1H1HAW100_FW539187_COMBO_w_1eklinki6_M_": UnitOfVolume.CUBIC_METERS,
-        "PDPR1H1HAW100_FW539187_COMBO_w_1eklinki6_LITER": UnitOfVolume.LITERS,
-    }
 }
