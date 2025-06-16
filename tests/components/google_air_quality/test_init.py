@@ -104,12 +104,11 @@ async def test_expired_token_refresh_failure(
     assert config_entry.state is expected_state
 
 
-@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.usefixtures("setup_integration_and_subentry")
 @pytest.mark.parametrize("api_error", [GoogleAirQualityApiError("some error")])
-async def test_coordinator_init_failure(
+async def test_async_update_data_failure(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_and_subentry: MockConfigEntry,
 ) -> None:
-    """Test init success for the connection."""
-    assert config_entry.state is ConfigEntryState.LOADED
-    ## Add test for failing on async_air_quality_data
+    """Test for no reply from the API."""
+    assert config_and_subentry.state is ConfigEntryState.SETUP_RETRY
