@@ -31,18 +31,18 @@ from .const import CONF_SITE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type SolarEdgeOptimizersConfigEntry = ConfigEntry[SolarEdgeOptimizersCoordinator]
+type SolarEdgeModulesConfigEntry = ConfigEntry[SolarEdgeModulesCoordinator]
 
 
-class SolarEdgeOptimizersCoordinator(DataUpdateCoordinator[None]):
+class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
     """Handle fetching SolarEdge Modules data and inserting statistics."""
 
-    config_entry: SolarEdgeOptimizersConfigEntry
+    config_entry: SolarEdgeModulesConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: SolarEdgeOptimizersConfigEntry,
+        config_entry: SolarEdgeModulesConfigEntry,
     ) -> None:
         """Initialize the data handler."""
         super().__init__(

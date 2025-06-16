@@ -59,7 +59,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         raise CannotConnect from err
 
 
-class SolarEdgeOptimizersConfigFlow(ConfigFlow, domain=DOMAIN):
+class SolarEdgeModulesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SolarEdge Modules."""
 
     VERSION = 1

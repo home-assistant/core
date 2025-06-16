@@ -5,17 +5,17 @@ from __future__ import annotations
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import SolarEdgeOptimizersConfigEntry, SolarEdgeOptimizersCoordinator
+from .coordinator import SolarEdgeModulesConfigEntry, SolarEdgeModulesCoordinator
 
 _PLATFORMS: list[Platform] = []
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: SolarEdgeOptimizersConfigEntry
+    hass: HomeAssistant, entry: SolarEdgeModulesConfigEntry
 ) -> bool:
     """Set up SolarEdge Modules from a config entry."""
 
-    coordinator = SolarEdgeOptimizersCoordinator(hass, entry)
+    coordinator = SolarEdgeModulesCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
@@ -25,7 +25,7 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, entry: SolarEdgeOptimizersConfigEntry
+    hass: HomeAssistant, entry: SolarEdgeModulesConfigEntry
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
