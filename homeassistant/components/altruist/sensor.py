@@ -4,8 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from altruistclient import AltruistDeviceModel
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -42,15 +40,15 @@ class AltruistSensorEntityDescription(SensorEntityDescription):
     state_class = SensorStateClass.MEASUREMENT
 
 
-SENSOR_DESCRIPTIONS = {
-    "BME280_humidity": AltruistSensorEntityDescription(
+SENSOR_DESCRIPTIONS = [
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,
         key="BME280_humidity",
         translation_key="bme_humidity",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
     ),
-    "BME280_pressure": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.PRESSURE,
         key="BME280_pressure",
         translation_key="bme_pressure",
@@ -58,14 +56,14 @@ SENSOR_DESCRIPTIONS = {
         suggested_display_precision=0,
         native_value_fn=lambda string_value: float(string_value) * 0.0075,
     ),
-    "BME280_temperature": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
         key="BME280_temperature",
         translation_key="bme_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=2,
     ),
-    "BMP_pressure": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.PRESSURE,
         key="BMP_pressure",
         translation_key="bmp_pressure",
@@ -73,21 +71,21 @@ SENSOR_DESCRIPTIONS = {
         suggested_display_precision=0,
         native_value_fn=lambda string_value: float(string_value) * 0.0075,
     ),
-    "BMP_temperature": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
         key="BMP_temperature",
         translation_key="bmp_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=2,
     ),
-    "BMP280_temperature": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
         key="BMP280_temperature",
         translation_key="bmp280_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=2,
     ),
-    "BMP280_pressure": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.PRESSURE,
         key="BMP280_pressure",
         translation_key="bmp280_pressure",
@@ -95,96 +93,96 @@ SENSOR_DESCRIPTIONS = {
         suggested_display_precision=0,
         native_value_fn=lambda string_value: float(string_value) * 0.0075,
     ),
-    "HTU21D_humidity": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,
         key="HTU21D_humidity",
         translation_key="htu_humidity",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
     ),
-    "HTU21D_temperature": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
         key="HTU21D_temperature",
         translation_key="htu_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=2,
     ),
-    "SDS_P1": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.PM10,
         translation_key="pm_10",
         key="SDS_P1",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         suggested_display_precision=2,
     ),
-    "SDS_P2": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.PM25,
         translation_key="pm_25",
         key="SDS_P2",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         suggested_display_precision=2,
     ),
-    "SHT3X_humidity": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,
         key="SHT3X_humidity",
         translation_key="sht_humidity",
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
     ),
-    "SHT3X_temperature": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
         key="SHT3X_temperature",
         translation_key="sht_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=2,
     ),
-    "signal": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         key="signal",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=0,
     ),
-    "PCBA_noiseMax": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.SOUND_PRESSURE,
         key="PCBA_noiseMax",
         translation_key="noise_max",
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         suggested_display_precision=0,
     ),
-    "PCBA_noiseAvg": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.SOUND_PRESSURE,
         key="PCBA_noiseAvg",
         translation_key="noise_avg",
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         suggested_display_precision=0,
     ),
-    "CCS_CO2": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         translation_key="ccs_co2",
         key="CCS_CO2",
         suggested_display_precision=2,
     ),
-    "CCS_TVOC": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         key="CCS_TVOC",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         suggested_display_precision=2,
     ),
-    "GC": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         key="GC",
         native_unit_of_measurement="μR/h",
         translation_key="radiation",
         suggested_display_precision=2,
     ),
-    "SCD4x_co2": AltruistSensorEntityDescription(
+    AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.CO2,
         translation_key="scd4x_co2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         key="SCD4x_co2",
         suggested_display_precision=2,
     ),
-}
+]
 
 
 async def async_setup_entry(
@@ -196,11 +194,9 @@ async def async_setup_entry(
     coordinator: AltruistDataUpdateCoordinator = config_entry.runtime_data
     if coordinator.client is not None:
         async_add_entities(
-            AltruistSensor(
-                coordinator, coordinator.client.device, SENSOR_DESCRIPTIONS[sensor_name]
-            )
-            for sensor_name in coordinator.client.sensor_names
-            if sensor_name in SENSOR_DESCRIPTIONS
+            AltruistSensor(coordinator, sensor_description)
+            for sensor_description in SENSOR_DESCRIPTIONS
+            if sensor_description.key in coordinator.client.sensor_names
         )
 
 
@@ -212,12 +208,11 @@ class AltruistSensor(CoordinatorEntity[AltruistDataUpdateCoordinator], SensorEnt
     def __init__(
         self,
         coordinator: AltruistDataUpdateCoordinator,
-        device: AltruistDeviceModel,
         description: AltruistSensorEntityDescription,
     ) -> None:
         """Initialize the Altruist sensor."""
         super().__init__(coordinator)
-        self._device = device
+        self._device = coordinator.client.device
         self.entity_description: AltruistSensorEntityDescription = description
         self._attr_unique_id = (
             f"altruist_{self._device.id}-{self.entity_description.key}"
