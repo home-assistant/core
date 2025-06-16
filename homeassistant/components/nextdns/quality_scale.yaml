@@ -11,9 +11,7 @@ rules:
   config-flow-test-coverage:
     status: todo
     comment: Tests should end with the creation of a config entry or an abort.
-  config-flow:
-    status: todo
-    comment: Data description is missing.
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -41,9 +39,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: todo
-    comment: Set PARALLEL_UPDATES=0 for read only plarforms.
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
