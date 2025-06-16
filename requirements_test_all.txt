@@ -28,6 +28,7 @@ Mastodon.py==2.0.1
 # homeassistant.components.generic
 # homeassistant.components.image_upload
 # homeassistant.components.matrix
+# homeassistant.components.openai_conversation
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
