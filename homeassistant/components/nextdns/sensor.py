@@ -20,7 +20,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -32,7 +32,7 @@ from .const import (
     ATTR_PROTOCOLS,
     ATTR_STATUS,
 )
-from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
+from .coordinator import CoordinatorDataT
 from .entity import NextDnsEntity
 
 PARALLEL_UPDATES = 1
@@ -302,17 +302,7 @@ class NextDnsSensor(NextDnsEntity, SensorEntity):
 
     entity_description: NextDnsSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: NextDnsUpdateCoordinator[CoordinatorDataT],
-        description: NextDnsSensorEntityDescription[CoordinatorDataT],
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator, description)
-        self._attr_native_value = description.value(coordinator.data)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self.entity_description.value(self.coordinator.data)
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value(self.coordinator.data)
