@@ -334,7 +334,7 @@ class NetatmoDataHandler:
 
         await self.unsubscribe(WEATHER, None)
         await self.unsubscribe(AIR_CARE, None)
-        #await self.unsubscribe(DOOR_TAG, None)
+        # await self.unsubscribe(DOOR_TAG, None)
 
     def setup_air_care(self) -> None:
         """Set up home coach/air care modules."""
@@ -376,7 +376,7 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
             ],
-            NetatmoDeviceCategory.opening: [NETATMO_CREATE_DOOR_TAG],
+            # NetatmoDeviceCategory.opening: [NETATMO_CREATE_DOOR_TAG],
             NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
             NetatmoDeviceCategory.shutter: [
                 NETATMO_CREATE_COVER,
@@ -426,14 +426,10 @@ class NetatmoDataHandler:
                     ),
                 )
             if module.device_category is NetatmoDeviceCategory.opening:
-                _LOGGER.debug(
-                    "Module %s dispatched as opening category to publisher %s",
-                    module.name,
-                    DOOR_TAG,
-                )
+                _LOGGER.debug("Module %s dispatched as opening category", module.name)
                 async_dispatcher_send(
                     self.hass,
-                    NETATMO_CREATE_WEATHER_SENSOR,
+                    NETATMO_CREATE_DOOR_TAG,
                     NetatmoDevice(
                         self,
                         module,
