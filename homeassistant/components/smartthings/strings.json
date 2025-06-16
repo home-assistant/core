@@ -624,6 +624,9 @@
       },
       "keep_fresh_mode": {
         "name": "Keep fresh mode"
+      },
+      "light": {
+        "name": "Display"
       }
     }
   },
