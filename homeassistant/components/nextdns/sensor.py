@@ -35,7 +35,7 @@ from .const import (
 )
 from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)

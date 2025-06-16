@@ -1273,7 +1273,7 @@ myuplink==0.7.0
 ndms2-client==0.1.2
 
 # homeassistant.components.ness_alarm
-nessclient==1.1.2
+nessclient==1.2.0
 
 # homeassistant.components.nmap_tracker
 netmap==0.7.0.2
@@ -1792,7 +1792,7 @@ pymodbus==3.9.2
 pymonoprice==0.4
 
 # homeassistant.components.mysensors
-pymysensors==0.24.0
+pymysensors==0.25.0
 
 # homeassistant.components.iron_os
 pynecil==4.1.0
@@ -1837,7 +1837,7 @@ pyopenweathermap==0.2.2
 pyopnsense==0.4.0
 
 # homeassistant.components.osoenergy
-pyosoenergyapi==1.1.4
+pyosoenergyapi==1.1.5
 
 # homeassistant.components.opentherm_gw
 pyotgw==2.2.2
@@ -1953,7 +1953,7 @@ pysmarty2==0.10.2
 pysmhi==1.0.2
 
 # homeassistant.components.edl21
-pysml==0.0.12
+pysml==0.1.5
 
 # homeassistant.components.smlight
 pysmlight==0.2.6
