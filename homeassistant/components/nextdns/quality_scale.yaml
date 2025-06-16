@@ -5,9 +5,7 @@ rules:
     comment: The integration does not register services.
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: Base entity should be stored in the entity.py file.
+  common-modules: done
   config-flow-test-coverage:
     status: todo
     comment: Tests should end with the creation of a config entry or an abort.
