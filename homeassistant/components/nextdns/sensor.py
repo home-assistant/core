@@ -33,14 +33,14 @@ from .const import (
     ATTR_STATUS,
 )
 from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
-from .entity import NextDnsEntity, NextDnsEntityDescription
+from .entity import NextDnsEntity
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
 class NextDnsSensorEntityDescription(
-    NextDnsEntityDescription, SensorEntityDescription, Generic[CoordinatorDataT]
+    SensorEntityDescription, Generic[CoordinatorDataT]
 ):
     """NextDNS sensor entity description."""
 

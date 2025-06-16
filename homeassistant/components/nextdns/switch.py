@@ -19,13 +19,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import NextDnsConfigEntry
 from .const import DOMAIN
 from .coordinator import NextDnsUpdateCoordinator
-from .entity import NextDnsEntity, NextDnsEntityDescription
+from .entity import NextDnsEntity
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class NextDnsSwitchEntityDescription(NextDnsEntityDescription, SwitchEntityDescription):
+class NextDnsSwitchEntityDescription(SwitchEntityDescription):
     """NextDNS switch entity description."""
 
     state: Callable[[Settings], bool]

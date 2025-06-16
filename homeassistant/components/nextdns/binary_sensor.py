@@ -18,15 +18,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NextDnsConfigEntry
 from .coordinator import NextDnsUpdateCoordinator
-from .entity import NextDnsEntity, NextDnsEntityDescription
+from .entity import NextDnsEntity
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class NextDnsBinarySensorEntityDescription(
-    NextDnsEntityDescription, BinarySensorEntityDescription
-):
+class NextDnsBinarySensorEntityDescription(BinarySensorEntityDescription):
     """NextDNS binary sensor entity description."""
 
     state: Callable[[ConnectionStatus, str], bool]

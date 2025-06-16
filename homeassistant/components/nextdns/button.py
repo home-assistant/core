@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError
@@ -16,17 +14,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NextDnsConfigEntry
 from .const import DOMAIN
-from .entity import NextDnsEntity, NextDnsEntityDescription
+from .entity import NextDnsEntity
 
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True, kw_only=True)
-class NextDnsButtonEntityDescription(NextDnsEntityDescription, ButtonEntityDescription):
-    """NextDNS button entity description."""
-
-
-CLEAR_LOGS_BUTTON = NextDnsButtonEntityDescription(
+CLEAR_LOGS_BUTTON = ButtonEntityDescription(
     key="clear_logs",
     translation_key="clear_logs",
     entity_category=EntityCategory.CONFIG,
