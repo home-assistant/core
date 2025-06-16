@@ -51,4 +51,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bool:
     """Unload a config entry."""
 
-    return await hass.config_entries.async_forward_entry_unload(entry, Platform.LIGHT)
+    return await hass.config_entries.async_unload_platforms(entry, [Platform.LIGHT])
