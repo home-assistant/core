@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from aiohttp import ClientResponseError
+from tesla_fleet_api.tessie import Tessie
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -78,6 +79,11 @@ class TessieEntity(TessieBaseEntity):
         self._attr_unique_id = f"{vehicle.vin}-{key}"
         self._attr_device_info = vehicle.device
 
+        tessie = Tessie(
+            vehicle.data_coordinator.session, vehicle.data_coordinator.api_key
+        )
+        self._fleet = tessie.vehicles.Fleet(tessie, vehicle.vin)
+
         super().__init__(vehicle.data_coordinator, key)
 
     @property
@@ -117,6 +123,30 @@ class TessieEntity(TessieBaseEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         # Not used in this class yet
+
+    async def async_set_navigation(
+        self,
+        destination: str | None = None,
+        latitude: float | None = None,
+        longitude: float | None = None,
+        locale: str = "en-US",
+    ) -> None:
+        """Set navigation for the vehicle.
+
+        Either a destination string or latitude and longitude must be provided.
+        """
+
+        if destination:
+            await self._fleet.navigation_request(
+                value=destination,
+                locale=locale,
+            )
+        elif latitude is not None and longitude is not None:
+            await self._fleet.navigation_gps_request(
+                lat=latitude,
+                lon=longitude,
+                order=0,
+            )
 
 
 class TessieEnergyEntity(TessieBaseEntity):
