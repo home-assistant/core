@@ -6,7 +6,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "API Key for your NextDNS account"
+          "api_key": "The API Key for your NextDNS account"
         }
       },
       "profiles": {
@@ -14,7 +14,7 @@
           "profile_name": "Profile"
         },
         "data_description": {
-          "profile_name": "NextDNS configuration profile you want to integrate"
+          "profile_name": "The NextDNS configuration profile you want to integrate"
         }
       },
       "reauth_confirm": {
