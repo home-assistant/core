@@ -87,6 +87,7 @@ class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
 ):
     """Representation of a devolo device tracker."""
 
+    _attr_has_entity_name = True
     _attr_translation_key = "device_tracker"
 
     def __init__(
