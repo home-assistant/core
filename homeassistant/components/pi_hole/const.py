@@ -7,7 +7,6 @@ DOMAIN = "pi_hole"
 CONF_STATISTICS_ONLY = "statistics_only"
 CONF_APP_PASSWORD = "app_password"
 
-DEFAULT_API_VERSION = 6
 DEFAULT_LOCATION = "admin"
 DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "Pi-Hole"
