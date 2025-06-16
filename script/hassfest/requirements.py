@@ -235,11 +235,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # python-mystrom > setuptools
         "python-mystrom": {"setuptools"}
     },
-    "ness_alarm": {
-        # https://github.com/nickw444/nessclient/issues/73
-        # nessclient > pyserial-asyncio
-        "nessclient": {"pyserial-asyncio"}
-    },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "nx584": {
