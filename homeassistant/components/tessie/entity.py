@@ -137,7 +137,6 @@ class TessieEntity(TessieBaseEntity):
 
     async def navigation_gps_request(
         self,
-        # gps is a home assistant location object with latitude and longitude
         gps: dict[str, float],
         order: int = 0,
     ) -> None:
