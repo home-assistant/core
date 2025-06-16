@@ -550,7 +550,7 @@
       "description": "Set navigation to some GPS coordinates.",
       "fields": {
         "gps": {
-          "description": "Location to navigate to.",
+          "description": "The GPS coordinates of the destination to navigate to.",
           "name": "Location"
         },
         "order": {
