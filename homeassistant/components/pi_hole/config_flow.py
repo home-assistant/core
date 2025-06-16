@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from . import api_by_version, determine_api_version
+from . import Hole, api_by_version, determine_api_version
 from .const import (
     DEFAULT_LOCATION,
     DEFAULT_NAME,
@@ -139,7 +139,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             version = await determine_api_version(hass=self.hass, entry=self._config)
         except HoleError:
             return {"base": "cannot_connect"}
-        pi_hole = api_by_version(self.hass, self._config, version)
+        pi_hole: Hole = api_by_version(self.hass, self._config, version)
 
         if version == 6:
             try:
