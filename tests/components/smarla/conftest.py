@@ -66,10 +66,12 @@ def mock_federwiege(mock_connection: MagicMock) -> Generator[MagicMock]:
         mock_babywiege_service.props = {
             "swing_active": MagicMock(spec=Property),
             "smart_mode": MagicMock(spec=Property),
+            "intensity": MagicMock(spec=Property),
         }
 
         mock_babywiege_service.props["swing_active"].get.return_value = False
         mock_babywiege_service.props["smart_mode"].get.return_value = False
+        mock_babywiege_service.props["intensity"].get.return_value = 1
 
         federwiege.services = {
             "babywiege": mock_babywiege_service,

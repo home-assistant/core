@@ -865,11 +865,6 @@ ZEROCONF = {
             "domain": "soundtouch",
         },
     ],
-    "_spotify-connect._tcp.local.": [
-        {
-            "domain": "spotify",
-        },
-    ],
     "_ssh._tcp.local.": [
         {
             "domain": "smappee",
