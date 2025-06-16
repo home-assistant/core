@@ -67,8 +67,6 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_AUTHENTICATION): cv.string,
         vol.Required(CONF_STOP_ID): vol.All(cv.ensure_list, [cv.positive_int]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        # vol.Optional(CONF_ROUTE, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        # vol.Optional(CONF_DIRECTION, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_DEPARTURE_TYPE, default=[]): vol.All(
             cv.ensure_list, [vol.In([*BUS_TYPES, *TRAIN_TYPES, *METRO_TYPES])]
         ),
@@ -97,16 +95,12 @@ def setup_platform(
     """Set up the Rejseplanen transport sensor."""
     name = config[CONF_NAME]
     stop_id = config[CONF_STOP_ID]
-    # route = config.get(CONF_ROUTE)
-    # direction = config[CONF_DIRECTION]
     departure_type = config[CONF_DEPARTURE_TYPE]
     auth = config[CONF_AUTHENTICATION]
 
     _LOGGER.debug(
         "Setting up Rejseplanen sensor with stop_id: %s",
         stop_id,
-        # route,
-        # direction,
     )
 
     backend = departuresAPIClient(auth_key=auth)
