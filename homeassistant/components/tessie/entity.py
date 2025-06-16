@@ -126,7 +126,7 @@ class TessieEntity(TessieBaseEntity):
 
     async def navigation_request(
         self,
-        destination: str | None = None,
+        destination: str,
         locale: str = "en-US",
     ) -> None:
         """Set navigation for the vehicle."""
