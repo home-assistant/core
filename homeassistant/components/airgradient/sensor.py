@@ -125,6 +125,7 @@ MEASUREMENT_SENSOR_TYPES: tuple[AirGradientMeasurementSensorEntityDescription, .
     ),
     AirGradientMeasurementSensorEntityDescription(
         key="nox_raw",
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         translation_key="raw_nitrogen",
         native_unit_of_measurement="ticks",
         state_class=SensorStateClass.MEASUREMENT,
@@ -133,6 +134,7 @@ MEASUREMENT_SENSOR_TYPES: tuple[AirGradientMeasurementSensorEntityDescription, .
     ),
     AirGradientMeasurementSensorEntityDescription(
         key="tvoc_raw",
+        device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         translation_key="raw_total_volatile_organic_component",
         native_unit_of_measurement="ticks",
         state_class=SensorStateClass.MEASUREMENT,
