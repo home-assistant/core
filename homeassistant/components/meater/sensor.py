@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -24,6 +23,7 @@ from homeassistant.util import dt as dt_util
 
 from . import MeaterCoordinator
 from .const import DOMAIN
+from .coordinator import MeaterConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -135,11 +135,11 @@ SENSOR_TYPES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MeaterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the entry."""
-    coordinator: MeaterCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     @callback
     def async_update_data():
