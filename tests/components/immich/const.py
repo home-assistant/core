@@ -25,6 +25,14 @@ MOCK_CONFIG_ENTRY_DATA = {
     CONF_VERIFY_SSL: False,
 }
 
+MOCK_CONFIG_ENTRY_DATA_HASSIO = {
+    CONF_HOST: "172.16.10.1",
+    CONF_API_KEY: "abcdef0123456789",
+    CONF_PORT: 8080,
+    CONF_SSL: False,
+    CONF_VERIFY_SSL: False,
+}
+
 ALBUM_DATA = {
     "id": "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6",
     "albumName": "My Album",

@@ -30,6 +30,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import DEFAULT_VERIFY_SSL, DOMAIN
 
@@ -81,6 +82,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _name: str
     _current_data: Mapping[str, Any]
+    _hassio_discovery: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -170,5 +172,68 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             description_placeholders={"name": self._name},
+            errors=errors,
+        )
+
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle the discovery step via hassio."""
+        self._hassio_discovery = discovery_info.config
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm Supervisor discovery."""
+        assert self._hassio_discovery
+        host = self._hassio_discovery[CONF_HOST]
+        port = self._hassio_discovery[CONF_PORT]
+        ssl = self._hassio_discovery[CONF_SSL]
+        addon = self._hassio_discovery["addon"]
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                my_user_info = await check_user_info(
+                    self.hass,
+                    host,
+                    port,
+                    ssl,
+                    user_input[CONF_VERIFY_SSL],
+                    user_input[CONF_API_KEY],
+                )
+            except ImmichUnauthorizedError:
+                errors["base"] = "invalid_auth"
+            except CONNECT_ERRORS:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(my_user_info.user_id)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=my_user_info.name,
+                    data={
+                        CONF_HOST: host,
+                        CONF_PORT: port,
+                        CONF_SSL: ssl,
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="hassio_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                    vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+                }
+            ),
+            description_placeholders={"addon": addon},
             errors=errors,
         )

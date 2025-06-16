@@ -26,6 +26,17 @@
         "data_description": {
           "api_key": "[%key:component::immich::common::data_desc_api_key%]"
         }
+      },
+      "hassio_confirm": {
+        "description": "Setup connection to add-on {addon}",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::immich::common::data_desc_api_key%]",
+          "verify_ssl": "[%key:component::immich::common::data_desc_ssl_verify%]"
+        }
       }
     },
     "error": {

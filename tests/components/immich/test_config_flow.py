@@ -7,12 +7,13 @@ from aioimmich.exceptions import ImmichUnauthorizedError
 import pytest
 
 from homeassistant.components.immich.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_USER
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from .const import MOCK_CONFIG_ENTRY_DATA, MOCK_USER_DATA
+from .const import MOCK_CONFIG_ENTRY_DATA, MOCK_CONFIG_ENTRY_DATA_HASSIO, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -242,3 +243,121 @@ async def test_reauth_flow_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
+
+
+async def test_hassio_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_immich: Mock
+) -> None:
+    """Test discovery via hassio."""
+
+    test_data = HassioServiceInfo(
+        config={
+            "host": "172.16.10.1",
+            "port": 8080,
+            "ssl": False,
+            "addon": "IMMICH",
+        },
+        name="IMMICH",
+        slug="immich",
+        uuid="1234",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=test_data,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: MOCK_USER_DATA[CONF_API_KEY],
+            CONF_VERIFY_SSL: MOCK_USER_DATA[CONF_VERIFY_SSL],
+        },
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "user"
+    assert result2["data"] == MOCK_CONFIG_ENTRY_DATA_HASSIO
+    assert result2["result"].unique_id == "e7ef5713-9dab-4bd4-b899-715b0ca4379e"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            ImmichUnauthorizedError(
+                {
+                    "message": "Invalid API key",
+                    "error": "Unauthenticated",
+                    "statusCode": 401,
+                    "correlationId": "abcdefg",
+                }
+            ),
+            "invalid_auth",
+        ),
+        (ClientError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_hassio_flow_error_handling(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_immich: Mock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test error handling during discovery via hassio."""
+
+    test_data = HassioServiceInfo(
+        config={
+            "host": "172.16.10.1",
+            "port": 8080,
+            "ssl": False,
+            "addon": "IMMICH",
+        },
+        name="IMMICH",
+        slug="immich",
+        uuid="1234",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=test_data,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+
+    mock_immich.users.async_get_my_user.side_effect = exception
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: MOCK_USER_DATA[CONF_API_KEY],
+            CONF_VERIFY_SSL: MOCK_USER_DATA[CONF_VERIFY_SSL],
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "hassio_confirm"
+    assert result2["errors"] == {"base": error}
+
+    mock_immich.users.async_get_my_user.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: MOCK_USER_DATA[CONF_API_KEY],
+            CONF_VERIFY_SSL: MOCK_USER_DATA[CONF_VERIFY_SSL],
+        },
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "user"
+    assert result3["data"] == MOCK_CONFIG_ENTRY_DATA_HASSIO
+    assert result3["result"].unique_id == "e7ef5713-9dab-4bd4-b899-715b0ca4379e"
