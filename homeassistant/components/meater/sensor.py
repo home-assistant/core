@@ -175,6 +175,7 @@ async def async_setup_entry(
 class MeaterProbeTemperature(SensorEntity, CoordinatorEntity[MeaterCoordinator]):
     """Meater Temperature Sensor Entity."""
 
+    _attr_has_entity_name = True
     entity_description: MeaterSensorEntityDescription
 
     def __init__(
@@ -189,7 +190,7 @@ class MeaterProbeTemperature(SensorEntity, CoordinatorEntity[MeaterCoordinator])
             },
             manufacturer="Apption Labs",
             model="Meater Probe",
-            name=f"Meater Probe {device_id}",
+            name=f"Meater Probe {device_id[:8]}",
         )
         self._attr_unique_id = f"{device_id}-{description.key}"
 
