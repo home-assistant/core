@@ -99,18 +99,17 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position: int | None = kwargs.get("position")
-        if position is None:
-            return
-        await self.send_api_command(
-            CurtainCommands.SET_POSITION,
-            parameters=f"{0},ff,{100 - position}",
-        )
-        self._attr_current_cover_position = position
-        if position == 0:
-            self._attr_is_closed = True
-        else:
-            self._attr_is_closed = False
-        self.async_write_ha_state()
+        if position is not None:
+            await self.send_api_command(
+                CurtainCommands.SET_POSITION,
+                parameters=f"{0},ff,{100 - position}",
+            )
+            self._attr_current_cover_position = position
+            if position == 0:
+                self._attr_is_closed = True
+            else:
+                self._attr_is_closed = False
+            self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -173,22 +172,21 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
             if self.coordinator.data
             else None
         )
-        if position is None:
-            return
-        if position in [0, 100]:
-            self._attr_is_closed = True
-        else:
-            self._attr_is_closed = False
-        if position > 50:
-            percent = 100 - ((position - 50) * 2)
-        else:
-            percent = 100 - (50 - position) * 2
-        self._attr_direction = self.coordinator.data.get("direction")
-        if self._attr_direction is not None:
-            self._attr_direction = self._attr_direction.lower()
-        self._attr_current_cover_position = percent
-        self._attr_current_cover_tilt_position = percent
-        self.async_write_ha_state()
+        if position is not None:
+            if position in [0, 100]:
+                self._attr_is_closed = True
+            else:
+                self._attr_is_closed = False
+            if position > 50:
+                percent = 100 - ((position - 50) * 2)
+            else:
+                percent = 100 - (50 - position) * 2
+            self._attr_direction = self.coordinator.data.get("direction")
+            if self._attr_direction is not None:
+                self._attr_direction = self._attr_direction.lower()
+            self._attr_current_cover_position = percent
+            self._attr_current_cover_tilt_position = percent
+            self.async_write_ha_state()
 
 
 class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
@@ -222,19 +220,18 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position: int | None = kwargs.get("position")
-        if position is None:
-            return
-        await self.send_api_command(
-            RollerShadeCommands.SET_POSITION, parameters=str(100 - position)
-        )
-        self._attr_current_cover_position = position
+        if position is not None:
+            await self.send_api_command(
+                RollerShadeCommands.SET_POSITION, parameters=str(100 - position)
+            )
+            self._attr_current_cover_position = position
 
-        if position == 0:
-            self._attr_is_closed = True
-        else:
-            self._attr_is_closed = False
+            if position == 0:
+                self._attr_is_closed = True
+            else:
+                self._attr_is_closed = False
 
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
 
 def _async_make_entity(
