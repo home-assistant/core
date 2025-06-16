@@ -23,11 +23,16 @@ TRANSLATED_ERRORS = {
     "no cable": "no_cable",
 }
 
-SERVICE_SET_NAVIGATION = "set_navigation"
-ATTR_DESTINATION = "destination"  # free-form address or PlusCode
-ATTR_LATITUDE = "latitude"  # float
-ATTR_LONGITUDE = "longitude"  # float
+SERVICE_NAVIGATION_REQUEST = "navigation_request"
+SERVICE_NAVIGATION_GPS_REQUEST = "navigation_gps_request"
+
+ATTR_GPS = "gps"
+ATTR_DESTINATION = "destination"
 ATTR_LOCALE = "locale"
+ATTR_ORDER = "order"
+
+CONF_LATITUDE = "latitude"
+CONF_LONGITUDE = "longitude"
 
 
 class TessieState(StrEnum):

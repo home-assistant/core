@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, TRANSLATED_ERRORS
+from .const import CONF_LATITUDE, CONF_LONGITUDE, DOMAIN, TRANSLATED_ERRORS
 from .coordinator import (
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
@@ -124,29 +124,29 @@ class TessieEntity(TessieBaseEntity):
         """Update the attributes of the entity."""
         # Not used in this class yet
 
-    async def async_set_navigation(
+    async def navigation_request(
         self,
         destination: str | None = None,
-        latitude: float | None = None,
-        longitude: float | None = None,
         locale: str = "en-US",
     ) -> None:
-        """Set navigation for the vehicle.
+        """Set navigation for the vehicle."""
+        await self._fleet.navigation_request(
+            value=destination,
+            locale=locale,
+        )
 
-        Either a destination string or latitude and longitude must be provided.
-        """
-
-        if destination:
-            await self._fleet.navigation_request(
-                value=destination,
-                locale=locale,
-            )
-        elif latitude is not None and longitude is not None:
-            await self._fleet.navigation_gps_request(
-                lat=latitude,
-                lon=longitude,
-                order=0,
-            )
+    async def navigation_gps_request(
+        self,
+        # gps is a home assistant location object with latitude and longitude
+        gps: dict[str, float],
+        order: int = 0,
+    ) -> None:
+        """Set GPS navigation for the vehicle."""
+        await self._fleet.navigation_gps_request(
+            lat=gps[CONF_LATITUDE],
+            lon=gps[CONF_LONGITUDE],
+            order=order,
+        )
 
 
 class TessieEnergyEntity(TessieBaseEntity):

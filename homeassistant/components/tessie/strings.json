@@ -531,25 +531,31 @@
     }
   },
   "services": {
-    "set_navigation": {
-      "name": "Set navigation",
-      "description": "Set navigation to a destination. Either provide a destination string or latitude and longitude.",
+    "navigation_request": {
+      "name": "Set navigation destination",
+      "description": "Set navigation to a destination.",
       "fields": {
         "destination": {
           "name": "Destination",
           "description": "The destination to navigate to, e.g., '1600 Amphitheatre Pkwy, Mountain View, CA'."
         },
-        "latitude": {
-          "name": "Latitude",
-          "description": "The latitude of the destination."
-        },
-        "longitude": {
-          "name": "Longitude",
-          "description": "The longitude of the destination."
-        },
         "locale": {
           "name": "Locale",
           "description": "The locale to use for the navigation, e.g., 'en-US'."
+        }
+      }
+    },
+    "navigation_gps_request": {
+      "name": "Set navigation GPS coordinates",
+      "description": "Set navigation to some GPS coordinates.",
+      "fields": {
+        "gps": {
+          "description": "Location to navigate to.",
+          "name": "Location"
+        },
+        "order": {
+          "name": "Order",
+          "description": "The order of the request."
         }
       }
     }

@@ -13,22 +13,16 @@ from homeassistant.helpers.typing import StateType
 from . import TessieConfigEntry
 from .const import (
     ATTR_DESTINATION,
-    ATTR_LATITUDE,
+    ATTR_GPS,
     ATTR_LOCALE,
-    ATTR_LONGITUDE,
-    SERVICE_SET_NAVIGATION,
+    ATTR_ORDER,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    SERVICE_NAVIGATION_GPS_REQUEST,
+    SERVICE_NAVIGATION_REQUEST,
 )
 from .entity import TessieEntity
 from .models import TessieVehicleData
-
-NAV_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Optional(ATTR_DESTINATION): cv.string,
-        vol.Optional(ATTR_LATITUDE): vol.Coerce(float),
-        vol.Optional(ATTR_LONGITUDE): vol.Coerce(float),
-        vol.Optional(ATTR_LOCALE, default="en-US"): cv.string,
-    }
-)
 
 PARALLEL_UPDATES = 0
 
@@ -51,10 +45,26 @@ async def async_setup_entry(
     )
 
     platform = entity_platform.async_get_current_platform()
+
     platform.async_register_entity_service(
-        SERVICE_SET_NAVIGATION,
-        NAV_SCHEMA,
-        "async_set_navigation",
+        SERVICE_NAVIGATION_GPS_REQUEST,
+        {
+            vol.Required(ATTR_GPS): {
+                vol.Required(CONF_LATITUDE): cv.latitude,
+                vol.Required(CONF_LONGITUDE): cv.longitude,
+            },
+            vol.Optional(ATTR_ORDER, default=0): cv.positive_int,
+        },
+        "navigation_gps_request",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_NAVIGATION_REQUEST,
+        {
+            vol.Required(ATTR_DESTINATION): cv.string,
+            vol.Optional(ATTR_LOCALE, default="en-US"): cv.string,
+        },
+        "navigation_request",
     )
 
 
