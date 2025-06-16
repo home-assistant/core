@@ -537,7 +537,7 @@
       "fields": {
         "destination": {
           "name": "Destination",
-          "description": "The destination to navigate to, e.g., '1600 Amphitheatre Pkwy, Mountain View, CA'."
+          "description": "The address of the destination to navigate to, e.g., '1600 Amphitheatre Pkwy, Mountain View, CA'."
         },
         "locale": {
           "name": "Locale",
