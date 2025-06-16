@@ -43,7 +43,7 @@ async def test_set_attributes_coordinator_is_none(
     assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_BlindTilt_set_attributes_coordinator_is_none(
+async def test_blindtilt_set_attributes_coordinator_is_none(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
     """test_set_attributes_coordinator_is_none."""
@@ -64,7 +64,71 @@ async def test_BlindTilt_set_attributes_coordinator_is_none(
     assert entry.state is ConfigEntryState.LOADED
 
 
-async def test_Roller_Shade_set_attributes_coordinator_is_none(
+async def test_blindtilt_set_attributes_position(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """test_set_attributes_coordinator_is_none."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Blind Tilt",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [
+        {
+            "slidePosition": 95,
+        },
+        {
+            "slidePosition": 90,
+        },
+    ]
+
+    entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_cover_async_set_cover_position(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """test_set_attributes_coordinator_is_none."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="cover-id-1",
+            deviceName="cover-1",
+            deviceType="Roller Shade",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.side_effect = [
+        {
+            "slidePosition": 100,
+        },
+        {
+            "slidePosition": 100,
+        },
+    ]
+    cover_id = "cover.cover_1"
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch.object(SwitchBotAPI, "send_command"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {"position": 0, ATTR_ENTITY_ID: cover_id},
+            blocking=True,
+        )
+    assert hass.states.get(cover_id).state == "closed"
+
+
+async def test_roller_shade_set_attributes_coordinator_is_none(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
     """test_set_attributes_coordinator_is_none."""
@@ -152,7 +216,6 @@ async def test_set_attributes_position_is_100(
     ]
 
     entry = await configure_integration(hass)
-
     assert entry.state is ConfigEntryState.LOADED
 
 
