@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 import io
 import logging
+import time
 from typing import Any, Final
 import wave
 
@@ -707,6 +708,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
         # Track the total duration of TTS audio for response timeout
         total_seconds = 0.0
+        start_time = time.monotonic()
 
         try:
             data = b"".join([chunk async for chunk in tts_result.async_stream_result()])
@@ -743,9 +745,11 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 await self._client.write_event(AudioStop(timestamp=timestamp).event())
                 _LOGGER.debug("TTS streaming complete")
         finally:
+            send_duration = time.monotonic() - start_time
+            timeout_seconds = max(0, total_seconds - send_duration + _TTS_TIMEOUT_EXTRA)
             self.config_entry.async_create_background_task(
                 self.hass,
-                self._tts_timeout(total_seconds, self._run_loop_id),
+                self._tts_timeout(timeout_seconds, self._run_loop_id),
                 name="wyoming TTS timeout",
             )
 
