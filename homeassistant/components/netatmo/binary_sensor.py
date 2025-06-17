@@ -81,9 +81,7 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity)
     entity_description: NetatmoBinarySensorEntityDescription
 
     def __init__(
-        self, 
-        device: NetatmoDevice, 
-        description: NetatmoBinarySensorEntityDescription
+        self, device: NetatmoDevice, description: NetatmoBinarySensorEntityDescription
     ) -> None:
         """Initialize a Netatmo binary sensor."""
         super().__init__(device)
