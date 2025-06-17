@@ -201,7 +201,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2025.5.1
+aioautomower==2025.6.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -2338,10 +2338,10 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smarla
-pysmarlaapi==0.8.2
+pysmarlaapi==0.9.0
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.4
+pysmartthings==3.2.5
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
