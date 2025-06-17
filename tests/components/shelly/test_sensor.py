@@ -23,6 +23,7 @@ from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
@@ -1619,7 +1620,7 @@ async def test_block_friendly_name_sleeping_sensor(
     assert (state := hass.states.get(entity.entity_id))
 
     # New name, the word "temperature" starts with a capital letter
-    assert state.attributes["friendly_name"] == "Test name Temperature"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test name Temperature"
 
     # Make device online
     monkeypatch.setattr(mock_block_device, "initialized", True)
@@ -1627,4 +1628,4 @@ async def test_block_friendly_name_sleeping_sensor(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity.entity_id))
-    assert state.attributes["friendly_name"] == "Test name Temperature"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test name Temperature"
