@@ -1037,8 +1037,6 @@ iaqualink==0.5.3
 ibeacon-ble==1.2.0
 
 # homeassistant.components.google
-ical==10.0.0
-
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar

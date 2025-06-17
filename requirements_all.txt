@@ -1200,8 +1200,6 @@ ibeacon-ble==1.2.0
 ibmiotf==0.3.4
 
 # homeassistant.components.google
-ical==10.0.0
-
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
