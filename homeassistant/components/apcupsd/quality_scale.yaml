@@ -66,13 +66,13 @@ rules:
     status: exempt
     comment: |
       The integration connects to a single service per configuration entry.
-  entity-category: todo
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices:
     status: exempt
