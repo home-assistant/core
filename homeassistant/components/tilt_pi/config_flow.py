@@ -17,7 +17,6 @@ from .const import DOMAIN
 class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tilt Pi."""
 
-    VERSION = 1
 
     async def _check_connection(self, host: str, port: int) -> str | None:
         """Check if we can connect to the TiltPi instance."""
