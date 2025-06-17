@@ -7,6 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/telegram_bot",
   "iot_class": "cloud_push",
   "loggers": ["telegram"],
-  "quality_scale": "legacy",
+  "quality_scale": "bronze",
   "requirements": ["python-telegram-bot[socks]==21.5"]
 }

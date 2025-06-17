@@ -118,6 +118,7 @@ async def test_webhook_callback(
     reolink_connect.motion_detected.return_value = True
     reolink_connect.ONVIF_event_callback.return_value = None
     await client.post(f"/api/webhook/{webhook_id}")
+    await hass.async_block_till_done()
     signal_all.assert_called_once()
     assert hass.states.get(entity_id).state == STATE_ON
 
@@ -129,6 +130,7 @@ async def test_webhook_callback(
     signal_all.reset_mock()
     reolink_connect.get_motion_state_all_ch.return_value = False
     await client.post(f"/api/webhook/{webhook_id}")
+    await hass.async_block_till_done()
     signal_all.assert_not_called()
 
     assert hass.states.get(entity_id).state == STATE_ON
@@ -137,6 +139,7 @@ async def test_webhook_callback(
     reolink_connect.motion_detected.return_value = False
     reolink_connect.ONVIF_event_callback.return_value = [0]
     await client.post(f"/api/webhook/{webhook_id}", data="test_data")
+    await hass.async_block_till_done()
     signal_ch.assert_called_once()
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -144,6 +147,7 @@ async def test_webhook_callback(
     signal_ch.reset_mock()
     reolink_connect.ONVIF_event_callback.side_effect = Exception("Test error")
     await client.post(f"/api/webhook/{webhook_id}", data="test_data")
+    await hass.async_block_till_done()
     signal_ch.assert_not_called()
 
     # test failure to read date from webhook post
