@@ -80,7 +80,7 @@ class HomeeEntity(Entity):
     def _on_node_updated(self, attribute: HomeeAttribute) -> None:
         self.schedule_update_ha_state()
 
-    def _on_connection_changed(self, connected: bool) -> None:
+    async def _on_connection_changed(self, connected: bool) -> None:
         self._host_connected = connected
         self.schedule_update_ha_state()
 
@@ -167,6 +167,6 @@ class HomeeNodeEntity(Entity):
     def _on_node_updated(self, node: HomeeNode) -> None:
         self.schedule_update_ha_state()
 
-    def _on_connection_changed(self, connected: bool) -> None:
+    async def _on_connection_changed(self, connected: bool) -> None:
         self._host_connected = connected
         self.schedule_update_ha_state()
