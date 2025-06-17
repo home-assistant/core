@@ -26,7 +26,6 @@ from .const import (
     CONF_REALTIME,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
-    CONSECUTIVE_FAILURE_THRESHOLD,
     DOMAIN,
     IMPERIAL_UNITS,
     SEMAPHORE,
@@ -73,7 +72,6 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
         self._origin = config_entry.data[CONF_ORIGIN]
         self._destination = config_entry.data[CONF_DESTINATION]
         self._region = config_entry.data[CONF_REGION]
-        self._consecutive_failures = 0
 
     async def _async_update_data(self) -> WazeTravelTimeData:
         """Get the latest data from Waze."""
@@ -130,32 +128,13 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
             )
 
         except WRCError as err:
-            self._consecutive_failures += 1
-            _LOGGER.warning(
-                "Failed to refresh Waze Travel Time (try #%i since last success), keeping old state",
-                self._consecutive_failures,
-            )
-
-            if self._consecutive_failures >= CONSECUTIVE_FAILURE_THRESHOLD:
-                raise UpdateFailed(
-                    f"Error communicating with Waze API for the {self._consecutive_failures} time: {err}"
-                ) from err
-
-            return WazeTravelTimeData(
-                origin=None,
-                destination=None,
-                duration=None,
-                distance=None,
-                route=None,
-            )
+            raise UpdateFailed(f"Error on retrieving data: {err}") from err
 
         finally:
             self.hass.data[DOMAIN][SEMAPHORE].release()
 
         if not routes:
             raise UpdateFailed("No routes found")
-
-        self._consecutive_failures = 0
 
         route = routes[0]
         waze_data = WazeTravelTimeData(
