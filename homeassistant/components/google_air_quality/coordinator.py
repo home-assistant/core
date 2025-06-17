@@ -1,6 +1,6 @@
 """Coordinator for fetching data from Google Air Quality API."""
 
-import datetime
+from datetime import timedelta
 import logging
 from typing import Final
 
@@ -17,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL: Final = datetime.timedelta(hours=1)
+UPDATE_INTERVAL: Final = timedelta(hours=1)
 
 type GoogleAirQualityConfigEntry = ConfigEntry[
     dict[str, GoogleAirQualityUpdateCoordinator]

@@ -2,11 +2,11 @@
 
 from typing import cast
 
-import aiohttp
+from aiohttp import ClientSession
 from google_air_quality_api import api
 
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 
 class AsyncConfigEntryAuth(api.AbstractAuth):
@@ -14,8 +14,8 @@ class AsyncConfigEntryAuth(api.AbstractAuth):
 
     def __init__(
         self,
-        websession: aiohttp.ClientSession,
-        oauth_session: config_entry_oauth2_flow.OAuth2Session,
+        websession: ClientSession,
+        oauth_session: OAuth2Session,
     ) -> None:
         """Initialize AsyncConfigEntryAuth."""
         super().__init__(websession)
@@ -32,7 +32,7 @@ class AsyncConfigFlowAuth(api.AbstractAuth):
 
     def __init__(
         self,
-        websession: aiohttp.ClientSession,
+        websession: ClientSession,
         token: str,
     ) -> None:
         """Initialize ConfigFlowAuth."""

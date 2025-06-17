@@ -24,8 +24,13 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    AbstractOAuth2FlowHandler,
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 from homeassistant.helpers.selector import LocationSelector
 
 from . import api
@@ -35,9 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_MAP = "map"
 
 
-class OAuth2FlowHandler(
-    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
-):
+class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle Google Air Quality OAuth2 authentication."""
 
     DOMAIN = DOMAIN
@@ -108,15 +111,9 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             entry = self._get_entry()
             hass = self.hass
-            implementation = (
-                await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                    hass, entry
-                )
-            )
+            implementation = await async_get_config_entry_implementation(hass, entry)
             web_session = async_get_clientsession(hass)
-            oauth_session = config_entry_oauth2_flow.OAuth2Session(
-                hass, entry, implementation
-            )
+            oauth_session = OAuth2Session(hass, entry, implementation)
             auth = api.AsyncConfigEntryAuth(web_session, oauth_session)
             client = GoogleAirQualityApi(auth)
             location = user_input[CONF_LOCATION]
