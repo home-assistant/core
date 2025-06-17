@@ -78,20 +78,21 @@
         },
         "state": {
           "title": "Add a Bayesian sensor",
-          "description": "Add an observation which evalulates to `True` when the value of the sensor exactly matches 'To state'.",
+          "description": "Add an observation which evaluates to `True` when the value of the sensor exactly matches *'To state'*. When `False`, it will update the prior with probabilities that are the inverse of those set below. This behaviour can be overridden by adding observations for the same entity's other states.",
+
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "entity_id": "Entity",
             "to_state": "To state",
-            "prob_given_true": "Probability when Bayesian sensor `on`",
-            "prob_given_false": "Probability when Bayesian sensor `off`"
+            "prob_given_true": "Probability when {parent_sensor_name} is {device_class_on}",
+            "prob_given_false": "Probability when {parent_sensor_name} is {device_class_off}"
           },
           "data_description": {
             "name": "This name will be used for to identify this observation for editing in the future.",
-            "entity_id": "The entity of interest.",
-            "to_state": "The state of the sensor to be detected.",
-            "prob_given_true": "The estimated probability or proportion of time this observation is `True` while `{parent_sensor_name}` is `{device_class_on}`.",
-            "prob_given_false": "The estimated probability or proportion of time this observation is `True` while `{parent_sensor_name}` is `{device_class_off}`."
+            "entity_id": "An entity that is correlated with `{parent_sensor_name}`.",
+            "to_state": "The state of the sensor for which the observation will be considered `True`.",
+            "prob_given_true": "The estimated probability or proportion of time this observation is `True` while `{parent_sensor_name}` is, or should be, `{device_class_on}`.",
+            "prob_given_false": "The estimated probability or proportion of time this observation is `True` while `{parent_sensor_name}` is, or should be, `{device_class_off}`."
           }
         },
         "numeric_state": {
