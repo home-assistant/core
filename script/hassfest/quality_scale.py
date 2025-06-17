@@ -1527,7 +1527,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "hko",
     "hlk_sw16",
     "holiday",
-    "home_connect",
     "homekit",
     "homekit_controller",
     "homematic",
