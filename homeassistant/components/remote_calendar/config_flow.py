@@ -4,7 +4,7 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
-from httpx import HTTPError, InvalidURL
+from httpx import HTTPError, InvalidURL, TimeoutException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -59,9 +59,9 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
             res.raise_for_status()
-        except (HTTPError, InvalidURL) as err:
+        except (HTTPError, InvalidURL, TimeoutException) as err:
             errors["base"] = "cannot_connect"
-            _LOGGER.debug("An error occurred: %s", err)
+            _LOGGER.debug("An error occurred: %s", str(err) or type(err).__name__)
         else:
             try:
                 await parse_calendar(self.hass, res.text)

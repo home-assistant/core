@@ -8,5 +8,5 @@ async def get_calendar(client: AsyncClient, url: str) -> Response:
     return await client.get(
         url,
         follow_redirects=True,
-        timeout=Timeout(connect=5.0, read=30.0, write=5.0, pool=5.0),
+        timeout=Timeout(5, read=30, write=5, pool=5),
     )

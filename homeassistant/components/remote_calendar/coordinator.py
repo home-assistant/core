@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from httpx import HTTPError, InvalidURL
+from httpx import HTTPError, InvalidURL, TimeoutException
 from ical.calendar import Calendar
 
 from homeassistant.config_entries import ConfigEntry
@@ -37,7 +37,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{config_entry.title}",
             update_interval=SCAN_INTERVAL,
             always_update=True,
         )
@@ -49,11 +49,11 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         try:
             res = await get_calendar(self._client, self._url)
             res.raise_for_status()
-        except (HTTPError, InvalidURL) as err:
+        except (HTTPError, InvalidURL, TimeoutException) as err:
+            _LOGGER.debug("%s: %s", self._url, str(err) or type(err).__name__)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_fetch",
-                translation_placeholders={"err": str(err)},
             ) from err
         try:
             self.ics = res.text
