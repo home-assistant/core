@@ -138,12 +138,9 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
         device_class in DEVICE_CLASS_UNITS
         and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
     ):
-        _LOGGER.warning(
-            "The unit of measurement `%s` is not valid "
-            "together with device class `%s`. "
-            "this will stop working in HA Core 2025.7.0",
-            unit_of_measurement,
-            device_class,
+        raise vol.Invalid(
+            f"The unit of measurement '{unit_of_measurement}' is not valid "
+            f"together with device class '{device_class}'"
         )
 
     return config
