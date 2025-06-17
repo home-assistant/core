@@ -128,7 +128,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             self.battery_level,
         )
 
-    async def async_start(self, **kwargs: Any) -> None:
+    async def async_start(self, **kwargs) -> None:
         """Start the device."""
         if self.data.current_state == State.SLEEP:
             value = State.WAKE_UP
@@ -144,7 +144,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             self.coordinator.api.async_set_clean_operation_mode(self.property_id, value)
         )
 
-    async def async_pause(self, **kwargs: Any) -> None:
+    async def async_pause(self, **kwargs) -> None:
         """Pause the device."""
         _LOGGER.debug(
             "[%s:%s] async_pause", self.coordinator.device_name, self.property_id

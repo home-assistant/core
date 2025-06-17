@@ -1153,7 +1153,7 @@ def test_number_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
 def test_vacuum_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -> None:
     """Ensure valid hints are accepted for vacuum entity."""
     # Set bypass option
-    type_hint_checker.linter.config.ignore_missing_annotations = True
+    type_hint_checker.linter.config.ignore_missing_annotations = False
 
     # Ensure that `dict | list | None` is valid for params
     class_node = astroid.extract_node(
