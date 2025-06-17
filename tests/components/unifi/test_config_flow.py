@@ -320,6 +320,7 @@ async def test_reauth_flow_update_configuration(
                 CONF_VERIFY_SSL: True,
             },
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
