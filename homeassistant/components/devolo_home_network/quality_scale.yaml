@@ -58,10 +58,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: exempt
-    comment: |
-      This integration has a fixed single device.
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -79,7 +76,7 @@ rules:
   stale-devices:
     status: exempt
     comment: |
-      This integration has a fixed single device.
+      The API for the device tracker platform cannot distinguish stale devices and devices that are not home.
 
   # Platinum
   async-dependency: done

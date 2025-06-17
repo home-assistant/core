@@ -1324,7 +1324,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "devialet",
     "device_sun_light_trigger",
     "devolo_home_control",
-    "devolo_home_network",
     "dexcom",
     "dhcp",
     "dialogflow",
