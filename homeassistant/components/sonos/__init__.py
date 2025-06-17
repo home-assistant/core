@@ -483,6 +483,7 @@ class SonosDiscoveryManager:
                     _LOGGER.debug(
                         "Manual poll to %s failed, keeping unavailable", ip_addr
                     )
+
         self.data.hosts_heartbeat = async_call_later(
             self.hass, DISCOVERY_INTERVAL.total_seconds(), self.async_poll_manual_hosts
         )
