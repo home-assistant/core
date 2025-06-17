@@ -83,31 +83,7 @@ class DreoFanDeviceData(DreoGenericDeviceData):
         return fan_data
 
 
-DreoDeviceData = DreoFanDeviceData | DreoGenericDeviceData
-
-
-class DeviceDataFactory:
-    """Factory to create device data based on device type."""
-
-    @staticmethod
-    def create_data(
-        coordinator: DreoDataUpdateCoordinator,
-        status: dict[str, Any],
-    ) -> DreoDeviceData | None:
-        """Create appropriate device data based on device type."""
-        if (
-            coordinator.device_type == FAN_DEVICE.get("type")
-            and coordinator.device_model
-        ):
-            return DreoFanDeviceData.process_fan_data(coordinator.device_model, status)
-
-        _LOGGER.warning(
-            "Unsupported device type: %s for model: %s - data will not be processed",
-            coordinator.device_type,
-            coordinator.device_model,
-        )
-
-        return None
+DreoDeviceData = DreoFanDeviceData
 
 
 class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
@@ -118,7 +94,7 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
         hass: HomeAssistant,
         client: HsCloud,
         device_id: str,
-        model: str | None = None,
+        model: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -132,6 +108,19 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
         self.device_model = model
         self.device_type = DEVICE_TYPE.get(model) if model else None
 
+    def _create_device_data(self, status: dict[str, Any]) -> DreoDeviceData | None:
+        """Create appropriate device data based on device type."""
+        if self.device_type == FAN_DEVICE.get("type") and self.device_model:
+            return DreoFanDeviceData.process_fan_data(self.device_model, status)
+
+        _LOGGER.warning(
+            "Unsupported device type: %s for model: %s - data will not be processed",
+            self.device_type,
+            self.device_model,
+        )
+
+        return None
+
     async def _async_update_data(self) -> DreoDeviceData | None:
         """Get device status from Dreo API and process it."""
         try:
@@ -142,8 +131,7 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
             if status is None:
                 return None
 
-            device_data = DeviceDataFactory.create_data(self, status)
-            return device_data if device_data is not None else DreoGenericDeviceData()
+            return self._create_device_data(status)
         except HsCloudException as error:
             raise UpdateFailed(f"Error communicating with Dreo API: {error}") from error
         except Exception as error:

@@ -13,14 +13,14 @@ from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .coordinator import DreoDataUpdateCoordinator
 
 type DreoConfigEntry = ConfigEntry[DreoData]
 
 PLATFORMS = [Platform.FAN]
-SYNC_INTERVAL = timedelta(seconds=15)
+SYNC_INTERVAL = timedelta(seconds=10)
 
 
 @dataclass
@@ -45,7 +45,7 @@ async def async_login(
     try:
         devices = await hass.async_add_executor_job(setup_client)
     except HsCloudBusinessException as ex:
-        raise ConfigEntryNotReady("Invalid username or password") from ex
+        raise ConfigEntryAuthFailed("Invalid username or password") from ex
     except HsCloudException as ex:
         raise ConfigEntryNotReady(f"Error communicating with Dreo API: {ex}") from ex
 
@@ -61,8 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
     coordinators: dict[str, DreoDataUpdateCoordinator] = {}
 
     for device in devices:
-        if DEVICE_TYPE.get(device.get("model")) is None:
-            continue
         await async_setup_device_coordinator(hass, client, device, coordinators)
 
     config_entry.runtime_data = DreoData(client, devices, coordinators)
@@ -82,13 +80,16 @@ async def async_setup_device_coordinator(
     device_model = device.get("model")
     device_id = str(device.get("deviceSn", ""))
 
-    if not device_id:
+    if not device_id or not device_model:
+        return
+
+    if DEVICE_TYPE.get(device_model) is None:
         return
 
     if device_id in coordinators:
         return
 
-    coordinator = DreoDataUpdateCoordinator(hass, client, device_id, device_model or "")
+    coordinator = DreoDataUpdateCoordinator(hass, client, device_id, device_model)
 
     await coordinator.async_config_entry_first_refresh()
 
