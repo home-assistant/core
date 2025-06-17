@@ -37,7 +37,7 @@ class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a configuration flow initialized by the user."""
 
         errors = {}
-        if user_input:
+        if user_input is not None:
             url = URL(user_input[CONF_URL])
             if (host := url.host) is None:
                 errors[CONF_URL] = "invalid_host"
