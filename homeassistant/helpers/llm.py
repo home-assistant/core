@@ -12,6 +12,7 @@ from functools import cache, partial
 from operator import attrgetter
 from typing import Any, cast
 
+from sentence_transformers import SentenceTransformer
 import slugify as unicode_slug
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
@@ -85,6 +86,10 @@ If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock loc
     3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
 For general knowledge questions not about the home: Answer truthfully from internal knowledge.
 """
+
+SENTENCE_TRANSFORMER = SentenceTransformer(
+    "ibm-granite/granite-embedding-107m-multilingual"
+)
 
 
 @callback
@@ -1115,6 +1120,19 @@ class GetLiveContextTool(Tool):
         "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
         "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first)."
     )
+    parameters = vol.Schema(
+        {
+            vol.Optional(
+                "context_filter",
+                description=(
+                    "Natural language string to filter the entities against. "
+                    "Could be the user query, or an keyword version of the user query. "
+                    "eg. If the user query was 'What is the temperature in the bedroom?' "
+                    "a context filter could be 'thermostat temperature bedroom'."
+                ),
+            ): str,
+        }
+    )
 
     async def async_call(
         self,
@@ -1131,9 +1149,35 @@ class GetLiveContextTool(Tool):
         exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
         if not exposed_entities["entities"]:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
+
+        data = self.parameters(tool_input.tool_args)
+        context_filter = data.get("context_filter", None)
+
+        entities_list = list(exposed_entities["entities"].values())
+
+        if context_filter:
+            context_filter_embedding = SENTENCE_TRANSFORMER.encode(context_filter)
+            entities_embeddings = SENTENCE_TRANSFORMER.encode(
+                [yaml_util.dump(entity) for entity in entities_list]
+            )
+            similarities = [
+                sub[0]
+                for sub in SENTENCE_TRANSFORMER.similarity(
+                    entities_embeddings, context_filter_embedding
+                )
+            ]
+
+            entities_list = [
+                entity
+                for similarity, entity in sorted(
+                    zip(similarities, entities_list, strict=True), reverse=True
+                )
+                if similarity > 0.6
+            ]
+
         prompt = [
             "Live Context: An overview of the areas and the devices in this smart home:",
-            yaml_util.dump(list(exposed_entities["entities"].values())),
+            yaml_util.dump(entities_list),
         ]
         return {
             "success": True,
