@@ -90,7 +90,7 @@ class GoogleWeatherDailyForecastCoordinator(
             _LOGGER,
             config_entry=config_entry,
             name=f"Google Weather daily forecast coordinator for {config_entry.title}",
-            update_interval=timedelta(hours=2),
+            update_interval=timedelta(hours=1),
         )
         self.api = api
 
@@ -122,7 +122,7 @@ class GoogleWeatherHourlyForecastCoordinator(
             _LOGGER,
             config_entry=config_entry,
             name=f"Google Weather hourly forecast coordinator for {config_entry.title}",
-            update_interval=timedelta(hours=2),
+            update_interval=timedelta(hours=1),
         )
         self.api = api
 
