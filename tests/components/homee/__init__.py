@@ -46,6 +46,7 @@ def build_mock_node(file: str) -> AsyncMock:
     def attribute_by_type(type, instance=0) -> HomeeAttribute | None:
         return {attr.type: attr for attr in mock_node.attributes}.get(type)
 
+    mock_node.raw_data = json_node
     mock_node.get_attribute_by_type = attribute_by_type
 
     return mock_node

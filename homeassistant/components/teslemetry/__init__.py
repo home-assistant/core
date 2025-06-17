@@ -32,7 +32,7 @@ from .coordinator import (
 )
 from .helpers import flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
-from .services import async_register_services
+from .services import async_setup_services
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -56,7 +56,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telemetry integration."""
-    async_register_services(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -95,13 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     energysites: list[TeslemetryEnergyData] = []
 
     # Create the stream
-    stream = TeslemetryStream(
-        session,
-        access_token,
-        server=f"{region.lower()}.teslemetry.com",
-        parse_timestamp=True,
-        manual=True,
-    )
+    stream: TeslemetryStream | None = None
 
     for product in products:
         if (
@@ -122,6 +116,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 model=api.model,
                 serial_number=vin,
             )
+
+            # Create stream if required
+            if not stream:
+                stream = TeslemetryStream(
+                    session,
+                    access_token,
+                    server=f"{region.lower()}.teslemetry.com",
+                    parse_timestamp=True,
+                    manual=True,
+                )
 
             remove_listener = stream.async_add_listener(
                 create_handle_vehicle_stream(vin, coordinator),
@@ -237,10 +241,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         )
 
     # Setup Platforms
-    entry.runtime_data = TeslemetryData(vehicles, energysites, scopes)
+    entry.runtime_data = TeslemetryData(vehicles, energysites, scopes, stream)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
+    if stream:
+        entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True
 

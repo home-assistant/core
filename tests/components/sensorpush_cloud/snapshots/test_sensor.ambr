@@ -23,6 +23,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfLength.METERS: 'm'>,
       }),
@@ -32,6 +35,7 @@
     'original_name': 'Altitude',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'altitude',
     'unique_id': 'test-sensor-device-id-0_altitude',
@@ -78,6 +82,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
@@ -87,6 +94,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-0_atmospheric_pressure',
@@ -133,12 +141,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Battery voltage',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_voltage',
     'unique_id': 'test-sensor-device-id-0_battery_voltage',
@@ -185,12 +197,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dewpoint',
     'unique_id': 'test-sensor-device-id-0_dewpoint',
@@ -210,7 +226,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17.8',
+    'state': '-17.7777777777778',
   })
 # ---
 # name: test_sensors[sensor.test_sensor_name_0_humidity-entry]
@@ -243,6 +259,7 @@
     'original_name': 'Humidity',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-0_humidity',
@@ -295,6 +312,7 @@
     'original_name': 'Signal strength',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-0_signal_strength',
@@ -341,12 +359,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-0_temperature',
@@ -366,7 +388,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17.8',
+    'state': '-17.7777777777778',
   })
 # ---
 # name: test_sensors[sensor.test_sensor_name_0_vapor_pressure-entry]
@@ -393,12 +415,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Vapor pressure',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vapor_pressure',
     'unique_id': 'test-sensor-device-id-0_vapor_pressure',
@@ -445,6 +471,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfLength.METERS: 'm'>,
       }),
@@ -454,6 +483,7 @@
     'original_name': 'Altitude',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'altitude',
     'unique_id': 'test-sensor-device-id-1_altitude',
@@ -500,6 +530,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
@@ -509,6 +542,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-1_atmospheric_pressure',
@@ -555,12 +589,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Battery voltage',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_voltage',
     'unique_id': 'test-sensor-device-id-1_battery_voltage',
@@ -607,12 +645,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dewpoint',
     'unique_id': 'test-sensor-device-id-1_dewpoint',
@@ -632,7 +674,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17.8',
+    'state': '-17.7777777777778',
   })
 # ---
 # name: test_sensors[sensor.test_sensor_name_1_humidity-entry]
@@ -665,6 +707,7 @@
     'original_name': 'Humidity',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-1_humidity',
@@ -717,6 +760,7 @@
     'original_name': 'Signal strength',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-1_signal_strength',
@@ -763,12 +807,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-1_temperature',
@@ -788,7 +836,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17.8',
+    'state': '-17.7777777777778',
   })
 # ---
 # name: test_sensors[sensor.test_sensor_name_1_vapor_pressure-entry]
@@ -815,12 +863,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Vapor pressure',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vapor_pressure',
     'unique_id': 'test-sensor-device-id-1_vapor_pressure',
@@ -867,6 +919,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfLength.METERS: 'm'>,
       }),
@@ -876,6 +931,7 @@
     'original_name': 'Altitude',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'altitude',
     'unique_id': 'test-sensor-device-id-2_altitude',
@@ -922,6 +978,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
       }),
@@ -931,6 +990,7 @@
     'original_name': 'Atmospheric pressure',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-2_atmospheric_pressure',
@@ -977,12 +1037,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Battery voltage',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_voltage',
     'unique_id': 'test-sensor-device-id-2_battery_voltage',
@@ -1029,12 +1093,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dewpoint',
     'unique_id': 'test-sensor-device-id-2_dewpoint',
@@ -1054,7 +1122,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17.8',
+    'state': '-17.7777777777778',
   })
 # ---
 # name: test_sensors[sensor.test_sensor_name_2_humidity-entry]
@@ -1087,6 +1155,7 @@
     'original_name': 'Humidity',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-2_humidity',
@@ -1139,6 +1208,7 @@
     'original_name': 'Signal strength',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-2_signal_strength',
@@ -1185,12 +1255,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-sensor-device-id-2_temperature',
@@ -1210,7 +1284,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17.8',
+    'state': '-17.7777777777778',
   })
 # ---
 # name: test_sensors[sensor.test_sensor_name_2_vapor_pressure-entry]
@@ -1237,12 +1311,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Vapor pressure',
     'platform': 'sensorpush_cloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vapor_pressure',
     'unique_id': 'test-sensor-device-id-2_vapor_pressure',

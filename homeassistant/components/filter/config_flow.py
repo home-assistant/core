@@ -105,9 +105,18 @@ DATA_SCHEMA_SETUP = vol.Schema(
 )
 
 BASE_OPTIONS_SCHEMA = {
+    vol.Optional(CONF_ENTITY_ID): EntitySelector(EntitySelectorConfig(read_only=True)),
+    vol.Optional(CONF_FILTER_NAME): SelectSelector(
+        SelectSelectorConfig(
+            options=FILTERS,
+            mode=SelectSelectorMode.DROPDOWN,
+            translation_key=CONF_FILTER_NAME,
+            read_only=True,
+        )
+    ),
     vol.Optional(CONF_FILTER_PRECISION, default=DEFAULT_PRECISION): NumberSelector(
         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
-    )
+    ),
 }
 
 OUTLIER_SCHEMA = vol.Schema(

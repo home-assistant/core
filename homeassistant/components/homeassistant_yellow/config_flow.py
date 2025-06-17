@@ -63,7 +63,7 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
     """Handle a config flow for Home Assistant Yellow."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Instantiate config flow."""
@@ -141,6 +141,11 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
                     if self._probed_firmware_info is not None
                     else ApplicationType.EZSP
                 ).value,
+                FIRMWARE_VERSION: (
+                    self._probed_firmware_info.firmware_version
+                    if self._probed_firmware_info is not None
+                    else None
+                ),
             },
         )
 
