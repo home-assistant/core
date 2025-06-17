@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from aiohttp import ClientError, ClientResponseError
 from google_air_quality_api.api import GoogleAirQualityApi
 
@@ -41,11 +43,15 @@ async def async_setup_entry(
 
     coordinators: dict[str, GoogleAirQualityUpdateCoordinator] = {}
     for subentry_id in entry.subentries:
-        coordinator = GoogleAirQualityUpdateCoordinator(
+        coordinators[subentry_id] = GoogleAirQualityUpdateCoordinator(
             hass, entry, subentry_id, api_client
         )
-        await coordinator.async_config_entry_first_refresh()
-        coordinators[subentry_id] = coordinator
+    await asyncio.gather(
+        *(
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinators.values()
+        )
+    )
 
     entry.runtime_data = coordinators
 
