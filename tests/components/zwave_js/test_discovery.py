@@ -1,10 +1,12 @@
 """Test entity discovery for device-specific schemas for the Z-Wave JS integration."""
 
+from datetime import timedelta
+from unittest.mock import MagicMock
+
 import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.components.number import (
@@ -12,7 +14,6 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -26,12 +27,13 @@ from homeassistant.components.zwave_js.discovery import (
 from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
-from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_aeon_smart_switch_6_state(
@@ -222,17 +224,24 @@ async def test_merten_507801_disabled_enitites(
 async def test_zooz_zen72(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    client,
-    switch_zooz_zen72,
-    integration,
+    client: MagicMock,
+    switch_zooz_zen72: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that Zooz ZEN72 Indicators are discovered as number entities."""
-    assert len(hass.states.async_entity_ids(NUMBER_DOMAIN)) == 1
-    assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2  # includes ping
     entity_id = "number.z_wave_plus_700_series_dimmer_switch_indicator_value"
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.entity_category == EntityCategory.CONFIG
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None  # disabled by default
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+    client.async_send_command.reset_mock()
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
@@ -246,7 +255,7 @@ async def test_zooz_zen72(
         },
         blocking=True,
     )
-    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_count == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == switch_zooz_zen72.node_id
@@ -260,16 +269,18 @@ async def test_zooz_zen72(
     client.async_send_command.reset_mock()
 
     entity_id = "button.z_wave_plus_700_series_dimmer_switch_identify"
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.entity_category == EntityCategory.CONFIG
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.disabled_by is None
+    assert hass.states.get(entity_id) is not None
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_count == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == switch_zooz_zen72.node_id
@@ -285,53 +296,55 @@ async def test_indicator_test(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    client,
-    indicator_test,
-    integration,
+    client: MagicMock,
+    indicator_test: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test that Indicators are discovered properly.
 
     This test covers indicators that we don't already have device fixtures for.
     """
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, indicator_test)}
+    binary_sensor_entity_id = "binary_sensor.this_is_a_fake_device_binary_sensor"
+    sensor_entity_id = "sensor.this_is_a_fake_device_sensor"
+    switch_entity_id = "switch.this_is_a_fake_device_switch"
+
+    for entity_id in (
+        binary_sensor_entity_id,
+        sensor_entity_id,
+    ):
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry
+        assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+        assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert hass.states.get(entity_id) is None  # disabled by default
+        entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    entity_id = switch_entity_id
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None  # disabled by default
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
-    assert device
-    entities = er.async_entries_for_device(entity_registry, device.id)
+    await hass.async_block_till_done()
+    client.async_send_command.reset_mock()
 
-    def len_domain(domain):
-        return len([entity for entity in entities if entity.domain == domain])
-
-    assert len_domain(NUMBER_DOMAIN) == 0
-    assert len_domain(BUTTON_DOMAIN) == 1  # only ping
-    assert len_domain(BINARY_SENSOR_DOMAIN) == 1
-    assert len_domain(SENSOR_DOMAIN) == 3  # include node status + last seen
-    assert len_domain(SWITCH_DOMAIN) == 1
-
-    entity_id = "binary_sensor.this_is_a_fake_device_binary_sensor"
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    entity_id = binary_sensor_entity_id
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
 
-    client.async_send_command.reset_mock()
-
-    entity_id = "sensor.this_is_a_fake_device_sensor"
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    entity_id = sensor_entity_id
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "0.0"
 
-    client.async_send_command.reset_mock()
-
-    entity_id = "switch.this_is_a_fake_device_switch"
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.entity_category == EntityCategory.CONFIG
+    entity_id = switch_entity_id
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
@@ -342,7 +355,7 @@ async def test_indicator_test(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_count == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == indicator_test.node_id
@@ -362,7 +375,7 @@ async def test_indicator_test(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_count == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == indicator_test.node_id
