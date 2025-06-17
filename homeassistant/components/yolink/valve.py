@@ -23,7 +23,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEV_MODEL_WATER_METER_YS5007, DOMAIN
+from .const import (
+    DEV_MODEL_LEAK_STOP_YS5009,
+    DEV_MODEL_LEAK_STOP_YS5029,
+    DEV_MODEL_WATER_METER_YS5007,
+    DOMAIN,
+)
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -155,7 +160,14 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
     @property
     def available(self) -> bool:
         """Return true is device is available."""
-        if self.coordinator.dev_net_type is not None:
+        if (
+            self.coordinator.device.device_model_name.startswith(
+                DEV_MODEL_LEAK_STOP_YS5009
+            )
+            or self.coordinator.device.device_model_name.startswith(
+                DEV_MODEL_LEAK_STOP_YS5029
+            )
+        ) and self.coordinator.dev_net_type is not None:
             # When the device operates in Class A mode, it cannot be controlled.
             return self.coordinator.dev_net_type != ATTR_DEVICE_MODEL_A
         return super().available
