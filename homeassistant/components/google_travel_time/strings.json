@@ -21,6 +21,7 @@
       }
     },
     "error": {
+      "permission_denied": "The Routes API is not enabled for this API key. Please see the setup instructions for detailed information.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
@@ -99,6 +100,12 @@
         "less_walking": "Less walking",
         "fewer_transfers": "Fewer transfers"
       }
+    }
+  },
+  "issues": {
+    "routes_api_disabled": {
+      "title": "The Routes API must be enabled",
+      "description": "Your Google Travel Time integration `{entry_title}` uses an API key which does not have the Routes API enabled.\n\n Please follow the instructions to [enable the API for your project]({enable_api_url}) and make sure your [API key restrictions]({api_key_restrictions_url}) allow access to the Routes API.\n\n After enabling the API this issue will be resolved automatically."
     }
   }
 }

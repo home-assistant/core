@@ -5,7 +5,7 @@ import datetime
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from yalexs.manager.activity import INITIAL_LOCK_RESYNC_TIME
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState

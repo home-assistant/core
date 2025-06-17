@@ -305,6 +305,36 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
+    # Pet Fountain
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r0as4ln
+    "cwysj": (
+        TuyaSensorEntityDescription(
+            key=DPCode.UV_RUNTIME,
+            translation_key="uv_runtime",
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PUMP_TIME,
+            translation_key="pump_time",
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FILTER_DURATION,
+            translation_key="filter_duration",
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_TIME,
+            translation_key="water_time",
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+    ),
     # Air Quality Monitor
     # https://developer.tuya.com/en/docs/iot/hjjcy?id=Kbeoad8y1nnlv
     "hjjcy": (
@@ -1281,6 +1311,9 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
+    # Wireless Switch
+    # https://developer.tuya.com/en/docs/iot/s?id=Kbeoa9fkv6brp
+    "wxkg": BATTERY_SENSORS,
 }
 
 # Socket (duplicate of `kg`)

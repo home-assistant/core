@@ -112,6 +112,11 @@ from tests.common import get_fixture_path
             ),
         ),
     ],
+    ids=[
+        "no addons and no metadata",
+        "with addons and metadata",
+        "only metadata",
+    ],
 )
 def test_read_backup(backup_json_content: bytes, expected_backup: AgentBackup) -> None:
     """Test reading a backup."""

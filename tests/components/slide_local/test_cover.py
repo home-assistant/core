@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from goslideapi.goslideapi import ClientConnectionError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
