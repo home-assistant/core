@@ -381,7 +381,7 @@ async def test_update_entity_installation(
     # When we install it, the other integration is reloaded
     with (
         patch(
-            "homeassistant.components.homeassistant_hardware.util.async_flash_silabs_firmware",
+            "homeassistant.components.homeassistant_hardware.update.async_flash_silabs_firmware",
             side_effect=mock_flash_firmware,
         ),
     ):
@@ -448,7 +448,7 @@ async def test_update_entity_installation_failure(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_hardware.util.async_flash_silabs_firmware",
+            "homeassistant.components.homeassistant_hardware.update.async_flash_silabs_firmware",
             side_effect=HomeAssistantError("Failed to flash firmware"),
         ),
         pytest.raises(HomeAssistantError, match="Failed to flash firmware"),
@@ -492,7 +492,7 @@ async def test_update_entity_installation_probe_failure(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_hardware.util.async_flash_silabs_firmware",
+            "homeassistant.components.homeassistant_hardware.update.async_flash_silabs_firmware",
             side_effect=HomeAssistantError(
                 "Failed to probe the firmware after flashing"
             ),
