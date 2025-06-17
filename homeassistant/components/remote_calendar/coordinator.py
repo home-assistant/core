@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .client import get_calendar
 from .const import DOMAIN
 from .ics import InvalidIcsException, parse_calendar
 
@@ -46,7 +47,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
     async def _async_update_data(self) -> Calendar:
         """Update data from the url."""
         try:
-            res = await self._client.get(self._url, follow_redirects=True)
+            res = await get_calendar(self._client, self._url)
             res.raise_for_status()
         except (HTTPError, InvalidURL) as err:
             raise UpdateFailed(
