@@ -181,8 +181,8 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                         default=user_input.get(
                             CONF_LOCATION,
                             {
-                                "latitude": self.hass.config.latitude,
-                                "longitude": self.hass.config.longitude,
+                                CONF_LATITUDE: self.hass.config.latitude,
+                                CONF_LONGITUDE: self.hass.config.longitude,
                             },
                         ),
                     ): LocationSelector()
