@@ -48,7 +48,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import selector
+from homeassistant.helpers import selector, translation
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -448,6 +448,22 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors,
             description_placeholders={
                 "parent_sensor_name": self._get_entry().title,
+                "device_class_on": translation.async_translate_state(
+                    self.hass,
+                    "on",
+                    BINARY_SENSOR_DOMAIN,
+                    platform=None,
+                    translation_key=None,
+                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
+                ),
+                "device_class_off": translation.async_translate_state(
+                    self.hass,
+                    "off",
+                    BINARY_SENSOR_DOMAIN,
+                    platform=None,
+                    translation_key=None,
+                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
+                ),
             },
         )
 
@@ -486,6 +502,22 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors,
             description_placeholders={
                 "parent_sensor_name": self._get_entry().title,
+                "device_class_on": translation.async_translate_state(
+                    self.hass,
+                    "on",
+                    BINARY_SENSOR_DOMAIN,
+                    platform=None,
+                    translation_key=None,
+                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
+                ),
+                "device_class_off": translation.async_translate_state(
+                    self.hass,
+                    "off",
+                    BINARY_SENSOR_DOMAIN,
+                    platform=None,
+                    translation_key=None,
+                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
+                ),
             },
         )
 
@@ -518,6 +550,22 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors,
             description_placeholders={
                 "parent_sensor_name": self._get_entry().title,
+                "device_class_on": translation.async_translate_state(
+                    self.hass,
+                    "on",
+                    BINARY_SENSOR_DOMAIN,
+                    platform=None,
+                    translation_key=None,
+                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
+                ),
+                "device_class_off": translation.async_translate_state(
+                    self.hass,
+                    "off",
+                    BINARY_SENSOR_DOMAIN,
+                    platform=None,
+                    translation_key=None,
+                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
+                ),
             },
         )
 
@@ -562,5 +610,21 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors,
             description_placeholders={
                 "parent_sensor_name": self._get_entry().title,
+                "device_class_on": translation.async_translate_state(
+                    self.hass,
+                    "on",
+                    BINARY_SENSOR_DOMAIN,
+                    platform=None,
+                    translation_key=None,
+                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
+                ),
+                "device_class_off": translation.async_translate_state(
+                    self.hass,
+                    "off",
+                    BINARY_SENSOR_DOMAIN,
+                    platform=None,
+                    translation_key=None,
+                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
+                ),
             },
         )

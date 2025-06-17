@@ -90,8 +90,8 @@
             "name": "This name will be used for to identify this observation for editing in the future.",
             "entity_id": "The entity of interest.",
             "to_state": "The state of the sensor to be detected.",
-            "prob_given_true": "The estimated probability or proportion of time this observation is `True` while {parent_sensor_name} is `True`.",
-            "prob_given_false": "The estimated probability or proportion of time this observation is `True` while {parent_sensor_name} is `False`."
+            "prob_given_true": "The estimated probability or proportion of time this observation is `True` while `{parent_sensor_name}` is `{device_class_on}`.",
+            "prob_given_false": "The estimated probability or proportion of time this observation is `True` while `{parent_sensor_name}` is `{device_class_off}`."
           }
         },
         "numeric_state": {
