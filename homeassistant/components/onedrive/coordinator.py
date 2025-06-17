@@ -66,6 +66,7 @@ class OneDriveUpdateCoordinator(DataUpdateCoordinator[Drive]):
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from err
         except OneDriveException as err:
+            _LOGGER.debug("Failed to fetch drive data: %s")
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="update_failed"
             ) from err
