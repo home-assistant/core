@@ -12,8 +12,8 @@ from fluss_api import (
     FlussApiClientCommunicationError,
     FlussApiClientError,
 )
-from fluss_api.main import FlussApiClient
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -27,9 +27,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Manages fetching Fluss device data on a schedule."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        api_key: str,
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api_key: str
     ) -> None:
         """Initialize the coordinator."""
         try:
@@ -46,6 +44,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name=f"Fluss+ ({slugify(api_key[:8])})",
+            config_entry=config_entry,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 

@@ -35,9 +35,6 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         await self.async_set_unique_id(DOMAIN)
 
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors: dict[str, str] = {}
         session = async_get_clientsession(self.hass)
         if user_input is not None:

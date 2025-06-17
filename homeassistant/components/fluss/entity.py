@@ -20,14 +20,21 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
         coordinator: FlussDataUpdateCoordinator,
         device_id: str,
         entity_description: EntityDescription,
+        device: dict | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.device_id = device_id
         self.entity_description = entity_description
+        self._device = device
         self._attr_unique_id = f"{device_id}_{entity_description.key}"
 
     @property
     def device(self) -> dict | None:
-        """Return the device data from the coordinator."""
-        return self.coordinator.data.get(self.device_id)
+        """Return the device data from the coordinator or stored device."""
+        if self._device is not None:
+            return self._device
+        for device in self.coordinator.data.get("devices", []):
+            if device.get("deviceId") == self.device_id:
+                return device
+        return None
