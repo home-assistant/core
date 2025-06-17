@@ -44,7 +44,11 @@ from homeassistant.helpers import (
     service,
 )
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.loader import async_get_integration, async_get_integrations
+from homeassistant.loader import (
+    Integration,
+    async_get_integration,
+    async_get_integrations,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml
 
@@ -1101,14 +1105,20 @@ async def test_async_get_all_descriptions_failing_integration(
     input_button_config = {DOMAIN_INPUT_BUTTON: {}}
     await async_setup_component(hass, DOMAIN_INPUT_BUTTON, input_button_config)
 
-    async def wrap_get_integrations(hass, domains):
+    async def wrap_get_integrations(
+        hass: HomeAssistant, domains: Iterable[str]
+    ) -> dict[str, Integration | Exception]:
         integrations = await async_get_integrations(hass, domains)
         integrations[DOMAIN_LOGGER] = ImportError("Failed to load services.yaml")
         return integrations
 
     async def wrap_get_translations(
-        hass, language, category, integrations=None, config_flow=None
-    ):
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, str]:
         translations = await async_get_translations(
             hass, language, category, integrations, config_flow
         )
