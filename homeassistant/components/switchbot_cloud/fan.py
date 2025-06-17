@@ -37,6 +37,7 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
 
     _attr_name = None
 
+    _api: SwitchBotAPI
     _attr_supported_features = (
         FanEntityFeature.SET_SPEED
         | FanEntityFeature.PRESET_MODE
