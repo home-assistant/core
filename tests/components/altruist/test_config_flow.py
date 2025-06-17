@@ -148,3 +148,22 @@ async def test_zeroconf_discovery_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_discovery_cant_create_client(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_altruist_client_fails_once: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test zeroconf discovery when already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_device_found"

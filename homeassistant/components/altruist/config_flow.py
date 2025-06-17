@@ -66,9 +66,13 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         _LOGGER.debug("Zeroconf discovery: %s", discovery_info)
-        client = await AltruistClient.from_ip_address(
-            async_get_clientsession(self.hass), str(discovery_info.ip_address)
-        )
+        try:
+            client = await AltruistClient.from_ip_address(
+                async_get_clientsession(self.hass), str(discovery_info.ip_address)
+            )
+        except AltruistError:
+            return self.async_abort(reason="no_device_found")
+
         self.device = client.device
         _LOGGER.debug("Zeroconf device: %s", client.device)
         await self.async_set_unique_id(client.device_id)
