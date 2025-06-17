@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -12,10 +12,6 @@ from .entity import FlussEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-BUTTON_DESCRIPTION = ButtonEntityDescription(
-    key="trigger",
-    name="Trigger",
-)
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -36,7 +32,7 @@ async def async_setup_entry(
             _LOGGER.debug("Skipping Fluss device without deviceId: %s", device)
             continue
 
-        entities.append(FlussButton(coordinator, device_id, device))
+        entities.append(FlussButton(coordinator, device))
 
     async_add_entities(entities)
 
@@ -45,15 +41,14 @@ class FlussButton(FlussEntity, ButtonEntity):
     """Representation of a Fluss button device."""
 
     def __init__(
-        self, coordinator: FlussDataUpdateCoordinator, device_id: str, device: dict
+        self,
+        coordinator: FlussDataUpdateCoordinator,
+        device: dict,
     ) -> None:
         """Initialize the button."""
-        super().__init__(coordinator, device_id, BUTTON_DESCRIPTION, device)
-        self._attr_name = (
-            self.device.get("deviceName", "Unknown Device")
-            if self.device
-            else "Unknown Device"
-        )
+        super().__init__(coordinator, device.get("deviceId"), device)
+        self.device.get("deviceName", "Unknown Device")
+        self._attr_unique_id = str(device["deviceId"])
 
     async def async_press(self) -> None:
         """Handle the button press."""

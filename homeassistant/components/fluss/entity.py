@@ -1,17 +1,12 @@
 """Base entities for the Fluss+ integration."""
 
-import logging
-
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import FlussDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
-    """Base class for Fluss entities."""
+    """Base class for Fluss entities without requiring an EntityDescription."""
 
     _attr_has_entity_name = True
 
@@ -19,22 +14,25 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
         self,
         coordinator: FlussDataUpdateCoordinator,
         device_id: str,
-        entity_description: EntityDescription,
         device: dict | None = None,
     ) -> None:
-        """Initialize the entity."""
+        """Initialize the entity with a device ID and optional device data."""
         super().__init__(coordinator)
         self.device_id = device_id
-        self.entity_description = entity_description
         self._device = device
-        self._attr_unique_id = f"{device_id}_{entity_description.key}"
+        self._attr_unique_id = f"{device_id}"
 
     @property
     def device(self) -> dict | None:
-        """Return the device data from the coordinator or stored device."""
+        """Return the stored device data or fetch it from the coordinator."""
         if self._device is not None:
             return self._device
-        for device in self.coordinator.data.get("devices", []):
-            if device.get("deviceId") == self.device_id:
-                return device
+        for dev in self.coordinator.data.get("devices", []):
+            if dev.get("deviceId") == self.device_id:
+                return dev
         return None
+
+    @property
+    def name(self) -> str:
+        """Use the deviceName field for the entity name."""
+        return self.device.get("deviceName", super().name)
