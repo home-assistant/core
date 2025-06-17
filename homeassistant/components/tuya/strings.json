@@ -615,6 +615,9 @@
         "name": "Last operation duration"
       },
       "water_level": {
+        "name": "Water level"
+      },
+      "water_level_status": {
         "name": "Water level",
         "state": {
           "level_1": "[%key:common::state::low%]",
