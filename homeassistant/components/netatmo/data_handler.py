@@ -433,6 +433,7 @@ class NetatmoDataHandler:
         """Set up rooms."""
         for room in home.rooms.values():
             if NetatmoDeviceCategory.climate in room.features:
+                _LOGGER.debug("Room %s dispatched", room)
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_CLIMATE,
@@ -459,6 +460,7 @@ class NetatmoDataHandler:
                         )
 
                 if "humidity" in room.features:
+                    _LOGGER.debug("Humidity for room %s dispatched", room)
                     async_dispatcher_send(
                         self.hass,
                         NETATMO_CREATE_ROOM_SENSOR,
