@@ -96,6 +96,8 @@ class DreoFan(DreoEntity, FanEntity):
         self._attr_preset_modes = model_config.get("preset_modes")
         self._low_high_range = speed_range
 
+        self._update_attributes()
+
     @callback
     def _handle_coordinator_update(self):
         """Handle updated data from the coordinator."""
@@ -105,6 +107,7 @@ class DreoFan(DreoEntity, FanEntity):
     def _update_attributes(self):
         """Update attributes from coordinator data."""
         if not self.coordinator.data:
+            self._attr_available = False
             return
 
         fan_state_data = self.coordinator.data

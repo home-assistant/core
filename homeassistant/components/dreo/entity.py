@@ -52,7 +52,7 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
         )
 
     async def async_send_command_and_update(
-        self, translation_key: str, **kwargs: Any
+        self, error_translation_key: str, **kwargs: Any
     ) -> None:
         """Call a device command handling error messages and update entity state."""
 
@@ -70,5 +70,5 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
             HsCloudFlowControlException,
         ) as ex:
             raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key=translation_key
+                translation_domain=DOMAIN, translation_key=error_translation_key
             ) from ex
