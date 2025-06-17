@@ -16,6 +16,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.google_air_quality.const import DOMAIN, OAUTH2_SCOPES
 from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -128,6 +129,7 @@ def mock_config_and_subentry(
                 data={
                     "latitude": 48,
                     "longitude": 9,
+                    CONF_NAME: "Straße Ohne Straßennamen",
                 },
                 subentry_id="ABCDEF",
                 subentry_type="location",

@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
+    CONF_NAME,
     CONF_TOKEN,
 )
 from homeassistant.core import callback
@@ -140,16 +141,24 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 for subentry in entry.subentries.values():
                     if subentry.unique_id == unique_id:
                         return self.async_abort(reason="already_configured")
-            data = {
-                CONF_LATITUDE: lat,
-                CONF_LONGITUDE: lon,
-            }
             try:
                 geo_data = await client.async_reverse_geocode(lat, lon)
                 title = geo_data.results[0].formatted_address
+                name = f"{lat}_{lon}"
+                for component in geo_data.results[0].address_components or []:
+                    _LOGGER.debug("component: %s", component)
+                    if "route" in component.types:
+                        name = component.short_text
+                        break
             except (GoogleAirQualityApiError, ValueError, IndexError):
                 _LOGGER.error("Could not resolve address for %s,%s:", lat, lon)
                 title = f"Coordinates {lat}, {lon}"
+                name = f"{lat}_{lon}"
+            data = {
+                CONF_LATITUDE: lat,
+                CONF_LONGITUDE: lon,
+                CONF_NAME: name,
+            }
             result = self.async_create_entry(
                 title=title,
                 data=data,

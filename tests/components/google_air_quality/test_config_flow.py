@@ -18,7 +18,7 @@ from homeassistant.components.google_air_quality.const import (
     OAUTH2_TOKEN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -122,10 +122,14 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(
-    ("api_error_reverse_geocode", "title"),
+    ("api_error_reverse_geocode", "title", "name"),
     [
-        (None, "Straße Ohne Straßennamen, 88637 Buchheim, Deutschland"),
-        (GoogleAirQualityApiError("some error"), "Coordinates 50.0, 10.0"),
+        (
+            None,
+            "Straße Ohne Straßennamen, 88637 Buchheim, Deutschland",
+            "Straße Ohne Straßennamen",
+        ),
+        (GoogleAirQualityApiError("some error"), "Coordinates 50.0, 10.0", "50.0_10.0"),
     ],
 )
 @pytest.mark.usefixtures("setup_integration")
@@ -135,6 +139,7 @@ async def test_add_location_flow(
     mock_api: Mock,
     api_error_reverse_geocode: Exception | None,
     title: str,
+    name: str,
 ) -> None:
     """Test add location subentry flow."""
     assert config_entry.state is ConfigEntryState.LOADED
@@ -159,6 +164,7 @@ async def test_add_location_flow(
     assert result["data"] == {
         CONF_LATITUDE: 50.0,
         CONF_LONGITUDE: 10.0,
+        CONF_NAME: name,
     }
     assert result["unique_id"] == "50.0_10.0"
     assert result["title"] == title
@@ -336,6 +342,7 @@ async def test_no_data_for_location_shows_form(
     assert result["data"] == {
         CONF_LATITUDE: 40.7128,
         CONF_LONGITUDE: 134.0060,
+        CONF_NAME: "Straße Ohne Straßennamen",
     }
     assert result["unique_id"] == "40.7128_134.006"
 
