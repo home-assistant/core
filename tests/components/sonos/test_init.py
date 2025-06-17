@@ -105,16 +105,11 @@ async def test_async_poll_manual_hosts_warnings(
         mock_visible_zones.side_effect = OSError()
         caplog.clear()
         await _setup_hass(hass)
-        record = next(
-            (
-                rec
-                for rec in caplog.records
-                if "Could not get visible Sonos devices from" in rec.message
-            ),
-            None,
-        )
-        assert record is not None
-        assert record.levelname == "WARNING"
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Could not get visible Sonos devices from" in rec.message
+        ] == ["WARNING"]
 
         # Second call fails again, it should be logged as a DEBUG message
         mock_visible_zones.side_effect = OSError()
@@ -122,16 +117,11 @@ async def test_async_poll_manual_hosts_warnings(
         freezer.tick(DISCOVERY_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        record = next(
-            (
-                rec
-                for rec in caplog.records
-                if "Could not get visible Sonos devices from" in rec.message
-            ),
-            None,
-        )
-        assert record is not None
-        assert record.levelname == "DEBUG"
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Could not get visible Sonos devices from" in rec.message
+        ] == ["DEBUG"]
 
         # Third call succeeds, logs message indicating reconnect
         mock_visible_zones.return_value = {soco}
@@ -140,16 +130,11 @@ async def test_async_poll_manual_hosts_warnings(
         freezer.tick(DISCOVERY_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        record = next(
-            (
-                rec
-                for rec in caplog.records
-                if "Connection reestablished to Sonos device" in rec.message
-            ),
-            None,
-        )
-        assert record is not None
-        assert record.levelname == "WARNING"
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Connection reestablished to Sonos device" in rec.message
+        ] == ["WARNING"]
 
         # Fourth call succeeds, it should log nothing
         caplog.clear()
@@ -164,16 +149,11 @@ async def test_async_poll_manual_hosts_warnings(
         freezer.tick(DISCOVERY_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        record = next(
-            (
-                rec
-                for rec in caplog.records
-                if "Could not get visible Sonos devices from" in rec.message
-            ),
-            None,
-        )
-        assert record is not None
-        assert record.levelname == "WARNING"
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Could not get visible Sonos devices from" in rec.message
+        ] == ["WARNING"]
 
 
 class _MockSoCoOsError(MockSoCo):
