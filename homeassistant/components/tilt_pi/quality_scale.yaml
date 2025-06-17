@@ -63,7 +63,7 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: No disabled entities implemented
-  entity-translations: todo
+  entity-translations: done
   exception-translations: todo
   icon-translations: done
   reconfiguration-flow: todo
