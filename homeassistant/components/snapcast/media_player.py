@@ -30,15 +30,18 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_LATENCY,
+    ATTR_MASTER,
     CLIENT_PREFIX,
     CLIENT_SUFFIX,
     CONF_CREATE_GROUP_ENTITIES,
     DOMAIN,
     GROUP_PREFIX,
     GROUP_SUFFIX,
+    SERVICE_JOIN,
     SERVICE_RESTORE,
     SERVICE_SET_LATENCY,
     SERVICE_SNAPSHOT,
+    SERVICE_UNJOIN,
 )
 from .coordinator import SnapcastUpdateCoordinator
 from .entity import SnapcastCoordinatorEntity
@@ -64,6 +67,10 @@ def register_services() -> None:
 
     platform.async_register_entity_service(SERVICE_SNAPSHOT, None, "snapshot")
     platform.async_register_entity_service(SERVICE_RESTORE, None, "async_restore")
+    platform.async_register_entity_service(
+        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, "async_join"
+    )
+    platform.async_register_entity_service(SERVICE_UNJOIN, None, "async_unjoin")
     platform.async_register_entity_service(
         SERVICE_SET_LATENCY,
         {vol.Required(ATTR_LATENCY): cv.positive_int},
@@ -259,6 +266,14 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Handle the set_latency service."""
         raise NotImplementedError
 
+    async def async_join(self, master) -> None:
+        """Handle the join service."""
+        raise NotImplementedError
+
+    async def async_unjoin(self) -> None:
+        """Handle the unjoin service."""
+        raise NotImplementedError
+
     @property
     def metadata(self) -> Mapping[str, Any]:
         """Get metadata from the current stream."""
@@ -361,6 +376,14 @@ class SnapcastGroupDevice(SnapcastBaseDevice):
         """Handle the set_latency service."""
         raise ServiceValidationError("Latency can only be set for a Snapcast client.")
 
+    async def async_join(self, master) -> None:
+        """Handle the join service."""
+        raise ServiceValidationError("Entity is not a client. Can only join clients.")
+
+    async def async_unjoin(self) -> None:
+        """Handle the unjoin service."""
+        raise ServiceValidationError("Entity is not a client. Can only unjoin clients.")
+
 
 class SnapcastClientDevice(SnapcastBaseDevice):
     """Representation of a Snapcast client device."""
@@ -410,6 +433,35 @@ class SnapcastClientDevice(SnapcastBaseDevice):
     async def async_set_latency(self, latency) -> None:
         """Set the latency of the client."""
         await self._device.set_latency(latency)
+        self.async_write_ha_state()
+
+    async def async_join(self, master) -> None:
+        """Join the group of the master player."""
+        entity_registry = er.async_get(self.hass)
+        master_entity = entity_registry.async_get(master)
+        if master_entity is None:
+            raise ServiceValidationError(f"Master entity '{master}' not found.")
+
+        # Validate master entity is a client
+        unique_id = master_entity.unique_id
+        if not unique_id.startswith(CLIENT_PREFIX):
+            raise ServiceValidationError(
+                "Master is not a client device. Can only join clients."
+            )
+
+        # Extract the client ID and locate it's group
+        identifier = unique_id.split("_")[-1]
+        master_group = next(
+            group
+            for group in self._device.groups_available()
+            if identifier in group.clients
+        )
+        await master_group.add_client(self._device.identifier)
+        self.async_write_ha_state()
+
+    async def async_unjoin(self) -> None:
+        """Unjoin the group the player is currently in."""
+        await self._current_group.remove_client(self._device.identifier)
         self.async_write_ha_state()
 
     @property
