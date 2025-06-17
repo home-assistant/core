@@ -448,37 +448,38 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # This should fail as overlapping ranges for the same entity are not allowed
-        with pytest.raises(vol.Invalid) as excinfo:
-            await hass.config_entries.subentries.async_configure(
-                result["flow_id"],
-                {
-                    CONF_ENTITY_ID: "sensor.outside_temperature",
-                    CONF_ABOVE: 30,
-                    CONF_BELOW: 40,
-                    CONF_P_GIVEN_T: 95,
-                    CONF_P_GIVEN_F: 8,
-                    CONF_NAME: "30 - 40 outside",
-                },
-            )
-        assert (
-            excinfo.value.error_message
-            == "Ranges for bayesian numeric state entities must not overlap, but sensor.outside_temperature has overlapping ranges, above:20.0, below:35.0 overlaps with above:30.0, below:40.0."
+        current_step = result["step_id"]
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_ENTITY_ID: "sensor.outside_temperature",
+                CONF_ABOVE: 30,
+                CONF_BELOW: 40,
+                CONF_P_GIVEN_T: 95,
+                CONF_P_GIVEN_F: 8,
+                CONF_NAME: "30 - 40 outside",
+            },
         )
+        await hass.async_block_till_done()
+        assert result["step_id"] == current_step
+        assert result["errors"] == {"base": "overlapping_ranges"}
 
         # This should fail as above should always be less than below
-        with pytest.raises(vol.Invalid) as excinfo:
-            await hass.config_entries.subentries.async_configure(
-                result["flow_id"],
-                {
-                    CONF_ENTITY_ID: "sensor.outside_temperature",
-                    CONF_ABOVE: 40,
-                    CONF_BELOW: 35,
-                    CONF_P_GIVEN_T: 95,
-                    CONF_P_GIVEN_F: 8,
-                    CONF_NAME: "35 - 40 outside",
-                },
-            )
-        assert excinfo.value.error_message == "'above' is greater than 'below'"
+        current_step = result["step_id"]
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_ENTITY_ID: "sensor.outside_temperature",
+                CONF_ABOVE: 40,
+                CONF_BELOW: 35,
+                CONF_P_GIVEN_T: 95,
+                CONF_P_GIVEN_F: 8,
+                CONF_NAME: "35 - 40 outside",
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["step_id"] == current_step
+        assert result["errors"] == {"base": "above_below"}
 
         # This should work
         result = await hass.config_entries.subentries.async_configure(

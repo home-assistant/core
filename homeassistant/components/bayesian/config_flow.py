@@ -434,7 +434,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                     title=user_input.get(CONF_NAME),
                     data=user_input,
                 )
-            except SchemaFlowError as err:
+            except (SchemaFlowError, vol.Invalid) as err:
                 _LOGGER.error("Error validating observation subentry: %s", err)
                 errors["base"] = str(err)
 
@@ -469,7 +469,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                     title=user_input.get(CONF_NAME),
                     data=user_input,
                 )
-            except SchemaFlowError as err:
+            except (SchemaFlowError, vol.Invalid) as err:
                 _LOGGER.error("Error validating observation subentry: %s", err)
                 errors["base"] = str(err)
 
@@ -498,7 +498,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                     title=user_input.get(CONF_NAME),
                     data=user_input,
                 )
-            except SchemaFlowError as err:
+            except (SchemaFlowError, vol.Invalid) as err:
                 _LOGGER.error("Error validating observation subentry: %s", err)
                 errors["base"] = str(err)
 
@@ -518,10 +518,18 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         sub_entry = self._get_reconfigure_subentry()
+        other_subentries = None
+        if sub_entry.data[CONF_PLATFORM] == str(ObservationTypes.NUMERIC_STATE):
+            other_subentries = [
+                dict(se.data) for se in self._get_entry().subentries.values()
+            ]
+            other_subentries.remove(dict(sub_entry.data))
         if user_input is not None:
             try:
                 user_input = await _validate_observation_subentry(
-                    sub_entry.data[CONF_PLATFORM], user_input
+                    sub_entry.data[CONF_PLATFORM],
+                    user_input,
+                    other_subentries=other_subentries,
                 )
                 return self.async_update_and_abort(
                     self._get_entry(),
@@ -529,7 +537,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                     title=user_input.get(CONF_NAME, sub_entry.data[CONF_NAME]),
                     data_updates=user_input,
                 )
-            except SchemaFlowError as err:
+            except (SchemaFlowError, vol.Invalid) as err:
                 _LOGGER.error("Error validating observation subentry: %s", err)
                 errors["base"] = str(err)
 

@@ -161,7 +161,10 @@
       "entry_type": "Observation",
       "error": {
         "equal_probabilities": "[%key:component::bayesian::config::error::equal_probabilities%]",
-        "extreme_prob_given_error": "[%key:component::bayesian::config::error::extreme_prob_given_error%]"
+        "extreme_prob_given_error": "[%key:component::bayesian::config::error::extreme_prob_given_error%]",
+        "above_below": "Invalid range: 'Above' must be less than 'Below' when both are set.",
+        "above_or_below": "Invalid range: At least one of 'Above' or 'Below' must be set.",
+        "overlapping_ranges": "Invalid range: The 'Above' and 'Below' values overlap with another observation for the same entity."
       },
       "abort": {
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"

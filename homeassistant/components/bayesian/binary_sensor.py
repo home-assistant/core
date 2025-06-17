@@ -82,9 +82,7 @@ def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
                 "For bayesian numeric state for entity: %s at least one of 'above' or 'below' must be specified",
                 config[CONF_ENTITY_ID],
             )
-            raise vol.Invalid(
-                "For bayesian numeric state at least one of 'above' or 'below' must be specified."
-            )
+            raise vol.Invalid("above_or_below")
         if above is not None and below is not None:
             if above > below:
                 _LOGGER.error(
@@ -92,7 +90,7 @@ def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
                     above,
                     below,
                 )
-                raise vol.Invalid("'above' is greater than 'below'")
+                raise vol.Invalid("above_below")
     return config
 
 
@@ -136,11 +134,16 @@ def no_overlapping(configs: list[dict]) -> list[dict]:
 
         for i, tup in enumerate(intervals):
             if len(intervals) > i + 1 and tup.below > intervals[i + 1].above:
+                _LOGGER.error(
+                    "Ranges for bayesian numeric state entities must not overlap, but %s has overlapping ranges, above:%s, below:%s overlaps with above:%s, below:%s",
+                    ent_id,
+                    tup.above,
+                    tup.below,
+                    intervals[i + 1].above,
+                    intervals[i + 1].below,
+                )
                 raise vol.Invalid(
-                    "Ranges for bayesian numeric state entities must not overlap, "
-                    f"but {ent_id} has overlapping ranges, above:{tup.above}, "
-                    f"below:{tup.below} overlaps with above:{intervals[i + 1].above}, "
-                    f"below:{intervals[i + 1].below}."
+                    "overlapping_ranges",
                 )
     return configs
 
