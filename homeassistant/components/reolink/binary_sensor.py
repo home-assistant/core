@@ -63,6 +63,7 @@ BINARY_PUSH_SENSORS = (
         cmd_id=33,
         device_class=BinarySensorDeviceClass.MOTION,
         value=lambda api, ch: api.motion_detected(ch),
+        supported=lambda api, ch: api.supported(ch, "motion_detection"),
     ),
     ReolinkBinarySensorEntityDescription(
         key=FACE_DETECTION_TYPE,

@@ -24,7 +24,6 @@ from tenacity import RetryError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
@@ -53,14 +52,6 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
         """Initialize."""
         self.nextdns = nextdns
         self.profile_id = profile_id
-        self.profile_name = nextdns.get_profile_name(profile_id)
-        self.device_info = DeviceInfo(
-            configuration_url=f"https://my.nextdns.io/{profile_id}/setup",
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, str(profile_id))},
-            manufacturer="NextDNS Inc.",
-            name=self.profile_name,
-        )
 
         super().__init__(
             hass,
