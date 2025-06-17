@@ -2,7 +2,6 @@
 
 from pykoplenti import SettingsData
 
-from homeassistant.components.kostal_plenticore.const import CONF_SERVICE_CODE
 from homeassistant.components.kostal_plenticore.coordinator import Plenticore
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -43,7 +42,7 @@ async def test_installer_setting_not_available(
 async def test_installer_setting_available(
     hass: HomeAssistant,
     mock_plenticore: Plenticore,
-    mock_config_entry: MockConfigEntry,
+    mock_installer_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the manual charge setting is available when using the installer login."""
@@ -62,13 +61,9 @@ async def test_installer_setting_available(
         ]
     }
 
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        data={**mock_config_entry.data, CONF_SERVICE_CODE: "test"},
-    )
+    mock_installer_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_installer_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert entity_registry.async_is_registered("switch.scb_battery_manual_charge")
