@@ -104,11 +104,17 @@ async def test_offline_device(
 
 
 @pytest.mark.parametrize(
-    ("sensor", "value", "scale", "unit"),
+    ("sensor", "api_value", "scale", "state_value", "unit"),
     [
-        ("temperature", "22.5", "FAHRENHEIT", "°F"),
-        ("temperature", "68.5", "CELSIUS", "°C"),
-        ("illuminance", "800", None, "lx"),
+        (
+            "temperature",
+            "86",
+            "FAHRENHEIT",
+            "30.0",  # State machine converts to °C
+            "°C",  # State machine converts to °C
+        ),
+        ("temperature", "22.5", "CELSIUS", "22.5", "°C"),
+        ("illuminance", "800", None, "800", "lx"),
     ],
 )
 async def test_unit_of_measurement(
@@ -117,8 +123,9 @@ async def test_unit_of_measurement(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     sensor: str,
-    value: Any,
+    api_value: Any,
     scale: str | None,
+    state_value: Any,
     unit: str | None,
 ) -> None:
     """Test sensor unit of measurement handling."""
@@ -127,10 +134,10 @@ async def test_unit_of_measurement(
 
     mock_amazon_devices_client.get_devices_data.return_value[
         TEST_SERIAL_NUMBER
-    ].sensors = {sensor: AmazonDeviceSensor(name=sensor, value=value, scale=scale)}
+    ].sensors = {sensor: AmazonDeviceSensor(name=sensor, value=api_value, scale=scale)}
 
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == value
+    assert state.state == state_value
     assert state.attributes["unit_of_measurement"] == unit
