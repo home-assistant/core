@@ -2792,6 +2792,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="StateVacuumEntity",
             matches=[
                 TypeHintMatch(
+                    function_name="state",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
                     function_name="battery_level",
                     return_type=["int", None],
                 ),
