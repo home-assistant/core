@@ -1184,6 +1184,7 @@ DISCOVERY_SCHEMAS = [
             any_available_states={(0, "idle")},
         ),
         allow_multi=True,
+        entity_registry_enabled_default=False,
     ),
     # event
     # stateful = False
