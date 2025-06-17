@@ -34,7 +34,7 @@ async def async_unload_entry(
     if not unload_ok:
         return False
 
-    coordinator: FlussDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     await coordinator.api.close()
 
     return True
