@@ -56,6 +56,9 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
                 do_not_disturb=False,
                 response_style=None,
                 bluetooth_state=True,
+                entity_id="11111111-2222-3333-4444-555555555555",
+                appliance_id="G1234567890123456789012345678A",
+                sensors={},
             )
         }
         client.get_model_details = lambda device: DEVICE_TYPE_TO_MODEL.get(
