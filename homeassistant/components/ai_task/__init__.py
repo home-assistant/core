@@ -11,14 +11,13 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DATA_COMPONENT, DOMAIN
 from .entity import AITaskEntity
 from .http import async_setup as async_setup_conversation_http
-from .task import GenTextTask, GenTextTaskResult, GenTextTaskType, async_generate_text
+from .task import GenTextTask, GenTextTaskResult, async_generate_text
 
 __all__ = [
     "DOMAIN",
     "AITaskEntity",
     "GenTextTask",
     "GenTextTaskResult",
-    "GenTextTaskType",
     "async_generate_text",
     "async_setup",
     "async_setup_entry",

@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .task import GenTextTaskType, async_generate_text
+from .task import async_generate_text
 
 
 @callback
@@ -21,7 +21,6 @@ def async_setup(hass: HomeAssistant) -> None:
         vol.Required("type"): "ai_task/generate_text",
         vol.Required("task_name"): str,
         vol.Required("entity_id"): str,
-        vol.Required("task_type"): (lambda v: GenTextTaskType(v)),  # pylint: disable=unnecessary-lambda
         vol.Required("instructions"): str,
     }
 )

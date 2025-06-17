@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_COMPONENT, GenTextTaskType
+from .const import DATA_COMPONENT
 
 
 async def async_generate_text(
@@ -14,7 +14,6 @@ async def async_generate_text(
     *,
     task_name: str,
     entity_id: str,
-    task_type: GenTextTaskType,
     instructions: str,
 ) -> GenTextTaskResult:
     """Run a task in the AI Task integration."""
@@ -25,7 +24,6 @@ async def async_generate_text(
     return await entity.internal_async_generate_text(
         GenTextTask(
             name=task_name,
-            type=task_type,
             instructions=instructions,
         )
     )
@@ -38,15 +36,12 @@ class GenTextTask:
     name: str
     """Name of the task."""
 
-    type: GenTextTaskType
-    """Type of the task."""
-
     instructions: str
     """Instructions on what needs to be done."""
 
     def __str__(self) -> str:
         """Return task as a string."""
-        return f"<GenTextTask {self.type}: {id(self)}>"
+        return f"<GenTextTask {self.name}: {id(self)}>"
 
 
 @dataclass(slots=True)

@@ -2,7 +2,7 @@
 
 from freezegun import freeze_time
 
-from homeassistant.components.ai_task import GenTextTaskType, async_generate_text
+from homeassistant.components.ai_task import async_generate_text
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -27,7 +27,6 @@ async def test_state_generate_text(
         hass,
         task_name="Test task",
         entity_id=TEST_ENTITY_ID,
-        task_type=GenTextTaskType.SUMMARY,
         instructions="Test prompt",
     )
     assert result.result == "Mock result"
@@ -37,5 +36,4 @@ async def test_state_generate_text(
 
     assert mock_ai_task_entity.mock_generate_text_tasks
     task = mock_ai_task_entity.mock_generate_text_tasks[0]
-    assert task.type == GenTextTaskType.SUMMARY
     assert task.instructions == "Test prompt"

@@ -4,7 +4,7 @@ from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.ai_task import GenTextTaskType, async_generate_text
+from homeassistant.components.ai_task import async_generate_text
 from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import chat_session
@@ -25,7 +25,6 @@ async def test_run_text_task_unknown_entity(
             hass,
             task_name="Test Task",
             entity_id="ai_task.unknown_entity",
-            task_type="summary",
             instructions="Test prompt",
         )
 
@@ -41,7 +40,6 @@ async def test_run_text_task_updates_chat_log(
         hass,
         task_name="Test Task",
         entity_id=TEST_ENTITY_ID,
-        task_type=GenTextTaskType.SUMMARY,
         instructions="Test prompt",
     )
     assert result.result == "Mock result"

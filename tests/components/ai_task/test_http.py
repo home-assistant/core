@@ -25,7 +25,6 @@ async def test_ws_generate_text(
             "type": "ai_task/generate_text",
             "task_name": "Test Task",
             "entity_id": TEST_ENTITY_ID,
-            "task_type": "summary",
             "instructions": "Test prompt",
         }
     )
