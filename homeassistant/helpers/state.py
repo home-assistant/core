@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Iterable
+from datetime import datetime
 import logging
 from types import ModuleType
 from typing import Any
@@ -95,3 +96,34 @@ def state_as_number(state: State) -> float:
         return 0
 
     return float(state.state)
+
+
+def get_device_uptime(
+    current_uptime: datetime,
+    last_uptime: datetime | None,
+    domain: str,
+    device_name: str | None = None,
+) -> datetime:
+    """Return device uptime, tolerate up to 'deviation_time' seconds deviation."""
+
+    # Allow 1 minute deviation as the main purpose of this function is to
+    # know if a device restarted or not.
+    UPTIME_DEVIATION = 60
+
+    if (
+        not last_uptime
+        or (diff := abs((current_uptime - last_uptime).total_seconds()))
+        > UPTIME_DEVIATION
+    ):
+        if last_uptime:
+            _LOGGER.debug(
+                "Time deviation %s > %s for device %s [%s] with uptime %s",
+                diff,
+                UPTIME_DEVIATION,
+                device_name or "unspecified",
+                domain,
+                current_uptime,
+            )
+        return current_uptime
+
+    return last_uptime
