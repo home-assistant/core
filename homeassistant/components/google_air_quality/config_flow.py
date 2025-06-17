@@ -38,7 +38,6 @@ from . import api
 from .const import CLOUD_PLATFORM_SCOPE, DOMAIN, OAUTH2_SCOPES
 
 _LOGGER = logging.getLogger(__name__)
-CONF_MAP = "map"
 
 
 class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
