@@ -682,9 +682,12 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
 
 def _load_services_files(
     hass: HomeAssistant, integrations: Iterable[Integration]
-) -> list[JSON_TYPE]:
+) -> dict[str, JSON_TYPE]:
     """Load service files for multiple integrations."""
-    return [_load_services_file(hass, integration) for integration in integrations]
+    return {
+        integration.domain: _load_services_file(hass, integration)
+        for integration in integrations
+    }
 
 
 @callback
@@ -744,10 +747,9 @@ async def async_get_all_descriptions(
             _LOGGER.error("Failed to load integration: %s", domain, exc_info=int_or_exc)
 
         if integrations:
-            contents = await hass.async_add_executor_job(
+            loaded = await hass.async_add_executor_job(
                 _load_services_files, hass, integrations
             )
-            loaded = dict(zip(domains_with_missing_services, contents, strict=False))
 
     # Load translations for all service domains
     translations = await translation.async_get_translations(
