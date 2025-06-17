@@ -22,6 +22,24 @@
     }
   },
   "services": {
+    "join": {
+      "name": "Join",
+      "description": "Groups players together in a single group.",
+      "fields": {
+        "master": {
+          "name": "Master",
+          "description": "Entity ID of the player to synchronize to."
+        },
+        "entity_id": {
+          "name": "Entity",
+          "description": "The players to join to the \"master\"."
+        }
+      }
+    },
+    "unjoin": {
+      "name": "Unjoin",
+      "description": "Removes one or more players from a group."
+    },
     "snapshot": {
       "name": "Snapshot",
       "description": "Takes a snapshot of what is currently playing on a media player."
