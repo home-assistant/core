@@ -223,7 +223,7 @@ async def test_oauth_fail(
 @pytest.mark.parametrize(
     ("api_error", "reason"),
     [
-        (GoogleAirQualityApiError("some error"), "access_not_configured"),
+        (GoogleAirQualityApiError("some error"), "unable_to_fetch"),
         (Exception("some error"), "unknown"),
     ],
 )

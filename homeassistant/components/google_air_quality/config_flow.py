@@ -85,9 +85,9 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         try:
             user_resource_info = await client.get_user_info()
         except GoogleAirQualityApiError as ex:
+            _LOGGER.debug("Cannot fetch user info: %s", str(ex))
             return self.async_abort(
                 reason="access_not_configured",
-                description_placeholders={"message": str(ex)},
             )
         except Exception:
             self.logger.exception("Unknown error occurred")
@@ -127,9 +127,9 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                     errors={"base": "no_data_for_location"},
                 )
             except GoogleAirQualityApiError as ex:
+                _LOGGER.debug("Cannot fetch air quality data: %s", str(ex))
                 return self.async_abort(
-                    reason="access_not_configured",
-                    description_placeholders={"message": str(ex)},
+                    reason="unable_to_fetch",
                 )
             except Exception:
                 _LOGGER.exception("Unknown error occurred")
@@ -148,7 +148,7 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 geo_data = await client.async_reverse_geocode(lat, lon)
                 title = geo_data.results[0].formatted_address
             except (GoogleAirQualityApiError, ValueError, IndexError):
-                _LOGGER.exception("Could not resolve address for %s,%s:", lat, lon)
+                _LOGGER.error("Could not resolve address for %s,%s:", lat, lon)
                 title = f"Coordinates {lat}, {lon}"
             result = self.async_create_entry(
                 title=title,

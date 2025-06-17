@@ -53,9 +53,9 @@ class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
         """Fetch air quality data for this coordinate."""
         try:
             return await self.client.async_air_quality(self.lat, self.long)
-        except GoogleAirQualityApiError as err:
+        except GoogleAirQualityApiError as ex:
+            _LOGGER.debug("Cannot fetch air quality data: %s", str(ex))
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_fetch",
-                translation_placeholders={"err": str(err)},
-            ) from err
+            ) from ex
