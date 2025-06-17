@@ -15,6 +15,12 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "description": "Enter the host and port on which the apcupsd NIS is being served."
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
       }
     }
   },
