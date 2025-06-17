@@ -46,8 +46,6 @@ from .addon import get_addon_manager
 from .const import (
     ADDON_SLUG,
     CONF_ADDON_DEVICE,
-    CONF_ADDON_EMULATE_HARDWARE,
-    CONF_ADDON_LOG_LEVEL,
     CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_LR_S2_AUTHENTICATED_KEY,
     CONF_ADDON_NETWORK_KEY,
@@ -78,17 +76,7 @@ TITLE = "Z-Wave JS"
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
-CONF_EMULATE_HARDWARE = "emulate_hardware"
-CONF_LOG_LEVEL = "log_level"
 
-ADDON_LOG_LEVELS = {
-    "error": "Error",
-    "warn": "Warn",
-    "info": "Info",
-    "verbose": "Verbose",
-    "debug": "Debug",
-    "silly": "Silly",
-}
 ADDON_USER_INPUT_MAP = {
     CONF_ADDON_DEVICE: CONF_USB_PATH,
     CONF_ADDON_S0_LEGACY_KEY: CONF_S0_LEGACY_KEY,
@@ -97,8 +85,6 @@ ADDON_USER_INPUT_MAP = {
     CONF_ADDON_S2_UNAUTHENTICATED_KEY: CONF_S2_UNAUTHENTICATED_KEY,
     CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: CONF_LR_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_LR_S2_AUTHENTICATED_KEY: CONF_LR_S2_AUTHENTICATED_KEY,
-    CONF_ADDON_LOG_LEVEL: CONF_LOG_LEVEL,
-    CONF_ADDON_EMULATE_HARDWARE: CONF_EMULATE_HARDWARE,
 }
 
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
@@ -1097,10 +1083,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
                 CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
                 CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
-                CONF_ADDON_LOG_LEVEL: user_input[CONF_LOG_LEVEL],
-                CONF_ADDON_EMULATE_HARDWARE: user_input.get(
-                    CONF_EMULATE_HARDWARE, False
-                ),
             }
 
             await self._async_set_addon_config(addon_config_updates)
@@ -1135,8 +1117,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         lr_s2_authenticated_key = addon_config.get(
             CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
         )
-        log_level = addon_config.get(CONF_ADDON_LOG_LEVEL, "info")
-        emulate_hardware = addon_config.get(CONF_ADDON_EMULATE_HARDWARE, False)
 
         try:
             ports = await async_get_usb_ports(self.hass)
@@ -1163,10 +1143,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_LR_S2_AUTHENTICATED_KEY, default=lr_s2_authenticated_key
                 ): str,
-                vol.Optional(CONF_LOG_LEVEL, default=log_level): vol.In(
-                    ADDON_LOG_LEVELS
-                ),
-                vol.Optional(CONF_EMULATE_HARDWARE, default=emulate_hardware): bool,
             }
         )
 

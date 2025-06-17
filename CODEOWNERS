@@ -89,8 +89,8 @@ build.json @home-assistant/supervisor
 /tests/components/alert/ @home-assistant/core @frenck
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
-/homeassistant/components/amazon_devices/ @chemelli74
-/tests/components/amazon_devices/ @chemelli74
+/homeassistant/components/alexa_devices/ @chemelli74
+/tests/components/alexa_devices/ @chemelli74
 /homeassistant/components/amazon_polly/ @jschlyter
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
@@ -1274,8 +1274,8 @@ build.json @home-assistant/supervisor
 /tests/components/rehlko/ @bdraco @peterager
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
-/homeassistant/components/remote_calendar/ @Thomas55555
-/tests/components/remote_calendar/ @Thomas55555
+/homeassistant/components/remote_calendar/ @Thomas55555 @allenporter
+/tests/components/remote_calendar/ @Thomas55555 @allenporter
 /homeassistant/components/renault/ @epenet
 /tests/components/renault/ @epenet
 /homeassistant/components/renson/ @jimmyd-be

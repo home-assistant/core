@@ -9,7 +9,7 @@ from pypaperless.exceptions import (
     PaperlessInvalidTokenError,
 )
 
-from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -69,7 +69,7 @@ async def _get_paperless_api(
     api = Paperless(
         entry.data[CONF_URL],
         entry.data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
+        session=async_get_clientsession(hass, entry.data.get(CONF_VERIFY_SSL, True)),
     )
 
     try:
