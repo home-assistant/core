@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from google_weather_api import GoogleWeatherApi
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
@@ -40,9 +42,11 @@ async def async_setup_entry(
     coordinator_hourly_forecast = GoogleWeatherHourlyForecastCoordinator(
         hass, entry, api
     )
-    await coordinator_observation.async_config_entry_first_refresh()
-    await coordinator_daily_forecast.async_config_entry_first_refresh()
-    await coordinator_hourly_forecast.async_config_entry_first_refresh()
+    await asyncio.gather(
+        coordinator_observation.async_config_entry_first_refresh(),
+        coordinator_daily_forecast.async_config_entry_first_refresh(),
+        coordinator_hourly_forecast.async_config_entry_first_refresh(),
+    )
     entry.runtime_data = GoogleWeatherRuntimeData(
         coordinator_observation=coordinator_observation,
         coordinator_daily_forecast=coordinator_daily_forecast,
