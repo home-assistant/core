@@ -51,9 +51,9 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.PRESSURE,
         key="BME280_pressure",
         translation_key="bme_pressure",
-        native_unit_of_measurement=UnitOfPressure.MMHG,
+        native_unit_of_measurement=UnitOfPressure.PA,
+        suggested_unit_of_measurement=UnitOfPressure.MMHG,
         suggested_display_precision=0,
-        native_value_fn=lambda string_value: float(string_value) * 0.0075,
     ),
     AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -66,9 +66,9 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.PRESSURE,
         key="BMP_pressure",
         translation_key="bmp_pressure",
-        native_unit_of_measurement=UnitOfPressure.MMHG,
+        native_unit_of_measurement=UnitOfPressure.PA,
+        suggested_unit_of_measurement=UnitOfPressure.MMHG,
         suggested_display_precision=0,
-        native_value_fn=lambda string_value: float(string_value) * 0.0075,
     ),
     AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.TEMPERATURE,
