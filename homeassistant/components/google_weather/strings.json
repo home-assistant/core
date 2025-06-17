@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "referrer": "HTTP referrer",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        },
+        "data_description": {
+          "name": "Config entry name",
+          "api_key": "A unique alphanumeric string that associates your Google billing account with Google Weather API",
+          "referrer": "Specify this only if the API key has application restriction on HTTP referrer",
+          "latitude": "",
+          "longitude": ""
+        },
+        "description": "Get your API key from [here]({api_key_url})."
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the Google Weather API:\n\n{error_message}",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
