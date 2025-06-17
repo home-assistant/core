@@ -23,6 +23,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_platform,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -270,6 +271,19 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Handle the unjoin service."""
         raise NotImplementedError
 
+    def _async_create_grouping_deprecation_issue(self) -> None:
+        """Create an issue for deprecated grouping actions."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_grouping_actions",
+            breaks_in_ha_version="2025.12.0",
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_grouping_actions",
+        )
+
 
 class SnapcastGroupDevice(SnapcastBaseDevice):
     """Representation of a Snapcast group device."""
@@ -363,6 +377,9 @@ class SnapcastClientDevice(SnapcastBaseDevice):
 
     async def async_join(self, master) -> None:
         """Join the group of the master player."""
+        # Action is deprecated, create an issue
+        self._async_create_grouping_deprecation_issue()
+
         entity_registry = er.async_get(self.hass)
         master_entity = entity_registry.async_get(master)
         if master_entity is None:
@@ -387,6 +404,9 @@ class SnapcastClientDevice(SnapcastBaseDevice):
 
     async def async_unjoin(self) -> None:
         """Unjoin the group the player is currently in."""
+        # Action is deprecated, create an issue
+        self._async_create_grouping_deprecation_issue()
+
         await self._current_group.remove_client(self._device.identifier)
         self.async_write_ha_state()
 
