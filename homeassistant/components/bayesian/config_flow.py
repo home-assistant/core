@@ -441,7 +441,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id=str(ObservationTypes.STATE),
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=STATE_SUBSCHEMA, suggested_values=None
+                data_schema=STATE_SUBSCHEMA, suggested_values=user_input
             ),
             last_step=True,
             errors=errors,
@@ -476,7 +476,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id=str(ObservationTypes.NUMERIC_STATE),
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=NUMERIC_STATE_SUBSCHEMA, suggested_values=None
+                data_schema=NUMERIC_STATE_SUBSCHEMA, suggested_values=user_input
             ),
             last_step=True,
             errors=errors,
@@ -505,7 +505,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id=str(ObservationTypes.TEMPLATE),
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=TEMPLATE_SUBSCHEMA, suggested_values=None
+                data_schema=TEMPLATE_SUBSCHEMA, suggested_values=user_input
             ),
             last_step=True,
             errors=errors,
