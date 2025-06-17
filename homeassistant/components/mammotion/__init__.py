@@ -25,7 +25,7 @@ from Tea.exceptions import UnretryableException
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, Platform
+from homeassistant.const import CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
@@ -33,9 +33,9 @@ from .const import (
     CONF_ACCOUNTNAME,
     CONF_AEP_DATA,
     CONF_AUTH_DATA,
+    CONF_BLE_DEVICES,
     CONF_CONNECT_DATA,
     CONF_DEVICE_DATA,
-    CONF_DEVICE_NAME,
     CONF_MAMMOTION_DATA,
     CONF_REGION_DATA,
     CONF_SESSION_DATA,
@@ -61,8 +61,7 @@ type MammotionConfigEntry = ConfigEntry[list[MammotionMowerData]]
 async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> bool:
     """Set up Mammotion Luba from a config entry."""
 
-    device_name = entry.data[CONF_DEVICE_NAME]
-    address = entry.data[CONF_ADDRESS]
+    addresses = entry.data.get(CONF_BLE_DEVICES, {})
     mammotion = Mammotion()
     account = entry.data[CONF_ACCOUNTNAME]
     password = entry.data[CONF_PASSWORD]
@@ -145,10 +144,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                 if mammotion_device is None:
                     raise ConfigEntryError
 
-                if address:
-                    ble_device = bluetooth.async_ble_device_from_address(hass, address)
-                    if ble_device and ble_device.name == device_name:
-                        mammotion_device.add_ble(ble_device)
+                if device_ble_address := addresses.get(device.deviceName, None):
+                    mammotion_device.mower_state.mower_state.ble_mac = (
+                        device_ble_address
+                    )
+                    ble_device = bluetooth.async_ble_device_from_address(
+                        hass, device_ble_address
+                    )
+                    if ble_device:
+                        mammotion_device.add_ble(device, ble_device)
                         mammotion_device.ble().set_disconnect_strategy(
                             not stay_connected_ble
                         )
