@@ -9,15 +9,33 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import NETATMO_CREATE_WEATHER_SENSOR
 from .data_handler import NetatmoDevice
 from .entity import NetatmoWeatherModuleEntity
 
+def process_status(status: StateType) -> bool | None:
+    """Process status and return boolean for display."""
+    if not isinstance(status, str):
+        return None
+    return {
+        "open": True,
+        "closed": False,
+    }.get(status, None)
+
+
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="reachable",
+        netatmo_name="reachable",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    BinarySensorEntityDescription(
+        key="status",
+        netatmo_name="status",
+        device_class=BinarySensorDeviceClass.OPENING,
+        value_fn=process_status,
     ),
 )
 
@@ -58,5 +76,12 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity)
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_is_on = self.device.reachable
+#        self._attr_is_on = self.device.reachable
+        value = cast(
+            StateType, getattr(self.device, self.entity_description.netatmo_name)
+        )
+        if value is not None:
+            value = self.entity_description.value_fn(value)
+        self._attr_native_value = value
+
         self.async_write_ha_state()
