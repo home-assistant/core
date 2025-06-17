@@ -31,7 +31,7 @@ from . import configure_integration
 async def test_set_attributes(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_set_attributes."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -73,7 +73,7 @@ async def test_set_attributes_coordinator_is_none(
 async def test_set_attributes_position_is_none(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_set_attributes_position_is_none."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -94,7 +94,7 @@ async def test_set_attributes_position_is_none(
 async def test_curtain_async_open_and_close_cover(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_curtain_async_open_and_close_cover."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -141,7 +141,7 @@ async def test_curtain_async_open_and_close_cover(
 async def test_curtain_set_cover_position_pause(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_curtain_set_cover_position_pause."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -192,7 +192,7 @@ async def test_curtain_set_cover_position_pause(
 async def test_curtain_stop_and_position_is_none(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_curtain_stop_and_position_is_none."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -230,7 +230,7 @@ async def test_curtain_stop_and_position_is_none(
 async def test_tilt_set_position(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_tilt_set_position."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -266,7 +266,7 @@ async def test_tilt_set_position(
 async def test_tilt_open_cover(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_tilt_open_cover."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -302,7 +302,7 @@ async def test_tilt_open_cover(
 async def test_tilt_close_cover(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_tilt_close_cover."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -338,7 +338,7 @@ async def test_tilt_close_cover(
 async def test_tilt_set_attributes_coordinator_data_is_none(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_tilt_set_attributes_coordinator_data_is_none."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -359,7 +359,7 @@ async def test_tilt_set_attributes_coordinator_data_is_none(
 async def test_tilt_set_attributes_position_is_not_none_1(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_tilt_set_attributes_position_is_not_none_1."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -380,7 +380,7 @@ async def test_tilt_set_attributes_position_is_not_none_1(
 async def test_tilt_set_attributes_position_is_not_none_2(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_tilt_set_attributes_position_is_not_none_2."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -403,7 +403,7 @@ async def test_tilt_set_attributes_position_is_not_none_2(
 async def test_roller_shade_async_open_and_close_cover(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_roller_shade_async_open_and_close_cover."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -449,7 +449,7 @@ async def test_roller_shade_async_open_and_close_cover(
 async def test_roller_shade_set_cover_position(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """test_set_attributes_coordinator_is_none."""
+    """test_roller_shade_set_cover_position."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
