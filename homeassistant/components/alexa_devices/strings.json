@@ -93,7 +93,7 @@
           "description": "The IDs of the devices to send the command to."
         },
         "sound": {
-          "name": "Amazon Sound skill file",
+          "name": "Alexa Sound skill file",
           "description": "The sound file to play."
         },
         "sound_variant": {
@@ -107,7 +107,7 @@
       "description": "Sends a text command to a device",
       "fields": {
         "text_command": {
-          "name": "Amazon text command",
+          "name": "Alexa text command",
           "description": "The text command to send."
         },
         "device_ids": {
