@@ -56,15 +56,16 @@ def authenticate(username, password, uuid):
         return {"success": False, "error": "API connection failed"}
 
 
-def signup(username, email, password):
-    """Sends signup request to Ezlo API and returns the response."""
-    _LOGGER.info("Sending signup request to Ezlo API...")
+def signup(username, email, password, ha_instance_id):
+    """Sends signup request to Go Auth API and returns the response."""
+    _LOGGER.info("Sending signup request to Auth API...")
 
     payload = {
         "username": username,
         "password": password,
         "email": email,
         "uuid": SIGNUP_UUID,
+        "ha_instance_id": ha_instance_id,
     }
 
     try:
@@ -72,13 +73,13 @@ def signup(username, email, password):
         response.raise_for_status()
 
         data = response.json()
-        identity = data.get("data", {}).get("legacy", {}).get("identity")
-        if data.get("status") == 1 and identity:
+        token = data.get("token")
+        if token:
             _LOGGER.info("Signup successful.")
             return {
                 "success": True,
-                "message": "Signup successful!",
-                "identity": identity,
+                "message": "Sign-up successful",
+                "token": token,
             }
 
         _LOGGER.warning("Signup failed. Response: %s", data)
@@ -89,13 +90,14 @@ def signup(username, email, password):
         return {"success": False, "error": "API request failed"}
 
 
-def create_stripe_session(user_id, price_id):
+def create_stripe_session(user_id, price_id, back_ref_url):
     """Creates a Stripe Checkout session and returns the checkout URL."""
     _LOGGER.info(f"Creating Stripe checkout session for user: {user_id}")
 
     payload = {
         "user_id": user_id,
         "plan_price_id": price_id,
+        "back_ref_url": back_ref_url,
     }
 
     try:

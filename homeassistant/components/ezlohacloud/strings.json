@@ -9,5 +9,13 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "options": {
+    "step": {
+      "view_status": {
+        "title": "Subscription Status",
+        "description": "[View subscription details]({url})"
+      }
+    }
   }
 }

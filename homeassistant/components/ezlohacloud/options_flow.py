@@ -46,6 +46,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_show_menu(
                 step_id="init",
                 menu_options={
+                    "view_status": "📋 View Payment Status",
                     "logout": "🔓 Logout",
                 },
             )
@@ -54,6 +55,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_menu(
             step_id="init",
             menu_options={
+                "view_status": "📋 View Payment Status",
                 "configure": "⚙️ Configure Port Settings",
                 "login": "🔑 Login to Ezlo Cloud",
                 "signup": "📝 Sign Up for Ezlo Cloud",
@@ -213,31 +215,46 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             password = user_input["password"]
 
             # Call signup API
+            system_uuid = await self.hass.helpers.instance_id.async_get()
+            _LOGGER.info(
+                f"Retrieved system UUID from instance_id.async_get: {system_uuid}"
+            )
+
+            if not system_uuid:
+                system_uuid = ""
+                _LOGGER.warning("Home Assistant UUID missing!")
+
             signup_response = await self.hass.async_add_executor_job(
-                signup, username, email, password
+                signup, username, email, password, system_uuid
             )
 
             _LOGGER.debug("Signup response: %s", signup_response)
 
-            if signup_response.get("success") and "identity" in signup_response:
+            if signup_response.get("success") and "token" in signup_response:
                 try:
-                    identity_token = signup_response["identity"]
+                    identity_token = signup_response["token"]
+                    parts = identity_token.split(".")
+                    if len(parts) != 3:
+                        raise ValueError("Invalid JWT format")
 
-                    padded = identity_token + "=" * (-len(identity_token) % 4)
-                    decoded_bytes = base64.b64decode(padded)
+                    payload_b64 = parts[1]
+                    padded = payload_b64 + "=" * (-len(payload_b64) % 4)
+                    decoded_bytes = base64.urlsafe_b64decode(padded)
                     decoded = json.loads(decoded_bytes)
 
-                    user_uuid = decoded.get("PK_User")
+                    user_uuid = decoded.get("uuid")
+                    base_url = "http://localhost:8123/config/integrations/integration/ezlohacloud"
 
                     stripe_response = await self.hass.async_add_executor_job(
                         create_stripe_session,
                         user_uuid,
                         "price_1RLKzGIOARqo54014CFxqSo3",
+                        base_url,
                     )
 
                     if stripe_response and stripe_response.get("checkout_url"):
                         return self.async_external_step(
-                            step_id="stripe_redirect",
+                            step_id="stripe_finish",
                             url=stripe_response["checkout_url"],
                         )
 
@@ -261,5 +278,21 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             errors=errors,
         )
 
-    async def async_step_stripe_redirect(self, user_input=None):
-        return self.async_external_step_done(next_step_id="init")
+    async def async_step_view_status(self, user_input=None):
+        """Show only the payment portal link without any status."""
+        url = self._config_entry.data.get("payment_url", "https://example.com/cloud")
+
+        return self.async_show_form(
+            step_id="view_status",
+            description_placeholders={"url": url},
+            data_schema=vol.Schema({}),
+        )
+
+    async def async_step_stripe_finish(self, user_input=None):
+        """Called after Stripe checkout finishes."""
+        # Update subscription status
+        new_data = self._config_entry.data.copy()
+        new_data["subscription_status"] = "paid"
+        self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
+
+        return await self.async_step_init()

@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ExampleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Example config flow."""
+    """Config flow for Ezlo HA Cloud."""
 
     VERSION = 1
     MINOR_VERSION = 1

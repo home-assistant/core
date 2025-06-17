@@ -39,6 +39,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up frpc client from a config entry."""
     config = entry.data
 
+    # Skip setup if auth_token is not yet available
+    token = config.get("auth_token")
+    if not token:
+        _LOGGER.warning("auth_token missing; skipping FRPC setup until login")
+        return True  # Still allow integration to register and show up
+
     try:
         # Install/update frpc binary
         version = "0.61.0"  # config["frp_version"]
