@@ -1053,6 +1053,9 @@ class CoordinatorWeatherEntity(
         daily_forecast_valid: timedelta | None = None,
         hourly_forecast_valid: timedelta | None = None,
         twice_daily_forecast_valid: timedelta | None = None,
+        daily_forecast_update_interval: timedelta | None = None,
+        hourly_forecast_update_interval: timedelta | None = None,
+        twice_daily_forecast_update_interval: timedelta | None = None,
     ) -> None:
         """Initialize."""
         super().__init__(observation_coordinator, context)
@@ -1065,6 +1068,11 @@ class CoordinatorWeatherEntity(
             "daily": daily_forecast_valid,
             "hourly": hourly_forecast_valid,
             "twice_daily": twice_daily_forecast_valid,
+        }
+        self.forecast_update_interval = {
+            "daily": daily_forecast_update_interval,
+            "hourly": hourly_forecast_update_interval,
+            "twice_daily": twice_daily_forecast_update_interval,
         }
         self.unsub_forecast: dict[str, Callable[[], None] | None] = {
             "daily": None,
@@ -1138,15 +1146,25 @@ class CoordinatorWeatherEntity(
         self,
         coordinator: TimestampDataUpdateCoordinator[Any],
         forecast_valid_time: timedelta | None,
+        forecast_update_interval: timedelta | None,
     ) -> bool:
         """Refresh stale forecast if needed."""
-        if coordinator.update_interval is None:
+        # Minimum of coordinator.update_interval and forecast_update_interval
+        update_interval = min(
+            (
+                td
+                for td in (coordinator.update_interval, forecast_update_interval)
+                if td is not None
+            ),
+            default=None,
+        )
+        if update_interval is None:
             return True
         if forecast_valid_time is None:
-            forecast_valid_time = coordinator.update_interval
+            forecast_valid_time = update_interval
         if (
             not (last_success_time := coordinator.last_update_success_time)
-            or utcnow() - last_success_time >= coordinator.update_interval
+            or utcnow() - last_success_time >= update_interval
         ):
             await coordinator.async_refresh()
         if (
@@ -1178,7 +1196,9 @@ class CoordinatorWeatherEntity(
         """Return the forecast in native units."""
         coordinator = self.forecast_coordinators[forecast_type]
         if coordinator and not await self._async_refresh_forecast(
-            coordinator, self.forecast_valid[forecast_type]
+            coordinator,
+            self.forecast_valid[forecast_type],
+            self.forecast_update_interval[forecast_type],
         ):
             return None
         return cast(
