@@ -242,11 +242,16 @@ class NetatmoDataHandler:
         When a schedule is changed, we need to reload the complete topology
         by calling async_update_topology on the account to get updated schedules.
         """
+
         data = event["data"]
         home_id = data.get("home_id")
 
         if not home_id:
             _LOGGER.warning("Received schedule update event without home_id: %s", data)
+            return
+
+        # ignore simple schedule changes
+        if "schedule_id" in data:
             return
 
         _LOGGER.debug(
