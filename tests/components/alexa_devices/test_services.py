@@ -1,9 +1,9 @@
-"""Tests for Amazon Devices services."""
+"""Tests for Alexa Devices services."""
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.amazon_devices.const import DOMAIN
-from homeassistant.components.amazon_devices.services import (
+from homeassistant.components.alexa_devices.const import DOMAIN
+from homeassistant.components.alexa_devices.services import (
     SERVICE_SOUND_NOTIFICATION,
     SERVICE_TEXT_COMMAND,
 )
@@ -19,7 +19,7 @@ async def test_setup_services(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup of Fritz!Tools services."""
+    """Test setup of Alexa Devices services."""
     await setup_integration(hass, mock_config_entry)
 
     assert (services := hass.services.async_services_for_domain(DOMAIN))
