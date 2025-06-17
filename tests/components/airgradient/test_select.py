@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from airgradient import AirGradientConnectionError, AirGradientError, Config
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.components.select import (
@@ -23,7 +23,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
+    async_load_fixture,
     snapshot_platform,
 )
 
@@ -77,7 +77,7 @@ async def test_cloud_creates_no_number(
     assert len(hass.states.async_all()) == 1
 
     mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
-        load_fixture("get_config_local.json", DOMAIN)
+        await async_load_fixture(hass, "get_config_local.json", DOMAIN)
     )
 
     freezer.tick(timedelta(minutes=5))
@@ -87,7 +87,7 @@ async def test_cloud_creates_no_number(
     assert len(hass.states.async_all()) == 7
 
     mock_cloud_airgradient_client.get_config.return_value = Config.from_json(
-        load_fixture("get_config_cloud.json", DOMAIN)
+        await async_load_fixture(hass, "get_config_cloud.json", DOMAIN)
     )
 
     freezer.tick(timedelta(minutes=5))

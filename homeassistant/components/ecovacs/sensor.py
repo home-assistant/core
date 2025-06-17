@@ -48,7 +48,7 @@ from .entity import (
     EcovacsLegacyEntity,
     EventT,
 )
-from .util import get_name_key, get_options, get_supported_entitites
+from .util import get_name_key, get_options, get_supported_entities
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -78,7 +78,9 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         capability_fn=lambda caps: caps.stats.clean,
         value_fn=lambda e: e.area,
         translation_key="stats_area",
+        device_class=SensorDeviceClass.AREA,
         native_unit_of_measurement_fn=get_area_native_unit_of_measurement,
+        suggested_unit_of_measurement=UnitOfArea.SQUARE_METERS,
     ),
     EcovacsSensorEntityDescription[StatsEvent](
         key="stats_time",
@@ -95,7 +97,8 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         value_fn=lambda e: e.area,
         key="total_stats_area",
         translation_key="total_stats_area",
-        native_unit_of_measurement_fn=get_area_native_unit_of_measurement,
+        device_class=SensorDeviceClass.AREA,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
@@ -207,7 +210,7 @@ async def async_setup_entry(
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
 
-    entities: list[EcovacsEntity] = get_supported_entitites(
+    entities: list[EcovacsEntity] = get_supported_entities(
         controller, EcovacsSensor, ENTITY_DESCRIPTIONS
     )
     entities.extend(

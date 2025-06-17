@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openweathermap.const import (
     DOMAIN,
