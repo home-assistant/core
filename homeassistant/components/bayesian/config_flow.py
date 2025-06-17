@@ -423,6 +423,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add a state observation. Function name must be in the format async_step_{observation_type}."""
+
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -445,6 +446,9 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
             ),
             last_step=True,
             errors=errors,
+            description_placeholders={
+                "parent_sensor_name": self._get_entry().title,
+            },
         )
 
     async def async_step_numeric_state(
@@ -480,6 +484,9 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
             ),
             last_step=True,
             errors=errors,
+            description_placeholders={
+                "parent_sensor_name": self._get_entry().title,
+            },
         )
 
     async def async_step_template(
@@ -509,6 +516,9 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
             ),
             last_step=True,
             errors=errors,
+            description_placeholders={
+                "parent_sensor_name": self._get_entry().title,
+            },
         )
 
     async def async_step_reconfigure(
@@ -550,4 +560,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                 suggested_values=await _get_observation_values_for_editing(sub_entry),
             ),
             errors=errors,
+            description_placeholders={
+                "parent_sensor_name": self._get_entry().title,
+            },
         )
