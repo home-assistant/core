@@ -1,5 +1,6 @@
 """Support for the Switchbot Bot as a Cover."""
 
+import asyncio
 from typing import Any
 
 from switchbot_api import (
@@ -49,18 +50,12 @@ class SwitchBotCloudCover(SwitchBotCloudEntity, CoverEntity):
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
             return
-        position: int | None = (
-            self.coordinator.data.get("slidePosition")
-            if self.coordinator.data
-            else None
-        )
+        position: int | None = self.coordinator.data.get("slidePosition")
         if position is None:
             return
         position = 100 - position
-        if position == 0:
-            self._attr_is_closed = True
-        else:
-            self._attr_is_closed = False
+
+        self._attr_is_closed = position == 0
 
         self._attr_direction = self.coordinator.data.get("direction")
         if self._attr_direction is not None:
@@ -105,23 +100,19 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
                 parameters=f"{0},ff,{100 - position}",
             )
             self._attr_current_cover_position = position
-            if position == 0:
-                self._attr_is_closed = True
-            else:
-                self._attr_is_closed = False
+            self._attr_is_closed = position == 0
             self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.send_api_command(CurtainCommands.PAUSE)
+        await asyncio.sleep(2)
         response: dict | None = await self._api.get_status(self.unique_id)
         position: int | None = response.get("slidePosition") if response else None
         if position is None:
             return
-        if position == 0:
-            self._attr_is_closed = True
-        else:
-            self._attr_is_closed = False
+        self._attr_is_closed = position == 0
+        self._attr_current_cover_position = position
         self.async_write_ha_state()
 
 
@@ -146,12 +137,16 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
                 BlindTiltCommands.SET_POSITION,
                 parameters=f"{self._attr_direction};{percent}",
             )
+            await asyncio.sleep(1)
+            await self.__update_current_cover_tile_position()
             self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(BlindTiltCommands.FULLY_OPEN)
         self._attr_is_closed = False
+        await asyncio.sleep(1)
+        await self.__update_current_cover_tile_position()
         self.async_write_ha_state()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
@@ -162,21 +157,16 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
             else:
                 await self.send_api_command(BlindTiltCommands.CLOSE_DOWN)
             self._attr_is_closed = True
+            await asyncio.sleep(1)
+            await self.__update_current_cover_tile_position()
             self.async_write_ha_state()
 
     def _set_attributes(self) -> None:
         if self.coordinator.data is None:
             return
-        position: int | None = (
-            self.coordinator.data.get("slidePosition")
-            if self.coordinator.data
-            else None
-        )
+        position: int | None = self.coordinator.data.get("slidePosition")
         if position is not None:
-            if position in [0, 100]:
-                self._attr_is_closed = True
-            else:
-                self._attr_is_closed = False
+            self._attr_is_closed = position in [0, 100]
             if position > 50:
                 percent = 100 - ((position - 50) * 2)
             else:
@@ -187,6 +177,19 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
             self._attr_current_cover_position = percent
             self._attr_current_cover_tilt_position = percent
             self.async_write_ha_state()
+
+    async def __update_current_cover_tile_position(self) -> None:
+        response: dict | None = await self._api.get_status(self.unique_id)
+        if response is not None:
+            position: int | None = response.get("slidePosition")
+            if position is not None:
+                self._attr_is_closed = position in [0, 100]
+                if position > 50:
+                    percent = 100 - ((position - 50) * 2)
+                else:
+                    percent = 100 - (50 - position) * 2
+                self._attr_current_cover_position = percent
+                self._attr_current_cover_tilt_position = percent
 
 
 class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
@@ -225,12 +228,7 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
                 RollerShadeCommands.SET_POSITION, parameters=str(100 - position)
             )
             self._attr_current_cover_position = position
-
-            if position == 0:
-                self._attr_is_closed = True
-            else:
-                self._attr_is_closed = False
-
+            self._attr_is_closed = position == 0
             self.async_write_ha_state()
 
 
