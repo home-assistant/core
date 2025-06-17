@@ -484,9 +484,7 @@ class SonosDiscoveryManager:
                         "Manual poll to %s failed, keeping unavailable", ip_addr
                     )
         self.data.hosts_heartbeat = async_call_later(
-            self.hass,
-            DISCOVERY_INTERVAL.total_seconds(),
-            self.async_poll_manual_hosts,
+            self.hass, DISCOVERY_INTERVAL.total_seconds(), self.async_poll_manual_hosts
         )
 
     async def _async_handle_discovery_message(
