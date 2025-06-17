@@ -112,7 +112,7 @@ async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
 
     updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
 
-    assert updated_entry.state is ConfigEntryState.LOADED
+    assert updated_entry.state is ConfigEntryState.SETUP_RETRY
     assert updated_entry.version == 2
     assert updated_entry.options[CONF_INCL_FILTER] == ["include"]
     assert updated_entry.options[CONF_EXCL_FILTER] == ["exclude"]

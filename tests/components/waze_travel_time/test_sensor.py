@@ -153,5 +153,5 @@ async def test_sensor_failed_wrcerror(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.waze_travel_time").state == "unknown"
+    assert hass.states.get("sensor.waze_travel_time") is None
     assert "Error on retrieving data: " in caplog.text
