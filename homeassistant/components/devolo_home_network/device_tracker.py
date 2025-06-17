@@ -100,6 +100,7 @@ class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
         super().__init__(coordinator)
         self._device = device
         self._attr_mac_address = mac
+        self._attr_name = mac
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
