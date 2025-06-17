@@ -52,7 +52,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
     ),
     AmazonBinarySensorEntityDescription(
         key="beepingApplianceDetectionState",
@@ -60,7 +60,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
     ),
     AmazonBinarySensorEntityDescription(
         key="coughDetectionState",
@@ -68,7 +68,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
     ),
     AmazonBinarySensorEntityDescription(
         key="dogBarkDetectionState",
@@ -76,7 +76,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
     ),
     AmazonBinarySensorEntityDescription(
         key="humanPresenceDetectionState",
@@ -84,7 +84,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
     ),
     AmazonBinarySensorEntityDescription(
         key="waterSoundsDetectionState",
@@ -92,7 +92,7 @@ BINARY_SENSORS: Final = (
         is_on_fn=lambda _device, _key: (
             _device.sensors[_key].value != SENSOR_STATE_OFF
         ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is None,
+        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
     ),
 )
 
