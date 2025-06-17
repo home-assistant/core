@@ -8,7 +8,8 @@ from jaraco.abode.exceptions import (
     Exception as AbodeException,
 )
 
-from homeassistant.components.abode import DOMAIN, SERVICE_SETTINGS
+from homeassistant.components.abode.const import DOMAIN
+from homeassistant.components.abode.services import SERVICE_SETTINGS
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME

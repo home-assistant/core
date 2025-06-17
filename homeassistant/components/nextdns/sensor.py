@@ -20,10 +20,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NextDnsConfigEntry
 from .const import (
@@ -33,9 +32,10 @@ from .const import (
     ATTR_PROTOCOLS,
     ATTR_STATUS,
 )
-from .coordinator import CoordinatorDataT, NextDnsUpdateCoordinator
+from .coordinator import CoordinatorDataT
+from .entity import NextDnsEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -297,27 +297,12 @@ async def async_setup_entry(
     )
 
 
-class NextDnsSensor(
-    CoordinatorEntity[NextDnsUpdateCoordinator[CoordinatorDataT]], SensorEntity
-):
+class NextDnsSensor(NextDnsEntity, SensorEntity):
     """Define an NextDNS sensor."""
 
-    _attr_has_entity_name = True
+    entity_description: NextDnsSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: NextDnsUpdateCoordinator[CoordinatorDataT],
-        description: NextDnsSensorEntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-        self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
-        self._attr_native_value = description.value(coordinator.data)
-        self.entity_description: NextDnsSensorEntityDescription = description
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self.entity_description.value(self.coordinator.data)
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value(self.coordinator.data)
