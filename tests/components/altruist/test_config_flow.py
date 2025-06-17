@@ -133,16 +133,12 @@ async def test_zeroconf_discovery(
 
 async def test_zeroconf_discovery_already_configured(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_altruist_client: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test zeroconf discovery when already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100"},
-        unique_id="5366960e8b18",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

@@ -138,6 +138,9 @@
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
@@ -164,7 +167,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '749.8362',
+    'state': '749.897762397492',
   })
 # ---
 # name: test_all_entities[sensor.5366960e8b18_bme280_temperature-entry]
