@@ -65,7 +65,7 @@ rules:
     comment: No disabled entities implemented
   entity-translations: todo
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
