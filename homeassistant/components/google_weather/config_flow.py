@@ -9,13 +9,17 @@ from google_weather_api import GoogleWeatherApi, GoogleWeatherApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import CONF_REFERRER, DOMAIN
-
-DEFAULT_NAME = "Home"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,8 +40,8 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             api_key = user_input[CONF_API_KEY]
             referrer = user_input.get(CONF_REFERRER)
-            latitude = user_input[CONF_LATITUDE]
-            longitude = user_input[CONF_LONGITUDE]
+            latitude = user_input[CONF_LOCATION][CONF_LATITUDE]
+            longitude = user_input[CONF_LOCATION][CONF_LONGITUDE]
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
             api = GoogleWeatherApi(
@@ -65,18 +69,30 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_REFERRER: referrer,
                 }
                 return self.async_create_entry(title=user_input[CONF_NAME], data=data)
-
+        else:
+            user_input = {}
         schema = vol.Schema(
             {
-                vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                vol.Required(CONF_API_KEY): str,
-                vol.Optional(CONF_REFERRER): str,
                 vol.Required(
-                    CONF_LATITUDE, default=self.hass.config.latitude
-                ): cv.latitude,
+                    CONF_NAME,
+                    default=user_input.get(CONF_NAME, self.hass.config.location_name),
+                ): str,
                 vol.Required(
-                    CONF_LONGITUDE, default=self.hass.config.longitude
-                ): cv.longitude,
+                    CONF_API_KEY, default=user_input.get(CONF_API_KEY, vol.UNDEFINED)
+                ): str,
+                vol.Optional(
+                    CONF_REFERRER, default=user_input.get(CONF_REFERRER, vol.UNDEFINED)
+                ): str,
+                vol.Required(
+                    CONF_LOCATION,
+                    default=user_input.get(
+                        CONF_LOCATION,
+                        {
+                            CONF_LATITUDE: self.hass.config.latitude,
+                            CONF_LONGITUDE: self.hass.config.longitude,
+                        },
+                    ),
+                ): LocationSelector(LocationSelectorConfig(radius=False)),
             }
         )
         return self.async_show_form(

@@ -6,15 +6,13 @@
           "name": "[%key:common::config_flow::data::name%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "referrer": "HTTP referrer",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "name": "Config entry name",
+          "name": "Location name. Used as the config entry and service name",
           "api_key": "A unique alphanumeric string that associates your Google billing account with Google Weather API",
           "referrer": "Specify this only if the API key has application restriction on HTTP referrer",
-          "latitude": "",
-          "longitude": ""
+          "location": "Location coordinates"
         },
         "description": "Get your API key from [here]({api_key_url})."
       }

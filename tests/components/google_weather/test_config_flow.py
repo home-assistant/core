@@ -7,7 +7,13 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.google_weather.const import CONF_REFERRER, DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -30,8 +36,10 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
             {
                 CONF_NAME: "test-name",
                 CONF_API_KEY: "test-api-key",
-                CONF_LATITUDE: 10.1,
-                CONF_LONGITUDE: 20.1,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 10.1,
+                    CONF_LONGITUDE: 20.1,
+                },
             },
         )
         await hass.async_block_till_done()
@@ -67,8 +75,10 @@ async def test_form_with_referrer(
                 CONF_NAME: "test-name",
                 CONF_API_KEY: "test-api-key",
                 CONF_REFERRER: "test-referrer",
-                CONF_LATITUDE: 10.1,
-                CONF_LONGITUDE: 20.1,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 10.1,
+                    CONF_LONGITUDE: 20.1,
+                },
             },
         )
         await hass.async_block_till_done()
@@ -112,8 +122,10 @@ async def test_form_exceptions(
             {
                 CONF_NAME: "test-name",
                 CONF_API_KEY: "test-api-key",
-                CONF_LATITUDE: 10.1,
-                CONF_LONGITUDE: 20.1,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 10.1,
+                    CONF_LONGITUDE: 20.1,
+                },
             },
         )
 
@@ -132,8 +144,10 @@ async def test_form_exceptions(
             {
                 CONF_NAME: "test-name",
                 CONF_API_KEY: "test-api-key",
-                CONF_LATITUDE: 10.1,
-                CONF_LONGITUDE: 20.1,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 10.1,
+                    CONF_LONGITUDE: 20.1,
+                },
             },
         )
         await hass.async_block_till_done()
@@ -165,8 +179,10 @@ async def test_form_already_configured(
             {
                 CONF_NAME: "test-name",
                 CONF_API_KEY: "test-api-key",
-                CONF_LATITUDE: mock_config_entry.data[CONF_LATITUDE],
-                CONF_LONGITUDE: mock_config_entry.data[CONF_LONGITUDE],
+                CONF_LOCATION: {
+                    CONF_LATITUDE: mock_config_entry.data[CONF_LATITUDE],
+                    CONF_LONGITUDE: mock_config_entry.data[CONF_LONGITUDE],
+                },
             },
         )
         await hass.async_block_till_done()
@@ -194,8 +210,10 @@ async def test_form_not_already_configured(
             {
                 CONF_NAME: "test-name",
                 CONF_API_KEY: "test-api-key",
-                CONF_LATITUDE: 10.2,
-                CONF_LONGITUDE: 20.2,
+                CONF_LOCATION: {
+                    CONF_LATITUDE: 10.2,
+                    CONF_LONGITUDE: 20.2,
+                },
             },
         )
         await hass.async_block_till_done()
