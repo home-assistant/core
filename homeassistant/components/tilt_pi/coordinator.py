@@ -35,11 +35,10 @@ class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, TiltHydrometer
             name="Tilt Pi",
             update_interval=SCAN_INTERVAL,
         )
-        session = async_get_clientsession(hass)
         self._api = TiltPiClient(
             host=config_entry.data[CONF_HOST],
             port=config_entry.data[CONF_PORT],
-            session=session,
+            session=async_get_clientsession(hass),
         )
         self.identifier = config_entry.entry_id
 
