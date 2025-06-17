@@ -19,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Scrape config entry."""
+    """Unload Bayesian config entry."""
     _LOGGER.debug(
         "Unloading sensor for entry_id %s with options %s",
         entry.entry_id,

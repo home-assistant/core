@@ -264,7 +264,7 @@ TEMPLATE_SUBSCHEMA = vol.Schema(
 def _convert_percentages_to_fractions(
     data: dict[str, str | float | int],
 ) -> dict[str, str | float]:
-    """Convert percentage probability values in a dictionary to fractions."""
+    """Convert percentage probability values in a dictionary to fractions for storing in the config entry."""
     probabilities = [
         CONF_P_GIVEN_T,
         CONF_P_GIVEN_F,
@@ -284,7 +284,7 @@ def _convert_percentages_to_fractions(
 def _convert_fractions_to_percentages(
     data: dict[str, str | float],
 ) -> dict[str, str | float]:
-    """Convert fraction probability values in a dictionary to percentages."""
+    """Convert fraction probability values in a dictionary to percentages for loading into the UI."""
     probabilities = [
         CONF_P_GIVEN_T,
         CONF_P_GIVEN_F,
@@ -304,7 +304,7 @@ def _convert_fractions_to_percentages(
 async def _select_observation_schema(
     obs_type: ObservationTypes,
 ) -> vol.Schema:
-    """Return menu schema for selecting an observation for editing."""
+    """Return the schema for editing the correct observation (SubEntry) type."""
     if obs_type == str(ObservationTypes.STATE):
         return STATE_SUBSCHEMA
     if obs_type == str(ObservationTypes.NUMERIC_STATE):
@@ -324,7 +324,7 @@ async def _get_base_suggested_values(
 async def _get_observation_values_for_editing(
     subentry: ConfigSubentry,
 ) -> dict[str, Any]:
-    """Only if editing observations in options flow, get the values. Otherwise leave blank."""
+    """Return the values for editing in the observation subentry."""
 
     return _convert_fractions_to_percentages(dict(subentry.data))
 
@@ -332,17 +332,9 @@ async def _get_observation_values_for_editing(
 async def _validate_user(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Validate user input for the basic settings and convert to fractions for storage."""
+    """Modify user input to convert to fractions for storage. Validation is done entirely by the schemas."""
     user_input = _convert_percentages_to_fractions(user_input)
     return {**user_input}
-
-
-def _validate_probabilities_given(
-    user_input: dict[str, Any],
-) -> None:
-    """Raise errors for invalid probability_given_true/false."""
-    if user_input[CONF_P_GIVEN_T] == user_input[CONF_P_GIVEN_F]:
-        raise SchemaFlowError("equal_probabilities")
 
 
 async def _validate_observation_subentry(
@@ -352,12 +344,14 @@ async def _validate_observation_subentry(
 ) -> dict[str, Any]:
     """Validate an observation input and manually update options with observations as they are nested items."""
 
-    _validate_probabilities_given(user_input)
+    if user_input[CONF_P_GIVEN_T] == user_input[CONF_P_GIVEN_F]:
+        raise SchemaFlowError("equal_probabilities")
     user_input = _convert_percentages_to_fractions(user_input)
 
-    # We need to record the observation type so add it to the user input.
+    # Save the observation type in the user input as it is needed in binary_sensor.py
     user_input[CONF_PLATFORM] = str(obs_type)
 
+    # Additional validation for multiple numeric state observations
     if (
         user_input[CONF_PLATFORM] == ObservationTypes.NUMERIC_STATE
         and other_subentries is not None
@@ -428,7 +422,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_state(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """User flow to add a state observation."""
+        """User flow to add a state observation. Function name must be in the format async_step_{observation_type}."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -456,7 +450,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_numeric_state(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """User flow to add a new numeric state observation, (a numeric range)."""
+        """User flow to add a new numeric state observation, (a numeric range). Function name must be in the format async_step_{observation_type}."""
 
         errors: dict[str, str] = {}
 
@@ -491,7 +485,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_template(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """User flow to add a new template observation."""
+        """User flow to add a new template observation. Function name must be in the format async_step_{observation_type}."""
 
         errors: dict[str, str] = {}
 
@@ -520,7 +514,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Enable the reconfigure button for observations."""
+        """Enable the reconfigure button for observations. Function name must be async_step_reconfigure to be recognised by hass."""
         errors: dict[str, str] = {}
 
         sub_entry = self._get_reconfigure_subentry()
