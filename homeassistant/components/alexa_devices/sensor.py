@@ -30,6 +30,7 @@ class AmazonSensorEntityDescription(SensorEntityDescription):
     """Amazon Devices sensor entity description."""
 
     is_supported: Callable[[AmazonDevice, str], bool] = lambda _device, _key: True
+    converted_unit: Callable[[AmazonDevice, str], str] | None = None
 
 
 SENSORS: Final = (
@@ -37,6 +38,11 @@ SENSORS: Final = (
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
+        converted_unit=lambda device, _key: (
+            UnitOfTemperature.CELSIUS
+            if device.sensors[_key].scale == "CELSIUS"
+            else UnitOfTemperature.FAHRENHEIT
+        ),
     ),
     AmazonSensorEntityDescription(
         key="illuminance",
@@ -72,11 +78,10 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
-        if self.entity_description.key == "temperature":
-            # Temperature sensor can have different scales
-            if self.device.sensors[self.entity_description.key].scale == "CELSIUS":
-                return UnitOfTemperature.CELSIUS
-            return UnitOfTemperature.FAHRENHEIT
+        if self.entity_description.converted_unit:
+            return self.entity_description.converted_unit(
+                self.device, self.entity_description.key
+            )
 
         return self.entity_description.native_unit_of_measurement
 
