@@ -62,10 +62,7 @@ async def async_setup_entry(
     )
 
 
-class HomeWizardSelectEntity(
-    HomeWizardEntity,
-    SelectEntity,
-):
+class HomeWizardSelectEntity(HomeWizardEntity, SelectEntity):
     """Defines a HomeWizard select entity."""
 
     entity_description: HomeWizardSelectEntityDescription
