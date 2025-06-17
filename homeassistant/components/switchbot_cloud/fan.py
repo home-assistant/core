@@ -6,7 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
-from switchbot_api import AirPurifierCommands, CommonCommands
+from switchbot_api import AirPurifierCommands, CommonCommands, SwitchBotAPI
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -38,6 +38,7 @@ async def async_setup_entry(
 class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
     """Representation of a Switchbot air purifier."""
 
+    _api: SwitchBotAPI
     _attr_supported_features = (
         FanEntityFeature.PRESET_MODE
         | FanEntityFeature.TURN_OFF
