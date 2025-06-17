@@ -74,9 +74,9 @@ rules:
     comment: |
       This integration doesn't have any cases where raising an issue is needed.
   stale-devices:
-    status: exempt
+    status: todo
     comment: |
-      The API for the device tracker platform cannot distinguish stale devices and devices that are not home.
+      The tracked devices could be own devices with a manual delete option as the API cannot distinguish between stale devices and devices that are not home.
 
   # Platinum
   async-dependency: done
