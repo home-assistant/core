@@ -2413,7 +2413,7 @@ thinqconnect==1.0.5
 tilt-ble==0.2.3
 
 # homeassistant.components.tilt_pi
-tilt-pi==0.2.0
+tilt-pi==0.2.1
 
 # homeassistant.components.todoist
 todoist-api-python==2.1.7

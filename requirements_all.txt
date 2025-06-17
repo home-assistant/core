@@ -2936,7 +2936,7 @@ tikteck==0.4
 tilt-ble==0.2.3
 
 # homeassistant.components.tilt_pi
-tilt-pi==0.2.0
+tilt-pi==0.2.1
 
 # homeassistant.components.tmb
 tmb==0.0.4
