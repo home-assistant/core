@@ -15,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_IP_ADDRESS
+from .const import CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class AltruistDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             name=f"Altruist {device_id}",
             update_interval=UPDATE_INTERVAL,
         )
-        self._ip_address = config_entry.data[CONF_IP_ADDRESS]
+        self._ip_address = config_entry.data[CONF_HOST]
 
     async def _async_setup(self) -> None:
         try:

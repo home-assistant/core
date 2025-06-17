@@ -35,7 +35,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'noise_avg',
-    'unique_id': 'altruist_5366960e8b18-PCBA_noiseAvg',
+    'unique_id': '5366960e8b18-PCBA_noiseAvg',
     'unit_of_measurement': <UnitOfSoundPressure.DECIBEL: 'dB'>,
   })
 # ---
@@ -91,7 +91,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bme_humidity',
-    'unique_id': 'altruist_5366960e8b18-BME280_humidity',
+    'unique_id': '5366960e8b18-BME280_humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -147,7 +147,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bme_pressure',
-    'unique_id': 'altruist_5366960e8b18-BME280_pressure',
+    'unique_id': '5366960e8b18-BME280_pressure',
     'unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
   })
 # ---
@@ -203,7 +203,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bme_temperature',
-    'unique_id': 'altruist_5366960e8b18-BME280_temperature',
+    'unique_id': '5366960e8b18-BME280_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -259,7 +259,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'noise_max',
-    'unique_id': 'altruist_5366960e8b18-PCBA_noiseMax',
+    'unique_id': '5366960e8b18-PCBA_noiseMax',
     'unit_of_measurement': <UnitOfSoundPressure.DECIBEL: 'dB'>,
   })
 # ---
@@ -315,7 +315,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pm_10',
-    'unique_id': 'altruist_5366960e8b18-SDS_P1',
+    'unique_id': '5366960e8b18-SDS_P1',
     'unit_of_measurement': 'µg/m³',
   })
 # ---
@@ -371,7 +371,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pm_25',
-    'unique_id': 'altruist_5366960e8b18-SDS_P2',
+    'unique_id': '5366960e8b18-SDS_P2',
     'unit_of_measurement': 'µg/m³',
   })
 # ---
@@ -427,7 +427,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'radiation',
-    'unique_id': 'altruist_5366960e8b18-GC',
+    'unique_id': '5366960e8b18-GC',
     'unit_of_measurement': 'μR/h',
   })
 # ---
@@ -482,7 +482,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'altruist_5366960e8b18-signal',
+    'unique_id': '5366960e8b18-signal',
     'unit_of_measurement': 'dBm',
   })
 # ---

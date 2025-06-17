@@ -7,21 +7,19 @@
       },
       "user": {
         "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "ip_address": "Altruist IP address in the local network"
+          "host": "Altruist IP address or hostname in the local network"
         },
-        "description": "Fill in Altruist IP address in your local network"
+        "description": "Fill in Altruist IP address or hostname in your local network"
       }
     },
     "abort": {
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "invalid_ip": "[%key:common::config_flow::error::invalid_host%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "invalid_ip": "[%key:common::config_flow::error::invalid_host%]",
       "no_device_found": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },

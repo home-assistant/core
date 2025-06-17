@@ -21,12 +21,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AltruistConfigEntry
-from .const import DOMAIN
 from .coordinator import AltruistDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,9 +88,9 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.PRESSURE,
         key="BMP280_pressure",
         translation_key="bmp280_pressure",
-        native_unit_of_measurement=UnitOfPressure.MMHG,
+        native_unit_of_measurement=UnitOfPressure.PA,
+        suggested_unit_of_measurement=UnitOfPressure.MMHG,
         suggested_display_precision=0,
-        native_value_fn=lambda string_value: float(string_value) * 0.0075,
     ),
     AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,
@@ -191,11 +190,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add sensors for passed config_entry in HA."""
-    coordinator: AltruistDataUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
     async_add_entities(
         AltruistSensor(coordinator, sensor_description)
         for sensor_description in SENSOR_DESCRIPTIONS
-        if sensor_description.key in coordinator.client.sensor_names
+        if sensor_description.key in coordinator.data
     )
 
 
@@ -213,11 +212,9 @@ class AltruistSensor(CoordinatorEntity[AltruistDataUpdateCoordinator], SensorEnt
         super().__init__(coordinator)
         self._device = coordinator.client.device
         self.entity_description: AltruistSensorEntityDescription = description
-        self._attr_unique_id = (
-            f"altruist_{self._device.id}-{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{self._device.id}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.id)},
+            connections={(CONNECTION_NETWORK_MAC, self._device.id)},
             manufacturer="Robonomics",
             model="Altruist",
             sw_version=self._device.fw_version,
