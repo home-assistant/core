@@ -1,6 +1,7 @@
 """The tests for the Netatmo climate platform."""
 
 from datetime import timedelta
+from functools import partial
 import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -49,13 +50,12 @@ from homeassistant.util import dt as dt_util
 from .common import (
     AiohttpClientMockResponse,
     fake_post_request,
-    load_fixture,
     selected_platforms,
     simulate_webhook,
     snapshot_platform_entities,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_entity(
@@ -94,7 +94,7 @@ async def test_schedule_update_webhook_event(
 
     # Modify the API request mock to return a modified schedule the 2nd time it is invoked
     async def custom_post_request(
-        *args: Any, **kwargs: Any
+        hass: HomeAssistant, *args: Any, **kwargs: Any
     ) -> AiohttpClientMockResponse:
         """Return fake data and simulate a schedule update."""
         if "endpoint" not in kwargs:
@@ -103,7 +103,9 @@ async def test_schedule_update_webhook_event(
         endpoint = kwargs["endpoint"].split("/")[-1]
 
         if endpoint == "homesdata":
-            json_data = json.loads(load_fixture("netatmo/homesdata.json"))
+            json_data = json.loads(
+                await async_load_fixture(hass, "homesdata.json", DOMAIN)
+            )
             # adapt the schedule
             schedules = json_data.get("body").get("homes")[0].get("schedules")
             for schedule in schedules:
@@ -117,7 +119,9 @@ async def test_schedule_update_webhook_event(
             )
         if endpoint == "homestatus":
             json_data = json.loads(
-                load_fixture("netatmo/homestatus_91763b24c43d3e344f424e8b.json")
+                await async_load_fixture(
+                    hass, "homestatus_91763b24c43d3e344f424e8b.json", DOMAIN
+                )
             )
             # reflect the changes in the schedule
             rooms = json_data.get("body").get("home").get("rooms")
@@ -129,9 +133,9 @@ async def test_schedule_update_webhook_event(
                 method="POST", url=endpoint, json=json_data
             )
 
-        return await fake_post_request(*args, **kwargs)
+        return await fake_post_request(hass, *args, **kwargs)
 
-    netatmo_auth.async_post_api_request.side_effect = custom_post_request
+    netatmo_auth.async_post_api_request.side_effect = partial(custom_post_request, hass)
 
     # Create a schedule update event without a schedule_id (the event is sent when temperature sets of a schedule are changed)
     response = {
