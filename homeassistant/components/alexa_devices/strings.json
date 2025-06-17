@@ -67,7 +67,7 @@
           "description": "The IDs of the devices to send the command to."
         },
         "sound": {
-          "name": "Alexa Sound skill file",
+          "name": "Alexa Skill sound file",
           "description": "The sound file to play."
         },
         "sound_variant": {
@@ -564,5 +564,9 @@
         "zippers": "Zippers"
       }
     }
+  },
+  "exceptions": {
+    "no_device_specified": { "message": "No device specified." },
+    "invalid_device_id": { "message": "Invalid device ID." }
   }
 }
