@@ -417,16 +417,12 @@ class SonosDiscoveryManager:
             ) as ex:
                 if not self.hosts_in_error.get(ip_addr):
                     _LOGGER.warning(
-                        "Could not get visible Sonos devices from %s: %s",
-                        ip_addr,
-                        ex,
+                        "Could not get visible Sonos devices from %s: %s", ip_addr, ex
                     )
                     self.hosts_in_error[ip_addr] = True
                 else:
                     _LOGGER.debug(
-                        "Could not get visible Sonos devices from %s: %s",
-                        ip_addr,
-                        ex,
+                        "Could not get visible Sonos devices from %s: %s", ip_addr, ex
                     )
                 continue
 
