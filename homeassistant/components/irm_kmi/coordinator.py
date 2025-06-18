@@ -33,9 +33,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
             hass,
             _LOGGER,
             config_entry=entry,
-            # Name of the data. For logging purposes.
             name="IRM KMI weather",
-            # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(minutes=7),
         )
         self._api = api_client
