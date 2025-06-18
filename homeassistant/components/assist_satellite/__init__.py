@@ -201,6 +201,6 @@ def has_one_non_empty_item(value: list[str]) -> list[str]:
 
     for sentence in value:
         if not sentence:
-            raise vol.Invalid(f"sentence too short: '{sentence}'")
+            raise vol.Invalid("sentences cannot be empty")
 
     return value
