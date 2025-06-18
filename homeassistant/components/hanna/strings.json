@@ -3,8 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "email": "Email",
-          "password": "Password",
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "code": "Encryption key",
           "scan_interval": "Scan interval"
         },
