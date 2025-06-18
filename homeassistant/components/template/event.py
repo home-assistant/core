@@ -30,13 +30,10 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_PICTURE
 from .entity import AbstractTemplateEntity
 from .template_entity import (
-    TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
+    make_template_entity_common_modern_attributes_schema,
 )
 from .trigger_entity import TriggerEntity
 
@@ -49,21 +46,14 @@ CONF_EVENT_TYPES = "event_types"
 
 DEVICE_CLASS_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(EventDeviceClass))
 
-EVENT_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
-            vol.Required(CONF_EVENT_TYPE): cv.template,
-            vol.Required(CONF_EVENT_TYPES): cv.template,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Optional(CONF_PICTURE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
-)
+EVENT_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
+        vol.Required(CONF_EVENT_TYPE): cv.template,
+        vol.Required(CONF_EVENT_TYPES): cv.template,
+    }
+).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
+
 
 EVENT_CONFIG_SCHEMA = vol.Schema(
     {
