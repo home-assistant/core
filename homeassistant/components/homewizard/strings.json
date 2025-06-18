@@ -157,8 +157,8 @@
       "battery_group_mode": {
         "name": "Battery group mode",
         "state": {
-          "zero": "Zero on meter",
-          "to_full": "Charge to full",
+          "zero": "Zero mode",
+          "to_full": "Manual charge mode",
           "standby": "Standby"
         }
       }
