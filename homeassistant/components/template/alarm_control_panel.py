@@ -43,6 +43,7 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_OBJECT_ID, DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
