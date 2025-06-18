@@ -430,7 +430,6 @@ class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateVacuum.__init__(self, config)
 
-        # Render the _attr_name before initializing TriggerVacuumEntity
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
 
         for action_id, action_config, supported_feature in self._iterate_scripts(
