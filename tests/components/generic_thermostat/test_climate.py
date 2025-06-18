@@ -896,7 +896,7 @@ async def test_heating_cooling_switch_toggles_when_outside_min_cycle_duration(
         "expected_triggered_service_call",
     ),
     [
-        (True, HVACMode.COOL, False, 30, 25, HVACMode.HEAT, SERVICE_TURN_ON),
+        (True, HVACMode.COOL, False, 30, 25, HVACMode.COOL, SERVICE_TURN_ON),
         (True, HVACMode.COOL, True, 25, 30, HVACMode.OFF, SERVICE_TURN_OFF),
         (False, HVACMode.HEAT, False, 25, 30, HVACMode.HEAT, SERVICE_TURN_ON),
         (False, HVACMode.HEAT, True, 30, 25, HVACMode.OFF, SERVICE_TURN_OFF),
