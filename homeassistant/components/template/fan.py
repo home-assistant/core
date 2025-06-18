@@ -565,7 +565,7 @@ class TemplateFan(TemplateEntity, AbstractTemplateFan):
 
 
 class TriggerFanEntity(TriggerEntity, AbstractTemplateFan):
-    """Light entity based on trigger data."""
+    """Fan entity based on trigger data."""
 
     domain = FAN_DOMAIN
 
@@ -579,7 +579,6 @@ class TriggerFanEntity(TriggerEntity, AbstractTemplateFan):
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateFan.__init__(self, config)
 
-        # Render the _attr_name before initializing TemplateLightEntity
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
 
         for action_id, action_config, supported_feature in self._iterate_scripts(
