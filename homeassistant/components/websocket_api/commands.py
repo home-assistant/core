@@ -52,7 +52,13 @@ from homeassistant.helpers.json import (
     json_bytes,
     json_fragment,
 )
-from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.service import (
+    async_get_all_descriptions as async_get_all_service_descriptions,
+)
+from homeassistant.helpers.trigger import (
+    async_get_all_descriptions as async_get_all_trigger_descriptions,
+    async_subscribe_platform_events as async_subscribe_trigger_platform_events,
+)
 from homeassistant.loader import (
     IntegrationNotFound,
     async_get_integration,
@@ -68,9 +74,10 @@ from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
 from .connection import ActiveConnection
-from .messages import construct_result_message
+from .messages import construct_event_message, construct_result_message
 
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
+ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_trigger_descriptions_json"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +95,7 @@ def async_register_commands(
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
+    async_reg(hass, handle_subscribe_trigger_platforms)
     async_reg(hass, handle_manifest_get)
     async_reg(hass, handle_integration_setup_info)
     async_reg(hass, handle_manifest_list)
@@ -493,9 +501,9 @@ def _send_handle_entities_init_response(
     )
 
 
-async def _async_get_all_descriptions_json(hass: HomeAssistant) -> bytes:
+async def _async_get_all_service_descriptions_json(hass: HomeAssistant) -> bytes:
     """Return JSON of descriptions (i.e. user documentation) for all service calls."""
-    descriptions = await async_get_all_descriptions(hass)
+    descriptions = await async_get_all_service_descriptions(hass)
     if ALL_SERVICE_DESCRIPTIONS_JSON_CACHE in hass.data:
         cached_descriptions, cached_json_payload = hass.data[
             ALL_SERVICE_DESCRIPTIONS_JSON_CACHE
@@ -514,8 +522,47 @@ async def handle_get_services(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get services command."""
-    payload = await _async_get_all_descriptions_json(hass)
+    payload = await _async_get_all_service_descriptions_json(hass)
     connection.send_message(construct_result_message(msg["id"], payload))
+
+
+async def _async_get_all_trigger_descriptions_json(hass: HomeAssistant) -> bytes:
+    """Return JSON of descriptions (i.e. user documentation) for all triggers."""
+    descriptions = await async_get_all_trigger_descriptions(hass)
+    if ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE in hass.data:
+        cached_descriptions, cached_json_payload = hass.data[
+            ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE
+        ]
+        # If the descriptions are the same, return the cached JSON payload
+        if cached_descriptions is descriptions:
+            return cast(bytes, cached_json_payload)
+    json_payload = json_bytes(descriptions)
+    hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
+    return json_payload
+
+
+@decorators.websocket_command({vol.Required("type"): "triggers_platforms/subscribe"})
+@decorators.async_response
+async def handle_subscribe_trigger_platforms(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe triggers command."""
+
+    async def on_new_triggers(new_triggers: set[str]) -> None:
+        """Forward new triggers to websocket."""
+        descriptions = await async_get_all_trigger_descriptions(hass)
+        new_trigger_descriptions = {}
+        for trigger in new_triggers:
+            if trigger in descriptions:
+                new_trigger_descriptions[trigger] = descriptions[trigger]
+        connection.send_event(msg["id"], new_trigger_descriptions)
+
+    connection.subscriptions[msg["id"]] = async_subscribe_trigger_platform_events(
+        hass, on_new_triggers
+    )
+    connection.send_result(msg["id"])
+    event = await _async_get_all_trigger_descriptions_json(hass)
+    connection.send_message(construct_event_message(msg["id"], event))
 
 
 @callback

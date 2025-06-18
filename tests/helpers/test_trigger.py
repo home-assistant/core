@@ -3,9 +3,13 @@
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
+from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
+from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import trigger
 from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
@@ -13,7 +17,9 @@ from homeassistant.helpers.trigger import (
     async_initialize_triggers,
     async_validate_trigger_config,
 )
+from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml.loader import JSON_TYPE
 
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
@@ -428,3 +434,63 @@ async def test_pluggable_action(
     remove_attach_2()
     assert not hass.data[DATA_PLUGGABLE_ACTIONS]
     assert not plug_2
+
+
+async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
+    """Test async_get_all_descriptions."""
+    await trigger.async_setup(hass)  # Move to hass fixture
+
+    sun_config = {DOMAIN_SUN: {}}
+    assert await async_setup_component(hass, DOMAIN_SUN, sun_config)
+    assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
+    await hass.async_block_till_done()
+
+    def _load_triggers_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+        return {
+            "sun": {
+                "fields": {
+                    "event": {
+                        "example": "sunrise",
+                        "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    },
+                    "offset": {"selector": {"time": None}},
+                }
+            }
+        }
+
+    with (
+        patch(
+            "homeassistant.helpers.trigger._load_triggers_files",
+            side_effect=trigger._load_triggers_files,
+        ) as proxy_load_triggers_files,
+        patch(
+            "homeassistant.helpers.trigger._load_triggers_file",
+            side_effect=_load_triggers_file,
+        ),
+        patch.object(Integration, "has_triggers", return_value=True),
+    ):
+        descriptions = await trigger.async_get_all_descriptions(hass)
+
+    # Test we only load triggers.yaml for integrations with triggers.yaml,
+    # system_health has no triggers
+    assert proxy_load_triggers_files.mock_calls[0][1][1] == unordered(
+        [
+            await async_get_integration(hass, DOMAIN_SUN),
+        ]
+    )
+
+    # system_health does not have services and should not be in descriptions
+    assert descriptions == {
+        DOMAIN_SUN: {
+            "fields": {
+                "event": {
+                    "example": "sunrise",
+                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                },
+                "offset": {"selector": {"time": None}},
+            }
+        }
+    }
+
+    # Verify the cache returns the same object
+    assert await trigger.async_get_all_descriptions(hass) is descriptions

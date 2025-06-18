@@ -677,6 +677,32 @@ async def test_get_services(
         assert msg["result"].keys() == hass.services.async_services().keys()
 
 
+async def test_subscribe_triggers(
+    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+) -> None:
+    """Test get_triggers command."""
+    assert await async_setup_component(hass, "sun", {})
+    assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
+
+    await websocket_client.send_json_auto_id({"type": "triggers_platforms/subscribe"})
+
+    # Test start subscription with initial event
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 1, "result": None, "success": True, "type": "result"}
+    msg = await websocket_client.receive_json()
+    assert msg == {"event": {"sun": {"fields": {}}}, "id": 1, "type": "event"}
+
+    # Test we receive an event when a new platform is loaded
+    assert await async_setup_component(hass, "persistent_notification", {})
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {"persistent_notification": {"fields": {}}},
+        "id": 1,
+        "type": "event",
+    }
+
+
 async def test_get_config(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:

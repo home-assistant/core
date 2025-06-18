@@ -87,6 +87,7 @@ from homeassistant.helpers import (
     restore_state as rs,
     storage,
     translation,
+    trigger,
 )
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -295,6 +296,7 @@ async def async_test_home_assistant(
     # Load the registries
     entity.async_setup(hass)
     loader.async_setup(hass)
+    await trigger.async_setup(hass)
 
     # setup translation cache instead of calling translation.async_setup(hass)
     hass.data[translation.TRANSLATION_FLATTEN_CACHE] = translation._TranslationCache(
