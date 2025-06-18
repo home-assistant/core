@@ -22,7 +22,6 @@ from .helpers import (
 class LcnEntity(Entity):
     """Parent class for all entities associated with the LCN component."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
     device_connection: DeviceConnectionType
 
@@ -57,15 +56,24 @@ class LcnEntity(Entity):
             ).lower(),
         )
 
+    @property
+    def should_poll(self) -> bool:
+        """Groups may not poll for a status."""
+        return not self.device_connection.is_group
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.device_connection = get_device_connection(
             self.hass, self.config[CONF_ADDRESS], self.config_entry
         )
-        if not self.device_connection.is_group:
-            self._unregister_for_inputs = self.device_connection.register_for_inputs(
-                self.input_received
-            )
+        if self.device_connection.is_group:
+            return
+
+        self._unregister_for_inputs = self.device_connection.register_for_inputs(
+            self.input_received
+        )
+
+        self.schedule_update_ha_state(force_refresh=True)
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -76,6 +84,9 @@ class LcnEntity(Entity):
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
+
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
 
     def input_received(self, input_obj: InputType) -> None:
         """Set state/value when LCN input object (command) is received."""

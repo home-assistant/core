@@ -1,6 +1,7 @@
 """Support for LCN sensors."""
 
 from collections.abc import Iterable
+from datetime import timedelta
 from functools import partial
 from itertools import chain
 
@@ -39,6 +40,8 @@ from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
 PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(minutes=1)
+
 
 DEVICE_CLASS_MAPPING = {
     pypck.lcn_defs.VarUnit.CELSIUS: SensorDeviceClass.TEMPERATURE,
@@ -125,17 +128,11 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
         )
         self._attr_device_class = DEVICE_CLASS_MAPPING.get(self.unit)
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.variable)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.variable)
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        await self.device_connection.request_status_variable(
+            self.variable, SCAN_INTERVAL.seconds
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
@@ -167,17 +164,11 @@ class LcnLedLogicSensor(LcnEntity, SensorEntity):
                 config[CONF_DOMAIN_DATA][CONF_SOURCE]
             ]
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.source)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.source)
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        await self.device_connection.request_status_led_and_logic_ops(
+            SCAN_INTERVAL.seconds
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""

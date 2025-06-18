@@ -1,6 +1,8 @@
 """Support for LCN covers."""
 
+import asyncio
 from collections.abc import Iterable
+from datetime import timedelta
 from functools import partial
 from typing import Any
 
@@ -27,6 +29,7 @@ from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
 PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
 def add_lcn_entities(
@@ -93,28 +96,6 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         else:
             self.reverse_time = None
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(
-                pypck.lcn_defs.OutputPort["OUTPUTUP"]
-            )
-            await self.device_connection.activate_status_request_handler(
-                pypck.lcn_defs.OutputPort["OUTPUTDOWN"]
-            )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(
-                pypck.lcn_defs.OutputPort["OUTPUTUP"]
-            )
-            await self.device_connection.cancel_status_request_handler(
-                pypck.lcn_defs.OutputPort["OUTPUTDOWN"]
-            )
-
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         state = pypck.lcn_defs.MotorStateModifier.DOWN
@@ -146,6 +127,18 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         self._attr_is_closing = False
         self._attr_is_opening = False
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        if not self.device_connection.is_group:
+            await asyncio.gather(
+                await self.device_connection.request_status_output(
+                    pypck.lcn_defs.OutputPort["OUTPUTUP"], SCAN_INTERVAL.seconds
+                ),
+                await self.device_connection.request_status_output(
+                    pypck.lcn_defs.OutputPort["OUTPUTDOWN"], SCAN_INTERVAL.seconds
+                ),
+            )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set cover states when LCN input object (command) is received."""
@@ -206,20 +199,6 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._is_closing = False
         self._is_opening = False
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(
-                self.motor, self.positioning_mode
-            )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.motor)
-
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if not await self.device_connection.control_motor_relays(
@@ -273,6 +252,17 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._attr_current_cover_position = position
 
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        coros = [self.device_connection.request_status_relays(SCAN_INTERVAL.seconds)]
+        if self.positioning_mode == pypck.lcn_defs.MotorPositioningMode.BS4:
+            coros.append(
+                self.device_connection.request_status_motor_position(
+                    self.motor, self.positioning_mode, SCAN_INTERVAL.seconds
+                )
+            )
+        await asyncio.gather(*coros)
 
     def input_received(self, input_obj: InputType) -> None:
         """Set cover states when LCN input object (command) is received."""
