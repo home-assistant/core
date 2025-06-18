@@ -39,6 +39,7 @@
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Source: Includes air quality data from Google',
       'device_class': 'carbon_monoxide',
       'friendly_name': 'Straße Ohne Straßennamen Carbon monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -98,6 +99,7 @@
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_lqi_de_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Source: Includes air quality data from Google',
       'device_class': 'enum',
       'friendly_name': 'Straße Ohne Straßennamen LQI (DE) category',
       'options': list([
@@ -160,6 +162,7 @@
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_lqi_de_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Source: Includes air quality data from Google',
       'device_class': 'enum',
       'friendly_name': 'Straße Ohne Straßennamen LQI (DE) dominant pollutant',
       'options': list([
@@ -216,6 +219,7 @@
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Source: Includes air quality data from Google',
       'friendly_name': 'Straße Ohne Straßennamen Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppb',
@@ -268,6 +272,7 @@
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Source: Includes air quality data from Google',
       'friendly_name': 'Straße Ohne Straßennamen Ozone',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppb',
@@ -320,6 +325,7 @@
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Source: Includes air quality data from Google',
       'device_class': 'pm10',
       'friendly_name': 'Straße Ohne Straßennamen PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -373,6 +379,7 @@
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Source: Includes air quality data from Google',
       'device_class': 'pm25',
       'friendly_name': 'Straße Ohne Straßennamen PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -426,6 +433,7 @@
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_sulphur_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Source: Includes air quality data from Google',
       'friendly_name': 'Straße Ohne Straßennamen Sulphur dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppb',
@@ -484,6 +492,7 @@
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_uaqi_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Source: Includes air quality data from Google',
       'device_class': 'enum',
       'friendly_name': 'Straße Ohne Straßennamen UAQI category',
       'options': list([
@@ -549,6 +558,7 @@
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_uaqi_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Source: Includes air quality data from Google',
       'device_class': 'enum',
       'friendly_name': 'Straße Ohne Straßennamen UAQI dominant pollutant',
       'options': list([
@@ -608,6 +618,7 @@
 # name: test_sensor_snapshot[sensor.strasse_ohne_strassennamen_universal_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'attribution': 'Source: Includes air quality data from Google',
       'device_class': 'aqi',
       'friendly_name': 'Straße Ohne Straßennamen Universal Air Quality Index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
