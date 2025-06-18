@@ -1,9 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: |
-      Needs complete refactor
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
