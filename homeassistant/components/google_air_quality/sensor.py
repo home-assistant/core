@@ -156,6 +156,7 @@ class AirQualitySensorEntity(
     """Defining the Air Quality Sensors with AirQualitySensorEntityDescription."""
 
     entity_description: AirQualitySensorEntityDescription
+    _attr_attribution="Source: Includes air quality data from Google"
     _attr_has_entity_name = True
 
     def __init__(
