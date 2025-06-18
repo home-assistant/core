@@ -265,7 +265,7 @@ aioharmony==0.5.2
 aiohasupervisor==0.3.1
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.17.1
+aiohomeconnect==0.18.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.15
@@ -369,7 +369,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.5.2
+aiorussound==4.6.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -1206,7 +1206,7 @@ ibmiotf==0.3.4
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==10.0.0
+ical==10.0.4
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1508,7 +1508,7 @@ nexia==2.10.0
 nextcloudmonitor==1.5.1
 
 # homeassistant.components.discord
-nextcord==2.6.0
+nextcord==3.1.0
 
 # homeassistant.components.nextdns
 nextdns==4.0.0
@@ -2099,7 +2099,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.8
+pylamarzocco==2.0.9
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2341,7 +2341,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smarla
-pysmarlaapi==0.8.2
+pysmarlaapi==0.9.0
 
 # homeassistant.components.smartthings
 pysmartthings==3.2.5
@@ -3183,7 +3183,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.59
+zha==0.0.60
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
