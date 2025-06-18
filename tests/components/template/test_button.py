@@ -264,7 +264,7 @@ async def test_templated_optional_config(
     test_template: str,
     expected: str,
 ) -> None:
-    """Test: extra attributes template."""
+    """Test optional config templates."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
             hass,

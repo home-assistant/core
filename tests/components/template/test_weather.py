@@ -1104,13 +1104,13 @@ async def test_new_style_template_state_text(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.usefixtures("setup_weather")
-async def test_extra_template(
+async def test_templated_optional_config(
     hass: HomeAssistant,
     attribute: str,
     expected: str,
     initial_expected_state: str | None,
 ) -> None:
-    """Test extra templates."""
+    """Test optional config templates."""
     state = hass.states.get(TEST_WEATHER)
     assert state.attributes.get(attribute) == initial_expected_state
 

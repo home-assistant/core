@@ -470,13 +470,13 @@ def _verify(
     ],
 )
 @pytest.mark.usefixtures("setup_select")
-async def test_extra_template(
+async def test_templated_optional_config(
     hass: HomeAssistant,
     attribute: str,
     expected: str,
     initial_expected_state: str | None,
 ) -> None:
-    """Test extra templates."""
+    """Test optional config templates."""
     state = hass.states.get(_TEST_SELECT)
     assert state.attributes.get(attribute) == initial_expected_state
 
