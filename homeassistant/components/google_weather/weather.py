@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.weather import (
@@ -46,15 +47,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 
 from .coordinator import (
     GoogleWeatherConfigEntry,
     GoogleWeatherCurrentConditionsCoordinator,
+    GoogleWeatherDailyForecastCoordinator,
+    GoogleWeatherHourlyForecastCoordinator,
     GoogleWeatherRuntimeData,
 )
 
 PARALLEL_UPDATES = 0
+
+_LOGGER = logging.getLogger(__name__)
 
 # Maps https://developers.google.com/maps/documentation/weather/weather-condition-icons
 # to https://developers.home-assistant.io/docs/core/entity/weather/#recommended-values-for-state-and-condition
@@ -102,12 +106,16 @@ _CONDITION_MAP = {
 }
 
 
-def _get_condition(data: dict[str, Any], is_daytime: bool | None = None) -> str:
-    cond = _CONDITION_MAP[data["weatherCondition"]["type"]]
-    if is_daytime is None:
-        is_daytime = bool(data["isDaytime"])
-    if cond == ATTR_CONDITION_SUNNY and not is_daytime:
-        cond = ATTR_CONDITION_CLEAR_NIGHT
+def _get_condition(data: dict[str, Any], is_daytime: bool | None = None) -> str | None:
+    api_cond = data["weatherCondition"]["type"]
+    cond = _CONDITION_MAP.get(api_cond)
+    if cond is None:
+        _LOGGER.warning("Unknown condition from Google Weather API: %s", api_cond)
+    if cond == ATTR_CONDITION_SUNNY:
+        if is_daytime is None:
+            is_daytime = bool(data["isDaytime"])
+        if not is_daytime:
+            cond = ATTR_CONDITION_CLEAR_NIGHT
     return cond
 
 
@@ -123,7 +131,9 @@ async def async_setup_entry(
 class GoogleWeatherEntity(
     CoordinatorWeatherEntity[
         GoogleWeatherCurrentConditionsCoordinator,
-        TimestampDataUpdateCoordinator[dict[str, Any]],
+        GoogleWeatherDailyForecastCoordinator,
+        GoogleWeatherHourlyForecastCoordinator,
+        GoogleWeatherDailyForecastCoordinator,
     ]
 ):
     """Representation of a Google Weather entity."""
