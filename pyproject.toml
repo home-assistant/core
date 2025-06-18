@@ -838,6 +838,7 @@ ignore = [
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
   "UP046", # Non PEP 695 generic class
   "UP047", # Non PEP 696 generic function
+  "UP049", # Avoid private type parameter names
 
   # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
   "W191",
