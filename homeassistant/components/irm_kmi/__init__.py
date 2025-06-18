@@ -6,7 +6,6 @@ from irm_kmi_api import IrmKmiApiClientHa
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import IRM_KMI_TO_HA_CONDITION_MAP, PLATFORMS, USER_AGENT
@@ -28,12 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> bo
         coordinator=IrmKmiCoordinator(hass, entry, api_client),
     )
 
-    try:
-        await entry.runtime_data.coordinator.async_config_entry_first_refresh()
-    except ConfigEntryError:
-        # This happens when the zone is out of Benelux (no forecast available there).
-        # This should be caught by the config flow anyway.
-        return False
+    await entry.runtime_data.coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
