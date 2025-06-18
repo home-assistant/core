@@ -324,6 +324,9 @@ SET_CLIENT_CERT = "set_client_cert"
 
 BOOLEAN_SELECTOR = BooleanSelector()
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
+TEXT_SELECTOR_READ_ONLY = TextSelector(
+    TextSelectorConfig(type=TextSelectorType.TEXT, read_only=True)
+)
 URL_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.URL))
 PUBLISH_TOPIC_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 PORT_SELECTOR = vol.All(
@@ -404,6 +407,7 @@ SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
     )
 )
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
+TEMPLATE_SELECTOR_READ_ONLY = TemplateSelector(TemplateSelectorConfig(read_only=True))
 
 SUBENTRY_AVAILABILITY_SCHEMA = vol.Schema(
     {
@@ -3190,7 +3194,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         yaml_config = yaml.dump(mqtt_yaml_config_base)
         data_schema = vol.Schema(
             {
-                vol.Optional("yaml"): TEMPLATE_SELECTOR,
+                vol.Optional("yaml"): TEMPLATE_SELECTOR_READ_ONLY,
             }
         )
         data_schema = self.add_suggested_values_to_schema(
@@ -3237,8 +3241,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Optional("discovery_topic"): TEXT_SELECTOR,
-                vol.Optional("discovery_payload"): TEMPLATE_SELECTOR,
+                vol.Optional("discovery_topic"): TEXT_SELECTOR_READ_ONLY,
+                vol.Optional("discovery_payload"): TEMPLATE_SELECTOR_READ_ONLY,
             }
         )
         data_schema = self.add_suggested_values_to_schema(
