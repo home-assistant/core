@@ -143,6 +143,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         fw_type: str,
         firmware_name: str,
         expected_installed_firmware_type: ApplicationType,
+        step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
         assert self._device is not None
@@ -173,6 +174,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
         if not self.firmware_install_task.done():
             return self.async_show_progress(
+                step_id=step_id,
                 progress_action="install_firmware",
                 description_placeholders={
                     **self._get_translation_placeholders(),
@@ -192,13 +194,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 reason="unsupported_firmware",
                 description_placeholders=self._get_translation_placeholders(),
             )
-
-        # Allow the stick to be used with ZHA without flashing
-        if (
-            self._probed_firmware_info is not None
-            and self._probed_firmware_info.firmware_type == ApplicationType.EZSP
-        ):
-            return await self.async_step_confirm_zigbee()
 
         return await self.async_step_install_zigbee_firmware()
 
@@ -337,39 +332,40 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         finally:
             self.addon_install_task = None
 
-        return self.async_show_progress_done(next_step_id="pick_firmware_thread")
+        return self.async_show_progress_done(next_step_id="install_thread_firmware")
 
     async def async_step_start_otbr_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure OTBR to point to the SkyConnect and run the addon."""
         otbr_manager = get_otbr_addon_manager(self.hass)
-        addon_info = await self._async_get_addon_info(otbr_manager)
-
-        assert self._device is not None
-        new_addon_config = {
-            **addon_info.options,
-            "device": self._device,
-            "baudrate": 460800,
-            "flow_control": True,
-            "autoflash_firmware": False,
-        }
-
-        _LOGGER.debug("Reconfiguring OTBR addon with %s", new_addon_config)
-
-        try:
-            await otbr_manager.async_set_addon_options(new_addon_config)
-        except AddonError as err:
-            _LOGGER.error(err)
-            raise AbortFlow(
-                "addon_set_config_failed",
-                description_placeholders={
-                    **self._get_translation_placeholders(),
-                    "addon_name": otbr_manager.addon_name,
-                },
-            ) from err
 
         if not self.addon_start_task:
+            addon_info = await self._async_get_addon_info(otbr_manager)
+
+            assert self._device is not None
+            new_addon_config = {
+                **addon_info.options,
+                "device": self._device,
+                "baudrate": 460800,
+                "flow_control": True,
+                "autoflash_firmware": False,
+            }
+
+            _LOGGER.debug("Reconfiguring OTBR addon with %s", new_addon_config)
+
+            try:
+                await otbr_manager.async_set_addon_options(new_addon_config)
+            except AddonError as err:
+                _LOGGER.error(err)
+                raise AbortFlow(
+                    "addon_set_config_failed",
+                    description_placeholders={
+                        **self._get_translation_placeholders(),
+                        "addon_name": otbr_manager.addon_name,
+                    },
+                ) from err
+
             self.addon_start_task = self.hass.async_create_task(
                 otbr_manager.async_start_addon_waiting()
             )
@@ -403,15 +399,15 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Confirm OTBR setup."""
         assert self._device is not None
 
+        if user_input is not None:
+            # OTBR discovery is done automatically via hassio
+            return self._async_flow_finished()
+
         if not await self._probe_firmware_info(probe_methods=(ApplicationType.SPINEL,)):
             return self.async_abort(
                 reason="unsupported_firmware",
                 description_placeholders=self._get_translation_placeholders(),
             )
-
-        if user_input is not None:
-            # OTBR discovery is done automatically via hassio
-            return self._async_flow_finished()
 
         return self.async_show_form(
             step_id="confirm_otbr",

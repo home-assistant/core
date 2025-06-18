@@ -141,6 +141,7 @@ class HomeAssistantSkyConnectConfigFlow(
             fw_type="skyconnect_zigbee_ncp",
             firmware_name="Zigbee",
             expected_installed_firmware_type=ApplicationType.EZSP,
+            step_id="install_zigbee_firmware",
             next_step_id="confirm_zigbee",
         )
 
@@ -153,6 +154,7 @@ class HomeAssistantSkyConnectConfigFlow(
             fw_type="skyconnect_openthread_rcp",
             firmware_name="OpenThread",
             expected_installed_firmware_type=ApplicationType.SPINEL,
+            step_id="install_thread_firmware",
             next_step_id="start_otbr_addon",
         )
 

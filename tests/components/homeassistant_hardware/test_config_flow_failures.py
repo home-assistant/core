@@ -21,7 +21,7 @@ from .test_config_flow import (
     TEST_DEVICE,
     TEST_DOMAIN,
     TEST_HARDWARE_NAME,
-    mock_addon_info,
+    mock_firmware_info,
     mock_test_firmware_platform,  # noqa: F401
 )
 
@@ -50,9 +50,9 @@ async def test_config_flow_cannot_probe_firmware(
 ) -> None:
     """Test failure case when firmware cannot be probed."""
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
-        app_type=None,
+        probe_app_type=None,
     ):
         # Start the flow
         result = await hass.config_entries.flow.async_init(
@@ -81,9 +81,9 @@ async def test_config_flow_zigbee_confirmation_fails(hass: HomeAssistant) -> Non
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "pick_firmware"
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
-        app_type=ApplicationType.EZSP,
+        probe_app_type=ApplicationType.EZSP,
     ):
         # Pick the menu option: we are now installing the addon
         result = await hass.config_entries.flow.async_configure(
@@ -93,9 +93,9 @@ async def test_config_flow_zigbee_confirmation_fails(hass: HomeAssistant) -> Non
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm_zigbee"
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
-        app_type=None,  # Probing fails
+        probe_app_type=None,  # Probing fails
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -114,10 +114,10 @@ async def test_config_flow_thread_not_hassio(hass: HomeAssistant) -> None:
         TEST_DOMAIN, context={"source": "hardware"}
     )
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
         is_hassio=False,
-        app_type=ApplicationType.EZSP,
+        probe_app_type=ApplicationType.EZSP,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -141,9 +141,9 @@ async def test_config_flow_thread_addon_info_fails(hass: HomeAssistant) -> None:
         TEST_DOMAIN, context={"source": "hardware"}
     )
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
-        app_type=ApplicationType.EZSP,
+        probe_app_type=ApplicationType.EZSP,
     ) as mock_otbr_manager:
         mock_otbr_manager.async_get_addon_info.side_effect = AddonError()
         result = await hass.config_entries.flow.async_configure(
@@ -169,9 +169,9 @@ async def test_config_flow_thread_addon_already_configured(hass: HomeAssistant) 
         TEST_DOMAIN, context={"source": "hardware"}
     )
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
-        app_type=ApplicationType.EZSP,
+        probe_app_type=ApplicationType.EZSP,
         otbr_addon_info=AddonInfo(
             available=True,
             hostname=None,
@@ -210,9 +210,9 @@ async def test_config_flow_thread_addon_install_fails(hass: HomeAssistant) -> No
         TEST_DOMAIN, context={"source": "hardware"}
     )
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
-        app_type=ApplicationType.EZSP,
+        probe_app_type=ApplicationType.EZSP,
     ) as mock_otbr_manager:
         mock_otbr_manager.async_install_addon_waiting = AsyncMock(
             side_effect=AddonError()
@@ -241,9 +241,9 @@ async def test_config_flow_thread_addon_set_config_fails(hass: HomeAssistant) ->
         TEST_DOMAIN, context={"source": "hardware"}
     )
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
-        app_type=ApplicationType.EZSP,
+        probe_app_type=ApplicationType.EZSP,
     ) as mock_otbr_manager:
 
         async def install_addon() -> None:
@@ -284,9 +284,9 @@ async def test_config_flow_thread_flasher_run_fails(hass: HomeAssistant) -> None
         TEST_DOMAIN, context={"source": "hardware"}
     )
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
-        app_type=ApplicationType.EZSP,
+        probe_app_type=ApplicationType.EZSP,
         otbr_addon_info=AddonInfo(
             available=True,
             hostname=None,
@@ -321,9 +321,9 @@ async def test_config_flow_thread_confirmation_fails(hass: HomeAssistant) -> Non
         TEST_DOMAIN, context={"source": "hardware"}
     )
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
-        app_type=ApplicationType.EZSP,
+        probe_app_type=ApplicationType.EZSP,
         otbr_addon_info=AddonInfo(
             available=True,
             hostname=None,
@@ -351,9 +351,9 @@ async def test_config_flow_thread_confirmation_fails(hass: HomeAssistant) -> Non
         assert confirm_result["type"] is FlowResultType.FORM
         assert confirm_result["step_id"] == "confirm_otbr"
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
-        app_type=None,  # Probing fails
+        probe_app_type=None,  # Probing fails
     ):
         error_result = await hass.config_entries.flow.async_configure(
             confirm_result["flow_id"], user_input={}
@@ -436,9 +436,9 @@ async def test_options_flow_thread_to_zigbee_otbr_configured(
     # Confirm options flow
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    with mock_addon_info(
+    with mock_firmware_info(
         hass,
-        app_type=ApplicationType.SPINEL,
+        probe_app_type=ApplicationType.SPINEL,
         otbr_addon_info=AddonInfo(
             available=True,
             hostname=None,
