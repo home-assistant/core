@@ -896,6 +896,7 @@ DISCOVERY_SCHEMAS = [
             writeable=False,
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # generic text sensors
     ZWaveDiscoverySchema(
@@ -932,6 +933,7 @@ DISCOVERY_SCHEMAS = [
         ),
         data_template=NumericSensorDataTemplate(),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # Meter sensors for Meter CC
     ZWaveDiscoverySchema(
@@ -957,6 +959,7 @@ DISCOVERY_SCHEMAS = [
             writeable=True,
         ),
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
     # button for Indicator CC
     ZWaveDiscoverySchema(
@@ -980,6 +983,7 @@ DISCOVERY_SCHEMAS = [
             writeable=True,
         ),
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
     # binary switch
     # barrier operator signaling states
@@ -1184,6 +1188,7 @@ DISCOVERY_SCHEMAS = [
             any_available_states={(0, "idle")},
         ),
         allow_multi=True,
+        entity_registry_enabled_default=False,
     ),
     # event
     # stateful = False

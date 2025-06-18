@@ -69,6 +69,21 @@ async def test_media_player_join_bad_entity(
     sonos_setup_two_speakers: list[MockSoCo],
 ) -> None:
     """Test error handling of joining with a bad entity."""
+=======
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, SERVICE_JOIN
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+
+from tests.common import MockConfigEntry
+
+
+async def test_media_player_join(
+    hass: HomeAssistant, async_autosetup_sonos, config_entry: MockConfigEntry
+) -> None:
+    """Test join service."""
+    valid_entity_id = "media_player.zone_a"
+    mocked_entity_id = "media_player.mocked"
+>>>>>>> dev
 
     # Ensure an error is raised if the entity is unknown
     with pytest.raises(HomeAssistantError) as excinfo:
@@ -183,7 +198,7 @@ async def test_media_player_unjoin_already_unjoined(
             {"entity_id": "media_player.bedroom"},
             blocking=True,
         )
-
+        
     assert len(caplog.records) == 0
     # Should not have called unjoin, since the speakers are already unjoined.
     assert soco_bedroom.unjoin.call_count == 0

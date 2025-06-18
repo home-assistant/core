@@ -81,7 +81,7 @@ __all__ = [
     "suggested_filename_from_name_date",
 ]
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.EVENT, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

@@ -75,14 +75,17 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         )
 
         http_s = "https" if self._host.api.use_https else "http"
-        self._conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
+        if self._host.api.baichuan_only:
+            self._conf_url = None
+        else:
+            self._conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
         self._dev_id = self._host.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._dev_id)},
             connections={(CONNECTION_NETWORK_MAC, self._host.api.mac_address)},
             name=self._host.api.nvr_name,
             model=self._host.api.model,
-            model_id=self._host.api.item_number,
+            model_id=self._host.api.item_number(),
             manufacturer=self._host.api.manufacturer,
             hw_version=self._host.api.hardware_version,
             sw_version=self._host.api.sw_version,
@@ -142,7 +145,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
 
     async def async_update(self) -> None:
         """Force full update from the generic entity update service."""
-        self._host.last_wake = 0
+        for channel in self._host.api.channels:
+            if self._host.api.supported(channel, "battery"):
+                self._host.last_wake[channel] = 0
         await super().async_update()
 
 
@@ -182,17 +187,23 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             if mac := self._host.api.baichuan.mac_address(dev_ch):
                 connections.add((CONNECTION_NETWORK_MAC, mac))
 
+            if self._conf_url is None:
+                conf_url = None
+            else:
+                conf_url = f"{self._conf_url}/?ch={dev_ch}"
+
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._dev_id)},
                 connections=connections,
                 via_device=(DOMAIN, self._host.unique_id),
                 name=self._host.api.camera_name(dev_ch),
                 model=self._host.api.camera_model(dev_ch),
+                model_id=self._host.api.item_number(dev_ch),
                 manufacturer=self._host.api.manufacturer,
                 hw_version=self._host.api.camera_hardware_version(dev_ch),
                 sw_version=self._host.api.camera_sw_version(dev_ch),
                 serial_number=self._host.api.camera_uid(dev_ch),
-                configuration_url=f"{self._conf_url}/?ch={dev_ch}",
+                configuration_url=conf_url,
             )
 
     @property
