@@ -55,7 +55,7 @@ async def test_user_flow_home(
     assert result.get("title") == "Home"
 
 
-async def test_config_flow_out_benelux_zone(
+async def test_config_flow_location_out_benelux(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
     mock_get_forecast_out_benelux: MagicMock,
@@ -98,7 +98,7 @@ async def test_config_flow_with_api_error(
 async def test_option_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test when the users changes options with the option flow."""
+    """Test when the user changes options with the option flow."""
     mock_config_entry.add_to_hass(hass)
 
     assert not mock_config_entry.options
