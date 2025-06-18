@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "email": "Email",
+          "password": "Password",
+          "code": "Encryption key",
+          "scan_interval": "Scan interval"
+        },
+        "data_description": {
+          "email": "Email address for your Hanna Cloud account",
+          "password": "Password for your Hanna Cloud account",
+          "code": "Encryption key for your Hanna Cloud account",
+          "scan_interval": "Scan interval for your Hanna Cloud account. Default is 1 minute."
+        },
+        "description": "Enter your Hanna Cloud credentials",
+        "title": "Hanna Cloud"
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
