@@ -19,7 +19,7 @@ class IrmKmiBaseEntity(CoordinatorEntity):
         "Weather data from the Royal Meteorological Institute of Belgium meteo.be"
     )
 
-    def __init__(self, entry: ConfigEntry, name: str | None) -> None:
+    def __init__(self, entry: ConfigEntry, name: str) -> None:
         """Init base properties for IRM KMI entities."""
         coordinator = entry.runtime_data.coordinator
         CoordinatorEntity.__init__(self, coordinator)
@@ -28,5 +28,5 @@ class IrmKmiBaseEntity(CoordinatorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer=IRM_KMI_NAME.get(preferred_language(self.hass, entry)),
-            name=name if name is not None else entry.title,
+            name=name,
         )
