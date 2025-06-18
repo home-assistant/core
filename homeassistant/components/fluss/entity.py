@@ -27,12 +27,16 @@ class FlussEntity(CoordinatorEntity[FlussDataUpdateCoordinator]):
         """Return the stored device data or fetch it from the coordinator."""
         if self._device is not None:
             return self._device
-        for dev in self.coordinator.data.get("devices", []):
-            if dev.get("deviceId") == self.device_id:
-                return dev
-        return None
+        return self.coordinator.data.get(self.device_id)
 
     @property
     def name(self) -> str:
         """Use the deviceName field for the entity name."""
-        return self.device.get("deviceName", super().name)
+        return (
+            self.device.get("deviceName", super().name) if self.device else super().name
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        return super().available and self.device_id in self.coordinator.data

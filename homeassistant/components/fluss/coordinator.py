@@ -48,9 +48,14 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch data from the Fluss API."""
+    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
+        """Fetch data from the Fluss API and return as a dictionary keyed by deviceId."""
         try:
-            return await self.api.async_get_devices()
+            devices = await self.api.async_get_devices()
+            return {
+                device["deviceId"]: device
+                for device in devices.get("devices", [])
+                if isinstance(device, dict) and "deviceId" in device
+            }
         except FlussApiClientError as err:
             raise UpdateFailed(f"Error fetching Fluss devices: {err}") from err

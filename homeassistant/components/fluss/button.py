@@ -12,27 +12,21 @@ from .entity import FlussEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry[FlussDataUpdateCoordinator],
+    entry: FlussConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fluss Devices, filtering out any invalid payloads."""
     coordinator = entry.runtime_data
-    devices = coordinator.data.get("devices", [])
+    devices = coordinator.data
 
     entities: list[FlussButton] = []
-    for device in devices:
-        if not isinstance(device, dict):
-            continue
-
-        device_id = device.get("deviceId")
-        if device_id is None:
-            _LOGGER.debug("Skipping Fluss device without deviceId: %s", device)
-            continue
-
-        entities.append(FlussButton(coordinator, device))
+    for device_id, device in devices.items():
+        entities.append(FlussButton(coordinator, device_id, device))
 
     async_add_entities(entities)
 
@@ -43,12 +37,11 @@ class FlussButton(FlussEntity, ButtonEntity):
     def __init__(
         self,
         coordinator: FlussDataUpdateCoordinator,
+        device_id: str,
         device: dict,
     ) -> None:
         """Initialize the button."""
-        super().__init__(coordinator, device.get("deviceId"), device)
-        self.device.get("deviceName", "Unknown Device")
-        self._attr_unique_id = str(device["deviceId"])
+        super().__init__(coordinator, device_id, device)
 
     async def async_press(self) -> None:
         """Handle the button press."""
