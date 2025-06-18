@@ -12,7 +12,7 @@ from homeassistant.components.blue_current.config_flow import (
     RequestLimitReached,
     WebsocketError,
 )
-from homeassistant.components.blue_current.const import WITHOUT_CHARGE_CARD
+from homeassistant.components.blue_current.const import WITHOUT_CHARGING_CARD
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -174,7 +174,10 @@ async def test_reauth(
             {CARD: "MOCK_NAME (MOCK_ID)"},
         ),
         ({UID: "MOCK_UID", CONF_ID: "MOCK_ID", "name": ""}, {CARD: "MOCK_ID"}),
-        ({UID: "BCU-APP", CONF_ID: "BCU-APP", "name": ""}, {CARD: WITHOUT_CHARGE_CARD}),
+        (
+            {UID: "BCU-APP", CONF_ID: "BCU-APP", "name": ""},
+            {CARD: WITHOUT_CHARGING_CARD},
+        ),
     ],
 )
 async def test_options_flow(

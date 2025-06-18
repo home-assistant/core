@@ -28,7 +28,7 @@
         "data": {
           "card": "Card"
         },
-        "description": "Select the charge card you want to use"
+        "description": "Select the default charging card you want to use"
       }
     }
   },
@@ -140,9 +140,9 @@
     }
   },
   "selector": {
-    "select_charge_card": {
+    "select_charging_card": {
       "options": {
-        "without_charge_card": "Without charge card"
+        "without_charging_card": "Without charging card"
       }
     }
   },
@@ -153,7 +153,7 @@
       "fields": {
         "charging_card_id": {
           "name": "Charging card ID",
-          "description": "Optional charging card ID that will be used to start a charging session. When not provided, the default charging card selected in options will be used."
+          "description": "Optional charging card ID that will be used to start a charge session. When not provided, the default charging card selected in config will be used."
         }
       }
     }

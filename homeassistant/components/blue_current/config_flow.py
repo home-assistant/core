@@ -25,7 +25,7 @@ from homeassistant.helpers.selector import (
 )
 
 from . import BlueCurrentConfigEntry, Connector
-from .const import BCU_APP, CARD, DOMAIN, LOGGER, WITHOUT_CHARGE_CARD
+from .const import BCU_APP, CARD, DOMAIN, LOGGER, WITHOUT_CHARGING_CARD
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
@@ -107,7 +107,7 @@ class ChargeCardsFlowHandler(config_entries.OptionsFlow):
         def card_display_name(card: dict[str, Any]) -> str:
             """Get the display name of a card. When the card has a name, show the name with the card id. Otherwise, only show the card id."""
             if card[CONF_ID] == BCU_APP:
-                return WITHOUT_CHARGE_CARD
+                return WITHOUT_CHARGING_CARD
             if card[CONF_NAME] == "":
                 return str(card[CONF_ID])
             return f"{card[CONF_NAME]} ({card[CONF_ID]})"
@@ -116,7 +116,7 @@ class ChargeCardsFlowHandler(config_entries.OptionsFlow):
             """Get the card id based on the display name."""
             split = card_name.rsplit("(")
             if len(split) == 1:
-                if split[0] == WITHOUT_CHARGE_CARD:
+                if split[0] == WITHOUT_CHARGING_CARD:
                     return BCU_APP
                 return split[0]
             return split[-1].strip(")")
@@ -131,7 +131,7 @@ class ChargeCardsFlowHandler(config_entries.OptionsFlow):
                     SelectSelectorConfig(
                         options=cards,
                         mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="select_charge_card",
+                        translation_key="select_charging_card",
                     )
                 )
             }
