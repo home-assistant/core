@@ -471,7 +471,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AbstractTemplateAlarmControlPane
 
 
 class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControlPanel):
-    """Light entity based on trigger data."""
+    """Alarm Control Panel entity based on trigger data."""
 
     domain = ALARM_CONTROL_PANEL_DOMAIN
 
@@ -485,7 +485,6 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateAlarmControlPanel.__init__(self, config)
 
-        # Render the _attr_name before initializing TemplateLightEntity
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
 
         if isinstance(config.get(CONF_STATE), template.Template):
