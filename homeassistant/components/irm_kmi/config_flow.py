@@ -6,7 +6,7 @@ from irm_kmi_api import IrmKmiApiClient, IrmKmiApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_LOCATION, CONF_ZONE
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_LOCATION
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -69,7 +69,7 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             if api_data.get("cityName", None) in OUT_OF_BENELUX:
-                errors[CONF_ZONE] = "out_of_benelux"
+                errors[CONF_LOCATION] = "out_of_benelux"
 
             if not errors:
                 await self.async_set_unique_id(f"{lat}-{lon}")
