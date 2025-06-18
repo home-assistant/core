@@ -194,6 +194,12 @@
     },
     "announce_media_error": {
       "message": "Announcing clip {media_id} failed {response}"
+    },
+    "invalid_grouping_entity": {
+      "message": "Invalid Sonos grouping entity: {entity_id}"
+    },
+    "unregistered_entity": {
+      "message": "{entity_id} is not registered as a Sonos entity."
     }
   }
 }
