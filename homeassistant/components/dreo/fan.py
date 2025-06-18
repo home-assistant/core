@@ -6,7 +6,7 @@ import logging
 import math
 from typing import Any
 
-from hscloud.const import DEVICE_TYPE, FAN_DEVICE
+from hscloud.const import FAN_DEVICE
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -20,11 +20,11 @@ from .const import (
     ERROR_SET_SPEED_FAILED,
     ERROR_TURN_OFF_FAILED,
     ERROR_TURN_ON_FAILED,
+    FAN_DEVICE_TYPE,
 )
 from .coordinator import DreoDataUpdateCoordinator
 from .entity import DreoEntity
 
-UNIQUE_ID_SUFFIX = "fan"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -41,12 +41,11 @@ async def async_setup_entry(
         new_fans = []
 
         for device in config_entry.runtime_data.devices:
-            device_model = device.get("model")
-            device_type = DEVICE_TYPE.get(device_model)
+            device_type = device.get("deviceType")
             if device_type is None:
                 continue
 
-            if device_type != FAN_DEVICE.get("type"):
+            if device_type != FAN_DEVICE_TYPE:
                 continue
 
             device_id = str(device.get("deviceSn", ""))
@@ -88,15 +87,13 @@ class DreoFan(DreoEntity, FanEntity):
         coordinator: DreoDataUpdateCoordinator,
     ) -> None:
         """Initialize the Dreo fan."""
-        super().__init__(device, coordinator, UNIQUE_ID_SUFFIX, None)
+        super().__init__(device, coordinator, FAN_DEVICE_TYPE, None)
 
         model_config = FAN_DEVICE.get("config", {}).get(self._model, {})
         speed_range = model_config.get("speed_range")
 
         self._attr_preset_modes = model_config.get("preset_modes")
         self._low_high_range = speed_range
-
-        self._update_attributes()
 
     @callback
     def _handle_coordinator_update(self):
@@ -107,7 +104,6 @@ class DreoFan(DreoEntity, FanEntity):
     def _update_attributes(self):
         """Update attributes from coordinator data."""
         if not self.coordinator.data:
-            self._attr_available = False
             return
 
         fan_state_data = self.coordinator.data
@@ -168,7 +164,7 @@ class DreoFan(DreoEntity, FanEntity):
 
     async def async_execute_fan_common_command(
         self,
-        translation_key: str,
+        error_translation_key: str,
         percentage: int | None = None,
         preset_mode: str | None = None,
         oscillate: bool | None = None,
@@ -192,4 +188,6 @@ class DreoFan(DreoEntity, FanEntity):
         if oscillate is not None:
             command_params["oscillate"] = oscillate
 
-        await self.async_send_command_and_update(translation_key, **command_params)
+        await self.async_send_command_and_update(
+            error_translation_key, **command_params
+        )
