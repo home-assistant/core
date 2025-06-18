@@ -56,3 +56,7 @@ fetch:
       example: "12"
       selector:
         text:
+    prefer_html:
+      required: false
+      selector:
+        boolean:

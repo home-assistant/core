@@ -41,6 +41,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 CONF_ENTRY = "entry"
 CONF_SEEN = "seen"
 CONF_UID = "uid"
+CONF_PREFER_HTML = "prefer_html"
 CONF_TARGET_FOLDER = "target_folder"
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +64,11 @@ SERVICE_MOVE_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     }
 )
 SERVICE_DELETE_SCHEMA = _SERVICE_UID_SCHEMA
-SERVICE_FETCH_TEXT_SCHEMA = _SERVICE_UID_SCHEMA
+SERVICE_FETCH_TEXT_SCHEMA = _SERVICE_UID_SCHEMA.extend(
+    {
+        vol.Optional(CONF_PREFER_HTML): cv.boolean,
+    }
+)
 
 type ImapConfigEntry = ConfigEntry[ImapDataUpdateCoordinator]
 
@@ -201,9 +206,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Process fetch email service and return content."""
         entry_id: str = call.data[CONF_ENTRY]
         uid: str = call.data[CONF_UID]
+        prefer_html = bool(call.data.get(CONF_PREFER_HTML))
         _LOGGER.debug(
-            "Fetch text for message %s. Entry: %s",
+            "Fetch text for message %s. Prefer HTML: %s. Entry: %s",
             uid,
+            prefer_html,
             entry_id,
         )
         client = await async_get_imap_client(hass, entry_id)
@@ -216,7 +223,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_placeholders={"error": str(exc)},
             ) from exc
         raise_on_error(response, "fetch_failed")
-        message = ImapMessage(response.lines[1])
+        message = ImapMessage(response.lines[1], prefer_html=prefer_html)
         await client.close()
         return {
             "text": message.text,
