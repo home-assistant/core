@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Redgtech",
+        "description": "Please enter your credentials to connect to the Redgtech API.",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Enter the email address associated with your Redgtech account.",
+          "password": "Enter the password for your Redgtech account."
+        }
+      }
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Error while communicating with the Redgtech API"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed. Please check your credentials."
+    }
+  }
+}
