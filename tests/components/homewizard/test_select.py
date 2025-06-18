@@ -155,7 +155,7 @@ async def test_select_request_error(
     mock_homewizardenergy.batteries.side_effect = RequestError
     with pytest.raises(
         HomeAssistantError,
-        match=r"^An error occurred while communicating with HomeWizard device$",
+        match=r"^An error occurred while communicating with your HomeWizard Energy device$",
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
