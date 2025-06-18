@@ -843,7 +843,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "rfxtrx",
     "rhasspy",
     "ridwell",
-    "ring",
     "ripple",
     "risco",
     "rituals_perfume_genie",
