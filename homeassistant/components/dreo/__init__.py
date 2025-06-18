@@ -19,7 +19,6 @@ from .coordinator import DreoDataUpdateCoordinator
 type DreoConfigEntry = ConfigEntry[DreoData]
 
 PLATFORMS = [Platform.FAN]
-SYNC_INTERVAL = timedelta(seconds=10)
 
 
 @dataclass
