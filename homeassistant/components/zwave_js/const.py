@@ -139,7 +139,10 @@ ATTR_TWIST_ASSIST = "twist_assist"
 ADDON_SLUG = "core_zwave_js"
 
 # Sensor entity description constants
-ENTITY_DESC_KEY_BATTERY = "battery"
+ENTITY_DESC_KEY_BATTERY_LEVEL = "battery_level"
+ENTITY_DESC_KEY_BATTERY_LIST_STATE = "battery_list_state"
+ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY = "battery_maximum_capacity"
+ENTITY_DESC_KEY_BATTERY_TEMPERATURE = "battery_temperature"
 ENTITY_DESC_KEY_CURRENT = "current"
 ENTITY_DESC_KEY_VOLTAGE = "voltage"
 ENTITY_DESC_KEY_ENERGY_MEASUREMENT = "energy_measurement"
