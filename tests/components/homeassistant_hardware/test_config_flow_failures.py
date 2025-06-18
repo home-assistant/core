@@ -21,6 +21,7 @@ from .test_config_flow import (
     TEST_DEVICE,
     TEST_DOMAIN,
     TEST_HARDWARE_NAME,
+    consume_progress_flow,
     mock_firmware_info,
     mock_test_firmware_platform,  # noqa: F401
 )
@@ -65,42 +66,6 @@ async def test_config_flow_cannot_probe_firmware(
         )
 
         assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "unsupported_firmware"
-
-
-@pytest.mark.parametrize(
-    "ignore_translations_for_mock_domains",
-    ["test_firmware_domain"],
-)
-async def test_config_flow_zigbee_confirmation_fails(hass: HomeAssistant) -> None:
-    """Test the config flow failing due to Zigbee firmware not being detected."""
-    result = await hass.config_entries.flow.async_init(
-        TEST_DOMAIN, context={"source": "hardware"}
-    )
-
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "pick_firmware"
-
-    with mock_firmware_info(
-        hass,
-        probe_app_type=ApplicationType.EZSP,
-    ):
-        # Pick the menu option: we are now installing the addon
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "confirm_zigbee"
-
-    with mock_firmware_info(
-        hass,
-        probe_app_type=None,  # Probing fails
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "unsupported_firmware"
 
 
@@ -270,8 +235,18 @@ async def test_config_flow_thread_addon_set_config_fails(hass: HomeAssistant) ->
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
         )
 
-        assert pick_thread_result["type"] == FlowResultType.ABORT
-        assert pick_thread_result["reason"] == "addon_set_config_failed"
+        pick_thread_progress_result = await consume_progress_flow(
+            hass,
+            flow_id=pick_thread_result["flow_id"],
+            valid_step_ids=(
+                "pick_firmware_thread",
+                "install_thread_firmware",
+                "start_otbr_addon",
+            ),
+        )
+
+        assert pick_thread_progress_result["type"] == FlowResultType.ABORT
+        assert pick_thread_progress_result["reason"] == "addon_set_config_failed"
 
 
 @pytest.mark.parametrize(
@@ -307,8 +282,18 @@ async def test_config_flow_thread_flasher_run_fails(hass: HomeAssistant) -> None
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
         )
 
-        assert pick_thread_result["type"] == FlowResultType.ABORT
-        assert pick_thread_result["reason"] == "addon_start_failed"
+        pick_thread_progress_result = await consume_progress_flow(
+            hass,
+            flow_id=pick_thread_result["flow_id"],
+            valid_step_ids=(
+                "pick_firmware_thread",
+                "install_thread_firmware",
+                "start_otbr_addon",
+            ),
+        )
+
+        assert pick_thread_progress_result["type"] == FlowResultType.ABORT
+        assert pick_thread_progress_result["reason"] == "addon_start_failed"
 
 
 @pytest.mark.parametrize(
@@ -324,6 +309,7 @@ async def test_config_flow_thread_confirmation_fails(hass: HomeAssistant) -> Non
     with mock_firmware_info(
         hass,
         probe_app_type=ApplicationType.EZSP,
+        flash_app_type=None,
         otbr_addon_info=AddonInfo(
             available=True,
             hostname=None,
@@ -340,26 +326,19 @@ async def test_config_flow_thread_confirmation_fails(hass: HomeAssistant) -> Non
             confirm_result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
         )
-        install_progress_result = await hass.config_entries.flow.async_configure(
-            pick_thread_result["flow_id"]
-        )
-        await hass.async_block_till_done(wait_background_tasks=True)
 
-        confirm_result = await hass.config_entries.flow.async_configure(
-            install_progress_result["flow_id"]
+        pick_thread_progress_result = await consume_progress_flow(
+            hass,
+            flow_id=pick_thread_result["flow_id"],
+            valid_step_ids=(
+                "pick_firmware_thread",
+                "install_thread_firmware",
+                "start_otbr_addon",
+            ),
         )
-        assert confirm_result["type"] is FlowResultType.FORM
-        assert confirm_result["step_id"] == "confirm_otbr"
 
-    with mock_firmware_info(
-        hass,
-        probe_app_type=None,  # Probing fails
-    ):
-        error_result = await hass.config_entries.flow.async_configure(
-            confirm_result["flow_id"], user_input={}
-        )
-        assert error_result["type"] is FlowResultType.ABORT
-        assert error_result["reason"] == "unsupported_firmware"
+        assert pick_thread_progress_result["type"] is FlowResultType.ABORT
+        assert pick_thread_progress_result["reason"] == "unsupported_firmware"
 
 
 @pytest.mark.parametrize(

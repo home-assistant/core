@@ -340,6 +340,27 @@ def mock_firmware_info(
         yield mock_otbr_manager
 
 
+async def consume_progress_flow(
+    hass: HomeAssistant,
+    flow_id: str,
+    valid_step_ids: tuple[str],
+) -> ConfigFlowResult:
+    """Consume a progress flow until it is done."""
+    while True:
+        result = await hass.config_entries.flow.async_configure(flow_id)
+        flow_id = result["flow_id"]
+
+        if result["type"] != FlowResultType.SHOW_PROGRESS:
+            break
+
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] in valid_step_ids
+
+        await asyncio.sleep(0.1)
+
+    return result
+
+
 async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
     """Test the config flow."""
     init_result = await hass.config_entries.flow.async_init(
@@ -364,30 +385,29 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
         assert pick_result["progress_action"] == "install_firmware"
         assert pick_result["step_id"] == "pick_firmware_zigbee"
 
-        progress_result = pick_result
+        confirm_result = await consume_progress_flow(
+            hass,
+            flow_id=pick_result["flow_id"],
+            valid_step_ids=(
+                "pick_firmware_thread",
+                "install_thread_firmware",
+                "start_otbr_addon",
+            ),
+        )
 
-        while True:
-            progress_result = await hass.config_entries.flow.async_configure(
-                progress_result["flow_id"]
-            )
-            await asyncio.sleep(0.1)
-
-            if progress_result["type"] != FlowResultType.SHOW_PROGRESS:
-                break
-
-        assert progress_result["type"] is FlowResultType.FORM
-        assert progress_result["step_id"] == "confirm_zigbee"
+        assert confirm_result["type"] is FlowResultType.FORM
+        assert confirm_result["step_id"] == "confirm_zigbee"
 
     with mock_firmware_info(
         hass,
         probe_app_type=ApplicationType.EZSP,
     ):
-        confirm_result = await hass.config_entries.flow.async_configure(
-            progress_result["flow_id"], user_input={}
+        create_result = await hass.config_entries.flow.async_configure(
+            confirm_result["flow_id"], user_input={}
         )
-        assert confirm_result["type"] is FlowResultType.CREATE_ENTRY
+        assert create_result["type"] is FlowResultType.CREATE_ENTRY
 
-    config_entry = confirm_result["result"]
+    config_entry = create_result["result"]
     assert config_entry.data == {
         "firmware": "ezsp",
         "device": TEST_DEVICE,
@@ -502,28 +522,20 @@ async def test_config_flow_thread(hass: HomeAssistant) -> None:
         )
 
         # Progress the flow, it is now installing firmware
-        progress_result = pick_result
-
-        while True:
-            assert progress_result["type"] is FlowResultType.SHOW_PROGRESS
-            assert progress_result["step_id"] in (
+        confirm_otbr_result = await consume_progress_flow(
+            hass,
+            flow_id=pick_result["flow_id"],
+            valid_step_ids=(
                 "pick_firmware_thread",
                 "install_otbr_addon",
                 "install_thread_firmware",
                 "start_otbr_addon",
-            )
-
-            progress_result = await hass.config_entries.flow.async_configure(
-                progress_result["flow_id"]
-            )
-            await asyncio.sleep(0.1)
-
-            if progress_result["type"] != FlowResultType.SHOW_PROGRESS:
-                break
+            ),
+        )
 
         # Installation will conclude with the config entry being created
         create_result = await hass.config_entries.flow.async_configure(
-            progress_result["flow_id"], user_input={}
+            confirm_otbr_result["flow_id"], user_input={}
         )
         assert create_result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -571,26 +583,18 @@ async def test_config_flow_thread_addon_already_installed(hass: HomeAssistant) -
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
         )
 
-        progress_result = pick_result
-
-        while True:
-            assert progress_result["type"] is FlowResultType.SHOW_PROGRESS
-            assert progress_result["step_id"] in (
+        # Progress
+        confirm_otbr_result = await consume_progress_flow(
+            hass,
+            flow_id=pick_result["flow_id"],
+            valid_step_ids=(
                 "pick_firmware_thread",
                 "install_thread_firmware",
                 "start_otbr_addon",
-            )
-
-            progress_result = await hass.config_entries.flow.async_configure(
-                progress_result["flow_id"]
-            )
-            await asyncio.sleep(0.1)
-
-            if progress_result["type"] != FlowResultType.SHOW_PROGRESS:
-                break
+            ),
+        )
 
         # We're now waiting to confirm OTBR
-        confirm_otbr_result = progress_result
         assert confirm_otbr_result["type"] is FlowResultType.FORM
         assert confirm_otbr_result["step_id"] == "confirm_otbr"
 
