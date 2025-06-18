@@ -45,5 +45,16 @@
         "name": "Brightness"
       }
     }
+  },
+  "exceptions": {
+    "connection_failed": {
+      "message": "Central Unit {gateway_id} is offline."
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "maintenance": {
+      "message": "devolo Home Control is currently in maintenance mode."
+    }
   }
 }
