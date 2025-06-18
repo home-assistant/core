@@ -56,32 +56,30 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
             lat: float = user_input[CONF_LOCATION][ATTR_LATITUDE]
             lon: float = user_input[CONF_LOCATION][ATTR_LONGITUDE]
 
-            # Check if location is in Benelux.
+            api_data = {}
+            try:
+                api_data = await IrmKmiApiClient(
+                    session=async_get_clientsession(self.hass),
+                    user_agent=USER_AGENT,
+                ).get_forecasts_coord({"lat": lat, "long": lon})
+            except IrmKmiApiError:
+                errors["base"] = "api_error"
+                _LOGGER.exception(
+                    "Encountered an unexpected error while configuring the integration"
+                )
+
+            if api_data.get("cityName", None) in OUT_OF_BENELUX:
+                errors[CONF_ZONE] = "out_of_benelux"
+
             if not errors:
-                api_data = {}
-                try:
-                    api_data = await IrmKmiApiClient(
-                        session=async_get_clientsession(self.hass),
-                        user_agent=USER_AGENT,
-                    ).get_forecasts_coord({"lat": lat, "long": lon})
-                except IrmKmiApiError:
-                    errors["base"] = "api_error"
-                    _LOGGER.exception(
-                        "Encountered an unexpected error while configuring the integration"
-                    )
+                await self.async_set_unique_id(f"{lat}-{lon}")
+                self._abort_if_unique_id_configured()
 
-                if api_data.get("cityName", None) in OUT_OF_BENELUX:
-                    errors[CONF_ZONE] = "out_of_benelux"
+                name: str = api_data.get("cityName", "")
+                if user_input[CONF_LOCATION] == home_location:
+                    name = HOME_LOCATION_NAME
 
-                if not errors:
-                    await self.async_set_unique_id(f"{lat}-{lon}")
-                    self._abort_if_unique_id_configured()
-
-                    name: str = api_data.get("cityName", "")
-                    if user_input[CONF_LOCATION] == home_location:
-                        name = HOME_LOCATION_NAME
-
-                    return self.async_create_entry(title=name, data=user_input)
+                return self.async_create_entry(title=name, data=user_input)
 
         return self.async_show_form(
             step_id="user",
