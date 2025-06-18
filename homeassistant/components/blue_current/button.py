@@ -6,16 +6,18 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BlueCurrentConfigEntry, Connector
-from .const import UID
+from . import UID, BlueCurrentConfigEntry, BlueCurrentEntityFeature, Connector
 from .entity import ChargepointEntity
 
 
@@ -61,6 +63,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Blue Current buttons."""
     connector: Connector = entry.runtime_data
+    platform = entity_platform.async_get_current_platform()
+
     async_add_entities(
         ChargePointButton(
             connector,
@@ -69,6 +73,24 @@ async def async_setup_entry(
         )
         for evse_id in connector.charge_points
         for button in CHARGE_POINT_BUTTONS
+    )
+
+    async def start_charge_session(
+        button: ChargePointButton, charging_card_id: str | None = None
+    ) -> None:
+        """Start a charge session with the provided charge card ID."""
+        # When no charge card is provided, use the default charge card set in the config flow.
+        if charging_card_id is None:
+            charging_card_id = button.connector.selected_charge_card[UID]
+        await button.connector.client.start_session(button.evse_id, charging_card_id)
+
+    platform.async_register_entity_service(
+        "start_charge_session",
+        {vol.Optional("charging_card_id"): cv.string},
+        lambda entity, call: start_charge_session(
+            entity, call.data.get("charging_card_id")
+        ),
+        [BlueCurrentEntityFeature.START_CHARGE_SESSION],
     )
 
 
@@ -88,6 +110,15 @@ class ChargePointButton(ChargepointEntity, ButtonEntity):
         super().__init__(connector, evse_id)
         self.entity_description = description
         self._attr_unique_id = f"{description.key}_{evse_id}"
+
+    @property
+    def supported_features(self) -> int | None:
+        """Specify supported features for this button."""
+        return (
+            BlueCurrentEntityFeature.START_CHARGE_SESSION
+            if self.entity_description.key == "start_charge_session"
+            else None
+        )
 
     async def async_press(self) -> None:
         """Handle the button press."""

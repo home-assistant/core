@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
+from enum import IntFlag
 from typing import Any
 
 from bluecurrent_api import Client
@@ -67,6 +68,12 @@ async def async_unload_entry(
     """Unload the Blue Current config entry."""
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+class BlueCurrentEntityFeature(IntFlag):
+    """Blue Current entity feature."""
+
+    START_CHARGE_SESSION = 1
 
 
 class Connector:

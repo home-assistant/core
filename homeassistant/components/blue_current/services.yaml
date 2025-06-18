@@ -1,0 +1,4 @@
+start_charge_session:
+  fields:
+    charging_card_id:
+      required: false

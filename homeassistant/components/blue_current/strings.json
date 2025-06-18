@@ -145,5 +145,17 @@
         "without_charge_card": "Without charge card"
       }
     }
+  },
+  "services": {
+    "start_charge_session": {
+      "name": "Start charge session",
+      "description": "Start a new charge session.",
+      "fields": {
+        "charging_card_id": {
+          "name": "Charging card ID",
+          "description": "Optional charging card ID that will be used to start a charging session. When not provided, the default charging card selected in options will be used."
+        }
+      }
+    }
   }
 }
