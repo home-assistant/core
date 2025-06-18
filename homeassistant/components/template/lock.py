@@ -157,7 +157,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._attr_assumed_state = bool(self._optimistic)
 
-    def _register_scripts(
+    def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], LockEntityFeature | int]]:
         for action_id, supported_feature in (
@@ -324,7 +324,7 @@ class TemplateLock(TemplateEntity, AbstractTemplateLock):
         if TYPE_CHECKING:
             assert name is not None
 
-        for action_id, action_config, supported_feature in self._register_scripts(
+        for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
@@ -359,7 +359,7 @@ class TemplateLock(TemplateEntity, AbstractTemplateLock):
 
 
 class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
-    """Light entity based on trigger data."""
+    """Lock entity based on trigger data."""
 
     domain = LOCK_DOMAIN
     extra_template_keys = (CONF_STATE,)
@@ -374,14 +374,13 @@ class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateLock.__init__(self, config)
 
-        # Render the _attr_name before initializing TemplateLightEntity
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
 
         if isinstance(config.get(CONF_CODE_FORMAT), template.Template):
             self._to_render_simple.append(CONF_CODE_FORMAT)
             self._parse_result.add(CONF_CODE_FORMAT)
 
-        for action_id, action_config, supported_feature in self._register_scripts(
+        for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
