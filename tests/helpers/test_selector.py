@@ -1270,8 +1270,8 @@ def test_floor_selector_schema(schema, valid_selections, invalid_selections) -> 
         ({}, ("sensor.temperature",), (None, ["sensor.temperature"])),
         (
             {"multiple": True},
-            ((["sensor.temperature", "sensor:external_temperature"], [])),
-            ("sensor.temperature"),
+            (["sensor.temperature", "sensor:external_temperature"], []),
+            ("sensor.temperature",),
         ),
         ({"multiple": False}, ("sensor.temperature",), (None, ["sensor.temperature"])),
     ],
