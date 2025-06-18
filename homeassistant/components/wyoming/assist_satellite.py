@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 import io
 import logging
+import time
 from typing import Any, Final
 import wave
 
@@ -36,6 +37,7 @@ from homeassistant.components.assist_satellite import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.ulid import ulid_now
 
 from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_WIDTH
 from .data import WyomingService
@@ -53,6 +55,7 @@ _PING_SEND_DELAY: Final = 2
 _PIPELINE_FINISH_TIMEOUT: Final = 1
 _TTS_SAMPLE_RATE: Final = 22050
 _ANNOUNCE_CHUNK_BYTES: Final = 2048  # 1024 samples
+_TTS_TIMEOUT_EXTRA: Final = 1.0
 
 # Wyoming stage -> Assist stage
 _STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
@@ -124,6 +127,10 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         # For announcements
         self._ffmpeg_manager: ffmpeg.FFmpegManager | None = None
         self._played_event_received: asyncio.Event | None = None
+
+        # Randomly set on each pipeline loop run.
+        # Used to ensure TTS timeout is acted on correctly.
+        self._run_loop_id: str | None = None
 
     @property
     def pipeline_entity_id(self) -> str | None:
@@ -511,6 +518,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         wake_word_phrase: str | None = None
         run_pipeline: RunPipeline | None = None
         send_ping = True
+        self._run_loop_id = ulid_now()
 
         # Read events and check for pipeline end in parallel
         pipeline_ended_task = self.config_entry.async_create_background_task(
@@ -698,38 +706,52 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 f"Cannot stream audio format to satellite: {tts_result.extension}"
             )
 
-        data = b"".join([chunk async for chunk in tts_result.async_stream_result()])
+        # Track the total duration of TTS audio for response timeout
+        total_seconds = 0.0
+        start_time = time.monotonic()
 
-        with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
-            sample_rate = wav_file.getframerate()
-            sample_width = wav_file.getsampwidth()
-            sample_channels = wav_file.getnchannels()
-            _LOGGER.debug("Streaming %s TTS sample(s)", wav_file.getnframes())
+        try:
+            data = b"".join([chunk async for chunk in tts_result.async_stream_result()])
 
-            timestamp = 0
-            await self._client.write_event(
-                AudioStart(
-                    rate=sample_rate,
-                    width=sample_width,
-                    channels=sample_channels,
-                    timestamp=timestamp,
-                ).event()
-            )
+            with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
+                sample_rate = wav_file.getframerate()
+                sample_width = wav_file.getsampwidth()
+                sample_channels = wav_file.getnchannels()
+                _LOGGER.debug("Streaming %s TTS sample(s)", wav_file.getnframes())
 
-            # Stream audio chunks
-            while audio_bytes := wav_file.readframes(_SAMPLES_PER_CHUNK):
-                chunk = AudioChunk(
-                    rate=sample_rate,
-                    width=sample_width,
-                    channels=sample_channels,
-                    audio=audio_bytes,
-                    timestamp=timestamp,
+                timestamp = 0
+                await self._client.write_event(
+                    AudioStart(
+                        rate=sample_rate,
+                        width=sample_width,
+                        channels=sample_channels,
+                        timestamp=timestamp,
+                    ).event()
                 )
-                await self._client.write_event(chunk.event())
-                timestamp += chunk.seconds
 
-            await self._client.write_event(AudioStop(timestamp=timestamp).event())
-            _LOGGER.debug("TTS streaming complete")
+                # Stream audio chunks
+                while audio_bytes := wav_file.readframes(_SAMPLES_PER_CHUNK):
+                    chunk = AudioChunk(
+                        rate=sample_rate,
+                        width=sample_width,
+                        channels=sample_channels,
+                        audio=audio_bytes,
+                        timestamp=timestamp,
+                    )
+                    await self._client.write_event(chunk.event())
+                    timestamp += chunk.seconds
+                    total_seconds += chunk.seconds
+
+                await self._client.write_event(AudioStop(timestamp=timestamp).event())
+                _LOGGER.debug("TTS streaming complete")
+        finally:
+            send_duration = time.monotonic() - start_time
+            timeout_seconds = max(0, total_seconds - send_duration + _TTS_TIMEOUT_EXTRA)
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._tts_timeout(timeout_seconds, self._run_loop_id),
+                name="wyoming TTS timeout",
+            )
 
     async def _stt_stream(self) -> AsyncGenerator[bytes]:
         """Yield audio chunks from a queue."""
@@ -743,6 +765,18 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 _LOGGER.debug("Receiving audio from satellite")
 
             yield chunk
+
+    async def _tts_timeout(
+        self, timeout_seconds: float, run_loop_id: str | None
+    ) -> None:
+        """Force state change to IDLE in case TTS played event isn't received."""
+        await asyncio.sleep(timeout_seconds + _TTS_TIMEOUT_EXTRA)
+
+        if run_loop_id != self._run_loop_id:
+            # On a different pipeline run now
+            return
+
+        self.tts_response_finished()
 
     @callback
     def _handle_timer(
