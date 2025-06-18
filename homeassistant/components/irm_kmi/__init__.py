@@ -25,8 +25,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> bo
     )
 
     entry.runtime_data = IrmKmiData(
-        api_client=api_client,
-        # If I don't put the api_client in the coordinator this way, I get circular dependencies.
         coordinator=IrmKmiCoordinator(hass, entry, api_client),
     )
 
