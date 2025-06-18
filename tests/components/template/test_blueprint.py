@@ -499,7 +499,7 @@ async def test_no_blueprint(hass: HomeAssistant) -> None:
 async def test_variables_for_entity(
     hass: HomeAssistant, domain: str, set_state: str, expected: str
 ) -> None:
-    """Test regular template entitis via blueprint with variables defined."""
+    """Test regular template entities via blueprint with variables defined."""
     hass.states.async_set("sensor.test_state", set_state)
     await hass.async_block_till_done()
 

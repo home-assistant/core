@@ -257,7 +257,7 @@ async def test_name_template(hass: HomeAssistant) -> None:
         (CONF_PICTURE, ATTR_ENTITY_PICTURE, "test{{ 1 + 1 }}.jpg", "test2.jpg"),
     ],
 )
-async def test_extra_attribute_template(
+async def test_templated_optional_config(
     hass: HomeAssistant,
     field: str,
     attribute: str,
