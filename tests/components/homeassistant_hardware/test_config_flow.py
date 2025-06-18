@@ -383,25 +383,17 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
 
         assert pick_result["type"] is FlowResultType.SHOW_PROGRESS
         assert pick_result["progress_action"] == "install_firmware"
-        assert pick_result["step_id"] == "pick_firmware_zigbee"
+        assert pick_result["step_id"] == "install_zigbee_firmware"
 
         confirm_result = await consume_progress_flow(
             hass,
             flow_id=pick_result["flow_id"],
-            valid_step_ids=(
-                "pick_firmware_thread",
-                "install_thread_firmware",
-                "start_otbr_addon",
-            ),
+            valid_step_ids=("install_zigbee_firmware",),
         )
 
         assert confirm_result["type"] is FlowResultType.FORM
         assert confirm_result["step_id"] == "confirm_zigbee"
 
-    with mock_firmware_info(
-        hass,
-        probe_app_type=ApplicationType.EZSP,
-    ):
         create_result = await hass.config_entries.flow.async_configure(
             confirm_result["flow_id"], user_input={}
         )

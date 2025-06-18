@@ -222,33 +222,33 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._device is not None
         assert self._hardware_name is not None
 
+        if user_input is None:
+            return self.async_show_form(
+                step_id="confirm_zigbee",
+                description_placeholders=self._get_translation_placeholders(),
+            )
+
         if not await self._probe_firmware_info(probe_methods=(ApplicationType.EZSP,)):
             return self.async_abort(
                 reason="unsupported_firmware",
                 description_placeholders=self._get_translation_placeholders(),
             )
 
-        if user_input is not None:
-            await self.hass.config_entries.flow.async_init(
-                ZHA_DOMAIN,
-                context={"source": "hardware"},
-                data={
-                    "name": self._hardware_name,
-                    "port": {
-                        "path": self._device,
-                        "baudrate": 115200,
-                        "flow_control": "hardware",
-                    },
-                    "radio_type": "ezsp",
+        await self.hass.config_entries.flow.async_init(
+            ZHA_DOMAIN,
+            context={"source": "hardware"},
+            data={
+                "name": self._hardware_name,
+                "port": {
+                    "path": self._device,
+                    "baudrate": 115200,
+                    "flow_control": "hardware",
                 },
-            )
-
-            return self._async_flow_finished()
-
-        return self.async_show_form(
-            step_id="confirm_zigbee",
-            description_placeholders=self._get_translation_placeholders(),
+                "radio_type": "ezsp",
+            },
         )
+
+        return self._async_flow_finished()
 
     async def async_step_pick_firmware_thread(
         self, user_input: dict[str, Any] | None = None
@@ -399,9 +399,11 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Confirm OTBR setup."""
         assert self._device is not None
 
-        if user_input is not None:
-            # OTBR discovery is done automatically via hassio
-            return self._async_flow_finished()
+        if user_input is None:
+            return self.async_show_form(
+                step_id="confirm_otbr",
+                description_placeholders=self._get_translation_placeholders(),
+            )
 
         if not await self._probe_firmware_info(probe_methods=(ApplicationType.SPINEL,)):
             return self.async_abort(
@@ -409,10 +411,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 description_placeholders=self._get_translation_placeholders(),
             )
 
-        return self.async_show_form(
-            step_id="confirm_otbr",
-            description_placeholders=self._get_translation_placeholders(),
-        )
+        # OTBR discovery is done automatically via hassio
+        return self._async_flow_finished()
 
     @abstractmethod
     def _async_flow_finished(self) -> ConfigFlowResult:
