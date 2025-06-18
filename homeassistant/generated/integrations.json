@@ -2552,6 +2552,13 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "hanna": {
+      "name": "Hanna",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
+    },
     "hardkernel": {
       "name": "Hardkernel",
       "integration_type": "hardware",
