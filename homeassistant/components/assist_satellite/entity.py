@@ -348,15 +348,12 @@ class AssistSatelliteEntity(entity.Entity):
         If preannounce is True, a sound is played before the start message or media.
         If preannounce_media_id is provided, it overrides the default sound.
 
-        Calls async_ask_question.
+        Calls async_start_conversation.
         """
         await self._cancel_running_pipeline()
 
         if question is None:
             question = ""
-
-        if answers is None:
-            answers = []
 
         announcement = await self._resolve_announcement_media_id(
             question,
@@ -376,22 +373,23 @@ class AssistSatelliteEntity(entity.Entity):
             await self.async_start_conversation(announcement)
 
             # Wait for response text
-            response_text = (await self._ask_question_future) or ""
-            return self._question_response_to_answer(
-                response_text, {answer["id"]: answer["sentences"] for answer in answers}
-            )
+            response_text = await self._ask_question_future
+            if response_text is None:
+                raise HomeAssistantError("No answer from question")
+
+            if not answers:
+                return AssistSatelliteAnswer(id=None, sentence=response_text)
+
+            return self._question_response_to_answer(response_text, answers)
         finally:
             self._is_announcing = False
             self._set_state(AssistSatelliteState.IDLE)
             self._ask_question_future = None
 
     def _question_response_to_answer(
-        self, response_text: str, answers: dict[str, list[str]]
+        self, response_text: str, answers: list[dict[str, Any]]
     ) -> AssistSatelliteAnswer:
         """Match text to a pre-defined set of answers."""
-        if not answers:
-            # Only return raw text
-            return AssistSatelliteAnswer(id=None, sentence=response_text)
 
         # Build intents and match
         intents = Intents.from_dict(
@@ -401,10 +399,10 @@ class AssistSatelliteEntity(entity.Entity):
                     "QuestionIntent": {
                         "data": [
                             {
-                                "sentences": answer_sentences,
-                                "metadata": {"answer_id": answer_id},
+                                "sentences": answer["sentences"],
+                                "metadata": {"answer_id": answer["id"]},
                             }
-                            for answer_id, answer_sentences in answers.items()
+                            for answer in answers
                         ]
                     }
                 },
