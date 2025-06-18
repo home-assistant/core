@@ -95,7 +95,7 @@
           "name": "[%key:common::config_flow::data::name%]",
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
           "event_type": "Last fired event type",
-          "event_types": "Event types"
+          "event_types": "[%key:component::event::entity_component::_::state_attributes::event_types::name%]"
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
