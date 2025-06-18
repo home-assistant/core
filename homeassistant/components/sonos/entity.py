@@ -34,7 +34,6 @@ class SonosEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
-        self.config_entry.runtime_data.entity_id_mappings[self.entity_id] = self.speaker
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

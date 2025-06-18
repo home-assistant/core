@@ -149,7 +149,6 @@ class SonosData:
     discovery_known: set[str] = field(default_factory=set)
     boot_counts: dict[str, int] = field(default_factory=dict)
     mdns_names: dict[str, str] = field(default_factory=dict)
-    entity_id_mappings: dict[str, SonosSpeaker] = field(default_factory=dict)
     unjoin_data: dict[str, UnjoinData] = field(default_factory=dict)
 
 
