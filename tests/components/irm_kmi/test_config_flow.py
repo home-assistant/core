@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_LOCATION, CONF_ZONE
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_LOCATION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -72,7 +72,7 @@ async def test_config_flow_out_benelux_zone(
 
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "user"
-    assert CONF_ZONE in result2.get("errors")
+    assert CONF_LOCATION in result2.get("errors")
 
 
 async def test_config_flow_with_api_error(
