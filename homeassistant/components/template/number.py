@@ -35,11 +35,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
-from .template_entity import (
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
-    TemplateEntity,
-)
+from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,23 +45,17 @@ CONF_SET_VALUE = "set_value"
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
 
-NUMBER_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Required(CONF_STATE): cv.template,
-            vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_STEP): cv.template,
-            vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
-            vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
-)
+NUMBER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_STATE): cv.template,
+        vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_STEP): cv.template,
+        vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
+        vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    }
+).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 NUMBER_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.template,
