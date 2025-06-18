@@ -181,13 +181,11 @@
           "data": {
             "platform": "Type of entity",
             "name": "Entity name",
-            "entity_category": "Entity category",
             "entity_picture": "Entity picture"
           },
           "data_description": {
             "platform": "The type of the entity to configure.",
             "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device](https://www.home-assistant.io/integrations/mqtt/#naming-of-mqtt-entities).",
-            "entity_category": "The category of the entity to configure. Leave empty to [mark it as a main feature of the MQTT device](https://developers.home-assistant.io/docs/core/entity/#registry-properties). An entity with a category will not be exposed to cloud, Alexa, or Google Assistant components, nor included in indirect service calls to devices or areas.",
             "entity_picture": "An URL to a picture to be assigned."
           }
         },
@@ -216,6 +214,7 @@
           "description": "Please configure specific details for {platform} entity \"{entity}\":",
           "data": {
             "device_class": "Device class",
+            "entity_category": "Entity category",
             "fan_feature_speed": "Speed support",
             "fan_feature_preset_modes": "Preset modes support",
             "fan_feature_oscillation": "Oscillation support",
@@ -228,6 +227,7 @@
           },
           "data_description": {
             "device_class": "The Device class of the {platform} entity. [Learn more.]({url}#device_class)",
+            "entity_category": "Allow marking an entity as device configuration or diagnostics. An entity with a category will not be exposed to cloud, Alexa, or Google Assistant components, nor included in indirect action calls to devices or areas. Sensor entities cannot be assigned a device configiuration class. [Learn more.](https://developers.home-assistant.io/docs/core/entity/#registry-properties)",
             "fan_feature_speed": "The fan supports multiple speeds.",
             "fan_feature_preset_modes": "The fan supports preset modes.",
             "fan_feature_oscillation": "The fan supports oscillation.",
@@ -653,7 +653,6 @@
         "options_not_allowed_with_state_class_or_uom": "The 'Options' setting is not allowed when state class or unit of measurement are used",
         "options_device_class_enum": "The 'Options' setting must be used with the Enumeration device class. If you continue, the existing options will be reset",
         "options_with_enum_device_class": "Configure options for the enumeration sensor",
-        "sensor_entity_category_must_not_be_config": "Sensor entities can not be categorized as configurable",
         "uom_required_for_device_class": "The selected device class requires a unit"
       }
     }
