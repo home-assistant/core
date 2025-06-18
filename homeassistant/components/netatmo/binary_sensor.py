@@ -41,14 +41,14 @@ class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
 BINARY_SENSOR_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = (
     NetatmoBinarySensorEntityDescription(
         key="reachable",
-        netatmo_name="reachable",
+        # netatmo_name="reachable",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
     NetatmoBinarySensorEntityDescription(
         key="status",
-        netatmo_name="status",
+        # netatmo_name="status",
         device_class=BinarySensorDeviceClass.OPENING,
-        value_fn=process_status,
+        # value_fn=process_status,
     ),
 )
 
