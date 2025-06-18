@@ -161,7 +161,19 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'not_started',
+        'configured',
+        'started',
+        'ready_for_resting',
+        'resting',
+        'slightly_underdone',
+        'finished',
+        'slightly_overdone',
+        'overcooked',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -179,7 +191,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'meater',
@@ -194,13 +206,25 @@
 # name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'options': list([
+        'not_started',
+        'configured',
+        'started',
+        'ready_for_resting',
+        'resting',
+        'slightly_underdone',
+        'finished',
+        'slightly_overdone',
+        'overcooked',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Started',
+    'state': 'started',
   })
 # ---
 # name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_target_temp-entry]
@@ -303,7 +327,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-10-20T23:59:58+00:00',
+    'state': '2023-10-20T23:59:28+00:00',
   })
 # ---
 # name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_cook_time_remaining-entry]
@@ -351,7 +375,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-10-21T00:01:02+00:00',
+    'state': '2023-10-21T00:00:32+00:00',
   })
 # ---
 # name: test_entities[sensor.meater_40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58_internal-entry]
