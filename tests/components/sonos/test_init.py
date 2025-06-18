@@ -10,10 +10,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import sonos
 from homeassistant.components.sonos.const import (
-<<<<<<< sonos-test-manual-5
-    DATA_SONOS_DISCOVERY_MANAGER,
-=======
->>>>>>> dev
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
 )
