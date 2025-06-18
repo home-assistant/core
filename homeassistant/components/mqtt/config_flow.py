@@ -2107,8 +2107,6 @@ def data_schema_from_fields(
             if field_details.section == schema_section
             and field_details.exclude_from_reconfig
         }
-        if not data_element_options:
-            continue
         if schema_section is None:
             data_schema.update(data_schema_element)
             continue
@@ -2884,8 +2882,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             component_data=component_data,
             user_input=user_input,
         )
-        if not data_schema.schema:
-            return await self.async_step_mqtt_platform_config()
         if user_input is not None:
             # Test entity fields against the validator
             merged_user_input, errors = validate_user_input(
