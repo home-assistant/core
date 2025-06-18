@@ -886,15 +886,18 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Join `group_members` as a player group with the current player."""
         speakers = []
 
-        player_ids: list[str] = []
         entity_registry = er.async_get(self.hass)
-        for child_entity_id in group_members:
-            # resolve HA entity_id to MA player_id
-            if not (entity_reg_entry := entity_registry.async_get(child_entity_id)):
-                raise HomeAssistantError(f"Entity {child_entity_id} not found")
-            # unique id is the MA player_id
-            player_ids.append(entity_reg_entry.unique_id)
-        await self.mass.players.player_command_group_many(self.player_id, player_ids)
+        for entity_id in group_members:
+            if not (entity_reg_entry := entity_registry.async_get(entity_id)):
+                raise HomeAssistantError(f"Entity {entity_id} not found")
+            if not (
+                speaker
+                := self.config_entry.runtime_data.unique_id_speaker_mappings.get(
+                    entity_reg_entry.unique_id
+                )
+            ):
+                raise HomeAssistantError(f"Speaker not found for {entity_id}")
+            speakers.append(speaker)
 
         await SonosSpeaker.join_multi(
             self.hass, self.config_entry, self.speaker, speakers
