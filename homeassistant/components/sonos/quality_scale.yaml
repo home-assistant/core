@@ -20,10 +20,7 @@ rules:
     status: exempt
     comment: |
       Offline devices are automatically reconnected
-  unique-config-entry:
-    status: exempt
-    comment: |
-      Only allows a single entry
+  unique-config-entry: done
   # Silver
   action-exceptions: todo
   config-entry-unloading: done
