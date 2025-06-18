@@ -29,7 +29,6 @@ PARALLEL_UPDATES = 0
 class AmazonSensorEntityDescription(SensorEntityDescription):
     """Amazon Devices sensor entity description."""
 
-    is_supported: Callable[[AmazonDevice, str], bool] = lambda _device, _key: True
     converted_unit: Callable[[AmazonDevice, str], str] | None = None
 
 
@@ -37,7 +36,6 @@ SENSORS: Final = (
     AmazonSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
         converted_unit=lambda device, _key: (
             UnitOfTemperature.CELSIUS
             if device.sensors[_key].scale == "CELSIUS"
@@ -48,7 +46,6 @@ SENSORS: Final = (
         key="illuminance",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
     ),
 )
 
@@ -66,7 +63,7 @@ async def async_setup_entry(
         AmazonSensorEntity(coordinator, serial_num, sensor_desc)
         for sensor_desc in SENSORS
         for serial_num in coordinator.data
-        if sensor_desc.is_supported(coordinator.data[serial_num], sensor_desc.key)
+        if coordinator.data[serial_num].sensors.get(sensor_desc.key) is not None
     )
 
 
