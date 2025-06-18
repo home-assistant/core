@@ -1,7 +1,9 @@
 """Base class for assist satellite entities."""
 
+from dataclasses import asdict
 import logging
 from pathlib import Path
+from typing import Any
 
 from hassil.util import (
     PUNCTUATION_END,
@@ -13,7 +15,9 @@ import voluptuous as vol
 
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -94,32 +98,60 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_internal_start_conversation",
         [AssistSatelliteEntityFeature.START_CONVERSATION],
     )
-    component.async_register_entity_service(
-        "ask_question",
-        vol.All(
-            cv.make_entity_service_schema(
-                {
-                    vol.Optional("question"): str,
-                    vol.Optional("question_media_id"): str,
-                    vol.Optional("preannounce"): bool,
-                    vol.Optional("preannounce_media_id"): str,
-                    vol.Optional("answers"): [
-                        {
-                            vol.Required("id"): str,
-                            vol.Required("sentences"): vol.All(
-                                cv.ensure_list,
-                                [cv.string],
-                                has_one_non_empty_item,
-                                has_no_punctuation,
-                            ),
-                        }
-                    ],
-                }
-            ),
+
+    async def handle_ask_question(call: ServiceCall) -> dict[str, Any]:
+        """Handle a Show View service call."""
+        satellite_entity_id: str = call.data[ATTR_ENTITY_ID]
+        satellite_entity: AssistSatelliteEntity | None = component.get_entity(
+            satellite_entity_id
+        )
+        if satellite_entity is None:
+            raise HomeAssistantError(
+                f"Invalid Assist satellite entity id: {satellite_entity_id}"
+            )
+
+        ask_question_args = {
+            "question": call.data.get("question"),
+            "question_media_id": call.data.get("question_media_id"),
+            "preannounce": call.data.get("preannounce", False),
+            "answers": call.data.get("answers"),
+        }
+
+        if preannounce_media_id := call.data.get("preannounce_media_id"):
+            ask_question_args["preannounce_media_id"] = preannounce_media_id
+
+        answer = await satellite_entity.async_internal_ask_question(**ask_question_args)
+
+        if answer is None:
+            raise HomeAssistantError("No answer from satellite")
+
+        return asdict(answer)
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service="ask_question",
+        service_func=handle_ask_question,
+        schema=vol.All(
+            {
+                vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+                vol.Optional("question"): str,
+                vol.Optional("question_media_id"): str,
+                vol.Optional("preannounce"): bool,
+                vol.Optional("preannounce_media_id"): str,
+                vol.Optional("answers"): [
+                    {
+                        vol.Required("id"): str,
+                        vol.Required("sentences"): vol.All(
+                            cv.ensure_list,
+                            [cv.string],
+                            has_one_non_empty_item,
+                            has_no_punctuation,
+                        ),
+                    }
+                ],
+            },
             cv.has_at_least_one_key("question", "question_media_id"),
         ),
-        "async_internal_ask_question",
-        [AssistSatelliteEntityFeature.START_CONVERSATION],
         supports_response=SupportsResponse.ONLY,
     )
     hass.data[CONNECTION_TEST_DATA] = {}

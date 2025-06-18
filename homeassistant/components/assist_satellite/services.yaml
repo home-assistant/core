@@ -55,12 +55,14 @@ start_conversation:
       selector:
         text:
 ask_question:
-  target:
-    entity:
-      domain: assist_satellite
-      supported_features:
-        - assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
   fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          domain: assist_satellite
+          supported_features:
+            - assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
     question:
       required: false
       example: "What kind of music would you like to play?"

@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Generator
+from dataclasses import asdict
 from unittest.mock import Mock, patch
 
 import pytest
@@ -822,13 +823,12 @@ async def test_ask_question(
         response = await hass.services.async_call(
             "assist_satellite",
             "ask_question",
-            {"question": question_text, **service_data},
-            target={"entity_id": entity_id},
+            {"entity_id": entity_id, "question": question_text, **service_data},
             blocking=True,
             return_response=True,
         )
         assert entity.state == AssistSatelliteState.IDLE
-        assert response[entity_id] == expected_answer
+        assert response == asdict(expected_answer)
 
 
 async def test_wake_word_start_keeps_responding(
