@@ -9,6 +9,7 @@ from typing import Any
 
 import aiohttp
 import pyatmo
+import voluptuous as vol
 
 from homeassistant.components import cloud
 from homeassistant.components.webhook import (
@@ -18,7 +19,7 @@ from homeassistant.components.webhook import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
@@ -44,6 +45,7 @@ from .const import (
     DATA_SCHEDULES,
     DOMAIN,
     PLATFORMS,
+    SERVICE_SYNC_SCHEDULE,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
 )
@@ -180,6 +182,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await unregister_webhook(None)
             entry.async_on_unload(async_call_later(hass, 30, register_webhook))
 
+    async def sync_schedule(call: ServiceCall) -> None:
+        """Handle the sync schedule service call."""
+        home_id = call.data["home_id"]
+        schedule_id = call.data["schedule_id"]
+
+        _LOGGER.debug(
+            "Service called to sync schedule %s in home %s", schedule_id, home_id
+        )
+
+        try:
+            data = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
+            await data.sync_schedule(home_id, schedule_id)
+            _LOGGER.debug(
+                "Successfully synced schedule %s in home %s", schedule_id, home_id
+            )
+        except (pyatmo.ApiError, aiohttp.ClientError) as err:
+            _LOGGER.error(
+                "Failed to sync schedule %s in home %s: %s", schedule_id, home_id, err
+            )
+
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
             await register_webhook(None)
@@ -191,6 +213,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
     hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)
+    # Register the sync schedule service
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SYNC_SCHEDULE,
+        sync_schedule,
+        schema=vol.Schema(
+            {
+                vol.Required("home_id"): str,
+                vol.Required("schedule_id"): str,
+            }
+        ),
+    )
 
     entry.async_on_unload(entry.add_update_listener(async_config_entry_updated))
 
