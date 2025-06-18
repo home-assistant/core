@@ -58,6 +58,10 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
                 CoffeeBoiler, machine.dashboard.config[WidgetType.CM_COFFEE_BOILER]
             ).target_temperature
         ),
+        available_fn=(
+            lambda coordinator: WidgetType.CM_COFFEE_BOILER
+            in coordinator.device.dashboard.config
+        ),
     ),
     LaMarzoccoNumberEntityDescription(
         key="smart_standby_time",
@@ -221,7 +225,7 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
     entity_description: LaMarzoccoNumberEntityDescription
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | int:
         """Return the current value."""
         return self.entity_description.native_value_fn(self.coordinator.device)
 
