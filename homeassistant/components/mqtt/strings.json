@@ -187,7 +187,7 @@
           "data_description": {
             "platform": "The type of the entity to configure.",
             "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device](https://www.home-assistant.io/integrations/mqtt/#naming-of-mqtt-entities).",
-            "entity_category": "The category of the entity to configure. Leave empty to [mark it as main feature of the MQTT device](https://developers.home-assistant.io/docs/core/entity/#registry-properties). An entity with a category will not be exposed to cloud, Alexa, or Google Assistant components, nor included in indirect service calls to devices or areas.",
+            "entity_category": "The category of the entity to configure. Leave empty to [mark it as a main feature of the MQTT device](https://developers.home-assistant.io/docs/core/entity/#registry-properties). An entity with a category will not be exposed to cloud, Alexa, or Google Assistant components, nor included in indirect service calls to devices or areas.",
             "entity_picture": "An URL to a picture to be assigned."
           }
         },
