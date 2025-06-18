@@ -1,6 +1,8 @@
 """Constants for the Dreo integration."""
 
 DOMAIN = "dreo"
+FAN_DEVICE_TYPE = "fan"
+
 
 # Error messages
 ERROR_TURN_ON_FAILED = "turn_on_failed"

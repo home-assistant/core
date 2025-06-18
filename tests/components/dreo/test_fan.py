@@ -37,6 +37,7 @@ async def test_fan_setup_and_device_info(hass: HomeAssistant) -> None:
                 "deviceName": "Living Room Fan",
                 "moduleFirmwareVersion": "1.0.0",
                 "mcuFirmwareVersion": "2.0.0",
+                "deviceType": "fan",
             }
         ]
         mock_client.get_status.return_value = {
@@ -49,7 +50,12 @@ async def test_fan_setup_and_device_info(hass: HomeAssistant) -> None:
 
         config_entry = await init_integration(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+        # Ensure coordinator data is loaded
+        coordinator = config_entry.runtime_data.coordinators["test-fan-123"]
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
 
     state = hass.states.get("fan.living_room_fan")
     assert state is not None
@@ -84,6 +90,7 @@ async def test_fan_turn_on_service(hass: HomeAssistant) -> None:
                 "deviceSn": "test-fan-456",
                 "model": "DR-HTF001S",
                 "deviceName": "Bedroom Fan",
+                "deviceType": "fan",
             }
         ]
         mock_client.get_status.return_value = {
@@ -120,6 +127,7 @@ async def test_fan_turn_off_service(hass: HomeAssistant) -> None:
                 "deviceSn": "test-fan-789",
                 "model": "DR-HTF001S",
                 "deviceName": "Kitchen Fan",
+                "deviceType": "fan",
             }
         ]
         mock_client.get_status.return_value = {
@@ -152,6 +160,7 @@ async def test_fan_set_percentage_service(hass: HomeAssistant) -> None:
                 "deviceSn": "test-fan-abc",
                 "model": "DR-HTF001S",
                 "deviceName": "Office Fan",
+                "deviceType": "fan",
             }
         ]
         mock_client.get_status.return_value = {
@@ -186,6 +195,7 @@ async def test_fan_set_preset_mode_service(hass: HomeAssistant) -> None:
                 "deviceSn": "test-fan-def",
                 "model": "DR-HTF001S",
                 "deviceName": "Garage Fan",
+                "deviceType": "fan",
             }
         ]
         mock_client.get_status.return_value = {
@@ -206,7 +216,9 @@ async def test_fan_set_preset_mode_service(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    mock_client.update_status.assert_called_with("test-fan-def", mode="Sleep")
+    mock_client.update_status.assert_called_with(
+        "test-fan-def", power_switch=True, mode="Sleep"
+    )
 
 
 async def test_fan_oscillate_service(hass: HomeAssistant) -> None:
@@ -219,6 +231,7 @@ async def test_fan_oscillate_service(hass: HomeAssistant) -> None:
                 "deviceSn": "test-fan-ghi",
                 "model": "DR-HTF001S",
                 "deviceName": "Patio Fan",
+                "deviceType": "fan",
             }
         ]
         mock_client.get_status.return_value = {
@@ -254,6 +267,7 @@ async def test_fan_unavailable_when_disconnected(hass: HomeAssistant) -> None:
                 "deviceSn": "test-fan-offline",
                 "model": "DR-HTF001S",
                 "deviceName": "Offline Fan",
+                "deviceType": "fan",
             }
         ]
         mock_client.get_status.return_value = {
@@ -280,6 +294,7 @@ async def test_fan_coordinator_error_handling(hass: HomeAssistant) -> None:
                 "deviceSn": "test-fan-error",
                 "model": "DR-HTF001S",
                 "deviceName": "Error Fan",
+                "deviceType": "fan",
             }
         ]
         mock_client.get_status.side_effect = [
@@ -306,6 +321,7 @@ async def test_fan_state_updates_from_coordinator(hass: HomeAssistant) -> None:
                 "deviceSn": "test-fan-update",
                 "model": "DR-HTF001S",
                 "deviceName": "Update Fan",
+                "deviceType": "fan",
             }
         ]
 
@@ -345,6 +361,7 @@ async def test_fan_unsupported_device_not_created(hass: HomeAssistant) -> None:
                 "deviceSn": "test-unsupported",
                 "model": "UNKNOWN-MODEL",
                 "deviceName": "Unsupported Device",
+                "deviceType": "heater",
             }
         ]
         mock_client.get_status.return_value = {
@@ -374,6 +391,7 @@ async def test_fan_service_error_handling(hass: HomeAssistant) -> None:
                 "deviceSn": "test-fan-service-error",
                 "model": "DR-HTF001S",
                 "deviceName": "Service Error Fan",
+                "deviceType": "fan",
             }
         ]
         mock_client.get_status.return_value = {
