@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError
 
@@ -22,7 +21,7 @@ from .utils import get_config_value, preferred_language
 _LOGGER = logging.getLogger(__name__)
 
 
-class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
+class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]):
     """Coordinator to update data from IRM KMI."""
 
     def __init__(
@@ -39,7 +38,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator):
         self._api = api_client
         self._location = get_config_value(entry, CONF_LOCATION)
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch data from API endpoint.
 
         This is the place to pre-process the data to lookup tables so entities can quickly look up their data.
