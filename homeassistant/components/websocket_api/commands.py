@@ -541,7 +541,7 @@ async def _async_get_all_trigger_descriptions_json(hass: HomeAssistant) -> bytes
     return json_payload
 
 
-@decorators.websocket_command({vol.Required("type"): "triggers_platforms/subscribe"})
+@decorators.websocket_command({vol.Required("type"): "trigger_platforms/subscribe"})
 @decorators.async_response
 async def handle_subscribe_trigger_platforms(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]

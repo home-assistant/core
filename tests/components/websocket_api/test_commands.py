@@ -685,7 +685,7 @@ async def test_subscribe_triggers(
     assert await async_setup_component(hass, "system_health", {})
     await hass.async_block_till_done()
 
-    await websocket_client.send_json_auto_id({"type": "triggers_platforms/subscribe"})
+    await websocket_client.send_json_auto_id({"type": "trigger_platforms/subscribe"})
 
     # Test start subscription with initial event
     msg = await websocket_client.receive_json()
