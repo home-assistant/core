@@ -15,7 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .entity import IrmKmiBaseEntity
 from .types import IrmKmiConfigEntry
@@ -32,15 +31,13 @@ async def async_setup_entry(
     async_add_entities([IrmKmiWeather(entry)])
 
 
-class IrmKmiWeather(CoordinatorEntity, WeatherEntity, IrmKmiBaseEntity):
+class IrmKmiWeather(WeatherEntity, IrmKmiBaseEntity):
     """Weather entity for IRM KMI weather."""
 
     _attr_has_entity_name = True
 
     def __init__(self, entry: IrmKmiConfigEntry) -> None:
         """Create a new instance of the weather entity from a configuration entry."""
-        coordinator = entry.runtime_data.coordinator
-        CoordinatorEntity.__init__(self, coordinator)
         WeatherEntity.__init__(self)
         IrmKmiBaseEntity.__init__(self, entry, "Forecast")
         self._name = entry.title
