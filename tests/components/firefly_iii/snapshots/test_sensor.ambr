@@ -1,0 +1,211 @@
+# serializer version: 1
+# name: test_all_entities[sensor.https_127_0_0_1_8080_credit_card-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.https_127_0_0_1_8080_credit_card',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': 'mdi:bank',
+    'original_name': 'Credit Card',
+    'platform': 'firefly_iii',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'account',
+    'unique_id': 'None_account_4',
+    'unit_of_measurement': 'AMS',
+  })
+# ---
+# name: test_all_entities[sensor.https_127_0_0_1_8080_credit_card-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'account_role': 'creditCard',
+      'current_balance': '-250.00',
+      'device_class': 'monetary',
+      'friendly_name': 'https://127.0.0.1:8080/ Credit Card',
+      'icon': 'mdi:bank',
+      'unit_of_measurement': 'AMS',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.https_127_0_0_1_8080_credit_card',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-250.00',
+  })
+# ---
+# name: test_all_entities[sensor.https_127_0_0_1_8080_lunch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.https_127_0_0_1_8080_lunch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': 'mdi:label',
+    'original_name': 'Lunch',
+    'platform': 'firefly_iii',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'category',
+    'unique_id': 'None_category_2',
+    'unit_of_measurement': 'AMS',
+  })
+# ---
+# name: test_all_entities[sensor.https_127_0_0_1_8080_lunch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'monetary',
+      'friendly_name': 'https://127.0.0.1:8080/ Lunch',
+      'icon': 'mdi:label',
+      'unit_of_measurement': 'AMS',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.https_127_0_0_1_8080_lunch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-12300.0',
+  })
+# ---
+# name: test_all_entities[sensor.https_127_0_0_1_8080_my_checking_account-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.https_127_0_0_1_8080_my_checking_account',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': 'mdi:account-cash',
+    'original_name': 'My checking account',
+    'platform': 'firefly_iii',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'account',
+    'unique_id': 'None_account_2',
+    'unit_of_measurement': 'AMS',
+  })
+# ---
+# name: test_all_entities[sensor.https_127_0_0_1_8080_my_checking_account-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'account_role': 'defaultAsset',
+      'current_balance': '123.45',
+      'device_class': 'monetary',
+      'friendly_name': 'https://127.0.0.1:8080/ My checking account',
+      'icon': 'mdi:account-cash',
+      'unit_of_measurement': 'AMS',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.https_127_0_0_1_8080_my_checking_account',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123.45',
+  })
+# ---
+# name: test_all_entities[sensor.https_127_0_0_1_8080_savings_account-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.https_127_0_0_1_8080_savings_account',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': 'mdi:cash-minus',
+    'original_name': 'Savings Account',
+    'platform': 'firefly_iii',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'account',
+    'unique_id': 'None_account_3',
+    'unit_of_measurement': 'AMS',
+  })
+# ---
+# name: test_all_entities[sensor.https_127_0_0_1_8080_savings_account-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'account_role': 'savingsAsset',
+      'current_balance': '5000.00',
+      'device_class': 'monetary',
+      'friendly_name': 'https://127.0.0.1:8080/ Savings Account',
+      'icon': 'mdi:cash-minus',
+      'unit_of_measurement': 'AMS',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.https_127_0_0_1_8080_savings_account',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5000.00',
+  })
+# ---

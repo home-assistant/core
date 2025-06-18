@@ -5,7 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyfirefly import Firefly, FireflyAuthenticationError, FireflyConnectionError
+from pyfirefly import (
+    Firefly,
+    FireflyAuthenticationError,
+    FireflyConnectionError,
+    FireflyTimeoutError,
+)
 import voluptuous as vol
 
 from homeassistant.components.water_heater import HomeAssistant
@@ -42,8 +47,8 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
         raise InvalidAuth from None
     except FireflyConnectionError as err:
         raise CannotConnect from err
-    except FireflyTimeout as err:
-        raise FireflyTimeout from err
+    except FireflyTimeoutError as err:
+        raise FireflyClientTimeout from err
 
     return True
 
@@ -65,6 +70,8 @@ class FireflyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except FireflyClientTimeout:
+                errors["base"] = "timeout_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -88,5 +95,5 @@ class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class FireflyTimeout(HomeAssistantError):
+class FireflyClientTimeout(HomeAssistantError):
     """Error to indicate a timeout occurred."""
