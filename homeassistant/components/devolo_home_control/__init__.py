@@ -91,7 +91,9 @@ async def async_unload_entry(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant,
+    config_entry: DevoloHomeControlConfigEntry,
+    device_entry: DeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     return True

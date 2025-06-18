@@ -2,7 +2,8 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.abode import DOMAIN, SERVICE_TRIGGER_AUTOMATION
+from homeassistant.components.abode.const import DOMAIN
+from homeassistant.components.abode.services import SERVICE_TRIGGER_AUTOMATION
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
