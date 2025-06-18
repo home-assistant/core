@@ -12,6 +12,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    ATTR_SCHEDULE_ID,
     CONF_URL_ENERGY,
     DATA_SCHEDULES,
     DOMAIN,
@@ -105,6 +106,13 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
                     data["schedule_id"]
                 )
             ).name
+
+            self._attr_extra_state_attributes.update(
+                {
+                    ATTR_SCHEDULE_ID: data["schedule_id"],
+                }
+            )
+
             self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
@@ -135,3 +143,7 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         self._attr_options = [
             schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]
+
+        self._attr_extra_state_attributes = {
+            ATTR_SCHEDULE_ID: schedule.entity_id if schedule else None,
+        }
