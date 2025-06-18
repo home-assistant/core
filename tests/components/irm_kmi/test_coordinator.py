@@ -9,11 +9,15 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_jules_forgot_to_revert_update_interval_before_pushing(
+def test_update_interval_is_7_minutes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that the refresh interval is more than 5 minutes."""
+    """Test that the refresh interval 7 minutes.
+
+    If you need to change this test, also change the documentation: https://github.com/home-assistant/home-assistant.io.
+    """
+
     coordinator = IrmKmiCoordinator(hass, mock_config_entry, MagicMock())
 
-    assert timedelta(minutes=5) <= coordinator.update_interval
+    assert timedelta(minutes=7) == coordinator.update_interval
