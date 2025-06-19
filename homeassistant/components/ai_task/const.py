@@ -23,7 +23,7 @@ DEFAULT_SYSTEM_PROMPT = (
 
 
 class AITaskEntityFeature(IntFlag):
-    """Supported features of the light entity."""
+    """Supported features of the AI task entity."""
 
     GENERATE_TEXT = 1
     """Generate text based on instructions."""
