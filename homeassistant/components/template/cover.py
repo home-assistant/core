@@ -37,14 +37,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .const import CONF_OBJECT_ID, DOMAIN
 from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
+    make_template_entity_common_modern_schema,
     rewrite_common_legacy_to_modern_conf,
 )
 from .trigger_entity import TriggerEntity
@@ -100,21 +99,16 @@ COVER_SCHEMA = vol.All(
             vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
             vol.Optional(CONF_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_PICTURE): cv.template,
             vol.Optional(CONF_POSITION): cv.template,
             vol.Optional(CONF_STATE): cv.template,
             vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_TILT): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
         }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
+    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
@@ -463,9 +457,7 @@ class CoverTemplate(TemplateEntity, AbstractTemplateCover):
         unique_id,
     ) -> None:
         """Initialize the Template cover."""
-        TemplateEntity.__init__(
-            self, hass, config=config, fallback_name=None, unique_id=unique_id
-        )
+        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
         AbstractTemplateCover.__init__(self, config)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
