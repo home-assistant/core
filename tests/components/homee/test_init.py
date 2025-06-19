@@ -49,10 +49,10 @@ async def test_connection_listener(
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
-    mock_homee.add_connection_listener.call_args_list[0][0][0](False)
+    await mock_homee.add_connection_listener.call_args_list[0][0][0](False)
     await hass.async_block_till_done()
     assert "Disconnected from Homee" in caplog.text
-    mock_homee.add_connection_listener.call_args_list[0][0][0](True)
+    await mock_homee.add_connection_listener.call_args_list[0][0][0](True)
     await hass.async_block_till_done()
     assert "Reconnected to Homee" in caplog.text
 
