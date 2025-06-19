@@ -23,14 +23,14 @@ class NederlandseSpoorwegenData:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NS API as config entry."""
 
+    nsapi = ns_api.NSAPI(entry.data[CONF_API_KEY])
     try:
-        nsapi = ns_api.NSAPI(entry.data[CONF_API_KEY])
         await hass.async_add_executor_job(nsapi.get_stations)
-        entry.runtime_data = NederlandseSpoorwegenData(nsapi)
     except RequestParametersError as ex:
         raise ConfigEntryAuthFailed(
             "Could not instantiate the Nederlandse Spoorwegen API."
         ) from ex
+    entry.runtime_data = NederlandseSpoorwegenData(nsapi)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
