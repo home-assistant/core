@@ -51,7 +51,7 @@
       "message": "Central Unit {gateway_id} is offline."
     },
     "invalid_auth": {
-      "message": "[%key:common::config_flow::error::invalid_auth%]"
+      "message": "Authentication failed. Please re-authenticaticate with your mydevolo account."
     },
     "maintenance": {
       "message": "devolo Home Control is currently in maintenance mode."
