@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from typing import Any
@@ -16,6 +17,7 @@ from songpal import (
     SongpalException,
     VolumeChange,
 )
+from songpal.containers import Setting
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -227,3 +229,32 @@ class SongpalCoordinator(DataUpdateCoordinator):
             self.available = False
 
         return data
+
+    def get_available_settings(self) -> dict[str, list[Setting]]:
+        """Get all available settings in a single dictionary."""
+
+        return {
+            "sound_settings": self.data["sound_settings"],
+            "bluetooth_settings": self.data["bluetooth_settings"],
+            "misc_settings": self.data["misc_settings"],
+            "playback_settings": self.data["playback_settings"],
+        }
+
+    def get_setting_setter(
+        self, setting_bank: str
+    ) -> Callable[[str, str], Awaitable[Any]]:
+        """Return function for setting settings in a specified bank."""
+
+        match setting_bank:
+            case "sound_settings":
+                return self.device.set_sound_settings
+            case "bluetooth_settings":
+                return self.device.set_bluetooth_settings
+            case "misc_settings":
+                return self.device.set_misc_settings
+            case "playback_settings":
+                return self.device.set_playback_settings
+            case _:
+                raise NotImplementedError(
+                    f"Failed to get setting setter for setting bank {setting_bank}"
+                )

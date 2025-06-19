@@ -4,6 +4,7 @@
 
 from abc import abstractmethod
 import logging
+import re
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -31,11 +32,10 @@ class SongpalBaseEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self.hass = hass
 
-    @abstractmethod
     def update_state(self, data) -> None:
         """Process data from coordinator."""
 
-        raise NotImplementedError("Songpal Entity fails to override update_state")
+        return
 
     def get_initial_state(self) -> None:
         """Fetch & process data from coordinator when entity is created."""
@@ -72,3 +72,36 @@ class SongpalBaseEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return device_info(self.coordinator.device_name, self.coordinator.data)
+
+
+class SongpalSettingEntity(SongpalBaseEntity):
+    """Base class for songpal entities that expose a single setting."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: SongpalCoordinator,
+        setting_bank: str,
+        setting_name: str,
+    ) -> None:
+        """Init."""
+
+        self._setting_bank = setting_bank
+        self._setting_name = setting_name
+
+        super().__init__(hass, coordinator)
+
+    def get_friendly_setting_name(self):
+        """Convert setting name from camelCase to space-delimited words."""
+
+        return " ".join(
+            word if len(word) > 1 and word.isupper() else word.lower()
+            for word in re.sub(
+                "([A-Z][a-z]+)", r" \1", re.sub("([A-Z]+)", r" \1", self._setting_name)
+            ).split()
+        )
+
+    def entity_name(self) -> str:
+        """Return the name of the setting."""
+
+        return f"{self._setting_bank}_{self.get_friendly_setting_name()}"

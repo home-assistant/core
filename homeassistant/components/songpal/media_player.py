@@ -19,11 +19,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base import SongpalBaseEntity
 from .const import ERROR_REQUEST_RETRY
 from .coordinator import SongpalCoordinator
 from .device import device_unique_id
 from .entities import create_entities_for_platform
+from .entity import SongpalBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,6 @@ class SongpalMediaPlayerEntity(MediaPlayerEntity, SongpalBaseEntity):
     def __init__(self, hass: HomeAssistant, coordinator: SongpalCoordinator) -> None:
         """Init."""
 
-        self._coordinator = coordinator
         self._sysinfo = None
         self._model = None
 
