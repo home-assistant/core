@@ -5,6 +5,15 @@ download_file:
       example: "http://example.org/myfile"
       selector:
         text:
+    digest_auth:
+      selector:
+        boolean:
+    digest_username:
+      selector:
+        text:
+    digest_password:
+      selector:
+        text:
     subdir:
       example: "download_dir"
       selector:

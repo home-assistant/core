@@ -8,6 +8,7 @@ import re
 import threading
 
 import requests
+from requests.auth import HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -17,6 +18,9 @@ from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import (
     _LOGGER,
+    ATTR_DIGEST_AUTH,
+    ATTR_DIGEST_PASSWORD,
+    ATTR_DIGEST_USERNAME,
     ATTR_FILENAME,
     ATTR_OVERWRITE,
     ATTR_SUBDIR,
@@ -40,6 +44,12 @@ def download_file(service: ServiceCall) -> None:
         try:
             url = service.data[ATTR_URL]
 
+            digest_auth = service.data.get(ATTR_DIGEST_AUTH)
+
+            digest_username = service.data.get(ATTR_DIGEST_USERNAME)
+
+            digest_password = service.data.get(ATTR_DIGEST_PASSWORD)
+
             subdir = service.data.get(ATTR_SUBDIR)
 
             filename = service.data.get(ATTR_FILENAME)
@@ -52,7 +62,18 @@ def download_file(service: ServiceCall) -> None:
 
             final_path = None
 
-            req = requests.get(url, stream=True, timeout=10)
+            auth = (
+                HTTPDigestAuth(digest_username, digest_password)
+                if digest_auth and digest_username and digest_password
+                else None
+            )
+
+            req = requests.get(
+                url=url,
+                stream=True,
+                timeout=10,
+                auth=auth,
+            )
 
             if req.status_code != HTTPStatus.OK:
                 _LOGGER.warning(
@@ -151,9 +172,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         download_file,
         schema=vol.Schema(
             {
+                vol.Optional(ATTR_DIGEST_AUTH, default=False): cv.boolean,
                 vol.Optional(ATTR_FILENAME): cv.string,
+                vol.Optional(ATTR_DIGEST_PASSWORD): cv.string,
                 vol.Optional(ATTR_SUBDIR): cv.string,
                 vol.Required(ATTR_URL): cv.url,
+                vol.Optional(ATTR_DIGEST_USERNAME): cv.string,
                 vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
             }
         ),
