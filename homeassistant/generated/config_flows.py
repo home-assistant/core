@@ -485,6 +485,7 @@ FLOWS = {
         "plugwise",
         "plum_lightpad",
         "point",
+        "pooldose",
         "poolsense",
         "powerfox",
         "powerwall",
