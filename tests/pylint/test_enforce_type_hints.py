@@ -1161,17 +1161,11 @@ def test_vacuum_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
     class Entity():
         pass
 
-    class ToggleEntity(Entity):
-        pass
-
-    class _BaseVacuum(Entity):
-        pass
-
-    class VacuumEntity(_BaseVacuum, ToggleEntity):
+    class StateVacuumEntity(Entity):
         pass
 
     class MyVacuum( #@
-        VacuumEntity
+        StateVacuumEntity
     ):
         def send_command(
             self,
