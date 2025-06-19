@@ -322,8 +322,9 @@ class OllamaConversationEntity(
             num_keep = 2 * max_messages + 1
             drop_index = len(message_history.messages) - num_keep
             message_history.messages = [
-                message_history.messages[0]
-            ] + message_history.messages[drop_index:]
+                message_history.messages[0],
+                *message_history.messages[drop_index:],
+            ]
 
     async def _async_entry_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry
