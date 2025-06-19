@@ -42,7 +42,11 @@ async def async_find_relevant_blueprints(
 ) -> dict[str, list[dict[str, Any]]]:
     """Find all blueprints relevant to a specific device."""
     results = {}
-    entities = er.async_entries_for_device(er.async_get(hass), device_id)
+    entities = [
+        entry
+        for entry in er.async_entries_for_device(er.async_get(hass), device_id)
+        if not entry.entity_category
+    ]
 
     async def all_blueprints_generator(hass: HomeAssistant):
         """Yield all blueprints from all domains."""
