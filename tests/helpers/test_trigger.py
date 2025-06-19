@@ -1,5 +1,6 @@
 """The tests for the trigger helper."""
 
+import io
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
@@ -9,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
 from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import trigger
 from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
@@ -19,7 +21,7 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
-from homeassistant.util.yaml.loader import JSON_TYPE
+from homeassistant.util.yaml.loader import parse_yaml
 
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
@@ -436,27 +438,53 @@ async def test_pluggable_action(
     assert not plug_2
 
 
-async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "sun_service_descriptions",
+    [
+        """
+        sun:
+          fields:
+            event:
+              example: sunrise
+              selector:
+                select:
+                  options:
+                    - sunrise
+                    - sunset
+            offset:
+              selector:
+                time: null
+        """,
+        """
+        .anchor: &anchor
+          - sunrise
+          - sunset
+        sun:
+          fields:
+            event:
+              example: sunrise
+              selector:
+                select:
+                  options: *anchor
+            offset:
+              selector:
+                time: null
+        """,
+    ],
+)
+async def test_async_get_all_descriptions(
+    hass: HomeAssistant, sun_service_descriptions: str
+) -> None:
     """Test async_get_all_descriptions."""
     await trigger.async_setup(hass)  # Move to hass fixture
 
-    sun_config = {DOMAIN_SUN: {}}
-    assert await async_setup_component(hass, DOMAIN_SUN, sun_config)
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
     assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
     await hass.async_block_till_done()
 
-    def _load_triggers_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
-        return {
-            "sun": {
-                "fields": {
-                    "event": {
-                        "example": "sunrise",
-                        "selector": {"select": {"options": ["sunrise", "sunset"]}},
-                    },
-                    "offset": {"selector": {"time": None}},
-                }
-            }
-        }
+    def _load_yaml(fname, secrets=None):
+        with io.StringIO(sun_service_descriptions) as file:
+            return parse_yaml(file)
 
     with (
         patch(
@@ -464,14 +492,14 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
             side_effect=trigger._load_triggers_files,
         ) as proxy_load_triggers_files,
         patch(
-            "homeassistant.helpers.trigger._load_triggers_file",
-            side_effect=_load_triggers_file,
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
         ),
         patch.object(Integration, "has_triggers", return_value=True),
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    # Test we only load triggers.yaml for integrations with triggers.yaml,
+    # Test we only load triggers.yaml for integrations with triggers,
     # system_health has no triggers
     assert proxy_load_triggers_files.mock_calls[0][1][1] == unordered(
         [
@@ -494,3 +522,81 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     # Verify the cache returns the same object
     assert await trigger.async_get_all_descriptions(hass) is descriptions
+
+
+@pytest.mark.parametrize(
+    ("yaml_error", "expected_message"),
+    [
+        (
+            FileNotFoundError("Blah"),
+            "Unable to find triggers.yaml for the sun integration",
+        ),
+        (
+            HomeAssistantError("Test error"),
+            "Unable to parse triggers.yaml for the sun integration: Test error",
+        ),
+    ],
+)
+async def test_async_get_all_descriptions_with_yaml_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    yaml_error: Exception,
+    expected_message: str,
+) -> None:
+    """Test async_get_all_descriptions."""
+    await trigger.async_setup(hass)  # Move to hass fixture
+
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    await hass.async_block_till_done()
+
+    def _load_yaml_dict(fname, secrets=None):
+        raise yaml_error
+
+    with (
+        patch(
+            "homeassistant.helpers.trigger.load_yaml_dict",
+            side_effect=_load_yaml_dict,
+        ),
+        patch.object(Integration, "has_triggers", return_value=True),
+    ):
+        descriptions = await trigger.async_get_all_descriptions(hass)
+
+    assert descriptions == {DOMAIN_SUN: {"fields": {}}}
+
+    assert expected_message in caplog.text
+
+
+async def test_async_get_all_descriptions_with_bad_description(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_get_all_descriptions."""
+    sun_service_descriptions = """
+        sun:
+          fields: not_a_dict
+    """
+
+    await trigger.async_setup(hass)  # Move to hass fixture
+
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    await hass.async_block_till_done()
+
+    def _load_yaml(fname, secrets=None):
+        with io.StringIO(sun_service_descriptions) as file:
+            return parse_yaml(file)
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_triggers", return_value=True),
+    ):
+        descriptions = await trigger.async_get_all_descriptions(hass)
+
+    assert descriptions == {DOMAIN_SUN: {"fields": {}}}
+
+    assert (
+        "Unable to parse triggers.yaml for the sun integration: "
+        "expected a dictionary for dictionary value @ data['sun']['fields']"
+    ) in caplog.text
