@@ -57,12 +57,12 @@ class GenTextTaskResult:
     conversation_id: str
     """Unique identifier for the conversation."""
 
-    result: str
-    """Result of the task."""
+    text: str
+    """Generated text."""
 
     def as_dict(self) -> dict[str, str]:
         """Return result as a dict."""
         return {
             "conversation_id": self.conversation_id,
-            "result": self.result,
+            "text": self.text,
         }

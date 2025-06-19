@@ -92,4 +92,4 @@ async def test_generate_text_service(
         return_response=True,
     )
 
-    assert result["result"] == "Mock result"
+    assert result["text"] == "Mock result"

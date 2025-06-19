@@ -48,7 +48,7 @@ class MockAITaskEntity(AITaskEntity):
         )
         return GenTextTaskResult(
             conversation_id=chat_log.conversation_id,
-            result="Mock result",
+            text="Mock result",
         )
 
 
