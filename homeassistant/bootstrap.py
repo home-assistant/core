@@ -605,7 +605,7 @@ async def async_enable_logging(
     )
     threading.excepthook = lambda args: logging.getLogger().exception(
         "Uncaught thread exception",
-        exc_info=(  # type: ignore[arg-type]
+        exc_info=(  # type: ignore[arg-type]  # noqa: LOG014
             args.exc_type,
             args.exc_value,
             args.exc_traceback,
@@ -1059,5 +1059,5 @@ async def _async_setup_multi_components(
             _LOGGER.error(
                 "Error setting up integration %s - received exception",
                 domain,
-                exc_info=(type(result), result, result.__traceback__),
+                exc_info=(type(result), result, result.__traceback__),  # noqa: LOG014
             )
