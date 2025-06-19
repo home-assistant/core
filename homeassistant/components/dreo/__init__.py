@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from hscloud.const import DEVICE_TYPE
 from hscloud.hscloud import HsCloud
 from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
 
@@ -20,7 +19,6 @@ from .coordinator import DreoDataUpdateCoordinator
 type DreoConfigEntry = ConfigEntry[DreoData]
 
 PLATFORMS = [Platform.FAN]
-SYNC_INTERVAL = timedelta(seconds=10)
 
 
 @dataclass
@@ -78,18 +76,21 @@ async def async_setup_device_coordinator(
     """Set up coordinator for a single device."""
 
     device_model = device.get("model")
-    device_id = str(device.get("deviceSn", ""))
+    device_id = device.get("deviceSn")
+    device_type = device.get("deviceType")
 
-    if not device_id or not device_model:
-        return
-
-    if DEVICE_TYPE.get(device_model) is None:
+    if not device_id or not device_model or not device_type:
         return
 
     if device_id in coordinators:
         return
 
-    coordinator = DreoDataUpdateCoordinator(hass, client, device_id, device_model)
+    coordinator = DreoDataUpdateCoordinator(
+        hass, client, device_id, device_model, device_type
+    )
+
+    if coordinator.data_processor is None:
+        return
 
     await coordinator.async_config_entry_first_refresh()
 

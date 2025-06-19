@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, NoReturn
 
-from hscloud.const import DEVICE_TYPE, FAN_DEVICE
+from hscloud.const import FAN_DEVICE
 from hscloud.hscloud import HsCloud
 from hscloud.hscloudexception import HsCloudException
 
@@ -14,11 +15,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.percentage import ranged_value_to_percentage
 
-from .const import DOMAIN
+from .const import DOMAIN, FAN_DEVICE_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+UPDATE_INTERVAL = timedelta(seconds=10)
 
 
 class DreoGenericDeviceData:
@@ -95,43 +96,58 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
         client: HsCloud,
         device_id: str,
         model: str,
+        device_type: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=UPDATE_INTERVAL,
         )
         self.client = client
         self.device_id = device_id
         self.device_model = model
-        self.device_type = DEVICE_TYPE.get(model) if model else None
+        self.device_type = device_type
+        self.data_processor: Callable[[str, dict[str, Any]], DreoDeviceData] | None
 
-    def _create_device_data(self, status: dict[str, Any]) -> DreoDeviceData | None:
-        """Create appropriate device data based on device type."""
-        if self.device_type == FAN_DEVICE.get("type") and self.device_model:
-            return DreoFanDeviceData.process_fan_data(self.device_model, status)
-
-        _LOGGER.warning(
-            "Unsupported device type: %s for model: %s - data will not be processed",
-            self.device_type,
-            self.device_model,
-        )
-
-        return None
+        if self.device_type == FAN_DEVICE_TYPE and self.device_model:
+            self.data_processor = DreoFanDeviceData.process_fan_data
+        else:
+            _LOGGER.warning(
+                "Unsupported device type: %s for model: %s - data will not be processed",
+                self.device_type,
+                self.device_model,
+            )
+            self.data_processor = None
 
     async def _async_update_data(self) -> DreoDeviceData | None:
         """Get device status from Dreo API and process it."""
+
+        def _raise_no_status() -> NoReturn:
+            """Raise UpdateFailed for no status available."""
+            raise UpdateFailed(
+                f"No status available for device {self.device_id} with model {self.device_model}"
+            )
+
+        def _raise_no_processor() -> NoReturn:
+            """Raise UpdateFailed for no data processor available."""
+            raise UpdateFailed(
+                f"No data processor available for device {self.device_id} with model {self.device_model}"
+            )
+
         try:
             status = await self.hass.async_add_executor_job(
                 self.client.get_status, self.device_id
             )
 
             if status is None:
-                return None
+                _raise_no_status()
 
-            return self._create_device_data(status)
+            if self.data_processor is None:
+                _raise_no_processor()
+
+            return self.data_processor(self.device_model, status)
         except HsCloudException as error:
             raise UpdateFailed(f"Error communicating with Dreo API: {error}") from error
         except Exception as error:

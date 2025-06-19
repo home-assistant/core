@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
+import pytest
 
 from homeassistant.components.dreo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -32,6 +33,7 @@ async def test_setup_success(hass: HomeAssistant, mock_config_entry) -> None:
                 "deviceSn": "test-device-id",
                 "model": "DR-HTF001S",
                 "deviceName": "Test Fan",
+                "deviceType": "fan",
             }
         ]
         mock_client.get_status.return_value = {
@@ -125,9 +127,24 @@ async def test_setup_with_multiple_devices(hass: HomeAssistant) -> None:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
-            {"deviceSn": "device1", "model": "DR-HTF001S", "deviceName": "Fan 1"},
-            {"deviceSn": "device2", "model": "UNKNOWN-MODEL", "deviceName": "Unknown"},
-            {"deviceSn": "device3", "model": "DR-HTF001S", "deviceName": "Fan 3"},
+            {
+                "deviceSn": "device1",
+                "model": "DR-HTF001S",
+                "deviceName": "Fan 1",
+                "deviceType": "fan",
+            },
+            {
+                "deviceSn": "device2",
+                "model": "UNKNOWN-MODEL",
+                "deviceName": "Unknown",
+                "deviceType": "heater",
+            },
+            {
+                "deviceSn": "device3",
+                "model": "DR-HTF001S",
+                "deviceName": "Fan 3",
+                "deviceType": "fan",
+            },
         ]
         mock_client.get_status.return_value = {
             "power_switch": True,
@@ -169,6 +186,7 @@ async def test_unload_config_entry(hass: HomeAssistant, mock_config_entry) -> No
                 "deviceSn": "test-device-unload",
                 "model": "DR-HTF001S",
                 "deviceName": "Unload Test Fan",
+                "deviceType": "fan",
             }
         ]
         mock_client.get_status.return_value = {
@@ -205,7 +223,7 @@ async def test_setup_with_no_devices(hass: HomeAssistant) -> None:
     with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
-        mock_client.get_devices.return_value = []  # No devices
+        mock_client.get_devices.return_value = []
 
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
@@ -233,8 +251,12 @@ async def test_setup_with_invalid_device_data(hass: HomeAssistant) -> None:
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
             {"model": "DR-HTF001S"},
-            {"deviceSn": ""},
-            {"deviceSn": "valid-id", "model": "DR-HTF001S", "deviceName": "Valid Fan"},
+            {
+                "deviceSn": "valid-id",
+                "model": "DR-HTF001S",
+                "deviceName": "Valid Fan",
+                "deviceType": "fan",
+            },
         ]
         mock_client.get_status.return_value = {
             "power_switch": True,
@@ -272,6 +294,7 @@ async def test_coordinator_setup_and_refresh(hass: HomeAssistant) -> None:
                 "deviceSn": "coordinator-test",
                 "model": "DR-HTF001S",
                 "deviceName": "Coordinator Test Fan",
+                "deviceType": "fan",
             }
         ]
 
@@ -294,3 +317,124 @@ async def test_coordinator_setup_and_refresh(hass: HomeAssistant) -> None:
     state = hass.states.get("fan.coordinator_test_fan")
     assert state is not None
     assert state.state == "on"
+
+
+async def test_coordinator_api_none_response_handling(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test coordinator handling when API returns None."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = [
+            {
+                "deviceSn": "none-response-device",
+                "model": "DR-HTF001S",
+                "deviceName": "None Response Fan",
+                "deviceType": "fan",
+            }
+        ]
+
+        mock_client.get_status.side_effect = [
+            {"power_switch": True, "connected": True, "speed": 3},
+            None,
+        ]
+
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        coordinator = mock_entry.runtime_data.coordinators["none-response-device"]
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert "No status available for device" in caplog.text
+    assert "none-response-device" in caplog.text
+
+
+async def test_coordinator_api_exception_handling(hass: HomeAssistant) -> None:
+    """Test coordinator handling of API exceptions."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = [
+            {
+                "deviceSn": "exception-device",
+                "model": "DR-HTF001S",
+                "deviceName": "Exception Fan",
+                "deviceType": "fan",
+            }
+        ]
+
+        mock_client.get_status.side_effect = [
+            {"power_switch": True, "connected": True, "speed": 3},
+            HsCloudException("API Error"),
+        ]
+
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        coordinator = mock_entry.runtime_data.coordinators["exception-device"]
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("fan.exception_fan")
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+async def test_coordinator_generic_exception_handling(hass: HomeAssistant) -> None:
+    """Test coordinator handling of generic exceptions."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = [
+            {
+                "deviceSn": "generic-error-device",
+                "model": "DR-HTF001S",
+                "deviceName": "Generic Error Fan",
+                "deviceType": "fan",
+            }
+        ]
+
+        mock_client.get_status.side_effect = [
+            {"power_switch": True, "connected": True, "speed": 3},
+            ValueError("Generic error"),
+        ]
+
+        assert await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        coordinator = mock_entry.runtime_data.coordinators["generic-error-device"]
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("fan.generic_error_fan")
+    assert state is not None
+    assert state.state == "unavailable"
