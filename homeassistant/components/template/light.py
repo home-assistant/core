@@ -536,7 +536,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
                     effect,
                     self.entity_id,
                     self._effect_list,
-                    exc_info=True,
                 )
 
             common_params["effect"] = effect
