@@ -436,7 +436,6 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                     data=user_input,
                 )
             except (SchemaFlowError, vol.Invalid) as err:
-                _LOGGER.error("Error validating observation subentry: %s", err)
                 errors["base"] = str(err)
 
         return self.async_show_form(
@@ -490,7 +489,6 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                     data=user_input,
                 )
             except (SchemaFlowError, vol.Invalid) as err:
-                _LOGGER.error("Error validating observation subentry: %s", err)
                 errors["base"] = str(err)
 
         return self.async_show_form(
@@ -538,7 +536,6 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                     data=user_input,
                 )
             except (SchemaFlowError, vol.Invalid) as err:
-                _LOGGER.error("Error validating observation subentry: %s", err)
                 errors["base"] = str(err)
 
         return self.async_show_form(
@@ -596,7 +593,6 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                     data_updates=user_input,
                 )
             except (SchemaFlowError, vol.Invalid) as err:
-                _LOGGER.error("Error validating observation subentry: %s", err)
                 errors["base"] = str(err)
 
         return self.async_show_form(
