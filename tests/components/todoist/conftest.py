@@ -19,6 +19,7 @@ from tests.common import MockConfigEntry
 
 PROJECT_ID = "project-id-1"
 SECTION_ID = "section-id-1"
+NEW_SECTION_ID = "new-section-id"
 SUMMARY = "A task"
 TOKEN = "some-token"
 TODAY = dt_util.now().strftime("%Y-%m-%d")
@@ -105,18 +106,61 @@ def mock_api(tasks: list[Task]) -> AsyncMock:
         Section(
             id=SECTION_ID,
             project_id=PROJECT_ID,
-            name="Section Name",
+            name="Existing Section",
             order=1,
         )
     ]
+    api.add_section.return_value = Section(
+        id=NEW_SECTION_ID,
+        project_id=PROJECT_ID,
+        name="New Section",
+        order=1,
+    )
     api.get_labels.return_value = [
         Label(id="1", name="Label1", color="1", order=1, is_favorite=False)
     ]
     api.get_collaborators.return_value = [
-        Collaborator(email="user@gmail.com", id="1", name="user")
+        Collaborator(email="user1@gmail.com", id="1", name="user1"),
+        Collaborator(email="user2@gmail.com", id="2", name="user2"),
     ]
     api.get_tasks.return_value = tasks
+    api.add_task.return_value = make_api_task()
     return api
+
+
+@pytest.fixture(name="mock_post")
+async def mock_session_post() -> AsyncMock:
+    """Mock the session.post method."""
+    with (
+        patch(
+            "homeassistant.helpers.aiohttp_client.async_get_clientsession"
+        ) as mock_get_clientsession,
+        patch("aiohttp.ClientSession.post", new_callable=AsyncMock) as mock_post,
+    ):
+        # Mock the aiohttp session
+        mock_session = AsyncMock()
+        mock_get_clientsession.return_value = mock_session
+
+        # Mock the POST request to the Todoist API
+        mock_post.return_value.__aenter__.return_value.json = AsyncMock(
+            return_value={"status": "ok"}
+        )
+        yield mock_post
+
+
+@pytest.fixture(name="mock_zone")
+def mock_zone(hass: HomeAssistant) -> None:
+    """Mock a zone entity."""
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {
+            "latitude": 37.7749,
+            "longitude": -122.4194,
+            "radius": 100,
+            "friendly_name": "Home",
+        },
+    )
 
 
 @pytest.fixture(name="todoist_api_status")
