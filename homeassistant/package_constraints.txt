@@ -2,11 +2,12 @@
 
 aiodhcpwatcher==1.2.0
 aiodiscover==2.7.0
-aiodns==3.4.0
+aiodns==3.5.0
+aiofiles==24.1.0
 aiohasupervisor==0.3.1
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
-aiohttp==3.12.11
+aiohttp==3.12.13
 aiohttp_cors==0.8.1
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
@@ -18,7 +19,7 @@ atomicwrites-homeassistant==1.4.1
 attrs==25.3.0
 audioop-lts==0.2.1
 av==13.1.0
-awesomeversion==24.6.0
+awesomeversion==25.5.0
 bcrypt==4.3.0
 bleak-retry-connector==3.9.0
 bleak==0.22.3
@@ -35,11 +36,11 @@ fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
 habluetooth==3.49.0
-hass-nabucasa==0.101.0
+hass-nabucasa==0.102.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250531.0
-home-assistant-intents==2025.5.28
+home-assistant-frontend==20250531.3
+home-assistant-intents==2025.6.10
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -50,7 +51,7 @@ orjson==3.10.18
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==11.2.1
-propcache==0.3.1
+propcache==0.3.2
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
 pymicro-vad==1.0.1
@@ -61,20 +62,20 @@ pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.8.0
 PyYAML==6.0.2
-requests==2.32.3
+requests==2.32.4
 securetar==2025.2.1
 SQLAlchemy==2.0.41
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.14.0,<5.0
 ulid-transform==1.4.0
-urllib3>=1.26.5,<2
+urllib3>=2.0
 uv==0.7.1
 voluptuous-openapi==0.1.0
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
-yarl==1.20.0
+yarl==1.20.1
 zeroconf==0.147.0
 
 # Constrain pycryptodome to avoid vulnerability
@@ -130,7 +131,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.5
+pydantic==2.11.7
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -200,14 +201,6 @@ tenacity!=8.4.0
 # 5.0.0 breaks Timeout as a context manager
 # TypeError: 'Timeout' object does not support the context manager protocol
 async-timeout==4.0.3
-
-# aiofiles keeps getting downgraded by custom components
-# causing newer methods to not be available and breaking
-# some integrations at startup
-# https://github.com/home-assistant/core/issues/127529
-# https://github.com/home-assistant/core/issues/122508
-# https://github.com/home-assistant/core/issues/118004
-aiofiles>=24.1.0
 
 # multidict < 6.4.0 has memory leaks
 # https://github.com/aio-libs/multidict/issues/1134
