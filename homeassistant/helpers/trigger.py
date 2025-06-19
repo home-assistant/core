@@ -60,7 +60,7 @@ DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = Has
     "pluggable_actions"
 )
 
-TRIGGER_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any]]] = HassKey(
+TRIGGER_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "trigger_description_cache"
 )
 TRIGGER_PLATFORM_SUBSCRIPTIONS: HassKey[
@@ -550,7 +550,7 @@ def _load_triggers_files(
 
 async def async_get_all_descriptions(
     hass: HomeAssistant,
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all triggers."""
     descriptions_cache = hass.data[TRIGGER_DESCRIPTION_CACHE]
 
@@ -599,12 +599,17 @@ async def async_get_all_descriptions(
     for missing_trigger in missing_triggers:
         domain = triggers[missing_trigger]
 
-        # Cache missing descriptions
-        domain_yaml = new_triggers_descriptions.get(domain) or {}
-
-        yaml_description = (
-            domain_yaml.get(missing_trigger) or {}  # type: ignore[union-attr]
-        )
+        if (
+            yaml_description := new_triggers_descriptions.get(domain, {}).get(  # type: ignore[union-attr]
+                missing_trigger
+            )
+        ) is None:
+            _LOGGER.debug(
+                "No trigger descriptions found for trigger %s, skipping",
+                missing_trigger,
+            )
+            new_descriptions_cache[missing_trigger] = None
+            continue
 
         description = {"fields": yaml_description.get("fields", {})}
 

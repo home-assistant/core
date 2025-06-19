@@ -2,6 +2,7 @@
 
 import asyncio
 from copy import deepcopy
+import io
 import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
@@ -28,9 +29,10 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.loader import async_get_integration
+from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
+from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import (
     MockConfigEntry,
@@ -680,10 +682,34 @@ async def test_get_services(
         assert msg["result"].keys() == hass.services.async_services().keys()
 
 
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_triggers", return_value=True)
 async def test_subscribe_triggers(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
 ) -> None:
     """Test get_triggers command."""
+    sun_service_descriptions = """
+        sun: {}
+        """
+    tag_service_descriptions = """
+        tag: {}
+        """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("sun/triggers.yaml"):
+            service_descriptions = sun_service_descriptions
+        elif fname.endswith("tag/triggers.yaml"):
+            service_descriptions = tag_service_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(service_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
     assert await async_setup_component(hass, "sun", {})
     assert await async_setup_component(hass, "system_health", {})
     await hass.async_block_till_done()
@@ -700,8 +726,10 @@ async def test_subscribe_triggers(
 
     old_cache = hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE]
 
-    # Test we receive an event when a new platform is loaded
+    # Test we receive an event when a new platform is loaded, if it has descriptions
+    assert await async_setup_component(hass, "calendar", {})
     assert await async_setup_component(hass, "tag", {})
+    await hass.async_block_till_done()
     msg = await websocket_client.receive_json()
     assert msg == {
         "event": {"tag": {"fields": {}}},

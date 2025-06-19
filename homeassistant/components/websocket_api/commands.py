@@ -536,7 +536,13 @@ async def _async_get_all_trigger_descriptions_json(hass: HomeAssistant) -> bytes
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
             return cast(bytes, cached_json_payload)
-    json_payload = json_bytes(descriptions)
+    json_payload = json_bytes(
+        {
+            trigger: description
+            for trigger, description in descriptions.items()
+            if description is not None
+        }
+    )
     hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
     return json_payload
 
@@ -553,8 +559,10 @@ async def handle_subscribe_trigger_platforms(
         descriptions = await async_get_all_trigger_descriptions(hass)
         new_trigger_descriptions = {}
         for trigger in new_triggers:
-            if trigger in descriptions:
-                new_trigger_descriptions[trigger] = descriptions[trigger]
+            if (description := descriptions[trigger]) is not None:
+                new_trigger_descriptions[trigger] = description
+        if not new_trigger_descriptions:
+            return
         connection.send_event(msg["id"], new_trigger_descriptions)
 
     connection.subscriptions[msg["id"]] = async_subscribe_trigger_platform_events(

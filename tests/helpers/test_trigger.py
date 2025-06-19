@@ -478,8 +478,6 @@ async def test_async_get_all_descriptions(
     hass: HomeAssistant, sun_service_descriptions: str
 ) -> None:
     """Test async_get_all_descriptions."""
-    await trigger.async_setup(hass)  # Move to hass fixture
-
     assert await async_setup_component(hass, DOMAIN_SUN, {})
     assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
     await hass.async_block_till_done()
@@ -546,8 +544,6 @@ async def test_async_get_all_descriptions_with_yaml_error(
     expected_message: str,
 ) -> None:
     """Test async_get_all_descriptions."""
-    await trigger.async_setup(hass)  # Move to hass fixture
-
     assert await async_setup_component(hass, DOMAIN_SUN, {})
     await hass.async_block_till_done()
 
@@ -563,7 +559,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {DOMAIN_SUN: {"fields": {}}}
+    assert descriptions == {DOMAIN_SUN: None}
 
     assert expected_message in caplog.text
 
@@ -577,8 +573,6 @@ async def test_async_get_all_descriptions_with_bad_description(
         sun:
           fields: not_a_dict
     """
-
-    await trigger.async_setup(hass)  # Move to hass fixture
 
     assert await async_setup_component(hass, DOMAIN_SUN, {})
     await hass.async_block_till_done()
@@ -596,7 +590,7 @@ async def test_async_get_all_descriptions_with_bad_description(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {DOMAIN_SUN: {"fields": {}}}
+    assert descriptions == {DOMAIN_SUN: None}
 
     assert (
         "Unable to parse triggers.yaml for the sun integration: "
