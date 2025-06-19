@@ -268,11 +268,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "squeezebox": {"pysqueezebox": {"async-timeout"}},
     "ssdp": {"async-upnp-client": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
-    "system_bridge": {
-        # https://github.com/timmo001/system-bridge-connector/pull/78
-        # systembridgeconnector > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
     "travisci": {
         # https://github.com/menegazzo/travispy seems to be unmaintained
         # and unused https://www.home-assistant.io/integrations/travisci
