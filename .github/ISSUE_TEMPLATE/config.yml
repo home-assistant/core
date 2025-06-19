@@ -11,7 +11,7 @@ contact_links:
     about: We use GitHub for tracking bugs, check our website for resources on getting help.
   - name: Feature Request
     url: https://github.com/orgs/home-assistant/discussions
-    about: Please use go here to request new features or enhancements to existing features.
+    about: Please use this link to request new features or enhancements to existing features.
   - name: I'm unsure where to go
     url: https://www.home-assistant.io/join-chat
     about: If you are unsure where to go, then joining our chat is recommended; Just ask!
