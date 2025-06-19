@@ -608,8 +608,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove MQTT config entry from a device."""
-    # pylint: disable-next=import-outside-toplevel
-    from . import device_automation
+    from . import device_automation  # noqa: PLC0415
 
     await device_automation.async_removed_from_device(hass, device_entry.id)
     return True

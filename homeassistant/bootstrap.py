@@ -394,7 +394,7 @@ async def async_setup_hass(
 
 def open_hass_ui(hass: core.HomeAssistant) -> None:
     """Open the UI."""
-    import webbrowser  # pylint: disable=import-outside-toplevel
+    import webbrowser  # noqa: PLC0415
 
     if hass.config.api is None or "frontend" not in hass.config.components:
         _LOGGER.warning("Cannot launch the UI because frontend not loaded")
@@ -561,8 +561,7 @@ async def async_enable_logging(
 
     if not log_no_color:
         try:
-            # pylint: disable-next=import-outside-toplevel
-            from colorlog import ColoredFormatter
+            from colorlog import ColoredFormatter  # noqa: PLC0415
 
             # basicConfig must be called after importing colorlog in order to
             # ensure that the handlers it sets up wraps the correct streams.
