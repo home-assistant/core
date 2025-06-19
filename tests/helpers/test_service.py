@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Iterable
 from copy import deepcopy
 import io
-from typing import Any
+import threading
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -43,14 +43,13 @@ from homeassistant.helpers import (
     entity_registry as er,
     service,
 )
-from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import (
     Integration,
     async_get_integration,
     async_get_integrations,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util.yaml.loader import parse_yaml
+from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
 from tests.common import (
     MockEntity,
@@ -831,7 +830,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     assert len(descriptions) == 1
     assert DOMAIN_GROUP in descriptions
-    assert "description" in descriptions[DOMAIN_GROUP]["reload"]
+    assert "description" not in descriptions[DOMAIN_GROUP]["reload"]
     assert "fields" in descriptions[DOMAIN_GROUP]["reload"]
 
     # Does not have services
@@ -839,26 +838,39 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     logger_config = {DOMAIN_LOGGER: {}}
 
-    async def async_get_translations(
-        hass: HomeAssistant,
-        language: str,
-        category: str,
-        integrations: Iterable[str] | None = None,
-        config_flow: bool | None = None,
-    ) -> dict[str, Any]:
-        """Return all backend translations."""
-        translation_key_prefix = f"component.{DOMAIN_LOGGER}.services.set_default_level"
+    # Test legacy service with translations in services.yaml
+    def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
         return {
-            f"{translation_key_prefix}.name": "Translated name",
-            f"{translation_key_prefix}.description": "Translated description",
-            f"{translation_key_prefix}.fields.level.name": "Field name",
-            f"{translation_key_prefix}.fields.level.description": "Field description",
-            f"{translation_key_prefix}.fields.level.example": "Field example",
+            "set_default_level": {
+                "description": "Translated description",
+                "fields": {
+                    "level": {
+                        "description": "Field description",
+                        "example": "Field example",
+                        "name": "Field name",
+                        "selector": {
+                            "select": {
+                                "options": [
+                                    "debug",
+                                    "info",
+                                    "warning",
+                                    "error",
+                                    "fatal",
+                                    "critical",
+                                ],
+                                "translation_key": "level",
+                            }
+                        },
+                    }
+                },
+                "name": "Translated name",
+            },
+            "set_level": None,
         }
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.service._load_services_file",
+        side_effect=_load_services_file,
     ):
         await async_setup_component(hass, DOMAIN_LOGGER, logger_config)
         descriptions = await service.async_get_all_descriptions(hass)
@@ -985,9 +997,7 @@ async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
     assert descriptions == {
         "test_domain": {
             "test_service": {
-                "description": "",
                 "fields": {"test": {"selector": {"text": None}}},
-                "name": "",
             }
         }
     }
@@ -1055,7 +1065,6 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
     )
 
     test_service_schema = {
-        "description": "",
         "fields": {
             "advanced_stuff": {
                 "fields": {
@@ -1076,7 +1085,6 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
                 "selector": {"number": None},
             },
         },
-        "name": "",
         "target": {
             "entity": [
                 {
@@ -1112,30 +1120,10 @@ async def test_async_get_all_descriptions_failing_integration(
         integrations[DOMAIN_LOGGER] = ImportError("Failed to load services.yaml")
         return integrations
 
-    async def wrap_get_translations(
-        hass: HomeAssistant,
-        language: str,
-        category: str,
-        integrations: Iterable[str] | None = None,
-        config_flow: bool | None = None,
-    ) -> dict[str, str]:
-        translations = await async_get_translations(
-            hass, language, category, integrations, config_flow
-        )
-        return {
-            key: value
-            for key, value in translations.items()
-            if not key.startswith("component.logger.services.")
-        }
-
     with (
         patch(
             "homeassistant.helpers.service.async_get_integrations",
             wraps=wrap_get_integrations,
-        ),
-        patch(
-            "homeassistant.helpers.service.translation.async_get_translations",
-            wrap_get_translations,
         ),
     ):
         descriptions = await service.async_get_all_descriptions(hass)
@@ -1145,16 +1133,12 @@ async def test_async_get_all_descriptions_failing_integration(
 
     # Services are empty defaults if the load fails but should
     # not raise
-    assert descriptions[DOMAIN_GROUP]["remove"]["description"]
+    assert "description" not in descriptions[DOMAIN_GROUP]["remove"]
     assert descriptions[DOMAIN_GROUP]["remove"]["fields"]
 
-    assert descriptions[DOMAIN_LOGGER]["set_level"] == {
-        "description": "",
-        "fields": {},
-        "name": "",
-    }
+    assert descriptions[DOMAIN_LOGGER]["set_level"] == {"fields": {}}
 
-    assert descriptions[DOMAIN_INPUT_BUTTON]["press"]["description"]
+    assert "description" not in descriptions[DOMAIN_INPUT_BUTTON]["press"]
     assert descriptions[DOMAIN_INPUT_BUTTON]["press"]["fields"] == {}
     assert "target" in descriptions[DOMAIN_INPUT_BUTTON]["press"]
 
@@ -1209,7 +1193,7 @@ async def test_async_get_all_descriptions_dynamically_created_services(
 
     assert len(descriptions) == 1
 
-    assert "description" in descriptions["group"]["reload"]
+    assert "description" not in descriptions["group"]["reload"]
     assert "fields" in descriptions["group"]["reload"]
 
     shell_command_config = {DOMAIN_SHELL_COMMAND: {"test_service": "ls /bin"}}
@@ -1218,9 +1202,7 @@ async def test_async_get_all_descriptions_dynamically_created_services(
 
     assert len(descriptions) == 2
     assert descriptions[DOMAIN_SHELL_COMMAND]["test_service"] == {
-        "description": "",
         "fields": {},
-        "name": "",
         "response": {"optional": True},
     }
 
@@ -1235,41 +1217,53 @@ async def test_async_get_all_descriptions_new_service_added_while_loading(
 
     assert len(descriptions) == 1
 
-    assert "description" in descriptions["group"]["reload"]
+    assert "description" not in descriptions["group"]["reload"]
     assert "fields" in descriptions["group"]["reload"]
 
     logger_domain = DOMAIN_LOGGER
     logger_config = {logger_domain: {}}
 
-    translations_called = asyncio.Event()
-    translations_wait = asyncio.Event()
+    translations_called = threading.Event()
+    translations_wait = threading.Event()
 
-    async def async_get_translations(
-        hass: HomeAssistant,
-        language: str,
-        category: str,
-        integrations: Iterable[str] | None = None,
-        config_flow: bool | None = None,
-    ) -> dict[str, Any]:
-        """Return all backend translations."""
+    def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
         translations_called.set()
-        await translations_wait.wait()
-        translation_key_prefix = f"component.{logger_domain}.services.set_default_level"
+        translations_wait.wait()
         return {
-            f"{translation_key_prefix}.name": "Translated name",
-            f"{translation_key_prefix}.description": "Translated description",
-            f"{translation_key_prefix}.fields.level.name": "Field name",
-            f"{translation_key_prefix}.fields.level.description": "Field description",
-            f"{translation_key_prefix}.fields.level.example": "Field example",
+            "set_default_level": {
+                "description": "Translated description",
+                "fields": {
+                    "level": {
+                        "description": "Field description",
+                        "example": "Field example",
+                        "name": "Field name",
+                        "selector": {
+                            "select": {
+                                "options": [
+                                    "debug",
+                                    "info",
+                                    "warning",
+                                    "error",
+                                    "fatal",
+                                    "critical",
+                                ],
+                                "translation_key": "level",
+                            }
+                        },
+                    }
+                },
+                "name": "Translated name",
+            },
+            "set_level": None,
         }
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
-        side_effect=async_get_translations,
+        "homeassistant.helpers.service._load_services_file",
+        side_effect=_load_services_file,
     ):
         await async_setup_component(hass, logger_domain, logger_config)
         task = asyncio.create_task(service.async_get_all_descriptions(hass))
-        await translations_called.wait()
+        await hass.async_add_executor_job(translations_called.wait)
         # Now register a new service while translations are being loaded
         hass.services.async_register(logger_domain, "new_service", lambda x: None, None)
         service.async_set_service_schema(
