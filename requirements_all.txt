@@ -1129,6 +1129,7 @@ hass-nabucasa==0.102.0
 # homeassistant.components.splunk
 hass-splunk==0.1.1
 
+# homeassistant.components.assist_satellite
 # homeassistant.components.conversation
 hassil==2.2.3
 
