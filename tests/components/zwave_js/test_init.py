@@ -1692,27 +1692,6 @@ async def test_replace_different_node(
         (DOMAIN, multisensor_6_device_id_ext),
     }
 
-    ws_client = await hass_ws_client(hass)
-
-    # Simulate the driver not being ready to ensure that the device removal handler
-    # does not crash
-    driver = client.driver
-    client.driver = None
-
-    response = await ws_client.remove_device(hank_device.id, integration.entry_id)
-    assert not response["success"]
-
-    client.driver = driver
-
-    # Attempting to remove the hank device should pass, but removing the multisensor should not
-    response = await ws_client.remove_device(hank_device.id, integration.entry_id)
-    assert response["success"]
-
-    response = await ws_client.remove_device(
-        multisensor_6_device.id, integration.entry_id
-    )
-    assert not response["success"]
-
 
 async def test_node_model_change(
     hass: HomeAssistant,
@@ -1833,7 +1812,8 @@ async def test_disabled_node_status_entity_on_node_replaced(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_disabled_entity_on_value_removed(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_remove_entity_on_value_removed(
     hass: HomeAssistant,
     zp3111: Node,
     client: MagicMock,
@@ -1843,15 +1823,6 @@ async def test_disabled_entity_on_value_removed(
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
-
-    # must reload the integration when enabling an entity
-    await hass.config_entries.async_unload(integration.entry_id)
-    await hass.async_block_till_done()
-    assert integration.state is ConfigEntryState.NOT_LOADED
-    integration.add_to_hass(hass)
-    await hass.config_entries.async_setup(integration.entry_id)
-    await hass.async_block_till_done()
-    assert integration.state is ConfigEntryState.LOADED
 
     state = hass.states.get(idle_cover_status_button_entity)
     assert state

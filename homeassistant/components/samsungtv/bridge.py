@@ -636,14 +636,21 @@ class SamsungTVWSBridge(
                 )
                 self._remote = None
             except ConnectionFailure as err:
-                LOGGER.warning(
-                    (
+                error_details = err.args[0]
+                if "ms.channel.timeOut" in (error_details := repr(err)):
+                    # The websocket was connected, but the TV is probably asleep
+                    LOGGER.debug(
+                        "Channel timeout occurred trying to get remote for %s: %s",
+                        self.host,
+                        error_details,
+                    )
+                else:
+                    LOGGER.warning(
                         "Unexpected ConnectionFailure trying to get remote for %s, "
-                        "please report this issue: %s"
-                    ),
-                    self.host,
-                    repr(err),
-                )
+                        "please report this issue: %s",
+                        self.host,
+                        error_details,
+                    )
                 self._remote = None
             except (WebSocketException, AsyncioTimeoutError, OSError) as err:
                 LOGGER.debug("Failed to get remote for %s: %s", self.host, repr(err))
