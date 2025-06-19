@@ -324,6 +324,9 @@
       "battery_replacement_description": {
         "name": "Battery type"
       },
+      "battery_capacity": {
+        "name": "Battery capacity"
+      },
       "current_phase": {
         "name": "Current phase"
       },

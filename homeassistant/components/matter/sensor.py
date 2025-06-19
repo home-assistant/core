@@ -358,6 +358,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="PowerSourceBatCapacity",
+            translation_key="battery_capacity",
             native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
             suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             device_class=SensorDeviceClass.CURRENT,
