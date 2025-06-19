@@ -901,6 +901,12 @@ class ActionTool(Tool):
         self._domain = domain
         self._action = action
         self.name = f"{domain}.{action}"
+        # Note: _get_cached_action_parameters only works for services which
+        # add their description directly to the service description cache.
+        # This is not the case for most services, but it is for scripts.
+        # If we want to use `ActionTool` for services other than scripts, we
+        # need to add a coroutine function to fetch the non-cached description
+        # and schema.
         self.description, self.parameters = _get_cached_action_parameters(
             hass, domain, action
         )
