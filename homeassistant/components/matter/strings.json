@@ -341,7 +341,7 @@
         }
       },
       "esa_op_out_state": {
-        "name": "Energy optimization opt out",
+        "name": "Energy optimization opt-out",
         "state": {
           "no_opt_out": "[%key:common::state::off%]",
           "local_opt_out": "Local opt-out",
