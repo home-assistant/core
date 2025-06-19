@@ -1,7 +1,5 @@
 """The nederlandse_spoorwegen component."""
 
-from dataclasses import dataclass
-
 import ns_api
 from ns_api import RequestParametersError
 
@@ -11,13 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 PLATFORMS = [Platform.SENSOR]
-
-
-@dataclass
-class NederlandseSpoorwegenData:
-    """Data structure for runtime data."""
-
-    nsapi: ns_api.NSAPI
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -30,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed(
             "Could not instantiate the Nederlandse Spoorwegen API."
         ) from ex
-    entry.runtime_data = NederlandseSpoorwegenData(nsapi)
+    entry.runtime_data = nsapi
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 

@@ -87,7 +87,7 @@ class NederlandseSpoorwegenSubentryFlowHandler(ConfigSubentryFlow):
         if len(self._stations) == 0:
             nsapi = self.hass.config_entries.async_get_known_entry(
                 self.handler[0]
-            ).runtime_data.nsapi
+            ).runtime_data
 
             self._stations = {
                 station.code: station.names["middle"]

@@ -35,7 +35,7 @@ async def async_setup_entry(
 
     for subentry_id, subentry in entry.subentries.items():
         async_add_entities(
-            [NSDepartureSensor(hass, subentry, entry.runtime_data.nsapi, subentry_id)],
+            [NSDepartureSensor(hass, subentry, entry.runtime_data, subentry_id)],
             update_before_add=True,
             config_subentry_id=subentry_id,
         )
