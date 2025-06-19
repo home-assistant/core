@@ -694,10 +694,10 @@ async def test_subscribe_triggers(
     assert msg == {"event": {"sun": {"fields": {}}}, "id": 1, "type": "event"}
 
     # Test we receive an event when a new platform is loaded
-    assert await async_setup_component(hass, "persistent_notification", {})
+    assert await async_setup_component(hass, "tag", {})
     msg = await websocket_client.receive_json()
     assert msg == {
-        "event": {"persistent_notification": {"fields": {}}},
+        "event": {"tag": {"fields": {}}},
         "id": 1,
         "type": "event",
     }

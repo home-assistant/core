@@ -182,7 +182,10 @@ def validate_triggers(config: Config, integration: Integration) -> None:  # noqa
                 except KeyError:
                     integration.add_error(
                         "triggers",
-                        f"Trigger {trigger_name} has a field {field_name} with no name {error_msg_suffix}",
+                        (
+                            f"Trigger {trigger_name} has a field {field_name} with no "
+                            f"name {error_msg_suffix}"
+                        ),
                     )
 
             if "description" not in field_schema and integration.core:
@@ -193,7 +196,10 @@ def validate_triggers(config: Config, integration: Integration) -> None:  # noqa
                 except KeyError:
                     integration.add_error(
                         "triggers",
-                        f"Trigger {trigger_name} has a field {field_name} with no description {error_msg_suffix}",
+                        (
+                            f"Trigger {trigger_name} has a field {field_name} with no "
+                            f"description {error_msg_suffix}"
+                        ),
                     )
 
             if "selector" in field_schema:

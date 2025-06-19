@@ -63,15 +63,14 @@ DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = Has
 TRIGGER_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any]]] = HassKey(
     "trigger_description_cache"
 )
-ALL_TRIGGER_DESCRIPTIONS_CACHE: HassKey[dict[str, dict[str, Any]]] = HassKey(
-    "all_trigger_descriptions_cache"
-)
 TRIGGER_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
 ] = HassKey("trigger_platform_subscriptions")
 TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 
 
+# Basic schemas to sanity check the trigger descriptions,
+# full validation is done by hassfest.services
 _FIELD_SCHEMA = vol.Schema(
     {},
     extra=vol.ALLOW_EXTRA,
@@ -148,7 +147,7 @@ async def _register_trigger_platform(
         )
         return
 
-    tasks: list[asyncio.Task] = [
+    tasks: list[asyncio.Task[None]] = [
         create_eager_task(listener(new_triggers))
         for listener in hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS]
     ]
@@ -559,12 +558,10 @@ async def async_get_all_descriptions(
     # See if there are new triggers not seen before.
     # Any trigger that we saw before already has an entry in description_cache.
     all_triggers = set(triggers)
-    # If we have a complete cache, check if it is still valid
-    if all_cache := hass.data.get(ALL_TRIGGER_DESCRIPTIONS_CACHE):
-        previous_all_triggers = set(all_cache)
-        # If the triggers are the same, we can return the cache
-        if previous_all_triggers == all_triggers:
-            return all_cache
+    previous_all_triggers = set(descriptions_cache)
+    # If the triggers are the same, we can return the cache
+    if previous_all_triggers == all_triggers:
+        return descriptions_cache
 
     # Files we loaded for missing descriptions
     loaded: dict[str, JSON_TYPE] = {}
@@ -597,25 +594,19 @@ async def async_get_all_descriptions(
                 _load_triggers_files, hass, integrations
             )
 
-    # Build response
-    descriptions: dict[str, dict[str, Any]] = {}
-    for trigger_name, domain in triggers.items():
-        description = descriptions_cache.get(trigger_name)
-        if description is not None:
-            descriptions[trigger_name] = description
-            continue
+    # Add missing descriptions to the cache
+    for missing_trigger in missing_triggers:
+        domain = triggers[missing_trigger]
 
         # Cache missing descriptions
         domain_yaml = loaded.get(domain) or {}
 
         yaml_description = (
-            domain_yaml.get(trigger_name) or {}  # type: ignore[union-attr]
+            domain_yaml.get(missing_trigger) or {}  # type: ignore[union-attr]
         )
 
         description = {"fields": yaml_description.get("fields", {})}
 
-        descriptions_cache[trigger_name] = description
-        descriptions[trigger_name] = description
+        descriptions_cache[missing_trigger] = description
 
-    hass.data[ALL_TRIGGER_DESCRIPTIONS_CACHE] = descriptions
-    return descriptions
+    return descriptions_cache

@@ -561,8 +561,8 @@ async def handle_subscribe_trigger_platforms(
         hass, on_new_triggers
     )
     connection.send_result(msg["id"])
-    event = await _async_get_all_trigger_descriptions_json(hass)
-    connection.send_message(construct_event_message(msg["id"], event))
+    triggers_json = await _async_get_all_trigger_descriptions_json(hass)
+    connection.send_message(construct_event_message(msg["id"], triggers_json))
 
 
 @callback
