@@ -17,6 +17,24 @@
           "description": "Extended information of notification. Supports list of images. Supports message format. Optional."
         }
       }
+    },
+    "react": {
+      "name": "React",
+      "description": "Sends a reaction to a message.",
+      "fields": {
+        "message_id": {
+          "name": "Message ID",
+          "description": "The ID of the message to react to."
+        },
+        "reaction": {
+          "name": "Reaction",
+          "description": "The reaction to send."
+        },
+        "room": {
+          "name": "Room",
+          "description": "The room to send the reaction to."
+        }
+      }
     }
   }
 }
