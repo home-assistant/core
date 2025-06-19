@@ -287,6 +287,7 @@ disable = [
   # "global-statement", # PLW0603, ruff catches new occurrences, needs more work
   "global-variable-not-assigned",      # PLW0602
   "implicit-str-concat",               # ISC001
+  "import-outside-toplevel",           # PLC0415
   "import-self",                       # PLW0406
   "inconsistent-quotes",               # Q000
   "invalid-envvar-default",            # PLW1508
@@ -812,6 +813,7 @@ ignore = [
   "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
   "PLR0915", # Too many statements ({statements} > {max_statements})
   "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
+  "PLW1641", # __eq__ without __hash__
   "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
   "PT011",   # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
   "PT018",   # Assertion should be broken down into multiple parts
@@ -835,6 +837,9 @@ ignore = [
   "TRY400", # Use `logging.exception` instead of `logging.error`
   # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
   "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
+  "UP046", # Non PEP 695 generic class
+  "UP047", # Non PEP 696 generic function
+  "UP049", # Avoid private type parameter names
 
   # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
   "W191",

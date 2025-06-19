@@ -452,11 +452,9 @@ def async_fire_mqtt_message(
     # Local import to avoid processing MQTT modules when running a testcase
     # which does not use MQTT.
 
-    # pylint: disable-next=import-outside-toplevel
-    from paho.mqtt.client import MQTTMessage
+    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
 
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.mqtt import MqttData
+    from homeassistant.components.mqtt import MqttData  # noqa: PLC0415
 
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
@@ -1736,8 +1734,7 @@ def async_get_persistent_notifications(
 
 def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> None:
     """Mock a signal the cloud disconnected."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.cloud import (
+    from homeassistant.components.cloud import (  # noqa: PLC0415
         SIGNAL_CLOUD_CONNECTION_STATE,
         CloudConnectionState,
     )
