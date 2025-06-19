@@ -17,6 +17,9 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+from homeassistant.components.websocket_api.commands import (
+    ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE,
+)
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
@@ -685,6 +688,8 @@ async def test_subscribe_triggers(
     assert await async_setup_component(hass, "system_health", {})
     await hass.async_block_till_done()
 
+    assert ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE not in hass.data
+
     await websocket_client.send_json_auto_id({"type": "trigger_platforms/subscribe"})
 
     # Test start subscription with initial event
@@ -692,6 +697,8 @@ async def test_subscribe_triggers(
     assert msg == {"id": 1, "result": None, "success": True, "type": "result"}
     msg = await websocket_client.receive_json()
     assert msg == {"event": {"sun": {"fields": {}}}, "id": 1, "type": "event"}
+
+    old_cache = hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE]
 
     # Test we receive an event when a new platform is loaded
     assert await async_setup_component(hass, "tag", {})
@@ -701,6 +708,35 @@ async def test_subscribe_triggers(
         "id": 1,
         "type": "event",
     }
+
+    # Initiate a second subscription to check the cache is updated because of the new
+    # trigger
+    await websocket_client.send_json_auto_id({"type": "trigger_platforms/subscribe"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 2, "result": None, "success": True, "type": "result"}
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {"sun": {"fields": {}}, "tag": {"fields": {}}},
+        "id": 2,
+        "type": "event",
+    }
+
+    assert hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] is not old_cache
+
+    # Initiate a third subscription to check the cache is not updated because no new
+    # trigger was added
+    old_cache = hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE]
+    await websocket_client.send_json_auto_id({"type": "trigger_platforms/subscribe"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 3, "result": None, "success": True, "type": "result"}
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "event": {"sun": {"fields": {}}, "tag": {"fields": {}}},
+        "id": 3,
+        "type": "event",
+    }
+
+    assert hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] is old_cache
 
 
 async def test_get_config(

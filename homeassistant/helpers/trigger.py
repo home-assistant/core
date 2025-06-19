@@ -594,7 +594,8 @@ async def async_get_all_descriptions(
                 _load_triggers_files, hass, integrations
             )
 
-    # Add missing descriptions to the cache
+    # Make a copy of the old cache and add missing descriptions to it
+    new_descriptions_cache = descriptions_cache.copy()
     for missing_trigger in missing_triggers:
         domain = triggers[missing_trigger]
 
@@ -607,6 +608,7 @@ async def async_get_all_descriptions(
 
         description = {"fields": yaml_description.get("fields", {})}
 
-        descriptions_cache[missing_trigger] = description
+        new_descriptions_cache[missing_trigger] = description
 
-    return descriptions_cache
+    hass.data[TRIGGER_DESCRIPTION_CACHE] = new_descriptions_cache
+    return new_descriptions_cache
