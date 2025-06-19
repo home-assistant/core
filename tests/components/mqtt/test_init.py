@@ -999,10 +999,9 @@ async def test_dump_service(
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
         await hass.async_block_till_done()
 
-    writes = mopen.return_value.write.mock_calls
-    assert len(writes) == 2
-    assert writes[0][1][0] == "bla/1,test1\n"
-    assert writes[1][1][0] == "bla/2,test2\n"
+    writes = mopen.return_value.writelines.mock_calls
+    assert len(writes) == 1
+    assert writes[0][1][0] == ["bla/1,test1\n", "bla/2,test2\n"]
 
 
 async def test_mqtt_ws_remove_discovered_device(
