@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    PRESET_NONE,
     SWING_OFF,
     SWING_ON,
     ClimateEntity,
@@ -108,7 +109,8 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         )
         self._attr_hvac_modes = [HVACMode.OFF]
         self._attr_hvac_mode = HVACMode.OFF
-        self._attr_preset_modes = []
+        self._attr_preset_modes = [PRESET_NONE]
+        self._attr_preset_mode = PRESET_NONE
         self._attr_temperature_unit = (
             self._get_unit_of_measurement(self.data.unit) or UnitOfTemperature.CELSIUS
         )
@@ -158,7 +160,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             hvac_mode = self.data.hvac_mode
             if hvac_mode in STR_TO_HVAC:
                 self._attr_hvac_mode = STR_TO_HVAC.get(hvac_mode)
-                self._attr_preset_mode = None
+                self._attr_preset_mode = PRESET_NONE
             elif hvac_mode in THINQ_PRESET_MODE:
                 self._attr_hvac_mode = (
                     HVACMode.COOL if hvac_mode == "energy_saving" else HVACMode.FAN_ONLY
@@ -166,7 +168,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
                 self._attr_preset_mode = hvac_mode
         else:
             self._attr_hvac_mode = HVACMode.OFF
-            self._attr_preset_mode = None
+            self._attr_preset_mode = PRESET_NONE
 
         self._attr_current_humidity = self.data.humidity
         self._attr_current_temperature = self.data.current_temp
@@ -249,6 +251,8 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self.property_id,
             preset_mode,
         )
+        if preset_mode == PRESET_NONE:
+            preset_mode = "cool" if self.preset_mode == "energy_saving" else "fan"
         await self.async_call_api(
             self.coordinator.api.async_set_hvac_mode(self.property_id, preset_mode)
         )
@@ -307,15 +311,15 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         if not self.data.is_on:
             await self.async_turn_on()
 
+        if hvac_mode and hvac_mode != self.hvac_mode:
+            await self.async_set_hvac_mode(HVACMode(hvac_mode))
+
         _LOGGER.debug(
             "[%s:%s] async_set_temperature: %s",
             self.coordinator.device_name,
             self.property_id,
             kwargs,
         )
-        if hvac_mode and hvac_mode != self.hvac_mode:
-            await self.async_set_hvac_mode(HVACMode(hvac_mode))
-
         if temperature := kwargs.get(ATTR_TEMPERATURE):
             if self.data.step >= 1:
                 temperature = int(temperature)
