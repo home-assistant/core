@@ -527,6 +527,7 @@ OVEN_PROGRAM_ID: dict[int, str] = {
     116: "custom_program_20",
     323: "pyrolytic",
     326: "descale",
+    327: "evaporate_water",
     335: "shabbat_program",
     336: "yom_tov",
     356: "defrost",

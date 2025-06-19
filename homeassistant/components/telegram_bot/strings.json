@@ -106,11 +106,12 @@
         "webhooks": "Webhooks"
       }
     },
-    "parsers": {
+    "parse_mode": {
       "options": {
         "markdown": "Markdown (Legacy)",
         "markdownv2": "MarkdownV2",
-        "html": "HTML"
+        "html": "HTML",
+        "plain_text": "Plain text"
       }
     }
   },
@@ -842,6 +843,46 @@
           "description": "ID of the chat where to delete the message."
         }
       }
+    },
+    "leave_chat": {
+      "name": "Leave chat",
+      "description": "Removes the bot from the chat.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to leave the chat."
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "Chat ID of the group from which the bot should be removed."
+        }
+      }
+    },
+    "set_message_reaction": {
+      "name": "Set message reaction",
+      "description": "Sets the bot's reaction for a given message.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
+          "description": "The config entry representing the Telegram bot to set the message reaction."
+        },
+        "message_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
+          "description": "ID of the message to react to."
+        },
+        "chat_id": {
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "ID of the chat containing the message."
+        },
+        "reaction": {
+          "name": "Reaction",
+          "description": "Emoji reaction to use."
+        },
+        "is_big": {
+          "name": "Large animation",
+          "description": "Whether the reaction animation should be large."
+        }
+      }
     }
   },
   "exceptions": {
@@ -853,6 +894,18 @@
     },
     "missing_allowed_chat_ids": {
       "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
+    },
+    "missing_input": {
+      "message": "{field} is required."
+    },
+    "failed_to_load_url": {
+      "message": "Failed to load URL: {error}"
+    },
+    "allowlist_external_dirs_error": {
+      "message": "File path has not been configured in allowlist_external_dirs."
+    },
+    "failed_to_load_file": {
+      "message": "Failed to load file: {error}"
     }
   },
   "issues": {
