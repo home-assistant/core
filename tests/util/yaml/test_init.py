@@ -559,6 +559,9 @@ def test_load_yaml_dict(expected_data: Any) -> None:
 @pytest.mark.usefixtures("try_both_loaders", "mock_hass_config_yaml")
 def test_load_yaml_dict_fail() -> None:
     """Test item without a key."""
+    # Make sure we raise a subclass of HomeAssistantError, not yaml_loader.YAMLException
+    assert issubclass(yaml_loader.YamlTypeError, HomeAssistantError)
+
     with pytest.raises(yaml_loader.YamlTypeError):
         yaml_loader.load_yaml_dict(YAML_CONFIG_FILE)
 
