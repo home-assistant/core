@@ -34,11 +34,6 @@ async def get_stations(hass: HomeAssistant, nsapi: ns_api.NSAPI):
 class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
     """Nederlandse Spoorwegen config flow."""
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-
-        self.api_key: str
-
     @classmethod
     @callback
     def async_get_supported_subentry_types(
@@ -53,16 +48,16 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.api_key = user_input[CONF_API_KEY]
+            self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
             try:
-                await get_stations(self.hass, ns_api.NSAPI(self.api_key))
+                await get_stations(self.hass, ns_api.NSAPI(user_input[CONF_API_KEY]))
             except RequestParametersError:
                 errors["base"] = "invalid_api_key"
             else:
-                await self.async_set_unique_id(self.api_key)
+                await self.async_set_unique_id(user_input[CONF_API_KEY])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title="NS API", data={CONF_API_KEY: self.api_key}
+                    title="NS API", data={CONF_API_KEY: user_input[CONF_API_KEY]}
                 )
 
         return self.async_show_form(
