@@ -41,13 +41,12 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .const import CONF_OBJECT_ID, DOMAIN
 from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
+    make_template_entity_common_modern_schema,
     rewrite_common_legacy_to_modern_conf,
 )
 
@@ -105,15 +104,10 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.All(
                 CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name
             ): cv.enum(TemplateCodeFormat),
             vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_NAME): cv.template,
-            vol.Optional(CONF_PICTURE): cv.template,
             vol.Optional(CONF_STATE): cv.template,
             vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
+    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 )
 
 
@@ -419,9 +413,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AbstractTemplateAlarmControlPane
         unique_id: str | None,
     ) -> None:
         """Initialize the panel."""
-        TemplateEntity.__init__(
-            self, hass, config=config, fallback_name=None, unique_id=unique_id
-        )
+        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
         AbstractTemplateAlarmControlPanel.__init__(self, config)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(

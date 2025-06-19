@@ -115,6 +115,7 @@ async def test_webhook_callback(
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # test webhook callback success all channels
+    reolink_connect.get_motion_state_all_ch.return_value = True
     reolink_connect.motion_detected.return_value = True
     reolink_connect.ONVIF_event_callback.return_value = None
     await client.post(f"/api/webhook/{webhook_id}")
