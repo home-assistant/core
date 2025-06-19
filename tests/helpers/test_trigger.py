@@ -23,6 +23,8 @@ from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml
 
+from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
+
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
     """Test bad trigger platform."""
@@ -600,3 +602,16 @@ async def test_async_get_all_descriptions_with_bad_description(
         "Unable to parse triggers.yaml for the sun integration: "
         "expected a dictionary for dictionary value @ data['sun']['fields']"
     ) in caplog.text
+
+
+async def test_invalid_trigger_platform(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid trigger platform."""
+    mock_integration(hass, MockModule("test", async_setup=AsyncMock(return_value=True)))
+    mock_platform(hass, "test.trigger", MockPlatform())
+
+    await async_setup_component(hass, "test", {})
+
+    assert "Integration test does not provide trigger support, skipping" in caplog.text
