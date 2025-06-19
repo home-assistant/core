@@ -564,7 +564,7 @@ async def async_get_all_descriptions(
         return descriptions_cache
 
     # Files we loaded for missing descriptions
-    loaded: dict[str, JSON_TYPE] = {}
+    new_triggers_descriptions: dict[str, JSON_TYPE] = {}
     # We try to avoid making a copy in the event the cache is good,
     # but now we must make a copy in case new triggers get added
     # while we are loading the missing ones so we do not
@@ -590,7 +590,7 @@ async def async_get_all_descriptions(
             )
 
         if integrations:
-            loaded = await hass.async_add_executor_job(
+            new_triggers_descriptions = await hass.async_add_executor_job(
                 _load_triggers_files, hass, integrations
             )
 
@@ -599,7 +599,7 @@ async def async_get_all_descriptions(
         domain = triggers[missing_trigger]
 
         # Cache missing descriptions
-        domain_yaml = loaded.get(domain) or {}
+        domain_yaml = new_triggers_descriptions.get(domain) or {}
 
         yaml_description = (
             domain_yaml.get(missing_trigger) or {}  # type: ignore[union-attr]
