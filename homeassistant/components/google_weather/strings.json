@@ -11,7 +11,7 @@
         "data_description": {
           "name": "Location name. Used as the config entry and service name",
           "api_key": "A unique alphanumeric string that associates your Google billing account with Google Weather API",
-          "referrer": "Specify this only if the API key has application restriction on HTTP referrer",
+          "referrer": "Specify this only if the API key has a [website application restriction](https://developers.google.com/maps/api-security-best-practices#restricting-api-keys)",
           "location": "Location coordinates"
         },
         "description": "Get your API key from [here]({api_key_url})."
