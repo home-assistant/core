@@ -18,7 +18,6 @@ from .conftest import MockSoCo, SonosMockEvent, group_speakers, ungroup_speakers
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
     load_json_value_fixture,
 )
 
