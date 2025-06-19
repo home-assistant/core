@@ -21,16 +21,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
+type MeaterConfigEntry = ConfigEntry[MeaterCoordinator]
+
 
 class MeaterCoordinator(DataUpdateCoordinator[dict[str, MeaterProbe]]):
     """Meater Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: MeaterConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: MeaterConfigEntry,
     ) -> None:
         """Initialize the Meater Coordinator."""
         super().__init__(
