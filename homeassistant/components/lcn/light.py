@@ -18,6 +18,7 @@ from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import (
     CONF_DIMMABLE,
@@ -28,6 +29,8 @@ from .const import (
 )
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
+
+BRIGHTNESS_SCALE = (1, 100)
 
 PARALLEL_UPDATES = 0
 
@@ -91,8 +94,6 @@ class LcnOutputLight(LcnEntity, LightEntity):
         )
         self.dimmable = config[CONF_DOMAIN_DATA][CONF_DIMMABLE]
 
-        self._is_dimming_to_zero = False
-
         if self.dimmable:
             self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
@@ -113,10 +114,6 @@ class LcnOutputLight(LcnEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            percent = int(kwargs[ATTR_BRIGHTNESS] / 255.0 * 100)
-        else:
-            percent = 100
         if ATTR_TRANSITION in kwargs:
             transition = pypck.lcn_defs.time_to_ramp_value(
                 kwargs[ATTR_TRANSITION] * 1000
@@ -124,12 +121,23 @@ class LcnOutputLight(LcnEntity, LightEntity):
         else:
             transition = self._transition
 
-        if not await self.device_connection.dim_output(
-            self.output.value, percent, transition
-        ):
+        if ATTR_BRIGHTNESS in kwargs:
+            percent = int(
+                brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+            )
+            if not await self.device_connection.dim_output(
+                self.output.value, percent, transition
+            ):
+                return
+        elif not self.is_on:
+            if not await self.device_connection.toggle_output(
+                self.output.value, transition, to_memory=True
+            ):
+                return
+        else:
             return
+
         self._attr_is_on = True
-        self._is_dimming_to_zero = False
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -141,13 +149,13 @@ class LcnOutputLight(LcnEntity, LightEntity):
         else:
             transition = self._transition
 
-        if not await self.device_connection.dim_output(
-            self.output.value, 0, transition
-        ):
-            return
-        self._is_dimming_to_zero = bool(transition)
-        self._attr_is_on = False
-        self.async_write_ha_state()
+        if self.is_on:
+            if not await self.device_connection.toggle_output(
+                self.output.value, transition, to_memory=True
+            ):
+                return
+            self._attr_is_on = False
+            self.async_write_ha_state()
 
     def input_received(self, input_obj: InputType) -> None:
         """Set light state when LCN input object (command) is received."""
@@ -157,11 +165,9 @@ class LcnOutputLight(LcnEntity, LightEntity):
         ):
             return
 
-        self._attr_brightness = int(input_obj.get_percent() / 100.0 * 255)
-        if self._attr_brightness == 0:
-            self._is_dimming_to_zero = False
-        if not self._is_dimming_to_zero and self._attr_brightness is not None:
-            self._attr_is_on = self._attr_brightness > 0
+        percent = input_obj.get_percent()
+        self._attr_brightness = value_to_brightness(BRIGHTNESS_SCALE, percent)
+        self._attr_is_on = bool(percent)
         self.async_write_ha_state()
 
 
