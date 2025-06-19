@@ -1,0 +1,195 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pair Kiosker App",
+        "description": "Enable the API in Kiosker settings to pair with Home Assistant.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "api_token": "API Token",
+          "ssl": "Use SSL",
+          "ssl_verify": "Verify certificate",
+          "poll_interval": "Poll Interval (seconds)"
+        },
+        "data_description": {
+          "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
+          "host": "The hostname or IP address of the device running the Kiosker App",
+          "port": "The port on which the Kiosker App is running. Default is 8081.",
+          "poll_interval": "The interval in seconds to poll the Kiosker App for updates.",
+          "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
+          "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
+        }
+      },
+      "zeroconf": {
+        "description": "Do you want to configure {name} at {host}:{port}?"
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered Kiosker App",
+        "description": "You are about to pair `{name}` at `{host}:{port}` with Home Assistant.\n\n**Would you like to proceed?**",
+        "submit": "Pair"
+      },
+      "discovery_confirm": {
+        "title": "Pair Kiosker App",
+        "description": "Pair `{name}` at `{host}:{port}`",
+        "data": {
+          "api_token": "API Token",
+          "poll_interval": "Poll Interval (seconds)",
+          "ssl": "Use SSL",
+          "ssl_verify": "Verify certificate"
+        },
+        "data_description": {
+          "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
+          "poll_interval": "The interval in seconds to poll the Kiosker App for updates.",
+          "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
+          "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Kiosker device",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    }
+  },
+  "entity": {
+    "switch": {
+      "disable_screensaver": {
+        "name": "Disable screensaver"
+      }
+    },
+    "sensor": {
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "unkown": "Unknwown",
+          "not_charging": "Not Charging",
+          "fully_charged": "Fully Charged"
+        }
+      },
+      "blackout_state": {
+        "name": "Blackout state",
+        "state": {
+          "active": "Active",
+          "inactive": "Inactive"
+        }
+      },
+      "last_interaction": {
+        "name": "Last interaction"
+      },
+      "last_motion": {
+        "name": "Last motion"
+      },
+      "last_update": {
+        "name": "Last update"
+      },
+      "screensaver_visibility": {
+        "name": "Screensaver visibility",
+        "state": {
+          "visible": "Visible",
+          "hidden": "Hidden"
+        }
+      }
+    }
+  },
+  "services": {
+    "navigate_url": {
+      "name": "Navigate to URL",
+      "description": "Navigate to a specific URL",
+      "fields": {
+        "url": {
+          "name": "URL",
+          "description": "The URL to navigate to"
+        }
+      }
+    },
+    "navigate_refresh": {
+      "name": "Refresh",
+      "description": "Refresh the current page"
+    },
+    "navigate_home": {
+      "name": "Navigate home",
+      "description": "Navigate to the home page"
+    },
+    "navigate_backward": {
+      "name": "Navigate backward",
+      "description": "Navigate to the previous page"
+    },
+    "navigate_forward": {
+      "name": "Navigate forward",
+      "description": "Navigate to the next page"
+    },
+    "print": {
+      "name": "Print",
+      "description": "Print the current page"
+    },
+    "clear_cookies": {
+      "name": "Clear cookies",
+      "description": "Clear all cookies"
+    },
+    "clear_cache": {
+      "name": "Clear cache",
+      "description": "Clear the browser cache"
+    },
+    "screensaver_interact": {
+      "name": "Screensaver interact",
+      "description": "Interact with the screensaver"
+    },
+    "blackout_set": {
+      "name": "Set blackout",
+      "description": "Set blackout screen with custom message",
+      "fields": {
+        "visible": {
+          "name": "Visible",
+          "description": "Whether the blackout is visible"
+        },
+        "text": {
+          "name": "Text",
+          "description": "Text to display on blackout screen"
+        },
+        "background": {
+          "name": "Background color",
+          "description": "Background color in hex format"
+        },
+        "foreground": {
+          "name": "Foreground color",
+          "description": "Text color in hex format"
+        },
+        "icon": {
+          "name": "Icon",
+          "description": "Icon to display (SF Symbols name)"
+        },
+        "expire": {
+          "name": "Expire time",
+          "description": "Time in seconds before blackout expires"
+        },
+        "dismissible": {
+          "name": "Dismissible",
+          "description": "Whether the blackout can be dismissed by user interaction"
+        },
+        "button_background": {
+          "name": "Button background color",
+          "description": "Background color of the dismiss button in hex format"
+        },
+        "button_foreground": {
+          "name": "Button foreground color",
+          "description": "Text color of the dismiss button in hex format"
+        },
+        "button_text": {
+          "name": "Button text",
+          "description": "Text to display on the dismiss button"
+        },
+        "sound": {
+          "name": "Sound",
+          "description": "Sound to play when blackout is displayed (SystemSoundID, eg: 1007)"
+        }
+      }
+    }
+  }
+}
