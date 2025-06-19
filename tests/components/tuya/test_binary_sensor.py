@@ -5,9 +5,9 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.tuya import DeviceListener, ManagerCompat
 from homeassistant.components.tuya.const import (
     CONF_ENDPOINT,
@@ -17,11 +17,11 @@ from homeassistant.components.tuya.const import (
     DOMAIN,
     DPCode,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -83,7 +83,7 @@ async def test_fault_sensor_setup_and_discovery(
     mock_config_entry: MockConfigEntry,
     mock_fault_device: CustomerDevice,
     entity_registry: er.EntityRegistry,
-    device_listener: DeviceListener,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test fault sensor entity discovery and setup."""
     # Setup
@@ -91,59 +91,14 @@ async def test_fault_sensor_setup_and_discovery(
     mock_config_entry.add_to_hass(hass)
 
     # Initialize the component
-    with patch(
-        "homeassistant.components.tuya.ManagerCompat", return_value=mock_manager
+    with (
+        patch("homeassistant.components.tuya.ManagerCompat", return_value=mock_manager),
+        patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR]),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Verify entity discovery - should create 3 fault sensors
-    entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    fault_sensors = [
-        entry
-        for entry in entries
-        if entry.entity_id.startswith("binary_sensor.test_fault_device_")
-    ]
-    assert len(fault_sensors) == 3
-
-
-@pytest.mark.parametrize(
-    ("entity_id", "expected_name"),
-    [
-        ("binary_sensor.test_fault_device_fault_1", "Test Fault Device Fault 1"),
-        ("binary_sensor.test_fault_device_fault_2", "Test Fault Device Fault 2"),
-        ("binary_sensor.test_fault_device_fault_3", "Test Fault Device Fault 3"),
-    ],
-)
-async def test_fault_sensor_initial_state(
-    hass: HomeAssistant,
-    mock_manager: ManagerCompat,
-    mock_config_entry: MockConfigEntry,
-    mock_fault_device: CustomerDevice,
-    device_listener: DeviceListener,
-    entity_id: str,
-    expected_name: str,
-) -> None:
-    """Test fault sensor initial state and attributes."""
-    # Setup
-    mock_manager.device_map = {mock_fault_device.id: mock_fault_device}
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.tuya.ManagerCompat", return_value=mock_manager
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Verify initial state
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_OFF
-    assert state.attributes["device_class"] == BinarySensorDeviceClass.PROBLEM
-    assert state.attributes["friendly_name"] == expected_name
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
