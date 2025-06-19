@@ -68,7 +68,6 @@ class NSDepartureSensor(SensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        self._hass = hass
         self._nsapi = nsapi
         self._name = entry.title
         self._departure = entry.data[CONF_STATION_FROM]
