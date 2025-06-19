@@ -48,7 +48,7 @@
   },
   "exceptions": {
     "connection_failed": {
-      "message": "Central Unit {gateway_id} is offline."
+      "message": "Failed to connect to devolo Home Control central unit {gateway_id}."
     },
     "invalid_auth": {
       "message": "Authentication failed. Please re-authenticaticate with your mydevolo account."
