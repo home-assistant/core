@@ -1016,7 +1016,7 @@ home-assistant-frontend==20250531.3
 home-assistant-intents==2025.6.10
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.5
+homematicip==2.0.6
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1509,7 +1509,7 @@ pyDuotecno==2024.10.1
 pyElectra==1.2.4
 
 # homeassistant.components.homee
-pyHomee==1.2.8
+pyHomee==1.2.9
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -2458,7 +2458,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.13.0
+uiprotect==7.14.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
