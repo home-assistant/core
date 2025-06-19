@@ -913,12 +913,41 @@ DISCOVERY_SCHEMAS = [
         hint="numeric_sensor",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
-                CommandClass.BATTERY,
                 CommandClass.ENERGY_PRODUCTION,
                 CommandClass.SENSOR_ALARM,
                 CommandClass.SENSOR_MULTILEVEL,
             },
             type={ValueType.NUMBER},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"level", "maximumCapacity"},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"temperature"},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="list",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"chargingStatus", "rechargeOrReplace"},
         ),
         data_template=NumericSensorDataTemplate(),
     ),
