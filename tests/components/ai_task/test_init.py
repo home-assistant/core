@@ -40,7 +40,7 @@ async def test_preferences_storage_load(
 
     assert new_preferences_instance.gen_text_entity_id == gen_text_id_1
 
-    # Test updating one preference and setting another to None
+    # Test updating one preference
     gen_text_id_2 = "sensor.summary_two"
     preferences.async_set_preferences(gen_text_entity_id=gen_text_id_2)
 

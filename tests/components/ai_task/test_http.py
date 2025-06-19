@@ -42,7 +42,7 @@ async def test_ws_preferences(
         "gen_text_entity_id": "ai_task.summary_1",
     }
 
-    # Set only one preference
+    # Update an existing preference
     await client.send_json_auto_id(
         {
             "type": "ai_task/preferences/set",
@@ -63,7 +63,7 @@ async def test_ws_preferences(
         "gen_text_entity_id": "ai_task.summary_2",
     }
 
-    # Clear a preference
+    # No preferences set will preserve existing preferences
     await client.send_json_auto_id(
         {
             "type": "ai_task/preferences/set",
