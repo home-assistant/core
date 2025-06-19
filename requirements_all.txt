@@ -244,7 +244,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==32.2.1
+aioesphomeapi==32.2.4
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1127,7 +1127,7 @@ habluetooth==3.49.0
 hanna-cloud==0.0.4
 
 # homeassistant.components.cloud
-hass-nabucasa==0.101.0
+hass-nabucasa==0.102.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1635,7 +1635,7 @@ orvibo==1.1.2
 ourgroceries==1.5.4
 
 # homeassistant.components.ovo_energy
-ovoenergy==2.0.0
+ovoenergy==2.0.1
 
 # homeassistant.components.p1_monitor
 p1monitor==3.1.0
@@ -1801,7 +1801,7 @@ pyEmby==1.10
 pyHik==0.3.2
 
 # homeassistant.components.homee
-pyHomee==1.2.8
+pyHomee==1.2.9
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -2990,7 +2990,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.13.0
+uiprotect==7.14.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
