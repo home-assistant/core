@@ -109,11 +109,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "devialet": {"async-upnp-client": {"async-timeout"}},
     "dlna_dmr": {"async-upnp-client": {"async-timeout"}},
     "dlna_dms": {"async-upnp-client": {"async-timeout"}},
-    "edl21": {
-        # https://github.com/mtdcr/pysml/issues/21
-        # pysml > pyserial-asyncio
-        "pysml": {"pyserial-asyncio", "async-timeout"},
-    },
     "efergy": {
         # https://github.com/tkdrob/pyefergy/issues/46
         # pyefergy > codecov
@@ -249,16 +244,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/arrow-py/arrow/issues/1169 (fixed not yet released)
         # opower > arrow > types-python-dateutil
         "arrow": {"types-python-dateutil"}
-    },
-    "osoenergy": {
-        # https://github.com/osohotwateriot/apyosohotwaterapi/pull/4
-        # pyosoenergyapi > unasync > setuptools
-        "unasync": {"setuptools"}
-    },
-    "ovo_energy": {
-        # https://github.com/timmo001/ovoenergy/issues/132
-        # ovoenergy > incremental > setuptools
-        "incremental": {"setuptools"}
     },
     "pi_hole": {"hole": {"async-timeout"}},
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
