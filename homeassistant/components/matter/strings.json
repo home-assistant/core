@@ -327,6 +327,12 @@
       "battery_capacity": {
         "name": "Battery capacity"
       },
+      "battery_time_remaining": {
+        "name": "Time remaining"
+      },
+      "battery_time_to_full_charge": {
+        "name": "Time to full charge"
+      },
       "current_phase": {
         "name": "Current phase"
       },
