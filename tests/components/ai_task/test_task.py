@@ -4,18 +4,23 @@ from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.ai_task import DATA_PREFERENCES, async_generate_text
+from homeassistant.components.ai_task import (
+    DATA_PREFERENCES,
+    AITaskEntityFeature,
+    async_generate_text,
+)
 from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import chat_session
 
-from .conftest import TEST_ENTITY_ID
+from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 
 
 async def test_run_task_preferred_entity(
     hass: HomeAssistant,
     init_components: None,
+    mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
     """Test running a task with an unknown entity."""
     preferences = hass.data[DATA_PREFERENCES]
@@ -52,6 +57,17 @@ async def test_run_task_preferred_entity(
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNKNOWN
+
+    mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
+    with pytest.raises(
+        ValueError,
+        match="AI Task entity ai_task.test_task_entity does not support generating text",
+    ):
+        await async_generate_text(
+            hass,
+            task_name="Test Task",
+            instructions="Test prompt",
+        )
 
 
 async def test_run_text_task_unknown_entity(

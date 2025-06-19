@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_COMPONENT, DATA_PREFERENCES
+from .const import DATA_COMPONENT, DATA_PREFERENCES, AITaskEntityFeature
 
 
 async def async_generate_text(
@@ -26,6 +26,9 @@ async def async_generate_text(
     entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
     if entity is None:
         raise ValueError(f"AI Task entity {entity_id} not found")
+
+    if AITaskEntityFeature.GENERATE_TEXT not in entity.supported_features:
+        raise ValueError(f"AI Task entity {entity_id} does not support generating text")
 
     return await entity.internal_async_generate_text(
         GenTextTask(

@@ -4,6 +4,8 @@ from collections.abc import AsyncGenerator
 import contextlib
 from typing import final
 
+from propcache.api import cached_property
+
 from homeassistant.components.conversation import (
     ChatLog,
     UserContent,
@@ -15,7 +17,7 @@ from homeassistant.helpers.chat_session import async_get_chat_session
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_SYSTEM_PROMPT, DOMAIN
+from .const import DEFAULT_SYSTEM_PROMPT, DOMAIN, AITaskEntityFeature
 from .task import GenTextTask, GenTextTaskResult
 
 
@@ -23,6 +25,7 @@ class AITaskEntity(RestoreEntity):
     """Entity that supports conversations."""
 
     _attr_should_poll = False
+    _attr_supported_features = AITaskEntityFeature(0)
     __last_activity: str | None = None
 
     @property
@@ -32,6 +35,11 @@ class AITaskEntity(RestoreEntity):
         if self.__last_activity is None:
             return None
         return self.__last_activity
+
+    @cached_property
+    def supported_features(self) -> AITaskEntityFeature:
+        """Flag supported features."""
+        return self._attr_supported_features
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""

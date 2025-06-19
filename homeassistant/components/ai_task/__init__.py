@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv, storage
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import DATA_COMPONENT, DATA_PREFERENCES, DOMAIN
+from .const import DATA_COMPONENT, DATA_PREFERENCES, DOMAIN, AITaskEntityFeature
 from .entity import AITaskEntity
 from .http import async_setup as async_setup_conversation_http
 from .task import GenTextTask, GenTextTaskResult, async_generate_text
@@ -25,6 +25,7 @@ from .task import GenTextTask, GenTextTaskResult, async_generate_text
 __all__ = [
     "DOMAIN",
     "AITaskEntity",
+    "AITaskEntityFeature",
     "GenTextTask",
     "GenTextTaskResult",
     "async_generate_text",
