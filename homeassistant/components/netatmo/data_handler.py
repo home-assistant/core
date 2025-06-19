@@ -62,7 +62,7 @@ HOME = "home"
 WEATHER = "weather"
 AIR_CARE = "air_care"
 PUBLIC = NetatmoDeviceType.public
-DOOR_TAG = "door_tag"
+DOOR_TAG = "opening"
 BINARY_SENSOR = BINARY_SENSOR_DOMAIN
 EVENT = "event"
 
