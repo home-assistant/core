@@ -6,7 +6,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "The API Key for your NextDNS account"
+          "api_key": "The API key for your NextDNS account"
         }
       },
       "profiles": {
