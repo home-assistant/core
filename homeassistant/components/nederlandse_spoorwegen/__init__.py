@@ -1,6 +1,5 @@
 """The nederlandse_spoorwegen component."""
 
-import asyncio
 from dataclasses import dataclass
 
 import ns_api
@@ -26,8 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         nsapi = ns_api.NSAPI(entry.data[CONF_API_KEY])
-        loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, nsapi.get_stations)
+        await hass.async_add_executor_job(nsapi.get_stations)
         entry.runtime_data = NederlandseSpoorwegenData(nsapi)
     except RequestParametersError as ex:
         raise ConfigEntryAuthFailed(

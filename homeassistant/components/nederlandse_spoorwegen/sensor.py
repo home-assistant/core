@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -189,9 +188,7 @@ class NSDepartureSensor(SensorEntity):
             trip_time = dt_util.now().strftime("%d-%m-%Y %H:%M")
 
         try:
-            loop = asyncio.get_running_loop()
-            self._trips = await loop.run_in_executor(  # type: ignore[func-returns-value] # ns_api import contains to typing and causes a mypy error here.
-                None,
+            self._trips = await self.hass.async_add_executor_job(  # type: ignore[func-returns-value] # ns_api import contains to typing and causes a mypy error here.
                 self._nsapi.get_trips,
                 trip_time,
                 self._departure,

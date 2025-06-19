@@ -1,6 +1,5 @@
 """Adds config flow for Nederlandse Spoorwegen."""
 
-import asyncio
 from typing import Any
 
 import ns_api
@@ -15,7 +14,7 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import TimeSelector
 
 from .const import (
@@ -27,10 +26,9 @@ from .const import (
 )
 
 
-async def get_stations(nsapi: ns_api.NSAPI):
+async def get_stations(hass: HomeAssistant, nsapi: ns_api.NSAPI):
     """Return all available stations."""
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, nsapi.get_stations)
+    return await hass.async_add_executor_job(nsapi.get_stations)
 
 
 class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -57,7 +55,7 @@ class NederlandseSpoorwegenConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.api_key = user_input[CONF_API_KEY]
             try:
-                await get_stations(ns_api.NSAPI(self.api_key))
+                await get_stations(self.hass, ns_api.NSAPI(self.api_key))
             except RequestParametersError:
                 errors["base"] = "invalid_api_key"
             else:
@@ -93,7 +91,7 @@ class NederlandseSpoorwegenSubentryFlowHandler(ConfigSubentryFlow):
 
             self._stations = {
                 station.code: station.names["middle"]
-                for station in await get_stations(nsapi)
+                for station in await get_stations(self.hass, nsapi)
                 if station.country == "NL"
             }
 
