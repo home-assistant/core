@@ -73,6 +73,10 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.reboot = AsyncMock()
     host_mock.set_ptz_command = AsyncMock()
     host_mock.get_motion_state_all_ch = AsyncMock(return_value=False)
+    host_mock.get_stream_source = AsyncMock()
+    host_mock.get_snapshot = AsyncMock()
+    host_mock.get_encoding = AsyncMock(return_value="h264")
+    host_mock.ONVIF_event_callback = AsyncMock()
     host_mock.is_nvr = True
     host_mock.is_hub = False
     host_mock.mac_address = TEST_MAC
@@ -105,7 +109,6 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.camera_uid.return_value = TEST_UID_CAM
     host_mock.camera_online.return_value = True
     host_mock.channel_for_uid.return_value = 0
-    host_mock.get_encoding.return_value = "h264"
     host_mock.firmware_update_available.return_value = False
     host_mock.session_active = True
     host_mock.timeout = 60
