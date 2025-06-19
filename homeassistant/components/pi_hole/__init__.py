@@ -194,7 +194,7 @@ def api_by_version(
     version: int,
     password: str | None = None,
 ) -> HoleV5 | HoleV6:
-    """Create an API object by version number."""
+    """Create a pi-hole API object by API version number."""
 
     if password is None:
         password = entry.get(CONF_API_KEY)
