@@ -19,7 +19,7 @@ from .coordinator import (
     GoogleWeatherRuntimeData,
 )
 
-_PLATFORMS: list[Platform] = [Platform.WEATHER]
+_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WEATHER]
 
 
 async def async_setup_entry(
