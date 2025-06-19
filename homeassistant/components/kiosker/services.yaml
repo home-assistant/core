@@ -1,0 +1,66 @@
+navigate_url:
+  fields:
+    url:
+      required: true
+      selector:
+        text:
+
+navigate_refresh:
+
+navigate_home:
+
+navigate_backward:
+
+navigate_forward:
+
+print:
+
+clear_cookies:
+
+clear_cache:
+
+screensaver_interact:
+
+blackout_clear:
+
+blackout_set:
+  fields:
+    visible:
+      default: true
+      selector:
+        boolean:
+    text:
+      default: "Hello, World!"
+      selector:
+        text:
+    background:
+      selector:
+        color_rgb:
+    foreground:
+      selector:
+        color_rgb:
+    icon:
+      selector:
+        text:
+    dismissible:
+      selector:
+        boolean:
+    button_background:
+      selector:
+        color_rgb:
+    button_foreground:
+      selector:
+        color_rgb:
+    button_text:
+      selector:
+        text:
+    sound:
+      selector:
+        text:
+    expire:
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds

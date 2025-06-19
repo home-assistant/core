@@ -1,0 +1,37 @@
+{
+  "services": {
+    "navigate_url": {
+      "service": "mdi:web"
+    },
+    "navigate_refresh": {
+      "service": "mdi:refresh"
+    },
+    "navigate_home": {
+      "service": "mdi:home"
+    },
+    "navigate_backward": {
+      "service": "mdi:arrow-left"
+    },
+    "navigate_forward": {
+      "service": "mdi:arrow-right"
+    },
+    "print": {
+      "service": "mdi:printer"
+    },
+    "clear_cookies": {
+      "service": "mdi:cookie-remove"
+    },
+    "clear_cache": {
+      "service": "mdi:cached"
+    },
+    "screensaver_interact": {
+      "service": "mdi:monitor-screenshot"
+    },
+    "blackout_set": {
+      "service": "mdi:monitor-off"
+    },
+    "blackout_clear": {
+      "service": "mdi:monitor"
+    }
+  }
+}
