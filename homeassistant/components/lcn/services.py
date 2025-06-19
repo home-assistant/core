@@ -28,8 +28,6 @@ from .const import (
     CONF_PCK,
     CONF_RELVARREF,
     CONF_ROW,
-    CONF_SETPOINT,
-    CONF_TABLE,
     CONF_TEXT,
     CONF_TIME,
     CONF_TIME_UNIT,
@@ -274,26 +272,6 @@ class VarRel(LcnServiceCall):
         await device_connection.var_rel(var, value, unit, value_ref)
 
 
-class LockRegulator(LcnServiceCall):
-    """Locks a regulator setpoint."""
-
-    schema = LcnServiceCall.schema.extend(
-        {
-            vol.Required(CONF_SETPOINT): vol.All(vol.Upper, vol.In(SETPOINTS)),
-            vol.Optional(CONF_STATE, default=False): bool,
-        }
-    )
-
-    async def async_call_service(self, service: ServiceCall) -> None:
-        """Execute service call."""
-        setpoint = pypck.lcn_defs.Var[service.data[CONF_SETPOINT]]
-        state = service.data[CONF_STATE]
-
-        reg_id = pypck.lcn_defs.Var.to_set_point_id(setpoint)
-        device_connection = self.get_device_connection(service)
-        await device_connection.lock_regulator(reg_id, state)
-
-
 class SendKeys(LcnServiceCall):
     """Sends keys (which executes bound commands)."""
 
@@ -338,48 +316,6 @@ class SendKeys(LcnServiceCall):
         else:
             state = pypck.lcn_defs.SendKeyCommand[service.data[CONF_STATE]]
             await device_connection.send_keys(keys, state)
-
-
-class LockKeys(LcnServiceCall):
-    """Lock keys."""
-
-    schema = LcnServiceCall.schema.extend(
-        {
-            vol.Optional(CONF_TABLE, default="a"): vol.All(
-                vol.Upper, cv.matches_regex(r"^[A-D]$")
-            ),
-            vol.Required(CONF_STATE): is_states_string,
-            vol.Optional(CONF_TIME, default=0): cv.positive_int,
-            vol.Optional(CONF_TIME_UNIT, default="S"): vol.All(
-                vol.Upper, vol.In(TIME_UNITS)
-            ),
-        }
-    )
-
-    async def async_call_service(self, service: ServiceCall) -> None:
-        """Execute service call."""
-        device_connection = self.get_device_connection(service)
-
-        states = [
-            pypck.lcn_defs.KeyLockStateModifier[state]
-            for state in service.data[CONF_STATE]
-        ]
-        table_id = ord(service.data[CONF_TABLE]) - 65
-
-        if (delay_time := service.data[CONF_TIME]) != 0:
-            if table_id != 0:
-                raise ValueError(
-                    "Only table A is allowed when locking keys for a specific time."
-                )
-            delay_unit = pypck.lcn_defs.TimeUnit.parse(service.data[CONF_TIME_UNIT])
-            await device_connection.lock_keys_tab_a_temporary(
-                delay_time, delay_unit, states
-            )
-        else:
-            await device_connection.lock_keys(table_id, states)
-
-        handler = device_connection.status_requests_handler
-        await handler.request_status_locked_keys_timeout()
 
 
 class DynText(LcnServiceCall):
@@ -439,10 +375,8 @@ SERVICES = (
     (LcnService.VAR_ABS, VarAbs),
     (LcnService.VAR_RESET, VarReset),
     (LcnService.VAR_REL, VarRel),
-    (LcnService.LOCK_REGULATOR, LockRegulator),
     (LcnService.LED, Led),
     (LcnService.SEND_KEYS, SendKeys),
-    (LcnService.LOCK_KEYS, LockKeys),
     (LcnService.DYN_TEXT, DynText),
     (LcnService.PCK, Pck),
 )
