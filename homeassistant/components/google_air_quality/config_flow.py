@@ -1,9 +1,10 @@
 """Config flow for Google Air Quality."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from google_air_quality_api.api import GoogleAirQualityApi
+from google_air_quality_api.auth import Auth
 from google_air_quality_api.exceptions import (
     GoogleAirQualityApiError,
     NoDataForLocationError,
@@ -12,38 +13,36 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
+    CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
-    CONF_TOKEN,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    AbstractOAuth2FlowHandler,
-    OAuth2Session,
-    async_get_config_entry_implementation,
-)
 from homeassistant.helpers.selector import LocationSelector
 
-from . import api
-from .const import CLOUD_PLATFORM_SCOPE, DOMAIN, OAUTH2_SCOPES
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+    }
+)
 
-class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
+
+class GoogleAirQaulityApiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow to handle Google Air Quality OAuth2 authentication."""
-
-    DOMAIN = DOMAIN
 
     @classmethod
     @callback
@@ -53,50 +52,38 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Return subentries supported by this integration."""
         return {"location": LocationSubentryFlowHandler}
 
-    @property
-    def logger(self) -> logging.Logger:
-        """Return logger."""
-        return logging.getLogger(__name__)
-
-    @property
-    def extra_authorize_data(self) -> dict[str, Any]:
-        """Extra data that needs to be appended to the authorize url."""
-        return {
-            "scope": " ".join(OAUTH2_SCOPES),
-            # Add params to ensure we get back a refresh token
-            "access_type": "offline",
-            "prompt": "consent",
-        }
-
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Store OAuth token data and prompt user to confirm or change coordinates."""
-        token_info = data[CONF_TOKEN]
-        scopes = token_info["scope"]
-
-        if CLOUD_PLATFORM_SCOPE not in scopes:
-            return self.async_abort(
-                reason="missing_scope",
-                description_placeholders={"scope": CLOUD_PLATFORM_SCOPE},
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] | None = None
+        user_input = user_input or {}
+        if user_input:
+            session = async_get_clientsession(self.hass)
+            auth = Auth(session, user_input[CONF_API_KEY])
+            client = GoogleAirQualityApi(auth)
+            try:
+                await client.async_air_quality(37.419734, -122.0827784)
+            except GoogleAirQualityApiError as ex:
+                _LOGGER.debug("Cannot fetch air quality data: %s", str(ex))
+                return self.async_abort(
+                    reason="unable_to_fetch",
+                )
+            except Exception:
+                _LOGGER.exception("Unknown error occurred")
+                return self.async_abort(reason="unknown")
+            await self.async_set_unique_id(user_input[CONF_API_KEY])
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=f"API-Key: {'*' * (len(user_input[CONF_API_KEY]) - 3)}{user_input[CONF_API_KEY][-3:]}",
+                data={},
             )
 
-        session = aiohttp_client.async_get_clientsession(self.hass)
-        auth = api.AsyncConfigFlowAuth(session, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-        client = GoogleAirQualityApi(auth)
-        try:
-            user_resource_info = await client.get_user_info()
-        except GoogleAirQualityApiError as ex:
-            _LOGGER.debug("Cannot fetch user info: %s", str(ex))
-            return self.async_abort(
-                reason="access_not_configured",
-            )
-        except Exception:
-            self.logger.exception("Unknown error occurred")
-            return self.async_abort(reason="unknown")
-        await self.async_set_unique_id(user_resource_info.id)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=user_resource_info.name,
-            data=data,
+        return self.async_show_form(
+            step_id="user",
+            data_schema=CONFIG_SCHEMA,
+            description_placeholders={
+                "more_info_url": "https://www.home-assistant.io/integrations/google_air_quality/"
+            },
+            errors=errors,
         )
 
 
@@ -111,10 +98,10 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             entry = self._get_entry()
             hass = self.hass
-            implementation = await async_get_config_entry_implementation(hass, entry)
-            web_session = async_get_clientsession(hass)
-            oauth_session = OAuth2Session(hass, entry, implementation)
-            auth = api.AsyncConfigEntryAuth(web_session, oauth_session)
+            session = async_get_clientsession(hass)
+            if TYPE_CHECKING:
+                assert entry.unique_id is not None
+            auth = Auth(session, entry.unique_id)
             client = GoogleAirQualityApi(auth)
             location = user_input[CONF_LOCATION]
             lat = location[CONF_LATITUDE]
@@ -150,7 +137,11 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                         name = component.short_text
                         break
             except (GoogleAirQualityApiError, ValueError, IndexError):
-                _LOGGER.error("Could not resolve address for %s,%s:", lat, lon)
+                _LOGGER.debug(
+                    "Could not resolve address for %s,%s. Using coordinates instead",
+                    lat,
+                    lon,
+                )
                 title = f"Coordinates {lat}, {lon}"
                 name = f"{lat}_{lon}"
             data = {
