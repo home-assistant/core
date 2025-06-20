@@ -82,6 +82,46 @@ def mock_async_client_api_error() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_async_client_voices_error() -> Generator[AsyncMock]:
+    """Override async ElevenLabs client with ApiError side effect."""
+    client_mock = _client_mock()
+    api_error = ApiError()
+    api_error.body = {
+        "detail": {
+            "status": "voices_unautorized",
+            "message": "API is unautorized for voices",
+        }
+    }
+    client_mock.voices.get_all.side_effect = api_error
+
+    with patch(
+        "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
+        return_value=client_mock,
+    ) as mock_async_client:
+        yield mock_async_client
+
+
+@pytest.fixture
+def mock_async_client_models_error() -> Generator[AsyncMock]:
+    """Override async ElevenLabs client with ApiError side effect."""
+    client_mock = _client_mock()
+    api_error = ApiError()
+    api_error.body = {
+        "detail": {
+            "status": "models_unautorized",
+            "message": "API is unautorized for models",
+        }
+    }
+    client_mock.voices.get_all.side_effect = api_error
+
+    with patch(
+        "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
+        return_value=client_mock,
+    ) as mock_async_client:
+        yield mock_async_client
+
+
+@pytest.fixture
 def mock_async_client_connect_error() -> Generator[AsyncMock]:
     """Override async ElevenLabs client."""
     client_mock = _client_mock()

@@ -86,13 +86,12 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 voices, _ = await get_voices_models(self.hass, user_input[CONF_API_KEY])
             except ApiError as exc:
+                errors["base"] = "unknown"
                 details = getattr(exc, "body", {}).get("detail", {})
                 if details:
-                    status = details.get("status", "unknown_error")
+                    status = details.get("status")
                     if status == "invalid_api_key":
                         errors["base"] = "invalid_api_key"
-                    else:
-                        errors["base"] = details.get("message", "unknown_error")
             else:
                 return self.async_create_entry(
                     title="ElevenLabs",
