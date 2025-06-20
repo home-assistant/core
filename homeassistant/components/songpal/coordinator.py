@@ -86,7 +86,7 @@ class SongpalCoordinator(DataUpdateCoordinator):
 
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""
-        _LOGGER.warning("Activating websocket connection")
+        _LOGGER.info("Activating websocket connection")
 
         async def _volume_changed(volume: VolumeChange):
             _LOGGER.debug("Volume changed: %s", volume)
@@ -146,7 +146,7 @@ class SongpalCoordinator(DataUpdateCoordinator):
                     self.async_set_updated_data(self.data)
 
             self.hass.loop.create_task(self.device.listen_notifications())
-            _LOGGER.warning(
+            _LOGGER.info(
                 "[%s(%s)] Connection reestablished", self.name, self.device.endpoint
             )
 

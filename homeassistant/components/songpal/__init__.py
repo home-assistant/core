@@ -77,8 +77,6 @@ async def async_setup_entry(
 ) -> bool:
     """Set up songpal coordinator and entities."""
 
-    _LOGGER.warning("Setup entry")
-
     name = entry.data[CONF_NAME]
     endpoint = entry.data[CONF_ENDPOINT]
     device = Device(endpoint)
@@ -93,18 +91,14 @@ async def async_setup_entry(
         _LOGGER.debug("Unable to get methods from songpal: %s", ex)
         raise UpdateFailed(f"[{name}({endpoint})] Unable to connect") from ex
 
-    _LOGGER.warning("Setup coordinator")
     coordinator = SongpalCoordinator(hass, entry, name, device)
 
-    _LOGGER.warning("First refresh")
     await coordinator.async_config_entry_first_refresh()
 
-    _LOGGER.warning("Refresh complete")
     if not coordinator.initialized:
-        _LOGGER.warning("Coordinator not initialised")
+        _LOGGER.warning("Songpal coordinator not initialised.")
         raise ConfigEntryNotReady
 
-    _LOGGER.warning("Runtime data")
     entry.runtime_data = RuntimeData(coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
