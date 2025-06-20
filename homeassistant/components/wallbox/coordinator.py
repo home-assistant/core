@@ -92,7 +92,7 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
                 raise ConfigEntryAuthFailed from wallbox_connection_error
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="api_failed"
-            )
+            ) from wallbox_connection_error
 
     return require_authentication
 
