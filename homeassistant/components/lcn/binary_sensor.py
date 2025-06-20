@@ -27,7 +27,7 @@ def add_lcn_entities(
     entity_configs: Iterable[ConfigType],
 ) -> None:
     """Add entities for this domain."""
-    entities: list[LcnBinarySensor] = [
+    entities = [
         LcnBinarySensor(entity_config, config_entry) for entity_config in entity_configs
     ]
     async_add_entities(entities)
