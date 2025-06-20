@@ -35,6 +35,7 @@ class SongpalIntegerEntity(SongpalSettingEntity, NumberEntity):
 
     def update_state(self, data) -> None:
         """Process updated state from coordinator."""
+
         super().update_state(data)
 
         if not self.setting:
