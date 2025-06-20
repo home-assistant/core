@@ -7,7 +7,6 @@ from datetime import timedelta
 import logging
 from typing import Any, NoReturn
 
-from hscloud.const import FAN_DEVICE
 from hscloud.hscloud import HsCloud
 from hscloud.hscloudexception import HsCloudException
 
@@ -57,7 +56,7 @@ class DreoFanDeviceData(DreoGenericDeviceData):
 
     @staticmethod
     def process_fan_data(
-        device_model: str, status: dict[str, Any]
+        status: dict[str, Any], model_config: dict[str, Any]
     ) -> DreoFanDeviceData:
         """Process fan device specific data."""
 
@@ -73,9 +72,7 @@ class DreoFanDeviceData(DreoGenericDeviceData):
             fan_data.oscillate = bool(oscillate)
 
         if (speed := status.get("speed")) is not None:
-            speed_range = (
-                FAN_DEVICE.get("config", {}).get(device_model, {}).get("speed_range")
-            )
+            speed_range = model_config.get("speed_range")
             if speed_range:
                 fan_data.speed_percentage = int(
                     ranged_value_to_percentage(speed_range, float(speed))
@@ -95,8 +92,8 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
         hass: HomeAssistant,
         client: HsCloud,
         device_id: str,
-        model: str,
         device_type: str,
+        model_config: dict[str, Any],
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -107,17 +104,19 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
         )
         self.client = client
         self.device_id = device_id
-        self.device_model = model
         self.device_type = device_type
-        self.data_processor: Callable[[str, dict[str, Any]], DreoDeviceData] | None
+        self.data_processor: (
+            Callable[[dict[str, Any], dict[str, Any]], DreoDeviceData] | None
+        )
+        self.model_config = model_config
 
-        if self.device_type == FAN_DEVICE_TYPE and self.device_model:
+        if self.device_type == FAN_DEVICE_TYPE:
             self.data_processor = DreoFanDeviceData.process_fan_data
         else:
             _LOGGER.warning(
                 "Unsupported device type: %s for model: %s - data will not be processed",
                 self.device_type,
-                self.device_model,
+                self.device_id,
             )
             self.data_processor = None
 
@@ -127,13 +126,13 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
         def _raise_no_status() -> NoReturn:
             """Raise UpdateFailed for no status available."""
             raise UpdateFailed(
-                f"No status available for device {self.device_id} with model {self.device_model}"
+                f"No status available for device {self.device_id} with type {self.device_type}"
             )
 
         def _raise_no_processor() -> NoReturn:
             """Raise UpdateFailed for no data processor available."""
             raise UpdateFailed(
-                f"No data processor available for device {self.device_id} with model {self.device_model}"
+                f"No data processor available for device {self.device_id} with type {self.device_type}"
             )
 
         try:
@@ -147,7 +146,7 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
             if self.data_processor is None:
                 _raise_no_processor()
 
-            return self.data_processor(self.device_model, status)
+            return self.data_processor(status, self.model_config)
         except HsCloudException as error:
             raise UpdateFailed(f"Error communicating with Dreo API: {error}") from error
         except Exception as error:

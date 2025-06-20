@@ -6,8 +6,6 @@ import logging
 import math
 from typing import Any
 
-from hscloud.const import FAN_DEVICE
-
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -89,11 +87,11 @@ class DreoFan(DreoEntity, FanEntity):
         """Initialize the Dreo fan."""
         super().__init__(device, coordinator, FAN_DEVICE_TYPE, None)
 
-        model_config = FAN_DEVICE.get("config", {}).get(self._model, {})
+        model_config = coordinator.model_config
         speed_range = model_config.get("speed_range")
 
-        self._attr_preset_modes = model_config.get("preset_modes")
         self._low_high_range = speed_range
+        self._attr_preset_modes = model_config.get("preset_modes")
 
     @callback
     def _handle_coordinator_update(self):

@@ -34,6 +34,10 @@ async def test_setup_success(hass: HomeAssistant, mock_config_entry) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Test Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.return_value = {
@@ -132,18 +136,30 @@ async def test_setup_with_multiple_devices(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Fan 1",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             },
             {
                 "deviceSn": "device2",
                 "model": "UNKNOWN-MODEL",
                 "deviceName": "Unknown",
                 "deviceType": "heater",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             },
             {
                 "deviceSn": "device3",
                 "model": "DR-HTF001S",
                 "deviceName": "Fan 3",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             },
         ]
         mock_client.get_status.return_value = {
@@ -187,6 +203,10 @@ async def test_unload_config_entry(hass: HomeAssistant, mock_config_entry) -> No
                 "model": "DR-HTF001S",
                 "deviceName": "Unload Test Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.return_value = {
@@ -256,6 +276,10 @@ async def test_setup_with_invalid_device_data(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Valid Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             },
         ]
         mock_client.get_status.return_value = {
@@ -295,6 +319,10 @@ async def test_coordinator_setup_and_refresh(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Coordinator Test Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
 
@@ -341,6 +369,10 @@ async def test_coordinator_api_none_response_handling(
                 "model": "DR-HTF001S",
                 "deviceName": "None Response Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
 
@@ -380,6 +412,10 @@ async def test_coordinator_api_exception_handling(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Exception Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
 
@@ -420,6 +456,10 @@ async def test_coordinator_generic_exception_handling(hass: HomeAssistant) -> No
                 "model": "DR-HTF001S",
                 "deviceName": "Generic Error Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
 
