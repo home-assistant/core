@@ -82,6 +82,8 @@ async def async_service_generate_text(call: ServiceCall) -> ServiceResponse:
 class AITaskPreferences:
     """AI Task preferences."""
 
+    KEYS = ("gen_text_entity_id",)
+
     gen_text_entity_id: str | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -95,7 +97,8 @@ class AITaskPreferences:
         data = await self._store.async_load()
         if data is None:
             return
-        self.gen_text_entity_id = data.get("gen_text_entity_id")
+        for key in self.KEYS:
+            setattr(self, key, data[key])
 
     @callback
     def async_set_preferences(
@@ -114,16 +117,9 @@ class AITaskPreferences:
         if not changed:
             return
 
-        self._store.async_delay_save(
-            lambda: {
-                "gen_text_entity_id": self.gen_text_entity_id,
-            },
-            10,
-        )
+        self._store.async_delay_save(self.as_dict, 10)
 
     @callback
     def as_dict(self) -> dict[str, str | None]:
         """Get the current preferences."""
-        return {
-            "gen_text_entity_id": self.gen_text_entity_id,
-        }
+        return {key: getattr(self, key) for key in self.KEYS}
