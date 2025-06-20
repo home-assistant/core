@@ -18,6 +18,7 @@ from homeassistant.components.here_travel_time.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from .const import DEFAULT_CONFIG
 
@@ -80,3 +81,29 @@ async def test_migrate_entry_v1_1_v1_2(
     assert updated_entry.state is ConfigEntryState.LOADED
     assert updated_entry.minor_version == 2
     assert updated_entry.options[CONF_TRAFFIC_MODE] is True
+
+
+@pytest.mark.usefixtures("valid_response")
+async def test_issue_multiple_here_integrations_detected(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test that an issue is created when multiple HERE integrations are detected."""
+    entry1 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234567890",
+        data=DEFAULT_CONFIG,
+        options=DEFAULT_OPTIONS,
+    )
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0987654321",
+        data=DEFAULT_CONFIG,
+        options=DEFAULT_OPTIONS,
+    )
+    entry1.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry1.entry_id)
+    entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry2.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
