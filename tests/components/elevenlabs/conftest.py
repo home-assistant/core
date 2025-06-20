@@ -112,7 +112,7 @@ def mock_async_client_models_error() -> Generator[AsyncMock]:
             "message": "API is unautorized for models",
         }
     }
-    client_mock.voices.get_all.side_effect = api_error
+    client_mock.models.list.side_effect = api_error
 
     with patch(
         "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
