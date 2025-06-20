@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
@@ -18,7 +19,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -50,6 +51,11 @@ async def async_setup_entry(
     """Set up Matter fan from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.FAN, async_add_entities)
+
+
+@dataclass(frozen=True)
+class MatterFanEntityDescription(FanEntityDescription, MatterEntityDescription):
+    """Describe Matter Fan entities."""
 
 
 class MatterFan(MatterEntity, FanEntity):
@@ -308,7 +314,7 @@ class MatterFan(MatterEntity, FanEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.FAN,
-        entity_description=FanEntityDescription(
+        entity_description=MatterFanEntityDescription(
             key="MatterFan",
             name=None,
         ),
