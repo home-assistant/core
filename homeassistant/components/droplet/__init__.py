@@ -2,31 +2,59 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
+import logging
+from typing import TYPE_CHECKING
+
+from homeassistant.components import mqtt
+from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .droplet import Droplet
+from .const import CONF_DATA_TOPIC, CONF_HEALTH_TOPIC
+from .coordinator import DropletConfigEntry, DropletDataCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_LOGGER = logging.getLogger(__name__)
 
-type DropletConfigEntry = ConfigEntry[Droplet]
+PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
+]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DropletConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: DropletConfigEntry
+) -> bool:
     """Set up Droplet from a config entry."""
 
-    # 1. Create API instance
-    # 2. Validate the API connection (and authentication)
-    # 3. Store an API object for your platforms to access
-    # entry.runtime_data = MyAPI(...)
-    # Yes... It should be 1 API here, multiple clients later...?
+    # Make sure MQTT integration is enabled and the client is available.
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        raise ConfigEntryNotReady("Device is offline")
 
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    if TYPE_CHECKING:
+        assert config_entry.unique_id is not None
+    droplet_coordinator = DropletDataCoordinator(hass, config_entry)
 
+    @callback
+    def mqtt_callback(msg: ReceiveMessage) -> None:
+        """Pass MQTT payload to Droplet API parser."""
+        if droplet_coordinator.droplet.parse_message(
+            msg.topic, msg.payload, msg.qos, msg.retain
+        ):
+            droplet_coordinator.async_set_updated_data(None)
+
+    for topic in (CONF_DATA_TOPIC, CONF_HEALTH_TOPIC):
+        config_entry.async_on_unload(
+            await mqtt.async_subscribe(hass, config_entry.data[topic], mqtt_callback)
+        )
+
+    config_entry.runtime_data = droplet_coordinator
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: DropletConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: DropletConfigEntry
+) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

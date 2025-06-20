@@ -1,65 +1,85 @@
-"""Platform for sensor integration."""
+"""Support for Droplet."""
 
 from __future__ import annotations
+
+import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DropletConfigEntry
-from .const import BRAND, DOMAIN
-from .droplet import Droplet
+from .const import (
+    CONF_DEVICE_NAME,
+    DOMAIN,
+    KEY_CURRENT_FLOW_RATE,
+    NAME_CURRENT_FLOW_RATE,
+)
+from .coordinator import DropletConfigEntry, DropletDataCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DropletConfigEntry,
-    async_add_entities: AddEntitiesCallback,  # pylint: disable=hass-argument-type
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add sensors for passed config_entry in HA."""
-    #    hub = config_entry.runtime_data
-    # Not how you're supposed to do this
-    async_add_entities([DropletSensor("localhost", 3333)])
+    """Set up the Droplet sensors from config entry."""
+    _LOGGER.info(
+        "Set up sensor for device %s with entry_id is %s",
+        config_entry.unique_id,
+        config_entry.entry_id,
+    )
+
+    _LOGGER.warning(config_entry.runtime_data)
+
+    coordinator = config_entry.runtime_data
+    sensor: SensorEntityDescription = SensorEntityDescription(
+        key=KEY_CURRENT_FLOW_RATE,
+        translation_key=KEY_CURRENT_FLOW_RATE,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        suggested_display_precision=3,
+        state_class=SensorStateClass.MEASUREMENT,
+        has_entity_name=True,
+        name=NAME_CURRENT_FLOW_RATE,
+    )
+    async_add_entities([DropletSensor(coordinator, sensor)])
 
 
-class DropletSensor(SensorEntity):
-    """Representation of a Sensor."""
+class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
+    """Representation of a Droplet."""
 
-    _attr_name = "Flow Rate"
-    _attr_unique_id = "ASKFD497134_droplet"
-    _attr_native_unit_of_measurement = UnitOfVolumeFlowRate.LITERS_PER_MINUTE
-    _attr_device_class = SensorDeviceClass.VOLUME_FLOW_RATE
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_icon = "mdi:water-circle"
+    def __init__(
+        self,
+        coordinator: DropletDataCoordinator,
+        entity_description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
 
-    def __init__(self, hostname, port):
-        """Initialize Droplet sensor."""
-        self.droplet = Droplet(3333, "localhost", self.set_flow)
+        unique_id = coordinator.config_entry.unique_id
+        self._attr_unique_id = f"{unique_id}_{DOMAIN}"
 
-        self.mac = "abc"
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self.mac}")},
-            # serial_number=coordinator.data.info.serial_number,
-            manufacturer=BRAND,
-            # model=coordinator.data.info.product_name,
-            name=f"{BRAND} {DOMAIN}",
-            # sw_version=f"{coordinator.data.info.firmware_version} ({coordinator.data.info.firmware_build_number})",
-            # hw_version=str(coordinator.data.info.hardware_board_type),
-        )
+        entry_data = coordinator.config_entry.data
+        if unique_id is not None:
+            self._attr_device_info = DeviceInfo(
+                manufacturer="Hydrific, part of LIXIL",
+                model="Droplet 1.0",
+                name=entry_data[CONF_DEVICE_NAME],
+                identifiers={(DOMAIN, unique_id)},
+            )
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return True
-
-    def set_flow(self, flow):
-        """Set flow and schedule update of HA state."""
-        self._attr_native_value = flow
-        self.schedule_update_ha_state()
+    def native_value(self) -> float | int | None:
+        """Return the value reported by the sensor."""
+        return self.coordinator.get_flow_rate()
