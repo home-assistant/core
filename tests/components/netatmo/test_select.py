@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.netatmo.const import ATTR_SCHEDULE_ID
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -69,6 +70,10 @@ async def test_select_schedule_thermostats(
     await hass.async_block_till_done()
 
     assert hass.states.get(select_entity).state == "Winter"
+    assert (
+        hass.states.get(select_entity).attributes.get(ATTR_SCHEDULE_ID)
+        == "b1b54a2f45795764f59d50d8"
+    )
     assert hass.states.get(select_entity).attributes[ATTR_OPTIONS] == [
         "Default",
         "Winter",
@@ -100,3 +105,7 @@ async def test_select_schedule_thermostats(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(select_entity).state == "Default"
+    assert (
+        hass.states.get(select_entity).attributes.get(ATTR_SCHEDULE_ID)
+        == "591b54a2764ff4d50d8b5795"
+    )
