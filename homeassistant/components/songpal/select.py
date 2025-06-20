@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from propcache.api import cached_property
+import logging
+
+from songpal import SongpalException
 from songpal.containers import SettingCandidate
 
 from homeassistant.components.select import SelectEntity
@@ -12,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entities import create_settings_entities_for_type
 from .entity import SongpalSettingEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -29,7 +33,7 @@ async def async_setup_entry(
 class SongpalSelectEntity(SongpalSettingEntity, SelectEntity):
     """Defines a Songpal switch."""
 
-    @cached_property
+    @property
     def options(self) -> list[str]:
         """Return available options."""
 
@@ -44,7 +48,7 @@ class SongpalSelectEntity(SongpalSettingEntity, SelectEntity):
 
         return setting_friendly_names
 
-    @cached_property
+    @property
     def current_option(self) -> str | None:
         """Return currently selected option."""
 
@@ -69,6 +73,9 @@ class SongpalSelectEntity(SongpalSettingEntity, SelectEntity):
         else:
             return
 
-        await self.coordinator.get_setting_setter(self._setting_bank)(
-            self._setting_target, candidate.value
-        )
+        try:
+            await self.coordinator.get_setting_setter(self._setting_bank)(
+                self._setting_target, candidate.value
+            )
+        except SongpalException as e:
+            _LOGGER.debug(e)

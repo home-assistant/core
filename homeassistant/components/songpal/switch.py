@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
+
+from songpal import SongpalException
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -11,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entities import create_settings_entities_for_type
 from .entity import SongpalSettingEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -39,12 +44,18 @@ class SongpalSwitchEntity(SongpalSettingEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off setting."""
-        await self.coordinator.get_setting_setter(self._setting_bank)(
-            self._setting_target, "off"
-        )
+        try:
+            await self.coordinator.get_setting_setter(self._setting_bank)(
+                self._setting_target, "off"
+            )
+        except SongpalException as e:
+            _LOGGER.debug(e)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on setting."""
-        await self.coordinator.get_setting_setter(self._setting_bank)(
-            self._setting_target, "on"
-        )
+        try:
+            await self.coordinator.get_setting_setter(self._setting_bank)(
+                self._setting_target, "on"
+            )
+        except SongpalException as e:
+            _LOGGER.debug(e)
