@@ -119,11 +119,11 @@ class SongpalCoordinator(DataUpdateCoordinator):
 
         async def _try_reconnect(connect: ConnectChange):
             _LOGGER.warning(
-                "[%s(%s)] Got disconnected, trying to reconnect",
+                "[%s(%s)] Got disconnected, trying to reconnect (%s)",
                 self.name,
                 self.device.endpoint,
+                connect.exception,
             )
-            _LOGGER.debug("Disconnected: %s", connect.exception)
             self.available = False
             self.async_set_updated_data(self.data)
 
