@@ -1,7 +1,5 @@
 """Temperature helpers for Home Assistant."""
 
-from __future__ import annotations
-
 from numbers import Number
 
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
@@ -13,8 +11,6 @@ def display_temp(
     hass: HomeAssistant, temperature: float | None, unit: str, precision: float
 ) -> float | None:
     """Convert temperature into preferred units/precision for display."""
-    temperature_unit = unit
-    ha_unit = hass.config.units.temperature_unit
 
     if temperature is None:
         return temperature
@@ -24,10 +20,10 @@ def display_temp(
     if not isinstance(temperature, Number):
         raise TypeError(f"Temperature is not a number: {temperature}")
 
-    if temperature_unit != ha_unit:
-        temperature = TemperatureConverter.converter_factory(temperature_unit, ha_unit)(
-            temperature
-        )
+    ha_unit = hass.config.units.temperature_unit
+
+    if unit != ha_unit:
+        temperature = TemperatureConverter.converter_factory(unit, ha_unit)(temperature)
 
     # Round in the units appropriate
     if precision == PRECISION_HALVES:
@@ -36,3 +32,21 @@ def display_temp(
         return round(temperature, 1)
     # Integer as a fall back (PRECISION_WHOLE)
     return round(temperature)
+
+
+def display_temp_interval(
+    hass: HomeAssistant, interval: float, unit: str, precision: float
+) -> float:
+    """Convert temperature interval into preferred units/precision for display."""
+
+    ha_unit = hass.config.units.temperature_unit
+
+    if unit != ha_unit:
+        interval = TemperatureConverter.convert_interval(interval, unit, ha_unit)
+
+    # Ensure 0.5 -> 1 while (IEEE) rounding to int
+    if precision == PRECISION_HALVES:
+        return (round(interval * 2 + 1) - 1) / 2.0
+    if precision == PRECISION_TENTHS:
+        return round(interval, 1)
+    return round(interval + 1) - 1
