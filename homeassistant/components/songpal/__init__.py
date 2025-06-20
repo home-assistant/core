@@ -27,6 +27,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 PLATFORMS = [
     Platform.MEDIA_PLAYER,
+    Platform.SELECT,
 ]
 
 
