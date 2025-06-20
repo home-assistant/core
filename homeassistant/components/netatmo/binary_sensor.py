@@ -1,5 +1,7 @@
 """Support for Netatmo binary sensors."""
 
+from typing import Any, cast
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -76,12 +78,16 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity)
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_is_on = self.device.reachable
-#        value = cast(
-#            StateType, getattr(self.device, self.entity_description.netatmo_name)
-#        )
-#        if value is not None:
-#            value = self.entity_description.value_fn(value)
-#        self._attr_native_value = value
+        if self.entity_description.key == "reachable":
+            self._attr_native_value = self.device.reachable
+            #self._attr_is_on = self.device.reachable
+        elif self.entity_description.key == "status":
+            value = cast(
+                StateType, getattr(self.device, self.entity_description.key)
+            )
+            if value is not None:
+                value = process_status(value)
+                #value = self.entity_description.value_fn(value)
+            self._attr_native_value = value
 
         self.async_write_ha_state()
