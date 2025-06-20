@@ -18,11 +18,11 @@ from songpal import (
 )
 from songpal.containers import Setting
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SongpalConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,6 +31,8 @@ PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
 INITIAL_RETRY_DELAY = 10
+
+type SongpalConfigEntry = ConfigEntry[SongpalCoordinator]
 
 
 class SongpalCoordinator(DataUpdateCoordinator[dict[str, Any]]):

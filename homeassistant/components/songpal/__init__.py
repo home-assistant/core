@@ -6,7 +6,7 @@ import logging
 from songpal import Device, SongpalException
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -15,7 +15,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CONF_ENDPOINT, DOMAIN
-from .coordinator import SongpalCoordinator
+from .coordinator import SongpalConfigEntry, SongpalCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +31,6 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [
     Platform.MEDIA_PLAYER,
 ]
-
-type SongpalConfigEntry = ConfigEntry[SongpalCoordinator]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
