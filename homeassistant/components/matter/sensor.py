@@ -366,21 +366,6 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="PowerSourceBatCapacity",
-            translation_key="battery_capacity",
-            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
-            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-            device_class=SensorDeviceClass.CURRENT,
-            suggested_display_precision=0,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(clusters.PowerSource.Attributes.BatCapacity,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
             key="PowerSourceBatTimeRemaining",
             translation_key="battery_time_remaining",
             native_unit_of_measurement=UnitOfTime.SECONDS,
