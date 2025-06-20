@@ -139,6 +139,7 @@ async def test_wallbox_lock_class_connection_error(
             blocking=True,
         )
 
+
 async def test_wallbox_lock_class_authentication_error(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:

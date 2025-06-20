@@ -122,6 +122,7 @@ async def test_wallbox_select_class_error(
             blocking=True,
         )
 
+
 @pytest.mark.parametrize(("mode", "response"), TEST_OPTIONS)
 async def test_wallbox_select_too_many_requests_error(
     hass: HomeAssistant,

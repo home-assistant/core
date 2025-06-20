@@ -95,6 +95,7 @@ async def test_wallbox_refresh_failed_invalid_auth(
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
 
+
 async def test_wallbox_refresh_failed_http_error(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
@@ -120,6 +121,7 @@ async def test_wallbox_refresh_failed_http_error(
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
 
+
 async def test_wallbox_refresh_failed_too_many_requests(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
@@ -144,6 +146,8 @@ async def test_wallbox_refresh_failed_too_many_requests(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_wallbox_refresh_failed_connection_error(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:

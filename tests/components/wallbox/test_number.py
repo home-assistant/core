@@ -142,6 +142,7 @@ async def test_wallbox_number_class_connection_error(
             blocking=True,
         )
 
+
 async def test_wallbox_number_class_too_many_requests(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
@@ -198,6 +199,7 @@ async def test_wallbox_number_class_energy_price_update_failed(
             },
             blocking=True,
         )
+
 
 async def test_wallbox_number_class_energy_price_update_connection_error(
     hass: HomeAssistant, entry: MockConfigEntry
@@ -353,6 +355,7 @@ async def test_wallbox_number_class_icp_energy_connection_error(
             },
             blocking=True,
         )
+
 
 async def test_wallbox_number_class_icp_energy_too_many_request(
     hass: HomeAssistant, entry: MockConfigEntry
