@@ -36,3 +36,11 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
     def get_availability(self) -> bool:
         """Retrieve Droplet's availability status."""
         return self.droplet.get_availability()
+
+    def get_server_status(self) -> str:
+        """Retrieve Droplet's connection status to Hydrific servers."""
+        return self.droplet.get_server_status()
+
+    def get_signal_quality(self) -> str:
+        """Retrieve Droplet's signal quality."""
+        return self.droplet.get_signal_quality()

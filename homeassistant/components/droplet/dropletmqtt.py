@@ -49,8 +49,10 @@ class Droplet:
 
     def __init__(self) -> None:
         """Initialize Droplet object."""
-        self.flow_rate = 0
-        self.available = True
+        self.flow_rate: float = 0
+        self.available: bool = True
+        self.signal_quality: str = "Unknown"
+        self.server_status: str = "Unknown"
 
     def parse_message(
         self, topic: str, payload: str | bytes | bytearray, qos: int, retain: bool
@@ -79,11 +81,25 @@ class Droplet:
         if flow_rate := msg.get("flow_rate"):
             self.flow_rate = flow_rate
             changed = True
+        if network := msg.get("server_connectivity"):
+            self.server_status = network
+            changed = True
+        if signal := msg.get("signal_quality"):
+            self.signal_quality = signal
+            changed = True
         return changed
 
     def get_flow_rate(self) -> float:
         """Retrieve Droplet's last flow rate."""
         return self.flow_rate
+
+    def get_signal_quality(self) -> str:
+        """Retrieve Droplet's signal quality."""
+        return self.signal_quality
+
+    def get_server_status(self) -> str:
+        """Retrieve Droplet's connectivity to Hydrific servers."""
+        return self.server_status
 
     def get_availability(self) -> bool:
         """Return true if device is available, false otherwise."""

@@ -16,3 +16,7 @@ DOMAIN = "droplet"
 
 KEY_CURRENT_FLOW_RATE = "current_flow_rate"
 NAME_CURRENT_FLOW_RATE = "Flow Rate"
+KEY_SIGNAL_QUALITY = "signal_quality"
+NAME_SIGNAL_QUALITY = "Signal Quality"
+KEY_SERVER_CONNECTIVITY = "server_connectivity"
+NAME_SERVER_CONNECTIVITY = "Server Status"
