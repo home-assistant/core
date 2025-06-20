@@ -154,6 +154,10 @@
         "charging_card_id": {
           "name": "Charging card ID",
           "description": "Optional charging card ID that will be used to start a charge session. When not provided, the default charging card selected in config will be used."
+        },
+        "device_id": {
+          "name": "Device ID",
+          "description": "The ID of the Blue Current charge point."
         }
       }
     }

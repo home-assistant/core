@@ -11,14 +11,17 @@ from bluecurrent_api.exceptions import (
 )
 import pytest
 
-from homeassistant.components.blue_current import async_setup_entry
+from homeassistant.components.blue_current import DOMAIN, async_setup_entry
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     IntegrationError,
+    ServiceValidationError,
 )
+from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
 
@@ -104,3 +107,67 @@ async def test_connect_request_limit_reached_error(
     await started_loop.wait()
     assert mock_client.get_next_reset_delta.call_count == 1
     assert mock_client.connect.call_count == 2
+
+
+async def test_start_charging_action(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the start charing action when a charging card is provided."""
+    integration = await init_integration(hass, config_entry, Platform.BUTTON)
+    client = integration[0]
+
+    await hass.services.async_call(
+        DOMAIN,
+        "start_charge_session",
+        {
+            "device_id": list(dr.async_get(hass).devices)[0],
+            "charging_card_id": "TEST_CARD",
+        },
+        blocking=True,
+    )
+
+    client.start_session.assert_called_once_with("101", "TEST_CARD")
+
+
+async def test_start_charging_action_without_card(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the start charing action when no charging card is provided."""
+    integration = await init_integration(hass, config_entry, Platform.BUTTON)
+    client = integration[0]
+
+    await hass.services.async_call(
+        DOMAIN,
+        "start_charge_session",
+        {
+            "device_id": list(dr.async_get(hass).devices)[0],
+        },
+        blocking=True,
+    )
+
+    client.start_session.assert_called_once_with("101", "BCU-APP")
+
+
+async def test_start_charging_action_errors(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the start charing action errors."""
+    await init_integration(hass, config_entry, Platform.BUTTON)
+
+    with pytest.raises(ServiceValidationError):
+        # No device id
+        await hass.services.async_call(
+            DOMAIN,
+            "start_charge_session",
+            {},
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError):
+        # Invalid device id
+        await hass.services.async_call(
+            DOMAIN,
+            "start_charge_session",
+            {"device_id": "INVALID"},
+            blocking=True,
+        )

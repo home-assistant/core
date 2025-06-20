@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from enum import IntFlag
 from typing import Any
 
 from bluecurrent_api import Client
@@ -16,12 +15,27 @@ from bluecurrent_api.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_API_TOKEN, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.const import ATTR_NAME, CONF_API_TOKEN, CONF_DEVICE_ID, Platform
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CARD, DEFAULT_CARD, DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE, UID
+from .const import (
+    CARD,
+    CHARGING_CARD_ID,
+    DEFAULT_CARD,
+    DOMAIN,
+    EVSE_ID,
+    LOGGER,
+    MODEL_TYPE,
+    START_CHARGE_SESSION,
+    UID,
+)
 
 type BlueCurrentConfigEntry = ConfigEntry[Connector]
 
@@ -59,6 +73,29 @@ async def async_setup_entry(
     config_entry.runtime_data = connector
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
+    async def start_charge_session(service_call: ServiceCall) -> None:
+        """Start a charge session with the provided device and charge card ID."""
+        # When no charge card is provided, use the default charge card set in the config flow.
+        charging_card_id = service_call.data.get(CHARGING_CARD_ID)
+        device_id = service_call.data.get(CONF_DEVICE_ID)
+        if device_id is None:
+            raise ServiceValidationError
+
+        # Get the device based on the given device ID.
+        device = dr.async_get(hass).devices.get(device_id)
+        if device is None:
+            raise ServiceValidationError
+
+        # Get the evse_id from the identifier of the device.
+        evse_id = list(device.identifiers)[0][1]
+
+        if charging_card_id is None:
+            charging_card_id = connector.selected_charge_card[UID]
+
+        await connector.client.start_session(evse_id, charging_card_id)
+
+    hass.services.async_register(DOMAIN, START_CHARGE_SESSION, start_charge_session)
+
     return True
 
 
@@ -68,12 +105,6 @@ async def async_unload_entry(
     """Unload the Blue Current config entry."""
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-class BlueCurrentEntityFeature(IntFlag):
-    """Blue Current entity feature."""
-
-    START_CHARGE_SESSION = 1
 
 
 class Connector:
