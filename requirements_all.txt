@@ -1140,7 +1140,7 @@ hdate[astral]==1.1.2
 heatmiserV3==2.0.3
 
 # homeassistant.components.here_travel_time
-here-routing==1.0.1
+here-routing==1.2.0
 
 # homeassistant.components.here_travel_time
 here-transit==1.2.1
