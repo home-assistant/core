@@ -80,6 +80,7 @@ async def test_open_close_reverse_cover(
 ) -> None:
     """Test opening the cover."""
     mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     mock_homee.nodes[0].attributes[0].is_reversed = True
 
     await setup_integration(hass, mock_config_entry)
