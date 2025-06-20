@@ -113,26 +113,7 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # _LOGGER.warning("Init mediaplayer entity")
-    # songpal_entity = SongpalEntity(name, coordinator)
-    # await add_entities(hass, "media_player", [songpal_entity], True)
-
-    # platform = entity_platform.async_get_current_platform()
-    # platform.async_register_entity_service(
-    #     SET_SOUND_SETTING,
-    #     {vol.Required(PARAM_NAME): cv.string, vol.Required(PARAM_VALUE): cv.string},
-    #     "async_set_sound_setting",
-    # )
-
     return True
-
-
-async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Reload the integration when options change.
-
-    Called from the listener created above.
-    """
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
