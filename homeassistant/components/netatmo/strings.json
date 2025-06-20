@@ -106,7 +106,7 @@
       "fields": {
         "home_id": {
           "name": "[%key:component::netatmo::device_automation::trigger_subtype::home_id%]",
-          "description": "Home Id."
+          "description": "The ID of your home in the Netatmo mobile app."
         },
         "schedule_id": {
           "name": "[%key:component::netatmo::device_automation::trigger_subtype::schedule_id%]",
