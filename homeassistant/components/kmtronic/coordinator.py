@@ -18,12 +18,16 @@ PLATFORMS = [Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
+type KMTronicConfigEntry = ConfigEntry[KMtronicCoordinator]
+
 
 class KMtronicCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for KMTronic."""
 
+    entry: KMTronicConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, hub: KMTronicHubAPI
+        self, hass: HomeAssistant, entry: KMTronicConfigEntry, hub: KMTronicHubAPI
     ) -> None:
         """Initialize the KMTronic coordinator."""
         super().__init__(
