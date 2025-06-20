@@ -1124,11 +1124,12 @@ habiticalib==0.4.0
 habluetooth==3.49.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.102.0
+hass-nabucasa==0.103.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
 
+# homeassistant.components.assist_satellite
 # homeassistant.components.conversation
 hassil==2.2.3
 
@@ -2236,7 +2237,7 @@ pypaperless==4.1.0
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.8.8
+pypck==0.8.9
 
 # homeassistant.components.pglab
 pypglab==0.0.5
