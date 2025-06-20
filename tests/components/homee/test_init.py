@@ -4,14 +4,15 @@ from unittest.mock import MagicMock
 
 from pyHomee import HomeeAuthFailedException, HomeeConnectionFailedException
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homee.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from . import build_mock_node, setup_integration
-from .conftest import HOMEE_ID, HOMEE_NAME
+from .conftest import HOMEE_ID
 
 from tests.common import MockConfigEntry
 
@@ -61,8 +62,8 @@ async def test_general_data(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test if data is set correctly."""
     mock_homee.nodes = [
@@ -74,39 +75,12 @@ async def test_general_data(
     )
     await setup_integration(hass, mock_config_entry)
 
-    # Verify hub created correctly.
+    # Verify hub and device created correctly using snapshots.
     hub = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}")})
-    assert hub.name == HOMEE_NAME
-    assert hub.manufacturer == "homee"
-    assert hub.model == "homee"
-    assert hub.sw_version == "1.2.3"
-    assert hub.connections == {("mac", dr.format_mac(HOMEE_ID))}
-
-    # verify device created correctly.
     device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
-    assert device.model == "shutter_position_switch"
-    assert device.sw_version == "4.54"
-    assert device.via_device_id == hub.id
 
-    # Verify entities with correct data present.
-    # For a HomeeEntity.
-    temp_sensor = hass.states.get("sensor.test_cover_temperature")
-    attributes = temp_sensor.attributes
-    assert attributes["friendly_name"] == "Test Cover Temperature"
-    assert (
-        entity_registry.async_get(temp_sensor.entity_id).unique_id == f"{HOMEE_ID}-3-4"
-    )
-
-    # For a HomeeNodeEntity.
-    cover = hass.states.get("cover.test_cover")
-    attributes = cover.attributes
-    assert attributes["friendly_name"] == "Test Cover"
-    assert entity_registry.async_get(cover.entity_id).unique_id == f"{HOMEE_ID}-3-1"
-
-    # For a NodeSensor.
-    node_state = entity_registry.async_get("sensor.testhomee_node_state")
-    assert node_state.disabled
-    assert node_state.unique_id == f"{HOMEE_ID}--1-state"
+    assert hub == snapshot
+    assert device == snapshot
 
 
 async def test_software_version(
