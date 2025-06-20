@@ -78,6 +78,9 @@
       "valve_position": {
         "default": "mdi:valve"
       },
+      "battery_charge_state": {
+        "default": "mdi:battery-charging"
+      },
       "battery_replacement_description": {
         "default": "mdi:battery-sync-outline"
       },

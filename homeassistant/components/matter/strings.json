@@ -327,6 +327,15 @@
       "battery_capacity": {
         "name": "Battery capacity"
       },
+      "battery_charge_state": {
+        "name": "Battery charge state",
+        "state": {
+          "charging": "Charging",
+          "full_charge": "Full charge",
+          "not_charging": "Not charging",
+          "unknown": "Unknown"
+        }
+      },
       "battery_time_remaining": {
         "name": "Time remaining"
       },
