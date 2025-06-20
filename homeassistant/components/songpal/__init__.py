@@ -1,7 +1,6 @@
 """The songpal component."""
 
 import asyncio
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -37,6 +36,7 @@ PLATFORMS = [
 
 type SongpalConfigEntry = ConfigEntry[SongpalCoordinator]
 
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -48,7 +48,6 @@ async def async_setup_platform(
         "Configuring Songpal through media_player platform is no longer supported."
         " Convert to songpal platform or UI configuration"
     )
-
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -91,7 +90,7 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     if not coordinator.initialized:
-        _LOGGER.warning("Songpal coordinator not initialised.")
+        _LOGGER.warning("Songpal coordinator not initialised")
         raise ConfigEntryNotReady
 
     entry.runtime_data = coordinator
