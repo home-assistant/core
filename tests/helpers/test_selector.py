@@ -590,7 +590,23 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
-    [({}, ("abc123",), ())],
+    [
+        ({}, ("abc123",), ()),
+        (
+            {
+                "schema": [
+                    {"name": "name", "selector": {"text": {}}},
+                    {"name": "percentage", "selector": {"number": {}}},
+                ],
+                "multiple": True,
+                "label_key": "name",
+                "description_key": "percentage",
+            },
+            (),
+            (),
+        ),
+    ],
+    [],
 )
 def test_object_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test object selector."""

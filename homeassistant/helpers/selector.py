@@ -1113,8 +1113,20 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         return value
 
 
+class ObjectSchemaDict(TypedDict):
+    """Class to represent a select option dict."""
+
+    name: str
+    selector: dict[str, Any]
+
+
 class ObjectSelectorConfig(BaseSelectorConfig):
     """Class to represent an object selector config."""
+
+    schema: list[ObjectSchemaDict]
+    multiple: bool
+    label_key: str
+    description: bool
 
 
 @SELECTORS.register("object")
@@ -1123,7 +1135,19 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
 
     selector_type = "object"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("schema"): [
+                {
+                    vol.Required("name"): str,
+                    vol.Required("selector"): dict,
+                }
+            ],
+            vol.Optional("label_key"): str,
+            vol.Optional("description_key"): str,
+            vol.Optional("multiple", default=False): bool,
+        }
+    )
 
     def __init__(self, config: ObjectSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
