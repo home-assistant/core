@@ -992,7 +992,7 @@ hassil==2.2.3
 hdate[astral]==1.1.2
 
 # homeassistant.components.here_travel_time
-here-routing==1.0.1
+here-routing==1.2.0
 
 # homeassistant.components.here_travel_time
 here-transit==1.2.1
