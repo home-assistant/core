@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_DEVICE_NAME,
+    CONF_MODEL,
     DOMAIN,
     KEY_CURRENT_FLOW_RATE,
     NAME_CURRENT_FLOW_RATE,
@@ -74,10 +75,15 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
         if unique_id is not None:
             self._attr_device_info = DeviceInfo(
                 manufacturer="Hydrific, part of LIXIL",
-                model="Droplet 1.0",
+                model=entry_data[CONF_MODEL],
                 name=entry_data[CONF_DEVICE_NAME],
                 identifiers={(DOMAIN, unique_id)},
             )
+
+    @property
+    def available(self) -> bool:
+        """Get Droplet's availability."""
+        return self.coordinator.get_availability()
 
     @property
     def native_value(self) -> float | int | None:

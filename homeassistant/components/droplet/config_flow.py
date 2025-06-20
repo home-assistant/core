@@ -14,6 +14,10 @@ from .const import (
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_HEALTH_TOPIC,
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_SERIAL,
+    CONF_SW,
     DOMAIN,
 )
 from .dropletmqtt import DropletDiscovery
@@ -42,10 +46,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._droplet_discovery = DropletDiscovery(discovery_info.topic, payload)
 
-        if (
-            self._droplet_discovery is None
-            or not self._droplet_discovery.is_valid_discovery()
-        ):
+        if self._droplet_discovery is None or not self._droplet_discovery.is_valid():
             return self.async_abort(reason="invalid_discovery_info")
 
         await self.async_set_unique_id(f"{self._droplet_discovery.device_id}")
@@ -69,6 +70,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_HEALTH_TOPIC: self._droplet_discovery.health_topic,
                 CONF_DEVICE_ID: self._droplet_discovery.device_id,
                 CONF_DEVICE_NAME: self._droplet_discovery.name,
+                CONF_MANUFACTURER: self._droplet_discovery.manufacturer,
+                CONF_MODEL: self._droplet_discovery.model,
+                CONF_SW: self._droplet_discovery.fw_version,
+                CONF_SERIAL: self._droplet_discovery.serial_number,
             }
             return self.async_create_entry(
                 title=self._droplet_discovery.name, data=device_data

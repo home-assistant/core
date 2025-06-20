@@ -32,3 +32,7 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
     def get_flow_rate(self) -> float:
         """Retrieve Droplet's latest flow rate."""
         return self.droplet.get_flow_rate()
+
+    def get_availability(self) -> bool:
+        """Retrieve Droplet's availability status."""
+        return self.droplet.get_availability()
