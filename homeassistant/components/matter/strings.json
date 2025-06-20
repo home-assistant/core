@@ -330,7 +330,7 @@
       "battery_charge_state": {
         "name": "Battery charge state",
         "state": {
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "full_charge": "Full charge",
           "not_charging": "Not charging",
           "unknown": "Unknown"
