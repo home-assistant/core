@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from typing import Any
@@ -239,21 +238,27 @@ class SongpalCoordinator(DataUpdateCoordinator):
             "misc_settings": self.data["misc_settings"],
         }
 
-    def get_setting_setter(
-        self, setting_bank: str
-    ) -> Callable[[str, str], Awaitable[Any]]:
+    async def set_setting(self, setting_bank: str, setting_name, setting_value) -> None:
         """Return function for setting settings in a specified bank."""
 
         match setting_bank:
             case "sound_settings":
-                return self.device.set_sound_settings
+                await self.device.set_sound_settings(setting_name, setting_value)
+                self.data["sound_settings"] = await self.device.get_sound_settings()
             case "bluetooth_settings":
-                return self.device.set_bluetooth_settings
+                await self.device.set_bluetooth_settings(setting_name, setting_value)
+                self.data[
+                    "bluetooth_settings"
+                ] = await self.device.get_bluetooth_settings()
             case "misc_settings":
-                return self.device.set_misc_settings
+                await self.device.set_misc_settings(setting_name, setting_value)
+                self.data["misc_settings"] = await self.device.get_misc_settings()
             case "playback_settings":
-                return self.device.set_playback_settings
+                await self.device.set_playback_settings(setting_name, setting_value)
+                self.data[
+                    "playback_settings"
+                ] = await self.device.get_playback_settings()
             case _:
-                raise NotImplementedError(
-                    f"Failed to get setting setter for setting bank {setting_bank}"
-                )
+                raise NotImplementedError(f"Unrecognised setting bank {setting_bank}")
+
+        self.async_set_updated_data(self.data)

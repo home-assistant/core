@@ -31,7 +31,7 @@ async def async_setup_entry(
 
 
 class SongpalSelectEntity(SongpalSettingEntity, SelectEntity):
-    """Defines a Songpal switch."""
+    """Defines a Songpal select."""
 
     @property
     def options(self) -> list[str]:
@@ -74,8 +74,8 @@ class SongpalSelectEntity(SongpalSettingEntity, SelectEntity):
             return
 
         try:
-            await self.coordinator.get_setting_setter(self._setting_bank)(
-                self._setting_target, candidate.value
+            await self.coordinator.set_setting(
+                self._setting_bank, self._setting_target, candidate.value
             )
         except SongpalException as e:
             _LOGGER.debug(e)

@@ -45,8 +45,8 @@ class SongpalSwitchEntity(SongpalSettingEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off setting."""
         try:
-            await self.coordinator.get_setting_setter(self._setting_bank)(
-                self._setting_target, "off"
+            await self.coordinator.set_setting(
+                self._setting_bank, self._setting_target, "off"
             )
         except SongpalException as e:
             _LOGGER.debug(e)
@@ -54,8 +54,8 @@ class SongpalSwitchEntity(SongpalSettingEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on setting."""
         try:
-            await self.coordinator.get_setting_setter(self._setting_bank)(
-                self._setting_target, "on"
+            await self.coordinator.set_setting(
+                self._setting_bank, self._setting_target, "on"
             )
         except SongpalException as e:
             _LOGGER.debug(e)

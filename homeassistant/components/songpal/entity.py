@@ -73,9 +73,7 @@ class SongpalSettingEntity(SongpalBaseEntity):
 
         self._setting_bank = setting_bank
         self._setting_target = setting.target
-        self._settingName = setting.title or self.get_friendly_setting_name(
-            setting.target
-        )
+        self._settingName = self.get_friendly_setting_name(setting.target)
         self._settingId = (
             f"{self._setting_bank}_{self._settingName.replace(' ', '_').lower()}"
         )
