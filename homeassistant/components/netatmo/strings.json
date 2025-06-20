@@ -102,7 +102,7 @@
     },
     "sync_schedule": {
       "name": "Sync heating schedule",
-      "description": "Syncs the heating schedule for Netatmo climate device.",
+      "description": "Synchronizes the heating schedule for a Netatmo climate device.",
       "fields": {
         "home_id": {
           "name": "[%key:component::netatmo::device_automation::trigger_subtype::home_id%]",
