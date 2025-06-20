@@ -7,6 +7,7 @@ import logging
 
 from songpal import SongpalException
 from songpal.containers import Input, Setting, Volume
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -16,9 +17,10 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ERROR_REQUEST_RETRY
+from .const import ERROR_REQUEST_RETRY, PARAM_NAME, PARAM_VALUE, SET_SOUND_SETTING
 from .coordinator import SongpalCoordinator
 from .device import device_unique_id
 from .entity import SongpalBaseEntity
@@ -43,6 +45,15 @@ async def async_setup_entry(
 
     for entity in new_entities:
         entity.get_initial_state()
+
+    platform = entity_platform.async_get_current_platform()
+
+    # Probably not really useful anymore, but included for backwards compatibility
+    platform.async_register_entity_service(
+        SET_SOUND_SETTING,
+        {vol.Required(PARAM_NAME): cv.string, vol.Required(PARAM_VALUE): cv.string},
+        "async_set_sound_setting",
+    )
 
 
 class SongpalMediaPlayerEntity(MediaPlayerEntity, SongpalBaseEntity):
