@@ -86,3 +86,17 @@ ask_question:
       required: false
       selector:
         object:
+          label_field: sentences
+          description_field: id
+          multiple: true
+          translation_key: answers
+          fields:
+            id:
+              required: true
+              selector:
+                text:
+            sentences:
+              required: true
+              selector:
+                text:
+                  multiple: true
