@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-from typing import Any
 
 from songpal import Device, SongpalException
 import voluptuous as vol
@@ -12,7 +11,6 @@ from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -35,19 +33,6 @@ PLATFORMS = [
 ]
 
 type SongpalConfigEntry = ConfigEntry[SongpalCoordinator]
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: Any | None = None,
-) -> None:
-    """Set up from legacy configuration file. Obsolete."""
-    _LOGGER.error(
-        "Configuring Songpal through media_player platform is no longer supported."
-        " Convert to songpal platform or UI configuration"
-    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -102,4 +87,5 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: SongpalConfigEntry) -> bool:
     """Unload songpal media player."""
+    await entry.runtime_data.destroy()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
