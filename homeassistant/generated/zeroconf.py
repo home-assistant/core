@@ -505,6 +505,11 @@ ZEROCONF = {
             "name": "tube*",
         },
     ],
+    "_everhome._tcp.local.": [
+        {
+            "domain": "everhome",
+        },
+    ],
     "_fbx-api._tcp.local.": [
         {
             "domain": "freebox",
