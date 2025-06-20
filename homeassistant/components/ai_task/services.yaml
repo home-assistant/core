@@ -14,4 +14,6 @@ generate_text:
       required: false
       selector:
         entity:
-          domain: llm_task
+          domain: ai_task
+          supported_features:
+            - ai_task.AITaskEntityFeature.GENERATE_TEXT
