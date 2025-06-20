@@ -18,7 +18,9 @@ async def test_weather(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_api: AsyncMock,
+    mock_rest_api: AsyncMock,
+    mock_get_stations: AsyncMock,
+    mock_websocket_api: AsyncMock,
 ) -> None:
     """Test all entities."""
     with patch(
