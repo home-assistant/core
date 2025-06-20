@@ -17,13 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_WS_PORT,
-    DATA_CONNECTION,
-    DATA_KODI,
-    DATA_REMOVE_LISTENER,
-    DOMAIN,
-)
+from .const import CONF_WS_PORT, DATA_CONNECTION, DATA_KODI, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -58,13 +52,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def _close(event):
         await conn.close()
 
-    remove_stop_listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_CONNECTION: conn,
         DATA_KODI: kodi,
-        DATA_REMOVE_LISTENER: remove_stop_listener,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -78,6 +71,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         data = hass.data[DOMAIN].pop(entry.entry_id)
         await data[DATA_CONNECTION].close()
-        data[DATA_REMOVE_LISTENER]()
 
     return unload_ok
