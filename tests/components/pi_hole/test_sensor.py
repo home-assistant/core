@@ -72,8 +72,7 @@ async def test_bad_data_key(
         mocked_hole.instances[-1].data = bad_data
 
     mocked_hole.instances[-1].get_data = AsyncMock(side_effect=set_bad_data)
-    future = dt_util.utcnow() + timedelta(minutes=1)
-    async_fire_time_changed(hass, future)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
     await hass.async_block_till_done()
     assert mocked_hole.instances[-1].data != ZERO_DATA_V6
 
