@@ -32,12 +32,18 @@ async def test_get_config_entry_diagnostics(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=50.3
+        "homeassistant.components.fastdotcom.coordinator.fast_com",
+        return_value={
+            "download_speed": 100.0,
+            "upload_speed": 50.0,
+            "unloaded_ping": 15.2,
+            "loaded_ping": 20.5,
+        },
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-        == snapshot
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
     )
+    assert diagnostics == snapshot
