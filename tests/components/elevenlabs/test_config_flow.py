@@ -7,14 +7,12 @@ import pytest
 from homeassistant.components.elevenlabs.const import (
     CONF_CONFIGURE_VOICE,
     CONF_MODEL,
-    CONF_OPTIMIZE_LATENCY,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STYLE,
     CONF_USE_SPEAKER_BOOST,
     CONF_VOICE,
     DEFAULT_MODEL,
-    DEFAULT_OPTIMIZE_LATENCY,
     DEFAULT_SIMILARITY,
     DEFAULT_STABILITY,
     DEFAULT_STYLE,
@@ -166,7 +164,6 @@ async def test_options_flow_voice_settings_default(
     assert mock_entry.options == {
         CONF_MODEL: "model1",
         CONF_VOICE: "voice1",
-        CONF_OPTIMIZE_LATENCY: DEFAULT_OPTIMIZE_LATENCY,
         CONF_SIMILARITY: DEFAULT_SIMILARITY,
         CONF_STABILITY: DEFAULT_STABILITY,
         CONF_STYLE: DEFAULT_STYLE,
