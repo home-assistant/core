@@ -19,11 +19,11 @@ from songpal import (
 from songpal.containers import Setting
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import CONF_ENDPOINT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,8 +49,6 @@ class SongpalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         config_entry: SongpalConfigEntry,
-        name: str,
-        device: Device,
     ) -> None:
         """Initialize coordinator."""
 
@@ -61,12 +59,26 @@ class SongpalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=10),
         )
 
-        self.device_name = name
+        self.device_name = config_entry.data[CONF_NAME]
+        self._endpoint = config_entry.data[CONF_ENDPOINT]
         self.data = {}
-        self.device = device
         self._initialized = False
 
     async def _async_setup(self):
+        self.device = Device(self._endpoint)
+
+        try:
+            async with asyncio.timeout(
+                10
+            ):  # set timeout to avoid blocking the setup process
+                await self.device.get_supported_methods()
+        except (SongpalException, TimeoutError) as ex:
+            _LOGGER.warning("[%s(%s)] Unable to connect", self.name, self._endpoint)
+            _LOGGER.debug("Unable to get methods from songpal: %s", ex)
+            raise UpdateFailed(
+                f"[{self.name}({self._endpoint})] Unable to connect"
+            ) from ex
+
         await self.async_activate_websocket()
         await self.full_refresh()
         self.async_set_updated_data(self.data)
