@@ -3,9 +3,8 @@
 import asyncio
 from collections.abc import Awaitable, Callable, Generator, Iterator
 import contextlib
-from contextlib import asynccontextmanager
 from typing import Any
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 from ha_silabs_firmware_client import (
     FirmwareManifest,
@@ -193,17 +192,14 @@ def delayed_side_effect() -> Callable[..., Awaitable[None]]:
     return side_effect
 
 
-class MockOwner:
-    """Mock hardware owner object."""
+def create_mock_owner() -> Mock:
+    """Mock for OwningAddon / OwningIntegration."""
+    owner = Mock()
+    owner.is_running = AsyncMock(return_value=True)
+    owner.temporarily_stop = MagicMock()
+    owner.temporarily_stop.return_value.__aenter__.return_value = AsyncMock()
 
-    async def is_running(self) -> bool:
-        """Mock method to check if the owner is running."""
-        return True
-
-    @asynccontextmanager
-    async def temporarily_stop(self, hass: HomeAssistant) -> Generator[None]:
-        """Mock method to temporarily stop the owner."""
-        yield
+    return owner
 
 
 @contextlib.contextmanager
@@ -279,7 +275,7 @@ def mock_firmware_info(
             device=TEST_DEVICE,
             firmware_type=flash_app_type,
             firmware_version="7.4.4.0",
-            owners=[MockOwner()],
+            owners=[create_mock_owner()],
             source="probe",
         )
 
