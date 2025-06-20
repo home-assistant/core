@@ -59,11 +59,9 @@ async def test_entities_removed(
         BinarySensorState(key=1, state=True, missing_state=False),
         BinarySensorState(key=2, state=True, missing_state=False),
     ]
-    user_service = []
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     entry = mock_device.entry
@@ -106,7 +104,6 @@ async def test_entities_removed(
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
         entry=entry,
     )
@@ -151,11 +148,9 @@ async def test_entities_removed_after_reload(
         BinarySensorState(key=1, state=True, missing_state=False),
         BinarySensorState(key=2, state=True, missing_state=False),
     ]
-    user_service = []
     mock_device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     entry = mock_device.entry
@@ -218,7 +213,7 @@ async def test_entities_removed_after_reload(
         ),
     ]
     mock_device.client.list_entities_services = AsyncMock(
-        return_value=(entity_info, user_service)
+        return_value=(entity_info, [])
     )
 
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -273,11 +268,9 @@ async def test_entities_for_entire_platform_removed(
     states = [
         BinarySensorState(key=1, state=True, missing_state=False),
     ]
-    user_service = []
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     entry = mock_device.entry
@@ -300,13 +293,8 @@ async def test_entities_for_entire_platform_removed(
     assert reg_entry is not None
     assert state.attributes[ATTR_RESTORED] is True
 
-    entity_info = []
-    states = []
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=entity_info,
-        user_service=user_service,
-        states=states,
         entry=entry,
     )
     assert mock_device.entry.entry_id == entry_id
@@ -336,11 +324,9 @@ async def test_entity_info_object_ids(
         )
     ]
     states = []
-    user_service = []
     await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
     )
     state = hass.states.get("binary_sensor.test_object_id_is_used")
@@ -373,11 +359,9 @@ async def test_deep_sleep_device(
         BinarySensorState(key=2, state=True, missing_state=False),
         SensorState(key=3, state=123.0, missing_state=False),
     ]
-    user_service = []
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
         device_info={"has_deep_sleep": True},
     )
@@ -474,11 +458,9 @@ async def test_esphome_device_without_friendly_name(
         BinarySensorState(key=1, state=True, missing_state=False),
         BinarySensorState(key=2, state=True, missing_state=False),
     ]
-    user_service = []
     await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
         device_info={"friendly_name": None},
     )
@@ -505,11 +487,9 @@ async def test_entity_without_name_device_with_friendly_name(
     states = [
         BinarySensorState(key=1, state=True, missing_state=False),
     ]
-    user_service = []
     await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
         device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
     )
@@ -540,7 +520,6 @@ async def test_entity_id_preserved_on_upgrade(
     states = [
         BinarySensorState(key=1, state=True, missing_state=False),
     ]
-    user_service = []
     assert (
         build_unique_id("11:22:33:44:55:AA", entity_info[0])
         == "11:22:33:44:55:AA-binary_sensor-my"
@@ -556,7 +535,6 @@ async def test_entity_id_preserved_on_upgrade(
     await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
         device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
     )
@@ -583,7 +561,6 @@ async def test_entity_id_preserved_on_upgrade_old_format_entity_id(
     states = [
         BinarySensorState(key=1, state=True, missing_state=False),
     ]
-    user_service = []
     assert (
         build_unique_id("11:22:33:44:55:AA", entity_info[0])
         == "11:22:33:44:55:AA-binary_sensor-my"
@@ -599,7 +576,6 @@ async def test_entity_id_preserved_on_upgrade_old_format_entity_id(
     await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
         device_info={"name": "mixer"},
     )
@@ -626,11 +602,9 @@ async def test_entity_id_preserved_on_upgrade_when_in_storage(
     states = [
         BinarySensorState(key=1, state=True, missing_state=False),
     ]
-    user_service = []
     device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
         device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
     )
@@ -660,7 +634,6 @@ async def test_entity_id_preserved_on_upgrade_when_in_storage(
     device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
-        user_service=user_service,
         states=states,
         entry=entry,
         device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
@@ -685,7 +658,6 @@ async def test_deep_sleep_added_after_setup(
                 unique_id="test",
             ),
         ],
-        user_service=[],
         states=[
             BinarySensorState(key=1, state=True, missing_state=False),
         ],

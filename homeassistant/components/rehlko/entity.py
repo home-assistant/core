@@ -44,6 +44,7 @@ class RehlkoEntity(CoordinatorEntity[RehlkoUpdateCoordinator]):
         device_data: dict,
         description: EntityDescription,
         document_key: str | None = None,
+        connectivity_key: str | None = DEVICE_DATA_IS_CONNECTED,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -62,6 +63,7 @@ class RehlkoEntity(CoordinatorEntity[RehlkoUpdateCoordinator]):
             connections=_get_device_connections(device_data[DEVICE_DATA_MAC_ADDRESS]),
         )
         self._document_key = document_key
+        self._connectivity_key = connectivity_key
 
     @property
     def _device_data(self) -> dict[str, Any]:
@@ -80,4 +82,6 @@ class RehlkoEntity(CoordinatorEntity[RehlkoUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self._device_data[DEVICE_DATA_IS_CONNECTED]
+        return super().available and (
+            not self._connectivity_key or self._device_data[self._connectivity_key]
+        )

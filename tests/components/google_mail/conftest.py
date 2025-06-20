@@ -16,7 +16,7 @@ from homeassistant.components.google_mail.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 type ComponentSetup = Callable[[], Awaitable[None]]
@@ -112,7 +112,10 @@ async def mock_setup_integration(
             "httplib2.Http.request",
             return_value=(
                 Response({}),
-                bytes(load_fixture("google_mail/get_vacation.json"), encoding="UTF-8"),
+                bytes(
+                    await async_load_fixture(hass, "get_vacation.json", DOMAIN),
+                    encoding="UTF-8",
+                ),
             ),
         ):
             assert await async_setup_component(hass, DOMAIN, {})
