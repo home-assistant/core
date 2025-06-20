@@ -242,6 +242,17 @@ async def test_pipeline_api_audio(
 
         event_callback(
             PipelineEvent(
+                type=PipelineEventType.INTENT_PROGRESS,
+                data={"tts_start_streaming": True},
+            )
+        )
+        assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+            VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS,
+            {"tts_start_streaming": True},
+        )
+
+        event_callback(
+            PipelineEvent(
                 type=PipelineEventType.INTENT_END,
                 data={
                     "intent_output": conversation.ConversationResult(
