@@ -809,6 +809,11 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "bresser": {
+      "name": "Bresser",
+      "integration_type": "virtual",
+      "supported_by": "ccl"
+    },
     "bring": {
       "name": "Bring!",
       "integration_type": "service",
