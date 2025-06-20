@@ -14,7 +14,7 @@ from homeassistant.components.wallbox.const import (
 from homeassistant.components.wallbox.coordinator import InvalidAuth
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     authorisation_response,

@@ -1,11 +1,10 @@
 """Test Wallbox Init Component."""
 
 from unittest.mock import Mock, patch
-import pytest
+
 from homeassistant.components.wallbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     authorisation_response,
