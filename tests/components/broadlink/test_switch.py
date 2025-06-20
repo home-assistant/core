@@ -92,7 +92,7 @@ async def test_slots_switch_setup_works(
     for slot, switch in enumerate(switches):
         assert (
             hass.states.get(switch.entity_id).attributes[ATTR_FRIENDLY_NAME]
-            == f"{device.name} S{slot+1}"
+            == f"{device.name} S{slot + 1}"
         )
         assert hass.states.get(switch.entity_id).state == STATE_OFF
         assert mock_setup.api.auth.call_count == 1

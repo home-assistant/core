@@ -23,12 +23,14 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from . import TautulliConfigEntry
 from .const import ATTR_TOP_USER, DOMAIN
-from .coordinator import TautulliDataUpdateCoordinator
+from .coordinator import TautulliConfigEntry, TautulliDataUpdateCoordinator
 from .entity import TautulliEntity
 
 
@@ -213,7 +215,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TautulliConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tautulli sensor."""
     data = entry.runtime_data

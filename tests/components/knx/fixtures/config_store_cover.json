@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "cover": {
+        "knx_es_01JQNM9A9G03952ZH0GDF51HB6": {
+          "entity": {
+            "name": "minimal",
+            "entity_category": null,
+            "device_info": null
+          },
+          "knx": {
+            "ga_up_down": {
+              "write": "1/0/1",
+              "passive": []
+            },
+            "travelling_time_down": 25.0,
+            "travelling_time_up": 25.0,
+            "sync_state": true
+          }
+        },
+        "knx_es_01JQNQVEB7WT3MYCX61RK361F8": {
+          "entity": {
+            "name": "position_only",
+            "entity_category": null,
+            "device_info": null
+          },
+          "knx": {
+            "ga_position_set": {
+              "write": "2/0/1",
+              "passive": []
+            },
+            "ga_position_state": {
+              "state": "2/0/0",
+              "passive": []
+            },
+            "invert_position": true,
+            "travelling_time_up": 25.0,
+            "travelling_time_down": 25.0,
+            "sync_state": true
+          }
+        },
+        "knx_es_01JQNQSDS4ZW96TX27S2NT3FYQ": {
+          "entity": {
+            "name": "tiltable",
+            "entity_category": null,
+            "device_info": null
+          },
+          "knx": {
+            "ga_up_down": {
+              "write": "3/0/1",
+              "passive": []
+            },
+            "ga_stop": {
+              "write": "3/0/2",
+              "passive": []
+            },
+            "ga_position_set": {
+              "write": "3/1/1",
+              "passive": []
+            },
+            "ga_position_state": {
+              "state": "3/1/0",
+              "passive": []
+            },
+            "ga_angle": {
+              "write": "3/2/1",
+              "state": "3/2/0",
+              "passive": []
+            },
+            "travelling_time_down": 16.0,
+            "travelling_time_up": 16.0,
+            "invert_angle": true,
+            "sync_state": true
+          }
+        }
+      }
+    }
+  }
+}

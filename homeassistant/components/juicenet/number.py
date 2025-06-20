@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pyjuicenet import Api, Charger
+from pyjuicenet import Charger
 
 from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
@@ -13,11 +13,12 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
-from .entity import JuiceNetDevice
+from .coordinator import JuiceNetCoordinator
+from .device import JuiceNetApi
+from .entity import JuiceNetEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,12 +44,12 @@ NUMBER_TYPES: tuple[JuiceNetNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the JuiceNet Numbers."""
     juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
-    api: Api = juicenet_data[JUICENET_API]
-    coordinator = juicenet_data[JUICENET_COORDINATOR]
+    api: JuiceNetApi = juicenet_data[JUICENET_API]
+    coordinator: JuiceNetCoordinator = juicenet_data[JUICENET_COORDINATOR]
 
     entities = [
         JuiceNetNumber(device, description, coordinator)
@@ -58,7 +59,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class JuiceNetNumber(JuiceNetDevice, NumberEntity):
+class JuiceNetNumber(JuiceNetEntity, NumberEntity):
     """Implementation of a JuiceNet number."""
 
     entity_description: JuiceNetNumberEntityDescription
@@ -67,7 +68,7 @@ class JuiceNetNumber(JuiceNetDevice, NumberEntity):
         self,
         device: Charger,
         description: JuiceNetNumberEntityDescription,
-        coordinator: DataUpdateCoordinator,
+        coordinator: JuiceNetCoordinator,
     ) -> None:
         """Initialise the number."""
         super().__init__(device, description.key, coordinator)

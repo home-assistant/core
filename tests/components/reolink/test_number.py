@@ -67,6 +67,48 @@ async def test_number(
     reolink_connect.set_volume.reset_mock(side_effect=True)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_smart_ai_number(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test number entity with smart ai sensitivity."""
+    reolink_connect.baichuan.smart_ai_sensitivity.return_value = 80
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.NUMBER]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.NUMBER}.{TEST_NVR_NAME}_AI_crossline_zone1_sensitivity"
+
+    assert hass.states.get(entity_id).state == "80"
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 50},
+        blocking=True,
+    )
+    reolink_connect.baichuan.set_smart_ai.assert_called_with(
+        0, "crossline", 0, sensitivity=50
+    )
+
+    reolink_connect.baichuan.set_smart_ai.side_effect = InvalidParameterError(
+        "Test error"
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 50},
+            blocking=True,
+        )
+
+    reolink_connect.baichuan.set_smart_ai.reset_mock(side_effect=True)
+
+
 async def test_host_number(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

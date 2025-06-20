@@ -2,11 +2,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup {cookidoo}",
+        "title": "Set up {cookidoo}",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "country": "Country"
+          "country": "[%key:common::config_flow::data::country%]"
         },
         "data_description": {
           "email": "Email used to access your {cookidoo} account.",
@@ -15,7 +15,7 @@
         }
       },
       "language": {
-        "title": "Setup {cookidoo}",
+        "title": "[%key:component::cookidoo::config::step::user::title%]",
         "data": {
           "language": "[%key:common::config_flow::data::language%]"
         },
@@ -24,7 +24,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "Login again to {cookidoo}",
+        "title": "Log in again to {cookidoo}",
         "description": "Please log in to {cookidoo} again to continue using this integration.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
@@ -44,10 +44,24 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The user identifier does not match the previous identifier"
     }
   },
   "entity": {
+    "sensor": {
+      "subscription": {
+        "name": "Subscription",
+        "state": {
+          "free": "Free",
+          "trial": "Trial",
+          "premium": "Premium"
+        }
+      },
+      "expires": {
+        "name": "Subscription expiration date"
+      }
+    },
     "button": {
       "todo_clear": {
         "name": "Clear shopping list and additional purchases"

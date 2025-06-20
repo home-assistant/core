@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as DECONZ_DOMAIN
+from .const import DOMAIN
 from .hub import DeconzHub
 from .util import serial_from_unique_id
 
@@ -59,12 +59,12 @@ class DeconzBase[_DeviceT: _DeviceType]:
 
         return DeviceInfo(
             connections={(CONNECTION_ZIGBEE, self.serial)},
-            identifiers={(DECONZ_DOMAIN, self.serial)},
+            identifiers={(DOMAIN, self.serial)},
             manufacturer=self._device.manufacturer,
             model=self._device.model_id,
             name=self._device.name,
             sw_version=self._device.software_version,
-            via_device=(DECONZ_DOMAIN, self.hub.api.config.bridge_id),
+            via_device=(DOMAIN, self.hub.api.config.bridge_id),
         )
 
 
@@ -176,9 +176,9 @@ class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(
-            identifiers={(DECONZ_DOMAIN, self._group_identifier)},
+            identifiers={(DOMAIN, self._group_identifier)},
             manufacturer="Dresden Elektronik",
             model="deCONZ group",
             name=self.group.name,
-            via_device=(DECONZ_DOMAIN, self.hub.api.config.bridge_id),
+            via_device=(DOMAIN, self.hub.api.config.bridge_id),
         )

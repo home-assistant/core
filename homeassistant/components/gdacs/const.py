@@ -10,8 +10,6 @@ DOMAIN = "gdacs"
 
 PLATFORMS = [Platform.GEO_LOCATION, Platform.SENSOR]
 
-FEED = "feed"
-
 CONF_CATEGORIES = "categories"
 
 DEFAULT_ICON = "mdi:alert"

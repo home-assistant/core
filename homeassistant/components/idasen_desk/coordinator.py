@@ -7,24 +7,31 @@ import logging
 from idasen_ha import Desk
 
 from homeassistant.components import bluetooth
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+type IdasenDeskConfigEntry = ConfigEntry[IdasenDeskCoordinator]
+
 
 class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
     """Class to manage updates for the Idasen Desk."""
 
+    config_entry: IdasenDeskConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        name: str,
+        config_entry: IdasenDeskConfigEntry,
         address: str,
     ) -> None:
         """Init IdasenDeskCoordinator."""
 
-        super().__init__(hass, _LOGGER, name=name)
+        super().__init__(
+            hass, _LOGGER, config_entry=config_entry, name=config_entry.title
+        )
         self.address = address
         self._expected_connected = False
 

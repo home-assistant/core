@@ -1,0 +1,40 @@
+{
+  "id": "alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
+  "connectionState": "Connected",
+  "firmware": {
+    "currentFwVersion": "9682R7A",
+    "desiredFwVersion": "9682R7A"
+  },
+  "product": {
+    "serialNumber": "10001",
+    "name": "Tehowatti Air"
+  },
+  "availableFeatures": {
+    "settings": true,
+    "reboot": true,
+    "forcesync": true,
+    "forceUpdate": false,
+    "requestUpdate": false,
+    "resetAlarm": true,
+    "triggerEvent": true,
+    "getMenu": false,
+    "getMenuChain": false,
+    "getGuideQuestion": false,
+    "sendHaystack": true,
+    "setSmartMode": false,
+    "setAidMode": true,
+    "getZones": false,
+    "processIntent": false,
+    "boostHotWater": true,
+    "boostVentilation": true,
+    "getScheduleConfig": false,
+    "getScheduleModes": false,
+    "getScheduleWeekly": false,
+    "getScheduleVacation": false,
+    "setScheduleModes": false,
+    "setScheduleWeekly": false,
+    "setScheduleOverride": false,
+    "setScheduleVacation": false,
+    "setVentilationMode": false
+  }
+}

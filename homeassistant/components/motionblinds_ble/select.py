@@ -11,7 +11,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_SPEED, CONF_MAC_CODE, DOMAIN
 from .entity import MotionblindsBLEEntity
@@ -32,7 +32,9 @@ SELECT_TYPES: dict[str, SelectEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select entities based on a config entry."""
 

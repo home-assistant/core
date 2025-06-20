@@ -14,7 +14,6 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.decorators import require_admin
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
@@ -114,7 +113,7 @@ class RepairsFlowIndexView(FlowManagerIndexView):
     url = "/api/repairs/issues/fix"
     name = "api:repairs:issues:fix"
 
-    @require_admin(error=Unauthorized(permission=POLICY_EDIT))
+    @require_admin(permission=POLICY_EDIT)
     @RequestDataValidator(
         vol.Schema(
             {
@@ -149,12 +148,12 @@ class RepairsFlowResourceView(FlowManagerResourceView):
     url = "/api/repairs/issues/fix/{flow_id}"
     name = "api:repairs:issues:fix:resource"
 
-    @require_admin(error=Unauthorized(permission=POLICY_EDIT))
+    @require_admin(permission=POLICY_EDIT)
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
-    @require_admin(error=Unauthorized(permission=POLICY_EDIT))
+    @require_admin(permission=POLICY_EDIT)
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)

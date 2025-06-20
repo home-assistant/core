@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -54,7 +54,9 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Mill climate."""
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
@@ -105,10 +107,8 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         self, coordinator: MillDataUpdateCoordinator, device: mill.Heater
     ) -> None:
         """Initialize the thermostat."""
-
-        super().__init__(coordinator, device)
         self._attr_unique_id = device.device_id
-        self._update_attr(device)
+        super().__init__(coordinator, device)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

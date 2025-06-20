@@ -4,10 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.notify import (
-    DOMAIN as NOTIFY_DOMAIN,
-    migrate_notify_issue,
-)
+from homeassistant.components.notify import DOMAIN, migrate_notify_issue
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -36,7 +33,7 @@ async def test_notify_migration_repair_flow(
     translation_key: str,
 ) -> None:
     """Test the notify service repair flow is triggered."""
-    await async_setup_component(hass, NOTIFY_DOMAIN, {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     await async_process_repairs_platforms(hass)
 
@@ -58,12 +55,12 @@ async def test_notify_migration_repair_flow(
     await hass.async_block_till_done()
     # Assert the issue is present
     assert issue_registry.async_get_issue(
-        domain=NOTIFY_DOMAIN,
+        domain=DOMAIN,
         issue_id=translation_key,
     )
     assert len(issue_registry.issues) == 1
 
-    data = await start_repair_fix_flow(http_client, NOTIFY_DOMAIN, translation_key)
+    data = await start_repair_fix_flow(http_client, DOMAIN, translation_key)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
@@ -75,7 +72,7 @@ async def test_notify_migration_repair_flow(
 
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(
-        domain=NOTIFY_DOMAIN,
+        domain=DOMAIN,
         issue_id=translation_key,
     )
     assert len(issue_registry.issues) == 0

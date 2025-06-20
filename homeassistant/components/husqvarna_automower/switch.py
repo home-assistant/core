@@ -7,8 +7,7 @@ from aioautomower.model import MowerModes, StayOutZones, Zone
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -27,86 +26,67 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch platform."""
     coordinator = entry.runtime_data
-    current_work_areas: dict[str, set[int]] = {}
-    current_stay_out_zones: dict[str, set[str]] = {}
-
-    async_add_entities(
+    entities: list[SwitchEntity] = []
+    entities.extend(
         AutomowerScheduleSwitchEntity(mower_id, coordinator)
         for mower_id in coordinator.data
     )
-
-    def _async_work_area_listener() -> None:
-        """Listen for new work areas and add switch entities if they did not exist.
-
-        Listening for deletable work areas is managed in the number platform.
-        """
-        for mower_id in coordinator.data:
-            if (
-                coordinator.data[mower_id].capabilities.work_areas
-                and (_work_areas := coordinator.data[mower_id].work_areas) is not None
-            ):
-                received_work_areas = set(_work_areas.keys())
-                new_work_areas = received_work_areas - current_work_areas.get(
-                    mower_id, set()
+    for mower_id in coordinator.data:
+        if coordinator.data[mower_id].capabilities.stay_out_zones:
+            _stay_out_zones = coordinator.data[mower_id].stay_out_zones
+            if _stay_out_zones is not None:
+                entities.extend(
+                    StayOutZoneSwitchEntity(coordinator, mower_id, stay_out_zone_uid)
+                    for stay_out_zone_uid in _stay_out_zones.zones
                 )
-                if new_work_areas:
-                    current_work_areas.setdefault(mower_id, set()).update(
-                        new_work_areas
-                    )
-                    async_add_entities(
-                        WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
-                        for work_area_id in new_work_areas
-                    )
+        if coordinator.data[mower_id].capabilities.work_areas:
+            _work_areas = coordinator.data[mower_id].work_areas
+            if _work_areas is not None:
+                entities.extend(
+                    WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
+                    for work_area_id in _work_areas
+                )
+    async_add_entities(entities)
 
-    def _remove_stay_out_zone_entities(
-        removed_stay_out_zones: set, mower_id: str
+    def _async_add_new_stay_out_zones(
+        mower_id: str, stay_out_zone_uids: set[str]
     ) -> None:
-        """Remove all unused stay-out zones for all platforms."""
-        entity_reg = er.async_get(hass)
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_reg, entry.entry_id
-        ):
-            for stay_out_zone_uid in removed_stay_out_zones:
-                if entity_entry.unique_id.startswith(f"{mower_id}_{stay_out_zone_uid}"):
-                    entity_reg.async_remove(entity_entry.entity_id)
+        async_add_entities(
+            StayOutZoneSwitchEntity(coordinator, mower_id, zone_uid)
+            for zone_uid in stay_out_zone_uids
+        )
 
-    def _async_stay_out_zone_listener() -> None:
-        """Listen for new stay-out zones and add/remove switch entities if they did not exist."""
-        for mower_id in coordinator.data:
+    def _async_add_new_work_areas(mower_id: str, work_area_ids: set[int]) -> None:
+        async_add_entities(
+            WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
+            for work_area_id in work_area_ids
+        )
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerScheduleSwitchEntity(mower_id, coordinator)
+            for mower_id in mower_ids
+        )
+        for mower_id in mower_ids:
+            mower_data = coordinator.data[mower_id]
             if (
-                coordinator.data[mower_id].capabilities.stay_out_zones
-                and (_stay_out_zones := coordinator.data[mower_id].stay_out_zones)
-                is not None
+                mower_data.capabilities.stay_out_zones
+                and mower_data.stay_out_zones is not None
+                and mower_data.stay_out_zones.zones is not None
             ):
-                received_stay_out_zones = set(_stay_out_zones.zones)
-                current_stay_out_zones_set = current_stay_out_zones.get(mower_id, set())
-                new_stay_out_zones = (
-                    received_stay_out_zones - current_stay_out_zones_set
+                _async_add_new_stay_out_zones(
+                    mower_id, set(mower_data.stay_out_zones.zones.keys())
                 )
-                removed_stay_out_zones = (
-                    current_stay_out_zones_set - received_stay_out_zones
-                )
-                if new_stay_out_zones:
-                    current_stay_out_zones.setdefault(mower_id, set()).update(
-                        new_stay_out_zones
-                    )
-                    async_add_entities(
-                        StayOutZoneSwitchEntity(
-                            coordinator, mower_id, stay_out_zone_uid
-                        )
-                        for stay_out_zone_uid in new_stay_out_zones
-                    )
-                if removed_stay_out_zones:
-                    _remove_stay_out_zone_entities(removed_stay_out_zones, mower_id)
+            if mower_data.capabilities.work_areas and mower_data.work_areas is not None:
+                _async_add_new_work_areas(mower_id, set(mower_data.work_areas.keys()))
 
-    coordinator.async_add_listener(_async_work_area_listener)
-    coordinator.async_add_listener(_async_stay_out_zone_listener)
-    _async_work_area_listener()
-    _async_stay_out_zone_listener()
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
+    coordinator.new_zones_callbacks.append(_async_add_new_stay_out_zones)
+    coordinator.new_areas_callbacks.append(_async_add_new_work_areas)
 
 
 class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
@@ -185,14 +165,14 @@ class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.commands.switch_stay_out_zone(
-            self.mower_id, self.stay_out_zone_uid, False
+            self.mower_id, self.stay_out_zone_uid, switch=False
         )
 
     @handle_sending_exception(poll_after_sending=True)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.commands.switch_stay_out_zone(
-            self.mower_id, self.stay_out_zone_uid, True
+            self.mower_id, self.stay_out_zone_uid, switch=True
         )
 
 
@@ -226,12 +206,12 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.commands.workarea_settings(
-            self.mower_id, self.work_area_id, enabled=False
-        )
+            self.mower_id, self.work_area_id
+        ).enabled(enabled=False)
 
     @handle_sending_exception(poll_after_sending=True)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.commands.workarea_settings(
-            self.mower_id, self.work_area_id, enabled=True
-        )
+            self.mower_id, self.work_area_id
+        ).enabled(enabled=True)

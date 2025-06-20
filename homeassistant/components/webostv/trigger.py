@@ -1,4 +1,4 @@
-"""webOS Smart TV trigger dispatcher."""
+"""LG webOS TV trigger dispatcher."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from typing import cast
 
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.trigger import (
     TriggerActionType,
     TriggerInfo,
@@ -13,6 +14,7 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .triggers import turn_on
 
 TRIGGERS = {
@@ -24,8 +26,10 @@ def _get_trigger_platform(config: ConfigType) -> TriggerProtocol:
     """Return trigger platform."""
     platform_split = config[CONF_PLATFORM].split(".", maxsplit=1)
     if len(platform_split) < 2 or platform_split[1] not in TRIGGERS:
-        raise ValueError(
-            f"Unknown webOS Smart TV trigger platform {config[CONF_PLATFORM]}"
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_trigger_platform",
+            translation_placeholders={"platform": config[CONF_PLATFORM]},
         )
     return cast(TriggerProtocol, TRIGGERS[platform_split[1]])
 

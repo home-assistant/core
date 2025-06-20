@@ -1,111 +1,773 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'config': dict({
-      'backflush_enabled': False,
-      'bbw_settings': None,
-      'boilers': dict({
-        'CoffeeBoiler1': dict({
-          'current_temperature': 96.5,
-          'enabled': True,
-          'target_temperature': 95,
-        }),
-        'SteamBoiler': dict({
-          'current_temperature': 123.80000305175781,
-          'enabled': True,
-          'target_temperature': 123.9000015258789,
-        }),
-      }),
-      'brew_active': False,
-      'brew_active_duration': 0,
-      'dose_hot_water': 8,
-      'doses': dict({
-        '1': 135,
-        '2': 97,
-        '3': 108,
-        '4': 121,
-      }),
-      'plumbed_in': True,
-      'prebrew_configuration': dict({
-        '1': dict({
-          'off_time': 1,
-          'on_time': 0.5,
-        }),
-        '2': dict({
-          'off_time': 1,
-          'on_time': 0.5,
-        }),
-        '3': dict({
-          'off_time': 3.299999952316284,
-          'on_time': 3.299999952316284,
-        }),
-        '4': dict({
-          'off_time': 2,
-          'on_time': 2,
-        }),
-      }),
-      'prebrew_mode': 'TypeB',
-      'scale': None,
-      'smart_standby': dict({
-        'enabled': True,
-        'minutes': 10,
-        'mode': 'LastBrewing',
-      }),
-      'turned_on': True,
-      'wake_up_sleep_entries': dict({
-        'Os2OswX': dict({
-          'days': list([
-            'monday',
-            'tuesday',
-            'wednesday',
-            'thursday',
-            'friday',
-            'saturday',
-            'sunday',
-          ]),
-          'enabled': True,
-          'entry_id': 'Os2OswX',
-          'steam': True,
-          'time_off': '24:0',
-          'time_on': '22:0',
-        }),
-        'aXFz5bJ': dict({
-          'days': list([
-            'sunday',
-          ]),
-          'enabled': True,
-          'entry_id': 'aXFz5bJ',
-          'steam': True,
-          'time_off': '7:30',
-          'time_on': '7:0',
-        }),
-      }),
-      'water_contact': True,
+    'bluetooth_available': dict({
+      'mac': False,
+      'options_enabled': True,
+      'token': True,
     }),
-    'firmware': list([
-      dict({
-        'machine': dict({
-          'current_version': '1.40',
-          'latest_version': '1.55',
+    'device': dict({
+      'dashboard': dict({
+        'available_firmware_update': False,
+        'ble_auth_token': None,
+        'coffee_station': None,
+        'config': dict({
+          'CMBackFlush': dict({
+            'last_cleaning_start_time': '2025-03-29T08:25:47.166000+00:00',
+            'status': 'Off',
+          }),
+          'CMCoffeeBoiler': dict({
+            'enabled': True,
+            'enabled_supported': False,
+            'ready_start_time': None,
+            'status': 'Ready',
+            'target_temperature': 95.0,
+            'target_temperature_max': 110,
+            'target_temperature_min': 80,
+            'target_temperature_step': 0.1,
+          }),
+          'CMGroupDoses': dict({
+            'available_modes': list([
+              'PulsesType',
+            ]),
+            'brewing_pressure': None,
+            'brewing_pressure_supported': False,
+            'continuous_dose': None,
+            'continuous_dose_supported': False,
+            'doses': dict({
+              'pulses_type': list([
+                dict({
+                  'dose': 126.0,
+                  'dose_index': 'DoseA',
+                  'dose_max': 9999.0,
+                  'dose_min': 0.0,
+                  'dose_step': 1,
+                }),
+                dict({
+                  'dose': 126.0,
+                  'dose_index': 'DoseB',
+                  'dose_max': 9999.0,
+                  'dose_min': 0.0,
+                  'dose_step': 1,
+                }),
+                dict({
+                  'dose': 160.0,
+                  'dose_index': 'DoseC',
+                  'dose_max': 9999.0,
+                  'dose_min': 0.0,
+                  'dose_step': 1,
+                }),
+                dict({
+                  'dose': 77.0,
+                  'dose_index': 'DoseD',
+                  'dose_max': 9999.0,
+                  'dose_min': 0.0,
+                  'dose_step': 1,
+                }),
+              ]),
+            }),
+            'mirror_with_group_1': None,
+            'mirror_with_group_1_not_effective': False,
+            'mirror_with_group_1_supported': False,
+            'mode': 'PulsesType',
+            'profile': None,
+          }),
+          'CMHotWaterDose': dict({
+            'doses': list([
+              dict({
+                'dose': 8.0,
+                'dose_index': 'DoseA',
+                'dose_max': 90.0,
+                'dose_min': 0.0,
+                'dose_step': 1,
+              }),
+            ]),
+            'enabled': True,
+            'enabled_supported': False,
+          }),
+          'CMMachineStatus': dict({
+            'available_modes': list([
+              'BrewingMode',
+              'StandBy',
+            ]),
+            'brewing_start_time': '2025-05-07T18:04:20+00:00',
+            'mode': 'BrewingMode',
+            'next_status': dict({
+              'start_time': '2025-03-24T22:59:55.332000+00:00',
+              'status': 'StandBy',
+            }),
+            'status': 'PoweredOn',
+          }),
+          'CMPreBrewing': dict({
+            'available_modes': list([
+              'PreBrewing',
+              'PreInfusion',
+              'Disabled',
+            ]),
+            'dose_index_supported': True,
+            'mode': 'PreInfusion',
+            'times': dict({
+              'pre_brewing': list([
+                dict({
+                  'dose_index': 'DoseA',
+                  'seconds': dict({
+                    'In': 0.5,
+                    'Out': 1.0,
+                  }),
+                  'seconds_max': dict({
+                    'In': 10.0,
+                    'Out': 10.0,
+                  }),
+                  'seconds_min': dict({
+                    'In': 0.0,
+                    'Out': 0.0,
+                  }),
+                  'seconds_step': dict({
+                    'In': 0.1,
+                    'Out': 0.1,
+                  }),
+                }),
+                dict({
+                  'dose_index': 'DoseB',
+                  'seconds': dict({
+                    'In': 0.5,
+                    'Out': 1.0,
+                  }),
+                  'seconds_max': dict({
+                    'In': 10.0,
+                    'Out': 10.0,
+                  }),
+                  'seconds_min': dict({
+                    'In': 0.0,
+                    'Out': 0.0,
+                  }),
+                  'seconds_step': dict({
+                    'In': 0.1,
+                    'Out': 0.1,
+                  }),
+                }),
+                dict({
+                  'dose_index': 'DoseC',
+                  'seconds': dict({
+                    'In': 3.3,
+                    'Out': 3.3,
+                  }),
+                  'seconds_max': dict({
+                    'In': 10.0,
+                    'Out': 10.0,
+                  }),
+                  'seconds_min': dict({
+                    'In': 0.0,
+                    'Out': 0.0,
+                  }),
+                  'seconds_step': dict({
+                    'In': 0.1,
+                    'Out': 0.1,
+                  }),
+                }),
+                dict({
+                  'dose_index': 'DoseD',
+                  'seconds': dict({
+                    'In': 2.0,
+                    'Out': 2.0,
+                  }),
+                  'seconds_max': dict({
+                    'In': 10.0,
+                    'Out': 10.0,
+                  }),
+                  'seconds_min': dict({
+                    'In': 0.0,
+                    'Out': 0.0,
+                  }),
+                  'seconds_step': dict({
+                    'In': 0.1,
+                    'Out': 0.1,
+                  }),
+                }),
+              ]),
+              'pre_infusion': list([
+                dict({
+                  'dose_index': 'DoseA',
+                  'seconds': dict({
+                    'In': 0.0,
+                    'Out': 4.0,
+                  }),
+                  'seconds_max': dict({
+                    'In': 25.0,
+                    'Out': 25.0,
+                  }),
+                  'seconds_min': dict({
+                    'In': 0.0,
+                    'Out': 0.0,
+                  }),
+                  'seconds_step': dict({
+                    'In': 0.1,
+                    'Out': 0.1,
+                  }),
+                }),
+                dict({
+                  'dose_index': 'DoseB',
+                  'seconds': dict({
+                    'In': 0.0,
+                    'Out': 4.0,
+                  }),
+                  'seconds_max': dict({
+                    'In': 25.0,
+                    'Out': 25.0,
+                  }),
+                  'seconds_min': dict({
+                    'In': 0.0,
+                    'Out': 0.0,
+                  }),
+                  'seconds_step': dict({
+                    'In': 0.1,
+                    'Out': 0.1,
+                  }),
+                }),
+                dict({
+                  'dose_index': 'DoseC',
+                  'seconds': dict({
+                    'In': 0.0,
+                    'Out': 4.0,
+                  }),
+                  'seconds_max': dict({
+                    'In': 25.0,
+                    'Out': 25.0,
+                  }),
+                  'seconds_min': dict({
+                    'In': 0.0,
+                    'Out': 0.0,
+                  }),
+                  'seconds_step': dict({
+                    'In': 0.1,
+                    'Out': 0.1,
+                  }),
+                }),
+                dict({
+                  'dose_index': 'DoseD',
+                  'seconds': dict({
+                    'In': 0.0,
+                    'Out': 4.0,
+                  }),
+                  'seconds_max': dict({
+                    'In': 25.0,
+                    'Out': 25.0,
+                  }),
+                  'seconds_min': dict({
+                    'In': 0.0,
+                    'Out': 0.0,
+                  }),
+                  'seconds_step': dict({
+                    'In': 0.1,
+                    'Out': 0.1,
+                  }),
+                }),
+              ]),
+            }),
+          }),
+          'CMSteamBoilerTemperature': dict({
+            'enabled': True,
+            'enabled_supported': True,
+            'ready_start_time': None,
+            'status': 'Off',
+            'target_temperature': 123.9,
+            'target_temperature_max': 140,
+            'target_temperature_min': 95,
+            'target_temperature_step': 0.1,
+            'target_temperature_supported': True,
+          }),
         }),
+        'connected': True,
+        'connection_date': '2025-03-20T16:44:47.479000+00:00',
+        'image_url': 'https://lion.lamarzocco.io/img/thing-model/detail/gs3av/gs3av-1.png',
+        'location': 'HOME',
+        'model_code': 'GS3AV',
+        'model_name': 'GS3 AV',
+        'name': 'GS012345',
+        'offline_mode': False,
+        'require_firmware_update': False,
+        'serial_number': '**REDACTED**',
+        'type': 'CoffeeMachine',
+        'widgets': list([
+          dict({
+            'code': 'CMMachineStatus',
+            'index': 1,
+            'output': dict({
+              'available_modes': list([
+                'BrewingMode',
+                'StandBy',
+              ]),
+              'brewing_start_time': '2025-05-07T18:04:20+00:00',
+              'mode': 'BrewingMode',
+              'next_status': dict({
+                'start_time': '2025-03-24T22:59:55.332000+00:00',
+                'status': 'StandBy',
+              }),
+              'status': 'PoweredOn',
+            }),
+          }),
+          dict({
+            'code': 'CMCoffeeBoiler',
+            'index': 1,
+            'output': dict({
+              'enabled': True,
+              'enabled_supported': False,
+              'ready_start_time': None,
+              'status': 'Ready',
+              'target_temperature': 95.0,
+              'target_temperature_max': 110,
+              'target_temperature_min': 80,
+              'target_temperature_step': 0.1,
+            }),
+          }),
+          dict({
+            'code': 'CMSteamBoilerTemperature',
+            'index': 1,
+            'output': dict({
+              'enabled': True,
+              'enabled_supported': True,
+              'ready_start_time': None,
+              'status': 'Off',
+              'target_temperature': 123.9,
+              'target_temperature_max': 140,
+              'target_temperature_min': 95,
+              'target_temperature_step': 0.1,
+              'target_temperature_supported': True,
+            }),
+          }),
+          dict({
+            'code': 'CMGroupDoses',
+            'index': 1,
+            'output': dict({
+              'available_modes': list([
+                'PulsesType',
+              ]),
+              'brewing_pressure': None,
+              'brewing_pressure_supported': False,
+              'continuous_dose': None,
+              'continuous_dose_supported': False,
+              'doses': dict({
+                'pulses_type': list([
+                  dict({
+                    'dose': 126.0,
+                    'dose_index': 'DoseA',
+                    'dose_max': 9999.0,
+                    'dose_min': 0.0,
+                    'dose_step': 1,
+                  }),
+                  dict({
+                    'dose': 126.0,
+                    'dose_index': 'DoseB',
+                    'dose_max': 9999.0,
+                    'dose_min': 0.0,
+                    'dose_step': 1,
+                  }),
+                  dict({
+                    'dose': 160.0,
+                    'dose_index': 'DoseC',
+                    'dose_max': 9999.0,
+                    'dose_min': 0.0,
+                    'dose_step': 1,
+                  }),
+                  dict({
+                    'dose': 77.0,
+                    'dose_index': 'DoseD',
+                    'dose_max': 9999.0,
+                    'dose_min': 0.0,
+                    'dose_step': 1,
+                  }),
+                ]),
+              }),
+              'mirror_with_group_1': None,
+              'mirror_with_group_1_not_effective': False,
+              'mirror_with_group_1_supported': False,
+              'mode': 'PulsesType',
+              'profile': None,
+            }),
+          }),
+          dict({
+            'code': 'CMPreBrewing',
+            'index': 1,
+            'output': dict({
+              'available_modes': list([
+                'PreBrewing',
+                'PreInfusion',
+                'Disabled',
+              ]),
+              'dose_index_supported': True,
+              'mode': 'PreInfusion',
+              'times': dict({
+                'pre_brewing': list([
+                  dict({
+                    'dose_index': 'DoseA',
+                    'seconds': dict({
+                      'In': 0.5,
+                      'Out': 1.0,
+                    }),
+                    'seconds_max': dict({
+                      'In': 10.0,
+                      'Out': 10.0,
+                    }),
+                    'seconds_min': dict({
+                      'In': 0.0,
+                      'Out': 0.0,
+                    }),
+                    'seconds_step': dict({
+                      'In': 0.1,
+                      'Out': 0.1,
+                    }),
+                  }),
+                  dict({
+                    'dose_index': 'DoseB',
+                    'seconds': dict({
+                      'In': 0.5,
+                      'Out': 1.0,
+                    }),
+                    'seconds_max': dict({
+                      'In': 10.0,
+                      'Out': 10.0,
+                    }),
+                    'seconds_min': dict({
+                      'In': 0.0,
+                      'Out': 0.0,
+                    }),
+                    'seconds_step': dict({
+                      'In': 0.1,
+                      'Out': 0.1,
+                    }),
+                  }),
+                  dict({
+                    'dose_index': 'DoseC',
+                    'seconds': dict({
+                      'In': 3.3,
+                      'Out': 3.3,
+                    }),
+                    'seconds_max': dict({
+                      'In': 10.0,
+                      'Out': 10.0,
+                    }),
+                    'seconds_min': dict({
+                      'In': 0.0,
+                      'Out': 0.0,
+                    }),
+                    'seconds_step': dict({
+                      'In': 0.1,
+                      'Out': 0.1,
+                    }),
+                  }),
+                  dict({
+                    'dose_index': 'DoseD',
+                    'seconds': dict({
+                      'In': 2.0,
+                      'Out': 2.0,
+                    }),
+                    'seconds_max': dict({
+                      'In': 10.0,
+                      'Out': 10.0,
+                    }),
+                    'seconds_min': dict({
+                      'In': 0.0,
+                      'Out': 0.0,
+                    }),
+                    'seconds_step': dict({
+                      'In': 0.1,
+                      'Out': 0.1,
+                    }),
+                  }),
+                ]),
+                'pre_infusion': list([
+                  dict({
+                    'dose_index': 'DoseA',
+                    'seconds': dict({
+                      'In': 0.0,
+                      'Out': 4.0,
+                    }),
+                    'seconds_max': dict({
+                      'In': 25.0,
+                      'Out': 25.0,
+                    }),
+                    'seconds_min': dict({
+                      'In': 0.0,
+                      'Out': 0.0,
+                    }),
+                    'seconds_step': dict({
+                      'In': 0.1,
+                      'Out': 0.1,
+                    }),
+                  }),
+                  dict({
+                    'dose_index': 'DoseB',
+                    'seconds': dict({
+                      'In': 0.0,
+                      'Out': 4.0,
+                    }),
+                    'seconds_max': dict({
+                      'In': 25.0,
+                      'Out': 25.0,
+                    }),
+                    'seconds_min': dict({
+                      'In': 0.0,
+                      'Out': 0.0,
+                    }),
+                    'seconds_step': dict({
+                      'In': 0.1,
+                      'Out': 0.1,
+                    }),
+                  }),
+                  dict({
+                    'dose_index': 'DoseC',
+                    'seconds': dict({
+                      'In': 0.0,
+                      'Out': 4.0,
+                    }),
+                    'seconds_max': dict({
+                      'In': 25.0,
+                      'Out': 25.0,
+                    }),
+                    'seconds_min': dict({
+                      'In': 0.0,
+                      'Out': 0.0,
+                    }),
+                    'seconds_step': dict({
+                      'In': 0.1,
+                      'Out': 0.1,
+                    }),
+                  }),
+                  dict({
+                    'dose_index': 'DoseD',
+                    'seconds': dict({
+                      'In': 0.0,
+                      'Out': 4.0,
+                    }),
+                    'seconds_max': dict({
+                      'In': 25.0,
+                      'Out': 25.0,
+                    }),
+                    'seconds_min': dict({
+                      'In': 0.0,
+                      'Out': 0.0,
+                    }),
+                    'seconds_step': dict({
+                      'In': 0.1,
+                      'Out': 0.1,
+                    }),
+                  }),
+                ]),
+              }),
+            }),
+          }),
+          dict({
+            'code': 'CMHotWaterDose',
+            'index': 1,
+            'output': dict({
+              'doses': list([
+                dict({
+                  'dose': 8.0,
+                  'dose_index': 'DoseA',
+                  'dose_max': 90.0,
+                  'dose_min': 0.0,
+                  'dose_step': 1,
+                }),
+              ]),
+              'enabled': True,
+              'enabled_supported': False,
+            }),
+          }),
+          dict({
+            'code': 'CMBackFlush',
+            'index': 1,
+            'output': dict({
+              'last_cleaning_start_time': '2025-03-29T08:25:47.166000+00:00',
+              'status': 'Off',
+            }),
+          }),
+        ]),
       }),
-      dict({
-        'gateway': dict({
-          'current_version': 'v3.1-rc4',
-          'latest_version': 'v3.5-rc3',
+      'schedule': dict({
+        'available_firmware_update': False,
+        'ble_auth_token': None,
+        'coffee_station': None,
+        'connected': True,
+        'connection_date': '2025-03-21T03:00:19.892000+00:00',
+        'image_url': 'https://lion.lamarzocco.io/img/thing-model/detail/lineamicra/lineamicra-1-c-bianco.png',
+        'location': None,
+        'model_code': 'LINEAMICRA',
+        'model_name': 'Linea Micra',
+        'name': 'MR123456',
+        'offline_mode': False,
+        'require_firmware_update': False,
+        'serial_number': '**REDACTED**',
+        'smart_wake_up_sleep': dict({
+          'schedules': list([
+            dict({
+              'days': list([
+                'Monday',
+                'Tuesday',
+                'Wednesday',
+                'Thursday',
+                'Friday',
+                'Saturday',
+                'Sunday',
+              ]),
+              'enabled': True,
+              'id': 'Os2OswX',
+              'offTimeMinutes': 1440,
+              'onTimeMinutes': 1320,
+              'steamBoiler': True,
+            }),
+            dict({
+              'days': list([
+                'Sunday',
+              ]),
+              'enabled': True,
+              'id': 'aXFz5bJ',
+              'offTimeMinutes': 450,
+              'onTimeMinutes': 420,
+              'steamBoiler': False,
+            }),
+          ]),
+          'schedules_dict': dict({
+            'Os2OswX': dict({
+              'days': list([
+                'Monday',
+                'Tuesday',
+                'Wednesday',
+                'Thursday',
+                'Friday',
+                'Saturday',
+                'Sunday',
+              ]),
+              'enabled': True,
+              'id': 'Os2OswX',
+              'offTimeMinutes': 1440,
+              'onTimeMinutes': 1320,
+              'steamBoiler': True,
+            }),
+            'aXFz5bJ': dict({
+              'days': list([
+                'Sunday',
+              ]),
+              'enabled': True,
+              'id': 'aXFz5bJ',
+              'offTimeMinutes': 450,
+              'onTimeMinutes': 420,
+              'steamBoiler': False,
+            }),
+          }),
+          'smart_stand_by_after': 'PowerOn',
+          'smart_stand_by_enabled': True,
+          'smart_stand_by_minutes': 10,
+          'smart_stand_by_minutes_max': 30,
+          'smart_stand_by_minutes_min': 1,
+          'smart_stand_by_minutes_step': 1,
         }),
+        'smart_wake_up_sleep_supported': True,
+        'type': 'CoffeeMachine',
       }),
-    ]),
-    'model': 'GS3 AV',
-    'statistics': dict({
-      'continous': 2252,
-      'drink_stats': dict({
-        '1': 1047,
-        '2': 560,
-        '3': 468,
-        '4': 312,
+      'serial_number': '**REDACTED**',
+      'settings': dict({
+        'actual_firmwares': list([
+          dict({
+            'available_update': dict({
+              'build_version': 'v5.0.10',
+              'change_log': '''
+                What’s new in this version:
+                
+                * fixed an issue that could cause the machine powers up outside scheduled time
+                * minor improvements
+              ''',
+              'thing_model_code': 'LineaMicra',
+              'type': 'Gateway',
+            }),
+            'build_version': 'v5.0.9',
+            'change_log': '''
+              What’s new in this version:
+              
+              * New La Marzocco compatibility
+              * Improved connectivity
+              * Improved pairing process
+              * Improved statistics
+              * Boilers heating time
+              * Last backflush date (GS3 MP excluded)
+              * Automatic gateway updates option
+            ''',
+            'status': 'ToUpdate',
+            'thing_model_code': 'LineaMicra',
+            'type': 'Gateway',
+          }),
+          dict({
+            'available_update': None,
+            'build_version': 'v1.17',
+            'change_log': 'None',
+            'status': 'Updated',
+            'thing_model_code': 'LineaMicra',
+            'type': 'Machine',
+          }),
+        ]),
+        'auto_update': False,
+        'auto_update_supported': True,
+        'available_firmware_update': False,
+        'ble_auth_token': None,
+        'coffee_station': None,
+        'connected': True,
+        'connection_date': '2025-03-21T03:00:19.892000+00:00',
+        'cropster_active': False,
+        'cropster_supported': False,
+        'factory_reset_supported': True,
+        'firmwares': dict({
+          'Gateway': dict({
+            'available_update': dict({
+              'build_version': 'v5.0.10',
+              'change_log': '''
+                What’s new in this version:
+                
+                * fixed an issue that could cause the machine powers up outside scheduled time
+                * minor improvements
+              ''',
+              'thing_model_code': 'LineaMicra',
+              'type': 'Gateway',
+            }),
+            'build_version': 'v5.0.9',
+            'change_log': '''
+              What’s new in this version:
+              
+              * New La Marzocco compatibility
+              * Improved connectivity
+              * Improved pairing process
+              * Improved statistics
+              * Boilers heating time
+              * Last backflush date (GS3 MP excluded)
+              * Automatic gateway updates option
+            ''',
+            'status': 'ToUpdate',
+            'thing_model_code': 'LineaMicra',
+            'type': 'Gateway',
+          }),
+          'Machine': dict({
+            'available_update': None,
+            'build_version': 'v1.17',
+            'change_log': 'None',
+            'status': 'Updated',
+            'thing_model_code': 'LineaMicra',
+            'type': 'Machine',
+          }),
+        }),
+        'hemro_active': False,
+        'hemro_supported': False,
+        'image_url': 'https://lion.lamarzocco.io/img/thing-model/detail/lineamicra/lineamicra-1-c-bianco.png',
+        'is_plumbed_in': True,
+        'location': None,
+        'model_code': 'LINEAMICRA',
+        'model_name': 'Linea Micra',
+        'name': 'MR123456',
+        'offline_mode': False,
+        'plumb_in_supported': True,
+        'require_firmware_update': False,
+        'serial_number': '**REDACTED**',
+        'type': 'CoffeeMachine',
+        'wifi_rssi': -51,
+        'wifi_ssid': 'MyWifi',
       }),
-      'total_flushes': 1740,
     }),
   })
 # ---

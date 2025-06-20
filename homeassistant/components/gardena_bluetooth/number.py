@@ -19,10 +19,9 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GardenaBluetoothConfigEntry
-from .coordinator import GardenaBluetoothCoordinator
+from .coordinator import GardenaBluetoothConfigEntry, GardenaBluetoothCoordinator
 from .entity import GardenaBluetoothDescriptorEntity, GardenaBluetoothEntity
 
 
@@ -106,7 +105,7 @@ DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GardenaBluetoothConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entity based on a config entry."""
     coordinator = entry.runtime_data

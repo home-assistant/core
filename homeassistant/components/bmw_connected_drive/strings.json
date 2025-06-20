@@ -6,7 +6,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "region": "ConnectedDrive Region"
+          "region": "ConnectedDrive region"
         },
         "data_description": {
           "username": "The email address of your MyBMW/MINI Connected account.",
@@ -69,7 +69,7 @@
         "name": "Door lock state"
       },
       "condition_based_services": {
-        "name": "Condition based services"
+        "name": "Condition-based services"
       },
       "check_control_messages": {
         "name": "Check control messages"
@@ -81,7 +81,7 @@
         "name": "Connection status"
       },
       "is_pre_entry_climatization_enabled": {
-        "name": "Pre entry climatization"
+        "name": "Pre-entry climatization"
       }
     },
     "button": {
@@ -113,10 +113,10 @@
     },
     "select": {
       "ac_limit": {
-        "name": "AC Charging Limit"
+        "name": "AC charging limit"
       },
       "charging_mode": {
-        "name": "Charging Mode",
+        "name": "Charging mode",
         "state": {
           "immediate_charging": "Immediate charging",
           "delayed_charging": "Delayed charging",
@@ -138,8 +138,8 @@
         "name": "Charging status",
         "state": {
           "default": "Default",
-          "charging": "Charging",
-          "error": "Error",
+          "charging": "[%key:common::state::charging%]",
+          "error": "[%key:common::state::error%]",
           "complete": "Complete",
           "fully_charged": "Fully charged",
           "finished_fully_charged": "Finished, fully charged",
@@ -181,7 +181,7 @@
           "cooling": "Cooling",
           "heating": "Heating",
           "inactive": "Inactive",
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "ventilation": "Ventilation"
         }
       },

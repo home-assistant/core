@@ -66,8 +66,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             bad_prefix = False
             prefix = user_input[CONF_DISCOVERY_PREFIX]
-            if prefix.endswith("/#"):
-                prefix = prefix[:-2]
+            prefix = prefix.removesuffix("/#")
             try:
                 valid_subscribe_topic(f"{prefix}/#")
             except vol.Invalid:

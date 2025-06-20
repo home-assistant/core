@@ -1,0 +1,1 @@
+"""Ogemray virtual integration."""

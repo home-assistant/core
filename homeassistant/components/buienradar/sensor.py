@@ -45,7 +45,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import BuienRadarConfigEntry
@@ -169,6 +169,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="windazimuth",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     SensorEntityDescription(
         key="pressure",
@@ -530,30 +532,35 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="windazimuth_1d",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key="windazimuth_2d",
         translation_key="windazimuth_2d",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key="windazimuth_3d",
         translation_key="windazimuth_3d",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key="windazimuth_4d",
         translation_key="windazimuth_4d",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key="windazimuth_5d",
         translation_key="windazimuth_5d",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass-outline",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key="condition_1d",
@@ -691,7 +698,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BuienRadarConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the buienradar sensor."""
     config = entry.data

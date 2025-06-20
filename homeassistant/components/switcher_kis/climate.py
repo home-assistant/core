@@ -26,10 +26,10 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitcherConfigEntry
 from .const import SIGNAL_DEVICE_ADD
@@ -62,7 +62,7 @@ HA_TO_DEVICE_FAN = {value: key for key, value in DEVICE_FAN_TO_HA.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SwitcherConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switcher climate from config entry."""
 
@@ -117,20 +117,15 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         self._attr_supported_features |= (
             ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         )
-        self._update_data(True)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
         self._update_data()
-        self.async_write_ha_state()
 
-    def _update_data(self, force_update: bool = False) -> None:
+    def _update_data(self) -> None:
         """Update data from device."""
         data = cast(SwitcherThermostat, self.coordinator.data)
         features = self._remote.modes_features[data.mode]
 
-        if data.target_temperature == 0 and not force_update:
+        # Ignore empty update from device that was power cycled
+        if data.target_temperature == 0 and self.target_temperature is not None:
             return
 
         self._attr_current_temperature = data.temperature

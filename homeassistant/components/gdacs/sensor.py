@@ -10,15 +10,14 @@ from typing import Any
 from aio_georss_client.status_update import StatusUpdate
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import GdacsFeedEntityManager
-from .const import DOMAIN, FEED
+from . import GdacsConfigEntry, GdacsFeedEntityManager
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,11 +36,12 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GdacsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GDACS Feed platform."""
-    manager: GdacsFeedEntityManager = hass.data[DOMAIN][FEED][entry.entry_id]
-    sensor = GdacsSensor(entry, manager)
+    sensor = GdacsSensor(entry, entry.runtime_data)
     async_add_entities([sensor])
 
 
@@ -55,7 +55,7 @@ class GdacsSensor(SensorEntity):
     _attr_translation_key = "alerts"
 
     def __init__(
-        self, config_entry: ConfigEntry, manager: GdacsFeedEntityManager
+        self, config_entry: GdacsConfigEntry, manager: GdacsFeedEntityManager
     ) -> None:
         """Initialize entity."""
         assert config_entry.unique_id

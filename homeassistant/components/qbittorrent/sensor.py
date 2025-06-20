@@ -14,10 +14,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, UnitOfDataRate
+from homeassistant.const import STATE_IDLE, UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -27,8 +27,14 @@ from .coordinator import QBittorrentDataCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPE_CURRENT_STATUS = "current_status"
+SENSOR_TYPE_CONNECTION_STATUS = "connection_status"
 SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
 SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
+SENSOR_TYPE_DOWNLOAD_SPEED_LIMIT = "download_speed_limit"
+SENSOR_TYPE_UPLOAD_SPEED_LIMIT = "upload_speed_limit"
+SENSOR_TYPE_ALLTIME_DOWNLOAD = "alltime_download"
+SENSOR_TYPE_ALLTIME_UPLOAD = "alltime_upload"
+SENSOR_TYPE_GLOBAL_RATIO = "global_ratio"
 SENSOR_TYPE_ALL_TORRENTS = "all_torrents"
 SENSOR_TYPE_PAUSED_TORRENTS = "paused_torrents"
 SENSOR_TYPE_ACTIVE_TORRENTS = "active_torrents"
@@ -50,16 +56,52 @@ def get_state(coordinator: QBittorrentDataCoordinator) -> str:
     return STATE_IDLE
 
 
-def get_dl(coordinator: QBittorrentDataCoordinator) -> int:
+def get_connection_status(coordinator: QBittorrentDataCoordinator) -> str:
+    """Get current download/upload state."""
+    server_state = cast(Mapping, coordinator.data.get("server_state"))
+    return cast(str, server_state.get("connection_status"))
+
+
+def get_download_speed(coordinator: QBittorrentDataCoordinator) -> int:
     """Get current download speed."""
     server_state = cast(Mapping, coordinator.data.get("server_state"))
     return cast(int, server_state.get("dl_info_speed"))
 
 
-def get_up(coordinator: QBittorrentDataCoordinator) -> int:
+def get_upload_speed(coordinator: QBittorrentDataCoordinator) -> int:
     """Get current upload speed."""
     server_state = cast(Mapping[str, Any], coordinator.data.get("server_state"))
     return cast(int, server_state.get("up_info_speed"))
+
+
+def get_download_speed_limit(coordinator: QBittorrentDataCoordinator) -> int:
+    """Get current download speed."""
+    server_state = cast(Mapping, coordinator.data.get("server_state"))
+    return cast(int, server_state.get("dl_rate_limit"))
+
+
+def get_upload_speed_limit(coordinator: QBittorrentDataCoordinator) -> int:
+    """Get current upload speed."""
+    server_state = cast(Mapping[str, Any], coordinator.data.get("server_state"))
+    return cast(int, server_state.get("up_rate_limit"))
+
+
+def get_alltime_download(coordinator: QBittorrentDataCoordinator) -> int:
+    """Get current download speed."""
+    server_state = cast(Mapping, coordinator.data.get("server_state"))
+    return cast(int, server_state.get("alltime_dl"))
+
+
+def get_alltime_upload(coordinator: QBittorrentDataCoordinator) -> int:
+    """Get current download speed."""
+    server_state = cast(Mapping, coordinator.data.get("server_state"))
+    return cast(int, server_state.get("alltime_ul"))
+
+
+def get_global_ratio(coordinator: QBittorrentDataCoordinator) -> float:
+    """Get current download speed."""
+    server_state = cast(Mapping, coordinator.data.get("server_state"))
+    return cast(float, server_state.get("global_ratio"))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -78,6 +120,13 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         value_fn=get_state,
     ),
     QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_CONNECTION_STATUS,
+        translation_key="connection_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=["connected", "firewalled", "disconnected"],
+        value_fn=get_connection_status,
+    ),
+    QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         translation_key="download_speed",
         state_class=SensorStateClass.MEASUREMENT,
@@ -85,7 +134,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
-        value_fn=get_dl,
+        value_fn=get_download_speed,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
@@ -95,7 +144,56 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
-        value_fn=get_up,
+        value_fn=get_upload_speed,
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_DOWNLOAD_SPEED_LIMIT,
+        translation_key="download_speed_limit",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        value_fn=get_download_speed_limit,
+        entity_registry_enabled_default=False,
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_UPLOAD_SPEED_LIMIT,
+        translation_key="upload_speed_limit",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        value_fn=get_upload_speed_limit,
+        entity_registry_enabled_default=False,
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_ALLTIME_DOWNLOAD,
+        translation_key="alltime_download",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfInformation.TEBIBYTES,
+        value_fn=get_alltime_download,
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_ALLTIME_UPLOAD,
+        translation_key="alltime_upload",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement="B",
+        suggested_display_precision=2,
+        suggested_unit_of_measurement="TiB",
+        value_fn=get_alltime_upload,
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_GLOBAL_RATIO,
+        translation_key="global_ratio",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_global_ratio,
+        entity_registry_enabled_default=False,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_ALL_TORRENTS,
@@ -120,7 +218,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         key=SENSOR_TYPE_PAUSED_TORRENTS,
         translation_key="paused_torrents",
         value_fn=lambda coordinator: count_torrents_in_states(
-            coordinator, ["pausedDL", "pausedUP"]
+            coordinator, ["stoppedDL", "stoppedUP"]
         ),
     ),
 )
@@ -129,7 +227,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up qBittorrent sensor entries."""
 

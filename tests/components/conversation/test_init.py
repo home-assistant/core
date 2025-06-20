@@ -220,6 +220,13 @@ async def test_get_agent_info(
     agent_info = conversation.async_get_agent_info(hass)
     assert agent_info == snapshot
 
+    default_agent = conversation.async_get_agent(hass)
+    default_agent._attr_supports_streaming = True
+    assert (
+        conversation.async_get_agent_info(hass, "homeassistant").supports_streaming
+        is True
+    )
+
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 async def test_prepare_agent(
@@ -271,6 +278,7 @@ async def test_async_handle_sentence_triggers(
             text="my trigger",
             context=Context(),
             conversation_id=None,
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
             device_id=device_id,
             language=hass.config.language,
         ),
@@ -306,6 +314,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
         ConversationInput(
             text="I'd like to order a stout",
             context=Context(),
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
             conversation_id=None,
             device_id=None,
             language=hass.config.language,
@@ -321,6 +330,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
         hass,
         ConversationInput(
             text="this sentence does not exist",
+            agent_id=conversation.HOME_ASSISTANT_AGENT,
             context=Context(),
             conversation_id=None,
             device_id=None,

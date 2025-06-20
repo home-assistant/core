@@ -25,6 +25,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type GeoJsonConfigEntry = ConfigEntry[GeoJsonFeedEntityManager]
+
 
 class GeoJsonFeedEntityManager:
     """Feed Entity Manager for GeoJSON feeds."""

@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
 
@@ -15,7 +16,7 @@ async def test_binary_sensors(
     """Test if all v2 binary_sensors get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "binary_sensor")
+    await setup_platform(hass, mock_bridge_v2, Platform.BINARY_SENSOR)
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
     # 5 binary_sensors should be created from test data
@@ -86,7 +87,7 @@ async def test_binary_sensor_add_update(
 ) -> None:
     """Test if binary_sensor get added/updated from events."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
-    await setup_platform(hass, mock_bridge_v2, "binary_sensor")
+    await setup_platform(hass, mock_bridge_v2, Platform.BINARY_SENSOR)
 
     test_entity_id = "binary_sensor.hue_mocked_device_motion"
 

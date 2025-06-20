@@ -4,8 +4,6 @@ DOMAIN = "smarttub"
 
 EVENT_SMARTTUB = "smarttub"
 
-SMARTTUB_CONTROLLER = "smarttub_controller"
-
 SCAN_INTERVAL = 60
 
 POLLING_TIMEOUT = 10

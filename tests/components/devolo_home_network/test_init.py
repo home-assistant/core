@@ -15,7 +15,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.components.update import DOMAIN as UPDATE
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -24,10 +24,10 @@ from . import configure_integration
 from .const import IP
 from .mock import MockDevice
 
-from tests.common import MockConfigEntry
 
-
-@pytest.mark.parametrize("device", ["mock_device", "mock_repeater_device"])
+@pytest.mark.parametrize(
+    "device", ["mock_device", "mock_repeater_device", "mock_ipv6_device"]
+)
 async def test_setup_entry(
     hass: HomeAssistant,
     device: str,
@@ -46,27 +46,6 @@ async def test_setup_entry(
         {(DOMAIN, mock_device.serial_number)}
     )
     assert device_info == snapshot
-
-
-@pytest.mark.usefixtures("mock_device")
-async def test_setup_without_password(hass: HomeAssistant) -> None:
-    """Test setup entry without a device password set like used before HA Core 2022.06."""
-    config = {
-        CONF_IP_ADDRESS: IP,
-    }
-    entry = MockConfigEntry(domain=DOMAIN, data=config)
-    entry.add_to_hass(hass)
-    # Patching async_forward_entry_setup* is not advisable, and should be refactored
-    # in the future.
-    with (
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            return_value=True,
-        ),
-        patch("homeassistant.core.EventBus.async_listen_once"),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_device_not_found(hass: HomeAssistant) -> None:

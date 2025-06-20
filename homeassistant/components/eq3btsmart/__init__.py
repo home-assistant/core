@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from eq3btsmart import Thermostat
 from eq3btsmart.exceptions import Eq3Exception
-from eq3btsmart.thermostat_config import ThermostatConfig
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -53,12 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
             f"[{eq3_config.mac_address}] Device could not be found"
         )
 
-    thermostat = Thermostat(
-        thermostat_config=ThermostatConfig(
-            mac_address=mac_address,
-        ),
-        ble_device=device,
-    )
+    thermostat = Thermostat(mac_address=device)  # type: ignore[arg-type]
 
     entry.runtime_data = Eq3ConfigEntryData(
         eq3_config=eq3_config, thermostat=thermostat

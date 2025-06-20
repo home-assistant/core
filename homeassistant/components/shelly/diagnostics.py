@@ -6,9 +6,14 @@ from typing import Any
 
 from homeassistant.components.bluetooth import async_scanner_by_source
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import format_mac
 
 from .coordinator import ShellyConfigEntry
 from .utils import get_rpc_ws_url
@@ -31,9 +36,9 @@ async def async_get_config_entry_diagnostics(
         block_coordinator = shelly_entry_data.block
         assert block_coordinator
         device_info = {
-            "name": block_coordinator.name,
-            "model": block_coordinator.model,
-            "sw_version": block_coordinator.sw_version,
+            ATTR_NAME: block_coordinator.name,
+            ATTR_MODEL: block_coordinator.model,
+            ATTR_SW_VERSION: block_coordinator.sw_version,
         }
         if block_coordinator.device.initialized:
             device_settings = {
@@ -66,28 +71,29 @@ async def async_get_config_entry_diagnostics(
         rpc_coordinator = shelly_entry_data.rpc
         assert rpc_coordinator
         device_info = {
-            "name": rpc_coordinator.name,
-            "model": rpc_coordinator.model,
-            "sw_version": rpc_coordinator.sw_version,
+            ATTR_NAME: rpc_coordinator.name,
+            ATTR_MODEL: rpc_coordinator.model,
+            ATTR_SW_VERSION: rpc_coordinator.sw_version,
         }
         if rpc_coordinator.device.initialized:
             device_settings = {
                 k: v for k, v in rpc_coordinator.device.config.items() if k in ["cloud"]
             }
-            ws_config = rpc_coordinator.device.config["ws"]
-            device_settings["ws_outbound_enabled"] = ws_config["enable"]
-            if ws_config["enable"]:
-                device_settings["ws_outbound_server_valid"] = bool(
-                    ws_config["server"] == get_rpc_ws_url(hass)
-                )
+            if not (ws_config := rpc_coordinator.device.config.get("ws", {})):
+                device_settings["ws_outbound"] = "not supported"
+            if (ws_outbound_enabled := ws_config.get("enable")) is not None:
+                device_settings["ws_outbound_enabled"] = ws_outbound_enabled
+                if ws_outbound_enabled:
+                    device_settings["ws_outbound_server_valid"] = bool(
+                        ws_config["server"] == get_rpc_ws_url(hass)
+                    )
             device_status = {
                 k: v
                 for k, v in rpc_coordinator.device.status.items()
                 if k in ["sys", "wifi"]
             }
 
-        source = format_mac(rpc_coordinator.mac).upper()
-        if scanner := async_scanner_by_source(hass, source):
+        if scanner := async_scanner_by_source(hass, rpc_coordinator.bluetooth_source):
             bluetooth = {
                 "scanner": await scanner.async_diagnostics(),
             }

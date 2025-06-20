@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -203,7 +203,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Picnic sensor entries."""
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]

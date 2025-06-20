@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from monzopy import InvalidMonzoAPIResponseError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.components.monzo.sensor import (

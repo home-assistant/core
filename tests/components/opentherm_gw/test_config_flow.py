@@ -54,30 +54,6 @@ async def test_form_user(
     assert mock_pyotgw.return_value.disconnect.await_count == 1
 
 
-# Deprecated import from configuration.yaml, can be removed in 2025.4.0
-async def test_form_import(
-    hass: HomeAssistant,
-    mock_pyotgw: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test import from existing config."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_ID: "legacy_gateway", CONF_DEVICE: "/dev/ttyUSB1"},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "legacy_gateway"
-    assert result["data"] == {
-        CONF_NAME: "legacy_gateway",
-        CONF_DEVICE: "/dev/ttyUSB1",
-        CONF_ID: "legacy_gateway",
-    }
-    assert mock_pyotgw.return_value.connect.await_count == 1
-    assert mock_pyotgw.return_value.disconnect.await_count == 1
-
-
 async def test_form_duplicate_entries(
     hass: HomeAssistant,
     mock_pyotgw: MagicMock,

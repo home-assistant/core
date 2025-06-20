@@ -199,6 +199,7 @@ async def test_if_fires_on_event(
     )
     ep = zigpy_device.add_endpoint(1)
     ep.add_output_cluster(0x0006)
+    ep.profile_id = zigpy.profiles.zha.PROFILE_ID
 
     zigpy_device.device_automation_triggers = {
         (SHAKEN, SHAKEN): {COMMAND: COMMAND_SHAKE},

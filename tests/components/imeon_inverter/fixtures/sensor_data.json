@@ -1,0 +1,73 @@
+{
+  "battery": {
+    "autonomy": 4.5,
+    "charge_time": 120,
+    "power": 2500.0,
+    "soc": 78.0,
+    "stored": 10.2
+  },
+  "grid": {
+    "current_l1": 12.5,
+    "current_l2": 10.8,
+    "current_l3": 11.2,
+    "frequency": 50.0,
+    "voltage_l1": 230.0,
+    "voltage_l2": 229.5,
+    "voltage_l3": 230.1
+  },
+  "input": {
+    "power_l1": 1000.0,
+    "power_l2": 950.0,
+    "power_l3": 980.0,
+    "power_total": 2930.0
+  },
+  "inverter": {
+    "charging_current_limit": 50,
+    "injection_power_limit": 5000.0
+  },
+  "meter": {
+    "power": 2000.0,
+    "power_protocol": 2018.0
+  },
+  "output": {
+    "current_l1": 15.0,
+    "current_l2": 14.5,
+    "current_l3": 15.2,
+    "frequency": 49.9,
+    "power_l1": 1100.0,
+    "power_l2": 1080.0,
+    "power_l3": 1120.0,
+    "power_total": 3300.0,
+    "voltage_l1": 231.0,
+    "voltage_l2": 229.8,
+    "voltage_l3": 230.2
+  },
+  "pv": {
+    "consumed": 1500.0,
+    "injected": 800.0,
+    "power_1": 1200.0,
+    "power_2": 1300.0,
+    "power_total": 2500.0
+  },
+  "temp": {
+    "air_temperature": 25.0,
+    "component_temperature": 45.5
+  },
+  "monitoring": {
+    "building_consumption": 3000.0,
+    "economy_factor": 0.8,
+    "grid_consumption": 500.0,
+    "grid_injection": 700.0,
+    "grid_power_flow": -200.0,
+    "self_consumption": 85.0,
+    "self_sufficiency": 90.0,
+    "solar_production": 2600.0
+  },
+  "monitoring_minute": {
+    "building_consumption": 50.0,
+    "grid_consumption": 8.3,
+    "grid_injection": 11.7,
+    "grid_power_flow": -3.4,
+    "solar_production": 43.3
+  }
+}

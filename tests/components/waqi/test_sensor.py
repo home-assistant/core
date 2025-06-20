@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from aiowaqi import WAQIAirQuality, WAQIError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.waqi.const import DOMAIN
@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -30,7 +30,9 @@ async def test_sensor(
     with patch(
         "aiowaqi.WAQIClient.get_by_station_number",
         return_value=WAQIAirQuality.from_dict(
-            json.loads(load_fixture("waqi/air_quality_sensor.json"))
+            json.loads(
+                await async_load_fixture(hass, "air_quality_sensor.json", DOMAIN)
+            )
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})

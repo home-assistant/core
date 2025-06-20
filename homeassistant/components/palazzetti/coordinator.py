@@ -22,11 +22,13 @@ class PalazzettiDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: PalazzettiConfigEntry,
     ) -> None:
         """Initialize global Palazzetti data updater."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

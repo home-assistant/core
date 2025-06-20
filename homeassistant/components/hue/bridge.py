@@ -36,11 +36,13 @@ PLATFORMS_v2 = [
     Platform.SWITCH,
 ]
 
+type HueConfigEntry = ConfigEntry[HueBridge]
+
 
 class HueBridge:
     """Manages a single Hue bridge."""
 
-    def __init__(self, hass: core.HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: core.HomeAssistant, config_entry: HueConfigEntry) -> None:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
@@ -58,7 +60,7 @@ class HueBridge:
         else:
             self.api = HueBridgeV2(self.host, app_key)
         # store (this) bridge object in hass data
-        hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
+        self.config_entry.runtime_data = self
 
     @property
     def host(self) -> str:
@@ -163,7 +165,7 @@ class HueBridge:
         )
 
         if unload_success:
-            self.hass.data[DOMAIN].pop(self.config_entry.entry_id)
+            delattr(self.config_entry, "runtime_data")
 
         return unload_success
 
@@ -179,7 +181,7 @@ class HueBridge:
         create_config_flow(self.hass, self.host)
 
 
-async def _update_listener(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
+async def _update_listener(hass: core.HomeAssistant, entry: HueConfigEntry) -> None:
     """Handle ConfigEntry options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 

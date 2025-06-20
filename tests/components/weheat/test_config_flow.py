@@ -47,7 +47,7 @@ async def test_full_flow(
 
     with (
         patch(
-            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
+            "homeassistant.components.weheat.config_flow.async_get_user_id_from_token",
             return_value=USER_UUID_1,
         ) as mock_weheat,
     ):
@@ -89,7 +89,7 @@ async def test_duplicate_unique_id(
 
     with (
         patch(
-            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
+            "homeassistant.components.weheat.config_flow.async_get_user_id_from_token",
             return_value=USER_UUID_1,
         ),
     ):

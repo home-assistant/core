@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import DOMAIN as SWITCH_AS_X_DOMAIN
+from .const import DOMAIN
 
 
 class BaseEntity(Entity):
@@ -61,7 +61,7 @@ class BaseEntity(Entity):
         self._switch_entity_id = switch_entity_id
 
         self._is_new_entity = (
-            registry.async_get_entity_id(domain, SWITCH_AS_X_DOMAIN, unique_id) is None
+            registry.async_get_entity_id(domain, DOMAIN, unique_id) is None
         )
 
     @callback
@@ -102,7 +102,7 @@ class BaseEntity(Entity):
         if registry.async_get(self.entity_id) is not None:
             registry.async_update_entity_options(
                 self.entity_id,
-                SWITCH_AS_X_DOMAIN,
+                DOMAIN,
                 self.async_generate_entity_options(),
             )
 

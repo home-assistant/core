@@ -1,0 +1,17 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'ics': '''
+      BEGIN:VCALENDAR
+      BEGIN:VEVENT
+      SUMMARY:***
+      DTSTART:19970714T170000Z
+      DTEND:19970715T040000Z
+      END:VEVENT
+      END:VCALENDAR
+    ''',
+    'now': '2023-06-04T18:00:00-06:00',
+    'system_timezone': 'tzlocal()',
+    'timezone': 'America/Regina',
+  })
+# ---

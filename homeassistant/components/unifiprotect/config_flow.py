@@ -14,7 +14,6 @@ from uiprotect.exceptions import ClientError, NotAuthorized
 from unifi_discovery import async_console_is_alive
 import voluptuous as vol
 
-from homeassistant.components import dhcp, ssdp
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     ConfigEntry,
@@ -36,6 +35,8 @@ from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
@@ -107,14 +108,14 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         self._discovered_device: dict[str, str] = {}
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         _LOGGER.debug("Starting discovery via: %s", discovery_info)
         return await self._async_discovery_handoff()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered UniFi device."""
         _LOGGER.debug("Starting discovery via: %s", discovery_info)

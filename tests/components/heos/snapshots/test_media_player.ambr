@@ -1,0 +1,235 @@
+# serializer version: 1
+# name: test_browse_media_heos_media
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'track',
+        'media_content_id': 'heos://media/1/station?name=Today%27s+Hits+Radio&image_url=&playable=True&browsable=False&media_id=123456789',
+        'media_content_type': '',
+        'thumbnail': '',
+        'title': "Today's Hits Radio",
+      }),
+    ]),
+    'children_media_class': 'track',
+    'media_class': 'directory',
+    'media_content_id': 'heos://media/1/music_service?name=Pandora&image_url=&available=True&service_username=user',
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': '',
+    'title': 'Pandora',
+  })
+# ---
+# name: test_browse_media_heos_media_error_returns_empty
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+    ]),
+    'children_media_class': None,
+    'media_class': 'directory',
+    'media_content_id': 'heos://media/1/music_service?name=Pandora&image_url=&available=True&service_username=user',
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': '',
+    'title': 'Pandora',
+  })
+# ---
+# name: test_browse_media_media_source
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'music',
+        'media_content_id': 'media-source://media_source/local/test.mp3',
+        'media_content_type': 'audio/mpeg',
+        'thumbnail': None,
+        'title': 'test.mp3',
+      }),
+    ]),
+    'children_media_class': 'music',
+    'media_class': 'directory',
+    'media_content_id': 'media-source://media_source/local/.',
+    'media_content_type': '',
+    'not_shown': 1,
+    'thumbnail': None,
+    'title': 'media',
+  })
+# ---
+# name: test_browse_media_root
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'directory',
+        'media_content_id': 'heos://media/1/music_service?name=Pandora&image_url=&available=True&service_username=user',
+        'media_content_type': '',
+        'thumbnail': '',
+        'title': 'Pandora',
+      }),
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'directory',
+        'media_content_id': 'heos://media/3/music_service?name=TuneIn&image_url=&available=False',
+        'media_content_type': '',
+        'thumbnail': '',
+        'title': 'TuneIn',
+      }),
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': 'music',
+        'media_class': 'directory',
+        'media_content_id': 'media-source://media_source/local/.',
+        'media_content_type': '',
+        'thumbnail': None,
+        'title': 'media',
+      }),
+    ]),
+    'children_media_class': 'directory',
+    'media_class': 'directory',
+    'media_content_id': 'heos://media',
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'Music Sources',
+  })
+# ---
+# name: test_browse_media_root_no_media_source
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'directory',
+        'media_content_id': 'heos://media/1/music_service?name=Pandora&image_url=&available=True&service_username=user',
+        'media_content_type': '',
+        'thumbnail': '',
+        'title': 'Pandora',
+      }),
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'directory',
+        'media_content_id': 'heos://media/3/music_service?name=TuneIn&image_url=&available=False',
+        'media_content_type': '',
+        'thumbnail': '',
+        'title': 'TuneIn',
+      }),
+    ]),
+    'children_media_class': 'directory',
+    'media_class': 'directory',
+    'media_content_id': 'heos://media',
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'Music Sources',
+  })
+# ---
+# name: test_browse_media_root_source_error_continues
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+    ]),
+    'children_media_class': 'directory',
+    'media_class': 'directory',
+    'media_content_id': 'heos://media',
+    'media_content_type': '',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'Music Sources',
+  })
+# ---
+# name: test_get_queue
+  dict({
+    'media_player.test_player': dict({
+      'queue': list([
+        dict({
+          'album': 'Espresso',
+          'album_id': '356276481',
+          'artist': 'Sabrina Carpenter',
+          'image_url': 'http://resources.wimpmusic.com/images/e4f2d75f/a69e/4b8a/b800/e18546b1ad4c/640x640.jpg',
+          'media_id': '356276483',
+          'queue_id': 1,
+          'song': 'Espresso',
+        }),
+        dict({
+          'album': 'A Bar Song (Tipsy)',
+          'album_id': '354365596',
+          'artist': 'Shaboozey',
+          'image_url': 'http://resources.wimpmusic.com/images/d05b8da3/4fae/45ff/ac1b/7ab7caab3523/640x640.jpg',
+          'media_id': '354365598',
+          'queue_id': 2,
+          'song': 'A Bar Song (Tipsy)',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_state_attributes
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'http://',
+      'friendly_name': 'Test Player',
+      'group_members': list([
+        'media_player.test_player',
+        'media_player.test_player_2',
+      ]),
+      'is_volume_muted': False,
+      'media_album_id': '1',
+      'media_album_name': 'Album',
+      'media_artist': 'Artist',
+      'media_content_id': '1',
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'media_queue_id': 1,
+      'media_source_id': 10,
+      'media_station': 'Station Name',
+      'media_title': 'Song',
+      'media_type': <MediaType.STATION: 'station'>,
+      'repeat': <RepeatMode.OFF: 'off'>,
+      'shuffle': False,
+      'source_list': list([
+        "Today's Hits Radio",
+        'Classical MPR (Classical Music)',
+        'HEOS Drive - Line In 1',
+        'Speaker - Line In 1',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 3079741>,
+      'volume_level': 0.25,
+    }),
+    'entity_id': 'media_player.test_player',
+    'state': 'idle',
+  })
+# ---

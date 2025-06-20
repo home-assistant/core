@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter the credentials used to log into mytotalconnectcomfort.com.",
+        "description": "Please enter the credentials used to log in to mytotalconnectcomfort.com.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -55,7 +55,7 @@
           "preset_mode": {
             "state": {
               "hold": "Hold",
-              "away": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::away%]",
+              "away": "[%key:common::state::not_home%]",
               "none": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::none%]"
             }
           }

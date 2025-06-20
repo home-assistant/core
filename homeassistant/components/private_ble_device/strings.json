@@ -14,7 +14,7 @@
       "irk_not_valid": "The key does not look like a valid IRK."
     },
     "abort": {
-      "bluetooth_not_available": "At least one Bluetooth adapter or remote bluetooth proxy must be configured to track Private BLE Devices."
+      "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to track Private BLE Devices."
     }
   },
   "entity": {

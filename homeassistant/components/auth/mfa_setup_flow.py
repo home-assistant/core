@@ -12,7 +12,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowContext
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util.hass_dict import HassKey
 
 WS_TYPE_SETUP_MFA = "auth/setup_mfa"

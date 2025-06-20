@@ -24,7 +24,7 @@
           "event_handled": "Send handled events",
           "event_third_party_packages": "Send events from third-party packages",
           "logging_event_level": "The log level Sentry will register an event for",
-          "logging_level": "The log level Sentry will record logs as breadcrums for",
+          "logging_level": "The log level Sentry will record events as breadcrumbs for",
           "tracing": "Enable performance tracing",
           "tracing_sample_rate": "Tracing sample rate; between 0.0 and 1.0 (1.0 = 100%)"
         }

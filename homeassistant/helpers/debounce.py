@@ -146,6 +146,10 @@ class Debouncer[_R_co]:
         """Cancel any scheduled call, and prevent new runs."""
         self._shutdown_requested = True
         self.async_cancel()
+        # Release hard references to parent function
+        # https://github.com/home-assistant/core/issues/137237
+        self._function = None
+        self._job = None
 
     @callback
     def async_cancel(self) -> None:

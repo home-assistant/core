@@ -45,9 +45,14 @@ async def test_get_triggers_module_device(
         )
     ]
 
-    triggers = await async_get_device_automations(
-        hass, DeviceAutomationType.TRIGGER, device.id
-    )
+    triggers = [
+        trigger
+        for trigger in await async_get_device_automations(
+            hass, DeviceAutomationType.TRIGGER, device.id
+        )
+        if trigger[CONF_DOMAIN] == DOMAIN
+    ]
+
     assert triggers == unordered(expected_triggers)
 
 
@@ -63,11 +68,8 @@ async def test_get_triggers_non_module_device(
         identifiers={(DOMAIN, entry.entry_id)}
     )
     group_device = get_device(hass, entry, (0, 5, True))
-    resource_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{entry.entry_id}-m000007-output1")}
-    )
 
-    for device in (host_device, group_device, resource_device):
+    for device in (host_device, group_device):
         triggers = await async_get_device_automations(
             hass, DeviceAutomationType.TRIGGER, device.id
         )

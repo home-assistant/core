@@ -11,7 +11,7 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_FAN
 from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
@@ -28,14 +28,14 @@ PRESETS = {v: k for k, v in PRESET_MAPPING.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo fan platform."""
 
     @callback
     def _create_entity(netatmo_device: NetatmoDevice) -> None:
         entity = NetatmoFan(netatmo_device)
-        _LOGGER.debug("Adding cover %s", entity)
+        _LOGGER.debug("Adding fan %s", entity)
         async_add_entities([entity])
 
     entry.async_on_unload(

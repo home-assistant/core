@@ -11,5 +11,10 @@
         "default": "mdi:message-text"
       }
     }
+  },
+  "services": {
+    "post": {
+      "service": "mdi:message-text"
+    }
   }
 }

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -136,7 +136,7 @@ async def test_simple_climate_device(
 
     # Service set HVAC mode to unsupported value
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -239,7 +239,7 @@ async def test_climate_device_without_cooling_support(
 
     # Service set HVAC mode to unsupported value
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,

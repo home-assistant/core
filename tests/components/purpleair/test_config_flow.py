@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import pytest
 
-from homeassistant.components.purpleair import DOMAIN
+from homeassistant.components.purpleair.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -288,6 +288,7 @@ async def test_options_remove_sensor(
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, str(TEST_SENSOR_INDEX1))}
     )
+    assert device_entry is not None
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={"sensor_device_id": device_entry.id},

@@ -63,7 +63,7 @@ def mock_pydrawise(
     controller_water_use_summary: ControllerWaterUseSummary,
 ) -> Generator[AsyncMock]:
     """Mock Hydrawise."""
-    with patch("pydrawise.client.Hydrawise", autospec=True) as mock_pydrawise:
+    with patch("pydrawise.hybrid.HybridClient", autospec=True) as mock_pydrawise:
         user.controllers = [controller]
         controller.sensors = sensors
         mock_pydrawise.return_value.get_user.return_value = user
@@ -76,8 +76,8 @@ def mock_pydrawise(
 
 @pytest.fixture
 def mock_auth() -> Generator[AsyncMock]:
-    """Mock pydrawise Auth."""
-    with patch("pydrawise.auth.Auth", autospec=True) as mock_auth:
+    """Mock pydrawise HybridAuth."""
+    with patch("pydrawise.auth.HybridAuth", autospec=True) as mock_auth:
         yield mock_auth.return_value
 
 
@@ -215,6 +215,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_USERNAME: "asfd@asdf.com",
             CONF_PASSWORD: "__password__",
+            CONF_API_KEY: "abc123",
         },
         unique_id="hydrawise-customerid",
         version=1,

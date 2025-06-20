@@ -1,0 +1,12 @@
+{
+  "notification_type": "TEST_NOTIFICATION",
+  "event": "",
+  "subject": "Test Notification",
+  "message": "Check check, 1, 2, 3. Are we coming in clear?",
+  "image": "",
+  "media": null,
+  "request": null,
+  "issue": null,
+  "comment": null,
+  "extra": []
+}

@@ -31,7 +31,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
 
@@ -60,7 +60,7 @@ class RenaultSensorEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RenaultConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
     entities: list[RenaultSensor[Any]] = [

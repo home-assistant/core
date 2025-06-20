@@ -1,0 +1,97 @@
+{
+  "015ae9ea3f964e668e490fa39da3870b": {
+    "binary_sensors": {
+      "plugwise_notification": false
+    },
+    "dev_class": "gateway",
+    "firmware": "4.0.15",
+    "hardware": "AME Smile 2.0 board",
+    "location": "a57efe5f145f498c9be62a9b63626fbf",
+    "mac_address": "012345670001",
+    "model": "Gateway",
+    "model_id": "smile_thermo",
+    "name": "Smile Anna",
+    "notifications": {},
+    "sensors": {
+      "outdoor_temperature": 28.2
+    },
+    "vendor": "Plugwise"
+  },
+  "1cbf783bb11e4a7c8a6843dee3a86927": {
+    "available": true,
+    "binary_sensors": {
+      "compressor_state": true,
+      "cooling_enabled": true,
+      "cooling_state": true,
+      "dhw_state": false,
+      "flame_state": false,
+      "heating_state": false,
+      "secondary_boiler_state": false
+    },
+    "dev_class": "heater_central",
+    "location": "a57efe5f145f498c9be62a9b63626fbf",
+    "max_dhw_temperature": {
+      "lower_bound": 35.0,
+      "resolution": 0.01,
+      "setpoint": 53.0,
+      "upper_bound": 60.0
+    },
+    "maximum_boiler_temperature": {
+      "lower_bound": 0.0,
+      "resolution": 1.0,
+      "setpoint": 60.0,
+      "upper_bound": 100.0
+    },
+    "model": "Generic heater/cooler",
+    "name": "OpenTherm",
+    "sensors": {
+      "dhw_temperature": 41.5,
+      "intended_boiler_temperature": 0.0,
+      "modulation_level": 40,
+      "outdoor_air_temperature": 28.0,
+      "return_temperature": 23.8,
+      "water_pressure": 1.57,
+      "water_temperature": 22.7
+    },
+    "switches": {
+      "dhw_cm_switch": false
+    },
+    "vendor": "Techneco"
+  },
+  "3cb70739631c4d17a86b8b12e8a5161b": {
+    "active_preset": "home",
+    "available_schedules": ["standaard", "off"],
+    "climate_mode": "auto",
+    "control_state": "cooling",
+    "dev_class": "thermostat",
+    "firmware": "2018-02-08T11:15:53+01:00",
+    "hardware": "6539-1301-5002",
+    "location": "c784ee9fdab44e1395b8dee7d7a497d5",
+    "model": "ThermoTouch",
+    "name": "Anna",
+    "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],
+    "select_schedule": "standaard",
+    "sensors": {
+      "cooling_activation_outdoor_temperature": 21.0,
+      "cooling_deactivation_threshold": 4.0,
+      "illuminance": 86.0,
+      "setpoint_high": 30.0,
+      "setpoint_low": 20.5,
+      "temperature": 26.3
+    },
+    "temperature_offset": {
+      "lower_bound": -2.0,
+      "resolution": 0.1,
+      "setpoint": -0.5,
+      "upper_bound": 2.0
+    },
+    "thermostat": {
+      "lower_bound": 4.0,
+      "resolution": 0.1,
+      "setpoint_high": 30.0,
+      "setpoint_low": 20.5,
+      "upper_bound": 30.0
+    },
+    "vendor": "Plugwise"
+  }
+}

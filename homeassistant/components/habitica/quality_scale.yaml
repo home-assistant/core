@@ -4,11 +4,9 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: test already_configured, tests should finish with create_entry or abort, assert unique_id
+  config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency: todo
+  dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
@@ -33,7 +31,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
@@ -53,7 +51,7 @@ rules:
     status: exempt
     comment: No supportable devices.
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
     status: exempt
@@ -66,11 +64,9 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: translations for UpdateFailed missing
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: done
     comment: Used to inform of deprecated entities and actions.
@@ -79,6 +75,6 @@ rules:
     comment: Not applicable. Only one device per config entry. Removed together with the config entry.
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

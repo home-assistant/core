@@ -29,9 +29,9 @@ from .conftest import MockConfigEntry, MockModuleConnection, init_integration
 
 from tests.common import snapshot_platform
 
-LIGHT_OUTPUT1 = "light.light_output1"
-LIGHT_OUTPUT2 = "light.light_output2"
-LIGHT_RELAY1 = "light.light_relay1"
+LIGHT_OUTPUT1 = "light.testmodule_light_output1"
+LIGHT_OUTPUT2 = "light.testmodule_light_output2"
+LIGHT_RELAY1 = "light.testmodule_light_relay1"
 
 
 async def test_setup_lcn_light(

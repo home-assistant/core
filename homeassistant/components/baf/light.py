@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BAFConfigEntry
 from .entity import BAFEntity
@@ -22,7 +22,7 @@ from .entity import BAFEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BAFConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BAF lights."""
     device = entry.runtime_data

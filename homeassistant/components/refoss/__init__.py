@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Refoss from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     discover = await refoss_discovery_server(hass)
-    refoss_discovery = DiscoveryService(hass, discover)
+    refoss_discovery = DiscoveryService(hass, entry, discover)
     hass.data[DOMAIN][DATA_DISCOVERY_SERVICE] = refoss_discovery
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

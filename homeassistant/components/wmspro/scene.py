@@ -9,7 +9,7 @@ from wmspro.scene import Scene as WMS_Scene
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WebControlProConfigEntry
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
@@ -18,7 +18,7 @@ from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: WebControlProConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WMS based scenes from a config entry."""
     hub = config_entry.runtime_data

@@ -13,11 +13,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ASSETS_URL
+from .coordinator import HabiticaConfigEntry
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -54,7 +56,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HabiticaBinarySensorEntityDescription, ...] = 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HabiticaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the habitica binary sensors."""
 

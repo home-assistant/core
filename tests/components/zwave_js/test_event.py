@@ -3,16 +3,23 @@
 from datetime import timedelta
 
 from freezegun import freeze_time
+import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.components.zwave_js.const import ATTR_VALUE
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 BASIC_EVENT_VALUE_ENTITY = "event.honeywell_in_wall_smart_fan_control_event_value"
 CENTRAL_SCENE_ENTITY = "event.node_51_scene_002"
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.EVENT]
 
 
 async def test_basic(

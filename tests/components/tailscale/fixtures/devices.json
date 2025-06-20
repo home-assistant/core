@@ -104,6 +104,28 @@
           "upnp": false
         }
       }
+    },
+    {
+      "addresses": ["100.11.11.113"],
+      "id": "123458",
+      "user": "frenck",
+      "name": "host-no-connectivity.homeassistant.github",
+      "hostname": "host-no-connectivity",
+      "clientVersion": "1.14.0-t5cff36945-g809e87bba",
+      "updateAvailable": true,
+      "os": "linux",
+      "created": "2021-08-29T09:49:06Z",
+      "lastSeen": "2021-11-15T20:37:03Z",
+      "keyExpiryDisabled": false,
+      "expires": "2022-02-25T09:49:06Z",
+      "authorized": true,
+      "isExternal": false,
+      "machineKey": "mkey:mock",
+      "nodeKey": "nodekey:mock",
+      "blocksIncomingConnections": false,
+      "enabledRoutes": ["0.0.0.0/0", "10.10.10.0/23", "::/0"],
+      "advertisedRoutes": ["0.0.0.0/0", "10.10.10.0/23", "::/0"],
+      "clientConnectivity": null
     }
   ]
 }

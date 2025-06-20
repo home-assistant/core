@@ -13,18 +13,22 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
 from .entity import RingDeviceT, RingEntity, refresh_after
 
+# Coordinator is used to centralize the data updates
+# Actions restricted to 1 at a time
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RingConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a numbers for a Ring device."""
     ring_data = entry.runtime_data

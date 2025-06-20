@@ -1,0 +1,11 @@
+{
+  "domain": "mcp",
+  "name": "Model Context Protocol",
+  "codeowners": ["@allenporter"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/mcp",
+  "iot_class": "local_polling",
+  "quality_scale": "silver",
+  "requirements": ["mcp==1.5.0"]
+}

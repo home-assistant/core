@@ -9,7 +9,7 @@ from deebot_client.commands.json import (
 )
 from deebot_client.events import LifeSpan
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.ecovacs.const import DOMAIN
@@ -161,8 +161,8 @@ async def test_disabled_by_default_buttons(
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
 
-        assert (
-            entry := entity_registry.async_get(entity_id)
-        ), f"Entity registry entry for {entity_id} is missing"
+        assert (entry := entity_registry.async_get(entity_id)), (
+            f"Entity registry entry for {entity_id} is missing"
+        )
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

@@ -155,7 +155,7 @@ async def test_service_say_http_error(
             await retrieve_media(
                 hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
             )
-            == HTTPStatus.NOT_FOUND
+            == HTTPStatus.INTERNAL_SERVER_ERROR
         )
 
     mock_speak.assert_called_once()

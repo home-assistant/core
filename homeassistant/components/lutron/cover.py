@@ -13,11 +13,10 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LutronData
+from . import LutronConfigEntry
 from .entity import LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,15 +24,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LutronConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron cover platform.
 
     Adds shades from the Main Repeater associated with the config_entry as
     cover entities.
     """
-    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    entry_data = config_entry.runtime_data
     async_add_entities(
         [
             LutronCover(area_name, device, entry_data.client)

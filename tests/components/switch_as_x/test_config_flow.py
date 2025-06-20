@@ -20,7 +20,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import PLATFORMS_TO_TEST, STATE_MAP
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)
@@ -160,9 +160,7 @@ async def test_options(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    schema = result["data_schema"].schema
-    schema_key = next(k for k in schema if k == CONF_INVERT)
-    assert schema_key.description["suggested_value"] is True
+    assert get_schema_suggested_value(result["data_schema"].schema, CONF_INVERT) is True
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],

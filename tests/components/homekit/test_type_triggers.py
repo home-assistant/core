@@ -3,7 +3,11 @@
 from unittest.mock import MagicMock
 
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.homekit.const import CHAR_PROGRAMMABLE_SWITCH_EVENT
+from homeassistant.components.homekit.const import (
+    CHAR_CONFIGURED_NAME,
+    CHAR_PROGRAMMABLE_SWITCH_EVENT,
+    SERV_STATELESS_PROGRAMMABLE_SWITCH,
+)
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -54,6 +58,10 @@ async def test_programmable_switch_button_fires_on_trigger(
     assert acc.entity_id is None
     assert acc.device_id is device_id
     assert acc.available is True
+
+    switch_service = acc.get_service(SERV_STATELESS_PROGRAMMABLE_SWITCH)
+    configured_name_char = switch_service.get_characteristic(CHAR_CONFIGURED_NAME)
+    assert configured_name_char.value == "ceiling lights Changed States"
 
     hk_driver.publish.reset_mock()
     hass.states.async_set("light.ceiling_lights", STATE_ON)

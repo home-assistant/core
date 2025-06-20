@@ -21,6 +21,7 @@ from homeassistant.components import (
     input_boolean,
     input_button,
     input_select,
+    lawn_mower,
     light,
     lock,
     media_player,
@@ -42,6 +43,7 @@ from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.humidifier import HumidifierEntityFeature
+from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.lock import LockState
 from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
@@ -714,7 +716,7 @@ class DockTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN
+        return domain in (vacuum.DOMAIN, lawn_mower.DOMAIN)
 
     def sync_attributes(self) -> dict[str, Any]:
         """Return dock attributes for a sync request."""
@@ -722,17 +724,32 @@ class DockTrait(_Trait):
 
     def query_attributes(self) -> dict[str, Any]:
         """Return dock query attributes."""
-        return {"isDocked": self.state.state == vacuum.VacuumActivity.DOCKED}
+        domain = self.state.domain
+        state = self.state.state
+        if domain == vacuum.DOMAIN:
+            return {"isDocked": state == vacuum.VacuumActivity.DOCKED}
+        if domain == lawn_mower.DOMAIN:
+            return {"isDocked": state == lawn_mower.LawnMowerActivity.DOCKED}
+        raise NotImplementedError(f"Unsupported domain {domain}")
 
     async def execute(self, command, data, params, challenge):
         """Execute a dock command."""
-        await self.hass.services.async_call(
-            self.state.domain,
-            vacuum.SERVICE_RETURN_TO_BASE,
-            {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=not self.config.should_report_state,
-            context=data.context,
-        )
+        domain = self.state.domain
+        service: str | None = None
+
+        if domain == vacuum.DOMAIN:
+            service = vacuum.SERVICE_RETURN_TO_BASE
+        elif domain == lawn_mower.DOMAIN:
+            service = lawn_mower.SERVICE_DOCK
+
+        if service:
+            await self.hass.services.async_call(
+                self.state.domain,
+                service,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
 
 
 @register_trait
@@ -843,7 +860,7 @@ class StartStopTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == vacuum.DOMAIN:
+        if domain in (vacuum.DOMAIN, lawn_mower.DOMAIN):
             return True
 
         if (
@@ -863,6 +880,12 @@ class StartStopTrait(_Trait):
                 & VacuumEntityFeature.PAUSE
                 != 0
             }
+        if domain == lawn_mower.DOMAIN:
+            return {
+                "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                & LawnMowerEntityFeature.PAUSE
+                != 0
+            }
         if domain in COVER_VALVE_DOMAINS:
             return {}
 
@@ -877,6 +900,11 @@ class StartStopTrait(_Trait):
             return {
                 "isRunning": state == vacuum.VacuumActivity.CLEANING,
                 "isPaused": state == vacuum.VacuumActivity.PAUSED,
+            }
+        if domain == lawn_mower.DOMAIN:
+            return {
+                "isRunning": state == lawn_mower.LawnMowerActivity.MOWING,
+                "isPaused": state == lawn_mower.LawnMowerActivity.PAUSED,
             }
 
         if domain in COVER_VALVE_DOMAINS:
@@ -896,46 +924,52 @@ class StartStopTrait(_Trait):
         if domain == vacuum.DOMAIN:
             await self._execute_vacuum(command, data, params, challenge)
             return
+        if domain == lawn_mower.DOMAIN:
+            await self._execute_lawn_mower(command, data, params, challenge)
+            return
         if domain in COVER_VALVE_DOMAINS:
             await self._execute_cover_or_valve(command, data, params, challenge)
             return
 
     async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
+        service: str | None = None
         if command == COMMAND_START_STOP:
-            if params["start"]:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_START,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
-            else:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_STOP,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
+            service = vacuum.SERVICE_START if params["start"] else vacuum.SERVICE_STOP
         elif command == COMMAND_PAUSE_UNPAUSE:
-            if params["pause"]:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_PAUSE,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
-            else:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_START,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
+            service = vacuum.SERVICE_PAUSE if params["pause"] else vacuum.SERVICE_START
+        if service:
+            await self.hass.services.async_call(
+                self.state.domain,
+                service,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
+
+    async def _execute_lawn_mower(self, command, data, params, challenge):
+        """Execute a StartStop command."""
+        service: str | None = None
+        if command == COMMAND_START_STOP:
+            service = (
+                lawn_mower.SERVICE_START_MOWING
+                if params["start"]
+                else lawn_mower.SERVICE_DOCK
+            )
+        elif command == COMMAND_PAUSE_UNPAUSE:
+            service = (
+                lawn_mower.SERVICE_PAUSE
+                if params["pause"]
+                else lawn_mower.SERVICE_START_MOWING
+            )
+        if service:
+            await self.hass.services.async_call(
+                self.state.domain,
+                service,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
 
     async def _execute_cover_or_valve(self, command, data, params, challenge):
         """Execute a StartStop command."""

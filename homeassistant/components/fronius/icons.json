@@ -4,13 +4,13 @@
       "current_dc": {
         "default": "mdi:current-dc"
       },
-      "current_dc_2": {
+      "current_dc_mppt_no": {
         "default": "mdi:current-dc"
       },
       "voltage_dc": {
         "default": "mdi:current-dc"
       },
-      "voltage_dc_2": {
+      "voltage_dc_mppt_no": {
         "default": "mdi:current-dc"
       },
       "co2_factor": {

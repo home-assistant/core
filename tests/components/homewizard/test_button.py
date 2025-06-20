@@ -61,7 +61,7 @@ async def test_identify_button(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"^An error occurred while communicating with HomeWizard device$",
+        match=r"^An error occurred while communicating with your HomeWizard Energy device$",
     ):
         await hass.services.async_call(
             button.DOMAIN,

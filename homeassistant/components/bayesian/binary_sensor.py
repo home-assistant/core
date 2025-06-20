@@ -31,8 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
-from homeassistant.helpers import condition
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     TrackTemplate,
@@ -131,7 +130,10 @@ def _no_overlapping(configs: list[dict]) -> list[dict]:
         for i, tup in enumerate(intervals):
             if len(intervals) > i + 1 and tup.below > intervals[i + 1].above:
                 raise vol.Invalid(
-                    f"Ranges for bayesian numeric state entities must not overlap, but {ent_id} has overlapping ranges, above:{tup.above}, below:{tup.below} overlaps with above:{intervals[i+1].above}, below:{intervals[i+1].below}."
+                    "Ranges for bayesian numeric state entities must not overlap, "
+                    f"but {ent_id} has overlapping ranges, above:{tup.above}, "
+                    f"below:{tup.below} overlaps with above:{intervals[i + 1].above}, "
+                    f"below:{intervals[i + 1].below}."
                 )
     return configs
 
@@ -206,7 +208,10 @@ async def async_setup_platform(
     broken_observations: list[dict[str, Any]] = []
     for observation in observations:
         if CONF_P_GIVEN_F not in observation:
-            text: str = f"{name}/{observation.get(CONF_ENTITY_ID,'')}{observation.get(CONF_VALUE_TEMPLATE,'')}"
+            text = (
+                f"{name}/{observation.get(CONF_ENTITY_ID, '')}"
+                f"{observation.get(CONF_VALUE_TEMPLATE, '')}"
+            )
             raise_no_prob_given_false(hass, text)
             _LOGGER.error("Missing prob_given_false YAML entry for %s", text)
             broken_observations.append(observation)

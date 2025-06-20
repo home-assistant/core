@@ -12,10 +12,10 @@ from homeassistant.components.humidifier import (
     HumidifierEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SwitchbotConfigEntry
-from .entity import SwitchbotSwitchedEntity
+from .entity import SwitchbotSwitchedEntity, exception_handler
 
 PARALLEL_UPDATES = 0
 
@@ -23,7 +23,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SwitchbotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switchbot based on a config entry."""
     async_add_entities([SwitchBotHumidifier(entry.runtime_data)])
@@ -55,11 +55,13 @@ class SwitchBotHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
         """Return the humidity we try to reach."""
         return self._device.get_target_humidity()
 
+    @exception_handler
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         self._last_run_success = bool(await self._device.set_level(humidity))
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_set_mode(self, mode: str) -> None:
         """Set new target humidity."""
         if mode == MODE_AUTO:

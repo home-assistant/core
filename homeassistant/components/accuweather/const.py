@@ -24,7 +24,7 @@ from homeassistant.components.weather import (
 
 API_METRIC: Final = "Metric"
 ATTRIBUTION: Final = "Data provided by AccuWeather"
-ATTR_CATEGORY: Final = "Category"
+ATTR_CATEGORY_VALUE = "CategoryValue"
 ATTR_DIRECTION: Final = "Direction"
 ATTR_ENGLISH: Final = "English"
 ATTR_LEVEL: Final = "level"
@@ -54,6 +54,20 @@ CONDITION_MAP = {
     cond_code: cond_ha
     for cond_ha, cond_codes in CONDITION_CLASSES.items()
     for cond_code in cond_codes
+}
+AIR_QUALITY_CATEGORY_MAP = {
+    1: "good",
+    2: "moderate",
+    3: "unhealthy",
+    4: "very_unhealthy",
+    5: "hazardous",
+}
+POLLEN_CATEGORY_MAP = {
+    1: "low",
+    2: "moderate",
+    3: "high",
+    4: "very_high",
+    5: "extreme",
 }
 UPDATE_INTERVAL_OBSERVATION = timedelta(minutes=40)
 UPDATE_INTERVAL_DAILY_FORECAST = timedelta(hours=6)

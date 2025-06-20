@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import CONF_DATA
 

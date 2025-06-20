@@ -12,10 +12,9 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BraviaTVConfigEntry
-from .coordinator import BraviaTVCoordinator
+from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
 from .entity import BraviaTVEntity
 
 
@@ -45,7 +44,7 @@ BUTTONS: tuple[BraviaTVButtonDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BraviaTVConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bravia TV Button entities."""
 

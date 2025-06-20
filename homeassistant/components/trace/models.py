@@ -15,9 +15,8 @@ from homeassistant.helpers.trace import (
     trace_id_set,
     trace_set_child_id,
 )
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, uuid as uuid_util
 from homeassistant.util.limited_size_dict import LimitedSizeDict
-import homeassistant.util.uuid as uuid_util
 
 type TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 

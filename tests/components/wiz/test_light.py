@@ -80,9 +80,11 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
-    assert pilot.pilot_params == {"b": 3, "c": 4, "g": 2, "r": 1, "state": True, "w": 5}
+    assert pilot.pilot_params == {"b": 3, "c": 4, "g": 2, "r": 1, "w": 5}
 
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, **pilot.pilot_params})
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "state": True, **pilot.pilot_params}
+    )
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_RGBWW_COLOR] == (1, 2, 3, 4, 5)
@@ -95,8 +97,10 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
-    assert pilot.pilot_params == {"dimming": 50, "temp": 6535, "state": True}
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, **pilot.pilot_params})
+    assert pilot.pilot_params == {"dimming": 50, "temp": 6535}
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "state": True, **pilot.pilot_params}
+    )
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 6535
@@ -109,8 +113,10 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
-    assert pilot.pilot_params == {"sceneId": 1, "state": True}
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, **pilot.pilot_params})
+    assert pilot.pilot_params == {"sceneId": 1}
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "state": True, **pilot.pilot_params}
+    )
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_EFFECT] == "Ocean"
@@ -123,7 +129,7 @@ async def test_rgbww_light(hass: HomeAssistant) -> None:
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
-    assert pilot.pilot_params == {"state": True}
+    assert pilot.pilot_params == {}
 
 
 async def test_rgbw_light(hass: HomeAssistant) -> None:
@@ -137,9 +143,11 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
-    assert pilot.pilot_params == {"b": 3, "g": 2, "r": 1, "state": True, "w": 4}
+    assert pilot.pilot_params == {"b": 3, "g": 2, "r": 1, "w": 4}
 
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, **pilot.pilot_params})
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "state": True, **pilot.pilot_params}
+    )
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_RGBW_COLOR] == (1, 2, 3, 4)
@@ -152,7 +160,7 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
-    assert pilot.pilot_params == {"dimming": 50, "temp": 6535, "state": True}
+    assert pilot.pilot_params == {"dimming": 50, "temp": 6535}
 
 
 async def test_turnable_light(hass: HomeAssistant) -> None:
@@ -166,9 +174,11 @@ async def test_turnable_light(hass: HomeAssistant) -> None:
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
-    assert pilot.pilot_params == {"dimming": 50, "temp": 6535, "state": True}
+    assert pilot.pilot_params == {"dimming": 50, "temp": 6535}
 
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, **pilot.pilot_params})
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "state": True, **pilot.pilot_params}
+    )
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 6535
@@ -187,9 +197,11 @@ async def test_old_firmware_dimmable_light(hass: HomeAssistant) -> None:
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
-    assert pilot.pilot_params == {"dimming": 50, "state": True}
+    assert pilot.pilot_params == {"dimming": 50}
 
-    await async_push_update(hass, bulb, {"mac": FAKE_MAC, **pilot.pilot_params})
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "state": True, **pilot.pilot_params}
+    )
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
@@ -202,4 +214,4 @@ async def test_old_firmware_dimmable_light(hass: HomeAssistant) -> None:
         blocking=True,
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
-    assert pilot.pilot_params == {"dimming": 100, "state": True}
+    assert pilot.pilot_params == {"dimming": 100}

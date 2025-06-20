@@ -17,6 +17,8 @@ from .entity import (
 )
 from .enum_mapper import EsphomeEnumMapper
 
+PARALLEL_UPDATES = 0
+
 TEXT_MODES: EsphomeEnumMapper[EsphomeTextMode, TextMode] = EsphomeEnumMapper(
     {
         EsphomeTextMode.TEXT: TextMode.TEXT,

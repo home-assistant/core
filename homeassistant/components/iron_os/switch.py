@@ -12,7 +12,7 @@ from pynecil import CharSetting, SettingsDataResponse
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IronOSConfigEntry
 from .coordinator import IronOSCoordinators
@@ -39,7 +39,6 @@ class IronOSSwitch(StrEnum):
     INVERT_BUTTONS = "invert_buttons"
     DISPLAY_INVERT = "display_invert"
     CALIBRATE_CJC = "calibrate_cjc"
-    USB_PD_MODE = "usb_pd_mode"
 
 
 SWITCH_DESCRIPTIONS: tuple[IronOSSwitchEntityDescription, ...] = (
@@ -95,21 +94,13 @@ SWITCH_DESCRIPTIONS: tuple[IronOSSwitchEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
-    IronOSSwitchEntityDescription(
-        key=IronOSSwitch.USB_PD_MODE,
-        translation_key=IronOSSwitch.USB_PD_MODE,
-        characteristic=CharSetting.USB_PD_MODE,
-        is_on_fn=lambda x: x.get("usb_pd_mode"),
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.CONFIG,
-    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IronOSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches from a config entry."""
 

@@ -2,16 +2,23 @@
   "config": {
     "step": {
       "user": {
-        "title": "Sign-in with Ring account",
+        "title": "Sign in with Ring account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Your Ring account username.",
+          "password": "Your Ring account password."
         }
       },
       "2fa": {
         "title": "Two-factor authentication",
         "data": {
           "2fa": "Two-factor code"
+        },
+        "data_description": {
+          "2fa": "Account verification code via the method selected in your Ring account settings."
         }
       },
       "reauth_confirm": {
@@ -19,13 +26,19 @@
         "description": "The Ring integration needs to re-authenticate your account {username}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::ring::config::step::user::data_description::password%]"
         }
       },
       "reconfigure": {
-        "title": "Reconfigure Ring Integration",
+        "title": "Reconfigure Ring integration",
         "description": "Will create a new Authorized Device for {username} at ring.com",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::ring::config::step::user::data_description::password%]"
         }
       }
     },
@@ -43,9 +56,6 @@
     "binary_sensor": {
       "ding": {
         "name": "Ding"
-      },
-      "motion": {
-        "name": "Motion"
       }
     },
     "event": {
@@ -109,9 +119,6 @@
       },
       "wifi_signal_category": {
         "name": "Wi-Fi signal category"
-      },
-      "wifi_signal_strength": {
-        "name": "Wi-Fi signal strength"
       }
     },
     "switch": {
@@ -132,6 +139,20 @@
       "last_recording": {
         "name": "Last recording"
       }
+    }
+  },
+  "exceptions": {
+    "api_authentication": {
+      "message": "Authentication error communicating with Ring API"
+    },
+    "api_timeout": {
+      "message": "Timeout communicating with Ring API"
+    },
+    "api_error": {
+      "message": "Error communicating with Ring API"
+    },
+    "sdp_m_line_index_required": {
+      "message": "Error negotiating stream for {device}"
     }
   },
   "issues": {

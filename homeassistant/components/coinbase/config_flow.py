@@ -11,18 +11,13 @@ from coinbase.wallet.client import Client as LegacyClient
 from coinbase.wallet.error import AuthenticationError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_API_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
-from . import get_accounts
+from . import CoinbaseConfigEntry, get_accounts
 from .const import (
     ACCOUNT_IS_VAULT,
     API_ACCOUNT_CURRENCY,
@@ -83,10 +78,12 @@ async def validate_api(hass: HomeAssistant, data):
     return {"title": user, "api_version": api_version}
 
 
-async def validate_options(hass: HomeAssistant, config_entry: ConfigEntry, options):
+async def validate_options(
+    hass: HomeAssistant, config_entry: CoinbaseConfigEntry, options
+):
     """Validate the requested resources are provided by API."""
 
-    client = hass.data[DOMAIN][config_entry.entry_id].client
+    client = config_entry.runtime_data.client
 
     accounts = await hass.async_add_executor_job(
         get_accounts, client, config_entry.data.get("api_version", "v2")
@@ -155,7 +152,7 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: CoinbaseConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()

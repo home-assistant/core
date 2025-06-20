@@ -8,7 +8,7 @@ from pysmlight.const import Actions
 
 from homeassistant.core import HomeAssistant
 
-from . import SmConfigEntry
+from .coordinator import SmConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

@@ -110,7 +110,7 @@
       "fields": {
         "fan_speed": {
           "name": "Fan speed",
-          "description": "Fan speed."
+          "description": "Relative speed of the built-in fans."
         }
       }
     },
@@ -119,7 +119,7 @@
       "description": "Sets the fan speed of the Away profile.",
       "fields": {
         "fan_speed": {
-          "name": "Fan speed",
+          "name": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::name%]",
           "description": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::description%]"
         }
       }
@@ -129,7 +129,7 @@
       "description": "Sets the fan speed of the Boost profile.",
       "fields": {
         "fan_speed": {
-          "name": "Fan speed",
+          "name": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::name%]",
           "description": "[%key:component::vallox::services::set_profile_fan_speed_home::fields::fan_speed::description%]"
         }
       }
@@ -152,8 +152,8 @@
   "selector": {
     "profile": {
       "options": {
-        "home": "Home",
-        "away": "Away",
+        "home": "[%key:common::state::home%]",
+        "away": "[%key:common::state::not_home%]",
         "boost": "Boost",
         "fireplace": "Fireplace",
         "extra": "Extra"

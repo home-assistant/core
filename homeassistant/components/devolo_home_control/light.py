@@ -9,7 +9,7 @@ from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DevoloHomeControlConfigEntry
 from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
@@ -18,7 +18,7 @@ from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DevoloHomeControlConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all light devices and setup them via config entry."""
 

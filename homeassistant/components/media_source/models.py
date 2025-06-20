@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -102,7 +101,7 @@ class MediaSourceItem:
         return cls(hass, domain, identifier, target_media_player)
 
 
-class MediaSource(ABC):
+class MediaSource:
     """Represents a source of media files."""
 
     name: str | None = None

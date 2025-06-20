@@ -21,7 +21,6 @@ from requests.exceptions import SSLError, Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -38,6 +37,15 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_PRESENTATION_URL,
+    ATTR_UPNP_SERIAL,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .const import (
     CONF_MANUFACTURER,
@@ -171,8 +179,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         except Timeout:
             _LOGGER.warning("Connection timeout", exc_info=True)
             errors[CONF_URL] = "connection_timeout"
-        except Exception:  # noqa: BLE001
-            _LOGGER.warning("Unknown error connecting to device", exc_info=True)
+        except Exception:
+            _LOGGER.exception("Unknown error connecting to device")
             errors[CONF_URL] = "unknown"
         return conn
 
@@ -181,8 +189,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             conn.close()
             conn.requests_session.close()
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Disconnect error", exc_info=True)
+        except Exception:
+            _LOGGER.exception("Disconnect error")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -262,21 +270,22 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=title, data=user_input)
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle SSDP initiated config flow."""
 
         if TYPE_CHECKING:
             assert discovery_info.ssdp_location
         url = url_normalize(
-            discovery_info.upnp.get(
-                ssdp.ATTR_UPNP_PRESENTATION_URL,
-                f"http://{urlparse(discovery_info.ssdp_location).hostname}/",
-            )
+            discovery_info.upnp.get(ATTR_UPNP_PRESENTATION_URL)
+            or f"http://{urlparse(discovery_info.ssdp_location).hostname}/"
         )
+        if TYPE_CHECKING:
+            # url_normalize only returns None if passed None, and we don't do that
+            assert url is not None
 
         unique_id = discovery_info.upnp.get(
-            ssdp.ATTR_UPNP_SERIAL, discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
+            ATTR_UPNP_SERIAL, discovery_info.upnp[ATTR_UPNP_UDN]
         )
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_URL: url})
@@ -301,12 +310,15 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-                    or "Huawei LTE"
+                    CONF_NAME: (
+                        discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME)
+                        or discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
+                        or "Huawei LTE"
+                    )
                 }
             }
         )
-        self.manufacturer = discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER)
+        self.manufacturer = discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER)
         self.url = url
         return await self._async_show_user_form()
 

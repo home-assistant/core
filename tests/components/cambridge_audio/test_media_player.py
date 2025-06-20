@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aiostreammagic import (
+    ControlBusMode,
     RepeatMode as CambridgeRepeatMode,
     ShuffleMode,
     TransportControl,
@@ -10,6 +11,7 @@ from aiostreammagic import (
 import pytest
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_REPEAT,
@@ -125,6 +127,29 @@ async def test_entity_supported_features(
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
         in attrs[ATTR_SUPPORTED_FEATURES]
+    )
+
+
+async def test_entity_supported_features_with_control_bus(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entity attributes with control bus state."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_stream_magic_client.state.pre_amp_mode = False
+    mock_stream_magic_client.state.control_bus = ControlBusMode.AMPLIFIER
+
+    await mock_state_update(mock_stream_magic_client)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    attrs = state.attributes
+    assert MediaPlayerEntityFeature.VOLUME_STEP in attrs[ATTR_SUPPORTED_FEATURES]
+    assert (
+        MediaPlayerEntityFeature.VOLUME_SET | MediaPlayerEntityFeature.VOLUME_MUTE
+        not in attrs[ATTR_SUPPORTED_FEATURES]
     )
 
 
@@ -489,3 +514,41 @@ async def test_play_media_unknown_type(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("source_id", "artist", "station", "display"),
+    [
+        ("MEDIA_PLAYER", "Metallica", None, "Metallica"),
+        ("USB_AUDIO", "Iron Maiden", "Radio BOB!", "Iron Maiden"),
+        ("IR", "In Flames", "Radio BOB!", "In Flames"),
+        ("IR", None, "Radio BOB!", "Radio BOB!"),
+        ("IR", None, None, None),
+        ("MEDIA_PLAYER", None, "Radio BOB!", None),
+    ],
+)
+async def test_media_artist(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    source_id: str,
+    artist: str,
+    station: str,
+    display: str,
+) -> None:
+    """Test media player state."""
+    await setup_integration(hass, mock_config_entry)
+    mock_stream_magic_client.play_state.metadata.artist = artist
+    mock_stream_magic_client.play_state.metadata.station = station
+    mock_stream_magic_client.state.source = source_id
+
+    await mock_state_update(mock_stream_magic_client)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    if (artist is None and source_id != "IR") or (
+        source_id == "IR" and station is None
+    ):
+        assert ATTR_MEDIA_ARTIST not in state.attributes
+    else:
+        assert state.attributes[ATTR_MEDIA_ARTIST] == display

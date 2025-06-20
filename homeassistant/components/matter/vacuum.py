@@ -17,7 +17,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity
 from .helpers import get_matter
@@ -50,7 +50,7 @@ class ModeTag(IntEnum):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter vacuum platform from Config Entry."""
     matter = get_matter(hass)
@@ -69,15 +69,15 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
-        await self._send_device_command(clusters.OperationalState.Commands.Stop())
+        await self.send_device_command(clusters.OperationalState.Commands.Stop())
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
-        await self._send_device_command(clusters.RvcOperationalState.Commands.GoHome())
+        await self.send_device_command(clusters.RvcOperationalState.Commands.GoHome())
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
-        await self._send_device_command(clusters.Identify.Commands.Identify())
+        await self.send_device_command(clusters.Identify.Commands.Identify())
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
@@ -87,26 +87,15 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             clusters.RvcOperationalState.Commands.Resume.command_id
             in self._last_accepted_commands
         ):
-            await self._send_device_command(
+            await self.send_device_command(
                 clusters.RvcOperationalState.Commands.Resume()
             )
         else:
-            await self._send_device_command(clusters.OperationalState.Commands.Start())
+            await self.send_device_command(clusters.OperationalState.Commands.Start())
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
-        await self._send_device_command(clusters.OperationalState.Commands.Pause())
-
-    async def _send_device_command(
-        self,
-        command: clusters.ClusterCommand,
-    ) -> None:
-        """Send a command to the device."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-        )
+        await self.send_device_command(clusters.OperationalState.Commands.Pause())
 
     @callback
     def _update_from_device(self) -> None:
@@ -219,5 +208,6 @@ DISCOVERY_SCHEMAS = [
             clusters.PowerSource.Attributes.BatPercentRemaining,
         ),
         device_type=(device_types.RoboticVacuumCleaner,),
+        allow_none_value=True,
     ),
 ]

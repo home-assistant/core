@@ -18,7 +18,7 @@ from pywilight.const import (
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import WiLightDevice
@@ -26,7 +26,9 @@ from .parent_device import WiLightParent
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiLight covers from a config entry."""
     parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]

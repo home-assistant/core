@@ -32,6 +32,9 @@
     }
   },
   "services": {
+    "browse_media": {
+      "service": "mdi:folder-search"
+    },
     "clear_playlist": {
       "service": "mdi:playlist-remove"
     },
@@ -64,6 +67,9 @@
     },
     "repeat_set": {
       "service": "mdi:repeat"
+    },
+    "search_media": {
+      "service": "mdi:text-search"
     },
     "select_sound_mode": {
       "service": "mdi:surround-sound"

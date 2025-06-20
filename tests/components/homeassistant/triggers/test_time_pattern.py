@@ -11,7 +11,7 @@ from homeassistant.components.homeassistant.triggers import time_pattern
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, mock_component
 
@@ -365,6 +365,7 @@ async def test_invalid_schemas() -> None:
         {"platform": "time_pattern", "minutes": "/"},
         {"platform": "time_pattern", "minutes": "*/5"},
         {"platform": "time_pattern", "minutes": "/90"},
+        {"platform": "time_pattern", "hours": "/0", "minutes": 10},
         {"platform": "time_pattern", "hours": 12, "minutes": 0, "seconds": 100},
     )
 

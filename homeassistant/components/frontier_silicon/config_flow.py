@@ -15,9 +15,9 @@ from afsapi import (
 )
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
     CONF_WEBFSAPI_URL,
@@ -87,7 +87,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Process entity discovered via SSDP."""
 
@@ -108,8 +108,8 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
         except FSConnectionError:
             return self.async_abort(reason="cannot_connect")
-        except Exception as exception:  # noqa: BLE001
-            _LOGGER.debug(exception)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
         # try to login with default pin

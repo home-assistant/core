@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from technove import TechnoVEError
 
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
@@ -45,7 +45,6 @@ async def test_sensors(
     "entity_id",
     [
         "binary_sensor.technove_station_static_ip",
-        "binary_sensor.technove_station_charging",
     ],
 )
 @pytest.mark.usefixtures("init_integration")

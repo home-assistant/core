@@ -11,7 +11,7 @@ from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFe
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import DEFAULT_OFF_DELAY, DeviceTuple, async_setup_platform_entry
@@ -47,7 +47,7 @@ def get_first_key(data: dict[int, str], entry: str) -> int:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""
 

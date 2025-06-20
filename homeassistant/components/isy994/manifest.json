@@ -24,7 +24,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pyisy"],
-  "requirements": ["pyisy==3.1.14"],
+  "requirements": ["pyisy==3.4.1"],
   "ssdp": [
     {
       "manufacturer": "Universal Devices Inc.",

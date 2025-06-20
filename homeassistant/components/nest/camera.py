@@ -30,7 +30,7 @@ from homeassistant.components.camera import (
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
@@ -51,7 +51,9 @@ BACKOFF_MULTIPLIER = 1.5
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: NestConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NestConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the cameras."""
 

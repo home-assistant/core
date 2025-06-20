@@ -12,7 +12,7 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your Traccar Server",
-          "username": "The username (email) you use to login to your Traccar Server"
+          "username": "The username (email) you use to log in to your Traccar Server"
         }
       }
     },
@@ -47,7 +47,7 @@
       "motion": {
         "name": "Motion",
         "state": {
-          "off": "Stopped",
+          "off": "[%key:common::state::stopped%]",
           "on": "Moving"
         }
       },

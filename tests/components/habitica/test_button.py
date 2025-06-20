@@ -4,6 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from habiticalib import HabiticaUserResponse, Skill
 import pytest
@@ -22,7 +23,7 @@ from .conftest import ERROR_BAD_REQUEST, ERROR_NOT_AUTHORIZED, ERROR_TOO_MANY_RE
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
+    async_load_fixture,
     snapshot_platform,
 )
 
@@ -57,7 +58,7 @@ async def test_buttons(
     """Test button entities."""
 
     habitica.get_user.return_value = HabiticaUserResponse.from_json(
-        load_fixture(f"{fixture}.json", DOMAIN)
+        await async_load_fixture(hass, f"{fixture}.json", DOMAIN)
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -166,7 +167,7 @@ async def test_button_press(
     """Test button press method."""
 
     habitica.get_user.return_value = HabiticaUserResponse.from_json(
-        load_fixture(f"{fixture}.json", DOMAIN)
+        await async_load_fixture(hass, f"{fixture}.json", DOMAIN)
     )
 
     config_entry.add_to_hass(hass)
@@ -215,18 +216,23 @@ async def test_button_press(
     [
         (
             ERROR_TOO_MANY_REQUESTS,
-            "Rate limit exceeded, try again later",
+            "Rate limit exceeded, try again in 5 seconds",
             HomeAssistantError,
         ),
         (
             ERROR_BAD_REQUEST,
-            "Unable to connect to Habitica, try again later",
+            "Unable to connect to Habitica: reason",
             HomeAssistantError,
         ),
         (
             ERROR_NOT_AUTHORIZED,
             "Unable to complete action, the required conditions are not met",
             ServiceValidationError,
+        ),
+        (
+            ClientError,
+            "Unable to connect to Habitica: ",
+            HomeAssistantError,
         ),
     ],
 )
@@ -315,7 +321,7 @@ async def test_button_unavailable(
     """Test buttons are unavailable if conditions are not met."""
 
     habitica.get_user.return_value = HabiticaUserResponse.from_json(
-        load_fixture(f"{fixture}.json", DOMAIN)
+        await async_load_fixture(hass, f"{fixture}.json", DOMAIN)
     )
 
     config_entry.add_to_hass(hass)
@@ -349,7 +355,7 @@ async def test_class_change(
     ]
 
     habitica.get_user.return_value = HabiticaUserResponse.from_json(
-        load_fixture("wizard_fixture.json", DOMAIN)
+        await async_load_fixture(hass, "wizard_fixture.json", DOMAIN)
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -361,7 +367,7 @@ async def test_class_change(
         assert hass.states.get(skill)
 
     habitica.get_user.return_value = HabiticaUserResponse.from_json(
-        load_fixture("healer_fixture.json", DOMAIN)
+        await async_load_fixture(hass, "healer_fixture.json", DOMAIN)
     )
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)

@@ -34,22 +34,21 @@ CAMERA_SWITCHES_BASIC = [
     d
     for d in CAMERA_SWITCHES
     if (
-        not d.name.startswith("Detections:")
-        and d.name
-        not in {"SSH enabled", "Color night vision", "Tracking: person", "HDR mode"}
+        not d.translation_key.startswith("detections_")
+        and d.key not in {"ssh", "color_night_vision", "track_person", "hdr_mode"}
     )
-    or d.name
+    or d.key
     in {
-        "Detections: motion",
-        "Detections: person",
-        "Detections: vehicle",
-        "Detections: animal",
+        "detections_motion",
+        "detections_person",
+        "detections_vehicle",
+        "detections_animal",
     }
 ]
 CAMERA_SWITCHES_NO_EXTRA = [
     d
     for d in CAMERA_SWITCHES_BASIC
-    if d.name not in ("High FPS", "Privacy mode", "HDR mode")
+    if d.key not in ("high_fps", "privacy_mode", "hdr_mode")
 ]
 
 
@@ -152,7 +151,7 @@ async def test_switch_setup_light(
     description = LIGHT_SWITCHES[0]
 
     unique_id = f"{light.mac}_{description.key}"
-    entity_id = f"switch.test_light_{description.name.lower().replace(' ', '_')}"
+    entity_id = f"switch.test_light_{description.translation_key}"
 
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -194,11 +193,8 @@ async def test_switch_setup_camera_all(
 
     description = CAMERA_SWITCHES[0]
 
-    description_entity_name = (
-        description.name.lower().replace(":", "").replace(" ", "_")
-    )
     unique_id = f"{doorbell.mac}_{description.key}"
-    entity_id = f"switch.test_camera_{description_entity_name}"
+    entity_id = f"switch.test_camera_{description.translation_key}"
 
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -243,11 +239,8 @@ async def test_switch_setup_camera_none(
 
     description = CAMERA_SWITCHES[0]
 
-    description_entity_name = (
-        description.name.lower().replace(":", "").replace(" ", "_")
-    )
     unique_id = f"{camera.mac}_{description.key}"
-    entity_id = f"switch.test_camera_{description_entity_name}"
+    entity_id = f"switch.test_camera_{description.translation_key}"
 
     entity = entity_registry.async_get(entity_id)
     assert entity

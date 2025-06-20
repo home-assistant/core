@@ -19,11 +19,13 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_NAME,
-    CONF_RESOURCE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from .const import (
     ADD_ENTITIES_CALLBACKS,
@@ -340,7 +342,6 @@ async def websocket_add_entity(
     entity_config = {
         CONF_ADDRESS: msg[CONF_ADDRESS],
         CONF_NAME: msg[CONF_NAME],
-        CONF_RESOURCE: resource,
         CONF_DOMAIN: domain_name,
         CONF_DOMAIN_DATA: domain_data,
     }
@@ -368,7 +369,15 @@ async def websocket_add_entity(
         vol.Required("entry_id"): cv.string,
         vol.Required(CONF_ADDRESS): ADDRESS_SCHEMA,
         vol.Required(CONF_DOMAIN): cv.string,
-        vol.Required(CONF_RESOURCE): cv.string,
+        vol.Required(CONF_DOMAIN_DATA): vol.Any(
+            DOMAIN_DATA_BINARY_SENSOR,
+            DOMAIN_DATA_SENSOR,
+            DOMAIN_DATA_SWITCH,
+            DOMAIN_DATA_LIGHT,
+            DOMAIN_DATA_CLIMATE,
+            DOMAIN_DATA_COVER,
+            DOMAIN_DATA_SCENE,
+        ),
     }
 )
 @websocket_api.async_response
@@ -387,7 +396,10 @@ async def websocket_delete_entity(
             if (
                 tuple(entity_config[CONF_ADDRESS]) == msg[CONF_ADDRESS]
                 and entity_config[CONF_DOMAIN] == msg[CONF_DOMAIN]
-                and entity_config[CONF_RESOURCE] == msg[CONF_RESOURCE]
+                and get_resource(
+                    entity_config[CONF_DOMAIN], entity_config[CONF_DOMAIN_DATA]
+                )
+                == get_resource(msg[CONF_DOMAIN], msg[CONF_DOMAIN_DATA])
             )
         ),
         None,
@@ -423,25 +435,22 @@ async def async_create_or_update_device_in_config_entry(
         device_connection.is_group,
     )
 
-    device_configs = [*config_entry.data[CONF_DEVICES]]
-    data = {**config_entry.data, CONF_DEVICES: device_configs}
-    for device_config in data[CONF_DEVICES]:
-        if tuple(device_config[CONF_ADDRESS]) == address:
-            break  # device already in config_entry
-    else:
-        # create new device_entry
-        device_config = {
-            CONF_ADDRESS: address,
-            CONF_NAME: "",
-            CONF_HARDWARE_SERIAL: -1,
-            CONF_SOFTWARE_SERIAL: -1,
-            CONF_HARDWARE_TYPE: -1,
-        }
-        data[CONF_DEVICES].append(device_config)
+    device_config = {
+        CONF_ADDRESS: address,
+        CONF_NAME: "",
+        CONF_HARDWARE_SERIAL: -1,
+        CONF_SOFTWARE_SERIAL: -1,
+        CONF_HARDWARE_TYPE: -1,
+    }
 
-    # update device_entry
+    device_configs = [
+        device
+        for device in config_entry.data[CONF_DEVICES]
+        if tuple(device[CONF_ADDRESS]) != address
+    ]
+    data = {**config_entry.data, CONF_DEVICES: [*device_configs, device_config]}
+
     await async_update_device_config(device_connection, device_config)
-
     hass.config_entries.async_update_entry(config_entry, data=data)
 
 

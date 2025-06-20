@@ -5,6 +5,49 @@ from __future__ import annotations
 import datetime
 import time
 
+import freezegun
+
+
+def ha_datetime_to_fakedatetime(datetime) -> freezegun.api.FakeDatetime:  # type: ignore[name-defined]
+    """Convert datetime to FakeDatetime.
+
+    Modified to include https://github.com/spulec/freezegun/pull/424.
+    """
+    return freezegun.api.FakeDatetime(  # type: ignore[attr-defined]
+        datetime.year,
+        datetime.month,
+        datetime.day,
+        datetime.hour,
+        datetime.minute,
+        datetime.second,
+        datetime.microsecond,
+        datetime.tzinfo,
+        fold=datetime.fold,
+    )
+
+
+class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
+    """Modified to include https://github.com/spulec/freezegun/pull/424."""
+
+    @classmethod
+    def now(cls, tz=None):
+        """Return frozen now."""
+        now = cls._time_to_freeze() or freezegun.api.real_datetime.now()
+        if tz:
+            result = tz.fromutc(now.replace(tzinfo=tz))
+        else:
+            result = now
+
+        # Add the _tz_offset only if it's non-zero to preserve fold
+        if cls._tz_offset():
+            result += cls._tz_offset()
+
+        return ha_datetime_to_fakedatetime(result)
+
+
+# Needed by Mashumaro
+datetime.HAFakeDatetime = HAFakeDatetime
+
 # Do not add any Home Assistant import here
 
 

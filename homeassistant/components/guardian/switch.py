@@ -9,13 +9,12 @@ from typing import Any
 from aioguardian import Client
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GuardianData
-from .const import API_VALVE_STATUS, API_WIFI_STATUS, DOMAIN
+from . import GuardianConfigEntry, GuardianData
+from .const import API_VALVE_STATUS, API_WIFI_STATUS
 from .entity import ValveControllerEntity, ValveControllerEntityDescription
 from .util import convert_exceptions_to_homeassistant_error
 from .valve import GuardianValveState
@@ -110,10 +109,12 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GuardianConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    data: GuardianData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
         ValveControllerSwitch(entry, data, description)
@@ -128,7 +129,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GuardianConfigEntry,
         data: GuardianData,
         description: ValveControllerSwitchDescription,
     ) -> None:

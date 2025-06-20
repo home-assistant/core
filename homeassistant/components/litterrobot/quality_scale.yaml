@@ -1,0 +1,82 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: done
+    comment: |
+      Primarily relies on push data, but polls every 5 minutes for missed updates
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: done
+    comment: No options to configure
+  docs-installation-parameters: todo
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: |
+      Move big data objects from common.py into JSON fixtures and oad them when needed.
+      Other fields can be moved to const.py. Consider snapshots and testing data updates
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: done
+    comment: The integration is cloud-based
+  discovery:
+    status: todo
+    comment: Need to validate discovery
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations:
+    status: todo
+    comment: Make sure all translated states are in sentence case
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: done
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed
+  stale-devices:
+    status: todo
+    comment: |
+      Currently handled via async_remove_config_entry_device,
+      but we should be able to remove devices automatically
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

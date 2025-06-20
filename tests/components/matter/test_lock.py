@@ -5,13 +5,13 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import LockEntityFeature, LockState
 from homeassistant.const import ATTR_CODE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     set_node_attribute,

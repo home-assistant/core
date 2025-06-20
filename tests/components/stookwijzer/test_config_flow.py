@@ -32,8 +32,8 @@ async def test_full_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Stookwijzer"
     assert result["data"] == {
-        CONF_LATITUDE: 200000.123456789,
-        CONF_LONGITUDE: 450000.123456789,
+        CONF_LATITUDE: 450000.123456789,
+        CONF_LONGITUDE: 200000.123456789,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -47,7 +47,7 @@ async def test_connection_error(
 ) -> None:
     """Test user configuration flow while connection fails."""
     original_return_value = mock_stookwijzer.async_transform_coordinates.return_value
-    mock_stookwijzer.async_transform_coordinates.return_value = (None, None)
+    mock_stookwijzer.async_transform_coordinates.return_value = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

@@ -1,18 +1,22 @@
 {
+  "availableFeatures": ["powerManagement"],
   "deviceId": "1abcdef2-3456-67g8-9h0i-1jk23456lm78",
   "deviceName": "Livingroom",
   "firmwareFamily": "DOS",
   "groupId": "12345678-901a-2b3c-def4-567g89h0i12j",
+  "installationId": "abc1eca1-1234-5251-a123-12ac1a3e9fe8",
   "ipControlVersion": "1",
+  "isSystemLeader": true,
   "model": "Phantom I Silver",
+  "modelFamily": "Phantom I",
+  "powerRating": "105 dB",
   "release": {
     "buildType": "release",
-    "canonicalVersion": "2.16.1.49152",
-    "version": "2.16.1"
+    "canonicalVersion": "2.17.6.49152",
+    "version": "2.17.6"
   },
   "role": "FrontLeft",
   "serial": "L00P00000AB11",
-  "standbyEntryDelay": 0,
-  "standbyState": "Unknown",
+  "setupState": "ongoing",
   "systemId": "a12b345c-67d8-90e1-12f4-g5hij67890kl"
 }

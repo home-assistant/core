@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from nextdns import ApiError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant

@@ -5,9 +5,14 @@ from http import HTTPStatus
 import logging
 
 from aiohttp import ClientError, ClientResponseError
-from tesla_fleet_api import EnergySpecific, Tessie
 from tesla_fleet_api.const import Scope
-from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.exceptions import (
+    Forbidden,
+    InvalidToken,
+    SubscriptionRequired,
+    TeslaFleetError,
+)
+from tesla_fleet_api.tessie import Tessie
 from tessie_api import get_state_of_all_vehicles
 
 from homeassistant.config_entries import ConfigEntry
@@ -69,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
             vin=vehicle["vin"],
             data_coordinator=TessieStateUpdateCoordinator(
                 hass,
+                entry,
                 api_key=api_key,
                 vin=vehicle["vin"],
                 data=vehicle["last_state"],
@@ -122,13 +128,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                     )
                     continue
 
-                api = EnergySpecific(tessie.energy, site_id)
+                api = tessie.energySites.create(site_id)
+
+                try:
+                    live_status = (await api.live_status())["response"]
+                except (InvalidToken, Forbidden, SubscriptionRequired) as e:
+                    raise ConfigEntryAuthFailed from e
+                except TeslaFleetError as e:
+                    raise ConfigEntryNotReady(e.message) from e
+
                 energysites.append(
                     TessieEnergyData(
                         api=api,
                         id=site_id,
-                        live_coordinator=TessieEnergySiteLiveCoordinator(hass, api),
-                        info_coordinator=TessieEnergySiteInfoCoordinator(hass, api),
+                        live_coordinator=(
+                            TessieEnergySiteLiveCoordinator(
+                                hass, entry, api, live_status
+                            )
+                            if isinstance(live_status, dict)
+                            else None
+                        ),
+                        info_coordinator=TessieEnergySiteInfoCoordinator(
+                            hass, entry, api
+                        ),
                         device=DeviceInfo(
                             identifiers={(DOMAIN, str(site_id))},
                             manufacturer="Tesla",
@@ -142,6 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
             *(
                 energysite.live_coordinator.async_config_entry_first_refresh()
                 for energysite in energysites
+                if energysite.live_coordinator is not None
             ),
             *(
                 energysite.info_coordinator.async_config_entry_first_refresh()

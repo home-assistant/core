@@ -282,8 +282,7 @@ class BaseNotificationService:
 
             for name, target in self.targets.items():
                 target_name = slugify(f"{self._target_service_name_prefix}_{name}")
-                if target_name in stale_targets:
-                    stale_targets.remove(target_name)
+                stale_targets.discard(target_name)
                 if (
                     target_name in self.registered_targets
                     and target == self.registered_targets[target_name]

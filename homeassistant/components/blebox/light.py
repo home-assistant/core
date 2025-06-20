@@ -21,7 +21,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from . import BleBoxConfigEntry
@@ -35,7 +35,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BleBoxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
     entities = [
@@ -84,7 +84,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return color_util.color_temperature_mired_to_kelvin(self._feature.color_temp)
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode:
         """Return the color mode.
 
         Set values to _attr_ibutes if needed.
@@ -92,7 +92,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
 
     @property
-    def supported_color_modes(self):
+    def supported_color_modes(self) -> set[ColorMode]:
         """Return supported color modes."""
         return {self.color_mode}
 
@@ -107,7 +107,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         return self._feature.effect
 
     @property
-    def rgb_color(self):
+    def rgb_color(self) -> tuple[int, int, int] | None:
         """Return value for rgb."""
         if (rgb_hex := self._feature.rgb_hex) is None:
             return None
@@ -118,14 +118,14 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         )
 
     @property
-    def rgbw_color(self):
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the hue and saturation."""
         if (rgbw_hex := self._feature.rgbw_hex) is None:
             return None
         return tuple(blebox_uniapi.light.Light.rgb_hex_to_rgb_list(rgbw_hex)[0:4])
 
     @property
-    def rgbww_color(self):
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
         """Return value for rgbww."""
         if (rgbww_hex := self._feature.rgbww_hex) is None:
             return None

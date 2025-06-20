@@ -20,7 +20,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 FIXTURE_USER_INPUT = {
     CONF_EMAIL: "testemail@example.com",
@@ -161,6 +161,7 @@ def get_devices_fixture_has_vacation_mode() -> bool:
 
 @pytest.fixture
 async def mock_client(
+    hass: HomeAssistant,
     get_devices_fixture_heat_pump: bool,
     get_devices_fixture_mode_pending: bool,
     get_devices_fixture_setpoint_pending: bool,
@@ -175,8 +176,8 @@ async def mock_client(
             has_vacation_mode=get_devices_fixture_has_vacation_mode,
         )
     ]
-    get_all_device_info_fixture = load_json_object_fixture(
-        "get_all_device_info.json", DOMAIN
+    get_all_device_info_fixture = await async_load_json_object_fixture(
+        hass, "get_all_device_info.json", DOMAIN
     )
 
     client_mock = MagicMock(AOSmithAPIClient)

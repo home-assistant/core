@@ -29,6 +29,7 @@ from zigpy.exceptions import NetworkNotFormed
 from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import repairs
 from .const import (
@@ -86,7 +87,7 @@ HARDWARE_MIGRATION_SCHEMA = vol.Schema(
         vol.Required("old_discovery_info"): vol.Schema(
             {
                 vol.Exclusive("hw", "discovery"): HARDWARE_DISCOVERY_SCHEMA,
-                vol.Exclusive("usb", "discovery"): usb.UsbServiceInfo,
+                vol.Exclusive("usb", "discovery"): UsbServiceInfo,
             }
         ),
     }
@@ -419,7 +420,7 @@ class ZhaMultiPANMigrationHelper:
         self._radio_mgr.radio_type = new_radio_type
         self._radio_mgr.device_path = new_device_settings[CONF_DEVICE_PATH]
         self._radio_mgr.device_settings = new_device_settings
-        device_settings = self._radio_mgr.device_settings.copy()  # type: ignore[union-attr]
+        device_settings = self._radio_mgr.device_settings.copy()
 
         # Update the config entry settings
         self._hass.config_entries.async_update_entry(

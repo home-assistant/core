@@ -13,7 +13,7 @@ from homeassistant.components.bmw_connected_drive.const import (
     CONF_GCID,
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
-    DOMAIN as BMW_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -34,7 +34,7 @@ FIXTURE_GCID = "DUMMY"
 
 FIXTURE_CONFIG_ENTRY = {
     "entry_id": "1",
-    "domain": BMW_DOMAIN,
+    "domain": DOMAIN,
     "title": FIXTURE_USER_INPUT[CONF_USERNAME],
     "data": {
         CONF_USERNAME: FIXTURE_USER_INPUT[CONF_USERNAME],
@@ -51,6 +51,13 @@ FIXTURE_CONFIG_ENTRY = {
 REMOTE_SERVICE_EXC_REASON = "HTTPStatusError: 502 Bad Gateway"
 REMOTE_SERVICE_EXC_TRANSLATION = (
     "Error executing remote service on vehicle. HTTPStatusError: 502 Bad Gateway"
+)
+
+BIMMER_CONNECTED_LOGIN_PATCH = (
+    "homeassistant.components.bmw_connected_drive.config_flow.MyBMWAuthentication.login"
+)
+BIMMER_CONNECTED_VEHICLE_PATCH = (
+    "homeassistant.components.bmw_connected_drive.coordinator.MyBMWAccount.get_vehicles"
 )
 
 

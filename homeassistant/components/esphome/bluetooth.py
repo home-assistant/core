@@ -7,11 +7,11 @@ from typing import TYPE_CHECKING
 
 from aioesphomeapi import APIClient, DeviceInfo
 from bleak_esphome import connect_scanner
-from bleak_esphome.backend.cache import ESPHomeBluetoothCache
 
 from homeassistant.components.bluetooth import async_register_scanner
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
+from .const import DOMAIN
 from .entry_data import RuntimeEntryData
 
 
@@ -28,10 +28,10 @@ def async_connect_scanner(
     entry_data: RuntimeEntryData,
     cli: APIClient,
     device_info: DeviceInfo,
-    cache: ESPHomeBluetoothCache,
+    device_id: str,
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
-    client_data = connect_scanner(cli, device_info, cache, entry_data.available)
+    client_data = connect_scanner(cli, device_info, entry_data.available)
     entry_data.bluetooth_device = client_data.bluetooth_device
     client_data.disconnect_callbacks = entry_data.disconnect_callbacks
     scanner = client_data.scanner
@@ -40,7 +40,14 @@ def async_connect_scanner(
     return partial(
         _async_unload,
         [
-            async_register_scanner(hass, scanner),
+            async_register_scanner(
+                hass,
+                scanner,
+                source_domain=DOMAIN,
+                source_model=device_info.model,
+                source_config_entry_id=entry_data.entry_id,
+                source_device_id=device_id,
+            ),
             scanner.async_setup(),
         ],
     )

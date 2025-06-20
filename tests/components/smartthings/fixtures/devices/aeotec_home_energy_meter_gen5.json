@@ -1,0 +1,69 @@
+{
+  "items": [
+    {
+      "deviceId": "f0af21a2-d5a1-437c-b10a-b34a87394b71",
+      "name": "aeotec-home-energy-meter-gen5",
+      "label": "Aeotec Energy Monitor",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "3e0921d3-0a66-3d49-b458-752e596838e9",
+      "deviceManufacturerCode": "0086-0002-005F",
+      "locationId": "6911ddf5-f0cb-4516-a06a-3a2a6ec22bca",
+      "ownerId": "93257fc4-6471-2566-b06e-2fe72dd979fa",
+      "roomId": "cdf080f0-0542-41d7-a606-aff69683e04c",
+      "components": [
+        {
+          "id": "main",
+          "label": "Meter",
+          "capabilities": [
+            {
+              "id": "powerMeter",
+              "version": 1
+            },
+            {
+              "id": "energyMeter",
+              "version": 1
+            },
+            {
+              "id": "voltageMeasurement",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "CurbPowerMeter",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2023-01-12T23:02:44.917Z",
+      "profile": {
+        "id": "6372c227-93c7-32ef-9be5-aef2221adff1"
+      },
+      "zwave": {
+        "networkId": "0A",
+        "driverId": "b98b34ce-1d1d-480c-bb17-41307a90cde0",
+        "executingLocally": true,
+        "hubId": "6a2d07a4-dd77-48bc-9acf-017029aaf099",
+        "networkSecurityLevel": "ZWAVE_S0_LEGACY",
+        "provisioningState": "PROVISIONED",
+        "manufacturerId": 134,
+        "productType": 2,
+        "productId": 95
+      },
+      "type": "ZWAVE",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "LOCAL"
+    }
+  ],
+  "_links": {}
+}

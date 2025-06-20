@@ -69,5 +69,6 @@ async def test_diagnostics(
             "created_at": ANY,
             "modified_at": ANY,
             "discovery_keys": {},
+            "subentries": [],
         },
     }

@@ -6,7 +6,7 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,7 +25,7 @@ RAIN_DELAY_ENTITY_DESCRIPTION = SensorEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RainbirdConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry for a Rain Bird sensor."""
     async_add_entities(

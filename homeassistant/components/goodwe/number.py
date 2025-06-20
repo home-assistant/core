@@ -13,13 +13,13 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
+from .const import DOMAIN
+from .coordinator import GoodweConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,12 +86,12 @@ NUMBERS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: GoodweConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the inverter select entities from a config entry."""
-    inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
-    device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]
+    inverter = config_entry.runtime_data.inverter
+    device_info = config_entry.runtime_data.device_info
 
     entities = []
 

@@ -9,7 +9,7 @@ import pytest
 import requests_mock
 
 from homeassistant.components import notify
-import homeassistant.components.clicksend_tts.notify as cs_tts
+from homeassistant.components.clicksend_tts import notify as cs_tts
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

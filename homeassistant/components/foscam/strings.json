@@ -35,7 +35,7 @@
   "services": {
     "ptz": {
       "name": "PTZ",
-      "description": "Pan/Tilt action for Foscam camera.",
+      "description": "Moves a Foscam camera to a specified direction.",
       "fields": {
         "movement": {
           "name": "Movement",
@@ -49,7 +49,7 @@
     },
     "ptz_preset": {
       "name": "PTZ preset",
-      "description": "PTZ Preset action for Foscam camera.",
+      "description": "Moves a Foscam camera to a predefined position.",
       "fields": {
         "preset_name": {
           "name": "Preset name",

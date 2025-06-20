@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, call, patch
 from pybalboa import SpaControl
 from pybalboa.enums import LowHighRange
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     ATTR_OPTION,

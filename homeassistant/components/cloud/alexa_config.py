@@ -43,7 +43,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
-    DOMAIN as CLOUD_DOMAIN,
+    DOMAIN,
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
     PREF_SHOULD_EXPOSE,
@@ -55,7 +55,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-CLOUD_ALEXA = f"{CLOUD_DOMAIN}.{ALEXA_DOMAIN}"
+CLOUD_ALEXA = f"{DOMAIN}.{ALEXA_DOMAIN}"
 
 # Time to wait when entity preferences have changed before syncing it to
 # the cloud.

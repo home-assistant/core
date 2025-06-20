@@ -41,6 +41,8 @@ from .entity import (
 from .enum_mapper import EsphomeEnumMapper
 from .ffmpeg_proxy import async_create_proxy_url
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumMapper(
@@ -76,7 +78,7 @@ class EsphomeMediaPlayer(
         if self._static_info.supports_pause:
             flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
         self._attr_supported_features = flags
-        self._entry_data.media_player_formats[static_info.unique_id] = cast(
+        self._entry_data.media_player_formats[self.unique_id] = cast(
             MediaPlayerInfo, static_info
         ).supported_formats
 
@@ -94,7 +96,7 @@ class EsphomeMediaPlayer(
 
     @property
     @esphome_float_state_property
-    def volume_level(self) -> float | None:
+    def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         return self._state.volume
 
@@ -112,9 +114,8 @@ class EsphomeMediaPlayer(
         media_id = async_process_play_media_url(self.hass, media_id)
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
         bypass_proxy = kwargs.get(ATTR_MEDIA_EXTRA, {}).get(ATTR_BYPASS_PROXY)
-
         supported_formats: list[MediaPlayerSupportedFormat] | None = (
-            self._entry_data.media_player_formats.get(self._static_info.unique_id)
+            self._entry_data.media_player_formats.get(self.unique_id)
         )
 
         if (
@@ -137,7 +138,7 @@ class EsphomeMediaPlayer(
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()
-        self._entry_data.media_player_formats.pop(self.entity_id, None)
+        self._entry_data.media_player_formats.pop(self.unique_id, None)
 
     def _get_proxy_url(
         self,
@@ -146,10 +147,6 @@ class EsphomeMediaPlayer(
         announcement: bool,
     ) -> str | None:
         """Get URL for ffmpeg proxy."""
-        if self.device_entry is None:
-            # Device id is required
-            return None
-
         # Choose the first default or announcement supported format
         format_to_use: MediaPlayerSupportedFormat | None = None
         for supported_format in supported_formats:

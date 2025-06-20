@@ -17,7 +17,7 @@ class ONVIFBaseEntity(Entity):
         self.device: ONVIFDevice = device
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if device is available."""
         return self.device.available
 

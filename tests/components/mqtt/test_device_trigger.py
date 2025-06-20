@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
-from .test_common import help_test_unload_config_entry
+from .common import help_test_unload_config_entry
 
 from tests.common import async_fire_mqtt_message, async_get_device_automations
 from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator

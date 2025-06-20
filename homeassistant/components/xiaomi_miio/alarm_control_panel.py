@@ -12,12 +12,12 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_GATEWAY, DOMAIN
+from .const import DOMAIN
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,12 +28,12 @@ XIAOMI_STATE_ARMING_VALUE = "oning"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: XiaomiMiioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi Gateway Alarm from a config entry."""
     entities = []
-    gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
+    gateway = config_entry.runtime_data.gateway
     entity = XiaomiGatewayAlarm(
         gateway,
         f"{config_entry.title} Alarm",
