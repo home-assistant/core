@@ -274,11 +274,13 @@ def _get_item_thumbnail(
         if url:
             if internal_request:
                 item_thumbnail = url
-            else:
+            elif hasattr(entity, "get_synthetic_id_and_cache_url"):
                 synthetic_id = entity.get_synthetic_id_and_cache_url(url)
                 item_thumbnail = entity.get_browse_image_url(
                     content_type, "synthetic", synthetic_id
                 )
+            else:
+                item_thumbnail = url
 
     return item_thumbnail
 

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
+import hashlib
 import json
 import logging
 from typing import TYPE_CHECKING, Any, cast
-from lru import LRU
-import hashlib
 
+from lru import LRU
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
@@ -806,13 +806,17 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         """Get album art from Squeezebox server."""
         if media_image_id:
             if media_image_id.startswith(SYNTHETIC_ID_PREFIX):
-                image_url = self._synthetic_media_browser_thumbnail_items.get(media_image_id)
+                image_url = self._synthetic_media_browser_thumbnail_items.get(
+                    media_image_id
+                )
 
                 if image_url is None:
                     _LOGGER.debug("Synthetic ID %s not found in cache", media_image_id)
                     return (None, None)
             else:
-                image_url = self._player.generate_image_url_from_track_id(media_image_id)
+                image_url = self._player.generate_image_url_from_track_id(
+                    media_image_id
+                )
 
             result = await self._async_fetch_image(image_url)
             if result == (None, None):
