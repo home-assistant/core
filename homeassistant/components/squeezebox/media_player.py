@@ -7,6 +7,8 @@ from datetime import datetime
 import json
 import logging
 from typing import TYPE_CHECKING, Any, cast
+from lru import LRU
+import hashlib
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
@@ -93,6 +95,8 @@ SQUEEZEBOX_MODE = {
     "play": MediaPlayerState.PLAYING,
     "stop": MediaPlayerState.IDLE,
 }
+
+SYNTHETIC_ID_PREFIX = "synthetic_"
 
 
 async def start_server_discovery(hass: HomeAssistant) -> None:
@@ -262,6 +266,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         self._previous_media_position = 0
         self._attr_unique_id = format_mac(self._player.player_id)
         self._browse_data = BrowseData()
+        self._synthetic_media_browser_thumbnail_items: LRU[str, str] = LRU(5000)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -744,6 +749,18 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await self._player.async_unsync()
         await self.coordinator.async_refresh()
 
+    def get_synthetic_id_and_cache_url(self, url: str) -> str:
+        """Cache a thumbnail URL and return a synthetic ID.
+
+        This enables us to proxy thumbnails for apps and favorites, as those do not have IDs.
+        """
+        url_hash = hashlib.md5(url.encode()).hexdigest()
+        synthetic_id = f"{SYNTHETIC_ID_PREFIX}{url_hash}"
+
+        self._synthetic_media_browser_thumbnail_items[synthetic_id] = url
+
+        return synthetic_id
+
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -788,7 +805,15 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     ) -> tuple[bytes | None, str | None]:
         """Get album art from Squeezebox server."""
         if media_image_id:
-            image_url = self._player.generate_image_url_from_track_id(media_image_id)
+            if media_image_id.startswith(SYNTHETIC_ID_PREFIX):
+                image_url = self._synthetic_media_browser_thumbnail_items.get(media_image_id)
+
+                if image_url is None:
+                    _LOGGER.debug("Synthetic ID %s not found in cache", media_image_id)
+                    return (None, None)
+            else:
+                image_url = self._player.generate_image_url_from_track_id(media_image_id)
+
             result = await self._async_fetch_image(image_url)
             if result == (None, None):
                 _LOGGER.debug("Error retrieving proxied album art from %s", image_url)

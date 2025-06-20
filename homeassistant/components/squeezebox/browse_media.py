@@ -262,10 +262,24 @@ def _get_item_thumbnail(
                 item_type, item["id"], track_id
             )
 
-    elif search_type in ["apps", "radios"]:
-        item_thumbnail = player.generate_image_url(item["icon"])
-    if item_thumbnail is None:
-        item_thumbnail = item.get("image_url")  # will not be proxied by HA
+    else:
+        url = None
+        content_type = item_type or "unknown"
+
+        if search_type in ["apps", "radios"]:
+            url = player.generate_image_url(item["icon"])
+        elif image_url := item.get("image_url"):
+            url = image_url
+
+        if url:
+            if internal_request:
+                item_thumbnail = url
+            else:
+                synthetic_id = entity.get_synthetic_id_and_cache_url(url)
+                item_thumbnail = entity.get_browse_image_url(
+                    content_type, "synthetic", synthetic_id
+                )
+
     return item_thumbnail
 
 
