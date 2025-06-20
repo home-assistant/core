@@ -8,5 +8,3 @@ DATA_HUB = "hub"
 DATA_COORDINATOR = "coordinator"
 
 MANUFACTURER = "KMtronic"
-
-UPDATE_LISTENER = "update_listener"
