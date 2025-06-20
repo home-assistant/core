@@ -60,16 +60,16 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SEEK
     )
+    _attr_name = None
 
     def __init__(
         self, controller: Controller, zone_id: int, sources: dict[int, Source]
     ) -> None:
         """Initialize the zone device."""
-        super().__init__(controller)
+        super().__init__(controller, zone_id)
         self._zone_id = zone_id
         _zone = self._zone
         self._sources = sources
-        self._attr_name = _zone.name
         self._attr_unique_id = f"{self._primary_mac_address}-{_zone.device_str}"
 
     @property

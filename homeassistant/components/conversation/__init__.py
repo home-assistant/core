@@ -270,7 +270,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup({})
 
     # Temporary migration. We can remove this in 2024.10
-    from homeassistant.components.assist_pipeline import (  # pylint: disable=import-outside-toplevel
+    from homeassistant.components.assist_pipeline import (  # noqa: PLC0415
         async_migrate_engine,
     )
 
