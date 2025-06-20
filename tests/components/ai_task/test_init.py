@@ -14,23 +14,24 @@ from tests.common import flush_store
 
 async def test_preferences_storage_load(
     hass: HomeAssistant,
-    init_components: None,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that AITaskPreferences are stored and loaded correctly."""
-    preferences = hass.data[DATA_PREFERENCES]
+    preferences = AITaskPreferences(hass)
+    await preferences.async_load()
 
     # Initial state should be None for entity IDs
-    assert preferences.gen_text_entity_id is None
+    for key in AITaskPreferences.KEYS:
+        assert getattr(preferences, key) is None, f"Initial {key} should be None"
 
-    gen_text_id_1 = "sensor.summary_one"
+    new_values = {key: f"ai_task.test_{key}" for key in AITaskPreferences.KEYS}
 
-    preferences.async_set_preferences(
-        gen_text_entity_id=gen_text_id_1,
-    )
+    preferences.async_set_preferences(**new_values)
 
     # Verify that current preferences object is updated
-    assert preferences.gen_text_entity_id == gen_text_id_1
+    for key, value in new_values.items():
+        assert getattr(preferences, key) == value, (
+            f"Current {key} should match set value"
+        )
 
     await flush_store(preferences._store)
 
@@ -38,22 +39,10 @@ async def test_preferences_storage_load(
     new_preferences_instance = AITaskPreferences(hass)
     await new_preferences_instance.async_load()
 
-    assert new_preferences_instance.gen_text_entity_id == gen_text_id_1
-
-    # Test updating one preference
-    gen_text_id_2 = "sensor.summary_two"
-    preferences.async_set_preferences(gen_text_entity_id=gen_text_id_2)
-
-    # Verify that current preferences object is updated
-    assert preferences.gen_text_entity_id == gen_text_id_2
-
-    await flush_store(preferences._store)
-
-    # Create another new preferences instance to confirm persistence of the update
-    another_new_preferences_instance = AITaskPreferences(hass)
-    await another_new_preferences_instance.async_load()
-
-    assert another_new_preferences_instance.gen_text_entity_id == gen_text_id_2
+    for key in AITaskPreferences.KEYS:
+        assert getattr(preferences, key) == getattr(new_preferences_instance, key), (
+            f"Loaded {key} should match saved value"
+        )
 
 
 @pytest.mark.parametrize(
