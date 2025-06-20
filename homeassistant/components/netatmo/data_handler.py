@@ -451,3 +451,20 @@ class NetatmoDataHandler:
                     signal_home,
                 ),
             )
+
+    async def sync_schedule(self, home_id: str, schedule_id: str) -> None:
+        """Sync the schedule with the Netatmo API."""
+        _LOGGER.debug("Syncing schedule %s in home %s", schedule_id, home_id)
+
+        if not (home := self.account.homes.get(home_id)):
+            _LOGGER.error("Home %s not found", home_id)
+            return
+
+        if not (schedule := home.schedules.get(schedule_id)):
+            _LOGGER.error("Schedule %s not found in home %s", schedule_id, home_id)
+            return
+
+        await home.async_sync_schedule(schedule)
+        _LOGGER.debug(
+            "Successfully synced schedule %s in home %s", schedule_id, home_id
+        )
