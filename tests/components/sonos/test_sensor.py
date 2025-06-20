@@ -42,6 +42,7 @@ async def test_entity_registry_supported(
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" in entity_registry.entities
     assert "binary_sensor.zone_a_charging" in entity_registry.entities
+    assert "sensor.zone_a_power_source" in entity_registry.entities
 
 
 async def test_battery_attributes(
@@ -59,6 +60,10 @@ async def test_battery_attributes(
     assert (
         power_state.attributes.get(ATTR_BATTERY_POWER_SOURCE) == "SONOS_CHARGING_RING"
     )
+
+    power_source = entity_registry.entities["sensor.zone_a_power_source"]
+    power_source_state = hass.states.get(power_source.entity_id)
+    assert power_source_state.state == "SONOS_CHARGING_RING"
 
 
 async def test_battery_on_s1(
