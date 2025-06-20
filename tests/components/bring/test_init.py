@@ -21,7 +21,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import UUID
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
 async def setup_integration(
@@ -240,7 +240,7 @@ async def test_purge_devices(
     )
 
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
-        load_fixture("lists2.json", DOMAIN)
+        await async_load_fixture(hass, "lists2.json", DOMAIN)
     )
 
     freezer.tick(timedelta(seconds=90))
@@ -265,7 +265,7 @@ async def test_create_devices(
     """Test create device entry for new lists."""
     list_uuid = "b4776778-7f6c-496e-951b-92a35d3db0dd"
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
-        load_fixture("lists2.json", DOMAIN)
+        await async_load_fixture(hass, "lists2.json", DOMAIN)
     )
     await setup_integration(hass, bring_config_entry)
 
@@ -279,7 +279,7 @@ async def test_create_devices(
     )
 
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
-        load_fixture("lists.json", DOMAIN)
+        await async_load_fixture(hass, "lists.json", DOMAIN)
     )
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
@@ -310,7 +310,7 @@ async def test_coordinator_update_intervals(
     mock_bring_client.get_activity.reset_mock()
 
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
-        load_fixture("lists2.json", DOMAIN)
+        await async_load_fixture(hass, "lists2.json", DOMAIN)
     )
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)

@@ -171,8 +171,6 @@ FRONTEND_INTEGRATIONS = {
 # Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
 # The substage containing recorder should have no timeout, as it could cancel a database migration.
 # Recorder freezes "recorder" timeout during a migration, but it does not freeze other timeouts.
-# The substages preceding it should also have no timeout, until we ensure that the recorder
-# is not accidentally promoted as a dependency of any of the integrations in them.
 # If we add timeouts to the frontend substages, we should make sure they don't apply in recovery mode.
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
@@ -396,7 +394,7 @@ async def async_setup_hass(
 
 def open_hass_ui(hass: core.HomeAssistant) -> None:
     """Open the UI."""
-    import webbrowser  # pylint: disable=import-outside-toplevel
+    import webbrowser  # noqa: PLC0415
 
     if hass.config.api is None or "frontend" not in hass.config.components:
         _LOGGER.warning("Cannot launch the UI because frontend not loaded")
@@ -563,8 +561,7 @@ async def async_enable_logging(
 
     if not log_no_color:
         try:
-            # pylint: disable-next=import-outside-toplevel
-            from colorlog import ColoredFormatter
+            from colorlog import ColoredFormatter  # noqa: PLC0415
 
             # basicConfig must be called after importing colorlog in order to
             # ensure that the handlers it sets up wraps the correct streams.
@@ -608,7 +605,7 @@ async def async_enable_logging(
     )
     threading.excepthook = lambda args: logging.getLogger().exception(
         "Uncaught thread exception",
-        exc_info=(  # type: ignore[arg-type]
+        exc_info=(  # type: ignore[arg-type]  # noqa: LOG014
             args.exc_type,
             args.exc_value,
             args.exc_traceback,
@@ -929,7 +926,11 @@ async def _async_set_up_integrations(
             await _async_setup_multi_components(hass, stage_all_domains, config)
             continue
         try:
-            async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
+            async with hass.timeout.async_timeout(
+                timeout,
+                cool_down=COOLDOWN_TIME,
+                cancel_message=f"Bootstrap stage {name} timeout",
+            ):
                 await _async_setup_multi_components(hass, stage_all_domains, config)
         except TimeoutError:
             _LOGGER.warning(
@@ -941,7 +942,11 @@ async def _async_set_up_integrations(
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
     try:
-        async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
+        async with hass.timeout.async_timeout(
+            WRAP_UP_TIMEOUT,
+            cool_down=COOLDOWN_TIME,
+            cancel_message="Bootstrap startup wrap up timeout",
+        ):
             await hass.async_block_till_done()
     except TimeoutError:
         _LOGGER.warning(
@@ -1054,5 +1059,5 @@ async def _async_setup_multi_components(
             _LOGGER.error(
                 "Error setting up integration %s - received exception",
                 domain,
-                exc_info=(type(result), result, result.__traceback__),
+                exc_info=(type(result), result, result.__traceback__),  # noqa: LOG014
             )

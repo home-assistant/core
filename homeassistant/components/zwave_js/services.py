@@ -58,6 +58,13 @@ TARGET_VALIDATORS = {
 }
 
 
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Register integration services."""
+    services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
+    services.async_register()
+
+
 def parameter_name_does_not_need_bitmask(
     val: dict[str, int | str | list[str]],
 ) -> dict[str, int | str | list[str]]:

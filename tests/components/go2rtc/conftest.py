@@ -11,6 +11,7 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.go2rtc.const import DOMAIN, RECOMMENDED_VERSION
 from homeassistant.components.go2rtc.server import Server
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -178,7 +179,7 @@ async def init_test_integration(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [CAMERA_DOMAIN]
+            config_entry, [Platform.CAMERA]
         )
         return True
 
@@ -187,7 +188,7 @@ async def init_test_integration(
     ) -> bool:
         """Unload test config entry."""
         await hass.config_entries.async_forward_entry_unload(
-            config_entry, CAMERA_DOMAIN
+            config_entry, Platform.CAMERA
         )
         return True
 
