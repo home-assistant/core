@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from aiorussound.rio import Controller, RussoundClient, ZoneControlSurface
+from aiorussound.rio import Controller, ZoneControlSurface
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import EntityCategory
@@ -74,14 +74,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Russound number entities based on a config entry."""
-    client: RussoundClient = entry.runtime_data
-    entities: list[RussoundNumberEntity] = [
+    client = entry.runtime_data
+    async_add_entities(
         RussoundNumberEntity(controller, zone_id, description)
         for controller in client.controllers.values()
         for zone_id in controller.zones
         for description in CONTROL_ENTITIES
-    ]
-    async_add_entities(entities)
+    )
 
 
 class RussoundNumberEntity(RussoundBaseEntity, NumberEntity):
@@ -98,15 +97,9 @@ class RussoundNumberEntity(RussoundBaseEntity, NumberEntity):
         """Initialize a Russound number entity."""
         super().__init__(controller, zone_id)
         self.entity_description = description
-        self._zone_id = zone_id
-        _zone = controller.zones[zone_id]
         self._attr_unique_id = (
-            f"{self._primary_mac_address}-{_zone.device_str}-{description.key}"
+            f"{self._primary_mac_address}-{self._zone.device_str}-{description.key}"
         )
-
-    @property
-    def _zone(self) -> ZoneControlSurface:
-        return self._controller.zones[self._zone_id]
 
     @property
     def native_value(self) -> float:
