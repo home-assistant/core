@@ -29,6 +29,7 @@ PLATFORMS = [
     Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

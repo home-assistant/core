@@ -1,0 +1,15 @@
+# serializer version: 1
+# name: test_setup_config_entry
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'template_notify',
+      'supported_features': <NotifyEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'notify.template_notify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

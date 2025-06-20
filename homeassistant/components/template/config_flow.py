@@ -53,6 +53,7 @@ from .alarm_control_panel import (
 )
 from .binary_sensor import async_create_preview_binary_sensor
 from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .notify import CONF_SEND_MESSAGE
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -138,6 +139,11 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         schema |= {
             vol.Required(CONF_URL): selector.TemplateSelector(),
             vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
+        }
+
+    if domain == Platform.NOTIFY:
+        schema |= {
+            vol.Required(CONF_SEND_MESSAGE): selector.ActionSelector(),
         }
 
     if domain == Platform.NUMBER:
@@ -309,6 +315,7 @@ TEMPLATE_TYPES = [
     "binary_sensor",
     "button",
     "image",
+    "notify",
     "number",
     "select",
     "sensor",
@@ -333,6 +340,10 @@ CONFIG_FLOW = {
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
         validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.NOTIFY: SchemaFlowFormStep(
+        config_schema(Platform.NOTIFY),
+        validate_user_input=validate_user_input(Platform.NOTIFY),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         config_schema(Platform.NUMBER),
@@ -374,6 +385,10 @@ OPTIONS_FLOW = {
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
         validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.NOTIFY: SchemaFlowFormStep(
+        options_schema(Platform.NOTIFY),
+        validate_user_input=validate_user_input(Platform.NOTIFY),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         options_schema(Platform.NUMBER),

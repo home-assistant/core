@@ -21,6 +21,7 @@ from homeassistant.components.fan import DOMAIN as DOMAIN_FAN
 from homeassistant.components.image import DOMAIN as DOMAIN_IMAGE
 from homeassistant.components.light import DOMAIN as DOMAIN_LIGHT
 from homeassistant.components.lock import DOMAIN as DOMAIN_LOCK
+from homeassistant.components.notify import DOMAIN as DOMAIN_NOTIFY
 from homeassistant.components.number import DOMAIN as DOMAIN_NUMBER
 from homeassistant.components.select import DOMAIN as DOMAIN_SELECT
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
@@ -57,6 +58,7 @@ from . import (
     image as image_platform,
     light as light_platform,
     lock as lock_platform,
+    notify as notify_platform,
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
@@ -135,6 +137,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             ),
             vol.Optional(DOMAIN_LOCK): vol.All(
                 cv.ensure_list, [lock_platform.LOCK_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_NOTIFY): vol.All(
+                cv.ensure_list, [notify_platform.NOTIFY_SCHEMA]
             ),
             vol.Optional(DOMAIN_NUMBER): vol.All(
                 cv.ensure_list, [number_platform.NUMBER_SCHEMA]
