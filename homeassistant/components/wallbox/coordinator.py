@@ -189,7 +189,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             elif eco_smart_mode == 1:
                 data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.FULL_SOLAR
 
-            return data # noqa: TRY300
+            return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
