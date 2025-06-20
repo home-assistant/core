@@ -817,6 +817,23 @@ def test_theme_selector_schema(schema, valid_selections, invalid_selections) -> 
             ),
             (None, "abc", {}),
         ),
+        (
+            {
+                "accept": ["image/*"],
+            },
+            (
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+                {
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                    "metadata": {},
+                },
+            ),
+            (None, "abc", {}),
+        ),
     ],
 )
 def test_media_selector_schema(schema, valid_selections, invalid_selections) -> None:
