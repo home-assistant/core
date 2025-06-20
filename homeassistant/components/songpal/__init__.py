@@ -35,6 +35,7 @@ PLATFORMS = [
     Platform.MEDIA_PLAYER,
 ]
 
+type SongpalConfigEntry = ConfigEntry[SongpalCoordinator]
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -48,12 +49,6 @@ async def async_setup_platform(
         " Convert to songpal platform or UI configuration"
     )
 
-
-@dataclass
-class RuntimeData:
-    """Class to hold data that should be easily accessible throughout the integration."""
-
-    coordinator: SongpalCoordinator
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -73,7 +68,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SongpalConfigEntry,
 ) -> bool:
     """Set up songpal coordinator and entities."""
 
@@ -99,13 +94,13 @@ async def async_setup_entry(
         _LOGGER.warning("Songpal coordinator not initialised.")
         raise ConfigEntryNotReady
 
-    entry.runtime_data = RuntimeData(coordinator)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SongpalConfigEntry) -> bool:
     """Unload songpal media player."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

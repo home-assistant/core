@@ -15,11 +15,11 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import SongpalConfigEntry
 from .const import ERROR_REQUEST_RETRY, PARAM_NAME, PARAM_VALUE, SET_SOUND_SETTING
 from .coordinator import SongpalCoordinator
 from .device import device_unique_id
@@ -32,12 +32,12 @@ INITIAL_RETRY_DELAY = 10
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SongpalConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up songpal coordinator and entities."""
 
-    coordinator: SongpalCoordinator = entry.runtime_data.coordinator
+    coordinator: SongpalCoordinator = entry.runtime_data
 
     new_entities = [SongpalMediaPlayerEntity(hass, coordinator)]
 

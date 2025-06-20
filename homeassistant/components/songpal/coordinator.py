@@ -18,12 +18,12 @@ from songpal import (
 )
 from songpal.containers import Setting
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import SongpalConfigEntry
 from .const import DOMAIN
 from .device import device_info, device_unique_id
 
@@ -46,7 +46,7 @@ class SongpalCoordinator(DataUpdateCoordinator):
     initialized: bool = False
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, name: str, device: Device
+        self, hass: HomeAssistant, config_entry: SongpalConfigEntry, name: str, device: Device
     ) -> None:
         """Initialize coordinator."""
 
