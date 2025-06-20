@@ -86,7 +86,7 @@ BOOST_STATE_MAP = {
 }
 
 CHARGE_STATE_MAP = {
-    clusters.PowerSource.Enums.BatChargeStateEnum.kUnknown: "unknown",
+    clusters.PowerSource.Enums.BatChargeStateEnum.kUnknown: None,
     clusters.PowerSource.Enums.BatChargeStateEnum.kIsNotCharging: "not_charging",
     clusters.PowerSource.Enums.BatChargeStateEnum.kIsCharging: "charging",
     clusters.PowerSource.Enums.BatChargeStateEnum.kIsAtFullCharge: "full_charge",
@@ -392,20 +392,19 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatTimeRemaining,),
     ),
-    # MatterDiscoverySchema(
-    #     platform=Platform.SENSOR,
-    #     entity_description=MatterSensorEntityDescription(
-    #         key="PowerSourceBatChargeState",
-    #         translation_key="battery_charge_state",
-    #         device_class=SensorDeviceClass.ENUM,
-    #         entity_category=EntityCategory.DIAGNOSTIC,
-    #         # error: Argument 1 to "list" has incompatible type "dict_values[Any, str | None]"; expected "Iterable[str]"
-    #         options=list(CHARGE_STATE_MAP.values())
-    #         measurement_to_ha=CHARGE_STATE_MAP.get,
-    #     ),
-    #     entity_class=MatterSensor,
-    #     required_attributes=(clusters.PowerSource.Attributes.BatChargeState,),
-    # ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatChargeState",
+            translation_key="battery_charge_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=[state for state in CHARGE_STATE_MAP.values() if state is not None],
+            measurement_to_ha=CHARGE_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatChargeState,),
+    ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
