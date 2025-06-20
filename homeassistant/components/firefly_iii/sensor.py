@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ACCOUNT_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="account",
+        key="account_type",
         translation_key="account",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -86,17 +86,6 @@ class FireflyAccountEntity(FireflyBaseEntity, SensorEntity):
         self._attr_native_unit_of_measurement = (
             coordinator.data.native_currency.attributes.code
         )
-        account_type = account.attributes.type
-        if account_type == "expense":
-            self._attr_icon = "mdi:cash-minus"
-        elif account_type == "asset":
-            self._attr_icon = "mdi:account-cash"
-        elif account_type == "revenue":
-            self._attr_icon = "mdi:cash-plus"
-        elif account_type == "liability":
-            self._attr_icon = "mdi:hand-coin"
-        else:
-            self._attr_icon = "mdi:bank"
 
     @property
     def native_value(self) -> float | None:
@@ -108,6 +97,7 @@ class FireflyAccountEntity(FireflyBaseEntity, SensorEntity):
         """Return extra state attributes for the account entity."""
         return {
             "account_role": self._account.attributes.account_role,
+            "account_type": self._account.attributes.type,
             "current_balance": self._account.attributes.current_balance,
         }
 
@@ -124,7 +114,6 @@ class FireflyCategoryEntity(FireflyBaseEntity, SensorEntity):
         self._attr_native_unit_of_measurement = (
             coordinator.data.native_currency.attributes.code
         )
-        self._attr_icon = "mdi:label"
 
     @property
     def native_value(self) -> float | None:
