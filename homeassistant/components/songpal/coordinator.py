@@ -35,7 +35,7 @@ PARAM_VALUE = "value"
 INITIAL_RETRY_DELAY = 10
 
 
-class SongpalCoordinator(DataUpdateCoordinator):
+class SongpalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator to manage a Songpal device."""
 
     device_name: str
@@ -46,7 +46,11 @@ class SongpalCoordinator(DataUpdateCoordinator):
     initialized: bool = False
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: SongpalConfigEntry, name: str, device: Device
+        self,
+        hass: HomeAssistant,
+        config_entry: SongpalConfigEntry,
+        name: str,
+        device: Device,
     ) -> None:
         """Initialize coordinator."""
 
@@ -54,7 +58,6 @@ class SongpalCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"{DOMAIN} ({config_entry.unique_id})",
-            update_method=self.update,
             update_interval=timedelta(seconds=10),
         )
 
@@ -68,21 +71,16 @@ class SongpalCoordinator(DataUpdateCoordinator):
         await self.full_refresh()
         self.async_set_updated_data(self.data)
 
-    async def update(
+    async def _async_update_data(
         self,
-        log_failures=True,
-        raise_on_auth_failed=False,
-        scheduled=False,
-        raise_on_entry_error=False,
-    ):
+    ) -> dict[str, Any]:
         """Poll for data updates that are not pushed."""
         self.data = await self.polling_refresh(self.data)
         return self.data
 
-    async def async_shutdown(self) -> None:
-        """Run when entity will be removed from hass."""
+    async def destroy(self) -> None:
+        """Deconstruct coordinator when entry is being unloaded."""
         await self.device.stop_listen_notifications()
-        await super().async_shutdown()
 
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""
