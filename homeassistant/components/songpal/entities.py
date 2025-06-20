@@ -22,15 +22,13 @@ def create_settings_entities_for_type(
 
     new_entities: list[SongpalBaseEntity] = []
     for setting_bank, settings in all_settings.items():
-        for setting in settings:
-            if setting_bank == "sound_settings" and setting.target == "soundField":
-                # Skipped because it's handled by the media player
-                continue
-
-            if setting.type == setting_type:
-                new_entities.append(
-                    instantiator(hass, coordinator, setting_bank, setting)
-                )
+        new_entities.extend(
+            [
+                instantiator(hass, coordinator, setting_bank, setting)
+                for setting in settings
+                if setting.type == setting_type
+            ]
+        )
 
     async_add_entities(new_entities)
 
