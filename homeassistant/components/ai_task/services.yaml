@@ -6,7 +6,7 @@ generate_text:
       selector:
         text:
     instructions:
-      example: "Funny notification that garage door left open"
+      example: "Generate a funny notification that garage door was left open"
       required: true
       selector:
         text:
