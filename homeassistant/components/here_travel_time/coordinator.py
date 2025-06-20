@@ -100,9 +100,11 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
         try:
             response = await self._api.route(
                 transport_mode=TransportMode(params.travel_mode),
-                origin=here_routing.Place(params.origin[0], params.origin[1]),
+                origin=here_routing.Place(
+                    float(params.origin[0]), float(params.origin[1])
+                ),
                 destination=here_routing.Place(
-                    params.destination[0], params.destination[1]
+                    float(params.destination[0]), float(params.destination[1])
                 ),
                 routing_mode=params.route_mode,
                 arrival_time=params.arrival,
