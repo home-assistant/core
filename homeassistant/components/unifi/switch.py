@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.firewall_policies import FirewallPolicies
@@ -25,7 +25,7 @@ from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.traffic_routes import TrafficRoutes
 from aiounifi.interfaces.traffic_rules import TrafficRules
 from aiounifi.interfaces.wlans import Wlans
-from aiounifi.models.api import ApiItemT
+from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client, ClientBlockRequest
 from aiounifi.models.device import DeviceSetOutletRelayRequest
 from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
@@ -54,8 +54,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import UnifiConfigEntry
 from .const import ATTR_MANUFACTURER, DOMAIN
 from .entity import (
-    HandlerT,
-    SubscriptionT,
+    SubscriptionType,
     UnifiEntity,
     UnifiEntityDescription,
     async_client_device_info_fn,
@@ -209,7 +208,7 @@ async def async_wlan_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> Non
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiSwitchEntityDescription(
+class UnifiSwitchEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     SwitchEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi switch entity."""
@@ -218,7 +217,7 @@ class UnifiSwitchEntityDescription(
     is_on_fn: Callable[[UnifiHub, ApiItemT], bool]
 
     # Optional
-    custom_subscribe: Callable[[aiounifi.Controller], SubscriptionT] | None = None
+    custom_subscribe: Callable[[aiounifi.Controller], SubscriptionType] | None = None
     """Callback for additional subscriptions to any UniFi handler."""
     only_event_for_state_change: bool = False
     """Use only UniFi events to trigger state changes."""
@@ -397,7 +396,9 @@ async def async_setup_entry(
     )
 
 
-class UnifiSwitchEntity(UnifiEntity[HandlerT, ApiItemT], SwitchEntity):
+class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+    UnifiEntity[HandlerT, ApiItemT], SwitchEntity
+):
     """Base representation of a UniFi switch."""
 
     entity_description: UnifiSwitchEntityDescription[HandlerT, ApiItemT]
