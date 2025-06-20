@@ -118,16 +118,8 @@ class FireflyCategoryEntity(FireflyBaseEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        spent = (
-            sum(float(item.sum) for item in self._category.attributes.spent)
-            if self._category.attributes.spent
-            else 0
-        )
-        earned = (
-            sum(float(item.sum) for item in self._category.attributes.earned)
-            if self._category.attributes.earned
-            else 0
-        )
+        spent = sum(float(item.sum) for item in self._category.attributes.spent)
+        earned = sum(float(item.sum) for item in self._category.attributes.earned)
         if spent == 0 and earned == 0:
             return None
         return spent + earned
