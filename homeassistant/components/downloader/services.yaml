@@ -5,13 +5,16 @@ download_file:
       example: "http://example.org/myfile"
       selector:
         text:
-    digest_auth:
+    auth_type:
       selector:
-        boolean:
-    digest_username:
+        select:
+          options:
+            - basic
+            - digest
+    auth_username:
       selector:
         text:
-    digest_password:
+    auth_password:
       selector:
         text:
     subdir:

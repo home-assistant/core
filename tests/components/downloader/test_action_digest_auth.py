@@ -6,14 +6,15 @@ from unittest.mock import mock_open, patch
 import requests_mock
 
 from homeassistant.components.downloader.const import (
-    ATTR_DIGEST_AUTH,
-    ATTR_DIGEST_PASSWORD,
-    ATTR_DIGEST_USERNAME,
+    ATTR_AUTH_PASSWORD,
+    ATTR_AUTH_TYPE,
+    ATTR_AUTH_USERNAME,
     ATTR_URL,
     CONF_DOWNLOAD_DIR,
     DOMAIN,
     SERVICE_DOWNLOAD_FILE,
 )
+from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -64,9 +65,9 @@ async def test_digest_auth(hass: HomeAssistant) -> None:
                 SERVICE_DOWNLOAD_FILE,
                 {
                     ATTR_URL: TEST_URL,
-                    ATTR_DIGEST_AUTH: True,
-                    ATTR_DIGEST_USERNAME: "test",
-                    ATTR_DIGEST_PASSWORD: "test",
+                    ATTR_AUTH_TYPE: HTTP_DIGEST_AUTHENTICATION,
+                    ATTR_AUTH_USERNAME: "test",
+                    ATTR_AUTH_PASSWORD: "test",
                 },
                 blocking=True,
             )

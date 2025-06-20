@@ -21,17 +21,17 @@
           "name": "[%key:common::config_flow::data::url%]",
           "description": "The URL of the file to download."
         },
-        "digest_auth": {
-          "name": "Use Digest Authentication",
-          "description": "Whether to use digest authentication."
+        "auth_type": {
+          "name": "Authentication Type",
+          "description": "Authentication type to use."
         },
-        "digest_username": {
-          "name": "Digest Authentication Username",
-          "description": "Username to use with digest authentication."
+        "auth_username": {
+          "name": "Authentication Username",
+          "description": "Username to use with authentication."
         },
-        "digest_password": {
-          "name": "Digest Authentication Password",
-          "description": "Password to use with digest authentication."
+        "auth_password": {
+          "name": "Authentication Password",
+          "description": "Password to use with authentication."
         },
         "subdir": {
           "name": "Subdirectory",

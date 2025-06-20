@@ -8,9 +8,10 @@ import re
 import threading
 
 import requests
-from requests.auth import HTTPDigestAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
+from homeassistant.const import HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
@@ -18,9 +19,9 @@ from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import (
     _LOGGER,
-    ATTR_DIGEST_AUTH,
-    ATTR_DIGEST_PASSWORD,
-    ATTR_DIGEST_USERNAME,
+    ATTR_AUTH_PASSWORD,
+    ATTR_AUTH_TYPE,
+    ATTR_AUTH_USERNAME,
     ATTR_FILENAME,
     ATTR_OVERWRITE,
     ATTR_SUBDIR,
@@ -44,11 +45,11 @@ def download_file(service: ServiceCall) -> None:
         try:
             url = service.data[ATTR_URL]
 
-            digest_auth = service.data.get(ATTR_DIGEST_AUTH)
+            auth_type = service.data.get(ATTR_AUTH_TYPE)
 
-            digest_username = service.data.get(ATTR_DIGEST_USERNAME)
+            username = service.data.get(ATTR_AUTH_USERNAME)
 
-            digest_password = service.data.get(ATTR_DIGEST_PASSWORD)
+            password = service.data.get(ATTR_AUTH_PASSWORD)
 
             subdir = service.data.get(ATTR_SUBDIR)
 
@@ -62,11 +63,13 @@ def download_file(service: ServiceCall) -> None:
 
             final_path = None
 
-            auth = (
-                HTTPDigestAuth(digest_username, digest_password)
-                if digest_auth and digest_username and digest_password
-                else None
-            )
+            auth: HTTPBasicAuth | HTTPDigestAuth | None = None
+
+            if username and password:
+                if auth_type == HTTP_BASIC_AUTHENTICATION:
+                    auth = HTTPBasicAuth(username, password)
+                elif auth_type == HTTP_DIGEST_AUTHENTICATION:
+                    auth = HTTPDigestAuth(username, password)
 
             req = requests.get(
                 url=url,
@@ -172,12 +175,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         download_file,
         schema=vol.Schema(
             {
-                vol.Optional(ATTR_DIGEST_AUTH, default=False): cv.boolean,
+                vol.Optional(ATTR_AUTH_TYPE, default=HTTP_BASIC_AUTHENTICATION): vol.In(
+                    [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+                ),
                 vol.Optional(ATTR_FILENAME): cv.string,
-                vol.Optional(ATTR_DIGEST_PASSWORD): cv.string,
+                vol.Optional(ATTR_AUTH_PASSWORD): cv.string,
                 vol.Optional(ATTR_SUBDIR): cv.string,
                 vol.Required(ATTR_URL): cv.url,
-                vol.Optional(ATTR_DIGEST_USERNAME): cv.string,
+                vol.Optional(ATTR_AUTH_USERNAME): cv.string,
                 vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
             }
         ),
