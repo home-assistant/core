@@ -1692,6 +1692,7 @@ async def test_step_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
     )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
@@ -2489,6 +2490,7 @@ async def test_reconfigure_flow_form(
             mqtt.CONF_WS_PATH: "/some_new_path",
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -2542,6 +2544,7 @@ async def test_reconfigure_no_changed_password(
             mqtt.CONF_WS_PATH: "/some_new_path",
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
