@@ -4,15 +4,12 @@ import logging
 
 import aiohttp
 from pyjuicenet import Api, TokenError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
 from .coordinator import JuiceNetCoordinator
@@ -21,30 +18,6 @@ from .device import JuiceNetApi
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the JuiceNet component."""
-    conf = config.get(DOMAIN)
-    hass.data.setdefault(DOMAIN, {})
-
-    if not conf:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-        )
-    )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
