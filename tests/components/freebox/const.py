@@ -23,6 +23,9 @@ DATA_STORAGE_GET_RAIDS = load_json_array_fixture("freebox/storage_get_raids.json
 DATA_WIFI_GET_GLOBAL_CONFIG = load_json_object_fixture(
     "freebox/wifi_get_global_config.json"
 )
+DATA_LAN_GET_PORT_FORWARDING_CONFIG_LIST = load_json_array_fixture(
+    "freebox/lan_get_port_forwarding_config_list.json"
+)
 
 # device_tracker
 DATA_LAN_GET_INTERFACES = load_json_array_fixture("freebox/lan_get_interfaces.json")
