@@ -50,14 +50,14 @@ class RoonEventEntity(EventEntity):
     _attr_event_types = ["volume_up", "volume_down", "mute_toggle"]
     _attr_translation_key = "volume"
 
-    def __init__(self, server, player_data, core_id):
+    def __init__(self, server, player_data, entry_id):
         """Initialize the entity."""
         self._server = server
         self._player_data = player_data
         player_name = player_data["display_name"]
         self._attr_name = f"{player_name} roon volume"
         self._attr_unique_id = self._player_data["dev_id"]
-        self._core_id = core_id
+        self._entry_id = entry_id
 
         if self._player_data.get("source_controls"):
             dev_model = self._player_data["source_controls"][0].get("display_name")
@@ -70,7 +70,7 @@ class RoonEventEntity(EventEntity):
             name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
-            via_device=(DOMAIN, self._core_id),
+            via_device=(DOMAIN, self._entry_id),
         )
 
     def _roonapi_volume_callback(
