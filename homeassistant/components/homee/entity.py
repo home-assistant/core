@@ -42,7 +42,7 @@ class HomeeEntity(Entity):
                 model=get_name_for_enum(NodeProfile, node.profile),
                 via_device=(DOMAIN, entry.runtime_data.settings.uid),
             )
-        if attribute.name != "":
+        if attribute.name:
             self._attr_name = attribute.name
 
         self._host_connected = entry.runtime_data.connected
