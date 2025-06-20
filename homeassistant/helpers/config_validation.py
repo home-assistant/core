@@ -721,8 +721,7 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
     if not (hass := _async_get_hass_or_none()):
-        # pylint: disable-next=import-outside-toplevel
-        from .frame import ReportBehavior, report_usage
+        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
 
         report_usage(
             (
@@ -750,8 +749,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
     if not (hass := _async_get_hass_or_none()):
-        # pylint: disable-next=import-outside-toplevel
-        from .frame import ReportBehavior, report_usage
+        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
 
         report_usage(
             (
@@ -1151,9 +1149,9 @@ def custom_serializer(schema: Any) -> Any:
 
 def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
     """Serialize additional types for voluptuous_serialize."""
-    from homeassistant import data_entry_flow  # pylint: disable=import-outside-toplevel
+    from homeassistant import data_entry_flow  # noqa: PLC0415
 
-    from . import selector  # pylint: disable=import-outside-toplevel
+    from . import selector  # noqa: PLC0415
 
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
@@ -1216,8 +1214,7 @@ def _no_yaml_config_schema(
     """Return a config schema which logs if attempted to setup from YAML."""
 
     def raise_issue() -> None:
-        # pylint: disable-next=import-outside-toplevel
-        from .issue_registry import IssueSeverity, async_create_issue
+        from .issue_registry import IssueSeverity, async_create_issue  # noqa: PLC0415
 
         # HomeAssistantError is raised if called from the wrong thread
         with contextlib.suppress(HomeAssistantError):
