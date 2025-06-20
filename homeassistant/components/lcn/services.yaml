@@ -356,6 +356,36 @@ var_rel:
             - "current"
             - "prog"
 
+lock_regulator:
+  fields:
+    device_id: *device_id
+    setpoint:
+      required: true
+      selector:
+        select:
+          options:
+            - "thrs1"
+            - "thrs2"
+            - "thrs3"
+            - "thrs4"
+            - "thrs5"
+            - "thrs2_1"
+            - "thrs2_2"
+            - "thrs2_3"
+            - "thrs2_4"
+            - "thrs3_1"
+            - "thrs3_2"
+            - "thrs3_3"
+            - "thrs3_4"
+            - "thrs4_1"
+            - "thrs4_2"
+            - "thrs4_3"
+            - "thrs4_4"
+    state:
+      default: false
+      selector:
+        boolean:
+
 send_keys:
   fields:
     device_id: *device_id
@@ -373,6 +403,45 @@ send_keys:
             - "make"
             - "break"
             - "dontsend"
+    time:
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+    time_unit:
+      default: s
+      selector:
+        select:
+          options:
+            - "d"
+            - "day"
+            - "days"
+            - "h"
+            - "hour"
+            - "hours"
+            - "m"
+            - "min"
+            - "minute"
+            - "minutes"
+            - "s"
+            - "sec"
+            - "second"
+            - "seconds"
+
+lock_keys:
+  fields:
+    device_id: *device_id
+    table:
+      example: "a"
+      default: a
+      selector:
+        text:
+    state:
+      required: true
+      example: "1---t0--"
+      selector:
+        text:
     time:
       default: 0
       selector:
