@@ -2,9 +2,10 @@
 
 # I would really like this file to be called "base.py" or "base_entity.py", but C7461 hass-enforce-class-module prevents that
 
-from abc import abstractmethod
 import logging
 import re
+
+from songpal.containers import Setting
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -32,10 +33,11 @@ class SongpalBaseEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self.hass = hass
 
+    @callback
     def update_state(self, data) -> None:
         """Process data from coordinator."""
 
-        return
+        raise NotImplementedError("Songpal entity failed to override update_state")
 
     def get_initial_state(self) -> None:
         """Fetch & process data from coordinator when entity is created."""
@@ -49,25 +51,6 @@ class SongpalBaseEntity(CoordinatorEntity):
         self.update_state(self.coordinator.data)
         self.async_write_ha_state()
 
-    @abstractmethod
-    def entity_name(self) -> str:
-        """Return the name of this specific entity, to be used in the friendly name and unique id."""
-
-        raise NotImplementedError("Songpal Entity fails to override entity_name")
-
-    @property
-    def name(self) -> str:
-        """Return the friendly name of the entity."""
-        return self.entity_name().replace("_", " ").title()
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-
-        return (
-            f"{DOMAIN}-{device_unique_id(self.coordinator.data)}-{self.entity_name()}"
-        )
-
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
@@ -77,31 +60,57 @@ class SongpalBaseEntity(CoordinatorEntity):
 class SongpalSettingEntity(SongpalBaseEntity):
     """Base class for songpal entities that expose a single setting."""
 
+    setting: Setting | None
+
     def __init__(
         self,
         hass: HomeAssistant,
         coordinator: SongpalCoordinator,
         setting_bank: str,
-        setting_name: str,
+        setting: Setting,
     ) -> None:
         """Init."""
 
         self._setting_bank = setting_bank
-        self._setting_name = setting_name
+        self._setting_target = setting.target
+        self._settingName = setting.title or self.get_friendly_setting_name(
+            setting.target
+        )
+        self._settingId = (
+            f"{self._setting_bank}_{self._settingName.replace(' ', '_').lower()}"
+        )
+
+        self.setting = setting
 
         super().__init__(hass, coordinator)
 
-    def get_friendly_setting_name(self):
+    def update_state(self, data) -> None:
+        """Process data from coordinator."""
+
+        for setting in self.coordinator.data[self._setting_bank]:
+            if setting.target == self._setting_target:
+                self.setting = setting
+                break
+        else:
+            self.setting = None
+
+    def get_friendly_setting_name(self, setting_name):
         """Convert setting name from camelCase to space-delimited words."""
 
         return " ".join(
             word if len(word) > 1 and word.isupper() else word.lower()
             for word in re.sub(
-                "([A-Z][a-z]+)", r" \1", re.sub("([A-Z]+)", r" \1", self._setting_name)
+                "([A-Z][a-z]+)", r" \1", re.sub("([A-Z]+)", r" \1", setting_name)
             ).split()
         )
 
-    def entity_name(self) -> str:
-        """Return the name of the setting."""
+    @property
+    def name(self) -> str:
+        """Return the friendly name of the entity."""
+        return self._settingName
 
-        return f"{self._setting_bank}_{self.get_friendly_setting_name()}"
+    @property
+    def unique_id(self) -> str:
+        """Return unique id."""
+
+        return f"{DOMAIN}-{device_unique_id(self.coordinator.data)}-{self._settingId}"

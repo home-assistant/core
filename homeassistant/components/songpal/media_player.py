@@ -9,7 +9,6 @@ from songpal import SongpalException
 from songpal.containers import Input, Setting, Volume
 
 from homeassistant.components.media_player import (
-    DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -22,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import ERROR_REQUEST_RETRY
 from .coordinator import SongpalCoordinator
 from .device import device_unique_id
-from .entities import create_entities_for_platform
 from .entity import SongpalBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,9 +35,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up songpal coordinator and entities."""
 
-    create_entities_for_platform(
-        hass, entry, SongpalMediaPlayerEntity, MEDIA_PLAYER_DOMAIN, async_add_entities
-    )
+    coordinator: SongpalCoordinator = entry.runtime_data.coordinator
+
+    new_entities = [SongpalMediaPlayerEntity(hass, coordinator)]
+
+    async_add_entities(new_entities)
+
+    for entity in new_entities:
+        entity.get_initial_state()
 
 
 class SongpalMediaPlayerEntity(MediaPlayerEntity, SongpalBaseEntity):
@@ -82,10 +85,10 @@ class SongpalMediaPlayerEntity(MediaPlayerEntity, SongpalBaseEntity):
 
         super().__init__(hass, coordinator)
 
-    def entity_name(self):
-        """Return the name of this entity."""
-
-        return "media_player"
+    @property
+    def name(self) -> str:
+        """Return the friendly name of the entity."""
+        return "Media Player"
 
     @property
     def unique_id(self) -> str:

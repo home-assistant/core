@@ -237,7 +237,6 @@ class SongpalCoordinator(DataUpdateCoordinator):
             "sound_settings": self.data["sound_settings"],
             "bluetooth_settings": self.data["bluetooth_settings"],
             "misc_settings": self.data["misc_settings"],
-            "playback_settings": self.data["playback_settings"],
         }
 
     def get_setting_setter(

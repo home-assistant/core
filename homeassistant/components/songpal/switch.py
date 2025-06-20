@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entities import create_entities_for_platform
+from .entities import create_settings_entities_for_type
 from .entity import SongpalSettingEntity
 
 
@@ -20,8 +20,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up songpal coordinator and entities."""
 
-    create_entities_for_platform(
-        hass, entry, SongpalSwitchEntity, SWITCH_DOMAIN, async_add_entities
+    create_settings_entities_for_type(
+        hass, entry, SongpalSwitchEntity, "booleanTarget", async_add_entities
     )
 
 
@@ -31,22 +31,20 @@ class SongpalSwitchEntity(SongpalSettingEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
-        for setting in self.coordinator.data[self._setting_bank]:
-            if setting.target == self._setting_name:
-                break
-        else:
+
+        if not self.setting:
             return None
 
-        return setting.currentValue == "on"
+        return self.setting.currentValue == "on"
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off setting."""
         await self.coordinator.get_setting_setter(self._setting_bank)(
-            self._setting_name, "off"
+            self._setting_target, "off"
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on setting."""
         await self.coordinator.get_setting_setter(self._setting_bank)(
-            self._setting_name, "on"
+            self._setting_target, "on"
         )
