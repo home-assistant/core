@@ -507,6 +507,9 @@
       "autotrack_sub": {
         "name": "Autotrack fluent"
       },
+      "telephoto_main": {
+        "name": "Telephoto clear"
+      },
       "autotrack_snapshots_sub": {
         "name": "Autotrack snapshots fluent"
       },
