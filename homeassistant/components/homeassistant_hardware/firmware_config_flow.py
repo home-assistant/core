@@ -250,15 +250,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
         return self._async_flow_finished()
 
-    async def async_step_pick_firmware_thread(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Pick Thread firmware."""
-        if not await self._probe_firmware_info():
-            return self.async_abort(
-                reason="unsupported_firmware",
-                description_placeholders=self._get_translation_placeholders(),
-            )
+    async def _ensure_thread_addon_setup(self) -> ConfigFlowResult | None:
+        """Ensure the OTBR addon is set up and not running."""
 
         # We install the OTBR addon no matter what, since it is required to use Thread
         if not is_hassio(self.hass):
@@ -287,6 +280,21 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
             # Otherwise, stop the addon before continuing to flash firmware
             await otbr_manager.async_stop_addon()
+
+        return None
+
+    async def async_step_pick_firmware_thread(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick Thread firmware."""
+        if not await self._probe_firmware_info():
+            return self.async_abort(
+                reason="unsupported_firmware",
+                description_placeholders=self._get_translation_placeholders(),
+            )
+
+        if result := await self._ensure_thread_addon_setup():
+            return result
 
         return await self.async_step_install_thread_firmware()
 
