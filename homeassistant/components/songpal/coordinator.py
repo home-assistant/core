@@ -18,14 +18,12 @@ from songpal import (
 )
 from songpal.containers import Setting
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import SongpalConfigEntry
-from .const import DOMAIN
-from .device import device_info, device_unique_id
+from .const import CONF_ENDPOINT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +31,8 @@ PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
 INITIAL_RETRY_DELAY = 10
+
+type SongpalConfigEntry = ConfigEntry[SongpalCoordinator]
 
 
 class SongpalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -49,8 +49,6 @@ class SongpalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         config_entry: SongpalConfigEntry,
-        name: str,
-        device: Device,
     ) -> None:
         """Initialize coordinator."""
 
@@ -61,12 +59,26 @@ class SongpalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=10),
         )
 
-        self.device_name = name
+        self.device_name = config_entry.data[CONF_NAME]
+        self._endpoint = config_entry.data[CONF_ENDPOINT]
         self.data = {}
-        self.device = device
         self._initialized = False
 
     async def _async_setup(self):
+        self.device = Device(self._endpoint)
+
+        try:
+            async with asyncio.timeout(
+                10
+            ):  # set timeout to avoid blocking the setup process
+                await self.device.get_supported_methods()
+        except (SongpalException, TimeoutError) as ex:
+            _LOGGER.warning("[%s(%s)] Unable to connect", self.name, self._endpoint)
+            _LOGGER.debug("Unable to get methods from songpal: %s", ex)
+            raise UpdateFailed(
+                f"[{self.name}({self._endpoint})] Unable to connect"
+            ) from ex
+
         await self.async_activate_websocket()
         await self.full_refresh()
         self.async_set_updated_data(self.data)
@@ -160,21 +172,6 @@ class SongpalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
         self.hass.loop.create_task(self.device.listen_notifications())
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{DOMAIN}-{device_unique_id(self.data)}-coordinator"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return device_info(self.device_name, self.data)
-
-    async def async_set_sound_setting(self, name, value):
-        """Change a setting on the device."""
-        _LOGGER.debug("Calling set_sound_setting with %s: %s", name, value)
-        await self.device.set_sound_settings(name, value)
 
     async def polling_refresh(self, data: dict[str, Any]) -> dict[str, Any]:
         """Fetch non-pushed updates from the device."""

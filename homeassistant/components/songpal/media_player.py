@@ -19,9 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SongpalConfigEntry
 from .const import ERROR_REQUEST_RETRY, PARAM_NAME, PARAM_VALUE, SET_SOUND_SETTING
-from .coordinator import SongpalCoordinator
+from .coordinator import SongpalConfigEntry, SongpalCoordinator
 from .device import device_unique_id
 from .entity import SongpalBaseEntity
 
