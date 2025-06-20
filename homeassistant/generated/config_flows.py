@@ -251,6 +251,7 @@ FLOWS = {
         "growatt_server",
         "guardian",
         "habitica",
+        "hanna",
         "harmony",
         "heos",
         "here_travel_time",
