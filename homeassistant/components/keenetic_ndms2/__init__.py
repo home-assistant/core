@@ -20,7 +20,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     ROUTER,
-    UNDO_UPDATE_LISTENER,
 )
 from .router import KeeneticRouter
 
@@ -36,11 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     router = KeeneticRouter(hass, entry)
     await router.async_setup()
 
-    undo_listener = entry.add_update_listener(update_listener)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     hass.data[DOMAIN][entry.entry_id] = {
         ROUTER: router,
-        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -50,8 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
-
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
