@@ -11,13 +11,10 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
-from .coordinator import JuiceNetCoordinator
-from .device import JuiceNetApi
+from .coordinator import JuiceNetConfigEntry, JuiceNetCoordinator
 from .entity import JuiceNetEntity
 
 
@@ -43,17 +40,15 @@ NUMBER_TYPES: tuple[JuiceNetNumberEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: JuiceNetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the JuiceNet Numbers."""
-    juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
-    api: JuiceNetApi = juicenet_data[JUICENET_API]
-    coordinator: JuiceNetCoordinator = juicenet_data[JUICENET_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     entities = [
         JuiceNetNumber(device, description, coordinator)
-        for device in api.devices
+        for device in coordinator.juicenet_api.devices
         for description in NUMBER_TYPES
     ]
     async_add_entities(entities)

@@ -5,28 +5,24 @@ from typing import Any
 from pyjuicenet import Charger
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
-from .coordinator import JuiceNetCoordinator
-from .device import JuiceNetApi
+from .coordinator import JuiceNetConfigEntry, JuiceNetCoordinator
 from .entity import JuiceNetEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: JuiceNetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the JuiceNet switches."""
-    juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
-    api: JuiceNetApi = juicenet_data[JUICENET_API]
-    coordinator: JuiceNetCoordinator = juicenet_data[JUICENET_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
-        JuiceNetChargeNowSwitch(device, coordinator) for device in api.devices
+        JuiceNetChargeNowSwitch(device, coordinator)
+        for device in coordinator.juicenet_api.devices
     )
 
 

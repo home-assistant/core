@@ -11,12 +11,16 @@ from .device import JuiceNetApi
 
 _LOGGER = logging.getLogger(__name__)
 
+type JuiceNetConfigEntry = ConfigEntry[JuiceNetCoordinator]
+
 
 class JuiceNetCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for JuiceNet."""
 
+    config_entry: JuiceNetConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, juicenet_api: JuiceNetApi
+        self, hass: HomeAssistant, entry: JuiceNetConfigEntry, juicenet_api: JuiceNetApi
     ) -> None:
         """Initialize the JuiceNet coordinator."""
         super().__init__(
