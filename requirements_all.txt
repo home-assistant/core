@@ -848,7 +848,7 @@ eheimdigital==1.2.0
 electrickiwi-api==0.9.14
 
 # homeassistant.components.elevenlabs
-elevenlabs==1.9.0
+elevenlabs==2.0.3
 
 # homeassistant.components.elgato
 elgato==5.1.2

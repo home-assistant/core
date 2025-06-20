@@ -28,7 +28,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def _client_mock():
     client_mock = AsyncMock()
     client_mock.voices.get_all.return_value = GetVoicesResponse(voices=MOCK_VOICES)
-    client_mock.models.get_all.return_value = MOCK_MODELS
+    client_mock.models.list.return_value = MOCK_MODELS
+
     return client_mock
 
 
@@ -44,6 +45,14 @@ def mock_async_client() -> Generator[AsyncMock]:
             "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
             new=mock_async_client,
         ),
+        patch(  # ← NEW
+            "homeassistant.components.elevenlabs.__init__.AsyncElevenLabs",
+            new=mock_async_client,
+        ),
+        patch(  # ← NEW
+            "homeassistant.components.elevenlabs.tts.AsyncElevenLabs",
+            new=mock_async_client,
+        ),
     ):
         yield mock_async_client
 
@@ -52,8 +61,12 @@ def mock_async_client() -> Generator[AsyncMock]:
 def mock_async_client_api_error() -> Generator[AsyncMock]:
     """Override async ElevenLabs client with ApiError side effect."""
     client_mock = _client_mock()
-    client_mock.models.get_all.side_effect = ApiError
-    client_mock.voices.get_all.side_effect = ApiError
+    api_error = ApiError()
+    api_error.body = {
+        "detail": {"status": "invalid_api_key", "message": "API key is invalid"}
+    }
+    client_mock.models.list.side_effect = api_error
+    client_mock.voices.get_all.side_effect = api_error
 
     with (
         patch(
@@ -72,7 +85,7 @@ def mock_async_client_api_error() -> Generator[AsyncMock]:
 def mock_async_client_connect_error() -> Generator[AsyncMock]:
     """Override async ElevenLabs client."""
     client_mock = _client_mock()
-    client_mock.models.get_all.side_effect = ConnectError("Unknown")
+    client_mock.models.list.side_effect = ConnectError("Unknown")
     client_mock.voices.get_all.side_effect = ConnectError("Unknown")
     with (
         patch(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 from elevenlabs import AsyncElevenLabs, Model
 from elevenlabs.core import ApiError
@@ -20,12 +21,17 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_MODEL
 
+_LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.TTS]
 
 
 async def get_model_by_id(client: AsyncElevenLabs, model_id: str) -> Model | None:
     """Get ElevenLabs model from their API by the model_id."""
-    models = await client.models.get_all()
+    try:
+        models = await client.models.list()
+    except ApiError as exc:
+        _LOGGER.error("Failure retrieving models: %s", exc)
+        raise
     for maybe_model in models:
         if maybe_model.model_id == model_id:
             return maybe_model
