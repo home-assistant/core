@@ -250,7 +250,7 @@ aioharmony==0.5.2
 aiohasupervisor==0.3.1
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.18.0
+aiohomeconnect==0.18.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.15
@@ -665,7 +665,7 @@ debugpy==1.8.14
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==13.3.0
+deebot-client==13.4.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -982,7 +982,7 @@ habiticalib==0.4.0
 habluetooth==3.49.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.102.0
+hass-nabucasa==0.103.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -992,7 +992,7 @@ hassil==2.2.3
 hdate[astral]==1.1.2
 
 # homeassistant.components.here_travel_time
-here-routing==1.0.1
+here-routing==1.2.0
 
 # homeassistant.components.here_travel_time
 here-transit==1.2.1
@@ -1858,7 +1858,7 @@ pypalazzetti==0.1.19
 pypaperless==4.1.0
 
 # homeassistant.components.lcn
-pypck==0.8.8
+pypck==0.8.9
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2625,7 +2625,7 @@ zeversolar==0.3.2
 zha==0.0.60
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.63.0
+zwave-js-server-python==0.64.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
