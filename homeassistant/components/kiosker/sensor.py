@@ -27,7 +27,7 @@ from .entity import KioskerEntity
 class KioskerSensorEntityDescription(SensorEntityDescription):
     """Kiosker sensor description."""
 
-    value_fn: Callable[[Any], StateType] | None = None
+    value_fn: Callable[[Any], StateType | datetime] | None = None
 
 
 def parse_datetime(value: Any) -> datetime | None:
@@ -62,9 +62,7 @@ SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
         translation_key="last_interaction",
         icon="mdi:gesture-tap",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: (
-            dt.isoformat() if (dt := parse_datetime(x.last_interaction)) else None
-        )
+        value_fn=lambda x: parse_datetime(x.last_interaction)
         if hasattr(x, "last_interaction")
         else None,
     ),
@@ -73,9 +71,7 @@ SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
         translation_key="last_motion",
         icon="mdi:motion-sensor",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: (
-            dt.isoformat() if (dt := parse_datetime(x.last_motion)) else None
-        )
+        value_fn=lambda x: parse_datetime(x.last_motion)
         if hasattr(x, "last_motion")
         else None,
     ),
@@ -84,9 +80,7 @@ SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
         translation_key="last_update",
         icon="mdi:update",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda x: (
-            dt.isoformat() if (dt := parse_datetime(x.last_update)) else None
-        )
+        value_fn=lambda x: parse_datetime(x.last_update)
         if hasattr(x, "last_update")
         else None,
     ),

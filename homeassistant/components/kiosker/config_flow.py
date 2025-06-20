@@ -50,6 +50,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         port=data[CONF_PORT],
         token=data[CONF_API_TOKEN],
         ssl=data[CONF_SSL],
+        verify=data[CONF_SSL_VERIFY],
     )
 
     try:
@@ -185,7 +186,7 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
                     CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL
                 ),
                 CONF_SSL: user_input.get(CONF_SSL, DEFAULT_SSL),
-                CONF_SSL_VERIFY: user_input.get(CONF_SSL_VERIFY, True),
+                CONF_SSL_VERIFY: user_input.get(CONF_SSL_VERIFY, DEFAULT_SSL_VERIFY),
             }
 
             try:
