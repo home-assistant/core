@@ -4,9 +4,6 @@ DOMAIN = "kodi"
 
 CONF_WS_PORT = "ws_port"
 
-DATA_CONNECTION = "connection"
-DATA_KODI = "kodi"
-
 DEFAULT_PORT = 8080
 DEFAULT_SSL = False
 DEFAULT_TIMEOUT = 5
