@@ -30,6 +30,7 @@ from .const import (
     CONF_API_TOKEN,
     CONF_POLL_INTERVAL,
     CONF_SSL,
+    CONF_SSL_VERIFY,
     SERVICE_BLACKOUT_CLEAR,
     SERVICE_BLACKOUT_SET,
     SERVICE_CLEAR_CACHE,
@@ -75,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> b
         port=entry.data[CONF_PORT],
         token=entry.data[CONF_API_TOKEN],
         ssl=entry.data[CONF_SSL],
+        verify=entry.data.get(CONF_SSL_VERIFY, False),
     )
 
     coordinator = KioskerDataUpdateCoordinator(
