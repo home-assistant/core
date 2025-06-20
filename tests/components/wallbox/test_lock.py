@@ -8,9 +8,11 @@ from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.components.wallbox.const import CHARGER_LOCKED_UNLOCKED_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     authorisation_response,
+    http_429_error,
     setup_integration,
     setup_integration_platform_not_ready,
     setup_integration_read_only,
@@ -113,6 +115,29 @@ async def test_wallbox_lock_class_connection_error(
             blocking=True,
         )
 
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.lockCharger",
+            new=Mock(side_effect=http_429_error),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.unlockCharger",
+            new=Mock(side_effect=http_429_error),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            "lock",
+            SERVICE_UNLOCK,
+            {
+                ATTR_ENTITY_ID: MOCK_LOCK_ENTITY_ID,
+            },
+            blocking=True,
+        )
 
 async def test_wallbox_lock_class_authentication_error(
     hass: HomeAssistant, entry: MockConfigEntry

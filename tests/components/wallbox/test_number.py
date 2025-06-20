@@ -14,12 +14,13 @@ from homeassistant.components.wallbox.const import (
 from homeassistant.components.wallbox.coordinator import InvalidAuth
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
 from . import (
     authorisation_response,
     http_403_error,
     http_404_error,
+    http_429_error,
     setup_integration,
     setup_integration_bidir,
     setup_integration_platform_not_ready,
@@ -129,7 +130,35 @@ async def test_wallbox_number_class_connection_error(
             "homeassistant.components.wallbox.Wallbox.setMaxChargingCurrent",
             new=Mock(side_effect=http_404_error),
         ),
-        pytest.raises(ConnectionError),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            "number",
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ID,
+                ATTR_VALUE: 20,
+            },
+            blocking=True,
+        )
+
+async def test_wallbox_number_class_too_many_requests(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox sensor class."""
+
+    await setup_integration(hass, entry)
+
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.setMaxChargingCurrent",
+            new=Mock(side_effect=http_429_error),
+        ),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             "number",
@@ -142,7 +171,35 @@ async def test_wallbox_number_class_connection_error(
         )
 
 
-async def test_wallbox_number_class_energy_price_connection_error(
+async def test_wallbox_number_class_energy_price_update_failed(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox sensor class."""
+
+    await setup_integration(hass, entry)
+
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.setEnergyCost",
+            new=Mock(side_effect=http_429_error),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            "number",
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
+                ATTR_VALUE: 1.1,
+            },
+            blocking=True,
+        )
+
+async def test_wallbox_number_class_energy_price_update_connection_error(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
     """Test wallbox sensor class."""
@@ -158,7 +215,7 @@ async def test_wallbox_number_class_energy_price_connection_error(
             "homeassistant.components.wallbox.Wallbox.setEnergyCost",
             new=Mock(side_effect=http_404_error),
         ),
-        pytest.raises(ConnectionError),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             "number",
@@ -185,9 +242,9 @@ async def test_wallbox_number_class_energy_price_auth_error(
         ),
         patch(
             "homeassistant.components.wallbox.Wallbox.setEnergyCost",
-            new=Mock(side_effect=http_403_error),
+            new=Mock(side_effect=http_429_error),
         ),
-        pytest.raises(ConfigEntryAuthFailed),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             "number",
@@ -285,7 +342,35 @@ async def test_wallbox_number_class_icp_energy_connection_error(
             "homeassistant.components.wallbox.Wallbox.setIcpMaxCurrent",
             new=Mock(side_effect=http_404_error),
         ),
-        pytest.raises(ConnectionError),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
+                ATTR_VALUE: 10,
+            },
+            blocking=True,
+        )
+
+async def test_wallbox_number_class_icp_energy_too_many_request(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox sensor class."""
+
+    await setup_integration(hass, entry)
+
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.setIcpMaxCurrent",
+            new=Mock(side_effect=http_429_error),
+        ),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,

@@ -162,6 +162,9 @@ test_response_no_power_boost = {
 http_404_error = requests.exceptions.HTTPError()
 http_404_error.response = requests.Response()
 http_404_error.response.status_code = HTTPStatus.NOT_FOUND
+http_429_error = requests.exceptions.HTTPError()
+http_429_error.response = requests.Response()
+http_429_error.response.status_code = HTTPStatus.TOO_MANY_REQUESTS
 
 authorisation_response = {
     "data": {

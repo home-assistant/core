@@ -1,14 +1,16 @@
 """Test Wallbox Init Component."""
 
 from unittest.mock import Mock, patch
-
+import pytest
 from homeassistant.components.wallbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import (
     authorisation_response,
     http_403_error,
+    http_429_error,
     setup_integration,
     setup_integration_connection_error,
     setup_integration_no_eco_mode,
@@ -54,7 +56,7 @@ async def test_wallbox_refresh_failed_connection_error_auth(
     with (
         patch(
             "homeassistant.components.wallbox.Wallbox.authenticate",
-            new=Mock(side_effect=http_403_error),
+            new=Mock(side_effect=http_429_error),
         ),
         patch(
             "homeassistant.components.wallbox.Wallbox.pauseChargingSession",
@@ -94,7 +96,55 @@ async def test_wallbox_refresh_failed_invalid_auth(
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
 
+async def test_wallbox_refresh_failed_http_error(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test Wallbox setup with authentication error."""
 
+    await setup_integration(hass, entry)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
+            new=Mock(side_effect=http_403_error),
+        ),
+    ):
+        wallbox = hass.data[DOMAIN][entry.entry_id]
+
+        await wallbox.async_refresh()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state is ConfigEntryState.NOT_LOADED
+
+async def test_wallbox_refresh_failed_too_many_requests(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test Wallbox setup with authentication error."""
+
+    await setup_integration(hass, entry)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.authenticate",
+            new=Mock(return_value=authorisation_response),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.getChargerStatus",
+            new=Mock(side_effect=http_429_error),
+        ),
+    ):
+        wallbox = hass.data[DOMAIN][entry.entry_id]
+
+        await wallbox.async_refresh()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state is ConfigEntryState.NOT_LOADED
 async def test_wallbox_refresh_failed_connection_error(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
