@@ -58,9 +58,9 @@
   "device_automation": {
     "trigger_subtype": {
       "away": "[%key:common::state::not_home%]",
-      "home_id": "Home Id",
+      "home_id": "Home ID",
       "schedule": "Schedule",
-      "schedule_id": "Schedule Id",
+      "schedule_id": "Schedule ID",
       "hg": "Frost guard"
     },
     "trigger_type": {
