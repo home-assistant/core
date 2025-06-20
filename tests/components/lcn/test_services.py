@@ -13,6 +13,8 @@ from homeassistant.components.lcn.const import (
     CONF_PCK,
     CONF_RELVARREF,
     CONF_ROW,
+    CONF_SETPOINT,
+    CONF_TABLE,
     CONF_TEXT,
     CONF_TIME,
     CONF_TIME_UNIT,
@@ -237,6 +239,29 @@ async def test_service_var_reset(
     var_reset.assert_awaited_with(pypck.lcn_defs.Var["VAR1"])
 
 
+async def test_service_lock_regulator(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+) -> None:
+    """Test lock_regulator service."""
+    await async_setup_component(hass, "persistent_notification", {})
+    await init_integration(hass, entry)
+
+    with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
+        await hass.services.async_call(
+            DOMAIN,
+            LcnService.LOCK_REGULATOR,
+            {
+                CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
+                CONF_SETPOINT: "r1varsetpoint",
+                CONF_STATE: True,
+            },
+            blocking=True,
+        )
+
+    lock_regulator.assert_awaited_with(0, True)
+
+
 async def test_service_send_keys(
     hass: HomeAssistant,
     entry: MockConfigEntry,
@@ -313,6 +338,84 @@ async def test_service_send_keys_hit_deferred(
                 CONF_KEYS: "a1a5d8",
                 CONF_STATE: "make",
                 CONF_TIME: 5,
+                CONF_TIME_UNIT: "s",
+            },
+            blocking=True,
+        )
+
+
+async def test_service_lock_keys(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+) -> None:
+    """Test lock_keys service."""
+    await async_setup_component(hass, "persistent_notification", {})
+    await init_integration(hass, entry)
+
+    with patch.object(MockModuleConnection, "lock_keys") as lock_keys:
+        await hass.services.async_call(
+            DOMAIN,
+            LcnService.LOCK_KEYS,
+            {
+                CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
+                CONF_TABLE: "a",
+                CONF_STATE: "0011TT--",
+            },
+            blocking=True,
+        )
+
+    states = ["OFF", "OFF", "ON", "ON", "TOGGLE", "TOGGLE", "NOCHANGE", "NOCHANGE"]
+    lock_states = [pypck.lcn_defs.KeyLockStateModifier[state] for state in states]
+
+    lock_keys.assert_awaited_with(0, lock_states)
+
+
+async def test_service_lock_keys_tab_a_temporary(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+) -> None:
+    """Test lock_keys (tab_a_temporary) service."""
+    await async_setup_component(hass, "persistent_notification", {})
+    await init_integration(hass, entry)
+
+    # success
+    with patch.object(
+        MockModuleConnection, "lock_keys_tab_a_temporary"
+    ) as lock_keys_tab_a_temporary:
+        await hass.services.async_call(
+            DOMAIN,
+            LcnService.LOCK_KEYS,
+            {
+                CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
+                CONF_STATE: "0011TT--",
+                CONF_TIME: 10,
+                CONF_TIME_UNIT: "s",
+            },
+            blocking=True,
+        )
+
+    states = ["OFF", "OFF", "ON", "ON", "TOGGLE", "TOGGLE", "NOCHANGE", "NOCHANGE"]
+    lock_states = [pypck.lcn_defs.KeyLockStateModifier[state] for state in states]
+
+    lock_keys_tab_a_temporary.assert_awaited_with(
+        10, pypck.lcn_defs.TimeUnit.parse("S"), lock_states
+    )
+
+    # wrong table
+    with (
+        patch.object(
+            MockModuleConnection, "lock_keys_tab_a_temporary"
+        ) as lock_keys_tab_a_temporary,
+        pytest.raises(ValueError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            LcnService.LOCK_KEYS,
+            {
+                CONF_DEVICE_ID: get_device(hass, entry, (0, 7, False)).id,
+                CONF_TABLE: "b",
+                CONF_STATE: "0011TT--",
+                CONF_TIME: 10,
                 CONF_TIME_UNIT: "s",
             },
             blocking=True,
