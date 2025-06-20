@@ -38,8 +38,7 @@ def validate_python() -> None:
 
 def ensure_config_path(config_dir: str) -> None:
     """Validate the configuration directory."""
-    # pylint: disable-next=import-outside-toplevel
-    from . import config as config_util
+    from . import config as config_util  # noqa: PLC0415
 
     lib_dir = os.path.join(config_dir, "deps")
 
@@ -80,8 +79,7 @@ def ensure_config_path(config_dir: str) -> None:
 
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
-    # pylint: disable-next=import-outside-toplevel
-    from . import config as config_util
+    from . import config as config_util  # noqa: PLC0415
 
     parser = argparse.ArgumentParser(
         description="Home Assistant: Observe, Control, Automate.",
@@ -177,8 +175,7 @@ def main() -> int:
         validate_os()
 
     if args.script is not None:
-        # pylint: disable-next=import-outside-toplevel
-        from . import scripts
+        from . import scripts  # noqa: PLC0415
 
         return scripts.run(args.script)
 
@@ -188,8 +185,7 @@ def main() -> int:
 
     ensure_config_path(config_dir)
 
-    # pylint: disable-next=import-outside-toplevel
-    from . import config, runner
+    from . import config, runner  # noqa: PLC0415
 
     safe_mode = config.safe_mode_enabled(config_dir)
 

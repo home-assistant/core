@@ -1124,11 +1124,12 @@ habiticalib==0.4.0
 habluetooth==3.49.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.102.0
+hass-nabucasa==0.103.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
 
+# homeassistant.components.assist_satellite
 # homeassistant.components.conversation
 hassil==2.2.3
 
@@ -1139,7 +1140,7 @@ hdate[astral]==1.1.2
 heatmiserV3==2.0.3
 
 # homeassistant.components.here_travel_time
-here-routing==1.0.1
+here-routing==1.2.0
 
 # homeassistant.components.here_travel_time
 here-transit==1.2.1
@@ -1170,7 +1171,7 @@ home-assistant-frontend==20250531.3
 home-assistant-intents==2025.6.10
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.0.5
+homematicip==2.0.6
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -2236,7 +2237,7 @@ pypaperless==4.1.0
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.8.8
+pypck==0.8.9
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -3192,7 +3193,7 @@ ziggo-mediabox-xl==1.1.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.63.0
+zwave-js-server-python==0.64.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
