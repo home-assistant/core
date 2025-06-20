@@ -1,7 +1,5 @@
 """Base class for all Songpal entities."""
 
-# I would really like this file to be called "base.py" or "base_entity.py", but C7461 hass-enforce-class-module prevents that
-
 import logging
 import re
 
