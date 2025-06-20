@@ -50,7 +50,7 @@ async def test_bluetooth(
 
     device = device_registry.async_get(entry.device_id)
     assert device
-    assert device.configuration_url is None
+    assert device.configuration_url == "https://127.0.0.1/"
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}
     assert device.entry_type is None
     assert device.hw_version is None

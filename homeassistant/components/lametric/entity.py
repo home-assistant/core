@@ -31,4 +31,5 @@ class LaMetricEntity(CoordinatorEntity[LaMetricDataUpdateCoordinator]):
             name=coordinator.data.name,
             sw_version=coordinator.data.os_version,
             serial_number=coordinator.data.serial_number,
+            configuration_url=f"https://{coordinator.data.wifi.ip}/",
         )
