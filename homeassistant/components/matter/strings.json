@@ -329,8 +329,7 @@
         "state": {
           "charging": "[%key:common::state::charging%]",
           "full_charge": "Full charge",
-          "not_charging": "Not charging",
-          "unknown": "Unknown"
+          "not_charging": "Not charging"
         }
       },
       "battery_time_remaining": {
