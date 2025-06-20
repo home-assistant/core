@@ -4,7 +4,4 @@ DOMAIN = "kmtronic"
 
 CONF_REVERSE = "reverse"
 
-DATA_HUB = "hub"
-DATA_COORDINATOR = "coordinator"
-
 MANUFACTURER = "KMtronic"
