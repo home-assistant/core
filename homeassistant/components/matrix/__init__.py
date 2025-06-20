@@ -283,9 +283,10 @@ class MatrixBot:
                     "room": room_id,
                     "event_id": message.event_id,
                     "args": pieces[1:],
+                    "thread_parent": self._get_thread_parent(message)
+                    or message.event_id,
                 }
-                if thread_parent := self._get_thread_parent(message):
-                    message_data["thread_parent"] = thread_parent
+
                 self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, message_data)
 
         # After single-word commands, check all regex commands in the room.
@@ -299,15 +300,22 @@ class MatrixBot:
                 "room": room_id,
                 "event_id": message.event_id,
                 "args": match.groupdict(),
+                "thread_parent": self._get_thread_parent(message) or message.event_id,
             }
-            if thread_parent := self._get_thread_parent(message):
-                message_data["thread_parent"] = thread_parent
+
             self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, message_data)
 
     def _get_thread_parent(self, message: RoomMessageText) -> Any | None:
         """Get the thread parent ID from a message, or None if not in a thread."""
         match message.source:
-            case {"content": {"m.relates_to": {"rel_type": "m.thread", "event_id": str() as event_id}}}:
+            case {
+                "content": {
+                    "m.relates_to": {
+                        "rel_type": "m.thread",
+                        "event_id": str() as event_id,
+                    }
+                }
+            }:
                 return event_id
             case _:
                 return None

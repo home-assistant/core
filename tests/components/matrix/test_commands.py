@@ -70,6 +70,28 @@ word_command_global = partial(
     expected_event_data_extra={
         "command": "WordTriggerEventName",
         "event_id": "fake_event_id",
+        "thread_parent": "fake_event_id",
+        "args": ["arg1", "arg2"],
+    },
+)
+thread_source = {
+    "event_id": "fake_event_id",
+    "sender": "@SomeUser:example.com",
+    "origin_server_ts": 123456789,
+    "content": {
+        "m.relates_to": {
+            "rel_type": "m.thread",
+            "event_id": "fake_thread_parent",
+        }
+    },
+}
+word_command_global_in_thread = partial(
+    CommandTestParameters,
+    room_message=room_message_base(body="!WordTrigger arg1 arg2", source=thread_source),
+    expected_event_data_extra={
+        "command": "WordTriggerEventName",
+        "event_id": "fake_event_id",
+        "thread_parent": "fake_thread_parent",
         "args": ["arg1", "arg2"],
     },
 )
@@ -79,6 +101,7 @@ expr_command_global = partial(
     expected_event_data_extra={
         "command": "ExpressionTriggerEventName",
         "event_id": "fake_event_id",
+        "thread_parent": "fake_event_id",
         "args": {"name": "FakeName"},
     },
 )
@@ -88,6 +111,7 @@ word_command_subset = partial(
     expected_event_data_extra={
         "command": "WordTriggerSubsetEventName",
         "event_id": "fake_event_id",
+        "thread_parent": "fake_event_id",
         "args": ["arg1", "arg2"],
     },
 )
@@ -97,6 +121,7 @@ expr_command_subset = partial(
     expected_event_data_extra={
         "command": "ExpressionTriggerSubsetEventName",
         "event_id": "fake_event_id",
+        "thread_parent": "fake_event_id",
         "args": {"name": "FakeName"},
     },
 )
@@ -144,6 +169,7 @@ reaction_command_global = partial(
     "command_params",
     chain(
         (word_command_global(room_id) for room_id in ALL_ROOMS),
+        (word_command_global_in_thread(room_id) for room_id in ALL_ROOMS),
         (expr_command_global(room_id) for room_id in ALL_ROOMS),
         (word_command_subset(room_id) for room_id in SUBSET_ROOMS),
         (expr_command_subset(room_id) for room_id in SUBSET_ROOMS),
