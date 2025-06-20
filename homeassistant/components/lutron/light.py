@@ -19,14 +19,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LutronData
+from . import LutronConfigEntry
 from .const import CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
 from .entity import LutronDevice
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron light platform.
@@ -34,7 +34,7 @@ async def async_setup_entry(
     Adds dimmers from the Main Repeater associated with the config_entry as
     light entities.
     """
-    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    entry_data = config_entry.runtime_data
 
     async_add_entities(
         (

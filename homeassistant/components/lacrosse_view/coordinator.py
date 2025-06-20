@@ -17,6 +17,8 @@ from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+type LaCrosseConfigEntry = ConfigEntry[LaCrosseUpdateCoordinator]
+
 
 class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     """DataUpdateCoordinator for LaCrosse View."""
@@ -27,12 +29,12 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     id: str
     hass: HomeAssistant
     devices: list[Sensor] | None = None
-    config_entry: ConfigEntry
+    config_entry: LaCrosseConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: LaCrosseConfigEntry,
         api: LaCrosse,
     ) -> None:
         """Initialize DataUpdateCoordinator for LaCrosse View."""
