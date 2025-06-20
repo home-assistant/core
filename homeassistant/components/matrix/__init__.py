@@ -306,15 +306,11 @@ class MatrixBot:
 
     def _get_thread_parent(self, message: RoomMessageText) -> Any | None:
         """Get the thread parent ID from a message, or None if not in a thread."""
-        content: dict[str, Any] | None = message.source.get("content")
-        if content is not None:
-            if (relates_to := content.get("m.relates_to")) is not None:
-                if (
-                    relates_to.get("rel_type") == "m.thread"
-                    and (event_id := relates_to.get("event_id")) is not None
-                ):
-                    return event_id
-        return None
+        match message.source:
+            case {"content": {"m.relates_to": {"rel_type": "m.thread", "event_id": str() as event_id}}}:
+                return event_id
+            case _:
+                return None
 
     async def _resolve_room_alias(
         self, room_alias_or_id: RoomAnyID
