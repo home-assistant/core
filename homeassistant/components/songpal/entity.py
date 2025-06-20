@@ -3,17 +3,13 @@
 # I would really like this file to be called "base.py" or "base_entity.py", but C7461 hass-enforce-class-module prevents that
 
 import logging
-import re
-
-from songpal.containers import Setting
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import SongpalCoordinator
-from .device import device_info, device_unique_id
+from .device import device_info
 
 _LOGGER = logging.getLogger(__name__)
 
