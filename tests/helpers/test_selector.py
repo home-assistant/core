@@ -594,13 +594,18 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
         ({}, ("abc123",), ()),
         (
             {
-                "schema": [
-                    {"name": "name", "selector": {"text": {}}},
-                    {"name": "percentage", "selector": {"number": {}}},
-                ],
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
                 "multiple": True,
-                "label_key": "name",
-                "description_key": "percentage",
+                "label_field": "name",
+                "description_field": "percentage",
             },
             (),
             (),
