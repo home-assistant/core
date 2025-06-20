@@ -210,10 +210,8 @@ class LocalMediaView(http.HomeAssistantView):
         self.hass = hass
         self.source = source
 
-    async def get(
-        self, request: web.Request, source_dir_id: str, location: str
-    ) -> web.FileResponse:
-        """Start a GET request."""
+    async def _validate_media_path(self, source_dir_id: str, location: str) -> Path:
+        """Validate media path and return it if valid."""
         try:
             raise_if_invalid_path(location)
         except ValueError as err:
@@ -233,6 +231,25 @@ class LocalMediaView(http.HomeAssistantView):
         if not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES:
             raise web.HTTPNotFound
 
+        return media_path
+
+    async def head(
+        self, request: web.Request, source_dir_id: str, location: str
+    ) -> None:
+        """Handle a HEAD request.
+
+        This is sent by some DLNA renderers, like Samsung ones, prior to sending
+        the GET request.
+
+        Check whether the location exists or not.
+        """
+        await self._validate_media_path(source_dir_id, location)
+
+    async def get(
+        self, request: web.Request, source_dir_id: str, location: str
+    ) -> web.FileResponse:
+        """Handle a GET request."""
+        media_path = await self._validate_media_path(source_dir_id, location)
         return web.FileResponse(media_path)
 
 
