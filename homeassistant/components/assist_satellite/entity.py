@@ -138,7 +138,6 @@ class AssistSatelliteEntity(entity.Entity):
     _is_announcing = False
     _extra_system_prompt: str | None = None
     _wake_word_intercept_future: asyncio.Future[str | None] | None = None
-    _stt_intercept_future: asyncio.Future[str | None] | None = None
     _attr_tts_options: dict[str, Any] | None = None
     _pipeline_task: asyncio.Task | None = None
     _ask_question_future: asyncio.Future[str | None] | None = None

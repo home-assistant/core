@@ -133,7 +133,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         service_func=handle_ask_question,
         schema=vol.All(
             {
-                vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+                vol.Required(ATTR_ENTITY_ID): cv.entity_domain(DOMAIN),
                 vol.Optional("question"): str,
                 vol.Optional("question_media_id"): str,
                 vol.Optional("preannounce"): bool,
