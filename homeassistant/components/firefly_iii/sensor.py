@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.components.sensor.const import SensorDeviceClass
 from homeassistant.components.todo import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -20,6 +24,7 @@ ACCOUNT_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="account",
         translation_key="account",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -28,6 +33,7 @@ CATEGORY_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="category",
         translation_key="category",
         device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
