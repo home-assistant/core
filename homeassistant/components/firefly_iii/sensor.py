@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -15,9 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import FireflyBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
-
 
 ACCOUNT_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
