@@ -109,6 +109,11 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.homee.get_access_token()
             except HomeeConnectionFailedException:
                 errors["base"] = "cannot_connect"
+            except HomeeAuthenticationFailedException:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
             else:
                 self.hass.loop.create_task(self.homee.run())
                 await self.homee.wait_until_connected()
