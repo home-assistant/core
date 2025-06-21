@@ -12,11 +12,15 @@ from pyenphase.envoy import Envoy
 from pyenphase.exceptions import EnvoyError
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import (CONF_NAME, CONF_PASSWORD, CONF_TOKEN,
-                                 CONF_UNIQUE_ID, CONF_USERNAME)
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_UNIQUE_ID,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
 
