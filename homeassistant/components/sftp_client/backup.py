@@ -11,7 +11,6 @@ from typing import Any, Concatenate
 from asyncssh import SFTPError
 from propcache.api import cached_property
 
-from config.custom_components.hacs.utils.backup import DEFAULT_BACKUP_PATH
 from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
@@ -23,7 +22,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_dumps
 
 from . import SFTPClientConfigEntry
-from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import (
+    CONF_BACKUP_PATH,
+    DATA_BACKUP_AGENT_LISTENERS,
+    DEFAULT_BACKUP_PATH,
+    DOMAIN,
+)
 from .helpers import json_to_stream
 
 _LOGGER = logging.getLogger(__name__)
