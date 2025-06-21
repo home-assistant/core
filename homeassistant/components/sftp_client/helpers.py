@@ -34,7 +34,7 @@ class SSHClient:
         self._ssl = ssl
         self._conn: SSHClientConnection | None = None
 
-    async def _async_ssh_connect(self) -> None:
+    async def async_ssh_connect(self) -> None:
         """Create a ssh connection."""
         try:
             self._conn = await connect(
@@ -48,7 +48,7 @@ class SSHClient:
         except (Error, OSError) as error:
             raise CannotConnect(error) from error
 
-    async def _async_ssh_close(self) -> None:
+    async def async_ssh_close(self) -> None:
         """Close SSH session."""
         if self._conn is not None:
             try:
@@ -67,7 +67,7 @@ class SFTPConnection(SSHClient):
 
     async def async_connect(self) -> None:
         """Open SFTP Connection."""
-        await self._async_ssh_connect()
+        await self.async_ssh_connect()
         if self._conn is None:
             raise RuntimeError("SHH Connection is failed")
 
@@ -84,7 +84,7 @@ class SFTPConnection(SSHClient):
             except Exception as e:  # noqa: BLE001
                 _LOGGER.warning("Error while closing SFTP client: %s", e)
             self.client = None
-        await self._async_ssh_close()
+        await self.async_ssh_close()
 
     async def async_ensure_path_exists(self, path: str) -> bool:
         """Ensure that a path exists recursively on the SFTP server."""
