@@ -94,7 +94,7 @@ class NtfyEventEntity(NtfyBaseEntity, EventEntity):
             self._connectivity_check = False
         except NtfyForbiddenError:
             if self._connectivity_check:
-                _LOGGER.exception("Failed to subscribe to topic. Topic is protected")
+                _LOGGER.error("Failed to subscribe to topic. Topic is protected")
             self._connectivity_check = False
         except NtfyHTTPError as e:
             if self._connectivity_check:
