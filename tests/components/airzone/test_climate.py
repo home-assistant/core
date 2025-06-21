@@ -10,16 +10,21 @@ from aioairzone.const import (
     API_MAX_TEMP,
     API_MIN_TEMP,
     API_ON,
+    API_ROOM_TEMP,
     API_SET_POINT,
     API_SPEED,
     API_SYSTEM_ID,
     API_SYSTEMS,
+    API_UNITS,
     API_ZONE_ID,
 )
 from aioairzone.exceptions import AirzoneError
 import pytest
 
-from homeassistant.components.airzone.const import API_TEMPERATURE_STEP
+from homeassistant.components.airzone.const import (
+    API_TEMPERATURE_STEP,
+    TEMP_UNIT_LIB_TO_HASS,
+)
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -39,6 +44,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    PRECISION_TENTHS,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -53,6 +59,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.temperature import display_temp, display_temp_interval
 from homeassistant.util.dt import utcnow
 
 from .util import (
@@ -71,10 +78,33 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
+    # Assume these 'system' defaults
+    precision = PRECISION_TENTHS
+
+    def _d_temp(api_key: str, api_mock: dict):
+        return display_temp(
+            hass,
+            api_mock[api_key],
+            TEMP_UNIT_LIB_TO_HASS[api_mock[API_UNITS]],
+            precision,
+        )
+
+    def _d_interval(api_mock: dict):
+        return display_temp_interval(
+            hass,
+            API_TEMPERATURE_STEP,
+            TEMP_UNIT_LIB_TO_HASS[api_mock[API_UNITS]],
+            precision,
+        )
+
     state = hass.states.get("climate.despacho")
+    api_mock = HVAC_MOCK[API_SYSTEMS][0][API_DATA][3]
+
     assert state.state == HVACMode.OFF
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 36
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 21.2
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == _d_temp(
+        API_ROOM_TEMP, api_mock
+    )
     assert state.attributes.get(ATTR_FAN_MODE) is None
     assert state.attributes.get(ATTR_FAN_MODES) is None
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
@@ -85,15 +115,19 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         HVACMode.HEAT,
         HVACMode.DRY,
     ]
-    assert state.attributes.get(ATTR_MAX_TEMP) == 30
-    assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
-    assert state.attributes.get(ATTR_TEMPERATURE) == 19.4
+    assert state.attributes.get(ATTR_MAX_TEMP) == _d_temp(API_MAX_TEMP, api_mock)
+    assert state.attributes.get(ATTR_MIN_TEMP) == _d_temp(API_MIN_TEMP, api_mock)
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == _d_interval(api_mock)
+    assert state.attributes.get(ATTR_TEMPERATURE) == _d_temp(API_SET_POINT, api_mock)
 
     state = hass.states.get("climate.dorm_1")
+    api_mock = HVAC_MOCK[API_SYSTEMS][0][API_DATA][2]
+
     assert state.state == HVACMode.HEAT
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 35
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 20.8
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == _d_temp(
+        API_ROOM_TEMP, api_mock
+    )
     assert state.attributes.get(ATTR_FAN_MODE) is None
     assert state.attributes.get(ATTR_FAN_MODES) is None
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.IDLE
@@ -104,15 +138,19 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         HVACMode.HEAT,
         HVACMode.DRY,
     ]
-    assert state.attributes.get(ATTR_MAX_TEMP) == 30
-    assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
-    assert state.attributes.get(ATTR_TEMPERATURE) == 19.3
+    assert state.attributes.get(ATTR_MAX_TEMP) == _d_temp(API_MAX_TEMP, api_mock)
+    assert state.attributes.get(ATTR_MIN_TEMP) == _d_temp(API_MIN_TEMP, api_mock)
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == _d_interval(api_mock)
+    assert state.attributes.get(ATTR_TEMPERATURE) == _d_temp(API_SET_POINT, api_mock)
 
     state = hass.states.get("climate.dorm_2")
+    api_mock = HVAC_MOCK[API_SYSTEMS][0][API_DATA][4]
+
     assert state.state == HVACMode.OFF
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 40
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 20.5
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == _d_temp(
+        API_ROOM_TEMP, api_mock
+    )
     assert state.attributes.get(ATTR_FAN_MODE) is None
     assert state.attributes.get(ATTR_FAN_MODES) is None
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
@@ -123,15 +161,19 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         HVACMode.HEAT,
         HVACMode.DRY,
     ]
-    assert state.attributes.get(ATTR_MAX_TEMP) == 30
-    assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
-    assert state.attributes.get(ATTR_TEMPERATURE) == 19.5
+    assert state.attributes.get(ATTR_MAX_TEMP) == _d_temp(API_MAX_TEMP, api_mock)
+    assert state.attributes.get(ATTR_MIN_TEMP) == _d_temp(API_MIN_TEMP, api_mock)
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == _d_interval(api_mock)
+    assert state.attributes.get(ATTR_TEMPERATURE) == _d_temp(API_SET_POINT, api_mock)
 
     state = hass.states.get("climate.dorm_ppal")
+    api_mock = HVAC_MOCK[API_SYSTEMS][0][API_DATA][1]
+
     assert state.state == HVACMode.HEAT
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 39
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 21.1
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == _d_temp(
+        API_ROOM_TEMP, api_mock
+    )
     assert state.attributes.get(ATTR_FAN_MODE) == FAN_AUTO
     assert state.attributes.get(ATTR_FAN_MODES) == [
         FAN_AUTO,
@@ -146,15 +188,19 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         HVACMode.HEAT,
         HVACMode.DRY,
     ]
-    assert state.attributes.get(ATTR_MAX_TEMP) == 30
-    assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
-    assert state.attributes.get(ATTR_TEMPERATURE) == 19.2
+    assert state.attributes.get(ATTR_MAX_TEMP) == _d_temp(API_MAX_TEMP, api_mock)
+    assert state.attributes.get(ATTR_MIN_TEMP) == _d_temp(API_MIN_TEMP, api_mock)
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == _d_interval(api_mock)
+    assert state.attributes.get(ATTR_TEMPERATURE) == _d_temp(API_SET_POINT, api_mock)
 
     state = hass.states.get("climate.salon")
+    api_mock = HVAC_MOCK[API_SYSTEMS][0][API_DATA][0]
+
     assert state.state == HVACMode.OFF
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 34
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 19.6
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == _d_temp(
+        API_ROOM_TEMP, api_mock
+    )
     assert state.attributes.get(ATTR_FAN_MODE) == FAN_AUTO
     assert state.attributes.get(ATTR_FAN_MODES) == [
         FAN_AUTO,
@@ -170,15 +216,19 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         HVACMode.HEAT,
         HVACMode.DRY,
     ]
-    assert state.attributes.get(ATTR_MAX_TEMP) == 30
-    assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
-    assert state.attributes.get(ATTR_TEMPERATURE) == 19.1
+    assert state.attributes.get(ATTR_MAX_TEMP) == _d_temp(API_MAX_TEMP, api_mock)
+    assert state.attributes.get(ATTR_MIN_TEMP) == _d_temp(API_MIN_TEMP, api_mock)
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == _d_interval(api_mock)
+    assert state.attributes.get(ATTR_TEMPERATURE) == _d_temp(API_SET_POINT, api_mock)
 
     state = hass.states.get("climate.airzone_2_1")
+    api_mock = HVAC_MOCK[API_SYSTEMS][1][API_DATA][0]
+
     assert state.state == HVACMode.OFF
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 62
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 22.3
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == _d_temp(
+        API_ROOM_TEMP, api_mock
+    )
     assert state.attributes.get(ATTR_FAN_MODE) == FAN_AUTO
     assert state.attributes.get(ATTR_FAN_MODES) == [
         FAN_AUTO,
@@ -192,15 +242,19 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         HVACMode.HEAT_COOL,
         HVACMode.OFF,
     ]
-    assert state.attributes.get(ATTR_MAX_TEMP) == 30
-    assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
-    assert state.attributes.get(ATTR_TEMPERATURE) == 19.0
+    assert state.attributes.get(ATTR_MAX_TEMP) == _d_temp(API_MAX_TEMP, api_mock)
+    assert state.attributes.get(ATTR_MIN_TEMP) == _d_temp(API_MIN_TEMP, api_mock)
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == _d_interval(api_mock)
+    assert state.attributes.get(ATTR_TEMPERATURE) == _d_temp(API_SET_POINT, api_mock)
 
     state = hass.states.get("climate.dkn_plus")
+    api_mock = HVAC_MOCK[API_SYSTEMS][2][API_DATA][0]
+
     assert state.state == HVACMode.HEAT_COOL
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 21.7
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == _d_temp(
+        API_ROOM_TEMP, api_mock
+    )
     assert state.attributes.get(ATTR_FAN_MODE) == "40%"
     assert state.attributes.get(ATTR_FAN_MODES) == [
         FAN_AUTO,
@@ -219,16 +273,24 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         HVACMode.HEAT_COOL,
         HVACMode.OFF,
     ]
-    assert state.attributes.get(ATTR_MAX_TEMP) == 32.2
-    assert state.attributes.get(ATTR_MIN_TEMP) == 17.8
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
-    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25.0
-    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 22.8
+    assert state.attributes.get(ATTR_MAX_TEMP) == _d_temp(API_MAX_TEMP, api_mock)
+    assert state.attributes.get(ATTR_MIN_TEMP) == _d_temp(API_MIN_TEMP, api_mock)
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == _d_interval(api_mock)
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == _d_temp(
+        API_COOL_SET_POINT, api_mock
+    )
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == _d_temp(
+        API_HEAT_SET_POINT, api_mock
+    )
 
     state = hass.states.get("climate.aux_heat")
+    api_mock = HVAC_MOCK[API_SYSTEMS][3][API_DATA][0]
+
     assert state.state == HVACMode.HEAT
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 22
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == _d_temp(
+        API_ROOM_TEMP, api_mock
+    )
     assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.IDLE
     assert state.attributes.get(ATTR_HVAC_MODES) == [
         HVACMode.OFF,
@@ -237,10 +299,10 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         HVACMode.FAN_ONLY,
         HVACMode.DRY,
     ]
-    assert state.attributes.get(ATTR_MAX_TEMP) == 30
-    assert state.attributes.get(ATTR_MIN_TEMP) == 15
-    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == API_TEMPERATURE_STEP
-    assert state.attributes.get(ATTR_TEMPERATURE) == 20.0
+    assert state.attributes.get(ATTR_MAX_TEMP) == _d_temp(API_MAX_TEMP, api_mock)
+    assert state.attributes.get(ATTR_MIN_TEMP) == _d_temp(API_MIN_TEMP, api_mock)
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == _d_interval(api_mock)
+    assert state.attributes.get(ATTR_TEMPERATURE) == _d_temp(API_SET_POINT, api_mock)
 
     HVAC_MOCK_CHANGED = copy.deepcopy(HVAC_MOCK)
     HVAC_MOCK_CHANGED[API_SYSTEMS][0][API_DATA][0][API_MAX_TEMP] = 25
@@ -268,8 +330,9 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("climate.salon")
-    assert state.attributes.get(ATTR_MAX_TEMP) == 25
-    assert state.attributes.get(ATTR_MIN_TEMP) == 10
+    api_mock = HVAC_MOCK_CHANGED[API_SYSTEMS][0][API_DATA][0]
+    assert state.attributes.get(ATTR_MAX_TEMP) == _d_temp(API_MAX_TEMP, api_mock)
+    assert state.attributes.get(ATTR_MIN_TEMP) == _d_temp(API_MIN_TEMP, api_mock)
 
 
 async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
