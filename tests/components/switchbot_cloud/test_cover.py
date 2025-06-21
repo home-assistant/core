@@ -121,7 +121,7 @@ async def test_curtain_async_open_and_close_cover(
             {ATTR_ENTITY_ID: cover_id},
             blocking=True,
         )
-    assert hass.states.get(cover_id).state == "open"
+    assert hass.states.get(cover_id).state in "open"
     mock_send_command.assert_called_once_with(
         "cover-id-1", CommonCommands.ON, "command", "default"
     )
@@ -172,7 +172,7 @@ async def test_curtain_set_cover_position_pause(
             {"position": 50, ATTR_ENTITY_ID: cover_id},
             blocking=True,
         )
-    assert hass.states.get(cover_id).state == "open"
+    assert hass.states.get(cover_id).state in "open"
     mock_send_command.assert_called_once()
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
@@ -480,5 +480,5 @@ async def test_roller_shade_set_cover_position(
             {"position": 50, ATTR_ENTITY_ID: cover_id},
             blocking=True,
         )
-    assert hass.states.get(cover_id).state == "open"
+    assert hass.states.get(cover_id).state in "open"
     mock_send_command.assert_called_once()

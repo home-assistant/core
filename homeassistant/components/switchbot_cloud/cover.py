@@ -138,7 +138,7 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
                 parameters=f"{self._attr_direction};{percent}",
             )
             await asyncio.sleep(1)
-            await self.__update_current_cover_tile_position()
+            await self.__update_current_cover_tilt_position()
             self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
@@ -146,7 +146,7 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
         await self.send_api_command(BlindTiltCommands.FULLY_OPEN)
         self._attr_is_closed = False
         await asyncio.sleep(1)
-        await self.__update_current_cover_tile_position()
+        await self.__update_current_cover_tilt_position()
         self.async_write_ha_state()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
@@ -158,7 +158,7 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
                 await self.send_api_command(BlindTiltCommands.CLOSE_DOWN)
             self._attr_is_closed = True
             await asyncio.sleep(1)
-            await self.__update_current_cover_tile_position()
+            await self.__update_current_cover_tilt_position()
             self.async_write_ha_state()
 
     def _set_attributes(self) -> None:
@@ -178,7 +178,7 @@ class SwitchBotCloudCoverTilt(SwitchBotCloudCover):
             self._attr_current_cover_tilt_position = percent
             self.async_write_ha_state()
 
-    async def __update_current_cover_tile_position(self) -> None:
+    async def __update_current_cover_tilt_position(self) -> None:
         response: dict | None = await self._api.get_status(self.unique_id)
         if response is not None:
             position: int | None = response.get("slidePosition")
