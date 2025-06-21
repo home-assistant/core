@@ -28,7 +28,7 @@ from .const import (
     DEFAULT_BACKUP_PATH,
     DOMAIN,
 )
-from .helpers import json_to_stream
+from .helpers import CannotConnect, json_to_stream
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,9 +132,14 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
 
         remote_path = f"{self._backup_path}/{suggested_filename(backup)}"
 
-        await self.sftp.async_connect()
+        try:
+            await self.sftp.async_connect()
+        except CannotConnect as err:
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
+            raise BackupAgentError(f"Failed to connect to SFTP server: {err}") from err
+
         if self.sftp.client is None:
-            raise RuntimeError("SFTP Error")
+            raise BackupAgentError("Failed to connect to SFTP server without a client")
 
         sftp_file = await self.sftp.client.open(remote_path, "rb")
 
@@ -166,9 +171,14 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
         """
         (filename_tar, filename_meta) = suggested_filenames(backup)
 
-        await self.sftp.async_connect()
+        try:
+            await self.sftp.async_connect()
+        except CannotConnect as err:
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
+            raise BackupAgentError(f"Failed to connect to SFTP server: {err}") from err
+
         if self.sftp.client is None:
-            raise RuntimeError("SFTP Error")
+            raise BackupAgentError("Failed to connect to SFTP server without a client")
 
         source_stream = await open_stream()
         tar_path = f"{self._backup_path}/{filename_tar}"
@@ -194,9 +204,16 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
         backup = await self._find_backup_by_id(backup_id)
 
         (filename_tar, filename_meta) = suggested_filenames(backup)
-        await self.sftp.async_connect()
+
+        try:
+            await self.sftp.async_connect()
+        except CannotConnect as err:
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
+            raise BackupAgentError(f"Failed to connect to SFTP server: {err}") from err
+
         if self.sftp.client is None:
-            raise RuntimeError("SFTP Error")
+            raise BackupAgentError("Failed to connect to SFTP server without a client")
+
         await self.sftp.client.remove(f"{self._backup_path}/{filename_tar}")
         await self.sftp.client.remove(f"{self._backup_path}/{filename_meta}")
         await self.sftp.async_close()
@@ -209,12 +226,19 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
     async def _async_list_backups(self, **kwargs: Any) -> dict[str, AgentBackup]:
         """List metadata files with a cache."""
 
-        await self.sftp.async_connect()
+        try:
+            await self.sftp.async_connect()
+        except CannotConnect as err:
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
+            raise BackupAgentError(f"Failed to connect to SFTP server: {err}") from err
 
         async def _download_metadata(path: str) -> AgentBackup:
             """Download metadata file."""
             if self.sftp.client is None:
-                raise RuntimeError("SFTP Error")
+                raise BackupAgentError(
+                    "Failed to connect to SFTP server without a client"
+                )
+
             chunks: list[bytes] = []
             async with await self.sftp.client.open(path, "rb") as sftp_file:
                 while True:
@@ -230,7 +254,10 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
         async def _list_metadata_files() -> dict[str, AgentBackup]:
             """List metadata files."""
             if self.sftp.client is None:
-                raise RuntimeError("SFTP Error")
+                raise BackupAgentError(
+                    "Failed to connect to SFTP server without a client"
+                )
+
             files = await self.sftp.client.listdir(self._backup_path)
             metadata_files = {}
             for file_name in files:
