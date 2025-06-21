@@ -12,7 +12,7 @@ from google.genai.types import File, FileState
 from requests.exceptions import Timeout
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import (
     HomeAssistant,
@@ -26,13 +26,14 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CHAT_MODEL,
     CONF_PROMPT,
+    DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
@@ -207,5 +208,44 @@ async def async_unload_entry(
     """Unload GoogleGenerativeAI."""
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
+
+    return True
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1:
+        # Migrate from version 1 to version 2
+        # Move conversation-specific options to a subentry
+        subentry = ConfigSubentry(
+            data=entry.options,
+            subentry_type="conversation",
+            title=DEFAULT_CONVERSATION_NAME,
+            unique_id=None,
+        )
+        hass.config_entries.async_add_subentry(
+            entry,
+            subentry,
+        )
+
+        # Migrate conversation entity to be linked to subentry
+        ent_reg = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+            if entity_entry.domain == Platform.CONVERSATION:
+                ent_reg.async_update_entity(
+                    entity_entry.entity_id,
+                    config_subentry_id=subentry.subentry_id,
+                    new_unique_id=subentry.subentry_id,
+                )
+                break
+
+        # Remove options from the main entry
+        hass.config_entries.async_update_entry(
+            entry,
+            options={},
+            version=2,
+        )
 
     return True

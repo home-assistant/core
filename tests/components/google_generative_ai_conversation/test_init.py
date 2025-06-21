@@ -7,9 +7,14 @@ import pytest
 from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.google_generative_ai_conversation import (
+    async_migrate_entry,
+)
+from homeassistant.components.google_generative_ai_conversation.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 
@@ -387,3 +392,65 @@ async def test_load_entry_with_unloaded_entries(
         "text": stubbed_generated_content,
     }
     assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot
+
+
+async def test_migration_from_v1_to_v2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration from version 1 to version 2."""
+    # Create a v1 config entry with conversation options and an entity
+    OPTIONS = {
+        "recommended": True,
+        "llm_hass_api": ["assist"],
+        "prompt": "You are a helpful assistant",
+        "chat_model": "models/gemini-2.0-flash",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"api_key": "1234"},
+        options=OPTIONS,
+        version=1,
+        title="Google Generative AI",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="Google",
+        model="Generative AI",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    entity = entity_registry.async_get_or_create(
+        "conversation",
+        DOMAIN,
+        "mock_config_entry.entry_id",
+        config_entry=mock_config_entry,
+        device_id=device.id,
+        suggested_object_id="google_generative_ai_conversation",
+    )
+
+    # Run migration
+    result = await async_migrate_entry(hass, mock_config_entry)
+
+    assert result is True
+    assert mock_config_entry.version == 2
+    assert mock_config_entry.data == {"api_key": "1234"}
+    assert mock_config_entry.options == {}
+
+    assert len(mock_config_entry.subentries) == 1
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    assert subentry.unique_id is None
+    assert subentry.title == "Google Conversation"
+    assert subentry.subentry_type == "conversation"
+    assert subentry.data == OPTIONS
+
+    migrated_entity = entity_registry.async_get(entity.entity_id)
+    assert migrated_entity is not None
+    assert migrated_entity.config_entry_id == mock_config_entry.entry_id
+    assert migrated_entity.config_subentry_id == subentry.subentry_id
+    assert migrated_entity.device_id == device.id

@@ -21,32 +21,41 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "recommended": "Recommended model settings",
-          "prompt": "Instructions",
-          "chat_model": "[%key:common::generic::model%]",
-          "temperature": "Temperature",
-          "top_p": "Top P",
-          "top_k": "Top K",
-          "max_tokens": "Maximum tokens to return in response",
-          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
-          "harassment_block_threshold": "Negative or harmful comments targeting identity and/or protected attributes",
-          "hate_block_threshold": "Content that is rude, disrespectful, or profane",
-          "sexual_block_threshold": "Contains references to sexual acts or other lewd content",
-          "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts",
-          "enable_google_search_tool": "Enable Google Search tool"
-        },
-        "data_description": {
-          "prompt": "Instruct how the LLM should respond. This can be a template.",
-          "enable_google_search_tool": "Only works if there is nothing selected in the \"Control Home Assistant\" setting. See docs for a workaround using it with \"Assist\"."
+  "config_subentries": {
+    "conversation": {
+      "initiate_flow": {
+        "user": "Add conversation agent",
+        "reconfigure": "Reconfigure conversation agent"
+      },
+      "entry_type": "Conversation agent",
+
+      "step": {
+        "set_options": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "recommended": "Recommended model settings",
+            "prompt": "Instructions",
+            "chat_model": "[%key:common::generic::model%]",
+            "temperature": "Temperature",
+            "top_p": "Top P",
+            "top_k": "Top K",
+            "max_tokens": "Maximum tokens to return in response",
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "harassment_block_threshold": "Negative or harmful comments targeting identity and/or protected attributes",
+            "hate_block_threshold": "Content that is rude, disrespectful, or profane",
+            "sexual_block_threshold": "Contains references to sexual acts or other lewd content",
+            "dangerous_block_threshold": "Promotes, facilitates, or encourages harmful acts",
+            "enable_google_search_tool": "Enable Google Search tool"
+          },
+          "data_description": {
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "enable_google_search_tool": "Only works if there is nothing selected in the \"Control Home Assistant\" setting. See docs for a workaround using it with \"Assist\"."
+          }
         }
+      },
+      "error": {
+        "invalid_google_search_option": "Google Search can only be enabled if nothing is selected in the \"Control Home Assistant\" setting."
       }
-    },
-    "error": {
-      "invalid_google_search_option": "Google Search can only be enabled if nothing is selected in the \"Control Home Assistant\" setting."
     }
   },
   "services": {
