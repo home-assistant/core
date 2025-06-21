@@ -607,7 +607,7 @@ async def test_get_blueprint(
     assert msg["success"]
     blueprints = msg["result"]
     assert blueprints == {
-        "yaml": "metadata:\n  domain: automation\n  input:\n    service_to_call: None\n    trigger_event:\n      selector:\n        text: {}\n    a_number:\n      selector:\n        number:\n          mode: box\n          step: 1\n  name: Call service based on event"
+        "yaml": "blueprint:\n  name: Call service based on event\n  domain: automation\n  input:\n    trigger_event:\n      selector:\n        text: {}\n    service_to_call:\n    a_number:\n      selector:\n        number:\n          mode: box\n          step: 1.0\ntriggers:\n  trigger: event\n  event_type: !input trigger_event\nactions:\n  service: !input service_to_call\n  entity_id: light.kitchen\n"
     }
 
 
