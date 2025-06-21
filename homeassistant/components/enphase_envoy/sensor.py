@@ -139,12 +139,14 @@ INVERTER_SENSORS = (
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=3,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=attrgetter("temperature"),
     ),
     EnvoyInverterSensorEntityDescription(
         key="lifetime_energy",
         translation_key="lifetime_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_enabled_default=False,
@@ -166,6 +168,7 @@ INVERTER_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DURATION,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=attrgetter("last_report_duration"),
     ),
     EnvoyInverterSensorEntityDescription(
@@ -185,6 +188,7 @@ INVERTER_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=attrgetter("max_report_watts"),
     ),
     EnvoyInverterSensorEntityDescription(

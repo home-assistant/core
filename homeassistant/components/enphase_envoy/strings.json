@@ -384,7 +384,7 @@
       "dc_voltage": {
         "name": "DC voltage"
       },
-      "dc_curret": {
+      "dc_current": {
         "name": "DC current"
       },
       "ac_voltage": {
