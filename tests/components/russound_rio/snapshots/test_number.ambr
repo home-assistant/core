@@ -200,7 +200,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Turn on volume',
+    'original_name': 'Turn-on volume',
     'platform': 'russound_rio',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -213,7 +213,7 @@
 # name: test_all_entities[number.backyard_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Backyard Turn on volume',
+      'friendly_name': 'Backyard Turn-on volume',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -428,7 +428,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Turn on volume',
+    'original_name': 'Turn-on volume',
     'platform': 'russound_rio',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -441,7 +441,7 @@
 # name: test_all_entities[number.bedroom_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Turn on volume',
+      'friendly_name': 'Bedroom Turn-on volume',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -656,7 +656,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Turn on volume',
+    'original_name': 'Turn-on volume',
     'platform': 'russound_rio',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -669,7 +669,7 @@
 # name: test_all_entities[number.kitchen_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Turn on volume',
+      'friendly_name': 'Kitchen Turn-on volume',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -884,7 +884,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Turn on volume',
+    'original_name': 'Turn-on volume',
     'platform': 'russound_rio',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -897,7 +897,7 @@
 # name: test_all_entities[number.living_room_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Turn on volume',
+      'friendly_name': 'Living Room Turn-on volume',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
