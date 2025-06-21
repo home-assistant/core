@@ -2796,6 +2796,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=["str", None],
                 ),
                 TypeHintMatch(
+                    function_name="activity",
+                    return_type=["VacuumActivity", None],
+                ),
+                TypeHintMatch(
                     function_name="battery_level",
                     return_type=["int", None],
                 ),
