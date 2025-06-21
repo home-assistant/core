@@ -135,6 +135,9 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
+            description_placeholders={
+                "host": self._reauth_host,
+            },
             errors=errors,
         )
 
