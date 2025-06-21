@@ -10,8 +10,6 @@ from typing import Any
 
 from jsonpath import jsonpath
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_NAME,
@@ -188,17 +186,7 @@ class CommandSensor(ManualTriggerSensorEntity):
                 self.entity_id, variables, None
             )
 
-        if self.device_class not in {
-            SensorDeviceClass.DATE,
-            SensorDeviceClass.TIMESTAMP,
-        }:
-            self._attr_native_value = value
-        elif value is not None:
-            self._attr_native_value = async_parse_date_datetime(
-                value, self.entity_id, self.device_class
-            )
-
-        self._process_manual_data(variables)
+        self._set_value_with_possible_timestamp(value, self.device_class, variables)
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
