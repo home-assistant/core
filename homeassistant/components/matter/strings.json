@@ -88,6 +88,12 @@
       },
       "boost_state": {
         "name": "Boost state"
+      },
+      "dishwasher_alarm_inflow": {
+        "name": "Inflow alarm"
+      },
+      "dishwasher_alarm_door": {
+        "name": "Door alarm"
       }
     },
     "button": {
