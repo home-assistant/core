@@ -179,18 +179,19 @@ async def async_setup_entry(
 
     def _new_sensor(sensor: CCLSensor) -> None:
         """Add a sensor to the data entry."""
-        entity_description = dataclasses.replace(
-            CCL_SENSOR_DESCRIPTIONS[sensor.sensor_type],
-            key=sensor.key,
-            name=sensor.name,
-        )
-        async_add_entities([CCLSensorEntity(coordinator, entity_description)])
+        if sensor.sensor_type in CCL_SENSOR_DESCRIPTIONS:
+            entity_description = dataclasses.replace(
+                CCL_SENSOR_DESCRIPTIONS[sensor.sensor_type],
+                key=sensor.key,
+                name=sensor.name,
+            )
+            async_add_entities([CCLSensorEntity(coordinator, entity_description)])
 
     coordinator.device.register_new_sensor_cb(_new_sensor)
     entry.async_on_unload(lambda: coordinator.device.remove_new_sensor_cb(_new_sensor))
 
     if coordinator.data is not None:
-        _new_sensor(list(coordinator.data["sensors"].values()))
+        _new_sensor(list(coordinator.data.values()))
 
 
 class CCLSensorEntity(CCLEntity, SensorEntity):
@@ -202,7 +203,7 @@ class CCLSensorEntity(CCLEntity, SensorEntity):
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize a CCL Sensor Entity."""
-        self._internal: CCLSensor = coordinator.data["sensors"][entity_description.key]
+        self._internal: CCLSensor = coordinator.data[entity_description.key]
         super().__init__(self._internal, coordinator)
 
         self.entity_description = entity_description
