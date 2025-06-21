@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from typing import Any
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -10,9 +9,14 @@ import pytest
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import VolvoApiException, VolvoAuthException
 
-from homeassistant.components.volvo.coordinator import VolvoDataCoordinator
+from homeassistant.components.volvo.coordinator import (
+    VolvoBaseCoordinator,
+    VolvoVerySlowIntervalCoordinator,
+)
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+
+from .common import configure_mock
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -29,7 +33,11 @@ async def test_coordinator_update(
     assert await setup_integration()
 
     sensor_id = "sensor.volvo_xc40_odometer"
-    coordinator: VolvoDataCoordinator = mock_config_entry.runtime_data
+    coordinators: tuple[VolvoBaseCoordinator] = mock_config_entry.runtime_data
+    coordinator = next(
+        c for c in coordinators if isinstance(c, VolvoVerySlowIntervalCoordinator)
+    )
+
     interval = timedelta(seconds=coordinator.update_interval.total_seconds() + 5)
     original_value = coordinator._refresh_conditions["odometer"][0].return_value
     mock_method: AsyncMock = mock_api.async_get_odometer
@@ -37,7 +45,7 @@ async def test_coordinator_update(
     state = hass.states.get(sensor_id)
     assert state.state == "30000"
 
-    _configure_mock(mock_method, return_value=None, side_effect=VolvoApiException())
+    configure_mock(mock_method, return_value=None, side_effect=VolvoApiException())
     freezer.tick(interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -45,7 +53,7 @@ async def test_coordinator_update(
     state = hass.states.get(sensor_id)
     assert state.state == STATE_UNAVAILABLE
 
-    _configure_mock(mock_method, return_value=original_value, side_effect=None)
+    configure_mock(mock_method, return_value=original_value, side_effect=None)
     freezer.tick(interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -53,7 +61,7 @@ async def test_coordinator_update(
     state = hass.states.get(sensor_id)
     assert state.state == "30000"
 
-    _configure_mock(mock_method, return_value=None, side_effect=VolvoAuthException())
+    configure_mock(mock_method, return_value=None, side_effect=VolvoAuthException())
     freezer.tick(interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -61,14 +69,14 @@ async def test_coordinator_update(
     state = hass.states.get(sensor_id)
     assert state.state == STATE_UNAVAILABLE
 
-    _configure_mock(mock_method, return_value=original_value, side_effect=None)
+    configure_mock(mock_method, return_value=original_value, side_effect=None)
     # Explicitly refresh to recover from auth failure
     await coordinator.async_refresh()
     assert mock_method.call_count == 1
     state = hass.states.get(sensor_id)
     assert state.state == "30000"
 
-    _configure_mock(mock_method, return_value=None, side_effect=Exception())
+    configure_mock(mock_method, return_value=None, side_effect=Exception())
     freezer.tick(interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -76,7 +84,7 @@ async def test_coordinator_update(
     state = hass.states.get(sensor_id)
     assert state.state == STATE_UNAVAILABLE
 
-    _configure_mock(mock_method, return_value=original_value, side_effect=None)
+    configure_mock(mock_method, return_value=original_value, side_effect=None)
     freezer.tick(interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -96,49 +104,11 @@ async def test_update_coordinator_all_error(
     assert await setup_integration()
 
     _mock_api_failure(mock_api)
-    freezer.tick(timedelta(seconds=135))
+    freezer.tick(timedelta(minutes=65))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     for state in hass.states.async_all():
         assert state.state == STATE_UNAVAILABLE
-
-
-async def test_coordinator_setup_no_vehicle(
-    hass: HomeAssistant,
-    setup_integration: Callable[[], Awaitable[bool]],
-    mock_api: VolvoCarsApi,
-) -> None:
-    """Test no vehicle during coordinator setup."""
-    sensor_id = "sensor.volvo_xc40_odometer"
-    mock_method: AsyncMock = mock_api.async_get_vehicle_details
-
-    _configure_mock(mock_method, return_value=None, side_effect=None)
-    assert not await setup_integration()
-
-    state = hass.states.get(sensor_id)
-    assert state is None
-
-
-async def test_coordinator_setup_auth_failure(
-    hass: HomeAssistant,
-    setup_integration: Callable[[], Awaitable[bool]],
-    mock_api: VolvoCarsApi,
-) -> None:
-    """Test auth failure during coordinator setup."""
-    sensor_id = "sensor.volvo_xc40_odometer"
-    mock_method: AsyncMock = mock_api.async_get_vehicle_details
-
-    _configure_mock(mock_method, return_value=None, side_effect=VolvoAuthException())
-    assert not await setup_integration()
-
-    state = hass.states.get(sensor_id)
-    assert state is None
-
-
-def _configure_mock(mock: AsyncMock, *, return_value: Any, side_effect: Any) -> None:
-    mock.reset_mock()
-    mock.side_effect = side_effect
-    mock.return_value = return_value
 
 
 def _mock_api_failure(mock_api: VolvoCarsApi) -> AsyncMock:

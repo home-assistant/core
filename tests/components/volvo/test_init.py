@@ -2,15 +2,19 @@
 
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
+from unittest.mock import AsyncMock
 
 import pytest
+from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.auth import TOKEN_URL
+from volvocarsapi.models import VolvoAuthException
 
 from homeassistant.components.volvo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
+from .common import configure_mock
 from .const import MOCK_ACCESS_TOKEN, SERVER_TOKEN_RESPONSE
 
 from tests.common import MockConfigEntry
@@ -94,3 +98,35 @@ async def test_token_refresh_reauth(
     assert flows
     assert flows[0]["handler"] == DOMAIN
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_no_vehicle(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_api: VolvoCarsApi,
+) -> None:
+    """Test no vehicle during coordinator setup."""
+    sensor_id = "sensor.volvo_xc40_odometer"
+    mock_method: AsyncMock = mock_api.async_get_vehicle_details
+
+    configure_mock(mock_method, return_value=None, side_effect=None)
+    assert not await setup_integration()
+
+    state = hass.states.get(sensor_id)
+    assert state is None
+
+
+async def test_vehcile_auth_failure(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_api: VolvoCarsApi,
+) -> None:
+    """Test auth failure during coordinator setup."""
+    sensor_id = "sensor.volvo_xc40_odometer"
+    mock_method: AsyncMock = mock_api.async_get_vehicle_details
+
+    configure_mock(mock_method, return_value=None, side_effect=VolvoAuthException())
+    assert not await setup_integration()
+
+    state = hass.states.get(sensor_id)
+    assert state is None

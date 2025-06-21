@@ -116,7 +116,6 @@
         'car_in_use',
         'no_internet',
         'power_saving_mode',
-        'unspecified',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -158,7 +157,6 @@
         'car_in_use',
         'no_internet',
         'power_saving_mode',
-        'unspecified',
       ]),
     }),
     'context': <ANY>,
@@ -176,11 +174,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'connection_status_connected_ac',
-        'connection_status_connected_dc',
-        'connection_status_disconnected',
-        'connection_status_fault',
-        'connection_status_unspecified',
+        'connected_ac',
+        'connected_dc',
+        'disconnected',
+        'fault',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -218,11 +215,10 @@
       'device_class': 'enum',
       'friendly_name': 'Volvo XC40 Charging connection status',
       'options': list([
-        'connection_status_connected_ac',
-        'connection_status_connected_dc',
-        'connection_status_disconnected',
-        'connection_status_fault',
-        'connection_status_unspecified',
+        'connected_ac',
+        'connected_dc',
+        'disconnected',
+        'fault',
       ]),
     }),
     'context': <ANY>,
@@ -230,7 +226,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'connection_status_connected_ac',
+    'state': 'connected_ac',
   })
 # ---
 # name: test_sensor[0][sensor.volvo_xc40_charging_status-entry]
@@ -240,12 +236,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'charging_system_charging',
-        'charging_system_done',
-        'charging_system_fault',
-        'charging_system_idle',
-        'charging_system_scheduled',
-        'charging_system_unspecified',
+        'charging',
+        'done',
+        'fault',
+        'idle',
+        'scheduled',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -283,12 +278,11 @@
       'device_class': 'enum',
       'friendly_name': 'Volvo XC40 Charging status',
       'options': list([
-        'charging_system_charging',
-        'charging_system_done',
-        'charging_system_fault',
-        'charging_system_idle',
-        'charging_system_scheduled',
-        'charging_system_unspecified',
+        'charging',
+        'done',
+        'fault',
+        'idle',
+        'scheduled',
       ]),
     }),
     'context': <ANY>,
@@ -296,7 +290,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'charging_system_idle',
+    'state': 'idle',
   })
 # ---
 # name: test_sensor[0][sensor.volvo_xc40_distance_to_empty_battery-entry]
@@ -416,7 +410,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -433,8 +429,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Engine time to service',
     'platform': 'volvo',
@@ -449,7 +448,9 @@
 # name: test_sensor[0][sensor.volvo_xc40_engine_time_to_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Volvo XC40 Engine time to service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -689,7 +690,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -707,7 +710,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
     'platform': 'volvo',
@@ -716,21 +719,23 @@
     'supported_features': 0,
     'translation_key': 'time_to_service',
     'unique_id': 'yv1abcdefg1234567_time_to_service',
-    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[0][sensor.volvo_xc40_time_to_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Volvo XC40 Time to service',
-      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MONTHS: 'm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.volvo_xc40_time_to_service',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '690',
+    'state': '23',
   })
 # ---
 # name: test_sensor[0][sensor.volvo_xc40_tm_avg_energy_consumption-entry]
@@ -908,7 +913,6 @@
         'car_in_use',
         'no_internet',
         'power_saving_mode',
-        'unspecified',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -950,7 +954,6 @@
         'car_in_use',
         'no_internet',
         'power_saving_mode',
-        'unspecified',
       ]),
     }),
     'context': <ANY>,
@@ -1078,7 +1081,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1095,8 +1100,11 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Engine time to service',
     'platform': 'volvo',
@@ -1111,7 +1119,9 @@
 # name: test_sensor[1][sensor.volvo_s90_engine_time_to_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Volvo S90 Engine time to service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -1351,7 +1361,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1369,7 +1381,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Time to service',
     'platform': 'volvo',
@@ -1378,13 +1390,15 @@
     'supported_features': 0,
     'translation_key': 'time_to_service',
     'unique_id': 'yv1abcdefg1234567_time_to_service',
-    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[1][sensor.volvo_s90_time_to_service-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Volvo S90 Time to service',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
@@ -1429,7 +1443,7 @@
     'supported_features': 0,
     'translation_key': 'average_fuel_consumption',
     'unique_id': 'yv1abcdefg1234567_average_fuel_consumption',
-    'unit_of_measurement': 'l/100 km',
+    'unit_of_measurement': 'L/100 km',
   })
 # ---
 # name: test_sensor[1][sensor.volvo_s90_tm_avg_fuel_consumption-state]
@@ -1437,7 +1451,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo S90 TM avg. fuel consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'l/100 km',
+      'unit_of_measurement': 'L/100 km',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.volvo_s90_tm_avg_fuel_consumption',

@@ -1,5 +1,8 @@
 """Common test utils for Volvo."""
 
+from typing import Any
+from unittest.mock import AsyncMock
+
 from volvocarsapi.models import VolvoCarsValueField
 
 from homeassistant.components.volvo.const import DOMAIN
@@ -34,3 +37,10 @@ async def async_load_fixture_as_value_field(
     """Load a `VolvoCarsValueField` object from a fixture."""
     data = await async_load_fixture_as_json(hass, name, model)
     return {key: VolvoCarsValueField.from_dict(value) for key, value in data.items()}
+
+
+def configure_mock(mock: AsyncMock, *, return_value: Any, side_effect: Any) -> None:
+    """Reconfigure mock."""
+    mock.reset_mock()
+    mock.side_effect = side_effect
+    mock.return_value = return_value

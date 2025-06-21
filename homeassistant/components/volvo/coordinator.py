@@ -19,7 +19,7 @@ from volvocarsapi.models import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_BATTERY_CAPACITY, DOMAIN
@@ -27,12 +27,12 @@ from .const import DATA_BATTERY_CAPACITY, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-type VolvoConfigEntry = ConfigEntry[VolvoDataCoordinator]
+type VolvoConfigEntry = ConfigEntry[tuple[VolvoBaseCoordinator, ...]]
 type CoordinatorData = dict[str, VolvoCarsApiBaseModel | None]
 
 
-class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
-    """Volvo Data Coordinator."""
+class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
+    """Volvo base coordinator."""
 
     config_entry: VolvoConfigEntry
     vehicle: VolvoCarsVehicle
@@ -42,6 +42,10 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
         hass: HomeAssistant,
         entry: VolvoConfigEntry,
         api: VolvoCarsApi,
+        vehicle: VolvoCarsVehicle,
+        update_interval: timedelta,
+        name: str,
+        api_calls: list[str],
     ) -> None:
         """Initialize the coordinator."""
 
@@ -49,39 +53,13 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
             hass,
             _LOGGER,
             config_entry=entry,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=135),
+            name=name,
+            update_interval=update_interval,
         )
 
         self.api = api
-
-        # The variable is set during _async_setup().
-        self._refresh_conditions: dict[
-            str, tuple[Callable[[], Coroutine[Any, Any, Any]], bool]
-        ] = {}
-
-    async def _async_setup(self) -> None:
-        """Set up the coordinator.
-
-        This method is called automatically during
-        coordinator.async_config_entry_first_refresh.
-        """
-        try:
-            vehicle = await self.api.async_get_vehicle_details()
-        except VolvoAuthException as ex:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="unauthorized",
-                translation_placeholders={"message": ex.message},
-            ) from ex
-
-        if vehicle is None:
-            raise ConfigEntryError(
-                translation_domain=DOMAIN, translation_key="no_vehicle"
-            )
-
         self.vehicle = vehicle
-        self.data = {}
+        self._api_calls = api_calls
 
         self._refresh_conditions = {
             "command_accessibility": (self.api.async_get_command_accessibility, True),
@@ -103,6 +81,10 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
         api_calls = self._get_api_calls()
         data: CoordinatorData = {}
+
+        if not api_calls:
+            return data
+
         valid = False
         exception: Exception | None = None
 
@@ -155,13 +137,6 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 translation_key="update_failed",
             ) from exception
 
-        # Add static values
-        data[DATA_BATTERY_CAPACITY] = VolvoCarsValue.from_dict(
-            {
-                "value": self.vehicle.battery_capacity_kwh,
-            }
-        )
-
         return data
 
     def get_api_field(self, api_field: str | None) -> VolvoCarsApiBaseModel | None:
@@ -174,6 +149,88 @@ class VolvoDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
         return [
             api_call
-            for _, (api_call, condition) in self._refresh_conditions.items()
-            if condition
+            for key, (api_call, condition) in self._refresh_conditions.items()
+            if condition and key in self._api_calls
         ]
+
+
+class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
+    """Volvo coordinator with very slow update rate."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: VolvoConfigEntry,
+        api: VolvoCarsApi,
+        vehicle: VolvoCarsVehicle,
+    ) -> None:
+        """Initialize the coordinator."""
+
+        super().__init__(
+            hass,
+            entry,
+            api,
+            vehicle,
+            timedelta(minutes=60),
+            "Volvo very slow interval coordinator",
+            ["diagnostics", "odometer", "statistics"],
+        )
+
+    async def _async_update_data(self) -> CoordinatorData:
+        data = await super()._async_update_data()
+
+        # Add static values
+        if self.vehicle.has_battery_engine():
+            data[DATA_BATTERY_CAPACITY] = VolvoCarsValue.from_dict(
+                {
+                    "value": self.vehicle.battery_capacity_kwh,
+                }
+            )
+
+        return data
+
+
+class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
+    """Volvo coordinator with slow update rate."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: VolvoConfigEntry,
+        api: VolvoCarsApi,
+        vehicle: VolvoCarsVehicle,
+    ) -> None:
+        """Initialize the coordinator."""
+
+        super().__init__(
+            hass,
+            entry,
+            api,
+            vehicle,
+            timedelta(minutes=15),
+            "Volvo slow interval coordinator",
+            ["command_accessibility", "fuel"],
+        )
+
+
+class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
+    """Volvo coordinator with medium update rate."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: VolvoConfigEntry,
+        api: VolvoCarsApi,
+        vehicle: VolvoCarsVehicle,
+    ) -> None:
+        """Initialize the coordinator."""
+
+        super().__init__(
+            hass,
+            entry,
+            api,
+            vehicle,
+            timedelta(minutes=2),
+            "Volvo medium interval coordinator",
+            ["recharge_status"],
+        )

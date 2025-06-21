@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_VIN, DOMAIN, MANUFACTURER
-from .coordinator import VolvoDataCoordinator
+from .coordinator import VolvoBaseCoordinator
 
 
 def get_unique_id(vin: str, key: str) -> str:
@@ -31,14 +31,14 @@ class VolvoEntityDescription(EntityDescription):
     api_field: str
 
 
-class VolvoEntity(CoordinatorEntity[VolvoDataCoordinator]):
+class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator]):
     """Volvo base entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: VolvoDataCoordinator,
+        coordinator: VolvoBaseCoordinator,
         description: VolvoEntityDescription,
     ) -> None:
         """Initialize entity."""
