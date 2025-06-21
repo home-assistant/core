@@ -1114,7 +1114,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
 
 
 class ObjectSelectorField(TypedDict):
-    """Class to represent a select option dict."""
+    """Class to represent an object selector fields dict."""
 
     label: str
     required: bool
