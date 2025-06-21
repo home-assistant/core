@@ -150,6 +150,9 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
                     if not chunk:
                         break
                     yield chunk
+            except SFTPError as err:
+                _LOGGER.debug("Full error: %s", err, exc_info=True)
+                raise BackupAgentError(f"Failed to read backup file: {err}") from err
             finally:
                 await sftp_file.close()
                 await self.sftp.async_close()
@@ -182,16 +185,24 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
 
         source_stream = await open_stream()
         tar_path = f"{self._backup_path}/{filename_tar}"
-        async with await self.sftp.client.open(tar_path, "wb") as sftp_file:
-            async for chunk in source_stream:
-                await sftp_file.write(chunk)
+        try:
+            async with await self.sftp.client.open(tar_path, "wb") as sftp_file:
+                async for chunk in source_stream:
+                    await sftp_file.write(chunk)
+        except SFTPError as err:
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
+            raise BackupAgentError(f"Failed to write backup file: {err}") from err
 
         metadata_content = json_dumps(backup.as_dict())
         source_stream = json_to_stream(metadata_content)
         meta_path = f"{self._backup_path}/{filename_meta}"
-        async with await self.sftp.client.open(meta_path, "wb") as sftp_file:
-            async for chunk in source_stream:
-                await sftp_file.write(chunk)
+        try:
+            async with await self.sftp.client.open(meta_path, "wb") as sftp_file:
+                async for chunk in source_stream:
+                    await sftp_file.write(chunk)
+        except SFTPError as err:
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
+            raise BackupAgentError(f"Failed to write metadata file: {err}") from err
 
         await self.sftp.async_close()
 
@@ -214,9 +225,13 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
         if self.sftp.client is None:
             raise BackupAgentError("Failed to connect to SFTP server without a client")
 
-        await self.sftp.client.remove(f"{self._backup_path}/{filename_tar}")
-        await self.sftp.client.remove(f"{self._backup_path}/{filename_meta}")
-        await self.sftp.async_close()
+        try:
+            await self.sftp.client.remove(f"{self._backup_path}/{filename_tar}")
+            await self.sftp.client.remove(f"{self._backup_path}/{filename_meta}")
+            await self.sftp.async_close()
+        except SFTPError as err:
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
+            raise BackupAgentError(f"Failed to delete backup files: {err}") from err
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
