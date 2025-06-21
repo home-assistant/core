@@ -76,6 +76,7 @@ async def integration_fixture(
     params=[
         "air_purifier",
         "air_quality_sensor",
+        "battery_storage",
         "color_temperature_light",
         "cooktop",
         "dimmable_light",
