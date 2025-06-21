@@ -33,7 +33,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.temperature import display_temp, display_temp_interval
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -213,16 +213,22 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
+        hass = self.hass
+        temperature_unit = self.temperature_unit
+        precision = self.precision
+
         data: dict[str, Any] = {
-            ATTR_MIN_TEMP: show_temp(
-                self.hass, self.min_temp, self.temperature_unit, self.precision
+            ATTR_MIN_TEMP: display_temp(
+                hass, self.min_temp, temperature_unit, precision
             ),
-            ATTR_MAX_TEMP: show_temp(
-                self.hass, self.max_temp, self.temperature_unit, self.precision
+            ATTR_MAX_TEMP: display_temp(
+                hass, self.max_temp, temperature_unit, precision
             ),
         }
         if target_temperature_step := self.target_temperature_step:
-            data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
+            data[ATTR_TARGET_TEMP_STEP] = display_temp_interval(
+                hass, target_temperature_step, temperature_unit, precision
+            )
 
         if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features:
             data[ATTR_OPERATION_LIST] = self.operation_list
@@ -233,30 +239,22 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
+        hass = self.hass
+        temperature_unit = self.temperature_unit
+        precision = self.precision
+
         data: dict[str, Any] = {
-            ATTR_CURRENT_TEMPERATURE: show_temp(
-                self.hass,
-                self.current_temperature,
-                self.temperature_unit,
-                self.precision,
+            ATTR_CURRENT_TEMPERATURE: display_temp(
+                hass, self.current_temperature, temperature_unit, precision
             ),
-            ATTR_TEMPERATURE: show_temp(
-                self.hass,
-                self.target_temperature,
-                self.temperature_unit,
-                self.precision,
+            ATTR_TEMPERATURE: display_temp(
+                hass, self.target_temperature, temperature_unit, precision
             ),
-            ATTR_TARGET_TEMP_HIGH: show_temp(
-                self.hass,
-                self.target_temperature_high,
-                self.temperature_unit,
-                self.precision,
+            ATTR_TARGET_TEMP_HIGH: display_temp(
+                hass, self.target_temperature_high, temperature_unit, precision
             ),
-            ATTR_TARGET_TEMP_LOW: show_temp(
-                self.hass,
-                self.target_temperature_low,
-                self.temperature_unit,
-                self.precision,
+            ATTR_TARGET_TEMP_LOW: display_temp(
+                hass, self.target_temperature_low, temperature_unit, precision
             ),
         }
 
@@ -266,8 +264,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_OPERATION_MODE] = self.current_operation
 
         if WaterHeaterEntityFeature.AWAY_MODE in supported_features:
-            is_away = self.is_away_mode_on
-            data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
+            data[ATTR_AWAY_MODE] = STATE_ON if self.is_away_mode_on else STATE_OFF
 
         return data
 
