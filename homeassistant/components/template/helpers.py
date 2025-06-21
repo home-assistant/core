@@ -54,8 +54,7 @@ async def _reload_blueprint_templates(hass: HomeAssistant, blueprint_path: str) 
 @callback
 def async_get_blueprints(hass: HomeAssistant) -> blueprint.DomainBlueprints:
     """Get template blueprints."""
-    # pylint: disable-next=import-outside-toplevel
-    from .config import TEMPLATE_BLUEPRINT_SCHEMA
+    from .config import TEMPLATE_BLUEPRINT_SCHEMA  # noqa: PLC0415
 
     return blueprint.DomainBlueprints(
         hass,
