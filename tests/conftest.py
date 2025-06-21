@@ -99,6 +99,7 @@ from homeassistant.helpers import (
     translation as translation_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.script import ScriptRun
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -2040,9 +2041,18 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
         context: Context | None = None,
         target: dict[str, Any] | None = None,
         return_response: bool = False,
+        script_run: ScriptRun | None = None,
     ) -> ServiceResponse:
         calls.append(
-            ServiceCall(hass, domain, service, service_data, context, return_response)
+            ServiceCall(
+                hass,
+                domain,
+                service,
+                service_data,
+                context,
+                return_response,
+                script_run,
+            )
         )
         try:
             return await _original_async_call(
@@ -2053,6 +2063,7 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
                 context,
                 target,
                 return_response,
+                script_run,
             )
         except ServiceNotFound:
             _LOGGER.debug("Ignoring unknown service call to %s.%s", domain, service)

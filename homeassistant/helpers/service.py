@@ -290,6 +290,7 @@ def async_prepare_call_from_config(
     config: ConfigType,
     variables: TemplateVarsType = None,
     validate_config: bool = False,
+    template_exclude_keys: template.ExcludeKeys = None,
 ) -> ServiceParams:
     """Prepare to call a service based on a config hash."""
     if validate_config:
@@ -300,25 +301,7 @@ def async_prepare_call_from_config(
                 f"Invalid config for calling service: {ex}"
             ) from ex
 
-    if CONF_ACTION in config:
-        domain_service = config[CONF_ACTION]
-    else:
-        domain_service = config[CONF_SERVICE_TEMPLATE]
-
-    if isinstance(domain_service, template.Template):
-        try:
-            domain_service = domain_service.async_render(variables)
-            domain_service = cv.service(domain_service)
-        except TemplateError as ex:
-            raise HomeAssistantError(
-                f"Error rendering service name template: {ex}"
-            ) from ex
-        except vol.Invalid as ex:
-            raise HomeAssistantError(
-                f"Template rendered invalid service: {domain_service}"
-            ) from ex
-
-    domain, _, service = domain_service.partition(".")
+    domain, service = async_get_domain_service_from_config(config, variables)
 
     target = {}
     if CONF_TARGET in config:
@@ -352,7 +335,9 @@ def async_prepare_call_from_config(
         if conf not in config:
             continue
         try:
-            render = template.render_complex(config[conf], variables)
+            render = template.render_complex_exclude_keys(
+                config[conf], variables, template_exclude_keys
+            )
             if not isinstance(render, dict):
                 raise HomeAssistantError(
                     "Error rendering data template: Result is not a Dictionary"
@@ -373,6 +358,33 @@ def async_prepare_call_from_config(
         "service_data": service_data,
         "target": target,
     }
+
+
+@callback
+def async_get_domain_service_from_config(
+    config: ConfigType, variables: TemplateVarsType = None
+) -> tuple[str, str]:
+    """Get the domain and service name from a config."""
+    if CONF_ACTION in config:
+        domain_service = config[CONF_ACTION]
+    else:
+        domain_service = config[CONF_SERVICE_TEMPLATE]
+
+    if isinstance(domain_service, template.Template):
+        try:
+            domain_service = domain_service.async_render(variables)
+            domain_service = cv.service(domain_service)
+        except TemplateError as ex:
+            raise HomeAssistantError(
+                f"Error rendering service name template: {ex}"
+            ) from ex
+        except vol.Invalid as ex:
+            raise HomeAssistantError(
+                f"Template rendered invalid service: {domain_service}"
+            ) from ex
+
+    domain, _, service = domain_service.partition(".")
+    return domain, service
 
 
 @bind_hass

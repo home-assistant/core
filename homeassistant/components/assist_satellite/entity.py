@@ -116,6 +116,9 @@ class AssistSatelliteAnswer:
     id: str | None
     """Matched answer id or None if no answer was matched."""
 
+    idx: int | None
+    """Matched answer index or None if no answer was matched."""
+
     sentence: str
     """Raw sentence text from user response."""
 
@@ -335,7 +338,7 @@ class AssistSatelliteEntity(entity.Entity):
         preannounce: bool = True,
         preannounce_media_id: str = PREANNOUNCE_URL,
         answers: list[dict[str, Any]] | None = None,
-    ) -> AssistSatelliteAnswer | None:
+    ) -> AssistSatelliteAnswer:
         """Ask a question and get a user's response from the satellite.
 
         If question_media_id is not provided, question is synthesized to audio
@@ -377,7 +380,7 @@ class AssistSatelliteEntity(entity.Entity):
                 raise HomeAssistantError("No answer from question")
 
             if not answers:
-                return AssistSatelliteAnswer(id=None, sentence=response_text)
+                return AssistSatelliteAnswer(id=None, idx=None, sentence=response_text)
 
             return self._question_response_to_answer(response_text, answers)
         finally:
@@ -399,9 +402,9 @@ class AssistSatelliteEntity(entity.Entity):
                         "data": [
                             {
                                 "sentences": answer["sentences"],
-                                "metadata": {"answer_id": answer["id"]},
+                                "metadata": {"answer_idx": idx},
                             }
-                            for answer in answers
+                            for idx, answer in enumerate(answers)
                         ]
                     }
                 },
@@ -422,11 +425,13 @@ class AssistSatelliteEntity(entity.Entity):
         result = recognize(response_text, intents)
         if result is None:
             # No match
-            return AssistSatelliteAnswer(id=None, sentence=response_text)
+            return AssistSatelliteAnswer(id=None, idx=None, sentence=response_text)
 
         assert result.intent_metadata
+        idx = result.intent_metadata["answer_idx"]
         return AssistSatelliteAnswer(
-            id=result.intent_metadata["answer_id"],
+            id=answers[idx].get("id"),
+            idx=idx,
             sentence=response_text,
             slots={
                 entity_name: entity.value
