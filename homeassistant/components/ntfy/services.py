@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
 )
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -65,6 +65,7 @@ async def _publish(call: ServiceCall) -> None:
     await entity_service_call(call.hass, async_get_entities(call.hass), "publish", call)
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up action for ntfy integration."""
 
