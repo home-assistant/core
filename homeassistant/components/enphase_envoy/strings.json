@@ -380,6 +380,39 @@
       },
       "aggregated_soc": {
         "name": "Aggregated battery soc"
+      },
+      "dc_voltage": {
+        "name": "DC voltage"
+      },
+      "dc_curret": {
+        "name": "DC current"
+      },
+      "ac_voltage": {
+        "name": "AC voltage"
+      },
+      "ac_current": {
+        "name": "AC current"
+      },
+      "ac_frequency": {
+        "name": "AC frequency"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "lifetime_energy": {
+        "name": "Lifetime energy"
+      },
+      "energy_today": {
+        "name": "Energy produced today"
+      },
+      "energy_produced": {
+        "name": "Energy produced"
+      },
+      "max_reported": {
+        "name": "Max reported"
+      },
+      "last_report_duration": {
+        "name": "Last report duration"
       }
     },
     "switch": {
@@ -389,36 +422,6 @@
       "grid_enabled": {
         "name": "Grid enabled"
       }
-    },
-    "dc_voltage": {
-      "name": "DC voltage"
-    },
-    "dc_curret": {
-      "name": "DC current"
-    },
-    "ac_voltage": {
-      "name": "AC voltage"
-    },
-    "ac_current": {
-      "name": "AC current"
-    },
-    "ac_frequency": {
-      "name": "AC frequency"
-    },
-    "temperature": {
-      "name": "Temperature"
-    },
-    "lifetime_energy": {
-      "name": "Lifetime energy"
-    },
-    "energy_today": {
-      "name": "Energy produced today"
-    },
-    "energy_produced": {
-      "name": "Energy produced"
-    },
-    "last_report_duration": {
-      "name": "Last report duration"
     }
   },
   "exceptions": {
