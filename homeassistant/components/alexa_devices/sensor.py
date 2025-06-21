@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Final
 
 from aioamazondevices.api import AmazonDevice
 
@@ -29,14 +29,14 @@ PARALLEL_UPDATES = 0
 class AmazonSensorEntityDescription(SensorEntityDescription):
     """Amazon Devices sensor entity description."""
 
-    converted_unit: Callable[[AmazonDevice, str], str] | None = None
+    native_unit_of_measurement_fn: Callable[[AmazonDevice, str], str] | None = None
 
 
 SENSORS: Final = (
     AmazonSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        converted_unit=lambda device, _key: (
+        native_unit_of_measurement_fn=lambda device, _key: (
             UnitOfTemperature.CELSIUS
             if device.sensors[_key].scale == "CELSIUS"
             else UnitOfTemperature.FAHRENHEIT
@@ -75,14 +75,14 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
-        if self.entity_description.converted_unit:
-            return self.entity_description.converted_unit(
+        if self.entity_description.native_unit_of_measurement_fn:
+            return self.entity_description.native_unit_of_measurement_fn(
                 self.device, self.entity_description.key
             )
 
-        return self.entity_description.native_unit_of_measurement
+        return super().native_unit_of_measurement
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return cast("StateType", self.device.sensors[self.entity_description.key].value)
+        return self.device.sensors[self.entity_description.key].value
