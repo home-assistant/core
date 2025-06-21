@@ -1,0 +1,102 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  has-entity-name:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  reauthentication-flow:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  discovery:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  docs-data-update:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  docs-examples: done
+  docs-known-limitations:
+    status: exempt
+    comment: "No known limitations"
+  docs-supported-devices:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  docs-supported-functions:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  entity-category:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  entity-device-class:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  entity-disabled-by-default:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  repair-issues:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  stale-devices:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: "Not necessary, SFTPClient is a service"
+  strict-typing: done

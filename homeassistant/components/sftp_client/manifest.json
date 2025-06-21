@@ -1,0 +1,10 @@
+{
+  "domain": "sftp_client",
+  "name": "SFTPClient",
+  "codeowners": ["@cyr-ius"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sftp_client",
+  "iot_class": "local_polling",
+  "quality_scale": "silver",
+  "requirements": ["asyncssh==2.21.0"]
+}

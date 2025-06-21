@@ -5854,6 +5854,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "sftp_client": {
+      "name": "SFTPClient",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "sharkiq": {
       "name": "Shark IQ",
       "integration_type": "hub",

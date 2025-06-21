@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "backup_path": "Backup path"
+        },
+        "data_description": {
+          "host": "The hostname of the SFTP server.",
+          "username": "The username for the SFTP server.",
+          "password": "The password for the SFTP server.",
+          "backup_path": "Define the path where the backups should be located (will be created automatically if it does not exist)."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "exceptions": {
+    "invalid_username_password": {
+      "message": "Invalid username or password"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to SFTP server"
+    },
+    "cannot_access_or_create_backup_path": {
+      "message": "Cannot access or create backup path. Please check the path and permissions."
+    }
+  }
+}

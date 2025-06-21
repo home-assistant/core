@@ -493,6 +493,9 @@ asyncarve==0.1.1
 # homeassistant.components.sleepiq
 asyncsleepiq==1.5.2
 
+# homeassistant.components.sftp_client
+asyncssh==2.21.0
+
 # homeassistant.components.aurora
 auroranoaa==0.0.5
 
