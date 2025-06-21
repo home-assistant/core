@@ -1,35 +1,14 @@
-"""Conversation test helpers."""
+"""Assist conversation test helpers."""
 
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import conversation
 from homeassistant.components.shopping_list import intent as sl_intent
-from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import MockAgent
-from .common import mock_conversation_agent_fixture_helper
-
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_agent(hass: HomeAssistant) -> MockAgent:
-    """Mock agent."""
-    return mock_conversation_agent_fixture_helper(hass)
-
-
-@pytest.fixture
-def mock_agent_support_all(hass: HomeAssistant) -> MockAgent:
-    """Mock agent that supports all languages."""
-    entry = MockConfigEntry(entry_id="mock-entry-support-all")
-    entry.add_to_hass(hass)
-    agent = MockAgent(entry.entry_id, MATCH_ALL)
-    conversation.async_set_agent(hass, entry, agent)
-    return agent
 
 
 @pytest.fixture(autouse=True)
@@ -55,13 +34,8 @@ async def sl_setup(hass: HomeAssistant):
 
 
 @pytest.fixture
-async def init_components(hass: HomeAssistant):
+async def init_components(hass: HomeAssistant) -> None:
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
-
-
-@pytest.fixture
-async def init_default_agent(hass: HomeAssistant):
-    """Initialize component for default agent."""
+    assert await async_setup_component(hass, "intent", {})
     assert await async_setup_component(hass, "assist_conversation", {})
