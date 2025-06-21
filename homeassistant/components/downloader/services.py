@@ -8,8 +8,10 @@ import re
 import threading
 
 import requests
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
+from homeassistant.const import HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
@@ -17,6 +19,9 @@ from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import (
     _LOGGER,
+    ATTR_AUTH_PASSWORD,
+    ATTR_AUTH_TYPE,
+    ATTR_AUTH_USERNAME,
     ATTR_FILENAME,
     ATTR_OVERWRITE,
     ATTR_SUBDIR,
@@ -40,6 +45,12 @@ def download_file(service: ServiceCall) -> None:
         try:
             url = service.data[ATTR_URL]
 
+            auth_type = service.data.get(ATTR_AUTH_TYPE)
+
+            username = service.data.get(ATTR_AUTH_USERNAME)
+
+            password = service.data.get(ATTR_AUTH_PASSWORD)
+
             subdir = service.data.get(ATTR_SUBDIR)
 
             filename = service.data.get(ATTR_FILENAME)
@@ -52,7 +63,20 @@ def download_file(service: ServiceCall) -> None:
 
             final_path = None
 
-            req = requests.get(url, stream=True, timeout=10)
+            auth: HTTPBasicAuth | HTTPDigestAuth | None = None
+
+            if username and password:
+                if auth_type == HTTP_BASIC_AUTHENTICATION:
+                    auth = HTTPBasicAuth(username, password)
+                elif auth_type == HTTP_DIGEST_AUTHENTICATION:
+                    auth = HTTPDigestAuth(username, password)
+
+            req = requests.get(
+                url=url,
+                stream=True,
+                timeout=10,
+                auth=auth,
+            )
 
             if req.status_code != HTTPStatus.OK:
                 _LOGGER.warning(
@@ -150,9 +174,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         download_file,
         schema=vol.Schema(
             {
+                vol.Optional(ATTR_AUTH_TYPE, default=HTTP_BASIC_AUTHENTICATION): vol.In(
+                    [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+                ),
                 vol.Optional(ATTR_FILENAME): cv.string,
+                vol.Optional(ATTR_AUTH_PASSWORD): cv.string,
                 vol.Optional(ATTR_SUBDIR): cv.string,
                 vol.Required(ATTR_URL): cv.url,
+                vol.Optional(ATTR_AUTH_USERNAME): cv.string,
                 vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
             }
         ),
