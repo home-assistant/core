@@ -1,0 +1,68 @@
+rules:
+  # Bronze
+  config-flow: done
+  brands: done
+  dependency-transparency: done
+  common-modules: done
+  has-entity-name: done
+  action-setup:
+    status: exempt
+    comment: The integration does not register actions.
+  appropriate-polling: done
+  test-before-configure: done
+  entity-event-setup: done
+  unique-config-entry: done
+  entity-unique-id: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  test-before-setup: done
+  docs-high-level-description: done
+  config-flow-test-coverage: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register actions.
+  runtime-data: done
+
+  # Silver
+  log-when-unavailable: done
+  config-entry-unloading: done
+  reauthentication-flow: done
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register actions.
+  docs-installation-parameters: done
+  integration-owner: done
+  parallel-updates: todo
+  test-coverage: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration does not provide configuration parameters.
+  entity-unavailable: done
+
+  # Gold
+  docs-examples: todo
+  discovery-update-info: done
+  entity-device-class: done
+  entity-translations: todo
+  docs-data-update: done
+  entity-disabled-by-default: done
+  discovery: done
+  exception-translations: todo
+  devices: done
+  docs-supported-devices: done
+  icon-translations: todo
+  docs-known-limitations: done
+  stale-devices: todo
+  docs-supported-functions: todo
+  repair-issues: todo
+  reconfiguration-flow: todo
+  entity-category: done
+  dynamic-devices: todo
+  docs-troubleshooting: todo
+  diagnostics: done
+  docs-use-cases: todo
+
+  # Platinum
+  async-dependency: done
+  strict-typing: done
+  inject-websession: done
