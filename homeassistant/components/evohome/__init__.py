@@ -2,64 +2,57 @@
 
 Such systems provide heating/cooling and DHW and include Evohome, Round Thermostat, and
 others.
+
+Note that the API used by this integration's client does not support cooling.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Final
 
-import evohomeasync as ev1
-from evohomeasync.schema import SZ_SESSION_ID
-import evohomeasync2 as evo
-from evohomeasync2.schema.const import (
-    SZ_AUTO_WITH_RESET,
-    SZ_CAN_BE_TEMPORARY,
-    SZ_SYSTEM_MODE,
-    SZ_TIMING_MODE,
+import evohomeasync as ec1
+import evohomeasync2 as ec2
+from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
+from evohomeasync2.schemas.const import (
+    S2_DURATION as SZ_DURATION,
+    S2_PERIOD as SZ_PERIOD,
+    SystemMode as EvoSystemMode,
 )
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import homeassistant.util.dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
-    ACCESS_TOKEN,
-    ACCESS_TOKEN_EXPIRES,
-    ATTR_DURATION_DAYS,
-    ATTR_DURATION_HOURS,
+    ATTR_DURATION,
     ATTR_DURATION_UNTIL,
-    ATTR_SYSTEM_MODE,
-    ATTR_ZONE_TEMP,
+    ATTR_PERIOD,
+    ATTR_SETPOINT,
     CONF_LOCATION_IDX,
     DOMAIN,
-    REFRESH_TOKEN,
     SCAN_INTERVAL_DEFAULT,
     SCAN_INTERVAL_MINIMUM,
-    STORAGE_KEY,
-    STORAGE_VER,
-    USER_DATA,
     EvoService,
 )
-from .coordinator import EvoBroker
-from .helpers import dt_aware_to_naive, dt_local_to_aware, handle_evo_exception
+from .coordinator import EvoDataUpdateCoordinator
+from .storage import TokenManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +81,7 @@ RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_ZONE_TEMP): vol.All(
+        vol.Required(ATTR_SETPOINT): vol.All(
             vol.Coerce(float), vol.Range(min=4.0, max=35.0)
         ),
         vol.Optional(ATTR_DURATION_UNTIL): vol.All(
@@ -97,177 +90,69 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
     }
 )
 
+EVOHOME_KEY: HassKey[EvoData] = HassKey(DOMAIN)
 
-class EvoSession:
-    """Class for evohome client instantiation & authentication."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the evohome broker and its data structure."""
+@dataclass
+class EvoData:
+    """Dataclass for storing evohome data."""
 
-        self.hass = hass
-
-        self._session = async_get_clientsession(hass)
-        self._store = Store[dict[str, Any]](hass, STORAGE_VER, STORAGE_KEY)
-
-        # the main client, which uses the newer API
-        self.client_v2: evo.EvohomeClient | None = None
-        self._tokens: dict[str, Any] = {}
-
-        # the older client can be used to obtain high-precision temps (only)
-        self.client_v1: ev1.EvohomeClient | None = None
-        self.session_id: str | None = None
-
-    async def authenticate(self, username: str, password: str) -> None:
-        """Check the user credentials against the web API.
-
-        Will raise evo.AuthenticationFailed if the credentials are invalid.
-        """
-
-        if (
-            self.client_v2 is None
-            or username != self.client_v2.username
-            or password != self.client_v2.password
-        ):
-            await self._load_auth_tokens(username)
-
-            client_v2 = evo.EvohomeClient(
-                username,
-                password,
-                **self._tokens,
-                session=self._session,
-            )
-
-        else:  # force a re-authentication
-            client_v2 = self.client_v2
-            client_v2._user_account = None  # noqa: SLF001
-
-        await client_v2.login()
-        self.client_v2 = client_v2  # only set attr if authentication succeeded
-
-        await self.save_auth_tokens()
-
-        self.client_v1 = ev1.EvohomeClient(
-            username,
-            password,
-            session_id=self.session_id,
-            session=self._session,
-        )
-
-    async def _load_auth_tokens(self, username: str) -> None:
-        """Load access tokens and session_id from the store and validate them.
-
-        Sets self._tokens and self._session_id to the latest values.
-        """
-
-        app_storage: dict[str, Any] = dict(await self._store.async_load() or {})
-
-        if app_storage.pop(CONF_USERNAME, None) != username:
-            # any tokens won't be valid, and store might be corrupt
-            await self._store.async_save({})
-
-            self.session_id = None
-            self._tokens = {}
-
-            return
-
-        # evohomeasync2 requires naive/local datetimes as strings
-        if app_storage.get(ACCESS_TOKEN_EXPIRES) is not None and (
-            expires := dt_util.parse_datetime(app_storage[ACCESS_TOKEN_EXPIRES])
-        ):
-            app_storage[ACCESS_TOKEN_EXPIRES] = dt_aware_to_naive(expires)
-
-        user_data: dict[str, str] = app_storage.pop(USER_DATA, {}) or {}
-
-        self.session_id = user_data.get(SZ_SESSION_ID)
-        self._tokens = app_storage
-
-    async def save_auth_tokens(self) -> None:
-        """Save access tokens and session_id to the store.
-
-        Sets self._tokens and self._session_id to the latest values.
-        """
-
-        if self.client_v2 is None:
-            await self._store.async_save({})
-            return
-
-        # evohomeasync2 uses naive/local datetimes
-        access_token_expires = dt_local_to_aware(
-            self.client_v2.access_token_expires  # type: ignore[arg-type]
-        )
-
-        self._tokens = {
-            CONF_USERNAME: self.client_v2.username,
-            REFRESH_TOKEN: self.client_v2.refresh_token,
-            ACCESS_TOKEN: self.client_v2.access_token,
-            ACCESS_TOKEN_EXPIRES: access_token_expires.isoformat(),
-        }
-
-        self.session_id = self.client_v1.broker.session_id if self.client_v1 else None
-
-        app_storage = self._tokens
-        if self.client_v1:
-            app_storage[USER_DATA] = {SZ_SESSION_ID: self.session_id}
-
-        await self._store.async_save(app_storage)
+    coordinator: EvoDataUpdateCoordinator
+    loc_idx: int
+    tcs: ec2.ControlSystem
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Evohome integration."""
 
-    sess = EvoSession(hass)
-
-    try:
-        await sess.authenticate(
-            config[DOMAIN][CONF_USERNAME],
-            config[DOMAIN][CONF_PASSWORD],
-        )
-
-    except (evo.AuthenticationFailed, evo.RequestFailed) as err:
-        handle_evo_exception(err)
-        return False
-
-    finally:
-        config[DOMAIN][CONF_PASSWORD] = "REDACTED"
-
-    broker = EvoBroker(sess)
-
-    if not broker.validate_location(
-        config[DOMAIN][CONF_LOCATION_IDX],
-    ):
-        return False
-
-    coordinator = DataUpdateCoordinator(
+    token_manager = TokenManager(
+        hass,
+        config[DOMAIN][CONF_USERNAME],
+        config[DOMAIN][CONF_PASSWORD],
+        async_get_clientsession(hass),
+    )
+    coordinator = EvoDataUpdateCoordinator(
         hass,
         _LOGGER,
-        config_entry=None,
+        ec2.EvohomeClient(token_manager),
         name=f"{DOMAIN}_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
-        update_method=broker.async_update,
+        location_idx=config[DOMAIN][CONF_LOCATION_IDX],
+        client_v1=ec1.EvohomeClient(token_manager),
     )
+
     await coordinator.async_register_shutdown()
+    await coordinator.async_first_refresh()
 
-    hass.data[DOMAIN] = {"broker": broker, "coordinator": coordinator}
+    if not coordinator.last_update_success:
+        _LOGGER.error(f"Failed to fetch initial data: {coordinator.last_exception}")  # noqa: G004
+        return False
 
-    # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
-    coordinator.async_add_listener(lambda: None)
-    await coordinator.async_refresh()  # get initial state
+    assert coordinator.tcs is not None  # mypy
+
+    hass.data[EVOHOME_KEY] = EvoData(
+        coordinator=coordinator,
+        loc_idx=coordinator.loc_idx,
+        tcs=coordinator.tcs,
+    )
 
     hass.async_create_task(
         async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
     )
-    if broker.tcs.hotwater:
+    if coordinator.tcs.hotwater:
         hass.async_create_task(
             async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
-    setup_service_functions(hass, broker)
+    setup_service_functions(hass, coordinator)
 
     return True
 
 
 @callback
-def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
+def setup_service_functions(
+    hass: HomeAssistant, coordinator: EvoDataUpdateCoordinator
+) -> None:
     """Set up the service handlers for the system/zone operating modes.
 
     Not all Honeywell TCC-compatible systems support all operating modes. In addition,
@@ -280,13 +165,15 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
     @verify_domain_control(hass, DOMAIN)
     async def force_refresh(call: ServiceCall) -> None:
         """Obtain the latest state data via the vendor's RESTful API."""
-        await broker.async_update()
+        await coordinator.async_refresh()
 
     @verify_domain_control(hass, DOMAIN)
     async def set_system_mode(call: ServiceCall) -> None:
         """Set the system mode."""
+        assert coordinator.tcs is not None  # mypy
+
         payload = {
-            "unique_id": broker.tcs.systemId,
+            "unique_id": coordinator.tcs.id,
             "service": call.service,
             "data": call.data,
         }
@@ -314,33 +201,39 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
 
         async_dispatcher_send(hass, DOMAIN, payload)
 
+    assert coordinator.tcs is not None  # mypy
+
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
 
     # Enumerate which operating modes are supported by this system
-    modes = broker.tcs.allowedSystemModes
+    modes = list(coordinator.tcs.allowed_system_modes)
 
     # Not all systems support "AutoWithReset": register this handler only if required
-    if [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_SYSTEM_MODE] == SZ_AUTO_WITH_RESET]:
+    if any(
+        m[SZ_SYSTEM_MODE]
+        for m in modes
+        if m[SZ_SYSTEM_MODE] == EvoSystemMode.AUTO_WITH_RESET
+    ):
         hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
     system_mode_schemas = []
-    modes = [m for m in modes if m[SZ_SYSTEM_MODE] != SZ_AUTO_WITH_RESET]
+    modes = [m for m in modes if m[SZ_SYSTEM_MODE] != EvoSystemMode.AUTO_WITH_RESET]
 
     # Permanent-only modes will use this schema
     perm_modes = [m[SZ_SYSTEM_MODE] for m in modes if not m[SZ_CAN_BE_TEMPORARY]]
     if perm_modes:  # any of: "Auto", "HeatingOff": permanent only
-        schema = vol.Schema({vol.Required(ATTR_SYSTEM_MODE): vol.In(perm_modes)})
+        schema = vol.Schema({vol.Required(ATTR_MODE): vol.In(perm_modes)})
         system_mode_schemas.append(schema)
 
     modes = [m for m in modes if m[SZ_CAN_BE_TEMPORARY]]
 
     # These modes are set for a number of hours (or indefinitely): use this schema
-    temp_modes = [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_TIMING_MODE] == "Duration"]
+    temp_modes = [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_TIMING_MODE] == SZ_DURATION]
     if temp_modes:  # any of: "AutoWithEco", permanent or for 0-24 hours
         schema = vol.Schema(
             {
-                vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
-                vol.Optional(ATTR_DURATION_HOURS): vol.All(
+                vol.Required(ATTR_MODE): vol.In(temp_modes),
+                vol.Optional(ATTR_DURATION): vol.All(
                     cv.time_period,
                     vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
                 ),
@@ -349,12 +242,12 @@ def setup_service_functions(hass: HomeAssistant, broker: EvoBroker) -> None:
         system_mode_schemas.append(schema)
 
     # These modes are set for a number of days (or indefinitely): use this schema
-    temp_modes = [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_TIMING_MODE] == "Period"]
+    temp_modes = [m[SZ_SYSTEM_MODE] for m in modes if m[SZ_TIMING_MODE] == SZ_PERIOD]
     if temp_modes:  # any of: "Away", "Custom", "DayOff", permanent or for 1-99 days
         schema = vol.Schema(
             {
-                vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
-                vol.Optional(ATTR_DURATION_DAYS): vol.All(
+                vol.Required(ATTR_MODE): vol.In(temp_modes),
+                vol.Optional(ATTR_PERIOD): vol.All(
                     cv.time_period,
                     vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
                 ),

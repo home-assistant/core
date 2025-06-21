@@ -97,8 +97,7 @@ class LocalCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_ICS_FILE],
                     self.data[CONF_STORAGE_KEY],
                 )
-            except HomeAssistantError as err:
-                _LOGGER.debug("Error saving uploaded file: %s", err)
+            except InvalidIcsFile:
                 errors[CONF_ICS_FILE] = "invalid_ics_file"
             else:
                 return self.async_create_entry(
@@ -112,6 +111,10 @@ class LocalCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
+class InvalidIcsFile(HomeAssistantError):
+    """Error to indicate that the uploaded file is not a valid ICS file."""
+
+
 def save_uploaded_ics_file(
     hass: HomeAssistant, uploaded_file_id: str, storage_key: str
 ):
@@ -122,6 +125,10 @@ def save_uploaded_ics_file(
         try:
             CalendarStream.from_ics(ics)
         except CalendarParseError as err:
-            raise HomeAssistantError("Failed to upload file: Invalid ICS file") from err
+            _LOGGER.error("Error reading the calendar information: %s", err.message)
+            _LOGGER.debug(
+                "Additional calendar error detail: %s", str(err.detailed_error)
+            )
+            raise InvalidIcsFile("Failed to upload file: Invalid ICS file") from err
         dest_path = Path(hass.config.path(STORAGE_PATH.format(key=storage_key)))
         shutil.move(file, dest_path)

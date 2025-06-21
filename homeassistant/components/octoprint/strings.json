@@ -1,11 +1,11 @@
 {
   "config": {
-    "flow_title": "OctoPrint Printer: {host}",
+    "flow_title": "OctoPrint printer: {host}",
     "step": {
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "path": "Application Path",
+          "path": "Application path",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
@@ -29,7 +29,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "auth_failed": "Failed to retrieve application api key",
+      "auth_failed": "Failed to retrieve API key",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "progress": {
@@ -44,7 +44,7 @@
   "services": {
     "printer_connect": {
       "name": "Connect to a printer",
-      "description": "Instructs the octoprint server to connect to a printer.",
+      "description": "Instructs the OctoPrint server to connect to a printer.",
       "fields": {
         "device_id": {
           "name": "Server",

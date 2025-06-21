@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -96,6 +97,7 @@ async def test_turn_on_off_toggle(
     [
         (ERROR_TOO_MANY_REQUESTS, HomeAssistantError),
         (ERROR_BAD_REQUEST, HomeAssistantError),
+        (ClientError, HomeAssistantError),
     ],
 )
 async def test_turn_on_off_toggle_exceptions(

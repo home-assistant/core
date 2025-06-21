@@ -1,6 +1,6 @@
 """Mock inputs for tests."""
 
-from pylamarzocco.const import MachineModel
+from pylamarzocco.const import ModelName
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -19,10 +19,10 @@ PASSWORD_SELECTION = {
 USER_INPUT = PASSWORD_SELECTION | {CONF_USERNAME: "username"}
 
 SERIAL_DICT = {
-    MachineModel.GS3_AV: "GS012345",
-    MachineModel.GS3_MP: "GS012345",
-    MachineModel.LINEA_MICRA: "MR012345",
-    MachineModel.LINEA_MINI: "LM012345",
+    ModelName.GS3_AV: "GS012345",
+    ModelName.GS3_MP: "GS012345",
+    ModelName.LINEA_MICRA: "MR012345",
+    ModelName.LINEA_MINI: "LM012345",
 }
 
 WAKE_UP_SLEEP_ENTRY_IDS = ["Os2OswX", "aXFz5bJ"]
@@ -37,15 +37,13 @@ async def async_init_integration(
     await hass.async_block_till_done()
 
 
-def get_bluetooth_service_info(
-    model: MachineModel, serial: str
-) -> BluetoothServiceInfo:
+def get_bluetooth_service_info(model: ModelName, serial: str) -> BluetoothServiceInfo:
     """Return a mocked BluetoothServiceInfo."""
-    if model in (MachineModel.GS3_AV, MachineModel.GS3_MP):
+    if model in (ModelName.GS3_AV, ModelName.GS3_MP):
         name = f"GS3_{serial}"
-    elif model == MachineModel.LINEA_MINI:
+    elif model == ModelName.LINEA_MINI:
         name = f"MINI_{serial}"
-    elif model == MachineModel.LINEA_MICRA:
+    elif model == ModelName.LINEA_MICRA:
         name = f"MICRA_{serial}"
     return BluetoothServiceInfo(
         name=name,

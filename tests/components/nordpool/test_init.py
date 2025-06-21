@@ -24,7 +24,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import ENTRY_CONFIG
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -88,7 +88,7 @@ async def test_reconfigure_cleans_up_device(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test clean up devices due to reconfiguration."""
-    nl_json_file = load_fixture("delivery_period_nl.json", DOMAIN)
+    nl_json_file = await async_load_fixture(hass, "delivery_period_nl.json", DOMAIN)
     load_nl_json = json.loads(nl_json_file)
 
     entry = MockConfigEntry(

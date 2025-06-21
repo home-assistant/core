@@ -12,14 +12,13 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CODE_REQUIRED, DOMAIN
-from .coordinator import TotalConnectDataUpdateCoordinator
+from .coordinator import TotalConnectConfigEntry, TotalConnectDataUpdateCoordinator
 from .entity import TotalConnectLocationEntity
 
 SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
@@ -27,7 +26,9 @@ SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TotalConnectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
     coordinator = entry.runtime_data
@@ -73,7 +74,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     ) -> None:
         """Initialize the TotalConnect status."""
         super().__init__(coordinator, location)
-        self._partition_id = partition_id
+        self._partition_id = int(partition_id)
         self._partition = self._location.partitions[partition_id]
 
         """
@@ -81,7 +82,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         for most users with new support for partitions.
         Add _# for partition 2 and beyond.
         """
-        if partition_id == 1:
+        if int(partition_id) == 1:
             self._attr_name = None
             self._attr_unique_id = str(location.location_id)
         else:
@@ -96,22 +97,6 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
-        # State attributes can be removed in 2025.3
-        attr = {
-            "location_id": self._location.location_id,
-            "partition": self._partition_id,
-            "ac_loss": self._location.ac_loss,
-            "low_battery": self._location.low_battery,
-            "cover_tampered": self._location.is_cover_tampered(),
-            "triggered_source": None,
-            "triggered_zone": None,
-        }
-
-        if self._partition_id == 1:
-            attr["location_name"] = self.device.name
-        else:
-            attr["location_name"] = f"{self.device.name} partition {self._partition_id}"
-
         state: AlarmControlPanelState | None = None
         if self._partition.arming_state.is_disarmed():
             state = AlarmControlPanelState.DISARMED
@@ -127,17 +112,12 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             state = AlarmControlPanelState.ARMING
         elif self._partition.arming_state.is_disarming():
             state = AlarmControlPanelState.DISARMING
-        elif self._partition.arming_state.is_triggered_police():
+        elif (
+            self._partition.arming_state.is_triggered_police()
+            or self._partition.arming_state.is_triggered_fire()
+            or self._partition.arming_state.is_triggered_gas()
+        ):
             state = AlarmControlPanelState.TRIGGERED
-            attr["triggered_source"] = "Police/Medical"
-        elif self._partition.arming_state.is_triggered_fire():
-            state = AlarmControlPanelState.TRIGGERED
-            attr["triggered_source"] = "Fire/Smoke"
-        elif self._partition.arming_state.is_triggered_gas():
-            state = AlarmControlPanelState.TRIGGERED
-            attr["triggered_source"] = "Carbon Monoxide"
-
-        self._attr_extra_state_attributes = attr
 
         return state
 

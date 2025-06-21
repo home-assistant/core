@@ -4,24 +4,20 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KeeneticRouter
-from .const import DOMAIN, ROUTER
+from .router import KeeneticConfigEntry, KeeneticRouter
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: KeeneticConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Keenetic NDMS2 component."""
-    router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
-
-    async_add_entities([RouterOnlineBinarySensor(router)])
+    async_add_entities([RouterOnlineBinarySensor(config_entry.runtime_data)])
 
 
 class RouterOnlineBinarySensor(BinarySensorEntity):

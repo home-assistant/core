@@ -7,7 +7,7 @@
       "fields": {
         "name": {
           "name": "[%key:common::config_flow::data::name%]",
-          "description": "Custom name for an entity, can be referenced using an `entity_id`."
+          "description": "Custom name for an entity, can be referenced using the 'Entity ID' field."
         },
         "message": {
           "name": "Message",

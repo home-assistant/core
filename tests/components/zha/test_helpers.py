@@ -9,7 +9,7 @@ from zigpy.application import ControllerApplication
 from zigpy.types.basic import uint16_t
 from zigpy.zcl.clusters import lighting
 
-import homeassistant.components.zha.const as zha_const
+from homeassistant.components.zha import const as zha_const
 from homeassistant.components.zha.helpers import (
     cluster_command_schema_to_vol_schema,
     convert_to_zcl_values,
@@ -18,7 +18,7 @@ from homeassistant.components.zha.helpers import (
     get_zha_data,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry

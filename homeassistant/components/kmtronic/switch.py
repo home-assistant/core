@@ -4,21 +4,23 @@ from typing import Any
 import urllib.parse
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_REVERSE, DATA_COORDINATOR, DATA_HUB, DOMAIN, MANUFACTURER
+from .const import CONF_REVERSE, DOMAIN, MANUFACTURER
+from .coordinator import KMTronicConfigEntry
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: KMTronicConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Config entry example."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
-    hub = hass.data[DOMAIN][entry.entry_id][DATA_HUB]
+    coordinator = entry.runtime_data
+    hub = coordinator.hub
     reverse = entry.options.get(CONF_REVERSE, False)
     await hub.async_get_relays()
 

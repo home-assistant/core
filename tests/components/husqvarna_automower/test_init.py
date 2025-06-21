@@ -7,10 +7,10 @@ import time
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import (
-    ApiException,
-    AuthException,
+    ApiError,
+    AuthError,
+    HusqvarnaTimeoutError,
     HusqvarnaWSServerHandshakeError,
-    TimeoutException,
 )
 from aioautomower.model import MowerAttributes, WorkArea
 from freezegun.api import FrozenDateTimeFactory
@@ -33,6 +33,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 ADDITIONAL_NUMBER_ENTITIES = 1
 ADDITIONAL_SENSOR_ENTITIES = 2
 ADDITIONAL_SWITCH_ENTITIES = 1
+NUMBER_OF_ENTITIES_MOWER_2 = 11
 
 
 async def test_load_unload_entry(
@@ -111,8 +112,8 @@ async def test_expired_token_refresh_failure(
 @pytest.mark.parametrize(
     ("exception", "entry_state"),
     [
-        (ApiException, ConfigEntryState.SETUP_RETRY),
-        (AuthException, ConfigEntryState.SETUP_ERROR),
+        (ApiError, ConfigEntryState.SETUP_RETRY),
+        (AuthError, ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_update_failed(
@@ -142,7 +143,7 @@ async def test_update_failed(
         ),
         (
             ["start_listening"],
-            TimeoutException,
+            HusqvarnaTimeoutError,
             "Failed to listen to websocket.",
         ),
     ],
@@ -227,31 +228,81 @@ async def test_coordinator_automatic_registry_cleanup(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     values: dict[str, MowerAttributes],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test automatic registry cleanup."""
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.async_block_till_done()
 
+    # Count current entitties and devices
     current_entites = len(
         er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     )
     current_devices = len(
         dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     )
-
-    values.pop(TEST_MOWER_ID)
+    # Remove mower 2 and check if it worked
+    mower2 = values.pop("1234")
     mock_automower_client.get_status.return_value = values
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (
         len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
-        == current_entites - 37
+        == current_entites - NUMBER_OF_ENTITIES_MOWER_2
     )
     assert (
         len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
         == current_devices - 1
+    )
+    # Add mower 2 and check if it worked
+    values["1234"] = mower2
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == current_entites
+    )
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
+        == current_devices
+    )
+
+    # Remove mower 1 and check if it worked
+    mower1 = values.pop(TEST_MOWER_ID)
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == NUMBER_OF_ENTITIES_MOWER_2
+    )
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
+        == current_devices - 1
+    )
+    # Add mower 1 and check if it worked
+    values[TEST_MOWER_ID] = mower1
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
+        == current_devices
+    )
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == current_entites
     )
 
 

@@ -6,21 +6,24 @@ from typing import Any
 from smarttub import SpaPump
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import API_TIMEOUT, ATTR_PUMPS, DOMAIN, SMARTTUB_CONTROLLER
+from .const import API_TIMEOUT, ATTR_PUMPS
+from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SmartTubConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch entities for the pumps on the tub."""
 
-    controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
+    controller = entry.runtime_data
 
     entities = [
         SmartTubPump(controller.coordinator, pump)
@@ -34,7 +37,9 @@ async def async_setup_entry(
 class SmartTubPump(SmartTubEntity, SwitchEntity):
     """A pump on a spa."""
 
-    def __init__(self, coordinator, pump: SpaPump) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[dict[str, Any]], pump: SpaPump
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, pump.spa, "pump")
         self.pump_id = pump.id

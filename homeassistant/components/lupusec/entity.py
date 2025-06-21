@@ -18,7 +18,7 @@ class LupusecDevice(Entity):
         self._device = device
         self._attr_unique_id = device.device_id
 
-    def update(self):
+    def update(self) -> None:
         """Update automation state."""
         self._device.refresh()
 

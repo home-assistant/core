@@ -14,7 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE, STATE_OFF, STAT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.recorder.common import (

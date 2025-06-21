@@ -41,9 +41,9 @@ def test_requirement_override_markers() -> None:
     ):
         assert (
             gen_requirements_all.process_action_requirement(
-                "env-canada==0.7.2", "pytest"
+                "env-canada==0.8.0", "pytest"
             )
-            == "env-canada==0.7.2;python_version<'3.13'"
+            == "env-canada==0.8.0;python_version<'3.13'"
         )
         assert (
             gen_requirements_all.process_action_requirement("other==1.0", "pytest")

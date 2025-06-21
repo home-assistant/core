@@ -217,7 +217,7 @@ async def test_reauth_with_existing_config(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_API_KEY: "MYAPIKEY2",
+            CONF_API_KEY: MOCK_CONFIG[CONF_API_KEY],
         },
     )
 

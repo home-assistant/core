@@ -5,24 +5,23 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FoscamCoordinator
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
+from .coordinator import FoscamConfigEntry, FoscamCoordinator
 from .entity import FoscamEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FoscamConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up foscam switch from a config entry."""
 
-    coordinator: FoscamCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -36,12 +35,12 @@ class FoscamSleepSwitch(FoscamEntity, SwitchEntity):
     def __init__(
         self,
         coordinator: FoscamCoordinator,
-        config_entry: ConfigEntry,
+        config_entry: FoscamConfigEntry,
     ) -> None:
         """Initialize a Foscam Sleep Switch."""
         super().__init__(coordinator, config_entry.entry_id)
 
-        self._attr_unique_id = "sleep_switch"
+        self._attr_unique_id = f"{config_entry.entry_id}_sleep_switch"
         self._attr_translation_key = "sleep_switch"
         self._attr_has_entity_name = True
 

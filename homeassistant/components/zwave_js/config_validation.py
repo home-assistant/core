@@ -4,7 +4,7 @@ from typing import Any
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 # Validates that a bitmask is provided in hex form and converts it to decimal
 # int equivalent since that's what the library uses

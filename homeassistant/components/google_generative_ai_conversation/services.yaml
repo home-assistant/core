@@ -9,3 +9,8 @@ generate_content:
       required: false
       selector:
         object:
+    filenames:
+      required: false
+      selector:
+        text:
+          multiple: true

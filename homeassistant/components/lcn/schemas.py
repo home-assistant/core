@@ -9,7 +9,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     UnitOfTemperature,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -21,15 +21,18 @@ from .const import (
     CONF_MOTOR,
     CONF_OUTPUT,
     CONF_OUTPUTS,
+    CONF_POSITIONING_MODE,
     CONF_REGISTER,
     CONF_REVERSE_TIME,
     CONF_SETPOINT,
+    CONF_TARGET_VALUE_LOCKED,
     CONF_TRANSITION,
     KEYS,
     LED_PORTS,
     LOGICOP_PORTS,
     MOTOR_PORTS,
-    MOTOR_REVERSE_TIME,
+    MOTOR_POSITIONING_MODES,
+    MOTOR_REVERSE_TIMES,
     OUTPUT_PORTS,
     RELAY_PORTS,
     S0_INPUTS,
@@ -58,6 +61,7 @@ DOMAIN_DATA_CLIMATE: VolDictType = {
     vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
     vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
     vol.Optional(CONF_LOCKABLE, default=False): vol.Coerce(bool),
+    vol.Optional(CONF_TARGET_VALUE_LOCKED, default=-1): vol.Coerce(float),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=UnitOfTemperature.CELSIUS): vol.In(
         UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
     ),
@@ -66,8 +70,11 @@ DOMAIN_DATA_CLIMATE: VolDictType = {
 
 DOMAIN_DATA_COVER: VolDictType = {
     vol.Required(CONF_MOTOR): vol.All(vol.Upper, vol.In(MOTOR_PORTS)),
+    vol.Optional(CONF_POSITIONING_MODE, default="none"): vol.All(
+        vol.Upper, vol.In(MOTOR_POSITIONING_MODES)
+    ),
     vol.Optional(CONF_REVERSE_TIME, default="rt1200"): vol.All(
-        vol.Upper, vol.In(MOTOR_REVERSE_TIME)
+        vol.Upper, vol.In(MOTOR_REVERSE_TIMES)
     ),
 }
 

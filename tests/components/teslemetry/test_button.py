@@ -29,6 +29,7 @@ async def test_button(
 @pytest.mark.parametrize(
     ("name", "func"),
     [
+        ("wake", "wake_up"),
         ("flash_lights", "flash_lights"),
         ("honk_horn", "honk_horn"),
         ("keyless_driving", "remote_start_drive"),
@@ -41,7 +42,7 @@ async def test_press(hass: HomeAssistant, name: str, func: str) -> None:
     await setup_platform(hass, [Platform.BUTTON])
 
     with patch(
-        f"homeassistant.components.teslemetry.VehicleSpecific.{func}",
+        f"tesla_fleet_api.teslemetry.Vehicle.{func}",
         return_value=COMMAND_OK,
     ) as command:
         await hass.services.async_call(

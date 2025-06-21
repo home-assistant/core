@@ -308,7 +308,7 @@ class AuthStore:
         credentials.data = data
         self._async_schedule_save()
 
-    async def async_load(self) -> None:  # noqa: C901
+    async def async_load(self) -> None:
         """Load the users."""
         if self._loaded:
             raise RuntimeError("Auth storage is already loaded")

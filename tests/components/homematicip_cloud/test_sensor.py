@@ -2,7 +2,6 @@
 
 from homematicip.base.enums import ValveState
 
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_CONFIG_PENDING,
     ATTR_DEVICE_OVERHEATED,
@@ -23,11 +22,7 @@ from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_WIND_DIRECTION,
     ATTR_WIND_DIRECTION_VARIATION,
 )
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
@@ -39,17 +34,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
-
-
-async def test_manually_configured_platform(hass: HomeAssistant) -> None:
-    """Test that we do not set up an access point."""
-    assert await async_setup_component(
-        hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: {"platform": HMIPC_DOMAIN}}
-    )
-    assert not hass.data.get(HMIPC_DOMAIN)
 
 
 async def test_hmip_accesspoint_status(
@@ -720,3 +706,42 @@ async def test_hmip_esi_led_energy_counter_usage_high_tariff(
     )
 
     assert ha_state.state == "23825.748"
+
+
+async def test_hmip_absolute_humidity_sensor(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test absolute humidity sensor (vaporAmount)."""
+    entity_id = "sensor.elvshctv_absolute_humidity"
+    entity_name = "elvshctv Absolute Humidity"
+    device_model = "ELV-SH-CTH"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["elvshctv"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "6098"
+
+
+async def test_hmip_absolute_humidity_sensor_invalid_value(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test absolute humidity sensor with invalid value for vaporAmount."""
+    entity_id = "sensor.elvshctv_absolute_humidity"
+    entity_name = "elvshctv Absolute Humidity"
+    device_model = "ELV-SH-CTH"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["elvshctv"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    await async_manipulate_test_data(hass, hmip_device, "vaporAmount", None, 1)
+    ha_state = hass.states.get(entity_id)
+
+    assert ha_state.state == STATE_UNKNOWN

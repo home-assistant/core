@@ -16,7 +16,7 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: done
     comment: |
@@ -45,8 +45,8 @@ rules:
   # Gold
   devices: todo
   diagnostics: todo
-  discovery: todo
-  discovery-update-info: todo
+  discovery: done
+  discovery-update-info: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

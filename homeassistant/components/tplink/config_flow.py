@@ -18,7 +18,7 @@ from kasa import (
 )
 import voluptuous as vol
 
-from homeassistant.components import dhcp, ffmpeg, stream
+from homeassistant.components import ffmpeg, stream
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -40,6 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import (
@@ -93,7 +94,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: Device | None = None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         return await self._async_handle_discovery(
@@ -327,7 +328,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
             host, port = self._async_get_host_port(host)
 
-            match_dict = {CONF_HOST: host}
+            match_dict: dict[str, Any] = {CONF_HOST: host}
             if port:
                 self.port = port
                 match_dict[CONF_PORT] = port
@@ -566,7 +567,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_reload_requires_auth_entries(self) -> None:
-        """Reload any in progress config flow that now have credentials."""
+        """Reload all config entries after auth update."""
         _config_entries = self.hass.config_entries
 
         if self.source == SOURCE_REAUTH:
@@ -578,11 +579,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             context = flow["context"]
             if context.get("source") != SOURCE_REAUTH:
                 continue
-            entry_id: str = context["entry_id"]
+            entry_id = context["entry_id"]
             if entry := _config_entries.async_get_entry(entry_id):
                 await _config_entries.async_reload(entry.entry_id)
-                if entry.state is ConfigEntryState.LOADED:
-                    _config_entries.flow.async_abort(flow["flow_id"])
 
     @callback
     def _async_create_or_update_entry_from_device(

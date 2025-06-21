@@ -11,8 +11,10 @@ from homeassistant.components.climate import (
 
 DOMAIN: Final = "velbus"
 
+CONF_CONFIG_ENTRY: Final = "config_entry"
 CONF_INTERFACE: Final = "interface"
 CONF_MEMO_TEXT: Final = "memo_text"
+CONF_TLS: Final = "tls"
 
 SERVICE_SCAN: Final = "scan"
 SERVICE_SYNC: Final = "sync_clock"

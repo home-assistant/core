@@ -1,13 +1,27 @@
 """Test the Z-Wave JS button entities."""
 
+from datetime import timedelta
+from unittest.mock import MagicMock
+
 import pytest
+from zwave_js_server.model.node import Node
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALUE
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from homeassistant.const import ATTR_ENTITY_ID, EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
+
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.BUTTON]
 
 
 async def test_ping_entity(
@@ -65,11 +79,32 @@ async def test_ping_entity(
 
 
 async def test_notification_idle_button(
-    hass: HomeAssistant, client, multisensor_6, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    multisensor_6: Node,
+    integration: MockConfigEntry,
 ) -> None:
     """Test Notification idle button."""
     node = multisensor_6
-    state = hass.states.get("button.multisensor_6_idle_home_security_cover_status")
+    entity_id = "button.multisensor_6_idle_home_security_cover_status"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None  # disabled by default
+
+    entity_registry.async_update_entity(
+        entity_id,
+        disabled_by=None,
+    )
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == "unknown"
     assert (
@@ -82,13 +117,13 @@ async def test_notification_idle_button(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.multisensor_6_idle_home_security_cover_status",
+            ATTR_ENTITY_ID: entity_id,
         },
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args_list[0][0][0]
+    assert client.async_send_command_no_wait.call_count == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "node.manually_idle_notification_value"
     assert args["nodeId"] == node.node_id
     assert args["valueId"] == {

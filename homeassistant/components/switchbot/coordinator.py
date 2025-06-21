@@ -91,6 +91,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         """Handle the device going unavailable."""
         super()._async_handle_unavailable(service_info)
         self._was_unavailable = True
+        _LOGGER.info("Device %s is unavailable", self.device_name)
 
     @callback
     def _async_handle_bluetooth_event(
@@ -114,6 +115,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         if not self.device.advertisement_changed(adv) and not self._was_unavailable:
             return
         self._was_unavailable = False
+        _LOGGER.info("Device %s is online", self.device_name)
         self.device.update_from_advertisement(adv)
         super()._async_handle_bluetooth_event(service_info, change)
 

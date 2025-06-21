@@ -213,6 +213,36 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
 
 
+async def test_async_step_user_replaces_ignored(hass: HomeAssistant) -> None:
+    """Test setup from service info cache replaces an ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="54:48:E6:8F:80:A5",
+        data={},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.bthome.config_flow.async_discovered_service_info",
+        return_value=[PRST_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    with patch("homeassistant.components.bthome.async_setup_entry", return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "54:48:E6:8F:80:A5"},
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "b-parasite 80A5"
+    assert result2["data"] == {}
+    assert result2["result"].unique_id == "54:48:E6:8F:80:A5"
+
+
 async def test_async_step_user_with_found_devices_encryption(
     hass: HomeAssistant,
 ) -> None:

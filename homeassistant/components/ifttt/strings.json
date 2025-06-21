@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up the IFTTT Webhook Applet",
+        "title": "Set up the IFTTT webhook applet",
         "description": "Are you sure you want to set up IFTTT?"
       }
     },
@@ -12,7 +12,7 @@
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
     },
     "create_entry": {
-      "default": "To send events to Home Assistant, you will need to use the \"Make a web request\" action from the [IFTTT Webhook applet]({applet_url}).\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/json\n\nSee [the documentation]({docs_url}) on how to configure automations to handle incoming data."
+      "default": "To send events to Home Assistant, you will need to use the \"Make a web request\" action from the [IFTTT webhook applet]({applet_url}).\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/json\n\nSee [the documentation]({docs_url}) on how to configure automations to handle incoming data."
     }
   },
   "services": {
@@ -32,7 +32,7 @@
     },
     "trigger": {
       "name": "Trigger",
-      "description": "Triggers the configured IFTTT Webhook.",
+      "description": "Triggers the configured IFTTT webhook.",
       "fields": {
         "event": {
           "name": "Event",

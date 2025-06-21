@@ -1,0 +1,89 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      The integration does not provide any additional actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: |
+      - The calls to the api can be changed to return bool, and services can then raise HomeAssistantError
+      - Current services raise ValueError and should raise ServiceValidationError instead.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration has no configuration parameters
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: |
+      - Test helper init_integration() does not set a unique_id
+      - Merge test_setup_http_exception and test_setup_auth_account_locked
+      - The climate platform is at 94%
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration is a cloud service and thus does not support discovery.
+  discovery:
+    status: exempt
+    comment: |
+      This integration is a cloud service and thus does not support discovery.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class:
+    status: todo
+    comment: The "unknown" state should not be part of the enum for the dispense level sensor.
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations:
+    status: todo
+    comment: |
+      Time remaining sensor still has hardcoded icon.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: No known use cases for repair issues or flows, yet
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

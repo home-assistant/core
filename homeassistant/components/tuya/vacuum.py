@@ -13,7 +13,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
@@ -48,7 +48,9 @@ TUYA_STATUS_TO_HA = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya vacuum dynamically through Tuya discovery."""
     hass_data = entry.runtime_data
@@ -89,9 +91,8 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
-        if (
-            self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True)
-            or (
+        if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True) or (
+            (
                 enum_type := self.find_dpcode(
                     DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
                 )

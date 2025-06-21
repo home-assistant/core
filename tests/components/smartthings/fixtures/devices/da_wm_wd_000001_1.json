@@ -1,0 +1,205 @@
+{
+  "items": [
+    {
+      "deviceId": "3a6c4e05-811d-5041-e956-3d04c424cbcd",
+      "name": "[dryer] Samsung",
+      "label": "Seca-Roupa",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-WM-WD-000001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "06efa178-ad2f-4d22-838c-d63e05e5a58a",
+      "ownerId": "1a5f5619-e9ec-4302-beb9-633bb1657897",
+      "roomId": "dde24053-9707-49a5-ba0e-f19681514f37",
+      "deviceTypeName": "Samsung OCF Dryer",
+      "components": [
+        {
+          "id": "main",
+          "label": "Seca-Roupa",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "dryerOperatingState",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "demandResponseLoadControl",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.dryerDryLevel",
+              "version": 1
+            },
+            {
+              "id": "custom.dryerWrinklePrevent",
+              "version": 1
+            },
+            {
+              "id": "custom.energyType",
+              "version": 1
+            },
+            {
+              "id": "custom.jobBeginningStatus",
+              "version": 1
+            },
+            {
+              "id": "custom.supportedOptions",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.detergentOrder",
+              "version": 1
+            },
+            {
+              "id": "samsungce.detergentState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dongleSoftwareInstallation",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerAutoCycleLink",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerCycle",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerCyclePreset",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerDelayEnd",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerDryingTemperature",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerDryingTime",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerFreezePrevent",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dryerOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kidsLock",
+              "version": 1
+            },
+            {
+              "id": "samsungce.welcomeMessage",
+              "version": 1
+            },
+            {
+              "id": "samsungce.quickControl",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Dryer",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "hca.main",
+          "label": "hca.main",
+          "capabilities": [
+            {
+              "id": "hca.dryerMode",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2020-06-20T10:00:42Z",
+      "profile": {
+        "id": "53a1d049-eeda-396c-8324-e33438ef57be"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.dryer",
+        "name": "[dryer] Samsung",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "DA_WM_A51_20_COMMON|20221341|30010102001211000103000000000000",
+        "platformVersion": "DAWIT 2.0",
+        "platformOS": "TizenRT 1.0 + IPv6",
+        "hwVersion": "ARTIK051",
+        "firmwareVersion": "DA_WM_A51_20_COMMON_30230708",
+        "vendorId": "DA-WM-WD-000001",
+        "vendorResourceClientServerVersion": "ARTIK051 Release 2.210224.1",
+        "lastSignupTime": "2020-11-19T04:43:50.736Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

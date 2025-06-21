@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import TechnoVEDataUpdateCoordinator
+from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
-
-TechnoVEConfigEntry = ConfigEntry[TechnoVEDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TechnoVEConfigEntry) -> bool:
@@ -25,6 +22,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TechnoVEConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TechnoVEConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

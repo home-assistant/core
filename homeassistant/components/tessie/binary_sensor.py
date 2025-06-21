@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TessieConfigEntry
 from .const import TessieState
@@ -177,7 +177,7 @@ ENERGY_INFO_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TessieConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tessie binary sensor platform from a config entry."""
     async_add_entities(
@@ -191,6 +191,7 @@ async def async_setup_entry(
                 TessieEnergyLiveBinarySensorEntity(energy, description)
                 for energy in entry.runtime_data.energysites
                 for description in ENERGY_LIVE_DESCRIPTIONS
+                if energy.live_coordinator is not None
             ),
             (
                 TessieEnergyInfoBinarySensorEntity(vehicle, description)
@@ -233,6 +234,7 @@ class TessieEnergyLiveBinarySensorEntity(TessieEnergyEntity, BinarySensorEntity)
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
+        assert data.live_coordinator is not None
         super().__init__(data, data.live_coordinator, description.key)
 
     def _async_update_attrs(self) -> None:

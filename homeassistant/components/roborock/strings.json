@@ -5,12 +5,18 @@
         "description": "Enter your Roborock email address.",
         "data": {
           "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "username": "The email address used to sign in to the Roborock app."
         }
       },
       "code": {
         "description": "Type the verification code sent to your email",
         "data": {
           "code": "Verification code"
+        },
+        "data_description": {
+          "code": "The verification code sent to your email."
         }
       },
       "reauth_confirm": {
@@ -23,13 +29,14 @@
       "invalid_email": "There is no account associated with the email you entered, please try again.",
       "invalid_email_format": "There is an issue with the formatting of your email - please try again.",
       "too_frequent_code_requests": "You have attempted to request too many codes. Try again later.",
-      "unknown_roborock": "There was an unknown roborock exception - please check your logs.",
-      "unknown_url": "There was an issue determining the correct url for your roborock account - please check your logs.",
+      "unknown_roborock": "There was an unknown Roborock exception - please check your logs.",
+      "unknown_url": "There was an issue determining the correct URL for your Roborock account - please check your logs.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "Wrong account: Please authenticate with the right account."
     }
   },
   "options": {
@@ -54,6 +61,25 @@
           "vacuum_position": "Vacuum position",
           "virtual_walls": "Virtual walls",
           "zones": "Zones"
+        },
+        "data_description": {
+          "charger": "Show the charger on the map.",
+          "cleaned_area": "Show the area cleaned on the map.",
+          "goto_path": "Show the go-to path on the map.",
+          "ignored_obstacles": "Show ignored obstacles on the map.",
+          "ignored_obstacles_with_photo": "Show ignored obstacles with photos on the map.",
+          "mop_path": "Show the mop path on the map.",
+          "no_carpet_zones": "Show the no carpet zones on the map.",
+          "no_go_zones": "Show the no-go zones on the map.",
+          "no_mopping_zones": "Show the no-mop zones on the map.",
+          "obstacles": "Show obstacles on the map.",
+          "obstacles_with_photo": "Show obstacles with photos on the map.",
+          "path": "Show the path on the map.",
+          "predicted_path": "Show the predicted path on the map.",
+          "room_names": "Show room names on the map.",
+          "vacuum_position": "Show the vacuum position on the map.",
+          "virtual_walls": "Show virtual walls on the map.",
+          "zones": "Show zones on the map."
         }
       }
     }
@@ -128,12 +154,12 @@
           "updating": "[%key:component::roborock::entity::sensor::status::state::updating%]",
           "washing": "Washing",
           "ready": "Ready",
-          "charging": "[%key:component::roborock::entity::sensor::status::state::charging%]",
+          "charging": "[%key:common::state::charging%]",
           "mop_washing": "Washing mop",
-          "self_clean_cleaning": "Self clean cleaning",
-          "self_clean_deep_cleaning": "Self clean deep cleaning",
-          "self_clean_rinsing": "Self clean rinsing",
-          "self_clean_dehydrating": "Self clean drying",
+          "self_clean_cleaning": "Self-clean cleaning",
+          "self_clean_deep_cleaning": "Self-clean deep cleaning",
+          "self_clean_rinsing": "Self-clean rinsing",
+          "self_clean_dehydrating": "Self-clean drying",
           "drying": "Drying",
           "ventilating": "Ventilating",
           "reserving": "Reserving",
@@ -155,6 +181,9 @@
       },
       "countdown": {
         "name": "Countdown"
+      },
+      "current_room": {
+        "name": "Current room"
       },
       "dock_error": {
         "name": "Dock error",
@@ -199,11 +228,11 @@
           "cleaning": "Cleaning",
           "returning_home": "Returning home",
           "manual_mode": "Manual mode",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "charging_problem": "Charging problem",
           "paused": "[%key:common::state::paused%]",
           "spot_cleaning": "Spot cleaning",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "shutting_down": "Shutting down",
           "updating": "Updating",
           "docking": "Docking",
@@ -227,6 +256,9 @@
       },
       "total_cleaning_area": {
         "name": "Total cleaning area"
+      },
+      "total_cleaning_count": {
+        "name": "Total cleaning count"
       },
       "vacuum_error": {
         "name": "Vacuum error",
@@ -307,7 +339,7 @@
       "zeo_state": {
         "name": "State",
         "state": {
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "weighing": "Weighing",
           "soaking": "Soaking",
           "washing": "Washing",
@@ -336,12 +368,12 @@
         "name": "Mop intensity",
         "state": {
           "off": "[%key:common::state::off%]",
-          "low": "Low",
+          "low": "[%key:common::state::low%]",
           "mild": "Mild",
-          "medium": "Medium",
+          "medium": "[%key:common::state::medium%]",
           "moderate": "Moderate",
           "max": "Max",
-          "high": "High",
+          "high": "[%key:common::state::high%]",
           "intense": "Intense",
           "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
           "custom_water_flow": "Custom water flow",
@@ -350,6 +382,15 @@
       },
       "selected_map": {
         "name": "Selected map"
+      },
+      "dust_collection_mode": {
+        "name": "Empty mode",
+        "state": {
+          "smart": "Smart",
+          "light": "Light",
+          "balanced": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::balanced%]",
+          "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]"
+        }
       }
     },
     "switch": {
@@ -385,14 +426,14 @@
         "state_attributes": {
           "fan_speed": {
             "state": {
-              "auto": "Auto",
+              "off": "[%key:common::state::off%]",
+              "auto": "[%key:common::state::auto%]",
               "balanced": "Balanced",
               "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
               "gentle": "Gentle",
-              "off": "[%key:common::state::off%]",
               "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]",
               "max_plus": "Max plus",
-              "medium": "Medium",
+              "medium": "[%key:common::state::medium%]",
               "quiet": "Quiet",
               "silent": "Silent",
               "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
@@ -417,21 +458,33 @@
     "map_failure": {
       "message": "Something went wrong creating the map"
     },
+    "position_not_found": {
+      "message": "Robot position not found"
+    },
+    "update_data_fail": {
+      "message": "Failed to update data"
+    },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
     },
     "update_options_failed": {
       "message": "Failed to update Roborock options"
+    },
+    "invalid_user_agreement": {
+      "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."
+    },
+    "no_user_agreement": {
+      "message": "You have not valid user agreement. Open your Roborock app and accept the agreement."
     }
   },
   "services": {
     "get_maps": {
       "name": "Get maps",
-      "description": "Get the map and room information of your device."
+      "description": "Retrieves the map and room information of your device."
     },
     "set_vacuum_goto_position": {
       "name": "Go to position",
-      "description": "Send the vacuum to a specific position.",
+      "description": "Sends the vacuum to a specific position.",
       "fields": {
         "x": {
           "name": "X-coordinate",
@@ -445,7 +498,7 @@
     },
     "get_vacuum_current_position": {
       "name": "Get current position",
-      "description": "Get the current position of the vacuum."
+      "description": "Retrieves the current position of the vacuum."
     }
   }
 }

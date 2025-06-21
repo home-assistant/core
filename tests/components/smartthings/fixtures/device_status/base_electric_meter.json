@@ -1,0 +1,21 @@
+{
+  "components": {
+    "main": {
+      "powerMeter": {
+        "power": {
+          "value": 938.3,
+          "unit": "W",
+          "timestamp": "2025-02-09T17:56:21.748Z"
+        }
+      },
+      "energyMeter": {
+        "energy": {
+          "value": 1930.362,
+          "unit": "kWh",
+          "timestamp": "2025-02-09T17:56:21.918Z"
+        }
+      },
+      "refresh": {}
+    }
+  }
+}

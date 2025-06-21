@@ -30,12 +30,12 @@ from .conftest import MockConfigEntry, MockModuleConnection, init_integration
 
 from tests.common import snapshot_platform
 
-SWITCH_OUTPUT1 = "switch.switch_output1"
-SWITCH_OUTPUT2 = "switch.switch_output2"
-SWITCH_RELAY1 = "switch.switch_relay1"
-SWITCH_RELAY2 = "switch.switch_relay2"
-SWITCH_REGULATOR1 = "switch.switch_regulator1"
-SWITCH_KEYLOCKK1 = "switch.switch_keylock1"
+SWITCH_OUTPUT1 = "switch.testmodule_switch_output1"
+SWITCH_OUTPUT2 = "switch.testmodule_switch_output2"
+SWITCH_RELAY1 = "switch.testmodule_switch_relay1"
+SWITCH_RELAY2 = "switch.testmodule_switch_relay2"
+SWITCH_REGULATOR1 = "switch.testmodule_switch_regulator1"
+SWITCH_KEYLOCKK1 = "switch.testmodule_switch_keylock1"
 
 
 async def test_setup_lcn_switch(

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import aiohttp
 from spotifyaio import Device, SpotifyClient, SpotifyConnectionError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -32,11 +31,11 @@ from .util import (
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 __all__ = [
-    "async_browse_media",
     "DOMAIN",
-    "spotify_uri_from_media_browser_url",
+    "async_browse_media",
     "is_spotify_media_type",
     "resolve_spotify_media_type",
+    "spotify_uri_from_media_browser_url",
 ]
 
 
@@ -63,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
 
     spotify.refresh_token_function = _refresh_token
 
-    coordinator = SpotifyCoordinator(hass, spotify)
+    coordinator = SpotifyCoordinator(hass, entry, spotify)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -92,6 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
     """Unload Spotify config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

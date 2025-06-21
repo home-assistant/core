@@ -3,10 +3,10 @@
 import asyncio
 from collections.abc import Generator
 import time
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, create_autospec, patch
 
+from aioautomower.commands import MowerCommands, WorkAreaSettings
 from aioautomower.model import MowerAttributes
-from aioautomower.session import AutomowerSession, _MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
@@ -58,6 +58,15 @@ def mock_values(mower_time_zone) -> dict[str, MowerAttributes]:
     )
 
 
+@pytest.fixture(name="values_one_mower")
+def mock_values_one_mower(mower_time_zone) -> dict[str, MowerAttributes]:
+    """Fixture to set correct scope for the token."""
+    return mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower1.json", DOMAIN),
+        mower_time_zone,
+    )
+
+
 @pytest.fixture
 def mock_config_entry(jwt: str, expires_at: int, scope: str) -> MockConfigEntry:
     """Return the default mocked config entry."""
@@ -99,7 +108,9 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_automower_client(values) -> Generator[AsyncMock]:
+def mock_automower_client(
+    values: dict[str, MowerAttributes],
+) -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
 
     async def listen() -> None:
@@ -108,14 +119,21 @@ def mock_automower_client(values) -> Generator[AsyncMock]:
         await listen_block.wait()
         pytest.fail("Listen was not cancelled!")
 
-    mock = AsyncMock(spec=AutomowerSession)
-    mock.auth = AsyncMock(side_effect=ClientWebSocketResponse)
-    mock.commands = AsyncMock(spec_set=_MowerCommands)
-    mock.get_status.return_value = values
-    mock.start_listening = AsyncMock(side_effect=listen)
-
     with patch(
         "homeassistant.components.husqvarna_automower.AutomowerSession",
-        return_value=mock,
-    ):
-        yield mock
+        autospec=True,
+        spec_set=True,
+    ) as mock:
+        mock_instance = mock.return_value
+        mock_instance.auth = AsyncMock(side_effect=ClientWebSocketResponse)
+        mock_instance.get_status = AsyncMock(return_value=values)
+        mock_instance.start_listening = AsyncMock(side_effect=listen)
+        mock_instance.commands = create_autospec(
+            MowerCommands, instance=True, spec_set=True
+        )
+        mock_instance.commands.workarea_settings.return_value = create_autospec(
+            WorkAreaSettings,
+            instance=True,
+            spec_set=True,
+        )
+        yield mock_instance

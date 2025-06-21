@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pystiebeleltron.pystiebeleltron import StiebelEltronAPI
+
 from homeassistant.components.climate import (
     PRESET_ECO,
     ClimateEntity,
@@ -13,10 +15,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as STE_DOMAIN
+from . import StiebelEltronConfigEntry
 
 DEPENDENCIES = ["stiebel_eltron"]
 
@@ -56,17 +57,14 @@ HA_TO_STE_HVAC = {
 HA_TO_STE_PRESET = {k: i for i, k in STE_TO_HA_PRESET.items()}
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: StiebelEltronConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the StiebelEltron platform."""
-    name = hass.data[STE_DOMAIN]["name"]
-    ste_data = hass.data[STE_DOMAIN]["ste_data"]
+    """Set up STIEBEL ELTRON climate platform."""
 
-    add_entities([StiebelEltron(name, ste_data)], True)
+    async_add_entities([StiebelEltron(entry.title, entry.runtime_data)], True)
 
 
 class StiebelEltron(ClimateEntity):
@@ -81,86 +79,84 @@ class StiebelEltron(ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, name, ste_data):
+    def __init__(self, name: str, client: StiebelEltronAPI) -> None:
         """Initialize the unit."""
         self._name = name
-        self._target_temperature = None
-        self._current_temperature = None
-        self._current_humidity = None
-        self._operation = None
-        self._filter_alarm = None
-        self._force_update = False
-        self._ste_data = ste_data
+        self._target_temperature: float | int | None = None
+        self._current_temperature: float | int | None = None
+        self._current_humidity: float | int | None = None
+        self._operation: str | None = None
+        self._filter_alarm: bool | None = None
+        self._client = client
 
     def update(self) -> None:
         """Update unit attributes."""
-        self._ste_data.update(no_throttle=self._force_update)
-        self._force_update = False
+        self._client.update()
 
-        self._target_temperature = self._ste_data.api.get_target_temp()
-        self._current_temperature = self._ste_data.api.get_current_temp()
-        self._current_humidity = self._ste_data.api.get_current_humidity()
-        self._filter_alarm = self._ste_data.api.get_filter_alarm_status()
-        self._operation = self._ste_data.api.get_operation()
+        self._target_temperature = self._client.get_target_temp()
+        self._current_temperature = self._client.get_current_temp()
+        self._current_humidity = self._client.get_current_humidity()
+        self._filter_alarm = self._client.get_filter_alarm_status()
+        self._operation = self._client.get_operation()
 
         _LOGGER.debug(
             "Update %s, current temp: %s", self._name, self._current_temperature
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, bool | None]:
         """Return device specific state attributes."""
         return {"filter_alarm": self._filter_alarm}
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the climate device."""
         return self._name
 
     # Handle ClimateEntityFeature.TARGET_TEMPERATURE
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._current_temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._target_temperature
 
     @property
-    def target_temperature_step(self):
+    def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         return 0.1
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return 10.0
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return 30.0
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return float(f"{self._current_humidity:.1f}")
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        return STE_TO_HA_HVAC.get(self._operation)
+        return STE_TO_HA_HVAC.get(self._operation) if self._operation else None
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        return STE_TO_HA_PRESET.get(self._operation)
+        return STE_TO_HA_PRESET.get(self._operation) if self._operation else None
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
@@ -170,20 +166,17 @@ class StiebelEltron(ClimateEntity):
             return
         new_mode = HA_TO_STE_HVAC.get(hvac_mode)
         _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation, new_mode)
-        self._ste_data.api.set_operation(new_mode)
-        self._force_update = True
+        self._client.set_operation(new_mode)
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
         if target_temperature is not None:
             _LOGGER.debug("set_temperature: %s", target_temperature)
-            self._ste_data.api.set_target_temp(target_temperature)
-            self._force_update = True
+            self._client.set_target_temp(target_temperature)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         new_mode = HA_TO_STE_PRESET.get(preset_mode)
         _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation, new_mode)
-        self._ste_data.api.set_operation(new_mode)
-        self._force_update = True
+        self._client.set_operation(new_mode)

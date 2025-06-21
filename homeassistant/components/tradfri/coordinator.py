@@ -10,6 +10,7 @@ from pytradfri.command import Command
 from pytradfri.device import Device
 from pytradfri.error import RequestError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -21,10 +22,12 @@ SCAN_INTERVAL = 60  # Interval for updating the coordinator
 class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Coordinator to manage data for a specific Tradfri device."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
+        config_entry: ConfigEntry,
         api: Callable[[Command | list[Command]], Any],
         device: Device,
     ) -> None:
@@ -36,6 +39,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=f"Update coordinator for {device}",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )

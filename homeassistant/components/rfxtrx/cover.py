@@ -11,7 +11,7 @@ from homeassistant.components.cover import CoverEntity, CoverEntityFeature, Cove
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DeviceTuple, async_setup_platform_entry
 from .const import (
@@ -34,7 +34,7 @@ def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""
 

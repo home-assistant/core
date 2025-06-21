@@ -22,6 +22,16 @@
       "available_requests": {
         "default": "mdi:message-bulleted"
       }
+    },
+    "event": {
+      "last_media_event": {
+        "default": "mdi:multimedia"
+      }
+    }
+  },
+  "services": {
+    "get_requests": {
+      "service": "mdi:multimedia"
     }
   }
 }

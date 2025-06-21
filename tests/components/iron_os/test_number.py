@@ -126,7 +126,7 @@ async def test_state(
             2.0,
             2.0,
         ),
-        ("number.pinecil_power_limit", CharSetting.POWER_LIMIT, 12.0, 12.0),
+        ("number.pinecil_power_limit", CharSetting.POWER_LIMIT, 120, 120),
         ("number.pinecil_quick_charge_voltage", CharSetting.QC_IDEAL_VOLTAGE, 9.0, 9.0),
         (
             "number.pinecil_short_press_temperature_step",
@@ -138,6 +138,12 @@ async def test_state(
         ("number.pinecil_sleep_temperature", CharSetting.SLEEP_TEMP, 150, 150),
         ("number.pinecil_sleep_timeout", CharSetting.SLEEP_TIMEOUT, 5, 5),
         ("number.pinecil_voltage_divider", CharSetting.VOLTAGE_DIV, 600, 600),
+        (
+            "number.pinecil_hall_sensor_sleep_timeout",
+            CharSetting.HALL_SLEEP_TIME,
+            60,
+            60,
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "ble_device")

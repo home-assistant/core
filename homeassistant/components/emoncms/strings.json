@@ -1,7 +1,7 @@
 {
   "config": {
     "error": {
-      "api_error": "An error occured in the pyemoncms API : {details}"
+      "api_error": "An error occurred in the pyemoncms API : {details}"
     },
     "step": {
       "user": {
@@ -10,8 +10,8 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "url": "Server url starting with the protocol (http or https)",
-          "api_key": "Your 32 bits api key"
+          "url": "Server URL starting with the protocol (http or https)",
+          "api_key": "Your 32 bits API key"
         }
       },
       "choose_feeds": {
@@ -93,7 +93,7 @@
     },
     "migrate_database": {
       "title": "Upgrade your emoncms version",
-      "description": "Your [emoncms]({url}) does not ship a unique identifier.\n\n Please upgrade to at least version 11.5.7 and migrate your emoncms database.\n\n More info on [emoncms documentation]({doc_url})"
+      "description": "Your [emoncms]({url}) does not ship a unique identifier.\n\nPlease upgrade to at least version 11.5.7 and migrate your emoncms database.\n\nMore info in the [emoncms documentation]({doc_url})"
     }
   }
 }

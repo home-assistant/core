@@ -1,11 +1,14 @@
 """Support for Roborock vacuum class."""
 
-from dataclasses import asdict
 from typing import Any
 
 from roborock.code_mappings import RoborockStateCode
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
+from vacuum_map_parser_base.config.color import ColorsPalette
+from vacuum_map_parser_base.config.image_config import ImageConfig
+from vacuum_map_parser_base.config.size import Sizes
+from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -16,18 +19,16 @@ from homeassistant.components.vacuum import (
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RoborockConfigEntry
 from .const import (
     DOMAIN,
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
 )
-from .coordinator import RoborockDataUpdateCoordinator
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
-from .image import ColorsPalette, ImageConfig, RoborockMapDataParser, Sizes
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"
@@ -55,11 +56,13 @@ STATE_CODE_TO_STATE = {
     RoborockStateCode.device_offline: VacuumActivity.ERROR,  # "Device offline"
 }
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Roborock sensor."""
     async_add_entities(
@@ -202,7 +205,14 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         """Get map information such as map id and room ids."""
         return {
             "maps": [
-                asdict(vacuum_map) for vacuum_map in self.coordinator.maps.values()
+                {
+                    "flag": vacuum_map.flag,
+                    "name": vacuum_map.name,
+                    # JsonValueType does not accept a int as a key - was not a
+                    # issue with previous asdict() implementation.
+                    "rooms": vacuum_map.rooms,  # type: ignore[dict-item]
+                }
+                for vacuum_map in self.coordinator.maps.values()
             ]
         }
 
@@ -211,13 +221,18 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
         map_data = await self.coordinator.cloud_api.get_map_v1()
         if not isinstance(map_data, bytes):
-            raise HomeAssistantError("Failed to retrieve map data.")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            )
         parser = RoborockMapDataParser(ColorsPalette(), Sizes(), [], ImageConfig(), [])
         parsed_map = parser.parse(map_data)
         robot_position = parsed_map.vacuum_position
 
         if robot_position is None:
-            raise HomeAssistantError("Robot position not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="position_not_found"
+            )
 
         return {
             "x": robot_position.x,

@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "bluetooth": {
+        "default": "mdi:bluetooth",
+        "state": {
+          "off": "mdi:bluetooth-off"
+        }
+      }
+    }
+  }
+}

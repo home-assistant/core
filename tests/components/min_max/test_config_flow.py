@@ -9,7 +9,7 @@ from homeassistant.components.min_max.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
@@ -55,17 +55,6 @@ async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
     assert config_entry.title == "My min_max"
 
 
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    # Wanted key absent from schema
-    raise KeyError("Wanted key absent from schema")
-
-
 @pytest.mark.parametrize("platform", ["sensor"])
 async def test_options(hass: HomeAssistant, platform: str) -> None:
     """Test reconfiguring."""
@@ -96,9 +85,9 @@ async def test_options(hass: HomeAssistant, platform: str) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
-    assert get_suggested(schema, "entity_ids") == input_sensors1
-    assert get_suggested(schema, "round_digits") == 0
-    assert get_suggested(schema, "type") == "min"
+    assert get_schema_suggested_value(schema, "entity_ids") == input_sensors1
+    assert get_schema_suggested_value(schema, "round_digits") == 0
+    assert get_schema_suggested_value(schema, "type") == "min"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],

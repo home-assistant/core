@@ -16,6 +16,7 @@ from aiohttp import ClientError
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
 from aiowithings import NotificationCategory, WithingsClient
+from aiowithings.exceptions import WithingsError
 from aiowithings.util import to_enum
 from yarl import URL
 
@@ -119,13 +120,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
     client.refresh_token_function = _refresh_token
     withings_data = WithingsData(
         client=client,
-        measurement_coordinator=WithingsMeasurementDataUpdateCoordinator(hass, client),
-        sleep_coordinator=WithingsSleepDataUpdateCoordinator(hass, client),
-        bed_presence_coordinator=WithingsBedPresenceDataUpdateCoordinator(hass, client),
-        goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, client),
-        activity_coordinator=WithingsActivityDataUpdateCoordinator(hass, client),
-        workout_coordinator=WithingsWorkoutDataUpdateCoordinator(hass, client),
-        device_coordinator=WithingsDeviceDataUpdateCoordinator(hass, client),
+        measurement_coordinator=WithingsMeasurementDataUpdateCoordinator(
+            hass, entry, client
+        ),
+        sleep_coordinator=WithingsSleepDataUpdateCoordinator(hass, entry, client),
+        bed_presence_coordinator=WithingsBedPresenceDataUpdateCoordinator(
+            hass, entry, client
+        ),
+        goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, entry, client),
+        activity_coordinator=WithingsActivityDataUpdateCoordinator(hass, entry, client),
+        workout_coordinator=WithingsWorkoutDataUpdateCoordinator(hass, entry, client),
+        device_coordinator=WithingsDeviceDataUpdateCoordinator(hass, entry, client),
     )
 
     for coordinator in withings_data.coordinators:
@@ -223,10 +228,13 @@ class WithingsWebhookManager:
                 "Unregister Withings webhook (%s)", self.entry.data[CONF_WEBHOOK_ID]
             )
             webhook_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
-            await async_unsubscribe_webhooks(self.withings_data.client)
             for coordinator in self.withings_data.coordinators:
                 coordinator.webhook_subscription_listener(False)
             self._webhooks_registered = False
+            try:
+                await async_unsubscribe_webhooks(self.withings_data.client)
+            except WithingsError as ex:
+                LOGGER.warning("Failed to unsubscribe from Withings webhook: %s", ex)
 
     async def register_webhook(
         self,

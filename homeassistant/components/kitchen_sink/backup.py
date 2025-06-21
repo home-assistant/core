@@ -7,7 +7,13 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
 from typing import Any
 
-from homeassistant.components.backup import AddonInfo, AgentBackup, BackupAgent, Folder
+from homeassistant.components.backup import (
+    AddonInfo,
+    AgentBackup,
+    BackupAgent,
+    BackupNotFound,
+    Folder,
+)
 from homeassistant.core import HomeAssistant, callback
 
 from . import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
@@ -51,7 +57,7 @@ class KitchenSinkBackupAgent(BackupAgent):
     def __init__(self, name: str) -> None:
         """Initialize the kitchen sink backup sync agent."""
         super().__init__()
-        self.name = name
+        self.name = self.unique_id = name
         self._uploads = [
             AgentBackup(
                 addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
@@ -110,9 +116,9 @@ class KitchenSinkBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
         for backup in self._uploads:
             if backup.backup_id == backup_id:
                 return backup
-        return None
+        raise BackupNotFound(f"Backup {backup_id} not found")

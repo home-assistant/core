@@ -97,16 +97,27 @@ def get_artwork_url(
     client: JellyfinClient, item: dict[str, Any], max_width: int = 600
 ) -> str | None:
     """Find a suitable thumbnail for an item."""
-    artwork_id: str = item["Id"]
-    artwork_type = "Primary"
+    artwork_id: str | None = None
+    artwork_type: str | None = None
     parent_backdrop_id: str | None = item.get("ParentBackdropItemId")
 
-    if "Backdrop" in item[ITEM_KEY_IMAGE_TAGS]:
+    if "AlbumPrimaryImageTag" in item:
+        # jellyfin_apiclient_python doesn't support passing a specific tag to `.artwork`,
+        # so we don't use the actual value of AlbumPrimaryImageTag.
+        # However, its mere presence tells us that the album does have primary artwork,
+        # and the resulting URL will pull the primary album art even if the tag is not specified.
+        artwork_type = "Primary"
+        artwork_id = item["AlbumId"]
+    elif "Backdrop" in item[ITEM_KEY_IMAGE_TAGS]:
         artwork_type = "Backdrop"
+        artwork_id = item["Id"]
     elif parent_backdrop_id:
         artwork_type = "Backdrop"
         artwork_id = parent_backdrop_id
-    elif "Primary" not in item[ITEM_KEY_IMAGE_TAGS]:
+    elif "Primary" in item[ITEM_KEY_IMAGE_TAGS]:
+        artwork_type = "Primary"
+        artwork_id = item["Id"]
+    else:
         return None
 
     return str(client.jellyfin.artwork(artwork_id, artwork_type, max_width))

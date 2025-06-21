@@ -105,7 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     hass.data.setdefault(DOMAIN, hass_data)
 
-    await async_setup_services(hass)
+    async_setup_services(hass)
 
     hass.http.register_view(PlexImageView())
 

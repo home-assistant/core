@@ -1,0 +1,718 @@
+{
+  "items": [
+    {
+      "deviceId": "074fa784-8be8-4c70-8e22-6f5ed6f81b7e",
+      "name": "SmartThings v2 Hub",
+      "label": "Home Hub",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "63f1469e-dc4a-3689-8cc5-69e293c1eb21",
+      "locationId": "c4d3b2a1-09f8-765e-4d3c-2b1a09f8e7d6 ",
+      "ownerId": "d47f2b19-3a6e-4c8d-bf21-9e8a7c5d134e",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "bridge",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Hub",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2016-11-13T18:18:07Z",
+      "childDevices": [
+        {
+          "deviceId": "0781c9d0-92cb-4c7b-bb5b-2f2dbe0c41f3",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "08ee0358-9f40-4afa-b5a0-3a6aba18c267",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "09076422-62cc-4b2d-8beb-b53bc451c704",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "0b5577db-5074-4b70-a2c5-efec286d264d",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "115236ea-59e5-4cd4-bade-d67c409967bc",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "1691801c-ae59-438b-89dc-f2c761fe937d",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "1a987293-0962-4447-99d4-aa82655ffb55",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "2533fdd0-e064-4fa2-b77b-1e17260b58d7",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "265e653b-3c0b-4fa6-8e2a-f6a69c7040f0",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "277e0a96-c8ec-41aa-b4cf-0bac57dc1cee",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "2d9a892b-1c93-45a5-84cb-0e81889498c6",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "374ba6fa-5a08-4ea2-969c-1fa43d86e21f",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "37c0cdda-9158-41ad-9635-4ca32df9fe5b",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "3f82e13c-bd39-4043-bb54-7432a4e47113",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "4339f999-1ad2-46fb-9103-cb628b30a022",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "4a59f635-9f0a-4a6c-a2f0-ffb7ef182a7c",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "4c3469c9-3556-4f19-a2e1-1c0a598341dc",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "4fddedf0-2662-476e-b1fd-aceaec17ad3a",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "550a1c72-65a0-4d55-b97b-75168e055398",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "630cf009-eb3b-409e-a77a-9b298540532f",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "6356b240-c7d8-403c-883e-ae438d432abe",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "68e786a6-7f61-4c3a-9e13-70b803cf782b",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "6a2e5058-36f3-4668-aa43-49a66f8df93d",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "6b5535c7-c039-42ee-9970-8af86c6b0775",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "6c1b7cfa-7429-4f35-9d02-ab1dfd2f1297",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "6ca56087-481f-4e93-9727-fb91049fe396",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "6e3e44b3-d84a-4efc-a97b-b5e0dae28ddc",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "6f4d2e72-7af4-4c96-97ab-d6b6a0d6bc4b",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "7111243f-39d6-4ed0-a277-f040e40a806d",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "7b9d924a-de0c-44f9-ac5c-f15869c59411",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "7bedac4c-5681-4897-a2ef-e9153cb19ba0",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "7d246592-93db-4d72-a10d-5a51793ece8c",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "803cb0d9-addd-4c2d-aaef-d4e20bf88228",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "829da938-6e92-4a93-8923-7c67f9663c03",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "84f1eaf0-592e-459a-a2b3-4fc43e004dae",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "8eacf25f-aa33-4d9e-ba90-0e4ac3ceb8e0",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "8f873071-a9aa-4580-a736-8f5f696e044a",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "91172212-e9ff-4ca6-9626-e7af0361c9ad",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "92138ee5-d3bf-4348-98e8-445dedc319cb",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "971b05df-6ed3-446e-b54f-5092eac01921",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "9a9cb299-5279-4dea-9249-b5c153d22ba1",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "9b479ba0-81e1-4877-87c5-c301a87cbdab",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "9dd17f8f-cf5e-4647-a11c-d8f24cdf9b2a",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "a1e6525c-1e24-403c-b18c-eecb65e22ccf",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "a9d42ef0-f972-44b0-86bc-efd6569a1aef",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "a9f587c5-5d8b-4273-8907-e7f609af5158",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "aaedaf28-2ae0-4c1d-b57e-87f6a420c298",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "b3a84295-ac3c-4fb1-95e4-4a4bbb1b0bce",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "b90c085d-7d1f-4abc-a66d-d5ce3f96be02",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "bafc5147-2e48-498b-97ff-34c93fae7814",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "c1107a0c-fa71-43c5-8ff9-a128ea6c4f20",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "c5209cd2-fcb5-46be-b685-5b05f22dcb2c",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "c5699ff6-af09-4922-901d-bb81b8345bc3",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "cfcd9a21-a943-4519-9972-3c7890cd25b1",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "d0268a69-abfb-4c92-a646-61cec2e510ad",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "d20891e5-59b4-46ce-9184-b7fdf0c7ae4c",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "d48848b9-25b0-4423-8fcf-96a022ac571e",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "ea2aa187-40fd-4140-9742-453e691c4469",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "f27d0b27-24fd-4d8c-b003-d3d7aaba1e70",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "f3c18803-cbec-48e3-8f15-3c31f302d68b",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "f3e184b2-631a-47b2-b583-32ac2fec9e3c",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        },
+        {
+          "deviceId": "f4e0517a-d94f-4bd6-a464-222c8c413a66",
+          "profile": {},
+          "allowed": null,
+          "executionContext": "CLOUD"
+        }
+      ],
+      "profile": {
+        "id": "d77ba2f6-c377-36f5-bb68-15db9d1aa0e1"
+      },
+      "hub": {
+        "hubEui": "D052A872947A0001",
+        "firmwareVersion": "000.055.00005",
+        "hubDrivers": [
+          {
+            "driverVersion": "2025-01-19T15:05:25.835006968",
+            "driverId": "00425c55-0932-416f-a1ba-78fae98ab614",
+            "channelId": "c8bb99e1-04a3-426b-9d94-2d260134d624"
+          },
+          {
+            "driverVersion": "2024-12-17T18:00:36.611958104",
+            "driverId": "01976eca-e7ff-4d1b-91db-9c980ce668d7",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-12-17T18:00:48.572636846",
+            "driverId": "0f206d13-508e-4342-9cbb-937e02489141",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-12-17T18:00:07.735400483",
+            "driverId": "2cbf55e3-dbc2-48a2-8be5-4c3ce756b692",
+            "channelId": "b1373fea-da9b-434b-b674-6694ce5d08cc"
+          },
+          {
+            "driverVersion": "2024-11-04T22:39:17.976631549",
+            "driverId": "3fb97b6c-f481-441b-a14e-f270d738764e",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-10-10T18:17:51.437710641",
+            "driverId": "408981c2-91d4-4dfc-bbfb-84ca0205d993",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-10-10T18:17:35.032104982",
+            "driverId": "4eb5b19a-7bbc-452f-859b-c6d7d857b2da",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2023-08-08T18:58:32.479650566",
+            "driverId": "4fb7ec02-2697-4d73-977d-2b1c65c4484f",
+            "channelId": "b1373fea-da9b-434b-b674-6694ce5d08cc"
+          },
+          {
+            "driverVersion": "2024-12-17T18:00:47.743217473",
+            "driverId": "572a2641-2af8-47e4-bfe5-ad83748fd7a1",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2023-07-12T03:33:26.23424277",
+            "driverId": "5ad2cc83-5503-4040-a98b-b0fc9931b9fe",
+            "channelId": "479886db-f6f5-41dd-979c-9c5f9366f070"
+          },
+          {
+            "driverVersion": "2024-09-17T20:08:25.82515546",
+            "driverId": "5db3363a-d954-412f-93e0-2ee40572658b",
+            "channelId": "2423da55-101c-4b21-af58-0903656b85ca"
+          },
+          {
+            "driverVersion": "2024-12-08T10:10:03.832334965",
+            "driverId": "6342be70-6da0-4535-afc1-ff6378d6c650",
+            "channelId": "c8bb99e1-04a3-426b-9d94-2d260134d624"
+          },
+          {
+            "driverVersion": "2022-02-01T21:35:33.624882",
+            "driverId": "6a90f7a0-e275-4366-bbf2-2e8a502efc5d",
+            "channelId": "479886db-f6f5-41dd-979c-9c5f9366f070"
+          },
+          {
+            "driverVersion": "2024-09-28T21:56:32.002090649",
+            "driverId": "7333473f-722c-465d-9e5d-f3a6ca760489",
+            "channelId": "f8900c5e-d591-4979-9826-75a867e9e0bd"
+          },
+          {
+            "driverVersion": "2025-02-03T22:38:47.582952919",
+            "driverId": "7beb8bc2-8dfa-45c2-8fdb-7373d4597b12",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-11-15T16:18:24.739596514",
+            "driverId": "7ca45ba9-7cfe-4547-b752-fe41a0efb848",
+            "channelId": "c8bb99e1-04a3-426b-9d94-2d260134d624"
+          },
+          {
+            "driverVersion": "2024-02-06T21:13:39.427465986",
+            "driverId": "8bf71a5d-677b-4391-93c2-e76471f3d7eb",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-10-21T19:06:49.949052991",
+            "driverId": "9050ac53-358c-47a1-a927-9a70f5f28cee",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-10-10T19:30:29.754256377",
+            "driverId": "92f39ab3-7b2f-47ee-94a7-ba47c4ee8a47",
+            "channelId": "b1373fea-da9b-434b-b674-6694ce5d08cc"
+          },
+          {
+            "driverVersion": "2024-12-17T18:00:21.846431345",
+            "driverId": "9870bccd-2b3d-4edf-8940-532fcb11e946",
+            "channelId": "b1373fea-da9b-434b-b674-6694ce5d08cc"
+          },
+          {
+            "driverVersion": "2024-12-09T21:10:00.424854506",
+            "driverId": "a6994e70-93de-4a76-8b5d-42971a3427c9",
+            "channelId": "c8bb99e1-04a3-426b-9d94-2d260134d624"
+          },
+          {
+            "driverVersion": "2022-01-03T08:19:45.80869",
+            "driverId": "a89371c4-8765-404b-9de9-e9882cc48bd8",
+            "channelId": "14bcc056-f80d-416b-9445-467b0db325e3"
+          },
+          {
+            "driverVersion": "2025-01-11T20:03:43.842469565",
+            "driverId": "b1504ded-efa4-4ef0-acd5-ae24e7a92e6e",
+            "channelId": "c8bb99e1-04a3-426b-9d94-2d260134d624"
+          },
+          {
+            "driverVersion": "2024-12-08T09:45:01.460678797",
+            "driverId": "bb1b3fd4-dcba-4d55-8d85-58ed7f1979fb",
+            "channelId": "c8bb99e1-04a3-426b-9d94-2d260134d624"
+          },
+          {
+            "driverVersion": "2024-11-04T22:39:18.253781754",
+            "driverId": "c21a6c77-872c-474e-be5b-5f6f11a240ef",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-01-30T21:36:15.547412569",
+            "driverId": "c856a3fd-69ee-4478-a224-d7279b6d978f",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2025-01-13T18:55:57.509807915",
+            "driverId": "cd898d81-6c27-4d27-a529-dfadc8caae5a",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-12-17T18:00:48.892833142",
+            "driverId": "ce930ffd-8155-4dca-aaa9-6c4158fc4278",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-10-10T19:30:41.208767469",
+            "driverId": "d620900d-f7bc-4ab5-a171-6dd159872f7d",
+            "channelId": "b1373fea-da9b-434b-b674-6694ce5d08cc"
+          },
+          {
+            "driverVersion": "2024-10-10T19:30:33.46670456",
+            "driverId": "d6b43c85-1561-446b-9e3e-15e2ad81a952",
+            "channelId": "b1373fea-da9b-434b-b674-6694ce5d08cc"
+          },
+          {
+            "driverVersion": "2023-07-11T18:43:49.169154271",
+            "driverId": "d9c3f8b8-c3c3-4b77-9ddd-01d08102c84b",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2024-10-10T18:17:54.195543653",
+            "driverId": "dbe192cb-f6a1-4369-a843-d1c42e5c91ba",
+            "channelId": "15ea8adc-8be7-4ea6-8b51-4155f56dc6cf"
+          },
+          {
+            "driverVersion": "2022-10-02T20:15:49.147522379",
+            "driverId": "e120daf2-8000-4a9d-93fa-653214ce70d1",
+            "channelId": "479886db-f6f5-41dd-979c-9c5f9366f070"
+          },
+          {
+            "driverVersion": "2023-08-15T20:08:28.115440571",
+            "driverId": "e7947a05-947d-4bb5-92c4-2aafaff6d69c",
+            "channelId": "b1373fea-da9b-434b-b674-6694ce5d08cc"
+          },
+          {
+            "driverVersion": "2025-02-05T18:49:13.3338494",
+            "driverId": "f2e891c6-00cc-446c-9192-8ebda63d9898",
+            "channelId": "b1373fea-da9b-434b-b674-6694ce5d08cc"
+          }
+        ],
+        "hubData": {
+          "zwaveStaticDsk": "13740-14339-50623-49310-29679-58685-46457-16097",
+          "zwaveS2": true,
+          "hardwareType": "V2_HUB",
+          "hardwareId": "000D",
+          "zigbeeFirmware": "5.7.10",
+          "zigbee3": true,
+          "zigbeeOta": "ENABLED_WITH_LIGHTS",
+          "otaEnable": "true",
+          "zigbeeUnsecureRejoin": true,
+          "zigbeeRequiresExternalHardware": false,
+          "threadRequiresExternalHardware": false,
+          "failoverAvailability": "Unsupported",
+          "primarySupportAvailability": "Unsupported",
+          "secondarySupportAvailability": "Unsupported",
+          "zigbeeAvailability": "Available",
+          "zwaveAvailability": "Available",
+          "lanAvailability": "Available",
+          "matterAvailability": "Available",
+          "localVirtualDeviceAvailability": "Available",
+          "childDeviceAvailability": "Unsupported",
+          "edgeDriversAvailability": "Available",
+          "hubReplaceAvailability": "Available",
+          "hubLocalApiAvailability": "Available",
+          "zigbeeManualFirmwareUpdateSupported": true,
+          "matterRendezvousHedgeSupported": true,
+          "matterSoftwareComponentVersion": "1.3-0",
+          "matterDeviceDiagnosticsAvailability": "Available",
+          "zigbeeDeviceDiagnosticsAvailability": "Available",
+          "hedgeTlsCertificate": "",
+          "zigbeeChannel": "14",
+          "zigbeePanId": "0EE7",
+          "zigbeeEui": "D052A872947A0001",
+          "zigbeeNodeID": "0000",
+          "zwaveNodeID": "01",
+          "zwaveHomeID": "CF0F089E",
+          "zwaveSucID": "01",
+          "zwaveVersion": "6.10",
+          "zwaveRegion": "US",
+          "macAddress": "D0:52:A8:72:91:02",
+          "localIP": "192.168.168.189",
+          "zigbeeRadioFunctional": true,
+          "zwaveRadioFunctional": true,
+          "zigbeeRadioEnabled": true,
+          "zwaveRadioEnabled": true,
+          "zigbeeRadioDetected": true,
+          "zwaveRadioDetected": true
+        }
+      },
+      "type": "HUB",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    },
+    {
+      "deviceId": "374ba6fa-5a08-4ea2-969c-1fa43d86e21f",
+      "name": "Multipurpose Sensor",
+      "label": "Mail Box",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "c385e2bc-acb8-317b-be2a-6efd1f879720",
+      "deviceManufacturerCode": "SmartThings",
+      "locationId": "c4d3b2a1-09f8-765e-4d3c-2b1a09f8e7d6 ",
+      "ownerId": "d47f2b19-3a6e-4c8d-bf21-9e8a7c5d134e",
+      "roomId": "f7f39cf6-ff3a-4bcb-8d1b-00a3324c016d",
+      "components": [
+        {
+          "id": "main",
+          "label": "Mail Box",
+          "capabilities": [
+            {
+              "id": "contactSensor",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "threeAxis",
+              "version": 1
+            },
+            {
+              "id": "accelerationSensor",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "MultiFunctionalSensor",
+              "categoryType": "manufacturer"
+            },
+            {
+              "name": "MultiFunctionalSensor",
+              "categoryType": "user"
+            }
+          ]
+        }
+      ],
+      "createTime": "2022-08-16T21:08:09.983Z",
+      "parentDeviceId": "074fa784-8be8-4c70-8e22-6f5ed6f81b7e",
+      "profile": {
+        "id": "4471213f-121b-38fd-b022-51df37ac1d4c"
+      },
+      "zigbee": {
+        "eui": "24FD5B00010A3A95",
+        "networkId": "E71B",
+        "driverId": "408981c2-91d4-4dfc-bbfb-84ca0205d993",
+        "executingLocally": true,
+        "hubId": "074fa784-8be8-4c70-8e22-6f5ed6f81b7e",
+        "provisioningState": "PROVISIONED"
+      },
+      "type": "ZIGBEE",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "LOCAL"
+    }
+  ],
+  "_links": {}
+}

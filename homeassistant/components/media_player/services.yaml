@@ -165,6 +165,53 @@ play_media:
       selector:
         boolean:
 
+browse_media:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.BROWSE_MEDIA
+  fields:
+    media_content_type:
+      required: false
+      example: "music"
+      selector:
+        text:
+    media_content_id:
+      required: false
+      example: "A:ALBUMARTIST/Beatles"
+      selector:
+        text:
+
+search_media:
+  target:
+    entity:
+      domain: media_player
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.SEARCH_MEDIA
+  fields:
+    search_query:
+      required: true
+      example: "Beatles"
+      selector:
+        text:
+    media_content_type:
+      required: false
+      example: "music"
+      selector:
+        text:
+    media_content_id:
+      required: false
+      example: "A:ALBUMARTIST/Beatles"
+      selector:
+        text:
+    media_filter_classes:
+      required: false
+      example: ["album", "artist"]
+      selector:
+        text:
+          multiple: true
+
 select_source:
   target:
     entity:

@@ -3,8 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "language": "Language",
-          "country": "Country"
+          "language": "[%key:common::config_flow::data::language%]",
+          "country": "[%key:common::config_flow::data::country%]"
         }
       }
     },

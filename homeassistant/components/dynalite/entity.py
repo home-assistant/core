@@ -6,27 +6,26 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .bridge import DynaliteBridge
+from .bridge import DynaliteBridge, DynaliteConfigEntry
 from .const import DOMAIN, LOGGER
 
 
 def async_setup_entry_base(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DynaliteConfigEntry,
     async_add_entities: AddEntitiesCallback,
     platform: str,
     entity_from_device: Callable,
 ) -> None:
     """Record the async_add_entities function to add them later when received from Dynalite."""
     LOGGER.debug("Setting up %s entry = %s", platform, config_entry.data)
-    bridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
 
     @callback
     def async_add_entities_platform(devices):

@@ -1,0 +1,52 @@
+{
+  "id": 1,
+  "name": "Test Lock",
+  "profile": 2007,
+  "image": "default",
+  "favorite": 0,
+  "order": 31,
+  "protocol": 1,
+  "routing": 0,
+  "state": 1,
+  "state_changed": 1711799526,
+  "added": 1645036891,
+  "history": 1,
+  "cube_type": 1,
+  "note": "",
+  "services": 3,
+  "phonetic_name": "",
+  "owner": 2,
+  "security": 0,
+  "attributes": [
+    {
+      "id": 1,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 1.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 232,
+      "state": 1,
+      "last_changed": 1711897362,
+      "changed_by": 4,
+      "changed_by_id": 5,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["toggle"],
+        "history": {
+          "day": 35,
+          "week": 5,
+          "month": 1,
+          "stepped": true
+        }
+      }
+    }
+  ]
+}

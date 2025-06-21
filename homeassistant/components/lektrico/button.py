@@ -13,7 +13,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_TYPE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
 from .entity import LektricoEntity
@@ -40,6 +40,12 @@ BUTTONS_FOR_CHARGERS: tuple[LektricoButtonEntityDescription, ...] = (
         press_fn=lambda device: device.send_charge_stop(),
     ),
     LektricoButtonEntityDescription(
+        key="charging_schedule_override",
+        translation_key="charging_schedule_override",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda device: device.send_charge_schedule_override(),
+    ),
+    LektricoButtonEntityDescription(
         key="reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
@@ -60,7 +66,7 @@ BUTTONS_FOR_LB_DEVICES: tuple[LektricoButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LektricoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
     coordinator = entry.runtime_data

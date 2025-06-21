@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from APsystemsEZ1 import APsystemsEZ1M
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_PORT
-from .coordinator import ApSystemsDataCoordinator
+from .coordinator import ApSystemsConfigEntry, ApSystemsData, ApSystemsDataCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -19,17 +16,6 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
-
-@dataclass
-class ApSystemsData:
-    """Store runtime data."""
-
-    coordinator: ApSystemsDataCoordinator
-    device_id: str
-
-
-type ApSystemsConfigEntry = ConfigEntry[ApSystemsData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> bool:
@@ -40,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) ->
         timeout=8,
         enable_debounce=True,
     )
-    coordinator = ApSystemsDataCoordinator(hass, api)
+    coordinator = ApSystemsDataCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
     assert entry.unique_id
     entry.runtime_data = ApSystemsData(
@@ -51,6 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) ->
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

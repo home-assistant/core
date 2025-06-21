@@ -12,9 +12,9 @@
       },
       "pair": {
         "title": "Pair with a device via HomeKit Accessory Protocol",
-        "description": "HomeKit Device communicates with {name} ({category}) over the local area network using a secure encrypted connection without a separate HomeKit Controller or iCloud. Enter your eight digit HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory. This code is usually found on the device itself or in the packaging, often close to a HomeKit bar code, next to the image of a small house.",
+        "description": "HomeKit Device communicates with {name} ({category}) over the local area network using a secure encrypted connection without a separate HomeKit Controller or iCloud. Enter your eight-digit HomeKit pairing code (in the format XXX-XX-XXX) to use this accessory. This code is usually found on the device itself or in the packaging, often close to a HomeKit bar code, next to the image of a small house.",
         "data": {
-          "pairing_code": "Pairing Code",
+          "pairing_code": "Pairing code",
           "allow_insecure_setup_codes": "Allow pairing with insecure setup codes."
         }
       },
@@ -112,7 +112,7 @@
       "air_purifier_state_target": {
         "state": {
           "automatic": "Automatic",
-          "manual": "Manual"
+          "manual": "[%key:common::state::manual%]"
         }
       }
     },
@@ -141,7 +141,7 @@
       "air_purifier_state_current": {
         "state": {
           "inactive": "Inactive",
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "purifying": "Purifying"
         }
       }

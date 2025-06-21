@@ -6,7 +6,8 @@ import logging
 from typing import Any
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.voice import MAP_VOICE, TTS_VOICES, AudioOutput, Gender, VoiceError
+from hass_nabucasa.voice import MAP_VOICE, AudioOutput, Gender, VoiceError
+from hass_nabucasa.voice_data import TTS_VOICES
 import voluptuous as vol
 
 from homeassistant.components.tts import (
@@ -22,15 +23,21 @@ from homeassistant.components.tts import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, async_get_hass, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_when_setup
 
 from .assist_pipeline import async_migrate_cloud_pipeline_engine
 from .client import CloudClient
-from .const import DATA_CLOUD, DATA_PLATFORMS_SETUP, DOMAIN, TTS_ENTITY_UNIQUE_ID
+from .const import (
+    DATA_CLOUD,
+    DATA_PLATFORMS_SETUP,
+    DOMAIN,
+    TTS_ENTITY_UNIQUE_ID,
+    VOICE_STYLE_SEPERATOR,
+)
 from .prefs import CloudPreferences
 
 ATTR_GENDER = "gender"
@@ -38,7 +45,193 @@ ATTR_GENDER = "gender"
 DEPRECATED_VOICES = {"XiaoxuanNeural": "XiaozhenNeural"}
 SUPPORT_LANGUAGES = list(TTS_VOICES)
 
+DEFAULT_VOICES = {
+    "af-ZA": "AdriNeural",
+    "am-ET": "MekdesNeural",
+    "ar-AE": "FatimaNeural",
+    "ar-BH": "LailaNeural",
+    "ar-DZ": "AminaNeural",
+    "ar-EG": "SalmaNeural",
+    "ar-IQ": "RanaNeural",
+    "ar-JO": "SanaNeural",
+    "ar-KW": "NouraNeural",
+    "ar-LB": "LaylaNeural",
+    "ar-LY": "ImanNeural",
+    "ar-MA": "MounaNeural",
+    "ar-OM": "AbdullahNeural",
+    "ar-QA": "AmalNeural",
+    "ar-SA": "ZariyahNeural",
+    "ar-SY": "AmanyNeural",
+    "ar-TN": "ReemNeural",
+    "ar-YE": "MaryamNeural",
+    "as-IN": "PriyomNeural",
+    "az-AZ": "BabekNeural",
+    "bg-BG": "KalinaNeural",
+    "bn-BD": "NabanitaNeural",
+    "bn-IN": "TanishaaNeural",
+    "bs-BA": "GoranNeural",
+    "ca-ES": "JoanaNeural",
+    "cs-CZ": "VlastaNeural",
+    "cy-GB": "NiaNeural",
+    "da-DK": "ChristelNeural",
+    "de-AT": "IngridNeural",
+    "de-CH": "LeniNeural",
+    "de-DE": "KatjaNeural",
+    "el-GR": "AthinaNeural",
+    "en-AU": "NatashaNeural",
+    "en-CA": "ClaraNeural",
+    "en-GB": "LibbyNeural",
+    "en-HK": "YanNeural",
+    "en-IE": "EmilyNeural",
+    "en-IN": "NeerjaNeural",
+    "en-KE": "AsiliaNeural",
+    "en-NG": "EzinneNeural",
+    "en-NZ": "MollyNeural",
+    "en-PH": "RosaNeural",
+    "en-SG": "LunaNeural",
+    "en-TZ": "ImaniNeural",
+    "en-US": "JennyNeural",
+    "en-ZA": "LeahNeural",
+    "es-AR": "ElenaNeural",
+    "es-BO": "SofiaNeural",
+    "es-CL": "CatalinaNeural",
+    "es-CO": "SalomeNeural",
+    "es-CR": "MariaNeural",
+    "es-CU": "BelkysNeural",
+    "es-DO": "RamonaNeural",
+    "es-EC": "AndreaNeural",
+    "es-ES": "ElviraNeural",
+    "es-GQ": "TeresaNeural",
+    "es-GT": "MartaNeural",
+    "es-HN": "KarlaNeural",
+    "es-MX": "DaliaNeural",
+    "es-NI": "YolandaNeural",
+    "es-PA": "MargaritaNeural",
+    "es-PE": "CamilaNeural",
+    "es-PR": "KarinaNeural",
+    "es-PY": "TaniaNeural",
+    "es-SV": "LorenaNeural",
+    "es-US": "PalomaNeural",
+    "es-UY": "ValentinaNeural",
+    "es-VE": "PaolaNeural",
+    "et-EE": "AnuNeural",
+    "eu-ES": "AinhoaNeural",
+    "fa-IR": "DilaraNeural",
+    "fi-FI": "SelmaNeural",
+    "fil-PH": "BlessicaNeural",
+    "fr-BE": "CharlineNeural",
+    "fr-CA": "SylvieNeural",
+    "fr-CH": "ArianeNeural",
+    "fr-FR": "DeniseNeural",
+    "ga-IE": "OrlaNeural",
+    "gl-ES": "SabelaNeural",
+    "gu-IN": "DhwaniNeural",
+    "he-IL": "HilaNeural",
+    "hi-IN": "SwaraNeural",
+    "hr-HR": "GabrijelaNeural",
+    "hu-HU": "NoemiNeural",
+    "hy-AM": "AnahitNeural",
+    "id-ID": "GadisNeural",
+    "is-IS": "GudrunNeural",
+    "it-IT": "ElsaNeural",
+    "iu-Cans-CA": "SiqiniqNeural",
+    "iu-Latn-CA": "SiqiniqNeural",
+    "ja-JP": "NanamiNeural",
+    "jv-ID": "SitiNeural",
+    "ka-GE": "EkaNeural",
+    "kk-KZ": "AigulNeural",
+    "km-KH": "SreymomNeural",
+    "kn-IN": "SapnaNeural",
+    "ko-KR": "SunHiNeural",
+    "lo-LA": "KeomanyNeural",
+    "lt-LT": "OnaNeural",
+    "lv-LV": "EveritaNeural",
+    "mk-MK": "MarijaNeural",
+    "ml-IN": "SobhanaNeural",
+    "mn-MN": "BataaNeural",
+    "mr-IN": "AarohiNeural",
+    "ms-MY": "YasminNeural",
+    "mt-MT": "GraceNeural",
+    "my-MM": "NilarNeural",
+    "nb-NO": "IselinNeural",
+    "ne-NP": "HemkalaNeural",
+    "nl-BE": "DenaNeural",
+    "nl-NL": "ColetteNeural",
+    "or-IN": "SubhasiniNeural",
+    "pa-IN": "OjasNeural",
+    "pl-PL": "AgnieszkaNeural",
+    "ps-AF": "LatifaNeural",
+    "pt-BR": "FranciscaNeural",
+    "pt-PT": "RaquelNeural",
+    "ro-RO": "AlinaNeural",
+    "ru-RU": "SvetlanaNeural",
+    "si-LK": "ThiliniNeural",
+    "sk-SK": "ViktoriaNeural",
+    "sl-SI": "PetraNeural",
+    "so-SO": "UbaxNeural",
+    "sq-AL": "AnilaNeural",
+    "sr-Latn-RS": "NicholasNeural",
+    "sr-RS": "SophieNeural",
+    "su-ID": "TutiNeural",
+    "sv-SE": "SofieNeural",
+    "sw-KE": "ZuriNeural",
+    "sw-TZ": "RehemaNeural",
+    "ta-IN": "PallaviNeural",
+    "ta-LK": "SaranyaNeural",
+    "ta-MY": "KaniNeural",
+    "ta-SG": "VenbaNeural",
+    "te-IN": "ShrutiNeural",
+    "th-TH": "AcharaNeural",
+    "tr-TR": "EmelNeural",
+    "uk-UA": "PolinaNeural",
+    "ur-IN": "GulNeural",
+    "ur-PK": "UzmaNeural",
+    "uz-UZ": "MadinaNeural",
+    "vi-VN": "HoaiMyNeural",
+    "wuu-CN": "XiaotongNeural",
+    "yue-CN": "XiaoMinNeural",
+    "zh-CN-henan": "YundengNeural",
+    "zh-CN-shandong": "YunxiangNeural",
+    "zh-CN": "XiaoxiaoNeural",
+    "zh-HK": "HiuMaanNeural",
+    "zh-TW": "HsiaoChenNeural",
+    "zu-ZA": "ThandoNeural",
+}
+
 _LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def _prepare_voice_args(
+    *,
+    hass: HomeAssistant,
+    language: str,
+    voice: str,
+    gender: str | None,
+) -> dict:
+    """Prepare voice arguments."""
+    gender = handle_deprecated_gender(hass, gender)
+    style: str | None
+    original_voice, _, style = voice.partition(VOICE_STYLE_SEPERATOR)
+    if not style:
+        style = None
+    updated_voice = handle_deprecated_voice(hass, original_voice)
+    if updated_voice not in TTS_VOICES[language]:
+        default_voice = DEFAULT_VOICES[language]
+        _LOGGER.debug(
+            "Unsupported voice %s detected, falling back to default %s for %s",
+            voice,
+            default_voice,
+            language,
+        )
+        updated_voice = default_voice
+
+    return {
+        "language": language,
+        "voice": updated_voice,
+        "gender": gender,
+        "style": style,
+    }
 
 
 def _deprecated_platform(value: str) -> str:
@@ -106,7 +299,7 @@ async def async_get_engine(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud text-to-speech platform."""
     tts_platform_loaded = hass.data[DATA_PLATFORMS_SETUP][Platform.TTS]
@@ -136,7 +329,7 @@ class CloudTTSEntity(TextToSpeechEntity):
         return self._language
 
     @property
-    def default_options(self) -> dict[str, Any]:
+    def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
             ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
@@ -178,45 +371,73 @@ class CloudTTSEntity(TextToSpeechEntity):
         """Return a list of supported voices for a language."""
         if not (voices := TTS_VOICES.get(language)):
             return None
-        return [Voice(voice, voice) for voice in voices]
+
+        result = []
+
+        for voice_id, voice_info in voices.items():
+            if isinstance(voice_info, str):
+                result.append(
+                    Voice(
+                        voice_id,
+                        voice_info,
+                    )
+                )
+                continue
+
+            name = voice_info["name"]
+
+            result.append(
+                Voice(
+                    voice_id,
+                    name,
+                )
+            )
+            result.extend(
+                [
+                    Voice(
+                        f"{voice_id}{VOICE_STYLE_SEPERATOR}{variant}",
+                        f"{name} ({variant})",
+                    )
+                    for variant in voice_info.get("variants", [])
+                ]
+            )
+
+        return result
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS from Home Assistant Cloud."""
-        gender: Gender | str | None = options.get(ATTR_GENDER)
-        gender = handle_deprecated_gender(self.hass, gender)
-        original_voice: str | None = options.get(ATTR_VOICE)
-        if original_voice is None and language == self._language:
-            original_voice = self._voice
-        voice = handle_deprecated_voice(self.hass, original_voice)
-        if voice not in TTS_VOICES[language]:
-            default_voice = TTS_VOICES[language][0]
-            _LOGGER.debug(
-                "Unsupported voice %s detected, falling back to default %s for %s",
-                voice,
-                default_voice,
-                language,
-            )
-            voice = default_voice
         # Process TTS
         try:
             data = await self.cloud.voice.process_tts(
                 text=message,
-                language=language,
-                gender=gender,
-                voice=voice,
                 output=options[ATTR_AUDIO_OUTPUT],
+                **_prepare_voice_args(
+                    hass=self.hass,
+                    language=language,
+                    voice=options.get(
+                        ATTR_VOICE,
+                        (
+                            self._voice
+                            if language == self._language
+                            else DEFAULT_VOICES[language]
+                        ),
+                    ),
+                    gender=options.get(ATTR_GENDER),
+                ),
             )
         except VoiceError as err:
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return (str(options[ATTR_AUDIO_OUTPUT].value), data)
+        return (options[ATTR_AUDIO_OUTPUT], data)
 
 
 class CloudProvider(Provider):
     """Home Assistant Cloud speech API provider."""
+
+    has_entity = True
 
     def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Initialize cloud provider."""
@@ -250,10 +471,41 @@ class CloudProvider(Provider):
         """Return a list of supported voices for a language."""
         if not (voices := TTS_VOICES.get(language)):
             return None
-        return [Voice(voice, voice) for voice in voices]
+
+        result = []
+
+        for voice_id, voice_info in voices.items():
+            if isinstance(voice_info, str):
+                result.append(
+                    Voice(
+                        voice_id,
+                        voice_info,
+                    )
+                )
+                continue
+
+            name = voice_info["name"]
+
+            result.append(
+                Voice(
+                    voice_id,
+                    name,
+                )
+            )
+            result.extend(
+                [
+                    Voice(
+                        f"{voice_id}{VOICE_STYLE_SEPERATOR}{variant}",
+                        f"{name} ({variant})",
+                    )
+                    for variant in voice_info.get("variants", [])
+                ]
+            )
+
+        return result
 
     @property
-    def default_options(self) -> dict[str, Any]:
+    def default_options(self) -> dict[str, str]:
         """Return a dict include default options."""
         return {
             ATTR_AUDIO_OUTPUT: AudioOutput.MP3,
@@ -264,35 +516,28 @@ class CloudProvider(Provider):
     ) -> TtsAudioType:
         """Load TTS from Home Assistant Cloud."""
         assert self.hass is not None
-        gender: Gender | str | None = options.get(ATTR_GENDER)
-        gender = handle_deprecated_gender(self.hass, gender)
-        original_voice: str | None = options.get(ATTR_VOICE)
-        if original_voice is None and language == self._language:
-            original_voice = self._voice
-        voice = handle_deprecated_voice(self.hass, original_voice)
-        if voice not in TTS_VOICES[language]:
-            default_voice = TTS_VOICES[language][0]
-            _LOGGER.debug(
-                "Unsupported voice %s detected, falling back to default %s for %s",
-                voice,
-                default_voice,
-                language,
-            )
-            voice = default_voice
         # Process TTS
         try:
             data = await self.cloud.voice.process_tts(
                 text=message,
-                language=language,
-                gender=gender,
-                voice=voice,
                 output=options[ATTR_AUDIO_OUTPUT],
+                **_prepare_voice_args(
+                    hass=self.hass,
+                    language=language,
+                    voice=options.get(
+                        ATTR_VOICE,
+                        self._voice
+                        if language == self._language
+                        else DEFAULT_VOICES[language],
+                    ),
+                    gender=options.get(ATTR_GENDER),
+                ),
             )
         except VoiceError as err:
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return (str(options[ATTR_AUDIO_OUTPUT].value), data)
+        return options[ATTR_AUDIO_OUTPUT], data
 
 
 @callback

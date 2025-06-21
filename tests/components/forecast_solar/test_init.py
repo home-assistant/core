@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from forecast_solar import ForecastSolarConnectionError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,

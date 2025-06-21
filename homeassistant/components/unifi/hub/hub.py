@@ -16,7 +16,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN, PLATFORMS
+from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, PLATFORMS
 from .config import UnifiConfig
 from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
@@ -104,7 +104,7 @@ class UnifiHub:
 
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(UNIFI_DOMAIN, self.config.entry.unique_id)},
+            identifiers={(DOMAIN, self.config.entry.unique_id)},
             manufacturer=ATTR_MANUFACTURER,
             model="UniFi Network Application",
             name="UniFi Network",

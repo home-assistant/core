@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Renson from a config entry."""
 
     api = RensonVentilation(entry.data[CONF_HOST])
-    coordinator = RensonCoordinator("Renson", hass, api)
+    coordinator = RensonCoordinator(hass, entry, api)
 
     if not await hass.async_add_executor_job(api.connect):
         raise ConfigEntryNotReady("Cannot connect to Renson device")

@@ -7,6 +7,7 @@
   "dependencies": ["file_upload", "http"],
   "documentation": "https://www.home-assistant.io/integrations/mqtt",
   "iot_class": "local_push",
-  "requirements": ["paho-mqtt==1.6.1"],
+  "quality_scale": "platinum",
+  "requirements": ["paho-mqtt==2.1.0"],
   "single_config_entry": true
 }

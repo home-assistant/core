@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pyjuicenet import Charger
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -18,10 +20,12 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
-from .entity import JuiceNetDevice
+from .coordinator import JuiceNetCoordinator
+from .device import JuiceNetApi
+from .entity import JuiceNetEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -70,12 +74,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the JuiceNet Sensors."""
     juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
-    api = juicenet_data[JUICENET_API]
-    coordinator = juicenet_data[JUICENET_COORDINATOR]
+    api: JuiceNetApi = juicenet_data[JUICENET_API]
+    coordinator: JuiceNetCoordinator = juicenet_data[JUICENET_COORDINATOR]
 
     entities = [
         JuiceNetSensorDevice(device, coordinator, description)
@@ -85,11 +89,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
+class JuiceNetSensorDevice(JuiceNetEntity, SensorEntity):
     """Implementation of a JuiceNet sensor."""
 
     def __init__(
-        self, device, coordinator, description: SensorEntityDescription
+        self,
+        device: Charger,
+        coordinator: JuiceNetCoordinator,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialise the sensor."""
         super().__init__(device, description.key, coordinator)

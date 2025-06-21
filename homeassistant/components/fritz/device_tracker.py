@@ -6,14 +6,14 @@ import datetime
 import logging
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_FRITZ, DOMAIN
 from .coordinator import (
+    FRITZ_DATA_KEY,
     AvmWrapper,
+    FritzConfigEntry,
     FritzData,
     FritzDevice,
     device_filter_out_from_trackers,
@@ -22,14 +22,19 @@ from .entity import FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for FRITZ!Box component."""
     _LOGGER.debug("Starting FRITZ!Box device tracker")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
-    data_fritz: FritzData = hass.data[DATA_FRITZ]
+    avm_wrapper = entry.runtime_data
+    data_fritz = hass.data[FRITZ_DATA_KEY]
 
     @callback
     def update_avm_device() -> None:
@@ -46,7 +51,7 @@ async def async_setup_entry(
 @callback
 def _async_add_entities(
     avm_wrapper: AvmWrapper,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     data_fritz: FritzData,
 ) -> None:
     """Add new tracker entities from the AVM device."""

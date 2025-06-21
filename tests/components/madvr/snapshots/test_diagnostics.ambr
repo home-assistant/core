@@ -17,6 +17,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'envy',
       'unique_id': '00:11:22:33:44:55',
       'version': 1,

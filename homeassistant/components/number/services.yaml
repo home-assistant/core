@@ -7,5 +7,6 @@ set_value:
   fields:
     value:
       example: 42
+      required: true
       selector:
         text:

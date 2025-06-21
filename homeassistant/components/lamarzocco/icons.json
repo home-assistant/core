@@ -34,36 +34,20 @@
       "dose": {
         "default": "mdi:cup-water"
       },
-      "prebrew_off": {
-        "default": "mdi:water-off"
-      },
-      "prebrew_on": {
-        "default": "mdi:water"
-      },
-      "preinfusion_off": {
-        "default": "mdi:water"
-      },
-      "scale_target": {
-        "default": "mdi:scale-balance"
-      },
       "smart_standby_time": {
         "default": "mdi:timer"
       },
-      "steam_temp": {
-        "default": "mdi:thermometer-water"
+      "preinfusion_time": {
+        "default": "mdi:water"
       },
-      "tea_water_duration": {
-        "default": "mdi:timer-sand"
+      "prebrew_time_on": {
+        "default": "mdi:water"
+      },
+      "prebrew_time_off": {
+        "default": "mdi:water-off"
       }
     },
     "select": {
-      "active_bbw": {
-        "default": "mdi:alpha-u",
-        "state": {
-          "a": "mdi:alpha-a",
-          "b": "mdi:alpha-b"
-        }
-      },
       "smart_standby_mode": {
         "default": "mdi:power",
         "state": {
@@ -89,20 +73,23 @@
       }
     },
     "sensor": {
-      "drink_stats_coffee": {
-        "default": "mdi:chart-line"
+      "coffee_boiler_ready_time": {
+        "default": "mdi:av-timer"
       },
-      "drink_stats_flushing": {
-        "default": "mdi:chart-line"
+      "last_cleaning_time": {
+        "default": "mdi:spray-bottle"
       },
-      "shot_timer": {
-        "default": "mdi:timer"
+      "steam_boiler_ready_time": {
+        "default": "mdi:av-timer"
       },
-      "current_temp_coffee": {
-        "default": "mdi:thermometer"
+      "brewing_start_time": {
+        "default": "mdi:clock-start"
       },
-      "current_temp_steam": {
-        "default": "mdi:thermometer"
+      "total_coffees_made": {
+        "default": "mdi:coffee"
+      },
+      "total_flushes_done": {
+        "default": "mdi:water-pump"
       }
     },
     "switch": {

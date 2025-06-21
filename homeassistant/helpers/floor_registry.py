@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
@@ -16,8 +17,9 @@ from homeassistant.util.hass_dict import HassKey
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
     NormalizedNameBaseRegistryItems,
+    normalize_name,
 )
-from .registry import BaseRegistry
+from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
@@ -92,10 +94,43 @@ class FloorRegistryStore(Store[FloorRegistryStoreData]):
         return old_data  # type: ignore[return-value]
 
 
+class FloorRegistryItems(NormalizedNameBaseRegistryItems[FloorEntry]):
+    """Class to hold floor registry items."""
+
+    def __init__(self) -> None:
+        """Initialize the floor registry items."""
+        super().__init__()
+        self._aliases_index: RegistryIndexType = defaultdict(dict)
+
+    def _index_entry(self, key: str, entry: FloorEntry) -> None:
+        """Index an entry."""
+        super()._index_entry(key, entry)
+        for alias in entry.aliases:
+            normalized_alias = normalize_name(alias)
+            self._aliases_index[normalized_alias][key] = True
+
+    def _unindex_entry(
+        self, key: str, replacement_entry: FloorEntry | None = None
+    ) -> None:
+        # always call base class before other indices
+        super()._unindex_entry(key, replacement_entry)
+        entry = self.data[key]
+        if aliases := entry.aliases:
+            for alias in aliases:
+                normalized_alias = normalize_name(alias)
+                self._unindex_entry_value(key, normalized_alias, self._aliases_index)
+
+    def get_floors_for_alias(self, alias: str) -> list[FloorEntry]:
+        """Get floors for alias."""
+        data = self.data
+        normalized_alias = normalize_name(alias)
+        return [data[key] for key in self._aliases_index.get(normalized_alias, ())]
+
+
 class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
     """Class to hold a registry of floors."""
 
-    floors: NormalizedNameBaseRegistryItems[FloorEntry]
+    floors: FloorRegistryItems
     _floor_data: dict[str, FloorEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -122,6 +157,11 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
     def async_get_floor_by_name(self, name: str) -> FloorEntry | None:
         """Get floor by name."""
         return self.floors.get_by_name(name)
+
+    @callback
+    def async_get_floors_by_alias(self, alias: str) -> list[FloorEntry]:
+        """Get floors by alias."""
+        return self.floors.get_floors_for_alias(alias)
 
     @callback
     def async_list_floors(self) -> Iterable[FloorEntry]:
@@ -226,7 +266,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
     async def async_load(self) -> None:
         """Load the floor registry."""
         data = await self._store.async_load()
-        floors = NormalizedNameBaseRegistryItems[FloorEntry]()
+        floors = FloorRegistryItems()
 
         if data is not None:
             for floor in data["floors"]:

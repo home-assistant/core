@@ -36,5 +36,13 @@
         "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       }
     }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "An error occurred while retrieving data from the Airly API for {entry}: {error}"
+    },
+    "no_station": {
+      "message": "An error occurred while retrieving data from the Airly API for {entry}: no measuring stations in this area"
+    }
   }
 }

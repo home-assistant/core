@@ -21,6 +21,7 @@ from homeassistant.components.homekit import (
     STATUS_RUNNING,
     STATUS_STOPPED,
     STATUS_WAIT,
+    TYPE_AIR_PURIFIER,
     HomeKit,
 )
 from homeassistant.components.homekit.accessories import HomeBridge
@@ -51,6 +52,7 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STARTED,
@@ -58,6 +60,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_ON,
     EntityCategory,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -615,7 +618,6 @@ async def test_homekit_entity_glob_filter_with_config_entities(
         "select",
         "any",
         "any",
-        device_id="1234",
         entity_category=EntityCategory.CONFIG,
     )
     hass.states.async_set(select_config_entity.entity_id, "off")
@@ -624,7 +626,6 @@ async def test_homekit_entity_glob_filter_with_config_entities(
         "switch",
         "any",
         "any",
-        device_id="1234",
         entity_category=EntityCategory.CONFIG,
     )
     hass.states.async_set(switch_config_entity.entity_id, "off")
@@ -669,7 +670,6 @@ async def test_homekit_entity_glob_filter_with_hidden_entities(
         "select",
         "any",
         "any",
-        device_id="1234",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
     hass.states.async_set(select_config_entity.entity_id, "off")
@@ -678,7 +678,6 @@ async def test_homekit_entity_glob_filter_with_hidden_entities(
         "switch",
         "any",
         "any",
-        device_id="1234",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
     hass.states.async_set(switch_config_entity.entity_id, "off")
@@ -1867,7 +1866,11 @@ async def test_homekit_ignored_missing_devices(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test HomeKit handles a device in the entity registry but missing from the device registry."""
+    """Test HomeKit handles a device in the entity registry but missing from the device registry.
+
+    If the entity registry is updated to remove entities linked to non-existent devices,
+    or set the link to None, this test can be removed.
+    """
 
     entry = await async_init_integration(hass)
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
@@ -1885,47 +1888,37 @@ async def test_homekit_ignored_missing_devices(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    entity_registry.async_get_or_create(
+    binary_sensor_entity = entity_registry.async_get_or_create(
         "binary_sensor",
         "powerwall",
         "battery_charging",
         device_id=device_entry.id,
         original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     )
-    entity_registry.async_get_or_create(
+    sensor_entity = entity_registry.async_get_or_create(
         "sensor",
         "powerwall",
         "battery",
         device_id=device_entry.id,
         original_device_class=SensorDeviceClass.BATTERY,
     )
-    light = entity_registry.async_get_or_create(
+    light_entity = light = entity_registry.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
     )
     # Delete the device to make sure we fallback
     # to using the platform
-    device_registry.async_remove_device(device_entry.id)
-    # Wait for the entities to be removed
-    await asyncio.sleep(0)
-    await asyncio.sleep(0)
-    # Restore the registry
-    entity_registry.async_get_or_create(
-        "binary_sensor",
-        "powerwall",
-        "battery_charging",
-        device_id=device_entry.id,
-        original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-    )
-    entity_registry.async_get_or_create(
-        "sensor",
-        "powerwall",
-        "battery",
-        device_id=device_entry.id,
-        original_device_class=SensorDeviceClass.BATTERY,
-    )
-    light = entity_registry.async_get_or_create(
-        "light", "powerwall", "demo", device_id=device_entry.id
-    )
+    with patch(
+        "homeassistant.helpers.entity_registry.async_entries_for_device",
+        return_value=[],
+    ):
+        device_registry.async_remove_device(device_entry.id)
+        # Wait for the device registry event handlers to execute
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+    # Check the entities were not removed
+    assert binary_sensor_entity.entity_id in entity_registry.entities
+    assert sensor_entity.entity_id in entity_registry.entities
+    assert light_entity.entity_id in entity_registry.entities
 
     hass.states.async_set(light.entity_id, STATE_ON)
     hass.states.async_set("light.two", STATE_ON)
@@ -2168,6 +2161,109 @@ async def test_homekit_finds_linked_humidity_sensors(
             "platform": "test",
             "sw_version": "0.16.1",
             "linked_humidity_sensor": "sensor.humidifier_humidity_sensor",
+        },
+    )
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_finds_linked_air_purifier_sensors(
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test HomeKit start method."""
+    entry = await async_init_integration(hass)
+
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
+
+    homekit.driver = hk_driver
+    homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
+
+    config_entry = MockConfigEntry(domain="air_purifier", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        sw_version="0.16.1",
+        model="Smart Air Purifier",
+        manufacturer="Home Assistant",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    humidity_sensor = entity_registry.async_get_or_create(
+        "sensor",
+        "air_purifier",
+        "humidity_sensor",
+        device_id=device_entry.id,
+        original_device_class=SensorDeviceClass.HUMIDITY,
+    )
+    pm25_sensor = entity_registry.async_get_or_create(
+        "sensor",
+        "air_purifier",
+        "pm25_sensor",
+        device_id=device_entry.id,
+        original_device_class=SensorDeviceClass.PM25,
+    )
+    temperature_sensor = entity_registry.async_get_or_create(
+        "sensor",
+        "air_purifier",
+        "temperature_sensor",
+        device_id=device_entry.id,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+    )
+    air_purifier = entity_registry.async_get_or_create(
+        "fan", "air_purifier", "demo", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        humidity_sensor.entity_id,
+        "42",
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+        },
+    )
+    hass.states.async_set(
+        pm25_sensor.entity_id,
+        8,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.PM25,
+            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        },
+    )
+    hass.states.async_set(
+        temperature_sensor.entity_id,
+        22,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        },
+    )
+    hass.states.async_set(air_purifier.entity_id, STATE_ON)
+
+    with (
+        patch.object(homekit.bridge, "add_accessory"),
+        patch(f"{PATH_HOMEKIT}.async_show_setup_message"),
+        patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc,
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+    ):
+        await homekit.async_start()
+    await hass.async_block_till_done()
+
+    mock_get_acc.assert_called_with(
+        hass,
+        ANY,
+        ANY,
+        ANY,
+        {
+            "manufacturer": "Home Assistant",
+            "model": "Smart Air Purifier",
+            "platform": "air_purifier",
+            "sw_version": "0.16.1",
+            "type": TYPE_AIR_PURIFIER,
+            "linked_humidity_sensor": "sensor.air_purifier_humidity_sensor",
+            "linked_pm25_sensor": "sensor.air_purifier_pm25_sensor",
+            "linked_temperature_sensor": "sensor.air_purifier_temperature_sensor",
         },
     )
 

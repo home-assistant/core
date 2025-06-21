@@ -10,11 +10,16 @@ from aiohttp import CookieJar
 from pybravia import BraviaAuthError, BraviaClient, BraviaError, BraviaNotSupported
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 from homeassistant.util.network import is_host_valid
 
 from .const import (
@@ -202,14 +207,14 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered device."""
         # We can cast the hostname to str because the ssdp_location is not bytes and
         # not a relative url
         host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
 
-        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
+        await self.async_set_unique_id(discovery_info.upnp[ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: host})
 
@@ -221,8 +226,8 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if "videoScreen" not in service_types:
             return self.async_abort(reason="not_bravia_device")
 
-        model_name = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
-        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        model_name = discovery_info.upnp[ATTR_UPNP_MODEL_NAME]
+        friendly_name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
 
         self.context["title_placeholders"] = {
             CONF_NAME: f"{model_name} ({friendly_name})",

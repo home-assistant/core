@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 
-from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
+from homeassistant.components.gdacs.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.gdacs.geo_location import (
     ATTR_ALERT_LEVEL,
     ATTR_COUNTRY,
@@ -33,7 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
@@ -251,10 +251,7 @@ async def test_setup_imperial(
         )
 
         # Test conversion of 200 miles to kilometers.
-        feeds = hass.data[DOMAIN][FEED]
-        assert feeds is not None
-        assert len(feeds) == 1
-        manager = list(feeds.values())[0]
+        manager = config_entry.runtime_data
         # Ensure that the filter value in km is correctly set.
         assert manager._feed_manager._feed._filter_radius == 321.8688
 

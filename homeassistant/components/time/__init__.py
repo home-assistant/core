@@ -6,7 +6,7 @@ from datetime import time, timedelta
 import logging
 from typing import final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -72,7 +72,7 @@ class TimeEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Time entity."""
 
     entity_description: TimeEntityDescription
-    _attr_native_value: time | None
+    _attr_native_value: time | None = None
     _attr_device_class: None = None
     _attr_state: None = None
 

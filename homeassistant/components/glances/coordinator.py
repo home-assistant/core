@@ -17,21 +17,25 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type GlancesConfigEntry = ConfigEntry[GlancesDataUpdateCoordinator]
+
 
 class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Get the latest data from Glances api."""
 
-    config_entry: ConfigEntry
+    config_entry: GlancesConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: Glances) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: GlancesConfigEntry, api: Glances
+    ) -> None:
         """Initialize the Glances data."""
         self.hass = hass
-        self.config_entry = entry
         self.host: str = entry.data[CONF_HOST]
         self.api = api
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN} - {self.host}",
             update_interval=DEFAULT_SCAN_INTERVAL,
         )

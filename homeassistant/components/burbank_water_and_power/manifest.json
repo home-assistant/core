@@ -1,0 +1,6 @@
+{
+  "domain": "burbank_water_and_power",
+  "name": "Burbank Water and Power (BWP)",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

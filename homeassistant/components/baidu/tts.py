@@ -11,7 +11,7 @@ from homeassistant.components.tts import (
     Provider,
 )
 from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 

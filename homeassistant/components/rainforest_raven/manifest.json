@@ -6,7 +6,7 @@
   "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/rainforest_raven",
   "iot_class": "local_polling",
-  "requirements": ["aioraven==0.7.0"],
+  "requirements": ["aioraven==0.7.1"],
   "usb": [
     {
       "vid": "0403",

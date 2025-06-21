@@ -48,7 +48,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
 
 from .binary_sensor import is_valid_notification_binary_sensor
@@ -58,7 +58,10 @@ from .const import (
     ATTR_VALUE,
     DATA_CLIENT,
     DOMAIN,
-    ENTITY_DESC_KEY_BATTERY,
+    ENTITY_DESC_KEY_BATTERY_LEVEL,
+    ENTITY_DESC_KEY_BATTERY_LIST_STATE,
+    ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
+    ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
     ENTITY_DESC_KEY_CO,
     ENTITY_DESC_KEY_CO2,
     ENTITY_DESC_KEY_CURRENT,
@@ -95,16 +98,32 @@ from .migrate import async_migrate_statistics_sensors
 PARALLEL_UPDATES = 0
 
 
-# These descriptions should include device class.
-ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
-    tuple[str, str], SensorEntityDescription
-] = {
-    (ENTITY_DESC_KEY_BATTERY, PERCENTAGE): SensorEntityDescription(
-        key=ENTITY_DESC_KEY_BATTERY,
+# These descriptions should have a non None unit of measurement.
+ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] = {
+    (ENTITY_DESC_KEY_BATTERY_LEVEL, PERCENTAGE): SensorEntityDescription(
+        key=ENTITY_DESC_KEY_BATTERY_LEVEL,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+    ),
+    (ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY, PERCENTAGE): SensorEntityDescription(
+        key=ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    (
+        ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
+        UnitOfTemperature.CELSIUS,
+    ): SensorEntityDescription(
+        key=ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_registry_enabled_default=False,
     ),
     (ENTITY_DESC_KEY_CURRENT, UnitOfElectricCurrent.AMPERE): SensorEntityDescription(
         key=ENTITY_DESC_KEY_CURRENT,
@@ -285,8 +304,14 @@ ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP: dict[
     ),
 }
 
-# These descriptions are without device class.
+# These descriptions are without unit of measurement.
 ENTITY_DESCRIPTION_KEY_MAP = {
+    ENTITY_DESC_KEY_BATTERY_LIST_STATE: SensorEntityDescription(
+        key=ENTITY_DESC_KEY_BATTERY_LIST_STATE,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     ENTITY_DESC_KEY_CO: SensorEntityDescription(
         key=ENTITY_DESC_KEY_CO,
         state_class=SensorStateClass.MEASUREMENT,
@@ -538,7 +563,7 @@ def get_entity_description(
     """Return the entity description for the given data."""
     data_description_key = data.entity_description_key or ""
     data_unit = data.unit_of_measurement or ""
-    return ENTITY_DESCRIPTION_KEY_DEVICE_CLASS_MAP.get(
+    return ENTITY_DESCRIPTION_KEY_UNIT_MAP.get(
         (data_description_key, data_unit),
         ENTITY_DESCRIPTION_KEY_MAP.get(
             data_description_key,
@@ -552,7 +577,7 @@ def get_entity_description(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave sensor from config entry."""
     client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
@@ -585,6 +610,10 @@ async def async_setup_entry(
             # prevent duplicate entities for values that are already represented as binary sensors
             if is_valid_notification_binary_sensor(info):
                 return
+            entities.append(
+                ZWaveListSensor(config_entry, driver, info, entity_description)
+            )
+        elif info.platform_hint == "list":
             entities.append(
                 ZWaveListSensor(config_entry, driver, info, entity_description)
             )

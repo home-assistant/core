@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
+from google.api_core.retry import AsyncRetry
 from google.cloud import texttospeech
 import voluptuous as vol
 
@@ -21,7 +22,7 @@ from homeassistant.components.tts import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -88,7 +89,7 @@ async def async_get_engine(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Google Cloud text-to-speech."""
     service_account_info = config_entry.data[CONF_SERVICE_ACCOUNT_INFO]
@@ -215,7 +216,11 @@ class BaseGoogleCloudProvider:
             ),
         )
 
-        response = await self._client.synthesize_speech(request, timeout=10)
+        response = await self._client.synthesize_speech(
+            request,
+            timeout=10,
+            retry=AsyncRetry(initial=0.1, maximum=2.0, multiplier=2.0),
+        )
 
         if encoding == texttospeech.AudioEncoding.MP3:
             extension = "mp3"

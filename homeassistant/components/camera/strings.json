@@ -46,10 +46,6 @@
           }
         }
       }
-    },
-    "legacy_webrtc_provider": {
-      "title": "Detected use of legacy WebRTC provider registered by {legacy_integration}",
-      "description": "The {legacy_integration} integration has registered a legacy WebRTC provider. Home Assistant prefers using the built-in modern WebRTC provider registered by the {builtin_integration} integration.\n\nBenefits of the built-in integration are:\n\n- The camera stream is started faster.\n- More camera devices are supported.\n\nTo fix this issue, you can either keep using the built-in modern WebRTC provider and remove the {legacy_integration} integration or remove the {builtin_integration} integration to use the legacy provider, and then restart Home Assistant."
     }
   },
   "services": {

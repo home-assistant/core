@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from contextlib import suppress
-from types import MappingProxyType
 from typing import Any
 
 import aiohttp
@@ -42,7 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import get_camera_from_cameras, is_acceptable_camera, listen_for_new_cameras
@@ -93,7 +93,9 @@ SCHEMA_SERVICE_SET_TEXT = vol.Schema(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up motionEye from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
@@ -152,7 +154,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         camera: dict[str, Any],
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
-        options: MappingProxyType[str, str],
+        options: Mapping[str, str],
     ) -> None:
         """Initialize a MJPEG camera."""
         self._surveillance_username = username

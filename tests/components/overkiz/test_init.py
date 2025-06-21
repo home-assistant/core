@@ -7,7 +7,7 @@ from homeassistant.setup import async_setup_component
 
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
 
-from tests.common import MockConfigEntry, mock_registry
+from tests.common import MockConfigEntry, RegistryEntryWithDefaults, mock_registry
 
 ENTITY_SENSOR_DISCRETE_RSSI_LEVEL = "sensor.zipscreen_woonkamer_discrete_rssi_level"
 ENTITY_ALARM_CONTROL_PANEL = "alarm_control_panel.alarm"
@@ -33,35 +33,35 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
         hass,
         {
             # This entity will be migrated to "io://1234-5678-1234/3541212-core:DiscreteRSSILevelState"
-            ENTITY_SENSOR_DISCRETE_RSSI_LEVEL: er.RegistryEntry(
+            ENTITY_SENSOR_DISCRETE_RSSI_LEVEL: RegistryEntryWithDefaults(
                 entity_id=ENTITY_SENSOR_DISCRETE_RSSI_LEVEL,
                 unique_id="io://1234-5678-1234/3541212-OverkizState.CORE_DISCRETE_RSSI_LEVEL",
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
             # This entity will be migrated to "internal://1234-5678-1234/alarm/0-TSKAlarmController"
-            ENTITY_ALARM_CONTROL_PANEL: er.RegistryEntry(
+            ENTITY_ALARM_CONTROL_PANEL: RegistryEntryWithDefaults(
                 entity_id=ENTITY_ALARM_CONTROL_PANEL,
                 unique_id="internal://1234-5678-1234/alarm/0-UIWidget.TSKALARM_CONTROLLER",
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
             # This entity will be migrated to "io://1234-5678-1234/0-OnOff"
-            ENTITY_SWITCH_GARAGE: er.RegistryEntry(
+            ENTITY_SWITCH_GARAGE: RegistryEntryWithDefaults(
                 entity_id=ENTITY_SWITCH_GARAGE,
                 unique_id="io://1234-5678-1234/0-UIClass.ON_OFF",
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
             # This entity will be removed since "io://1234-5678-1234/3541212-core:TargetClosureState" already exists
-            ENTITY_SENSOR_TARGET_CLOSURE_STATE: er.RegistryEntry(
+            ENTITY_SENSOR_TARGET_CLOSURE_STATE: RegistryEntryWithDefaults(
                 entity_id=ENTITY_SENSOR_TARGET_CLOSURE_STATE,
                 unique_id="io://1234-5678-1234/3541212-OverkizState.CORE_TARGET_CLOSURE",
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
             # This entity will not be migrated"
-            ENTITY_SENSOR_TARGET_CLOSURE_STATE_2: er.RegistryEntry(
+            ENTITY_SENSOR_TARGET_CLOSURE_STATE_2: RegistryEntryWithDefaults(
                 entity_id=ENTITY_SENSOR_TARGET_CLOSURE_STATE_2,
                 unique_id="io://1234-5678-1234/3541212-core:TargetClosureState",
                 platform=DOMAIN,

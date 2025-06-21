@@ -21,13 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    CONF_CUSTOM_ATTRIBUTES,
-    CONF_EVENTS,
-    CONF_MAX_ACCURACY,
-    CONF_SKIP_ACCURACY_FILTER_FOR,
-    DOMAIN,
-)
+from .const import CONF_EVENTS, DOMAIN
 from .coordinator import TraccarServerCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -47,6 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     coordinator = TraccarServerCoordinator(
         hass=hass,
+        config_entry=entry,
         client=ApiClient(
             client_session=client_session,
             host=entry.data[CONF_HOST],
@@ -56,10 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ssl=entry.data[CONF_SSL],
             verify_ssl=entry.data[CONF_VERIFY_SSL],
         ),
-        events=entry.options.get(CONF_EVENTS, []),
-        max_accuracy=entry.options.get(CONF_MAX_ACCURACY, 0.0),
-        skip_accuracy_filter_for=entry.options.get(CONF_SKIP_ACCURACY_FILTER_FOR, []),
-        custom_attributes=entry.options.get(CONF_CUSTOM_ATTRIBUTES, []),
     )
 
     await coordinator.async_config_entry_first_refresh()

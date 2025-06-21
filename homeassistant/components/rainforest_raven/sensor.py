@@ -19,7 +19,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -80,7 +80,7 @@ DIAGNOSTICS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RAVEnConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
     coordinator = entry.runtime_data
@@ -101,7 +101,7 @@ async def async_setup_entry(
                     coordinator,
                     RAVEnSensorEntityDescription(
                         message_key="PriceCluster",
-                        translation_key="meter_price",
+                        translation_key="energy_price",
                         key="price",
                         native_unit_of_measurement=f"{meter_data['PriceCluster']['currency'].value}/{UnitOfEnergy.KILO_WATT_HOUR}",
                         state_class=SensorStateClass.MEASUREMENT,

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any
 
+from gcal_sync.api import GoogleCalendarService
 from gcal_sync.store import CalendarStore
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
@@ -18,6 +21,16 @@ STORAGE_KEY_FORMAT = "{domain}.{entry_id}"
 STORAGE_VERSION = 1
 # Buffer writes every few minutes (plus guaranteed to be written at shutdown)
 STORAGE_SAVE_DELAY_SECONDS = 120
+
+type GoogleConfigEntry = ConfigEntry[GoogleRuntimeData]
+
+
+@dataclass
+class GoogleRuntimeData:
+    """Google runtime data."""
+
+    service: GoogleCalendarService
+    store: LocalCalendarStore
 
 
 class LocalCalendarStore(CalendarStore):

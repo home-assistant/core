@@ -9,20 +9,17 @@ from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
     TeslaFleetError,
-    VehicleOffline,
 )
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
-from .const import VEHICLE_DATA_ALT
-
-from tests.common import async_fire_time_changed
+from .const import PRODUCTS_MODERN, VEHICLE_DATA_ALT
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -67,22 +64,6 @@ async def test_devices(
 
     for device in devices:
         assert device == snapshot(name=f"{device.identifiers}")
-
-
-async def test_vehicle_refresh_offline(
-    hass: HomeAssistant, mock_vehicle_data: AsyncMock, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test coordinator refresh with an error."""
-    entry = await setup_platform(hass, [Platform.CLIMATE])
-    assert entry.state is ConfigEntryState.LOADED
-    mock_vehicle_data.assert_called_once()
-    mock_vehicle_data.reset_mock()
-
-    mock_vehicle_data.side_effect = VehicleOffline
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_vehicle_data.assert_called_once()
 
 
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
@@ -142,43 +123,73 @@ async def test_energy_history_refresh_error(
 
 async def test_vehicle_stream(
     hass: HomeAssistant,
-    mock_listen: AsyncMock,
+    mock_add_listener: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test vehicle stream events."""
 
-    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
-    mock_listen.assert_called_once()
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+    mock_add_listener.assert_called()
+
+    state = hass.states.get("binary_sensor.test_status")
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("binary_sensor.test_user_present")
+    assert state.state == STATE_OFF
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "vehicle_data": VEHICLE_DATA_ALT["response"],
+            "state": "online",
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_status")
     assert state.state == STATE_ON
 
     state = hass.states.get("binary_sensor.test_user_present")
-    assert state.state == STATE_OFF
-
-    runtime_data: TeslemetryData = entry.runtime_data
-    for listener, _ in runtime_data.vehicles[0].stream._listeners.values():
-        listener(
-            {
-                "vin": VEHICLE_DATA_ALT["response"]["vin"],
-                "vehicle_data": VEHICLE_DATA_ALT["response"],
-                "createdAt": "2024-10-04T10:45:17.537Z",
-            }
-        )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.test_user_present")
     assert state.state == STATE_ON
 
-    for listener, _ in runtime_data.vehicles[0].stream._listeners.values():
-        listener(
-            {
-                "vin": VEHICLE_DATA_ALT["response"]["vin"],
-                "state": "offline",
-                "createdAt": "2024-10-04T10:45:17.537Z",
-            }
-        )
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "state": "offline",
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_status")
     assert state.state == STATE_OFF
+
+
+async def test_no_live_status(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test coordinator refresh with an error."""
+    mock_live_status.side_effect = AsyncMock({"response": ""})
+    await setup_platform(hass)
+
+    assert hass.states.get("sensor.energy_site_grid_power") is None
+
+
+async def test_modern_no_poll(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_products: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that modern vehicles do not poll vehicle_data."""
+
+    mock_products.return_value = PRODUCTS_MODERN
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert mock_vehicle_data.called is False
+    freezer.tick(VEHICLE_INTERVAL)
+    assert mock_vehicle_data.called is False
+    freezer.tick(VEHICLE_INTERVAL)
+    assert mock_vehicle_data.called is False

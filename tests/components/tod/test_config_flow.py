@@ -9,7 +9,7 @@ from homeassistant.components.tod.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
@@ -55,17 +55,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert config_entry.title == "My tod"
 
 
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    # Wanted key absent from schema
-    raise KeyError("Wanted key absent from schema")
-
-
 @pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)
 async def test_options(hass: HomeAssistant) -> None:
     """Test reconfiguring."""
@@ -88,8 +77,8 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
-    assert get_suggested(schema, "after_time") == "10:00"
-    assert get_suggested(schema, "before_time") == "18:05"
+    assert get_schema_suggested_value(schema, "after_time") == "10:00"
+    assert get_schema_suggested_value(schema, "before_time") == "18:05"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],

@@ -33,6 +33,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_STATE,
+    CONF_TRIGGER,
+    CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
@@ -44,18 +46,16 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector, template
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
-from .const import (
-    CONF_ATTRIBUTE_TEMPLATES,
-    CONF_AVAILABILITY_TEMPLATE,
-    CONF_OBJECT_ID,
-    CONF_TRIGGER,
-)
+from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE, CONF_OBJECT_ID
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_SCHEMA,
     TemplateEntity,
@@ -129,7 +129,7 @@ LEGACY_SENSOR_SCHEMA = vol.All(
 
 def extra_validation_checks(val):
     """Run extra validation checks."""
-    if CONF_TRIGGER in val:
+    if CONF_TRIGGERS in val or CONF_TRIGGER in val:
         raise vol.Invalid(
             "You can only add triggers to template entities if they are defined under"
             " `template:`. See the template documentation for more information:"
@@ -167,6 +167,7 @@ PLATFORM_SCHEMA = vol.All(
     SENSOR_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_TRIGGER): cv.match_all,  # to raise custom warning
+            vol.Optional(CONF_TRIGGERS): cv.match_all,  # to raise custom warning
             vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(LEGACY_SENSOR_SCHEMA),
         }
     ),
@@ -178,7 +179,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 def _async_create_template_tracking_entities(
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
     hass: HomeAssistant,
     definitions: list[dict],
     unique_id_prefix: str | None,
@@ -237,7 +238,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
     _options = dict(config_entry.options)

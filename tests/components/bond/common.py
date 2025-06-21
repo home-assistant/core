@@ -11,7 +11,7 @@ from aiohttp.client_exceptions import ClientResponseError
 from bond_async import DeviceType
 
 from homeassistant import core
-from homeassistant.components.bond.const import DOMAIN as BOND_DOMAIN
+from homeassistant.components.bond.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
@@ -77,7 +77,7 @@ async def setup_platform(
 ):
     """Set up the specified Bond platform."""
     mock_entry = MockConfigEntry(
-        domain=BOND_DOMAIN,
+        domain=DOMAIN,
         data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
     )
     mock_entry.add_to_hass(hass)
@@ -93,7 +93,7 @@ async def setup_platform(
         patch_bond_device_properties(return_value=props),
         patch_bond_device_state(return_value=state),
     ):
-        assert await async_setup_component(hass, BOND_DOMAIN, {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     return mock_entry

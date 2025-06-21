@@ -150,7 +150,11 @@ class NetgearRouter:
                 if device_entry.via_device_id is None:
                     continue  # do not add the router itself
 
-                device_mac = dict(device_entry.connections)[dr.CONNECTION_NETWORK_MAC]
+                device_mac = dict(device_entry.connections).get(
+                    dr.CONNECTION_NETWORK_MAC
+                )
+                if device_mac is None:
+                    continue
                 self.devices[device_mac] = {
                     "mac": device_mac,
                     "name": device_entry.name,
@@ -210,6 +214,12 @@ class NetgearRouter:
 
         for device in self.devices.values():
             device["active"] = now - device["last_seen"] <= self._consider_home
+            if not device["active"]:
+                device["link_rate"] = None
+                device["signal"] = None
+                device["ip"] = None
+                device["ssid"] = None
+                device["conn_ap_mac"] = None
 
         if new_device:
             _LOGGER.debug("Netgear tracker: new device found")

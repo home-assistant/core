@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'tmt100_name',
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.aaecosystem.com',
     'connections': set({
     }),

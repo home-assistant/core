@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -25,12 +24,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import ProcessDataUpdateCoordinator
+from .coordinator import PlenticoreConfigEntry, ProcessDataUpdateCoordinator
 from .helper import PlenticoreDataFormatter
 
 _LOGGER = logging.getLogger(__name__)
@@ -807,20 +805,18 @@ SENSOR_PROCESS_DATA = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PlenticoreConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kostal plenticore Sensors."""
-    plenticore = hass.data[DOMAIN][entry.entry_id]
+    plenticore = entry.runtime_data
 
     entities = []
 
     available_process_data = await plenticore.client.get_process_data()
     process_data_update_coordinator = ProcessDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Process Data",
-        timedelta(seconds=10),
-        plenticore,
+        hass, entry, _LOGGER, "Process Data", timedelta(seconds=10), plenticore
     )
     for description in SENSOR_PROCESS_DATA:
         module_id = description.module_id

@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import AutarcoConfigEntry, AutarcoDataUpdateCoordinator
+from .coordinator import AutarcoConfigEntry, AutarcoDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(

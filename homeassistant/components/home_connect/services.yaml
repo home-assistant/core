@@ -46,6 +46,559 @@ select_program:
       example: "seconds"
       selector:
         text:
+set_program_and_options:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    affects_to:
+      example: active_program
+      required: true
+      selector:
+        select:
+          translation_key: affects_to
+          options:
+            - active_program
+            - selected_program
+    program:
+      example: dishcare_dishwasher_program_auto2
+      selector:
+        select:
+          mode: dropdown
+          custom_value: false
+          translation_key: programs
+          options:
+            - consumer_products_cleaning_robot_program_cleaning_clean_all
+            - consumer_products_cleaning_robot_program_cleaning_clean_map
+            - consumer_products_cleaning_robot_program_basic_go_home
+            - consumer_products_coffee_maker_program_beverage_ristretto
+            - consumer_products_coffee_maker_program_beverage_espresso
+            - consumer_products_coffee_maker_program_beverage_espresso_doppio
+            - consumer_products_coffee_maker_program_beverage_coffee
+            - consumer_products_coffee_maker_program_beverage_x_l_coffee
+            - consumer_products_coffee_maker_program_beverage_caffe_grande
+            - consumer_products_coffee_maker_program_beverage_espresso_macchiato
+            - consumer_products_coffee_maker_program_beverage_cappuccino
+            - consumer_products_coffee_maker_program_beverage_latte_macchiato
+            - consumer_products_coffee_maker_program_beverage_caffe_latte
+            - consumer_products_coffee_maker_program_beverage_milk_froth
+            - consumer_products_coffee_maker_program_beverage_warm_milk
+            - consumer_products_coffee_maker_program_coffee_world_kleiner_brauner
+            - consumer_products_coffee_maker_program_coffee_world_grosser_brauner
+            - consumer_products_coffee_maker_program_coffee_world_verlaengerter
+            - consumer_products_coffee_maker_program_coffee_world_verlaengerter_braun
+            - consumer_products_coffee_maker_program_coffee_world_wiener_melange
+            - consumer_products_coffee_maker_program_coffee_world_flat_white
+            - consumer_products_coffee_maker_program_coffee_world_cortado
+            - consumer_products_coffee_maker_program_coffee_world_cafe_cortado
+            - consumer_products_coffee_maker_program_coffee_world_cafe_con_leche
+            - consumer_products_coffee_maker_program_coffee_world_cafe_au_lait
+            - consumer_products_coffee_maker_program_coffee_world_doppio
+            - consumer_products_coffee_maker_program_coffee_world_kaapi
+            - consumer_products_coffee_maker_program_coffee_world_koffie_verkeerd
+            - consumer_products_coffee_maker_program_coffee_world_galao
+            - consumer_products_coffee_maker_program_coffee_world_garoto
+            - consumer_products_coffee_maker_program_coffee_world_americano
+            - consumer_products_coffee_maker_program_coffee_world_red_eye
+            - consumer_products_coffee_maker_program_coffee_world_black_eye
+            - consumer_products_coffee_maker_program_coffee_world_dead_eye
+            - consumer_products_coffee_maker_program_beverage_hot_water
+            - dishcare_dishwasher_program_pre_rinse
+            - dishcare_dishwasher_program_auto_1
+            - dishcare_dishwasher_program_auto_2
+            - dishcare_dishwasher_program_auto_3
+            - dishcare_dishwasher_program_eco_50
+            - dishcare_dishwasher_program_quick_45
+            - dishcare_dishwasher_program_intensiv_70
+            - dishcare_dishwasher_program_normal_65
+            - dishcare_dishwasher_program_glas_40
+            - dishcare_dishwasher_program_glass_care
+            - dishcare_dishwasher_program_night_wash
+            - dishcare_dishwasher_program_quick_65
+            - dishcare_dishwasher_program_normal_45
+            - dishcare_dishwasher_program_intensiv_45
+            - dishcare_dishwasher_program_auto_half_load
+            - dishcare_dishwasher_program_intensiv_power
+            - dishcare_dishwasher_program_magic_daily
+            - dishcare_dishwasher_program_super_60
+            - dishcare_dishwasher_program_kurz_60
+            - dishcare_dishwasher_program_express_sparkle_65
+            - dishcare_dishwasher_program_machine_care
+            - dishcare_dishwasher_program_steam_fresh
+            - dishcare_dishwasher_program_maximum_cleaning
+            - dishcare_dishwasher_program_mixed_load
+            - laundry_care_dryer_program_cotton
+            - laundry_care_dryer_program_synthetic
+            - laundry_care_dryer_program_mix
+            - laundry_care_dryer_program_blankets
+            - laundry_care_dryer_program_business_shirts
+            - laundry_care_dryer_program_down_feathers
+            - laundry_care_dryer_program_hygiene
+            - laundry_care_dryer_program_jeans
+            - laundry_care_dryer_program_outdoor
+            - laundry_care_dryer_program_synthetic_refresh
+            - laundry_care_dryer_program_towels
+            - laundry_care_dryer_program_delicates
+            - laundry_care_dryer_program_super_40
+            - laundry_care_dryer_program_shirts_15
+            - laundry_care_dryer_program_pillow
+            - laundry_care_dryer_program_anti_shrink
+            - laundry_care_dryer_program_my_time_my_drying_time
+            - laundry_care_dryer_program_time_cold
+            - laundry_care_dryer_program_time_warm
+            - laundry_care_dryer_program_in_basket
+            - laundry_care_dryer_program_time_cold_fix_time_cold_20
+            - laundry_care_dryer_program_time_cold_fix_time_cold_30
+            - laundry_care_dryer_program_time_cold_fix_time_cold_60
+            - laundry_care_dryer_program_time_warm_fix_time_warm_30
+            - laundry_care_dryer_program_time_warm_fix_time_warm_40
+            - laundry_care_dryer_program_time_warm_fix_time_warm_60
+            - laundry_care_dryer_program_dessous
+            - cooking_common_program_hood_automatic
+            - cooking_common_program_hood_venting
+            - cooking_common_program_hood_delayed_shut_off
+            - cooking_oven_program_heating_mode_pre_heating
+            - cooking_oven_program_heating_mode_hot_air
+            - cooking_oven_program_heating_mode_hot_air_eco
+            - cooking_oven_program_heating_mode_hot_air_grilling
+            - cooking_oven_program_heating_mode_top_bottom_heating
+            - cooking_oven_program_heating_mode_top_bottom_heating_eco
+            - cooking_oven_program_heating_mode_bottom_heating
+            - cooking_oven_program_heating_mode_pizza_setting
+            - cooking_oven_program_heating_mode_slow_cook
+            - cooking_oven_program_heating_mode_intensive_heat
+            - cooking_oven_program_heating_mode_keep_warm
+            - cooking_oven_program_heating_mode_preheat_ovenware
+            - cooking_oven_program_heating_mode_frozen_heatup_special
+            - cooking_oven_program_heating_mode_desiccation
+            - cooking_oven_program_heating_mode_defrost
+            - cooking_oven_program_heating_mode_proof
+            - cooking_oven_program_heating_mode_hot_air_30_steam
+            - cooking_oven_program_heating_mode_hot_air_60_steam
+            - cooking_oven_program_heating_mode_hot_air_80_steam
+            - cooking_oven_program_heating_mode_hot_air_100_steam
+            - cooking_oven_program_heating_mode_sabbath_programme
+            - cooking_oven_program_microwave_90_watt
+            - cooking_oven_program_microwave_180_watt
+            - cooking_oven_program_microwave_360_watt
+            - cooking_oven_program_microwave_600_watt
+            - cooking_oven_program_microwave_900_watt
+            - cooking_oven_program_microwave_1000_watt
+            - cooking_oven_program_microwave_max
+            - cooking_oven_program_heating_mode_warming_drawer
+            - laundry_care_washer_program_cotton
+            - laundry_care_washer_program_cotton_cotton_eco
+            - laundry_care_washer_program_cotton_eco_4060
+            - laundry_care_washer_program_cotton_colour
+            - laundry_care_washer_program_easy_care
+            - laundry_care_washer_program_mix
+            - laundry_care_washer_program_mix_night_wash
+            - laundry_care_washer_program_delicates_silk
+            - laundry_care_washer_program_wool
+            - laundry_care_washer_program_sensitive
+            - laundry_care_washer_program_auto_30
+            - laundry_care_washer_program_auto_40
+            - laundry_care_washer_program_auto_60
+            - laundry_care_washer_program_chiffon
+            - laundry_care_washer_program_curtains
+            - laundry_care_washer_program_dark_wash
+            - laundry_care_washer_program_dessous
+            - laundry_care_washer_program_monsoon
+            - laundry_care_washer_program_outdoor
+            - laundry_care_washer_program_plush_toy
+            - laundry_care_washer_program_shirts_blouses
+            - laundry_care_washer_program_sport_fitness
+            - laundry_care_washer_program_towels
+            - laundry_care_washer_program_water_proof
+            - laundry_care_washer_program_power_speed_59
+            - laundry_care_washer_program_super_153045_super_15
+            - laundry_care_washer_program_super_153045_super_1530
+            - laundry_care_washer_program_down_duvet_duvet
+            - laundry_care_washer_program_rinse_rinse_spin_drain
+            - laundry_care_washer_program_drum_clean
+            - laundry_care_washer_dryer_program_cotton
+            - laundry_care_washer_dryer_program_cotton_eco_4060
+            - laundry_care_washer_dryer_program_mix
+            - laundry_care_washer_dryer_program_easy_care
+            - laundry_care_washer_dryer_program_wash_and_dry_60
+            - laundry_care_washer_dryer_program_wash_and_dry_90
+    cleaning_robot_options:
+      collapsed: true
+      fields:
+        consumer_products_cleaning_robot_option_reference_map_id:
+          example: consumer_products_cleaning_robot_enum_type_available_maps_map1
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: available_maps
+              options:
+                - consumer_products_cleaning_robot_enum_type_available_maps_temp_map
+                - consumer_products_cleaning_robot_enum_type_available_maps_map1
+                - consumer_products_cleaning_robot_enum_type_available_maps_map2
+                - consumer_products_cleaning_robot_enum_type_available_maps_map3
+        consumer_products_cleaning_robot_option_cleaning_mode:
+          example: consumer_products_cleaning_robot_enum_type_cleaning_modes_standard
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: cleaning_mode
+              options:
+                - consumer_products_cleaning_robot_enum_type_cleaning_modes_silent
+                - consumer_products_cleaning_robot_enum_type_cleaning_modes_standard
+                - consumer_products_cleaning_robot_enum_type_cleaning_modes_power
+    coffee_maker_options:
+      collapsed: true
+      fields:
+        consumer_products_coffee_maker_option_bean_amount:
+          example: consumer_products_coffee_maker_enum_type_bean_amount_normal
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: bean_amount
+              options:
+                - consumer_products_coffee_maker_enum_type_bean_amount_very_mild
+                - consumer_products_coffee_maker_enum_type_bean_amount_mild
+                - consumer_products_coffee_maker_enum_type_bean_amount_mild_plus
+                - consumer_products_coffee_maker_enum_type_bean_amount_normal
+                - consumer_products_coffee_maker_enum_type_bean_amount_normal_plus
+                - consumer_products_coffee_maker_enum_type_bean_amount_strong
+                - consumer_products_coffee_maker_enum_type_bean_amount_strong_plus
+                - consumer_products_coffee_maker_enum_type_bean_amount_very_strong
+                - consumer_products_coffee_maker_enum_type_bean_amount_very_strong_plus
+                - consumer_products_coffee_maker_enum_type_bean_amount_extra_strong
+                - consumer_products_coffee_maker_enum_type_bean_amount_double_shot
+                - consumer_products_coffee_maker_enum_type_bean_amount_double_shot_plus
+                - consumer_products_coffee_maker_enum_type_bean_amount_double_shot_plus_plus
+                - consumer_products_coffee_maker_enum_type_bean_amount_triple_shot
+                - consumer_products_coffee_maker_enum_type_bean_amount_triple_shot_plus
+                - consumer_products_coffee_maker_enum_type_bean_amount_coffee_ground
+        consumer_products_coffee_maker_option_fill_quantity:
+          example: 60
+          required: false
+          selector:
+            number:
+              min: 0
+              step: 1
+              mode: box
+              unit_of_measurement: ml
+        consumer_products_coffee_maker_option_coffee_temperature:
+          example: consumer_products_coffee_maker_enum_type_coffee_temperature_88_c
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: coffee_temperature
+              options:
+                - consumer_products_coffee_maker_enum_type_coffee_temperature_88_c
+                - consumer_products_coffee_maker_enum_type_coffee_temperature_90_c
+                - consumer_products_coffee_maker_enum_type_coffee_temperature_92_c
+                - consumer_products_coffee_maker_enum_type_coffee_temperature_94_c
+                - consumer_products_coffee_maker_enum_type_coffee_temperature_95_c
+                - consumer_products_coffee_maker_enum_type_coffee_temperature_96_c
+        consumer_products_coffee_maker_option_bean_container:
+          example: consumer_products_coffee_maker_enum_type_bean_container_selection_right
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: bean_container
+              options:
+                - consumer_products_coffee_maker_enum_type_bean_container_selection_right
+                - consumer_products_coffee_maker_enum_type_bean_container_selection_left
+        consumer_products_coffee_maker_option_flow_rate:
+          example: consumer_products_coffee_maker_enum_type_flow_rate_normal
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: flow_rate
+              options:
+                - consumer_products_coffee_maker_enum_type_flow_rate_normal
+                - consumer_products_coffee_maker_enum_type_flow_rate_intense
+                - consumer_products_coffee_maker_enum_type_flow_rate_intense_plus
+        consumer_products_coffee_maker_option_multiple_beverages:
+          example: false
+          required: false
+          selector:
+            boolean:
+        consumer_products_coffee_maker_option_coffee_milk_ratio:
+          example: consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: coffee_milk_ratio
+              options:
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_10_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_20_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_25_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_30_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_40_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_55_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_60_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_65_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_67_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_70_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_75_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_80_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_85_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_90_percent
+        consumer_products_coffee_maker_option_hot_water_temperature:
+          example: consumer_products_coffee_maker_enum_type_hot_water_temperature_50_c
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: hot_water_temperature
+              options:
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_white_tea
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_green_tea
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_black_tea
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_50_c
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_55_c
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_60_c
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_65_c
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_70_c
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_75_c
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_80_c
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_85_c
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_90_c
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_95_c
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_97_c
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_122_f
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_131_f
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_140_f
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_149_f
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_158_f
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_167_f
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_176_f
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_185_f
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_194_f
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_203_f
+                - consumer_products_coffee_maker_enum_type_hot_water_temperature_max
+    dish_washer_options:
+      collapsed: true
+      fields:
+        b_s_h_common_option_start_in_relative:
+          example: 3600
+          required: false
+          selector:
+            number:
+              min: 0
+              step: 1
+              mode: box
+              unit_of_measurement: s
+        dishcare_dishwasher_option_intensiv_zone:
+          example: false
+          required: false
+          selector:
+            boolean:
+        dishcare_dishwasher_option_brilliance_dry:
+          example: false
+          required: false
+          selector:
+            boolean:
+        dishcare_dishwasher_option_vario_speed_plus:
+          example: false
+          required: false
+          selector:
+            boolean:
+        dishcare_dishwasher_option_silence_on_demand:
+          example: false
+          required: false
+          selector:
+            boolean:
+        dishcare_dishwasher_option_half_load:
+          example: false
+          required: false
+          selector:
+            boolean:
+        dishcare_dishwasher_option_extra_dry:
+          example: false
+          required: false
+          selector:
+            boolean:
+        dishcare_dishwasher_option_hygiene_plus:
+          example: false
+          required: false
+          selector:
+            boolean:
+        dishcare_dishwasher_option_eco_dry:
+          example: false
+          required: false
+          selector:
+            boolean:
+        dishcare_dishwasher_option_zeolite_dry:
+          example: false
+          required: false
+          selector:
+            boolean:
+    dryer_options:
+      collapsed: true
+      fields:
+        laundry_care_dryer_option_drying_target:
+          example: laundry_care_dryer_enum_type_drying_target_iron_dry
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: drying_target
+              options:
+                - laundry_care_dryer_enum_type_drying_target_iron_dry
+                - laundry_care_dryer_enum_type_drying_target_gentle_dry
+                - laundry_care_dryer_enum_type_drying_target_cupboard_dry
+                - laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus
+                - laundry_care_dryer_enum_type_drying_target_extra_dry
+    hood_options:
+      collapsed: true
+      fields:
+        cooking_hood_option_venting_level:
+          example: cooking_hood_enum_type_stage_fan_stage01
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: venting_level
+              options:
+                - cooking_hood_enum_type_stage_fan_off
+                - cooking_hood_enum_type_stage_fan_stage_01
+                - cooking_hood_enum_type_stage_fan_stage_02
+                - cooking_hood_enum_type_stage_fan_stage_03
+                - cooking_hood_enum_type_stage_fan_stage_04
+                - cooking_hood_enum_type_stage_fan_stage_05
+        cooking_hood_option_intensive_level:
+          example: cooking_hood_enum_type_intensive_stage_intensive_stage1
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: intensive_level
+              options:
+                - cooking_hood_enum_type_intensive_stage_intensive_stage_off
+                - cooking_hood_enum_type_intensive_stage_intensive_stage1
+                - cooking_hood_enum_type_intensive_stage_intensive_stage2
+    oven_options:
+      collapsed: true
+      fields:
+        cooking_oven_option_setpoint_temperature:
+          example: 180
+          required: false
+          selector:
+            number:
+              min: 0
+              step: 1
+              mode: box
+              unit_of_measurement: °C/°F
+        b_s_h_common_option_duration:
+          example: 900
+          required: false
+          selector:
+            number:
+              min: 0
+              step: 1
+              mode: box
+              unit_of_measurement: s
+        cooking_oven_option_fast_pre_heat:
+          example: false
+          required: false
+          selector:
+            boolean:
+    warming_drawer_options:
+      collapsed: true
+      fields:
+        cooking_oven_option_warming_level:
+          example: cooking_oven_enum_type_warming_level_medium
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: warming_level
+              options:
+                - cooking_oven_enum_type_warming_level_low
+                - cooking_oven_enum_type_warming_level_medium
+                - cooking_oven_enum_type_warming_level_high
+    washer_options:
+      collapsed: true
+      fields:
+        laundry_care_washer_option_temperature:
+          example: laundry_care_washer_enum_type_temperature_g_c_40
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: washer_temperature
+              options:
+                - laundry_care_washer_enum_type_temperature_cold
+                - laundry_care_washer_enum_type_temperature_g_c_20
+                - laundry_care_washer_enum_type_temperature_g_c_30
+                - laundry_care_washer_enum_type_temperature_g_c_40
+                - laundry_care_washer_enum_type_temperature_g_c_50
+                - laundry_care_washer_enum_type_temperature_g_c_60
+                - laundry_care_washer_enum_type_temperature_g_c_70
+                - laundry_care_washer_enum_type_temperature_g_c_80
+                - laundry_care_washer_enum_type_temperature_g_c_90
+                - laundry_care_washer_enum_type_temperature_ul_cold
+                - laundry_care_washer_enum_type_temperature_ul_warm
+                - laundry_care_washer_enum_type_temperature_ul_hot
+                - laundry_care_washer_enum_type_temperature_ul_extra_hot
+        laundry_care_washer_option_spin_speed:
+          example: laundry_care_washer_enum_type_spin_speed_r_p_m800
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: spin_speed
+              options:
+                - laundry_care_washer_enum_type_spin_speed_off
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_400
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_600
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_700
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_800
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_900
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_1000
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_1200
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_1400
+                - laundry_care_washer_enum_type_spin_speed_r_p_m_1600
+                - laundry_care_washer_enum_type_spin_speed_ul_off
+                - laundry_care_washer_enum_type_spin_speed_ul_low
+                - laundry_care_washer_enum_type_spin_speed_ul_medium
+                - laundry_care_washer_enum_type_spin_speed_ul_high
+        b_s_h_common_option_finish_in_relative:
+          example: 3600
+          required: false
+          selector:
+            number:
+              min: 0
+              step: 1
+              mode: box
+              unit_of_measurement: s
+        laundry_care_washer_option_i_dos1_active:
+          example: false
+          required: false
+          selector:
+            boolean:
+        laundry_care_washer_option_i_dos2_active:
+          example: false
+          required: false
+          selector:
+            boolean:
+        laundry_care_washer_option_vario_perfect:
+          example: laundry_care_common_enum_type_vario_perfect_eco_perfect
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: vario_perfect
+              options:
+                - laundry_care_common_enum_type_vario_perfect_off
+                - laundry_care_common_enum_type_vario_perfect_eco_perfect
+                - laundry_care_common_enum_type_vario_perfect_speed_perfect
 pause_program:
   fields:
     device_id:

@@ -9,7 +9,7 @@ from attr import asdict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import VersionConfigEntry
+from .coordinator import VersionConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

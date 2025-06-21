@@ -5,7 +5,7 @@ from http import HTTPStatus
 import pytest
 import requests_mock
 
-import homeassistant.components.facebook.notify as fb
+from homeassistant.components.facebook import notify as fb
 from homeassistant.core import HomeAssistant
 
 

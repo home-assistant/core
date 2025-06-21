@@ -9,6 +9,7 @@ from homeassistant.components.habitica.const import (
     CONF_API_USER,
     DEFAULT_URL,
     DOMAIN,
+    SECTION_DANGER_ZONE,
     SECTION_REAUTH_API_KEY,
     SECTION_REAUTH_LOGIN,
 )
@@ -54,6 +55,13 @@ USER_INPUT_REAUTH_API_KEY = {
     SECTION_REAUTH_LOGIN: {},
     SECTION_REAUTH_API_KEY: {CONF_API_KEY: "cd0e5985-17de-4b4f-849e-5d506c5e4382"},
 }
+USER_INPUT_RECONFIGURE = {
+    CONF_API_KEY: "cd0e5985-17de-4b4f-849e-5d506c5e4382",
+    SECTION_DANGER_ZONE: {
+        CONF_URL: DEFAULT_URL,
+        CONF_VERIFY_SSL: True,
+    },
+}
 
 
 @pytest.mark.usefixtures("habitica")
@@ -68,8 +76,9 @@ async def test_form_login(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     assert "login" in result["menu_options"]
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "login"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "login"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -115,8 +124,9 @@ async def test_form_login_errors(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "login"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "login"},
     )
 
     habitica.login.side_effect = raise_error
@@ -148,6 +158,36 @@ async def test_form_login_errors(
 
 
 @pytest.mark.usefixtures("habitica")
+async def test_form_already_configured(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort form login when entry is already configured."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "login"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_LOGIN_STEP,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("habitica")
 async def test_form_advanced(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
 
@@ -159,18 +199,13 @@ async def test_form_advanced(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
     assert "advanced" in result["menu_options"]
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "advanced"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "advanced"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "advanced"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "advanced"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -212,8 +247,9 @@ async def test_form_advanced_errors(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "advanced"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "advanced"},
     )
 
     habitica.get_user.side_effect = raise_error
@@ -261,8 +297,9 @@ async def test_form_advanced_already_configured(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "advanced"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "advanced"},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -385,5 +422,114 @@ async def test_flow_reauth_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_API_KEY] == "cd0e5985-17de-4b4f-849e-5d506c5e4382"
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("habitica")
+async def test_flow_reauth_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reauth flow."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="test-user",
+        data={
+            CONF_URL: DEFAULT_URL,
+            CONF_API_USER: "371fcad5-0f9c-4211-931c-034a5d2a6213",
+            CONF_API_KEY: "cd0e5985-17de-4b4f-849e-5d506c5e4382",
+        },
+        unique_id="371fcad5-0f9c-4211-931c-034a5d2a6213",
+    )
+
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT_REAUTH_LOGIN,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("habitica")
+async def test_flow_reconfigure(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT_RECONFIGURE,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_API_KEY] == "cd0e5985-17de-4b4f-849e-5d506c5e4382"
+    assert config_entry.data[CONF_URL] == DEFAULT_URL
+    assert config_entry.data[CONF_VERIFY_SSL] is True
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "text_error"),
+    [
+        (ERROR_NOT_AUTHORIZED, "invalid_auth"),
+        (ERROR_BAD_REQUEST, "cannot_connect"),
+        (KeyError, "unknown"),
+    ],
+)
+async def test_flow_reconfigure_errors(
+    hass: HomeAssistant,
+    habitica: AsyncMock,
+    config_entry: MockConfigEntry,
+    raise_error: Exception,
+    text_error: str,
+) -> None:
+    """Test reconfigure flow errors."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    habitica.get_user.side_effect = raise_error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT_RECONFIGURE,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
+
+    habitica.get_user.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT_RECONFIGURE,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_API_KEY] == "cd0e5985-17de-4b4f-849e-5d506c5e4382"
+    assert config_entry.data[CONF_URL] == DEFAULT_URL
+    assert config_entry.data[CONF_VERIFY_SSL] is True
 
     assert len(hass.config_entries.async_entries()) == 1

@@ -16,13 +16,12 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AutarcoConfigEntry
 from .const import DOMAIN
-from .coordinator import AutarcoDataUpdateCoordinator
+from .coordinator import AutarcoConfigEntry, AutarcoDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -173,7 +172,7 @@ SENSORS_INVERTER: tuple[AutarcoInverterSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutarcoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Autarco sensors based on a config entry."""
     entities: list[SensorEntity] = []
