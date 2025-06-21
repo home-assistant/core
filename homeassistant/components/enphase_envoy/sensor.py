@@ -179,6 +179,15 @@ INVERTER_SENSORS = (
         value_fn=attrgetter("energy_produced"),
     ),
     EnvoyInverterSensorEntityDescription(
+        key="max_reported",
+        translation_key="max_reported",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("max_report_watts"),
+    ),
+    EnvoyInverterSensorEntityDescription(
         key=LAST_REPORTED_KEY,
         translation_key=LAST_REPORTED_KEY,
         device_class=SensorDeviceClass.TIMESTAMP,
