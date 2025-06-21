@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from switchbot.devices.device import SwitchbotOperationError
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -21,13 +20,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import (
-    BULB_SERVICE_INFO,
-    CEILING_LIGHT_SERVICE_INFO,
-    FLOOR_LAMP_SERVICE_INFO,
-    STRIP_LIGHT_3_SERVICE_INFO,
-    WOSTRIP_SERVICE_INFO,
-)
+from . import BULB_SERVICE_INFO, CEILING_LIGHT_SERVICE_INFO, WOSTRIP_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -100,22 +93,6 @@ STRIP_LIGHT_PARAMETERS = (
         TURN_OFF_PARAMETERS,
         SET_BRIGHTNESS_PARAMETERS,
         SET_RGB_PARAMETERS,
-        (
-            SERVICE_TURN_ON,
-            {ATTR_EFFECT: "Halloween"},
-            "set_effect",
-            ("Halloween",),
-        ),
-    ],
-)
-FLOOR_LAMP_PARAMETERS = (
-    COMMON_PARAMETERS,
-    [
-        TURN_ON_PARAMETERS,
-        TURN_OFF_PARAMETERS,
-        SET_BRIGHTNESS_PARAMETERS,
-        SET_RGB_PARAMETERS,
-        SET_COLOR_TEMP_PARAMETERS,
         (
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "Halloween"},
@@ -327,94 +304,6 @@ async def test_strip_light_services_exception(
 
     with patch.multiple(
         "homeassistant.components.switchbot.light.switchbot.SwitchbotLightStrip",
-        **{mock_method: AsyncMock(side_effect=exception)},
-        update=AsyncMock(return_value=None),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        with pytest.raises(HomeAssistantError, match=error_message):
-            await hass.services.async_call(
-                LIGHT_DOMAIN,
-                service,
-                {**service_data, ATTR_ENTITY_ID: entity_id},
-                blocking=True,
-            )
-
-
-@pytest.mark.parametrize(
-    ("sensor_type", "service_info"),
-    [
-        ("strip_light_3", STRIP_LIGHT_3_SERVICE_INFO),
-        ("floor_lamp", FLOOR_LAMP_SERVICE_INFO),
-    ],
-)
-@pytest.mark.parametrize(*FLOOR_LAMP_PARAMETERS)
-async def test_floor_lamp_services(
-    hass: HomeAssistant,
-    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
-    sensor_type: str,
-    service_info: BluetoothServiceInfoBleak,
-    service: str,
-    service_data: dict,
-    mock_method: str,
-    expected_args: Any,
-) -> None:
-    """Test all SwitchBot floor lamp services."""
-    inject_bluetooth_service_info(hass, service_info)
-
-    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
-    entry.add_to_hass(hass)
-    entity_id = "light.test_name"
-
-    mocked_instance = AsyncMock(return_value=True)
-
-    with patch.multiple(
-        "homeassistant.components.switchbot.light.switchbot.SwitchbotStripLight3",
-        **{mock_method: mocked_instance},
-        update=AsyncMock(return_value=None),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            service,
-            {**service_data, ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
-
-        mocked_instance.assert_awaited_once_with(*expected_args)
-
-
-@pytest.mark.parametrize(
-    ("sensor_type", "service_info"),
-    [
-        ("strip_light_3", STRIP_LIGHT_3_SERVICE_INFO),
-        ("floor_lamp", FLOOR_LAMP_SERVICE_INFO),
-    ],
-)
-@pytest.mark.parametrize(*FLOOR_LAMP_PARAMETERS)
-async def test_floor_lamp_services_exception(
-    hass: HomeAssistant,
-    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
-    sensor_type: str,
-    service_info: BluetoothServiceInfoBleak,
-    service: str,
-    service_data: dict,
-    mock_method: str,
-    expected_args: Any,
-) -> None:
-    """Test all SwitchBot floor lamp services with exception."""
-    inject_bluetooth_service_info(hass, service_info)
-
-    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
-    entry.add_to_hass(hass)
-    entity_id = "light.test_name"
-    exception = SwitchbotOperationError("Operation failed")
-    error_message = "An error occurred while performing the action: Operation failed"
-    with patch.multiple(
-        "homeassistant.components.switchbot.light.switchbot.SwitchbotStripLight3",
         **{mock_method: AsyncMock(side_effect=exception)},
         update=AsyncMock(return_value=None),
     ):
