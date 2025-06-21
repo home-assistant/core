@@ -70,5 +70,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPClientConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: SFTPClientConfigEntry) -> bool:
     """Unload a SFTPClient config entry."""
     sftp = entry.runtime_data
-    await sftp.__aexit__(None, None, None)
+    await sftp.async_close()
     return True
