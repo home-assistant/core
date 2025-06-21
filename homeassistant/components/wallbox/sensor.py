@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from typing import cast
 
 from homeassistant.components.sensor import (
@@ -48,11 +47,6 @@ from .const import (
 )
 from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
-
-CHARGER_STATION = "station"
-UPDATE_INTERVAL = 30
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
