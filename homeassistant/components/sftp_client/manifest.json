@@ -1,6 +1,7 @@
 {
   "domain": "sftp_client",
   "name": "SFTPClient",
+  "after_dependencies": ["backup"],
   "codeowners": ["@cyr-ius"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sftp_client",
