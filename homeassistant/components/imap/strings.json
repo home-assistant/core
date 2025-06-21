@@ -145,6 +145,10 @@
         "uid": {
           "name": "UID",
           "description": "The email identifier (UID)."
+        },
+        "prefer_html": {
+          "description": "Return HTML instead of text content if available.",
+          "name": "Prefer HTML"
         }
       }
     },
