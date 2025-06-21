@@ -11,6 +11,7 @@ from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from copy import deepcopy
 from datetime import date, datetime, time, timedelta
+from enum import Enum
 from functools import cache, lru_cache, partial, wraps
 import hashlib
 import json
@@ -263,6 +264,54 @@ def render_complex(
         }
     if isinstance(value, Template):
         return value.async_render(variables, limited=limited, parse_result=parse_result)
+
+    return value
+
+
+class ExcludeType(Enum):
+    """Singleton type for use with ExcludeKeys."""
+
+    _singleton = 0
+
+
+EXCLUDE = ExcludeType._singleton  # noqa: SLF001
+
+type ExcludeKeys = (
+    dict[str | int | ExcludeType, ExcludeKeys | ExcludeType] | ExcludeType
+)
+
+
+def render_complex_exclude_keys(
+    value: Any,
+    variables: TemplateVarsType = None,
+    exclude_keys: ExcludeKeys | None = None,
+) -> Any:
+    """Recursive template creator helper function with keys exclusion."""
+    if exclude_keys is None:
+        return render_complex(value, variables)
+    if exclude_keys is EXCLUDE:  # Do not render
+        return value
+    if isinstance(value, list):
+        result_list = []
+        wildcard_exclude_keys = exclude_keys.get(EXCLUDE)
+        for key, item in enumerate(value):
+            next_exclude_keys = exclude_keys.get(key, wildcard_exclude_keys)
+            result_list.append(
+                render_complex_exclude_keys(item, variables, next_exclude_keys)
+            )
+        return result_list
+    if isinstance(value, collections.abc.Mapping):
+        result_dict = {}
+        wildcard_exclude_keys = exclude_keys.get(EXCLUDE)
+        for key, item in value.items():
+            rendered_key = render_complex(key, variables)
+            next_exclude_keys = exclude_keys.get(rendered_key, wildcard_exclude_keys)
+            result_dict[rendered_key] = render_complex_exclude_keys(
+                item, variables, next_exclude_keys
+            )
+        return result_dict
+    if isinstance(value, Template):
+        return value.async_render(variables)
 
     return value
 

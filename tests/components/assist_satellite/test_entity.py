@@ -716,7 +716,7 @@ async def test_start_conversation_default_preannounce(
         (
             {"preannounce": False},
             "jazz",
-            AssistSatelliteAnswer(id=None, sentence="jazz"),
+            AssistSatelliteAnswer(id=None, idx=None, sentence="jazz"),
         ),
         (
             {
@@ -727,7 +727,7 @@ async def test_start_conversation_default_preannounce(
                 "preannounce": False,
             },
             "Some Rock, please.",
-            AssistSatelliteAnswer(id="rock", sentence="Some Rock, please."),
+            AssistSatelliteAnswer(id="rock", idx=1, sentence="Some Rock, please."),
         ),
         (
             {
@@ -746,6 +746,7 @@ async def test_start_conversation_default_preannounce(
             "artist Pink Floyd",
             AssistSatelliteAnswer(
                 id="artist",
+                idx=1,
                 sentence="artist Pink Floyd",
                 slots={"artist": "Pink Floyd"},
             ),

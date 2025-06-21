@@ -15,10 +15,10 @@ import voluptuous as vol
 
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ACTIONS
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, script, template
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -100,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     async def handle_ask_question(call: ServiceCall) -> dict[str, Any]:
-        """Handle a Show View service call."""
+        """Handle Ask Question service call."""
         satellite_entity_id: str = call.data[ATTR_ENTITY_ID]
         satellite_entity: AssistSatelliteEntity | None = component.get_entity(
             satellite_entity_id
@@ -110,22 +110,44 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 f"Invalid Assist satellite entity id: {satellite_entity_id}"
             )
 
+        question = call.data.get("question")
+        question_media_id = call.data.get("question_media_id")
+        answers: list[dict[str, Any]] | None = call.data.get("answers")
+
         ask_question_args = {
-            "question": call.data.get("question"),
-            "question_media_id": call.data.get("question_media_id"),
+            "question": question,
+            "question_media_id": question_media_id,
             "preannounce": call.data.get("preannounce", False),
-            "answers": call.data.get("answers"),
+            "answers": answers,
         }
 
         if preannounce_media_id := call.data.get("preannounce_media_id"):
             ask_question_args["preannounce_media_id"] = preannounce_media_id
 
         answer = await satellite_entity.async_internal_ask_question(**ask_question_args)
+        answer_dict = asdict(answer)
 
-        if answer is None:
-            raise HomeAssistantError("No answer from satellite")
+        if answer.idx is None:
+            return answer_dict
 
-        return asdict(answer)
+        if not answers:
+            return answer_dict
+
+        actions = answers[answer.idx].get("actions")
+        if not actions:
+            return answer_dict
+
+        script_name = question or question_media_id
+        await script.Script(
+            hass,
+            actions,
+            f"Assist satellite: {script_name}",
+            DOMAIN,
+            top_level=call.script_run_variables is None,
+            variables={"answer": answer},
+        ).async_run(run_variables=call.script_run_variables, context=call.context)
+
+        return answer_dict
 
     hass.services.async_register(
         domain=DOMAIN,
@@ -140,19 +162,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Optional("preannounce_media_id"): str,
                 vol.Optional("answers"): [
                     {
-                        vol.Required("id"): str,
+                        vol.Optional("id"): str,
                         vol.Required("sentences"): vol.All(
                             cv.ensure_list,
                             [cv.string],
                             has_one_non_empty_item,
                             has_no_punctuation,
                         ),
+                        vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
                     }
                 ],
             },
             cv.has_at_least_one_key("question", "question_media_id"),
         ),
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.OPTIONAL,
+        template_exclude_keys={
+            "answers": {template.EXCLUDE: {"actions": template.EXCLUDE}}
+        },
     )
     hass.data[CONNECTION_TEST_DATA] = {}
     async_register_websocket_api(hass)
