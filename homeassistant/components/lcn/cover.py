@@ -76,7 +76,7 @@ async def async_setup_entry(
 class LcnOutputsCover(LcnEntity, CoverEntity):
     """Representation of a LCN cover connected to output ports."""
 
-    _attr_is_closed = False
+    _attr_is_closed = True
     _attr_is_closing = False
     _attr_is_opening = False
     _attr_assumed_state = True
@@ -132,10 +132,10 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
         """Update the state of the entity."""
         if not self.device_connection.is_group:
             await asyncio.gather(
-                await self.device_connection.request_status_output(
+                self.device_connection.request_status_output(
                     pypck.lcn_defs.OutputPort["OUTPUTUP"], SCAN_INTERVAL.seconds
                 ),
-                await self.device_connection.request_status_output(
+                self.device_connection.request_status_output(
                     pypck.lcn_defs.OutputPort["OUTPUTDOWN"], SCAN_INTERVAL.seconds
                 ),
             )
@@ -168,7 +168,7 @@ class LcnOutputsCover(LcnEntity, CoverEntity):
 class LcnRelayCover(LcnEntity, CoverEntity):
     """Representation of a LCN cover connected to relays."""
 
-    _attr_is_closed = False
+    _attr_is_closed = True
     _attr_is_closing = False
     _attr_is_opening = False
     _attr_assumed_state = True

@@ -380,9 +380,6 @@ class LockKeys(LcnServiceCall):
         else:
             await device_connection.lock_keys(table_id, states)
 
-        handler = device_connection.status_requests_handler
-        await handler.request_status_locked_keys_timeout()
-
 
 class DynText(LcnServiceCall):
     """Send dynamic text to LCN-GTxD displays."""
