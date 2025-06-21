@@ -694,7 +694,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nexia",
     "nextbus",
     "nextcloud",
-    "nextdns",
     "nfandroidtv",
     "nibe_heatpump",
     "nice_go",
