@@ -18,7 +18,10 @@ from .const import DOMAIN, LOGGER
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
+type HusqvarnaConfigEntry = ConfigEntry[HusqvarnaCoordinator]
+
+
+class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
     """Class to manage fetching data."""
 
     config_entry: ConfigEntry
@@ -66,11 +69,11 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         except BleakError as err:
             raise UpdateFailed("Failed to connect") from err
 
-    async def _async_update_data(self) -> dict[str, bytes]:
+    async def _async_update_data(self) -> dict[str, str | int]:
         """Poll the device."""
         LOGGER.debug("Polling device")
 
-        data: dict[str, bytes] = {}
+        data: dict[str, str | int] = {}
 
         try:
             if not self.mower.is_connected():
