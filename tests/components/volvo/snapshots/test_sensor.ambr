@@ -719,7 +719,7 @@
     'supported_features': 0,
     'translation_key': 'time_to_service',
     'unique_id': 'yv1abcdefg1234567_time_to_service',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTime.MONTHS: 'm'>,
   })
 # ---
 # name: test_sensor[0][sensor.volvo_xc40_time_to_service-state]
@@ -1380,6 +1380,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -1390,7 +1393,7 @@
     'supported_features': 0,
     'translation_key': 'time_to_service',
     'unique_id': 'yv1abcdefg1234567_time_to_service',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
 # name: test_sensor[1][sensor.volvo_s90_time_to_service-state]

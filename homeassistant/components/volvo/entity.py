@@ -64,10 +64,7 @@ class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator]):
             serial_number=vehicle.vin,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()
+        self._update_state(coordinator.get_api_field(description.api_field))
 
     @callback
     def _handle_coordinator_update(self) -> None:
