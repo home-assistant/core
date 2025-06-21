@@ -148,7 +148,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
-        if self._attr_model_name is None:
+        if self._attr_model_name is not None:
             if self._attr_model_name in Vacuum_Cleaner_V2_Commands_supported_devices:
                 await self.send_api_command(VacuumCleanerV2Commands.PAUSE)
             else:
@@ -156,7 +156,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
-        if self._attr_model_name is None:
+        if self._attr_model_name is not None:
             if self._attr_model_name in Vacuum_Cleaner_V2_Commands_supported_devices:
                 await self.send_api_command(VacuumCleanerV2Commands.DOCK)
             else:
@@ -164,7 +164,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
-        if self._attr_model_name is None:
+        if self._attr_model_name is not None:
             if self._attr_model_name in Vacuum_Cleaner_V2_Commands_supported_devices:
                 assert self.fan_speed in VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED
                 command_param: dict[str, Any] = {
