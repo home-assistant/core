@@ -26,6 +26,21 @@ from tests.common import (
 from tests.components.light.common import MockLight
 
 
+class LastActivatedTestScene(scene.Scene):
+    """A scene implementation to test auto setting __last_activated."""
+
+    def __init__(self, hass: HomeAssistant, auto_set: bool) -> None:
+        """Initialize the class."""
+
+        super().__init__()
+        self.hass = hass
+        self.entity_id = "scene.test_last_activated"
+        self._auto_set_last_activated = auto_set
+
+    async def async_activate(self, **kwargs):
+        """Activate the scene."""
+
+
 @pytest.fixture(autouse=True)
 def entities(
     hass: HomeAssistant,
@@ -220,6 +235,25 @@ async def test_restore_state_does_not_restore_unavailable(
     await hass.async_block_till_done()
 
     assert hass.states.get("scene.test").state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+@pytest.mark.parametrize("auto_set", [True, False])
+async def test_set_last_activated(hass: HomeAssistant, auto_set: bool) -> None:
+    """Test the scene with and without auto setting __last_activated."""
+    scene = LastActivatedTestScene(hass, auto_set)
+
+    state = hass.states.get(scene.entity_id)
+    assert state is None
+
+    await scene._async_activate()
+    state = hass.states.get(scene.entity_id)
+
+    if auto_set:
+        assert state is not None
+        assert state.state is not None
+    else:
+        assert state is None
 
 
 async def activate(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
