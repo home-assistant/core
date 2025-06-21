@@ -113,6 +113,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="floodlight_brightness",
         cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
         translation_key="floodlight_brightness",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
