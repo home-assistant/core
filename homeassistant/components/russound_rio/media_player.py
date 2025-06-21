@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 from aiorussound import Controller
 from aiorussound.const import FeatureFlag
 from aiorussound.models import PlayStatus, Source
-from aiorussound.rio import ZoneControlSurface
 from aiorussound.util import is_feature_supported
 
 from homeassistant.components.media_player import (
@@ -67,14 +66,9 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     ) -> None:
         """Initialize the zone device."""
         super().__init__(controller, zone_id)
-        self._zone_id = zone_id
         _zone = self._zone
         self._sources = sources
         self._attr_unique_id = f"{self._primary_mac_address}-{_zone.device_str}"
-
-    @property
-    def _zone(self) -> ZoneControlSurface:
-        return self._controller.zones[self._zone_id]
 
     @property
     def _source(self) -> Source:

@@ -40,6 +40,22 @@
       "wrong_device": "This Russound controller does not match the existing device ID. Please make sure you entered the correct IP address."
     }
   },
+  "entity": {
+    "number": {
+      "balance": {
+        "name": "Balance"
+      },
+      "bass": {
+        "name": "Bass"
+      },
+      "treble": {
+        "name": "Treble"
+      },
+      "turn_on_volume": {
+        "name": "Turn-on volume"
+      }
+    }
+  },
   "exceptions": {
     "entry_cannot_connect": {
       "message": "Error while connecting to {host}:{port}"
