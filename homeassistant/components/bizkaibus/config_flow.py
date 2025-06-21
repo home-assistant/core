@@ -4,7 +4,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_STOP_ID, DOMAIN
@@ -12,7 +12,7 @@ from .const import CONF_STOP_ID, DOMAIN
 USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_STOP_ID): cv.string})
 
 
-class BizkaibusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bizkaibus."""
 
     # The schema version of the entries that it creates
@@ -21,19 +21,18 @@ class BizkaibusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step of the config flow."""
-        if user_input is not None:
+        if user_input:
             return self.async_create_entry(
-                title="Parada " + user_input[CONF_STOP_ID],
-                data={CONF_STOP_ID: user_input[CONF_STOP_ID]},
+                title="Parada " + user_input[CONF_STOP_ID], data=user_input
             )
 
         return self.async_show_form(step_id="user", data_schema=USER_DATA_SCHEMA)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle reconfiguration of the entry."""
         if user_input is not None:
             await self.async_set_unique_id("user")
@@ -48,7 +47,7 @@ class BizkaibusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=USER_DATA_SCHEMA,
         )
 
-    async def async_step_import(self, info) -> config_entries.ConfigFlowResult:
+    async def async_step_import(self, info) -> ConfigFlowResult:
         """Handle the import step of the config flow."""
         if info is not None:
             pass

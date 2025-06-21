@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
-
 from bizkaibus.bizkaibus import BizkaibusData
 import voluptuous as vol
 
@@ -14,8 +12,11 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .coordinator import BizkaibusConfigEntry, BizkaibusUpdateCoordinator
 
 ATTR_DUE_IN = "Due in"
 
@@ -33,22 +34,24 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: BizkaibusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bizkaibus public transport sensor."""
-    name = config[CONF_NAME]
-    stop = config[CONF_STOP_ID]
+    # name = config[CONF_NAME]
+    # stop = config[CONF_STOP_ID]
     # route = config[CONF_ROUTE]
 
-    data = BizkaibusData(stop)
-    add_entities([BizkaibusSensor(data, name)], True)
+    coordinator = config_entry.runtime_data
+
+    api = BizkaibusData("2001")
+    coordinator = BizkaibusUpdateCoordinator(hass, api)
+    async_add_entities([BizkaibusSensor(coordinator)], True)
 
 
-class BizkaibusSensor(SensorEntity):
+class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntity):
     """The class for handling the data."""
 
     _attr_has_entity_name = True
@@ -56,13 +59,9 @@ class BizkaibusSensor(SensorEntity):
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_should_poll = True
 
-    def __init__(self, data, name) -> None:
+    def __init__(self, coordinator: BizkaibusUpdateCoordinator) -> None:
         """Initialize the sensor."""
-        self.data = data
-        self._attr_name = name
-
-    def update(self) -> None:
-        """Get the latest data from the webservice."""
-        self.data.update()
-        with suppress(TypeError):
-            self._attr_native_value = "self.data.info[0][ATTR_DUE_IN]"
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+        )

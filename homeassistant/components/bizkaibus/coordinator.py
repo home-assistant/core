@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
-from bizkaibus.bizkaibus import BizkaibusData
+from bizkaibus.bizkaibus import BizkaibusData, BizkaibusTimetable
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,10 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 type BizkaibusConfigEntry = ConfigEntry[BizkaibusUpdateCoordinator]
 
 
-class BizkaibusUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """BizkaibusUpdateCoordinator - In charge of downloading the data for a site."""
+class BizkaibusUpdateCoordinator(DataUpdateCoordinator[BizkaibusTimetable]):
+    """Bizkaibus Update Coordinator class."""
 
-    def __init__(self, hass: HomeAssistant, api: Bizkaibus) -> None:
+    def __init__(self, hass: HomeAssistant, api: BizkaibusData) -> None:
         """Initialize the data service."""
         self.api = api
         super().__init__(
@@ -31,19 +30,7 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> BizkaibusTimetable:
         """Async update wrapper."""
-        return await self.api.update()
-
-
-class Bizkaibus:
-    """The class for handling the data retrieval."""
-
-    def __init__(self, stop) -> None:
-        """Initialize the data object."""
-        self.bridge = BizkaibusData(stop)
-        self.info = None
-
-    async def update(self) -> dict[str, Any]:
-        """Retrieve the information from API."""
-        return await self.bridge.GetTimetable()
+        timetable = await self.api.GetTimetable()
+        return timetable or BizkaibusTimetable(self.api.stop)
