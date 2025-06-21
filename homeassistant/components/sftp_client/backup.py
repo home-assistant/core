@@ -135,6 +135,7 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
         await self.sftp.async_connect()
         if self.sftp.client is None:
             raise RuntimeError("SFTP Error")
+
         sftp_file = await self.sftp.client.open(remote_path, "rb")
 
         async def stream_chunks() -> AsyncIterator[bytes]:
@@ -171,14 +172,14 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
 
         source_stream = await open_stream()
         tar_path = f"{self._backup_path}/{filename_tar}"
-        async with self.sftp.client.open(tar_path, "wb") as sftp_file:
+        async with await self.sftp.client.open(tar_path, "wb") as sftp_file:
             async for chunk in source_stream:
                 await sftp_file.write(chunk)
 
         metadata_content = json_dumps(backup.as_dict())
         source_stream = json_to_stream(metadata_content)
         meta_path = f"{self._backup_path}/{filename_meta}"
-        async with self.sftp.client.open(meta_path, "wb") as sftp_file:
+        async with await self.sftp.client.open(meta_path, "wb") as sftp_file:
             async for chunk in source_stream:
                 await sftp_file.write(chunk)
 
@@ -214,13 +215,14 @@ class SFTPClientConfigEntryBackupAgent(BackupAgent):
             """Download metadata file."""
             if self.sftp.client is None:
                 raise RuntimeError("SFTP Error")
-            async with self.sftp.client.open(path, "rb") as sftp_file:
-                chunks: list[bytes] = []
+            chunks: list[bytes] = []
+            async with await self.sftp.client.open(path, "rb") as sftp_file:
                 while True:
                     chunk: bytes = await sftp_file.read(65536)
                     if not chunk:
                         break
                     chunks.append(chunk)
+
             metadata_bytes = b"".join(chunks)
             metadata = json_loads(metadata_bytes.decode("utf-8"))
             return AgentBackup.from_dict(metadata)
