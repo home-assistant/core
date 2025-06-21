@@ -5,5 +5,10 @@
         "default": "mdi:console-line"
       }
     }
+  },
+  "services": {
+    "publish": {
+      "service": "mdi:send"
+    }
   }
 }
