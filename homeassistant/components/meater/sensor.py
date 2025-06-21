@@ -14,18 +14,28 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from . import MeaterCoordinator
 from .const import DOMAIN
+from .coordinator import MeaterConfigEntry
+
+COOK_STATES = {
+    "Not Started": "not_started",
+    "Configured": "configured",
+    "Started": "started",
+    "Ready For Resting": "ready_for_resting",
+    "Resting": "resting",
+    "Slightly Underdone": "slightly_underdone",
+    "Finished": "finished",
+    "Slightly Overdone": "slightly_overdone",
+    "OVERCOOK!": "overcooked",
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,13 +92,13 @@ SENSOR_TYPES = (
         available=lambda probe: probe is not None and probe.cook is not None,
         value=lambda probe: probe.cook.name if probe.cook else None,
     ),
-    # One of Not Started, Configured, Started, Ready For Resting, Resting,
-    # Slightly Underdone, Finished, Slightly Overdone, OVERCOOK!. Not translated.
     MeaterSensorEntityDescription(
         key="cook_state",
         translation_key="cook_state",
         available=lambda probe: probe is not None and probe.cook is not None,
-        value=lambda probe: probe.cook.state if probe.cook else None,
+        device_class=SensorDeviceClass.ENUM,
+        options=list(COOK_STATES.values()),
+        value=lambda probe: COOK_STATES.get(probe.cook.state) if probe.cook else None,
     ),
     # Target temperature
     MeaterSensorEntityDescription(
@@ -137,13 +147,11 @@ SENSOR_TYPES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MeaterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the entry."""
-    coordinator: DataUpdateCoordinator[dict[str, MeaterProbe]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]["coordinator"]
+    coordinator = entry.runtime_data
 
     @callback
     def async_update_data():
@@ -174,11 +182,10 @@ async def async_setup_entry(
 
     # Add a subscriber to the coordinator to discover new temperature probes
     coordinator.async_add_listener(async_update_data)
+    async_update_data()
 
 
-class MeaterProbeTemperature(
-    SensorEntity, CoordinatorEntity[DataUpdateCoordinator[dict[str, MeaterProbe]]]
-):
+class MeaterProbeTemperature(SensorEntity, CoordinatorEntity[MeaterCoordinator]):
     """Meater Temperature Sensor Entity."""
 
     entity_description: MeaterSensorEntityDescription

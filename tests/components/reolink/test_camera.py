@@ -25,7 +25,7 @@ async def test_camera(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
 ) -> None:
     """Test camera entity with fluent."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
@@ -37,28 +37,26 @@ async def test_camera(
     assert hass.states.get(entity_id).state == CameraState.IDLE
 
     # check getting a image from the camera
-    reolink_connect.get_snapshot.return_value = b"image"
+    reolink_host.get_snapshot.return_value = b"image"
     assert (await async_get_image(hass, entity_id)).content == b"image"
 
-    reolink_connect.get_snapshot.side_effect = ReolinkError("Test error")
+    reolink_host.get_snapshot.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await async_get_image(hass, entity_id)
 
     # check getting the stream source
     assert await async_get_stream_source(hass, entity_id) is not None
 
-    reolink_connect.get_snapshot.reset_mock(side_effect=True)
-
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_camera_no_stream_source(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
 ) -> None:
     """Test camera entity with no stream source."""
-    reolink_connect.model = TEST_DUO_MODEL
-    reolink_connect.get_stream_source.return_value = None
+    reolink_host.model = TEST_DUO_MODEL
+    reolink_host.get_stream_source.return_value = None
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

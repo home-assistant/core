@@ -233,13 +233,13 @@ class TelegramNotificationService:
         """Initialize the service."""
         self.app = app
         self.config = config
-        self._parsers = {
+        self._parsers: dict[str, str | None] = {
             PARSER_HTML: ParseMode.HTML,
             PARSER_MD: ParseMode.MARKDOWN,
             PARSER_MD2: ParseMode.MARKDOWN_V2,
             PARSER_PLAIN_TEXT: None,
         }
-        self.parse_mode = self._parsers.get(parser)
+        self.parse_mode = self._parsers[parser]
         self.bot = bot
         self.hass = hass
         self._last_message_id: dict[int, int] = {}
@@ -784,6 +784,39 @@ class TelegramNotificationService:
         _LOGGER.debug("Leave from chat ID %s", chat_id)
         return await self._send_msg(
             self.bot.leave_chat, "Error leaving chat", None, chat_id, context=context
+        )
+
+    async def set_message_reaction(
+        self,
+        chat_id: int,
+        reaction: str,
+        is_big: bool = False,
+        context: Context | None = None,
+        **kwargs,
+    ) -> None:
+        """Set the bot's reaction for a given message."""
+        chat_id = self._get_target_chat_ids(chat_id)[0]
+        message_id, _ = self._get_msg_ids(kwargs, chat_id)
+        params = self._get_msg_kwargs(kwargs)
+
+        _LOGGER.debug(
+            "Set reaction to message %s in chat ID %s to %s with params: %s",
+            message_id,
+            chat_id,
+            reaction,
+            params,
+        )
+
+        await self._send_msg(
+            self.bot.set_message_reaction,
+            "Error setting message reaction",
+            params[ATTR_MESSAGE_TAG],
+            chat_id,
+            message_id,
+            reaction=reaction,
+            is_big=is_big,
+            read_timeout=params[ATTR_TIMEOUT],
+            context=context,
         )
 
 

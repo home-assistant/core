@@ -41,6 +41,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_PASSWORD,
     ATTR_QUESTION,
     ATTR_REPLY_TO_MSGID,
+    ATTR_SHOW_ALERT,
     ATTR_STICKER_ID,
     ATTR_TARGET,
     ATTR_TIMEOUT,
@@ -889,20 +890,27 @@ async def test_answer_callback_query(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.answer_callback_query"
+        "homeassistant.components.telegram_bot.bot.Bot.answer_callback_query"
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ANSWER_CALLBACK_QUERY,
             {
                 ATTR_MESSAGE: "mock message",
-                ATTR_CALLBACK_QUERY_ID: 12345,
+                ATTR_CALLBACK_QUERY_ID: 123456,
+                ATTR_SHOW_ALERT: True,
             },
             blocking=True,
         )
 
     await hass.async_block_till_done()
     mock.assert_called_once()
+    mock.assert_called_with(
+        123456,
+        text="mock message",
+        show_alert=True,
+        read_timeout=None,
+    )
 
 
 async def test_leave_chat(
@@ -916,20 +924,23 @@ async def test_leave_chat(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.TelegramNotificationService.leave_chat",
+        "homeassistant.components.telegram_bot.bot.Bot.leave_chat",
         AsyncMock(return_value=True),
     ) as mock:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_LEAVE_CHAT,
             {
-                ATTR_CHAT_ID: 12345,
+                ATTR_CHAT_ID: 123456,
             },
             blocking=True,
         )
 
     await hass.async_block_till_done()
     mock.assert_called_once()
+    mock.assert_called_with(
+        123456,
+    )
 
 
 async def test_send_video(
@@ -1111,3 +1122,39 @@ async def test_send_video(
     await hass.async_block_till_done()
     assert mock_get.call_count > 0
     assert response["chats"][0]["message_id"] == 12345
+
+
+async def test_set_message_reaction(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test set message reaction."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.set_message_reaction",
+        AsyncMock(return_value=True),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_message_reaction",
+            {
+                ATTR_CHAT_ID: 123456,
+                ATTR_MESSAGEID: 54321,
+                "reaction": "👍",
+                "is_big": True,
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once_with(
+        123456,
+        54321,
+        reaction="👍",
+        is_big=True,
+        read_timeout=None,
+    )

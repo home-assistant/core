@@ -43,8 +43,7 @@ def async_initialize_backup(hass: HomeAssistant) -> None:
     registers the basic backup websocket API which is used by frontend to subscribe
     to backup events.
     """
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.backup import basic_websocket
+    from homeassistant.components.backup import basic_websocket  # noqa: PLC0415
 
     hass.data[DATA_BACKUP] = BackupData()
     basic_websocket.async_register_websocket_handlers(hass)
