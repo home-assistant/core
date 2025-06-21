@@ -45,8 +45,8 @@ async def test_set_attributes(
     cover_id = "cover.cover_1"
     mock_get_status.return_value = {"slidePosition": 100, "direction": "up"}
     await configure_integration(hass)
-    device = hass.states.get(cover_id)
-    assert device.state in "closed"
+    state = hass.states.get(cover_id)
+    assert state.state == "closed"
 
 
 async def test_set_attributes_coordinator_is_none(
@@ -66,8 +66,8 @@ async def test_set_attributes_coordinator_is_none(
     cover_id = "cover.cover_1"
     mock_get_status.return_value = None
     await configure_integration(hass)
-    device = hass.states.get(cover_id)
-    assert device.state in "unknown"
+    state = hass.states.get(cover_id)
+    assert state.state == "unknown"
 
 
 async def test_set_attributes_position_is_none(
@@ -87,8 +87,8 @@ async def test_set_attributes_position_is_none(
     cover_id = "cover.cover_1"
     mock_get_status.return_value = {}
     await configure_integration(hass)
-    device = hass.states.get(cover_id)
-    assert device.state in "unknown"
+    state = hass.states.get(cover_id)
+    assert state.state == "unknown"
 
 
 async def test_curtain_async_open_and_close_cover(
@@ -182,8 +182,8 @@ async def test_curtain_set_cover_position_pause(
             {ATTR_ENTITY_ID: cover_id},
             blocking=True,
         )
-    device = hass.states.get(cover_id)
-    assert device.state in "open"
+    state = hass.states.get(cover_id)
+    assert state.state == "open"
     mock_send_command.assert_called_once_with(
         "cover-id-1", CurtainCommands.PAUSE, "command", "default"
     )
@@ -220,8 +220,8 @@ async def test_curtain_stop_and_position_is_none(
             {ATTR_ENTITY_ID: cover_id},
             blocking=True,
         )
-    device = hass.states.get(cover_id)
-    assert device.state in "open"
+    state = hass.states.get(cover_id)
+    assert state.state == "open"
     mock_send_command.assert_called_once_with(
         "cover-id-1", CurtainCommands.PAUSE, "command", "default"
     )
@@ -256,8 +256,8 @@ async def test_tilt_set_position(
             {"tilt_position": 55, ATTR_ENTITY_ID: cover_id},
             blocking=True,
         )
-    device = hass.states.get(cover_id)
-    assert device.state in "open"
+    state = hass.states.get(cover_id)
+    assert state.state == "open"
     mock_send_command.assert_called_once_with(
         "cover-id-1", BlindTiltCommands.SET_POSITION, "command", "up;55"
     )
@@ -292,8 +292,8 @@ async def test_tilt_open_cover(
             {ATTR_ENTITY_ID: cover_id},
             blocking=True,
         )
-    device = hass.states.get(cover_id)
-    assert device.state in "open"
+    state = hass.states.get(cover_id)
+    assert state.state == "open"
     mock_send_command.assert_called_once_with(
         "cover-id-1", BlindTiltCommands.FULLY_OPEN, "command", "default"
     )
@@ -328,8 +328,8 @@ async def test_tilt_close_cover(
             {ATTR_ENTITY_ID: cover_id},
             blocking=True,
         )
-    device = hass.states.get(cover_id)
-    assert device.state in "open"
+    state = hass.states.get(cover_id)
+    assert state.state == "open"
     mock_send_command.assert_called_once_with(
         "cover-id-1", BlindTiltCommands.CLOSE_UP, "command", "default"
     )
@@ -352,8 +352,8 @@ async def test_tilt_set_attributes_coordinator_data_is_none(
     cover_id = "cover.cover_1"
     mock_get_status.return_value = None
     await configure_integration(hass)
-    device = hass.states.get(cover_id)
-    assert device.state in "unknown"
+    state = hass.states.get(cover_id)
+    assert state.state == "unknown"
 
 
 async def test_tilt_set_attributes_position_is_not_none_1(
@@ -373,8 +373,8 @@ async def test_tilt_set_attributes_position_is_not_none_1(
     cover_id = "cover.cover_1"
     mock_get_status.return_value = {"slidePosition": 55, "direction": "down"}
     await configure_integration(hass)
-    device = hass.states.get(cover_id)
-    assert device.state in "open"
+    state = hass.states.get(cover_id)
+    assert state.state == "open"
 
 
 async def test_tilt_set_attributes_position_is_not_none_2(
@@ -396,8 +396,8 @@ async def test_tilt_set_attributes_position_is_not_none_2(
         "slidePosition": 45,
     }
     await configure_integration(hass)
-    device = hass.states.get(cover_id)
-    assert device.state in "open"
+    state = hass.states.get(cover_id)
+    assert state.state == "open"
 
 
 async def test_roller_shade_async_open_and_close_cover(
