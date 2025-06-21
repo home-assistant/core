@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 import logging
-from types import TracebackType
-from typing import Self
 
 from asyncssh import (
     Error,
@@ -102,19 +100,19 @@ class SFTPConnection(SSHClient):
         except SFTPError as error:
             raise BackupFolderError("Failed to create a backup folder") from error
 
-    async def __aenter__(self) -> Self:
-        """Async init."""
-        await self.async_connect()
-        return self
-
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> None:
-        """Async exit."""
-        await self.async_close()
+    async def async_read(self, path: str) -> str:
+        """Read a file from the SFTP server."""
+        if self.client is None:
+            raise RuntimeError("SFTP Error")
+        async with self.client.open(path, "rb") as sftp_file:
+            chunks: list[bytes] = []
+            while True:
+                chunk: bytes = await sftp_file.read(65536)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+        metadata_bytes = b"".join(chunks)
+        return metadata_bytes.decode("utf-8")
 
 
 def json_to_stream(json_str: str, chunk_size: int = 8192) -> AsyncIterator[bytes]:
