@@ -858,14 +858,19 @@ class Integration:
         return self.manifest.get("import_executor", True)
 
     @cached_property
+    def has_services(self) -> bool:
+        """Return if the integration has services."""
+        return "services.yaml" in self._top_level_files
+
+    @cached_property
     def has_translations(self) -> bool:
         """Return if the integration has translations."""
         return "translations" in self._top_level_files
 
     @cached_property
-    def has_services(self) -> bool:
-        """Return if the integration has services."""
-        return "services.yaml" in self._top_level_files
+    def has_triggers(self) -> bool:
+        """Return if the integration has triggers."""
+        return "triggers.yaml" in self._top_level_files
 
     @property
     def mqtt(self) -> list[str] | None:

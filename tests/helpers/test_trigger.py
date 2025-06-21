@@ -1,11 +1,17 @@
 """The tests for the trigger helper."""
 
+import io
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
+from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
+from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import trigger
 from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
@@ -13,7 +19,11 @@ from homeassistant.helpers.trigger import (
     async_initialize_triggers,
     async_validate_trigger_config,
 )
+from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml.loader import parse_yaml
+
+from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
 
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
@@ -428,3 +438,174 @@ async def test_pluggable_action(
     remove_attach_2()
     assert not hass.data[DATA_PLUGGABLE_ACTIONS]
     assert not plug_2
+
+
+@pytest.mark.parametrize(
+    "sun_service_descriptions",
+    [
+        """
+        sun:
+          fields:
+            event:
+              example: sunrise
+              selector:
+                select:
+                  options:
+                    - sunrise
+                    - sunset
+            offset:
+              selector:
+                time: null
+        """,
+        """
+        .anchor: &anchor
+          - sunrise
+          - sunset
+        sun:
+          fields:
+            event:
+              example: sunrise
+              selector:
+                select:
+                  options: *anchor
+            offset:
+              selector:
+                time: null
+        """,
+    ],
+)
+async def test_async_get_all_descriptions(
+    hass: HomeAssistant, sun_service_descriptions: str
+) -> None:
+    """Test async_get_all_descriptions."""
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
+    await hass.async_block_till_done()
+
+    def _load_yaml(fname, secrets=None):
+        with io.StringIO(sun_service_descriptions) as file:
+            return parse_yaml(file)
+
+    with (
+        patch(
+            "homeassistant.helpers.trigger._load_triggers_files",
+            side_effect=trigger._load_triggers_files,
+        ) as proxy_load_triggers_files,
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_triggers", return_value=True),
+    ):
+        descriptions = await trigger.async_get_all_descriptions(hass)
+
+    # Test we only load triggers.yaml for integrations with triggers,
+    # system_health has no triggers
+    assert proxy_load_triggers_files.mock_calls[0][1][1] == unordered(
+        [
+            await async_get_integration(hass, DOMAIN_SUN),
+        ]
+    )
+
+    # system_health does not have services and should not be in descriptions
+    assert descriptions == {
+        DOMAIN_SUN: {
+            "fields": {
+                "event": {
+                    "example": "sunrise",
+                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                },
+                "offset": {"selector": {"time": None}},
+            }
+        }
+    }
+
+    # Verify the cache returns the same object
+    assert await trigger.async_get_all_descriptions(hass) is descriptions
+
+
+@pytest.mark.parametrize(
+    ("yaml_error", "expected_message"),
+    [
+        (
+            FileNotFoundError("Blah"),
+            "Unable to find triggers.yaml for the sun integration",
+        ),
+        (
+            HomeAssistantError("Test error"),
+            "Unable to parse triggers.yaml for the sun integration: Test error",
+        ),
+    ],
+)
+async def test_async_get_all_descriptions_with_yaml_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    yaml_error: Exception,
+    expected_message: str,
+) -> None:
+    """Test async_get_all_descriptions."""
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    await hass.async_block_till_done()
+
+    def _load_yaml_dict(fname, secrets=None):
+        raise yaml_error
+
+    with (
+        patch(
+            "homeassistant.helpers.trigger.load_yaml_dict",
+            side_effect=_load_yaml_dict,
+        ),
+        patch.object(Integration, "has_triggers", return_value=True),
+    ):
+        descriptions = await trigger.async_get_all_descriptions(hass)
+
+    assert descriptions == {DOMAIN_SUN: None}
+
+    assert expected_message in caplog.text
+
+
+async def test_async_get_all_descriptions_with_bad_description(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_get_all_descriptions."""
+    sun_service_descriptions = """
+        sun:
+          fields: not_a_dict
+    """
+
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    await hass.async_block_till_done()
+
+    def _load_yaml(fname, secrets=None):
+        with io.StringIO(sun_service_descriptions) as file:
+            return parse_yaml(file)
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_triggers", return_value=True),
+    ):
+        descriptions = await trigger.async_get_all_descriptions(hass)
+
+    assert descriptions == {DOMAIN_SUN: None}
+
+    assert (
+        "Unable to parse triggers.yaml for the sun integration: "
+        "expected a dictionary for dictionary value @ data['sun']['fields']"
+    ) in caplog.text
+
+
+async def test_invalid_trigger_platform(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid trigger platform."""
+    mock_integration(hass, MockModule("test", async_setup=AsyncMock(return_value=True)))
+    mock_platform(hass, "test.trigger", MockPlatform())
+
+    await async_setup_component(hass, "test", {})
+
+    assert "Integration test does not provide trigger support, skipping" in caplog.text
