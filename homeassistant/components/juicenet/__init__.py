@@ -1,6 +1,5 @@
 """The JuiceNet integration."""
 
-from datetime import timedelta
 import logging
 
 import aiohttp
@@ -14,9 +13,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
+from .coordinator import JuiceNetCoordinator
 from .device import JuiceNetApi
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,20 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
     _LOGGER.debug("%d JuiceNet device(s) found", len(juicenet.devices))
 
-    async def async_update_data():
-        """Update all device states from the JuiceNet API."""
-        for device in juicenet.devices:
-            await device.update_state(True)
-        return True
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name="JuiceNet",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=30),
-    )
+    coordinator = JuiceNetCoordinator(hass, entry, juicenet)
 
     await coordinator.async_config_entry_first_refresh()
 

@@ -605,7 +605,10 @@
         "name": "Wrinkle prevent"
       },
       "ice_maker": {
-        "name": "Ice maker"
+        "name": "Cubed ice"
+      },
+      "ice_maker_2": {
+        "name": "Ice Bites"
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
