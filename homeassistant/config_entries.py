@@ -3180,15 +3180,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
         :param reload_even_if_entry_is_unchanged: set this to `False` if the entry
         should not be reloaded if it is unchanged
-
-        Using this method in combination with `update_listeners` is not supported.
-        If the entry has `update_listeners`, this method will raise a ValueError.
         """
-        if entry.update_listeners:
-            raise ValueError(
-                "Using async_update_reload_and_abort in combination with "
-                "update_listeners is not supported"
-            )
         if data_updates is not UNDEFINED:
             if data is not UNDEFINED:
                 raise ValueError("Cannot set both data and data_updates")
