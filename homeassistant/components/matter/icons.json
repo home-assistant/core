@@ -81,6 +81,9 @@
       "battery_replacement_description": {
         "default": "mdi:battery-sync-outline"
       },
+      "esa_op_out_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
       "evse_state": {
         "default": "mdi:ev-station"
       },

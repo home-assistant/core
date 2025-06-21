@@ -524,6 +524,18 @@ async def test_water_heater(
     assert state
     assert state.state == "offline"
 
+    # DeviceEnergyManagement -> OptOutState attribute
+    state = hass.states.get("sensor.water_heater_energy_optimization_opt_out")
+    assert state
+    assert state.state == "no_opt_out"
+
+    set_node_attribute(matter_node, 2, 152, 7, 3)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.water_heater_energy_optimization_opt_out")
+    assert state
+    assert state.state == "opt_out"
+
 
 @pytest.mark.parametrize("node_fixture", ["pump"])
 async def test_pump(
