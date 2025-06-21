@@ -845,7 +845,7 @@ class TelegramNotificationService:
         reaction: str,
         is_big: bool = False,
         context: Context | None = None,
-        **kwargs,
+        **kwargs: dict[str, Any],
     ) -> None:
         """Set the bot's reaction for a given message."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
