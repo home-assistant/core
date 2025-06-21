@@ -313,7 +313,6 @@ FLOWS = {
         "izone",
         "jellyfin",
         "jewish_calendar",
-        "juicenet",
         "justnimbus",
         "jvc_projector",
         "kaleidescape",
