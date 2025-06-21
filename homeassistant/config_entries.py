@@ -3485,7 +3485,15 @@ class OptionsFlowManager(
         entry = self.hass.config_entries.async_get_known_entry(flow.handler)
 
         if result["data"] is not None:
-            self.hass.config_entries.async_update_entry(entry, options=result["data"])
+            if (
+                self.hass.config_entries.async_update_entry(
+                    entry, options=result["data"]
+                )
+                and not entry.update_listeners
+                and hasattr(flow, "automatic_reload")
+                and flow.automatic_reload
+            ):
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
         result["result"] = True
         return result
@@ -3592,6 +3600,16 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
     def options(self) -> dict[str, Any]:
         """Return a mutable copy of the config entry options."""
         return self._options
+
+
+class OptionsFlowWithReload(OptionsFlow):
+    """Extended class for config options flows.
+
+    Triggers an automatic reload of the config entry when the options are changed.
+    Integrations does not need to use a config entry update listener when using this class.
+    """
+
+    automatic_reload: bool = True
 
 
 class EntityRegistryDisabledHandler:
