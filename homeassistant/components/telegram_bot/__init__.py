@@ -46,6 +46,7 @@ from .const import (
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
     ATTR_IS_ANONYMOUS,
+    ATTR_IS_BIG,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
     ATTR_MESSAGE,
@@ -58,6 +59,7 @@ from .const import (
     ATTR_PARSER,
     ATTR_PASSWORD,
     ATTR_QUESTION,
+    ATTR_REACTION,
     ATTR_RESIZE_KEYBOARD,
     ATTR_SHOW_ALERT,
     ATTR_STICKER_ID,
@@ -94,6 +96,7 @@ from .const import (
     SERVICE_SEND_STICKER,
     SERVICE_SEND_VIDEO,
     SERVICE_SEND_VOICE,
+    SERVICE_SET_MESSAGE_REACTION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -250,6 +253,19 @@ SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema(
     }
 )
 
+SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
+    {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Required(ATTR_MESSAGEID): vol.Any(
+            cv.positive_int, vol.All(cv.string, "last")
+        ),
+        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+        vol.Required(ATTR_REACTION): cv.string,
+        vol.Optional(ATTR_IS_BIG, default=False): cv.boolean,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
@@ -266,6 +282,7 @@ SERVICE_MAP = {
     SERVICE_ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE: SERVICE_SCHEMA_DELETE_MESSAGE,
     SERVICE_LEAVE_CHAT: SERVICE_SCHEMA_LEAVE_CHAT,
+    SERVICE_SET_MESSAGE_REACTION: SERVICE_SCHEMA_SET_MESSAGE_REACTION,
 }
 
 
@@ -374,6 +391,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         elif msgtype == SERVICE_DELETE_MESSAGE:
             await notify_service.delete_message(context=service.context, **kwargs)
+        elif msgtype == SERVICE_LEAVE_CHAT:
+            messages = await notify_service.leave_chat(
+                context=service.context, **kwargs
+            )
+        elif msgtype == SERVICE_SET_MESSAGE_REACTION:
+            await notify_service.set_message_reaction(context=service.context, **kwargs)
         else:
             await notify_service.edit_message(
                 msgtype, context=service.context, **kwargs
@@ -447,7 +470,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
     """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    entry.runtime_data.parse_mode = entry.options[ATTR_PARSER]
 
 
 async def async_unload_entry(
