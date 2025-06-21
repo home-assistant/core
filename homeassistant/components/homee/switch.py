@@ -28,6 +28,7 @@ def get_device_class(
 ) -> SwitchDeviceClass:
     """Check device class of Switch according to node profile."""
     node = config_entry.runtime_data.get_node_by_id(attribute.node_id)
+    assert node is not None
     if node.profile in [
         NodeProfile.ON_OFF_PLUG,
         NodeProfile.METERING_PLUG,
