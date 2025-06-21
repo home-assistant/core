@@ -770,26 +770,50 @@ async def test_sensor_inverter_data(
         assert dt_util.parse_datetime(
             last_reported.state
         ) == dt_util.utc_from_timestamp(inverter.last_report_date)
-        assert (voltage := hass.states.get(f"{entity_base}_{sn}_voltage"))
-        assert (voltage.state) == "unknown"
-        assert (current := hass.states.get(f"{entity_base}_{sn}_current"))
-        assert (current.state) == "unknown"
-        assert (voltage_2 := hass.states.get(f"{entity_base}_{sn}_voltage_2"))
-        assert (voltage_2.state) == "unknown"
-        assert (current_2 := hass.states.get(f"{entity_base}_{sn}_current_2"))
-        assert (current_2.state) == "unknown"
-        assert (frequency := hass.states.get(f"{entity_base}_{sn}_frequency"))
-        assert (frequency.state) == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_inverter_detailed_data(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test enphase_envoy inverter detailed entities values."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    entity_base = f"{Platform.SENSOR}.inverter"
+
+    for sn, inverter in mock_envoy.data.inverters.items():
+        assert (dc_voltage := hass.states.get(f"{entity_base}_{sn}_voltage"))
+        assert float(dc_voltage.state) == (inverter.dc_voltage)
+        assert (dc_current := hass.states.get(f"{entity_base}_{sn}_current"))
+        assert float(dc_current.state) == (inverter.dc_current)
+        assert (ac_voltage := hass.states.get(f"{entity_base}_{sn}_voltage_2"))
+        assert float(ac_voltage.state) == (inverter.ac_voltage)
+        assert (ac_current := hass.states.get(f"{entity_base}_{sn}_current_2"))
+        assert float(ac_current.state) == (inverter.ac_current)
+        assert (ac_frequency := hass.states.get(f"{entity_base}_{sn}_frequency"))
+        assert float(ac_frequency.state) == (inverter.ac_frequency)
         assert (temperature := hass.states.get(f"{entity_base}_{sn}_temperature"))
-        assert (temperature.state) == "unknown"
-        assert (energy := hass.states.get(f"{entity_base}_{sn}_energy"))
-        assert (energy.state) == "unknown"
-        assert (energy_2 := hass.states.get(f"{entity_base}_{sn}_energy_2"))
-        assert (energy_2.state) == "unknown"
-        assert (energy_3 := hass.states.get(f"{entity_base}_{sn}_energy_3"))
-        assert (energy_3.state) == "unknown"
-        assert (duration := hass.states.get(f"{entity_base}_{sn}_duration"))
-        assert (duration.state) == "unknown"
+        assert int(temperature.state) == (inverter.temperature)
+        assert (lifetime_energy := hass.states.get(f"{entity_base}_{sn}_energy"))
+        assert int(lifetime_energy.state) == (inverter.lifetime_energy)
+        assert (energy_today := hass.states.get(f"{entity_base}_{sn}_energy_2"))
+        assert int(energy_today.state) == (inverter.energy_today)
+        assert (last_report_duration := hass.states.get(f"{entity_base}_{sn}_duration"))
+        assert int(last_report_duration.state) == (inverter.last_report_duration)
+        assert (energy_produced := hass.states.get(f"{entity_base}_{sn}_energy_3"))
+        assert float(energy_produced.state) == (inverter.energy_produced)
+        assert (max_reported := hass.states.get(f"{entity_base}_{sn}_power"))
+        assert int(max_reported.state) == (inverter.max_report_watts)
 
 
 @pytest.mark.parametrize(
