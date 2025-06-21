@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: Only entity services
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
