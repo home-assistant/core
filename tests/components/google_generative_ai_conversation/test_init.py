@@ -15,7 +15,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 
@@ -439,7 +438,7 @@ async def test_migration_from_v1_to_v2(
         "homeassistant.components.openai_conversation.async_setup_entry",
         return_value=True,
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.version == 2
     assert mock_config_entry.data == {"api_key": "1234"}
