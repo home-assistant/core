@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components import stt
+from homeassistant.components import media_player, stt
 from homeassistant.components.assist_pipeline import (
     OPTION_PREFERRED,
     AudioSettings,
@@ -28,12 +28,14 @@ from homeassistant.components.assist_satellite.const import PREANNOUNCE_URL
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
 
+from tests.common import async_mock_service
 from tests.components.tts.common import MockResultStream
 
 
@@ -929,6 +931,139 @@ async def test_ask_question(
         )
         assert entity.state == AssistSatelliteState.IDLE
         assert response == asdict(expected_answer)
+
+
+@pytest.mark.parametrize(
+    ("response_text", "expected_content_type", "expected_content_id"),
+    [
+        ("genre jazz", media_player.MediaType.GENRE, "jazz"),
+        ("artist Pink Floyd", media_player.MediaType.ARTIST, "Pink Floyd"),
+    ],
+)
+async def test_ask_question_with_actions(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    response_text: str,
+    expected_content_type: media_player.MediaType,
+    expected_content_id: str,
+) -> None:
+    """Test asking a question and executing actions depending on the answer."""
+    entity_id = "assist_satellite.test_entity"
+    question_text = "What kind of music would you like to listen to?"
+
+    await async_update_pipeline(
+        hass, async_get_pipeline(hass), stt_engine="test-stt-engine", stt_language="en"
+    )
+
+    async def speech_to_text(self, *args, **kwargs):
+        self.process_event(
+            PipelineEvent(
+                PipelineEventType.STT_END, {"stt_output": {"text": response_text}}
+            )
+        )
+
+        return response_text
+
+    original_start_conversation = entity.async_start_conversation
+
+    async def async_start_conversation(start_announcement):
+        # Verify state change
+        assert entity.state == AssistSatelliteState.RESPONDING
+        await original_start_conversation(start_announcement)
+
+        audio_stream = object()
+        with (
+            patch(
+                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.prepare_speech_to_text"
+            ),
+            patch(
+                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.speech_to_text",
+                speech_to_text,
+            ),
+        ):
+            await entity.async_accept_pipeline_from_satellite(
+                audio_stream, start_stage=PipelineStage.STT
+            )
+
+    player_entity_id = f"{media_player.DOMAIN}.test_player"
+    hass.states.async_set(
+        player_entity_id,
+        media_player.MediaPlayerState.IDLE,
+        {ATTR_SUPPORTED_FEATURES: media_player.MediaPlayerEntityFeature.PLAY_MEDIA},
+    )
+    play_media_calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_PLAY_MEDIA
+    )
+    play_media_action = f"{media_player.DOMAIN}.{media_player.SERVICE_PLAY_MEDIA}"
+
+    with (
+        patch(
+            "homeassistant.components.tts.generate_media_source_id",
+            return_value="media-source://generated",
+        ),
+        patch(
+            "homeassistant.components.tts.async_resolve_engine",
+            return_value="tts.cloud",
+        ),
+        patch(
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=PlayMedia(
+                url="https://www.home-assistant.io/resolved.mp3",
+                mime_type="audio/mp3",
+            ),
+        ),
+        patch.object(entity, "async_start_conversation", new=async_start_conversation),
+    ):
+        await hass.services.async_call(
+            "assist_satellite",
+            "ask_question",
+            {
+                "entity_id": entity_id,
+                "question": question_text,
+                "answers": [
+                    {
+                        "sentences": ["genre {genre}"],
+                        "actions": [
+                            {
+                                "action": play_media_action,
+                                "data_template": {
+                                    "target": {"entity_id": player_entity_id},
+                                    media_player.ATTR_MEDIA_CONTENT_TYPE: media_player.MediaType.GENRE,
+                                    media_player.ATTR_MEDIA_CONTENT_ID: "{{ answer.slots.genre }}",
+                                },
+                            }
+                        ],
+                    },
+                    {
+                        "sentences": ["artist {artist}"],
+                        "actions": [
+                            {
+                                "action": play_media_action,
+                                "data_template": {
+                                    "target": {"entity_id": player_entity_id},
+                                    media_player.ATTR_MEDIA_CONTENT_TYPE: media_player.MediaType.ARTIST,
+                                    media_player.ATTR_MEDIA_CONTENT_ID: "{{ answer.slots.artist }}",
+                                },
+                            }
+                        ],
+                    },
+                ],
+            },
+            blocking=True,
+            return_response=True,
+        )
+        assert entity.state == AssistSatelliteState.IDLE
+
+    # Verify correct media was played
+    assert len(play_media_calls) == 1
+    play_call = play_media_calls[0]
+    assert play_call.data[media_player.ATTR_MEDIA_CONTENT_TYPE] == expected_content_type
+    assert play_call.data[media_player.ATTR_MEDIA_CONTENT_ID] == expected_content_id
 
 
 async def test_wake_word_start_keeps_responding(
