@@ -34,7 +34,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -74,7 +73,6 @@ from .const import (
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
     CONF_CHAT_ID,
-    CONF_PROXY_PARAMS,
     CONF_PROXY_URL,
     DOMAIN,
     EVENT_TELEGRAM_CALLBACK,
@@ -824,52 +822,9 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
     """Initialize telegram bot with proxy support."""
     api_key: str = p_config[CONF_API_KEY]
     proxy_url: str | None = p_config.get(CONF_PROXY_URL)
-    proxy_params: dict | None = p_config.get(CONF_PROXY_PARAMS)
 
     if proxy_url is not None:
-        auth = None
-        if proxy_params is None:
-            # CONF_PROXY_PARAMS has been kept for backwards compatibility.
-            proxy_params = {}
-        elif "username" in proxy_params and "password" in proxy_params:
-            # Auth can actually be stuffed into the URL, but the docs have previously
-            # indicated to put them here.
-            auth = proxy_params.pop("username"), proxy_params.pop("password")
-            ir.create_issue(
-                hass,
-                DOMAIN,
-                "proxy_params_auth_deprecation",
-                breaks_in_ha_version="2024.10.0",
-                is_persistent=False,
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_placeholders={
-                    "proxy_params": CONF_PROXY_PARAMS,
-                    "proxy_url": CONF_PROXY_URL,
-                    "telegram_bot": "Telegram bot",
-                },
-                translation_key="proxy_params_auth_deprecation",
-                learn_more_url="https://github.com/home-assistant/core/pull/112778",
-            )
-        else:
-            ir.create_issue(
-                hass,
-                DOMAIN,
-                "proxy_params_deprecation",
-                breaks_in_ha_version="2024.10.0",
-                is_persistent=False,
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_placeholders={
-                    "proxy_params": CONF_PROXY_PARAMS,
-                    "proxy_url": CONF_PROXY_URL,
-                    "httpx": "httpx",
-                    "telegram_bot": "Telegram bot",
-                },
-                translation_key="proxy_params_deprecation",
-                learn_more_url="https://github.com/home-assistant/core/pull/112778",
-            )
-        proxy = httpx.Proxy(proxy_url, auth=auth, **proxy_params)
+        proxy = httpx.Proxy(proxy_url)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
         request = HTTPXRequest(connection_pool_size=8)
