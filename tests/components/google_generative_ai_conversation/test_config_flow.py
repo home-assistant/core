@@ -22,6 +22,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -115,7 +116,7 @@ async def test_form(hass: HomeAssistant) -> None:
         {
             "subentry_type": "conversation",
             "data": RECOMMENDED_OPTIONS,
-            "title": "Google Conversation",
+            "title": DEFAULT_CONVERSATION_NAME,
             "unique_id": None,
         }
     ]
@@ -425,7 +426,10 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test the reauth flow."""
     hass.config.components.add("google_generative_ai_conversation")
     mock_config_entry = MockConfigEntry(
-        domain=DOMAIN, state=config_entries.ConfigEntryState.LOADED, title="Gemini"
+        domain=DOMAIN,
+        state=config_entries.ConfigEntryState.LOADED,
+        title="Gemini",
+        version=2,
     )
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.async_start_reauth(hass)

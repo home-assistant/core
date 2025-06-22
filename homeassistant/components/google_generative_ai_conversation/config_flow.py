@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 from google import genai
 from google.genai.errors import APIError, ClientError
@@ -177,38 +177,36 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     """Flow for managing conversation subentries."""
 
     last_rendered_recommended = False
-    is_new: bool
-    start_data: dict[str, Any]
 
     @property
     def _genai_client(self) -> genai.Client:
         """Return the Google Generative AI client."""
         return self._get_entry().runtime_data
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Add a subentry."""
-        self.is_new = True
-        self.start_data = RECOMMENDED_OPTIONS.copy()
-        return await self.async_step_set_options()
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Handle reconfiguration of a subentry."""
-        self.is_new = False
-        self.start_data = self._get_reconfigure_subentry().data.copy()
-        return await self.async_step_set_options()
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == "user"
 
     async def async_step_set_options(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Set conversation options."""
-        options = self.start_data
         errors: dict[str, str] = {}
 
-        if user_input is not None:
+        if user_input is None:
+            if self._is_new:
+                options = RECOMMENDED_OPTIONS.copy()
+            else:
+                # If this is a reconfiguration, we need to copy the existing options
+                # so that we can show the current values in the form.
+                options = self._get_reconfigure_subentry().data.copy()
+
+            self.last_rendered_recommended = cast(
+                bool, options.get(CONF_RECOMMENDED, False)
+            )
+
+        else:
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
                 if not user_input.get(CONF_LLM_HASS_API):
                     user_input.pop(CONF_LLM_HASS_API, None)
@@ -217,7 +215,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     user_input.get(CONF_LLM_HASS_API)
                     and user_input.get(CONF_USE_GOOGLE_SEARCH_TOOL, False) is True
                 ):
-                    if self.is_new:
+                    if self._is_new:
                         return self.async_create_entry(
                             title=user_input.pop(CONF_NAME),
                             data=user_input,
@@ -234,15 +232,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
 
             options = user_input
-        else:
-            self.last_rendered_recommended = options.get(CONF_RECOMMENDED, False)
 
         schema = await google_generative_ai_config_option_schema(
-            self.hass, self.is_new, options, self._genai_client
+            self.hass, self._is_new, options, self._genai_client
         )
         return self.async_show_form(
             step_id="set_options", data_schema=vol.Schema(schema), errors=errors
         )
+
+    async_step_reconfigure = async_step_set_options
+    async_step_user = async_step_set_options
 
 
 async def google_generative_ai_config_option_schema(

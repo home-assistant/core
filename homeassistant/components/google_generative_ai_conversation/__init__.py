@@ -232,14 +232,17 @@ async def async_migrate_entry(
 
         # Migrate conversation entity to be linked to subentry
         ent_reg = er.async_get(hass)
-        for entity_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
-            if entity_entry.domain == Platform.CONVERSATION:
-                ent_reg.async_update_entity(
-                    entity_entry.entity_id,
-                    config_subentry_id=subentry.subentry_id,
-                    new_unique_id=subentry.subentry_id,
-                )
-                break
+        conversation_entity = ent_reg.async_get_entity_id(
+            "conversation",
+            DOMAIN,
+            entry.entry_id,
+        )
+        if conversation_entity is not None:
+            ent_reg.async_update_entity(
+                conversation_entity,
+                config_subentry_id=subentry.subentry_id,
+                new_unique_id=subentry.subentry_id,
+            )
 
         # Remove options from the main entry
         hass.config_entries.async_update_entry(

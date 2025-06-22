@@ -10,7 +10,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.google_generative_ai_conversation import (
     async_migrate_entry,
 )
-from homeassistant.components.google_generative_ai_conversation.const import DOMAIN
+from homeassistant.components.google_generative_ai_conversation.const import (
+    DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -427,7 +430,7 @@ async def test_migration_from_v1_to_v2(
     entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
-        "mock_config_entry.entry_id",
+        mock_config_entry.entry_id,
         config_entry=mock_config_entry,
         device_id=device.id,
         suggested_object_id="google_generative_ai_conversation",
@@ -445,7 +448,7 @@ async def test_migration_from_v1_to_v2(
 
     subentry = next(iter(mock_config_entry.subentries.values()))
     assert subentry.unique_id is None
-    assert subentry.title == "Google Conversation"
+    assert subentry.title == DEFAULT_CONVERSATION_NAME
     assert subentry.subentry_type == "conversation"
     assert subentry.data == OPTIONS
 
