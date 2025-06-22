@@ -38,7 +38,6 @@ from homeassistant.const import (
     CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
-    CONF_DOMAIN,
     CONF_ELSE,
     CONF_ENABLED,
     CONF_ERROR,
@@ -53,7 +52,6 @@ from homeassistant.const import (
     CONF_RESPONSE_VARIABLE,
     CONF_SCENE,
     CONF_SEQUENCE,
-    CONF_SERVICE,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SET_CONVERSATION_RESPONSE,
@@ -85,11 +83,15 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
-from . import condition, config_validation as cv, service, template
+from . import condition, config_validation as cv, template
 from .condition import ConditionCheckerType, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptRunVariables, ScriptVariables
+from .service import (
+    async_get_domain_service_from_config,
+    async_prepare_call_from_config,
+)
 from .template import Template
 from .trace import (
     TraceElement,
@@ -982,32 +984,40 @@ class _ScriptRun:
         """Call the service specified in the action."""
         self._step_log("call service")
 
-        params = service.async_prepare_call_from_config(
-            self._hass, self._action, self._variables
+        domain, service = async_get_domain_service_from_config(
+            self._action, self._variables
         )
 
         # Validate response data parameters. This check ignores services that do
         # not exist which will raise an appropriate error in the service call below.
         response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
         return_response = response_variable is not None
-        if self._hass.services.has_service(params[CONF_DOMAIN], params[CONF_SERVICE]):
-            supports_response = self._hass.services.supports_response(
-                params[CONF_DOMAIN], params[CONF_SERVICE]
-            )
+        template_exclude_keys: template.ExcludeKeys | None = None
+        if self._hass.services.has_service(domain, service):
+            supports_response = self._hass.services.supports_response(domain, service)
             if supports_response == SupportsResponse.ONLY and not return_response:
                 raise vol.Invalid(
                     f"Script requires '{CONF_RESPONSE_VARIABLE}' for response data "
-                    f"for service call {params[CONF_DOMAIN]}.{params[CONF_SERVICE]}"
+                    f"for service call {domain}.{service}"
                 )
             if supports_response == SupportsResponse.NONE and return_response:
                 raise vol.Invalid(
                     f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
                     f"'{CONF_RESPONSE_VARIABLE}' which does not support response data."
                 )
+            template_exclude_keys = self._hass.services.template_exclude_keys(
+                domain, service
+            )
 
+        params = async_prepare_call_from_config(
+            self._hass,
+            self._action,
+            self._variables,
+            template_exclude_keys=template_exclude_keys,
+        )
         running_script = (
-            params[CONF_DOMAIN] == "automation" and params[CONF_SERVICE] == "trigger"
-        ) or params[CONF_DOMAIN] in ("python_script", "script")
+            domain == "automation" and service == "trigger"
+        ) or domain in ("python_script", "script")
         trace_set_result(params=params, running_script=running_script)
         response_data = await self._async_run_long_action(
             self._hass.async_create_task_internal(
@@ -1016,6 +1026,7 @@ class _ScriptRun:
                     blocking=True,
                     context=self._context,
                     return_response=return_response,
+                    script_run_variables=self._variables.enter_scope(),
                 ),
                 eager_start=True,
             )
@@ -1445,7 +1456,7 @@ class Script:
         running_description: str | None = None,
         script_mode: str = DEFAULT_SCRIPT_MODE,
         top_level: bool = True,
-        variables: ScriptVariables | None = None,
+        variables: ScriptVariables | dict[str, Any] | None = None,
         enabled: bool = True,
     ) -> None:
         """Initialize the script.
@@ -1495,7 +1506,10 @@ class Script:
         self._if_data: dict[int, _IfData] = {}
         self._parallel_scripts: dict[int, list[Script]] = {}
         self._sequence_scripts: dict[int, Script] = {}
-        self.variables = variables
+        if variables is None or isinstance(variables, ScriptVariables):
+            self.variables = variables
+        else:
+            self.variables = ScriptVariables(variables)
 
     @property
     def change_listener(self) -> Callable[..., Any] | None:
@@ -1767,25 +1781,30 @@ class Script:
                 script_execution_set("failed_max_runs")
                 return None
 
-        # If this is a top level Script then make a copy of the variables in case they
-        # are read-only, but more importantly, so as not to leak any variables created
-        # during the run back to the caller.
+        rendered_variables: Mapping[str, Any] | None = None
+        if self.variables is not None:
+            try:
+                rendered_variables = self.variables.async_render(
+                    self._hass,
+                    run_variables,
+                )
+            except exceptions.TemplateError as err:
+                self._log("Error rendering variables: %s", err, level=logging.ERROR)
+                raise
         if self.top_level:
-            if self.variables:
-                try:
-                    run_variables = self.variables.async_render(
-                        self._hass,
-                        run_variables,
-                    )
-                except exceptions.TemplateError as err:
-                    self._log("Error rendering variables: %s", err, level=logging.ERROR)
-                    raise
-
-            variables = ScriptRunVariables.create_top_level(run_variables)
+            if rendered_variables is None:
+                rendered_variables = run_variables
+            # This is a top level Script, so make a copy of run variables in case they
+            # are read-only, but more importantly, so as not to leak any variables created
+            # during the run back to the caller.
+            variables = ScriptRunVariables.create_top_level(rendered_variables)
             variables["context"] = context
         else:
             # This is not the top level script, run_variables is an instance of ScriptRunVariables
             variables = cast(ScriptRunVariables, run_variables)
+            if rendered_variables is not None:
+                for key, value in rendered_variables.items():
+                    variables.define_local(key, value)
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to
         # stop (restart) or wait for (queued) our own script run.
