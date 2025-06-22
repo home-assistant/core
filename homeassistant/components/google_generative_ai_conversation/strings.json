@@ -54,6 +54,7 @@
         }
       },
       "abort": {
+        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "error": {

@@ -129,8 +129,6 @@ async def test_creating_conversation_subentry(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test creating a conversation subentry."""
-    mock_config_entry.add_to_hass(hass)
-
     with patch(
         "google.genai.models.AsyncModels.list",
         return_value=get_models_pager(),
@@ -161,6 +159,26 @@ async def test_creating_conversation_subentry(
     processed_options[CONF_PROMPT] = processed_options[CONF_PROMPT].strip()
 
     assert result2["data"] == processed_options
+
+
+async def test_creating_conversation_subentry_not_loaded(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a conversation subentry."""
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
 
 
 def will_options_be_rendered_again(current_options, new_options) -> bool:

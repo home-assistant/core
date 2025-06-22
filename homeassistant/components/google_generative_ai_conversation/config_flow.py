@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -192,6 +193,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Set conversation options."""
+        # abort if entry is not loaded
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
         errors: dict[str, str] = {}
 
         if user_input is None:
