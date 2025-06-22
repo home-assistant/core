@@ -196,8 +196,6 @@ async def test_stale_device_removal(
     mock_products: AsyncMock,
 ) -> None:
     """Test removal of stale devices."""
-    # Create a modified products response with no VINs/devices
-    empty_products = {"response": []}
 
     # Setup the entry first to get a valid config_entry_id
     entry = await setup_platform(hass)
@@ -220,7 +218,7 @@ async def test_stale_device_removal(
     # Update products with an empty response (no devices) and reload entry
     with patch(
         "tesla_fleet_api.teslemetry.Teslemetry.products",
-        return_value=empty_products,
+        return_value={"response": []},
     ):
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
