@@ -1,13 +1,17 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: No actions.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: No actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -22,7 +26,9 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No configuration options.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
