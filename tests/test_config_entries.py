@@ -15,6 +15,7 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.config_entries import ConfigEntry
@@ -8652,6 +8653,69 @@ async def test_options_flow_config_entry(
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "abort"
+
+
+async def test_options_flow_automatic_reload(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test options flow with automatic reload when updated."""
+    original_entry = MockConfigEntry(
+        domain="test", title="Test", data={}, options={"test": "first"}
+    )
+    original_entry.add_to_hass(hass)
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Mock setup entry."""
+        config_entries._LOGGER.info(
+            "loaded entry %s with options %s", entry.title, entry.options
+        )
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    await hass.config_entries.async_setup(original_entry.entry_id)
+    assert original_entry.state is config_entries.ConfigEntryState.LOADED
+    assert "loaded entry First" in caplog.text
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class _OptionsFlow(config_entries.OptionsFlowWithReload):
+                """Test flow."""
+
+                async def async_step_init(self, user_input=None):
+                    """Test user step."""
+                    if user_input is not None:
+                        return self.async_create_entry(data=user_input)
+                    return self.async_show_form(
+                        step_id="init", data_schema=vol.Schema({"test": str})
+                    )
+
+            return _OptionsFlow()
+
+    with mock_config_flow("test", TestFlow):
+        result = await hass.config_entries.options.async_init(original_entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {"test": "updated"}
+        )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "loaded entry Updated" in caplog.text
 
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
