@@ -19,7 +19,7 @@ from openai.types.responses import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import (
     HomeAssistant,
@@ -32,7 +32,11 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    selector,
+)
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
@@ -44,6 +48,7 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -118,7 +123,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_placeholders={"config_entry": entry_id},
             )
 
-        model: str = entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        # Get first conversation subentry for options
+        conversation_subentry = next(
+            (
+                sub
+                for sub in entry.subentries.values()
+                if sub.subentry_type == "conversation"
+            ),
+            None,
+        )
+        if not conversation_subentry:
+            raise HomeAssistantError("No conversation configuration found")
+
+        model: str = conversation_subentry.data.get(
+            CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL
+        )
         client: openai.AsyncClient = entry.runtime_data
 
         content: ResponseInputMessageContentListParam = [
@@ -169,11 +188,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             model_args = {
                 "model": model,
                 "input": messages,
-                "max_output_tokens": entry.options.get(
+                "max_output_tokens": conversation_subentry.data.get(
                     CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
                 ),
-                "top_p": entry.options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-                "temperature": entry.options.get(
+                "top_p": conversation_subentry.data.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                "temperature": conversation_subentry.data.get(
                     CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
                 ),
                 "user": call.context.user_id,
@@ -182,7 +201,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             if model.startswith("o"):
                 model_args["reasoning"] = {
-                    "effort": entry.options.get(
+                    "effort": conversation_subentry.data.get(
                         CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                     )
                 }
@@ -269,3 +288,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload OpenAI."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1:
+        # Migrate from version 1 to version 2
+        # Move conversation-specific options to a subentry
+        subentry = ConfigSubentry(
+            data=entry.options,
+            subentry_type="conversation",
+            title=DEFAULT_CONVERSATION_NAME,
+            unique_id=None,
+        )
+        hass.config_entries.async_add_subentry(
+            entry,
+            subentry,
+        )
+
+        # Migrate conversation entity to be linked to subentry
+        ent_reg = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+            if entity_entry.domain == Platform.CONVERSATION:
+                ent_reg.async_update_entity(
+                    entity_entry.entity_id,
+                    config_subentry_id=subentry.subentry_id,
+                    new_unique_id=subentry.subentry_id,
+                )
+                break
+
+        # Remove options from the main entry
+        hass.config_entries.async_update_entry(
+            entry,
+            options={},
+            version=2,
+        )
+
+    return True
