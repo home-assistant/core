@@ -1,0 +1,15 @@
+upload_file:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: immich
+    file:
+      required: true
+      selector:
+        text:
+    album_id:
+      required: false
+      selector:
+        text:
