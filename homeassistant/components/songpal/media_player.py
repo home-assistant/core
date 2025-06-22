@@ -15,24 +15,14 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DOMAIN,
-    ERROR_REQUEST_RETRY,
-    PARAM_NAME,
-    PARAM_VALUE,
-    SET_SOUND_SETTING,
-)
+from .const import ERROR_REQUEST_RETRY, PARAM_NAME, PARAM_VALUE, SET_SOUND_SETTING
 from .coordinator import SongpalConfigEntry, SongpalCoordinator
+from .device import device_unique_id
+from .entity import SongpalBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,12 +38,12 @@ async def async_setup_entry(
 
     coordinator: SongpalCoordinator = entry.runtime_data
 
-    new_entities = [SongpalMediaPlayerEntity(coordinator)]
+    new_entities = [SongpalMediaPlayerEntity(hass, coordinator)]
 
     async_add_entities(new_entities)
 
     for entity in new_entities:
-        entity.load_initial_state()
+        entity.get_initial_state()
 
     platform = entity_platform.async_get_current_platform()
 
@@ -65,9 +55,7 @@ async def async_setup_entry(
     )
 
 
-class SongpalMediaPlayerEntity(
-    MediaPlayerEntity, CoordinatorEntity[SongpalCoordinator]
-):
+class SongpalMediaPlayerEntity(MediaPlayerEntity, SongpalBaseEntity):
     """Class representing a Songpal device."""
 
     _attr_should_poll = False
@@ -84,7 +72,7 @@ class SongpalMediaPlayerEntity(
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, coordinator: SongpalCoordinator) -> None:
+    def __init__(self, hass: HomeAssistant, coordinator: SongpalCoordinator) -> None:
         """Init."""
 
         self._sysinfo = None
@@ -105,7 +93,7 @@ class SongpalMediaPlayerEntity(
         self._active_sound_mode: Input = None
         self._sound_modes: dict[str, Setting] = {}
 
-        super().__init__(coordinator)
+        super().__init__(hass, coordinator)
 
     @property
     def name(self) -> str:
@@ -116,47 +104,7 @@ class SongpalMediaPlayerEntity(
     def unique_id(self) -> str:
         """Return unique ID (maintaining consistency with pre-coordinator unique ID)."""
 
-        return (
-            self.coordinator.data["sysinfo"].macAddr
-            or self.coordinator.data["sysinfo"].wirelessMacAddr
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-
-        connections = set()
-        if self.coordinator.data["sysinfo"].macAddr:
-            connections.add(
-                (dr.CONNECTION_NETWORK_MAC, self.coordinator.data["sysinfo"].macAddr)
-            )
-        if self.coordinator.data["sysinfo"].wirelessMacAddr:
-            connections.add(
-                (
-                    dr.CONNECTION_NETWORK_MAC,
-                    self.coordinator.data["sysinfo"].wirelessMacAddr,
-                )
-            )
-        return DeviceInfo(
-            connections=connections,
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Sony Corporation",
-            model=self.coordinator.data["interface_info"].modelName,
-            name=self.coordinator.name,
-            sw_version=self.coordinator.data["sysinfo"].version,
-        )
-
-    def load_initial_state(self) -> None:
-        """Fetch & process data from coordinator when entity is created."""
-        self.update_state(self.coordinator.data)
-        self.async_write_ha_state()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Update latest data from coordinator."""
-        # This method is called by SongpalCoordinator when a successful update runs.
-        self.update_state(self.coordinator.data)
-        self.async_write_ha_state()
+        return device_unique_id(self.coordinator.data)
 
     def update_state(self, data) -> None:
         """Get state from coordinator."""
