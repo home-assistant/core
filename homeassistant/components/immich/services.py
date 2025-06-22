@@ -46,24 +46,19 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="config_entry_not_found",
-            translation_placeholders={"service": service_call.service},
         )
 
     if target_entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="config_entry_not_loaded",
-            translation_placeholders={"service": service_call.service},
         )
 
     if not os.path.isfile(target_file):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="file_not_found",
-            translation_placeholders={
-                "service": service_call.service,
-                "file": target_file,
-            },
+            translation_placeholders={"file": target_file},
         )
 
     coordinator = target_entry.runtime_data
@@ -75,11 +70,7 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="album_not_found",
-                translation_placeholders={
-                    "service": service_call.service,
-                    "album_id": target_album,
-                    "error": str(ex),
-                },
+                translation_placeholders={"album_id": target_album, "error": str(ex)},
             ) from ex
 
     try:
@@ -92,11 +83,7 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="upload_failed",
-            translation_placeholders={
-                "service": service_call.service,
-                "file": target_file,
-                "error": str(ex),
-            },
+            translation_placeholders={"file": target_file, "error": str(ex)},
         ) from ex
 
 

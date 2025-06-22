@@ -97,10 +97,7 @@ async def test_upload_file_config_entry_not_found(
     """Test upload_file service raising config_entry_not_found."""
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(
-        ServiceValidationError,
-        match='Failed to perform action "upload_file". Config entry not found',
-    ):
+    with pytest.raises(ServiceValidationError, match="Config entry not found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPLOAD_FILE,
@@ -121,10 +118,7 @@ async def test_upload_file_config_entry_not_loaded(
     mock_config_entry.disabled_by = er.RegistryEntryDisabler.USER
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(
-        ServiceValidationError,
-        match='Failed to perform action "upload_file". Config entry not loaded',
-    ):
+    with pytest.raises(ServiceValidationError, match="Config entry not loaded"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPLOAD_FILE,
@@ -145,8 +139,7 @@ async def test_upload_file_file_not_found(
     await setup_integration(hass, mock_config_entry)
 
     with pytest.raises(
-        ServiceValidationError,
-        match='Failed to perform action "upload_file". File `not_existing.file` not found',
+        ServiceValidationError, match="File `not_existing.file` not found"
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -182,7 +175,7 @@ async def test_upload_file_album_not_found(
 
     with pytest.raises(
         ServiceValidationError,
-        match='Failed to perform action "upload_file". Album with id `721e1a4b-aa12-441e-8d3b-5ac7ab283bb6` not found',
+        match="Album with ID `721e1a4b-aa12-441e-8d3b-5ac7ab283bb6` not found",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -217,8 +210,7 @@ async def test_upload_file_upload_failed(
         }
     )
     with pytest.raises(
-        ServiceValidationError,
-        match=f'Failed to perform action "upload_file". Upload of file `{test_file.as_posix()}` failed',
+        ServiceValidationError, match=f"Upload of file `{test_file.as_posix()}` failed"
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -252,8 +244,7 @@ async def test_upload_file_to_album_upload_failed(
         }
     )
     with pytest.raises(
-        ServiceValidationError,
-        match=f'Failed to perform action "upload_file". Upload of file `{test_file.as_posix()}` failed',
+        ServiceValidationError, match=f"Upload of file `{test_file.as_posix()}` failed"
     ):
         await hass.services.async_call(
             DOMAIN,
