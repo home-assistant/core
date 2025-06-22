@@ -1,6 +1,6 @@
 {
   "domain": "open_router",
-  "name": "OpenAI Conversation",
+  "name": "OpenRouter",
   "after_dependencies": ["assist_pipeline", "intent"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/open_router",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["openai==1.68.2", "python-open-router==0.2.0"]
+  "requirements": ["openai==1.76.2", "python-open-router==0.2.0"]
 }

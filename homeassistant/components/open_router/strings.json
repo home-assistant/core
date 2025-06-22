@@ -16,19 +16,19 @@
     }
   },
   "config_subentries": {
-    "model": {
+    "conversation": {
       "step": {
         "user": {
-          "description": "Configure the new model",
+          "description": "Configure the new conversation agent",
           "data": {
-            "name": "[%key:common::config_flow::data::name%]"
+            "model": "Model"
           }
         }
       },
       "initiate_flow": {
-        "user": "Add model"
+        "user": "Add conversation agent"
       },
-      "entry_type": "Model"
+      "entry_type": "Conversation agent"
     }
   }
 }

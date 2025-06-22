@@ -1593,6 +1593,7 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.3.2
 
+# homeassistant.components.open_router
 # homeassistant.components.openai_conversation
 openai==1.76.2
 
@@ -2472,6 +2473,9 @@ python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
+
+# homeassistant.components.open_router
+python-open-router==0.2.0
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0

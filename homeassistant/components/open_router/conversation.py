@@ -1,4 +1,4 @@
-"""Conversation support for OpenAI."""
+"""Conversation support for OpenRouter."""
 
 from typing import Literal
 
@@ -32,7 +32,7 @@ async def async_setup_entry(
 class OpenRouterConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
-    """OpenAI conversation agent."""
+    """OpenRouter conversation agent."""
 
     def __init__(self, entry: OpenRouterConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""
@@ -81,7 +81,7 @@ class OpenRouterConversationEntity(
         try:
             result = await client.chat.completions.create(
                 model=self.model,
-                messages=messages,
+                messages=messages,  # type: ignore[arg-type]
                 user=conversation_id,
                 extra_headers={
                     "X-Title": "Home Assistant",

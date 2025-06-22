@@ -1,4 +1,4 @@
-"""Config flow for OpenAI Conversation integration."""
+"""Config flow for OpenRouter integration."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -26,14 +27,13 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Open Router."""
+    """Handle a config flow for OpenRouter."""
 
     VERSION = 1
 
@@ -43,7 +43,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
-        return {"model": ModelFlowHandler}
+        return {"conversation": ConversationFlowHandler}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -78,7 +78,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class ModelFlowHandler(ConfigSubentryFlow):
+class ConversationFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow."""
 
     def __init__(self) -> None:
@@ -101,8 +101,8 @@ class ModelFlowHandler(ConfigSubentryFlow):
         )
         options = []
         async for model in await client.with_options(timeout=10.0).models.list():
-            options.append(SelectOptionDict(value=model.id, label=model.name))
-            self.options[model.id] = model.name
+            options.append(SelectOptionDict(value=model.id, label=model.name))  # type: ignore[attr-defined]
+            self.options[model.id] = model.name  # type: ignore[attr-defined]
 
         return self.async_show_form(
             step_id="user",
