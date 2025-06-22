@@ -3613,10 +3613,11 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
 
 
 class OptionsFlowWithReload(OptionsFlow):
-    """Extended class for config options flows.
+    """Automatic reloading class for config options flows.
 
     Triggers an automatic reload of the config entry when the options are changed.
-    Integrations does not need to use a config entry update listener when using this class.
+    Integrations can not use this automatic reloading Options flow class
+    together with config entry update listeners.
     """
 
     automatic_reload: bool = True
