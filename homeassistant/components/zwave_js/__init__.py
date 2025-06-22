@@ -1116,38 +1116,6 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         LOGGER.error(err)
 
 
-async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
-) -> bool:
-    """Remove a config entry from a device."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
-
-    # Driver may not be ready yet so we can't allow users to remove a device since
-    # we need to check if the device is still known to the controller
-    if (driver := client.driver) is None:
-        LOGGER.error("Driver for %s is not ready", config_entry.title)
-        return False
-
-    # If a node is found on the controller that matches the hardware based identifier
-    # on the device, prevent the device from being removed.
-    if next(
-        (
-            node
-            for node in driver.controller.nodes.values()
-            if get_device_id_ext(driver, node) in device_entry.identifiers
-        ),
-        None,
-    ):
-        return False
-
-    controller_events: ControllerEvents = config_entry.runtime_data[
-        DATA_DRIVER_EVENTS
-    ].controller_events
-    controller_events.registered_unique_ids.pop(device_entry.id, None)
-    controller_events.discovered_value_ids.pop(device_entry.id, None)
-    return True
-
-
 async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Ensure that Z-Wave JS add-on is installed and running."""
     addon_manager = _get_addon_manager(hass)

@@ -65,8 +65,8 @@ homeassistant.components.aladdin_connect.*
 homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
 homeassistant.components.alexa.*
+homeassistant.components.alexa_devices.*
 homeassistant.components.alpha_vantage.*
-homeassistant.components.amazon_devices.*
 homeassistant.components.amazon_polly.*
 homeassistant.components.amberelectric.*
 homeassistant.components.ambient_network.*

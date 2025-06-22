@@ -48,7 +48,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         await api.login()
     finally:
         await api.logout()
-        await api.close()
 
     return {"title": data[CONF_HOST]}
 

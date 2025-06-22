@@ -216,6 +216,31 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
         await hass.async_block_till_done()
 
 
+async def setup_integration_no_eco_mode(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox sensor class setup."""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            json=test_response_no_power_boost,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.put(
+            "https://api.wall-box.com/v2/charger/12345",
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
+            status_code=HTTPStatus.OK,
+        )
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
 async def setup_integration_select(
     hass: HomeAssistant, entry: MockConfigEntry, response
 ) -> None:

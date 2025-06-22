@@ -179,8 +179,7 @@ class EventStateReportedData(EventStateEventData):
 
 
 def _deprecated_core_config() -> Any:
-    # pylint: disable-next=import-outside-toplevel
-    from . import core_config
+    from . import core_config  # noqa: PLC0415
 
     return core_config.Config
 
@@ -428,8 +427,7 @@ class HomeAssistant:
 
     def __init__(self, config_dir: str) -> None:
         """Initialize new Home Assistant object."""
-        # pylint: disable-next=import-outside-toplevel
-        from .core_config import Config
+        from .core_config import Config  # noqa: PLC0415
 
         # This is a dictionary that any component can store any data on.
         self.data = HassDict()
@@ -458,7 +456,7 @@ class HomeAssistant:
         """Report and raise if we are not running in the event loop thread."""
         if self.loop_thread_id != threading.get_ident():
             # frame is a circular import, so we import it here
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_non_thread_safe_operation(what)
 
@@ -522,8 +520,7 @@ class HomeAssistant:
 
         await self.async_start()
         if attach_signals:
-            # pylint: disable-next=import-outside-toplevel
-            from .helpers.signal import async_register_signal_handling
+            from .helpers.signal import async_register_signal_handling  # noqa: PLC0415
 
             async_register_signal_handling(self)
 
@@ -643,7 +640,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         # late import to avoid circular imports
-        from .helpers import frame  # pylint: disable=import-outside-toplevel
+        from .helpers import frame  # noqa: PLC0415
 
         frame.report_usage(
             "calls `async_add_job`, which should be reviewed against "
@@ -699,7 +696,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         # late import to avoid circular imports
-        from .helpers import frame  # pylint: disable=import-outside-toplevel
+        from .helpers import frame  # noqa: PLC0415
 
         frame.report_usage(
             "calls `async_add_hass_job`, which should be reviewed against "
@@ -802,7 +799,7 @@ class HomeAssistant:
         target: target to call.
         """
         if self.loop_thread_id != threading.get_ident():
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_non_thread_safe_operation("hass.async_create_task")
         return self.async_create_task_internal(target, name, eager_start)
@@ -973,7 +970,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         # late import to avoid circular imports
-        from .helpers import frame  # pylint: disable=import-outside-toplevel
+        from .helpers import frame  # noqa: PLC0415
 
         frame.report_usage(
             "calls `async_run_job`, which should be reviewed against "
@@ -1517,7 +1514,7 @@ class EventBus:
         """
         _verify_event_type_length_or_raise(event_type)
         if self._hass.loop_thread_id != threading.get_ident():
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_non_thread_safe_operation("hass.bus.async_fire")
         return self.async_fire_internal(
@@ -1622,7 +1619,7 @@ class EventBus:
         """
         if run_immediately in (True, False):
             # late import to avoid circular imports
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_usage(
                 "calls `async_listen` with run_immediately",
@@ -1692,7 +1689,7 @@ class EventBus:
         """
         if run_immediately in (True, False):
             # late import to avoid circular imports
-            from .helpers import frame  # pylint: disable=import-outside-toplevel
+            from .helpers import frame  # noqa: PLC0415
 
             frame.report_usage(
                 "calls `async_listen_once` with run_immediately",

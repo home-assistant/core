@@ -1207,6 +1207,15 @@ class PipelineRun:
 
                 self._streamed_response_text = True
 
+                self.process_event(
+                    PipelineEvent(
+                        PipelineEventType.INTENT_PROGRESS,
+                        {
+                            "tts_start_streaming": True,
+                        },
+                    )
+                )
+
                 async def tts_input_stream_generator() -> AsyncGenerator[str]:
                     """Yield TTS input stream."""
                     while (tts_input := await tts_input_stream.get()) is not None:

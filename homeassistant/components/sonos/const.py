@@ -10,7 +10,6 @@ from homeassistant.const import Platform
 UPNP_ST = "urn:schemas-upnp-org:device:ZonePlayer:1"
 
 DOMAIN = "sonos"
-DATA_SONOS = "sonos_media_player"
 DATA_SONOS_DISCOVERY_MANAGER = "sonos_discovery_manager"
 PLATFORMS = [
     Platform.BINARY_SENSOR,

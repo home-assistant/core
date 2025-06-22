@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -19,7 +18,6 @@ from .mocks import (
 )
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_binary_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
@@ -58,7 +56,6 @@ async def test_binary_sensor(
     )
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_remote_control(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
@@ -99,7 +96,6 @@ async def test_remote_control(
     )
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_disabled(hass: HomeAssistant) -> None:
     """Test setup of a disabled device."""
     entry = configure_integration(hass)
@@ -113,7 +109,6 @@ async def test_disabled(hass: HomeAssistant) -> None:
     assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_door") is None
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_remove_from_hass(hass: HomeAssistant) -> None:
     """Test removing entity."""
     entry = configure_integration(hass)

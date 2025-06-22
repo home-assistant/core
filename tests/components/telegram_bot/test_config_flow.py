@@ -1,6 +1,6 @@
 """Config flow tests for the Telegram Bot integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from telegram import ChatFullInfo, User
 from telegram.constants import AccentColor
@@ -19,8 +19,8 @@ from homeassistant.components.telegram_bot.const import (
     ERROR_MESSAGE,
     ISSUE_DEPRECATED_YAML,
     ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR,
-    PARSER_HTML,
     PARSER_MD,
+    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     PLATFORM_WEBHOOKS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
@@ -56,13 +56,13 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            ATTR_PARSER: PARSER_HTML,
+            ATTR_PARSER: PARSER_PLAIN_TEXT,
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][ATTR_PARSER] == PARSER_HTML
+    assert result["data"][ATTR_PARSER] is None
 
 
 async def test_reconfigure_flow_broadcast(
@@ -305,10 +305,19 @@ async def test_reauth_flow(
 
     # test: valid
 
-    with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
-        return_value=User(123456, "Testbot", True),
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
+            return_value=User(123456, "Testbot", True),
+        ),
+        patch(
+            "homeassistant.components.telegram_bot.webhooks.PushBot",
+        ) as mock_pushbot,
     ):
+        mock_pushbot.return_value.start_application = AsyncMock()
+        mock_pushbot.return_value.register_webhook = AsyncMock()
+        mock_pushbot.return_value.shutdown = AsyncMock()
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_API_KEY: "new mock api key"},
@@ -413,7 +422,7 @@ async def test_subentry_flow_chat_error(
     with patch(
         "homeassistant.components.telegram_bot.config_flow.Bot.get_chat",
         return_value=ChatFullInfo(
-            id=1234567890,
+            id=123456,
             title="mock title",
             first_name="mock first_name",
             type="PRIVATE",
@@ -423,7 +432,7 @@ async def test_subentry_flow_chat_error(
     ):
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            user_input={CONF_CHAT_ID: 1234567890},
+            user_input={CONF_CHAT_ID: 123456},
         )
         await hass.async_block_till_done()
 

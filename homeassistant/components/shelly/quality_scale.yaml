@@ -61,8 +61,8 @@ rules:
   reconfiguration-flow: done
   repair-issues: done
   stale-devices:
-    status: todo
-    comment: BLU TRV needs to be removed when un-paired
+    status: done
+    comment: BLU TRV is removed when un-paired
 
   # Platinum
   async-dependency: done

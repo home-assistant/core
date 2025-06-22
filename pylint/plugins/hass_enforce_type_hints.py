@@ -2789,12 +2789,12 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=_RESTORE_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
-            base_class="ToggleEntity",
-            matches=_TOGGLE_ENTITY_MATCH,
-        ),
-        ClassTypeHintMatch(
-            base_class="_BaseVacuum",
+            base_class="StateVacuumEntity",
             matches=[
+                TypeHintMatch(
+                    function_name="state",
+                    return_type=["str", None],
+                ),
                 TypeHintMatch(
                     function_name="battery_level",
                     return_type=["int", None],
@@ -2818,6 +2818,16 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="stop",
                     kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="start",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="pause",
                     return_type=None,
                     has_async_counterpart=True,
                 ),
@@ -2857,63 +2867,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
-                ),
-            ],
-        ),
-        ClassTypeHintMatch(
-            base_class="VacuumEntity",
-            matches=[
-                TypeHintMatch(
-                    function_name="status",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
-                    function_name="start_pause",
-                    kwargs_type="Any",
-                    return_type=None,
-                    has_async_counterpart=True,
-                ),
-                TypeHintMatch(
-                    function_name="async_pause",
-                    return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_start",
-                    return_type=None,
-                ),
-            ],
-        ),
-        ClassTypeHintMatch(
-            base_class="StateVacuumEntity",
-            matches=[
-                TypeHintMatch(
-                    function_name="state",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
-                    function_name="start",
-                    return_type=None,
-                    has_async_counterpart=True,
-                ),
-                TypeHintMatch(
-                    function_name="pause",
-                    return_type=None,
-                    has_async_counterpart=True,
-                ),
-                TypeHintMatch(
-                    function_name="async_turn_on",
-                    kwargs_type="Any",
-                    return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_turn_off",
-                    kwargs_type="Any",
-                    return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_toggle",
-                    kwargs_type="Any",
-                    return_type=None,
                 ),
             ],
         ),

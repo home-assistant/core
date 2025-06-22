@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
 
 from pypaperless.models import Statistic, Status
 from pypaperless.models.common import StatusType
@@ -23,23 +22,23 @@ from homeassistant.util.unit_conversion import InformationConverter
 
 from .coordinator import (
     PaperlessConfigEntry,
+    PaperlessCoordinator,
     PaperlessStatisticCoordinator,
     PaperlessStatusCoordinator,
-    TData,
 )
-from .entity import PaperlessEntity, TCoordinator
+from .entity import PaperlessEntity
 
 PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class PaperlessEntityDescription(SensorEntityDescription, Generic[TData]):
+class PaperlessEntityDescription[DataT](SensorEntityDescription):
     """Describes Paperless-ngx sensor entity."""
 
-    value_fn: Callable[[TData], StateType]
+    value_fn: Callable[[DataT], StateType]
 
 
-SENSOR_STATISTICS: tuple[PaperlessEntityDescription, ...] = (
+SENSOR_STATISTICS: tuple[PaperlessEntityDescription[Statistic], ...] = (
     PaperlessEntityDescription[Statistic](
         key="documents_total",
         translation_key="documents_total",
@@ -78,7 +77,7 @@ SENSOR_STATISTICS: tuple[PaperlessEntityDescription, ...] = (
     ),
 )
 
-SENSOR_STATUS: tuple[PaperlessEntityDescription, ...] = (
+SENSOR_STATUS: tuple[PaperlessEntityDescription[Status], ...] = (
     PaperlessEntityDescription[Status](
         key="storage_total",
         translation_key="storage_total",
@@ -258,7 +257,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PaperlessSensor(PaperlessEntity[TCoordinator], SensorEntity):
+class PaperlessSensor[CoordinatorT: PaperlessCoordinator](
+    PaperlessEntity[CoordinatorT], SensorEntity
+):
     """Defines a Paperless-ngx sensor entity."""
 
     entity_description: PaperlessEntityDescription

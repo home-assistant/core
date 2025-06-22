@@ -5569,7 +5569,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '66.571',
+    'state': '229.226',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_difference-entry]
@@ -5625,7 +5625,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.019',
+    'state': '0.01',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_energy_saved-entry]
@@ -5737,7 +5737,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17',
+    'state': '-22.2222222222222',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_fridge_temperature-entry]
@@ -5793,7 +5793,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6',
+    'state': '2.22222222222222',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_power-entry]
@@ -5841,8 +5841,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Frigo Power',
-      'power_consumption_end': '2025-03-30T18:38:18Z',
-      'power_consumption_start': '2025-03-30T18:21:37Z',
+      'power_consumption_end': '2025-06-16T16:45:48Z',
+      'power_consumption_start': '2025-06-16T16:30:09Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -5851,7 +5851,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '61',
+    'state': '17',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][sensor.frigo_power_energy-entry]
@@ -5907,7 +5907,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0189117822202047',
+    'state': '0.0143511805540986',
   })
 # ---
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_battery-entry]

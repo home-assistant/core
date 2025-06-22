@@ -87,19 +87,16 @@ async def test_options(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
     # fake router
-    hass.data.setdefault(keenetic.DOMAIN, {})
-    hass.data[keenetic.DOMAIN][entry.entry_id] = {
-        keenetic.ROUTER: Mock(
-            client=Mock(
-                get_interfaces=Mock(
-                    return_value=[
-                        InterfaceInfo.from_dict({"id": name, "type": "bridge"})
-                        for name in MOCK_OPTIONS[const.CONF_INTERFACES]
-                    ]
-                )
+    entry.runtime_data = Mock(
+        client=Mock(
+            get_interfaces=Mock(
+                return_value=[
+                    InterfaceInfo.from_dict({"id": name, "type": "bridge"})
+                    for name in MOCK_OPTIONS[const.CONF_INTERFACES]
+                ]
             )
         )
-    }
+    )
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 

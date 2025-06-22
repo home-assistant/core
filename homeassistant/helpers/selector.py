@@ -1216,6 +1216,39 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
+class StatisticSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a statistic selector config."""
+
+    multiple: bool
+
+
+@SELECTORS.register("statistic")
+class StatisticSelector(Selector[StatisticSelectorConfig]):
+    """Selector of a single or list of statistics."""
+
+    selector_type = "statistic"
+
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: StatisticSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str | list[str]:
+        """Validate the passed selection."""
+
+        if not self.config["multiple"]:
+            stat: str = vol.Schema(str)(data)
+            return stat
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
+
+
 class TargetSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a target selector config."""
 

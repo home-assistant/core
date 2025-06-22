@@ -8,7 +8,13 @@
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
@@ -542,6 +548,7 @@
           "endive_strips": "Endive (strips)",
           "espresso": "Espresso",
           "espresso_macchiato": "Espresso macchiato",
+          "evaporate_water": "Evaporate water",
           "express": "Express",
           "express_20": "Express 20'",
           "extra_quiet": "Extra quiet",

@@ -141,6 +141,7 @@ async def test_browsing(
     entry_id = config_entry.entry_id
     reolink_connect.supported.return_value = 1
     reolink_connect.model = "Reolink TrackMix PoE"
+    reolink_connect.is_nvr = False
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(entry_id) is True
@@ -333,7 +334,14 @@ async def test_browsing_rec_playback_unsupported(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing a Reolink camera which does not support playback of recordings."""
-    reolink_connect.supported.return_value = 0
+
+    def test_supported(ch, key):
+        """Test supported function."""
+        if key == "replay":
+            return False
+        return True
+
+    reolink_connect.supported = test_supported
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -347,6 +355,8 @@ async def test_browsing_rec_playback_unsupported(
     assert browse.identifier is None
     assert browse.children == []
 
+    reolink_connect.supported = lambda ch, key: True  # Reset supported function
+
 
 async def test_browsing_errors(
     hass: HomeAssistant,
@@ -354,8 +364,6 @@ async def test_browsing_errors(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing a Reolink camera errors."""
-    reolink_connect.supported.return_value = 1
-
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -373,8 +381,6 @@ async def test_browsing_not_loaded(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing a Reolink camera integration which is not loaded."""
-    reolink_connect.supported.return_value = 1
-
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

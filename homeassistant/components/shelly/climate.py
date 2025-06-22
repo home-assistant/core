@@ -211,7 +211,10 @@ class BlockSleepingClimate(
         elif entry is not None:
             self._unique_id = entry.unique_id
         self._attr_device_info = get_block_device_info(
-            coordinator.device, coordinator.mac, sensor_block
+            coordinator.device,
+            coordinator.mac,
+            sensor_block,
+            suggested_area=coordinator.suggested_area,
         )
         self._attr_name = get_block_entity_name(
             self.coordinator.device, sensor_block, None

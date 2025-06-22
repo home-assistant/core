@@ -139,7 +139,11 @@ class RpcEmeterPhaseSensor(RpcSensor):
         super().__init__(coordinator, key, attribute, description)
 
         self._attr_device_info = get_rpc_device_info(
-            coordinator.device, coordinator.mac, key, description.emeter_phase
+            coordinator.device,
+            coordinator.mac,
+            key,
+            emeter_phase=description.emeter_phase,
+            suggested_area=coordinator.suggested_area,
         )
 
 

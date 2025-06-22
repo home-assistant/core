@@ -58,6 +58,7 @@ TARGET_VALIDATORS = {
 }
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration services."""
     services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))

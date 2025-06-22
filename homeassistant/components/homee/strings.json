@@ -160,12 +160,36 @@
       }
     },
     "event": {
+      "button_state": {
+        "name": "Switch",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "upper": "Upper button",
+              "lower": "Lower button",
+              "released": "Released"
+            }
+          }
+        }
+      },
+      "button_state_instance": {
+        "name": "Switch {instance}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "upper": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::upper%]",
+              "lower": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::lower%]",
+              "released": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::released%]"
+            }
+          }
+        }
+      },
       "up_down_remote": {
         "name": "Up/down remote",
         "state_attributes": {
           "event_type": {
             "state": {
-              "release": "Released",
+              "release": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::released%]",
               "up": "Up",
               "down": "Down",
               "stop": "Stop",
@@ -199,6 +223,18 @@
       }
     },
     "number": {
+      "button_brightness_active": {
+        "name": "Button brightness (active)"
+      },
+      "button_brightness_dimmed": {
+        "name": "Button brightness (dimmed)"
+      },
+      "display_brightness_active": {
+        "name": "Display brightness (active)"
+      },
+      "display_brightness_dimmed": {
+        "name": "Display brightness (dimmed)"
+      },
       "down_position": {
         "name": "Down position"
       },
@@ -210,6 +246,12 @@
       },
       "endposition_configuration": {
         "name": "End position"
+      },
+      "external_temperature_offset": {
+        "name": "External temperature offset"
+      },
+      "floor_temperature_offset": {
+        "name": "Floor temperature offset"
       },
       "motion_alarm_cancelation_delay": {
         "name": "Motion alarm delay"
@@ -235,6 +277,9 @@
       "temperature_offset": {
         "name": "Temperature offset"
       },
+      "temperature_report_interval": {
+        "name": "Temperature report interval"
+      },
       "up_time": {
         "name": "Up-movement duration"
       },
@@ -246,6 +291,13 @@
       }
     },
     "select": {
+      "display_temperature_selection": {
+        "name": "Displayed temperature",
+        "state": {
+          "target": "Target",
+          "current": "Measured"
+        }
+      },
       "repeater_mode": {
         "name": "Repeater mode",
         "state": {
@@ -276,6 +328,12 @@
       },
       "exhaust_motor_revs": {
         "name": "Exhaust motor speed"
+      },
+      "external_temperature": {
+        "name": "External temperature"
+      },
+      "floor_temperature": {
+        "name": "Floor temperature"
       },
       "indoor_humidity": {
         "name": "Indoor humidity"

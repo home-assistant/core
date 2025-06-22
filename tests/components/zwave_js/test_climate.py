@@ -264,7 +264,7 @@ async def test_thermostat_v2(
     client.async_send_command.reset_mock()
 
     # Test setting invalid hvac mode
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -574,7 +574,7 @@ async def test_setpoint_thermostat(
     )
 
     # Test setting illegal mode raises an error
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,

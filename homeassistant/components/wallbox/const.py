@@ -74,3 +74,4 @@ class EcoSmartMode(StrEnum):
     OFF = "off"
     ECO_MODE = "eco_mode"
     FULL_SOLAR = "full_solar"
+    DISABLED = "disabled"

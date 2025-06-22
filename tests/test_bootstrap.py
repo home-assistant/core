@@ -85,6 +85,17 @@ async def test_async_enable_logging(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test to ensure logging is migrated to the queue handlers."""
+    config_log_file_pattern = get_test_config_dir("home-assistant.log*")
+    arg_log_file_pattern = "test.log*"
+
+    # Ensure we start with a clean slate
+    for f in glob.glob(arg_log_file_pattern):
+        os.remove(f)
+    for f in glob.glob(config_log_file_pattern):
+        os.remove(f)
+    assert len(glob.glob(config_log_file_pattern)) == 0
+    assert len(glob.glob(arg_log_file_pattern)) == 0
+
     with (
         patch("logging.getLogger"),
         patch(
@@ -97,6 +108,8 @@ async def test_async_enable_logging(
     ):
         await bootstrap.async_enable_logging(hass)
         mock_async_activate_log_queue_handler.assert_called_once()
+        assert len(glob.glob(config_log_file_pattern)) > 0
+
         mock_async_activate_log_queue_handler.reset_mock()
         await bootstrap.async_enable_logging(
             hass,
@@ -104,12 +117,14 @@ async def test_async_enable_logging(
             log_file="test.log",
         )
         mock_async_activate_log_queue_handler.assert_called_once()
-        for f in glob.glob("test.log*"):
-            os.remove(f)
-        for f in glob.glob("testing_config/home-assistant.log*"):
-            os.remove(f)
+        assert len(glob.glob(arg_log_file_pattern)) > 0
 
     assert "Error rolling over log file" in caplog.text
+
+    for f in glob.glob(arg_log_file_pattern):
+        os.remove(f)
+    for f in glob.glob(config_log_file_pattern):
+        os.remove(f)
 
 
 async def test_load_hassio(hass: HomeAssistant) -> None:

@@ -2,7 +2,7 @@
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
@@ -48,6 +48,7 @@ def set_speed(call: ServiceCall) -> None:
     _get_coordinator(call).nzbget.rate(call.data[ATTR_SPEED])
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration-level services."""
 

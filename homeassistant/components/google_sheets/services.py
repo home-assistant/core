@@ -13,7 +13,7 @@ from gspread.utils import ValueInputOption
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import ConfigEntrySelector
@@ -76,6 +76,7 @@ async def _async_append_to_sheet(call: ServiceCall) -> None:
     await call.hass.async_add_executor_job(_append_to_sheet, call, entry)
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Add the services for Google Sheets."""
 
