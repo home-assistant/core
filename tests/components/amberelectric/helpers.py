@@ -178,6 +178,30 @@ FEED_IN_CHANNEL = [
     ),
 ]
 
+GENERAL_FORECASTS = [
+    generate_current_interval(
+        ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
+    ),
+    generate_forecast_interval(
+        ChannelType.GENERAL,
+        parser.parse("2021-09-21T09:00:00+10:00"),
+        range=True,
+        advanced_price=True,
+    ),
+    generate_forecast_interval(
+        ChannelType.GENERAL,
+        parser.parse("2021-09-21T09:30:00+10:00"),
+        range=True,
+        advanced_price=True,
+    ),
+    generate_forecast_interval(
+        ChannelType.GENERAL,
+        parser.parse("2021-09-21T10:00:00+10:00"),
+        range=True,
+        advanced_price=True,
+    ),
+]
+
 FORECASTS = [
     generate_current_interval(
         ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")

@@ -21,6 +21,7 @@ from .helpers import (
     GENERAL_AND_FEED_IN_SITE_ID,
     GENERAL_CHANNEL,
     GENERAL_CHANNEL_WITH_RANGE,
+    GENERAL_FORECASTS,
     GENERAL_ONLY_SITE_ID,
 )
 
@@ -110,6 +111,12 @@ def forecast_prices() -> list[Interval]:
 
 
 @pytest.fixture
+def general_forecast_prices() -> list[Interval]:
+    """List containing forecasts with advanced prices."""
+    return GENERAL_FORECASTS
+
+
+@pytest.fixture
 def mock_amber_client_general_channel(
     mock_amber_client: AsyncMock, general_channel_prices: list[Interval]
 ) -> Generator[AsyncMock]:
@@ -161,7 +168,17 @@ async def mock_amber_client_general_and_feed_in(
 async def mock_amber_client_forecasts(
     mock_amber_client: AsyncMock, forecast_prices: list[Interval]
 ) -> AsyncGenerator[Mock]:
-    """Set up general channel and feed in channel."""
+    """Set up general channel, controlled load and feed in channel."""
     client = mock_amber_client.return_value
     client.get_current_prices.return_value = forecast_prices
+    return mock_amber_client
+
+
+@pytest.fixture
+async def mock_amber_client_general_forecasts(
+    mock_amber_client: AsyncMock, general_forecast_prices: list[Interval]
+) -> AsyncGenerator[Mock]:
+    """Set up general channel only."""
+    client = mock_amber_client.return_value
+    client.get_current_prices.return_value = general_forecast_prices
     return mock_amber_client

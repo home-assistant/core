@@ -118,7 +118,7 @@ async def test_incorrect_channel_type(
     hass: HomeAssistant,
     general_channel_config_entry: MockConfigEntry,
 ) -> None:
-    """Test error when the channel type is not found."""
+    """Test error when the channel type is incorrect."""
     await setup_integration(hass, general_channel_config_entry)
 
     with pytest.raises(
@@ -131,6 +131,26 @@ async def test_incorrect_channel_type(
             DOMAIN,
             GET_FORECASTS_SERVICE,
             {ATTR_SITE_ID: GENERAL_ONLY_SITE_ID, ATTR_CHANNEL_TYPE: "incorrect"},
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.usefixtures("mock_amber_client_general_forecasts")
+async def test_unavailable_channel_type(
+    hass: HomeAssistant,
+    general_channel_config_entry: MockConfigEntry,
+) -> None:
+    """Test error when the channel type is not found."""
+    await setup_integration(hass, general_channel_config_entry)
+
+    with pytest.raises(
+        ServiceValidationError, match="There is no controlled_load channel at this site"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_FORECASTS_SERVICE,
+            {ATTR_SITE_ID: GENERAL_ONLY_SITE_ID, ATTR_CHANNEL_TYPE: "controlled_load"},
             blocking=True,
             return_response=True,
         )

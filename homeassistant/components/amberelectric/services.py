@@ -47,6 +47,7 @@ def async_get_entry(hass: HomeAssistant, site_id: str) -> AmberConfigEntry:
 def get_forecasts(channel_type: str, data: dict) -> list[JsonValueType]:
     """Return an array of forecasts."""
     results: list[JsonValueType] = []
+
     if channel_type not in data["forecasts"]:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
