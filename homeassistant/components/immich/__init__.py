@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import ImmichConfigEntry, ImmichDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ImmichConfigEntry) -> bool:
