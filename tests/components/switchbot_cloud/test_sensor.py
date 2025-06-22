@@ -91,6 +91,5 @@ async def test_unsupported_device_type(
         entry = await configure_integration(hass)
 
     # Assert no sensor entities were created for unsupported device type
-    sensor_entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    sensor_entities = [e for e in sensor_entities if e.domain == "sensor"]
-    assert len(sensor_entities) == 0
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert len([e for e in entities if e.domain == "sensor"]) == 0
