@@ -18,7 +18,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import GATEWAY_SERIAL_PATTERN, PLATFORMS
+from .const import DOMAIN, GATEWAY_SERIAL_PATTERN, PLATFORMS
 
 type DevoloHomeControlConfigEntry = ConfigEntry[list[HomeControl]]
 
@@ -32,10 +32,16 @@ async def async_setup_entry(
     credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)
 
     if not credentials_valid:
-        raise ConfigEntryAuthFailed
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        )
 
     if await hass.async_add_executor_job(mydevolo.maintenance):
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="maintenance",
+        )
 
     gateway_ids = await hass.async_add_executor_job(mydevolo.get_gateway_ids)
 
@@ -69,7 +75,11 @@ async def async_setup_entry(
                 )
             )
     except GatewayOfflineError as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={"gateway_id": gateway_id},
+        ) from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

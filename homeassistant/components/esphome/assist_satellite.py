@@ -285,9 +285,9 @@ class EsphomeAssistSatellite(
             data_to_send = {"text": event.data["stt_output"]["text"]}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS:
             data_to_send = {
-                "tts_start_streaming": bool(
-                    event.data and event.data.get("tts_start_streaming")
-                ),
+                "tts_start_streaming": "1"
+                if (event.data and event.data.get("tts_start_streaming"))
+                else "0",
             }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
             assert event.data is not None
