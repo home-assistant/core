@@ -54,7 +54,7 @@ from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 
-from tests.common import load_json_object_fixture, mock_platform
+from tests.common import async_load_json_object_fixture, mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_BACKUP = supervisor_backups.Backup(
@@ -1018,8 +1018,10 @@ async def test_reader_writer_create_addon_folder_error(
     supervisor_client.jobs.get_job.side_effect = [
         TEST_JOB_NOT_DONE,
         supervisor_jobs.Job.from_dict(
-            load_json_object_fixture(
-                "backup_done_with_addon_folder_errors.json", DOMAIN
+            (
+                await async_load_json_object_fixture(
+                    hass, "backup_done_with_addon_folder_errors.json", DOMAIN
+                )
             )["data"]
         ),
     ]

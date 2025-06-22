@@ -366,14 +366,34 @@ class AnthropicConversationEntity(
         options = self.entry.options
 
         try:
-            await chat_log.async_update_llm_data(
-                DOMAIN,
-                user_input,
+            await chat_log.async_provide_llm_data(
+                user_input.as_llm_context(DOMAIN),
                 options.get(CONF_LLM_HASS_API),
                 options.get(CONF_PROMPT),
+                user_input.extra_system_prompt,
             )
         except conversation.ConverseError as err:
             return err.as_conversation_result()
+
+        await self._async_handle_chat_log(chat_log)
+
+        response_content = chat_log.content[-1]
+        if not isinstance(response_content, conversation.AssistantContent):
+            raise TypeError("Last message must be an assistant message")
+        intent_response = intent.IntentResponse(language=user_input.language)
+        intent_response.async_set_speech(response_content.content or "")
+        return conversation.ConversationResult(
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
+        )
+
+    async def _async_handle_chat_log(
+        self,
+        chat_log: conversation.ChatLog,
+    ) -> None:
+        """Generate an answer for the chat log."""
+        options = self.entry.options
 
         tools: list[ToolParam] | None = None
         if chat_log.llm_api:
@@ -424,7 +444,7 @@ class AnthropicConversationEntity(
                     [
                         content
                         async for content in chat_log.async_add_delta_content_stream(
-                            user_input.agent_id,
+                            self.entity_id,
                             _transform_stream(chat_log, stream, messages),
                         )
                         if not isinstance(content, conversation.AssistantContent)
@@ -434,17 +454,6 @@ class AnthropicConversationEntity(
 
             if not chat_log.unresponded_tool_results:
                 break
-
-        response_content = chat_log.content[-1]
-        if not isinstance(response_content, conversation.AssistantContent):
-            raise TypeError("Last message must be an assistant message")
-        intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response_content.content or "")
-        return conversation.ConversationResult(
-            response=intent_response,
-            conversation_id=chat_log.conversation_id,
-            continue_conversation=chat_log.continue_conversation,
-        )
 
     async def _async_entry_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry
