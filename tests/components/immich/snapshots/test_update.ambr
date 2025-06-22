@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_update[update.someone_immich_server-entry]
+# name: test_update[update.someone_version-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,8 +11,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'update',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.someone_immich_server',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'update.someone_version',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Immich server',
+    'original_name': 'Version',
     'platform': 'immich',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -34,13 +34,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update[update.someone_immich_server-state]
+# name: test_update[update.someone_version-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/immich/icon.png',
-      'friendly_name': 'Someone Immich server',
+      'friendly_name': 'Someone Version',
       'in_progress': False,
       'installed_version': 'v1.134.0',
       'latest_version': 'v1.135.3',
@@ -52,7 +52,7 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.someone_immich_server',
+    'entity_id': 'update.someone_version',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
