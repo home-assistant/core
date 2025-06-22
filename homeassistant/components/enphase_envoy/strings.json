@@ -409,7 +409,7 @@
         "name": "Energy produced"
       },
       "max_reported": {
-        "name": "Max reported"
+        "name": "Lifetime maximum power"
       },
       "last_report_duration": {
         "name": "Last report duration"
