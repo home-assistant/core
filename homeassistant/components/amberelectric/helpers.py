@@ -2,7 +2,7 @@
 
 from amberelectric.models.price_descriptor import PriceDescriptor
 
-descriptor_map: dict[str, str] = {
+DESCRIPTOR_MAP: dict[str, str] = {
     PriceDescriptor.SPIKE: "spike",
     PriceDescriptor.HIGH: "high",
     PriceDescriptor.NEUTRAL: "neutral",
@@ -15,8 +15,8 @@ descriptor_map: dict[str, str] = {
 
 def normalize_descriptor(descriptor: PriceDescriptor | None) -> str | None:
     """Return the snake case versions of descriptor names. Returns None if the name is not recognized."""
-    if descriptor in descriptor_map:
-        return descriptor_map[descriptor]
+    if descriptor in DESCRIPTOR_MAP:
+        return DESCRIPTOR_MAP[descriptor]
     return None
 
 
