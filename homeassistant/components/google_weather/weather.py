@@ -52,8 +52,8 @@ from .coordinator import (
     GoogleWeatherCurrentConditionsCoordinator,
     GoogleWeatherDailyForecastCoordinator,
     GoogleWeatherHourlyForecastCoordinator,
-    GoogleWeatherRuntimeData,
 )
+from .entity import GoogleWeatherBaseEntity
 
 PARALLEL_UPDATES = 0
 
@@ -109,7 +109,10 @@ def _get_condition(data: dict[str, Any], is_daytime: bool | None = None) -> str 
     api_cond = data["weatherCondition"]["type"]
     cond = _CONDITION_MAP.get(api_cond)
     if cond is None:
-        _LOGGER.warning("Unknown condition from Google Weather API: %s", api_cond)
+        _LOGGER.warning(
+            "Please report an issue. Unknown condition from Google Weather API: %s",
+            api_cond,
+        )
     if cond == ATTR_CONDITION_SUNNY:
         if is_daytime is None:
             is_daytime = bool(data["isDaytime"])
@@ -124,7 +127,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    async_add_entities([GoogleWeatherEntity(entry.runtime_data)])
+    async_add_entities([GoogleWeatherEntity(entry)])
 
 
 class GoogleWeatherEntity(
@@ -133,7 +136,8 @@ class GoogleWeatherEntity(
         GoogleWeatherDailyForecastCoordinator,
         GoogleWeatherHourlyForecastCoordinator,
         GoogleWeatherDailyForecastCoordinator,
-    ]
+    ],
+    GoogleWeatherBaseEntity,
 ):
     """Representation of a Google Weather entity."""
 
@@ -145,7 +149,6 @@ class GoogleWeatherEntity(
     _attr_native_visibility_unit = UnitOfLength.KILOMETERS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
 
-    _attr_has_entity_name = True
     _attr_name = None
 
     _attr_supported_features = (
@@ -156,19 +159,16 @@ class GoogleWeatherEntity(
 
     def __init__(
         self,
-        runtime_data: GoogleWeatherRuntimeData,
+        entry: GoogleWeatherConfigEntry,
     ) -> None:
         """Initialize the weather entity."""
         super().__init__(
-            observation_coordinator=runtime_data.coordinator_observation,
-            daily_coordinator=runtime_data.coordinator_daily_forecast,
-            hourly_coordinator=runtime_data.coordinator_hourly_forecast,
-            twice_daily_coordinator=runtime_data.coordinator_daily_forecast,
+            observation_coordinator=entry.runtime_data.coordinator_observation,
+            daily_coordinator=entry.runtime_data.coordinator_daily_forecast,
+            hourly_coordinator=entry.runtime_data.coordinator_hourly_forecast,
+            twice_daily_coordinator=entry.runtime_data.coordinator_daily_forecast,
         )
-        self._attr_unique_id = (
-            runtime_data.coordinator_observation.config_entry.unique_id
-        )
-        self._attr_device_info = runtime_data.coordinator_observation.device_info
+        GoogleWeatherBaseEntity.__init__(self, entry)
 
     @property
     def condition(self) -> str | None:
