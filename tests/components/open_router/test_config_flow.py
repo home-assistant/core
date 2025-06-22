@@ -134,12 +134,13 @@ async def test_create_conversation_agent(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry_id = list(mock_config_entry.subentries)[0]
-    assert mock_config_entry.subentries == {
-        subentry_id: ConfigSubentry(
+    assert (
+        ConfigSubentry(
             data={CONF_MODEL: "gpt-3.5-turbo"},
             subentry_id=subentry_id,
             subentry_type="conversation",
             title="GPT-3.5 Turbo",
             unique_id=None,
         )
-    }
+        in mock_config_entry.subentries.values()
+    )

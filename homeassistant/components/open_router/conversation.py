@@ -8,12 +8,13 @@ from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_MODEL, MATCH_ALL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import intent, template
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import ulid as ulid_util
 
 from . import OpenRouterConfigEntry
-from .const import LOGGER
+from .const import CONF_PROMPT, DEFAULT_PROMPT, LOGGER
 
 
 async def async_setup_entry(
@@ -64,13 +65,26 @@ class OpenRouterConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
+        raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
 
         if user_input.conversation_id in self.history:
             conversation_id = user_input.conversation_id
             messages = self.history[conversation_id]
         else:
             conversation_id = ulid_util.ulid_now()
-            messages = [{"role": "system", "content": "prompt"}]
+            try:
+                prompt = self._async_generate_prompt(raw_prompt)
+            except TemplateError as err:
+                LOGGER.error("Error rendering prompt: %s", err)
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Sorry, I had a problem with my template: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
+            messages = [{"role": "system", "content": prompt}]
 
         messages.append({"role": "user", "content": user_input.text})
 
@@ -105,4 +119,13 @@ class OpenRouterConversationEntity(
         intent_response.async_set_speech(response["content"])
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
+        )
+
+    def _async_generate_prompt(self, raw_prompt: str) -> str:
+        """Generate a prompt for the user."""
+        return template.Template(raw_prompt, self.hass).async_render(  # type: ignore[no-any-return]
+            {
+                "ha_name": self.hass.config.location_name,
+            },
+            parse_result=False,
         )

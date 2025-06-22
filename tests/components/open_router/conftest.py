@@ -4,10 +4,14 @@ from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from openai.types import CompletionUsage
+from openai.types.chat import ChatCompletion, ChatCompletionMessage
+from openai.types.chat.chat_completion import Choice
 import pytest
 
 from homeassistant.components.open_router.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -33,6 +37,15 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={
             CONF_API_KEY: "bla",
         },
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_MODEL: "gpt-3.5-turbo"},
+                subentry_id="ABCDEF",
+                subentry_type="conversation",
+                title="GPT-3.5 Turbo",
+                unique_id=None,
+            )
+        ],
     )
 
 
@@ -48,9 +61,7 @@ class Model:
 async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
     """Initialize integration."""
     with (
-        patch(
-            "homeassistant.components.open_router.AsyncOpenAI", autospec=True
-        ) as mock_client,
+        patch("homeassistant.components.open_router.AsyncOpenAI") as mock_client,
         patch(
             "homeassistant.components.open_router.config_flow.AsyncOpenAI",
             new=mock_client,
@@ -65,6 +76,30 @@ async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
                     Model(id="gpt-4", name="GPT-4"),
                     Model(id="gpt-3.5-turbo", name="GPT-3.5 Turbo"),
                 ],
+            )
+        )
+        client.chat.completions.create = AsyncMock(
+            return_value=ChatCompletion(
+                id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                choices=[
+                    Choice(
+                        finish_reason="stop",
+                        index=0,
+                        message=ChatCompletionMessage(
+                            content="Hello, how can I help you?",
+                            role="assistant",
+                            function_call=None,
+                            tool_calls=None,
+                        ),
+                    )
+                ],
+                created=1700000000,
+                model="gpt-3.5-turbo-0613",
+                object="chat.completion",
+                system_fingerprint=None,
+                usage=CompletionUsage(
+                    completion_tokens=9, prompt_tokens=8, total_tokens=17
+                ),
             )
         )
         yield client
