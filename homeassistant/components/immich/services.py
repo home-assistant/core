@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 
 from .const import DOMAIN
-from .coordinator import ImmichDataUpdateCoordinator
+from .coordinator import ImmichConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
         service_call.data,
     )
     hass = service_call.hass
-    target_entry = hass.config_entries.async_get_entry(
+    target_entry: ImmichConfigEntry | None = hass.config_entries.async_get_entry(
         service_call.data[CONF_CONFIG_ENTRY_ID]
     )
     target_file = service_call.data[CONF_FILE]
@@ -66,7 +66,7 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
             },
         )
 
-    coordinator: ImmichDataUpdateCoordinator = target_entry.runtime_data
+    coordinator = target_entry.runtime_data
 
     if target_album := service_call.data.get(CONF_ALBUM_ID):
         try:
