@@ -11,7 +11,6 @@ from google_weather_api import GoogleWeatherApi, GoogleWeatherApiError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -54,13 +53,6 @@ class GoogleWeatherCurrentConditionsCoordinator(
             update_interval=timedelta(minutes=15),
         )
         self.api = api
-        assert config_entry.unique_id
-        self.device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(config_entry.domain, config_entry.unique_id)},
-            manufacturer="Google",
-            name=config_entry.title,
-        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch current weather conditions."""
@@ -68,7 +60,7 @@ class GoogleWeatherCurrentConditionsCoordinator(
             return await self.api.async_get_current_conditions()
         except GoogleWeatherApiError as err:
             _LOGGER.error("Error fetching current weather conditions: %s", err)
-            raise UpdateFailed from err
+            raise UpdateFailed("Error fetching current weather conditions") from err
 
 
 class GoogleWeatherDailyForecastCoordinator(
@@ -100,7 +92,7 @@ class GoogleWeatherDailyForecastCoordinator(
             return await self.api.async_get_daily_forecast()
         except GoogleWeatherApiError as err:
             _LOGGER.error("Error fetching daily weather forecast: %s", err)
-            raise UpdateFailed from err
+            raise UpdateFailed("Error fetching daily weather forecast") from err
 
 
 class GoogleWeatherHourlyForecastCoordinator(
@@ -132,4 +124,4 @@ class GoogleWeatherHourlyForecastCoordinator(
             return await self.api.async_get_hourly_forecast()
         except GoogleWeatherApiError as err:
             _LOGGER.error("Error fetching hourly weather forecast: %s", err)
-            raise UpdateFailed from err
+            raise UpdateFailed("Error fetching hourly weather forecast") from err
