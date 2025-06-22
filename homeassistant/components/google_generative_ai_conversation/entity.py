@@ -40,7 +40,6 @@ from .const import (
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
-    DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -306,7 +305,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         """Initialize the agent."""
         self.entry = entry
         self.subentry = subentry
-        self._attr_name = subentry.title or DEFAULT_CONVERSATION_NAME
+        self._attr_name = subentry.title
         self._genai_client = entry.runtime_data
         self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
