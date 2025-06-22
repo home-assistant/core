@@ -24,6 +24,7 @@ from homeassistant.components.openai_conversation.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
@@ -72,42 +73,85 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "api_key": "bla",
     }
-    assert result2["options"] == RECOMMENDED_OPTIONS
+    assert result2["options"] == {}
+    assert result2["subentries"] == [
+        {
+            "subentry_type": "conversation",
+            "data": RECOMMENDED_OPTIONS,
+            "title": DEFAULT_CONVERSATION_NAME,
+            "unique_id": None,
+        }
+    ]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options_recommended(
+async def test_creating_conversation_subentry(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a conversation subentry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert not result["errors"]
+
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"name": "My Custom Agent", **RECOMMENDED_OPTIONS},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "My Custom Agent"
+
+    processed_options = RECOMMENDED_OPTIONS.copy()
+    processed_options[CONF_PROMPT] = processed_options[CONF_PROMPT].strip()
+
+    assert result2["data"] == processed_options
+
+
+async def test_subentry_recommended(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
-    """Test the options flow with recommended settings."""
-    options_flow = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
+    """Test the subentry flow with recommended settings."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_type, subentry.subentry_id
     )
-    options = await hass.config_entries.options.async_configure(
-        options_flow["flow_id"],
+    options = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
         {
             "prompt": "Speak like a pirate",
             "recommended": True,
         },
     )
     await hass.async_block_till_done()
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"]["prompt"] == "Speak like a pirate"
+    assert options["type"] is FlowResultType.ABORT
+    assert options["reason"] == "reconfigure_successful"
+    assert subentry.data["prompt"] == "Speak like a pirate"
 
 
-async def test_options_unsupported_model(
+async def test_subentry_unsupported_model(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
-    """Test the options form giving error about models not supported."""
-    options_flow = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
+    """Test the subentry form giving error about models not supported."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_type, subentry.subentry_id
     )
-    assert options_flow["type"] == FlowResultType.FORM
-    assert options_flow["step_id"] == "init"
+    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
 
     # Configure initial step
-    options_flow = await hass.config_entries.options.async_configure(
-        options_flow["flow_id"],
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
@@ -115,19 +159,19 @@ async def test_options_unsupported_model(
         },
     )
     await hass.async_block_till_done()
-    assert options_flow["type"] == FlowResultType.FORM
-    assert options_flow["step_id"] == "advanced"
+    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["step_id"] == "advanced"
 
     # Configure advanced step
-    options_flow = await hass.config_entries.options.async_configure(
-        options_flow["flow_id"],
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
         {
             CONF_CHAT_MODEL: "o1-mini",
         },
     )
     await hass.async_block_till_done()
-    assert options_flow["type"] is FlowResultType.FORM
-    assert options_flow["errors"] == {"chat_model": "model_not_supported"}
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["errors"] == {"chat_model": "model_not_supported"}
 
 
 @pytest.mark.parametrize(
@@ -494,7 +538,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
         ),
     ],
 )
-async def test_options_switching(
+async def test_subentry_switching(
     hass: HomeAssistant,
     mock_config_entry,
     mock_init_component,
@@ -502,16 +546,21 @@ async def test_options_switching(
     new_options,
     expected_options,
 ) -> None:
-    """Test the options form."""
-    hass.config_entries.async_update_entry(mock_config_entry, options=current_options)
-    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert options["step_id"] == "init"
+    """Test the subentry form."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data=current_options
+    )
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_type, subentry.subentry_id
+    )
+    assert subentry_flow["step_id"] == "init"
 
     for step_options in new_options:
-        assert options["type"] == FlowResultType.FORM
+        assert subentry_flow["type"] == FlowResultType.FORM
 
         # Test that current options are showed as suggested values:
-        for key in options["data_schema"].schema:
+        for key in subentry_flow["data_schema"].schema:
             if (
                 isinstance(key.description, dict)
                 and "suggested_value" in key.description
@@ -523,38 +572,42 @@ async def test_options_switching(
                 assert key.description["suggested_value"] == current_option
 
         # Configure current step
-        options = await hass.config_entries.options.async_configure(
-            options["flow_id"],
+        subentry_flow = await hass.config_entries.subentries.async_configure(
+            subentry_flow["flow_id"],
             step_options,
         )
         await hass.async_block_till_done()
 
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == expected_options
+    assert subentry_flow["type"] is FlowResultType.ABORT
+    assert subentry_flow["reason"] == "reconfigure_successful"
+    assert subentry.data == expected_options
 
 
-async def test_options_web_search_user_location(
+async def test_subentry_web_search_user_location(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
     """Test fetching user location."""
-    options = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "init"
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_type, subentry.subentry_id
+    )
+    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
 
     # Configure initial step
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
         {
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
         },
     )
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "advanced"
+    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["step_id"] == "advanced"
 
     # Configure advanced step
-    options = await hass.config_entries.options.async_configure(
-        options["flow_id"],
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
         {
             CONF_TEMPERATURE: 1.0,
             CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
@@ -563,8 +616,8 @@ async def test_options_web_search_user_location(
         },
     )
     await hass.async_block_till_done()
-    assert options["type"] == FlowResultType.FORM
-    assert options["step_id"] == "model"
+    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
 
     hass.config.country = "US"
     hass.config.time_zone = "America/Los_Angeles"
@@ -601,8 +654,8 @@ async def test_options_web_search_user_location(
         )
 
         # Configure model step
-        options = await hass.config_entries.options.async_configure(
-            options["flow_id"],
+        subentry_flow = await hass.config_entries.subentries.async_configure(
+            subentry_flow["flow_id"],
             {
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
@@ -614,8 +667,9 @@ async def test_options_web_search_user_location(
         mock_create.call_args.kwargs["input"][0]["content"] == "Where are the following"
         " coordinates located: (37.7749, -122.4194)?"
     )
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == {
+    assert subentry_flow["type"] is FlowResultType.ABORT
+    assert subentry_flow["reason"] == "reconfigure_successful"
+    assert subentry.data == {
         CONF_RECOMMENDED: False,
         CONF_PROMPT: "Speak like a pirate",
         CONF_TEMPERATURE: 1.0,
