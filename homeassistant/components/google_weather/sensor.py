@@ -30,6 +30,7 @@ from .coordinator import (
     GoogleWeatherConfigEntry,
     GoogleWeatherCurrentConditionsCoordinator,
 )
+from .entity import GoogleWeatherBaseEntity
 
 PARALLEL_UPDATES = 0
 
@@ -215,11 +216,12 @@ async def async_setup_entry(
 
 
 class GoogleWeatherSensor(
-    CoordinatorEntity[GoogleWeatherCurrentConditionsCoordinator], SensorEntity
+    CoordinatorEntity[GoogleWeatherCurrentConditionsCoordinator],
+    GoogleWeatherBaseEntity,
+    SensorEntity,
 ):
     """Define a Google Weather entity."""
 
-    _attr_has_entity_name = True
     entity_description: GoogleWeatherSensorDescription
 
     def __init__(
@@ -229,12 +231,10 @@ class GoogleWeatherSensor(
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-
-        self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}-{description.key}".lower()
+        GoogleWeatherBaseEntity.__init__(
+            self, coordinator.config_entry, description.key
         )
-        self._attr_device_info = coordinator.device_info
+        self.entity_description = description
 
     @property
     def native_value(self) -> str | int | float | None:
