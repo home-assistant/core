@@ -11,6 +11,23 @@ send_message:
       selector:
         text:
     data:
-      example: "{'images': ['/tmp/test.jpg'], 'format': 'text'}"
+      example: "{'images': ['/tmp/test.jpg'], 'format': 'text', 'thread_id': '$-abcdeghij_klmnopqrstuvwxyz123'}"
       selector:
         object:
+react:
+  fields:
+    reaction:
+      required: true
+      example: "👍"
+      selector:
+        text:
+    room:
+      required: true
+      example: "#hasstest:matrix.org"
+      selector:
+        text:
+    message_id:
+      required: true
+      example: "$-abcdeghij_klmnopqrstuvwxyz123"
+      selector:
+        text:
