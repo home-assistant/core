@@ -1,7 +1,7 @@
 """Define fixtures for Volvo unit tests."""
 
 from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from _pytest.fixtures import SubRequest
 import pytest
@@ -83,9 +83,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         },
     )
 
-    config_entry.runtime_data = Mock()
     config_entry.add_to_hass(hass)
-
     return config_entry
 
 
