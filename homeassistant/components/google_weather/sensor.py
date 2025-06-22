@@ -45,7 +45,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
     GoogleWeatherSensorDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: cast(float, data["temperature"]["degrees"]),
@@ -54,7 +54,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
     GoogleWeatherSensorDescription(
         key="feelsLikeTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: cast(float, data["feelsLikeTemperature"]["degrees"]),
@@ -90,7 +90,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
     GoogleWeatherSensorDescription(
         key="relativeHumidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: cast(int, data["relativeHumidity"]),
@@ -117,7 +117,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
     GoogleWeatherSensorDescription(
         key="precipitation_qpf",
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data["precipitation"]["qpf"]["quantity"]),
@@ -178,7 +178,7 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
     ),
     GoogleWeatherSensorDescription(
         key="cloudCover",
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: cast(int, data["cloudCover"]),
