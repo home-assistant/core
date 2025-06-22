@@ -1113,8 +1113,8 @@ async def test_precision(hass: HomeAssistant) -> None:
     await common.async_set_temperature(hass, 55.27)
     state = hass.states.get(ENTITY)
     assert state.attributes.get("temperature") == 55.3
-    # check that target_temp_step defaults to precision
-    assert state.attributes.get("target_temp_step") == 0.1
+    # check that target_temp_step defaults to precision (0.1 °C -> 0.2 °F)
+    assert state.attributes.get("target_temp_step") == 0.2
 
 
 @pytest.fixture(
