@@ -7,9 +7,6 @@ import pytest
 from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.google_generative_ai_conversation import (
-    async_migrate_entry,
-)
 from homeassistant.components.google_generative_ai_conversation.const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
@@ -18,6 +15,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 
@@ -437,9 +435,12 @@ async def test_migration_from_v1_to_v2(
     )
 
     # Run migration
-    result = await async_migrate_entry(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.openai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
 
-    assert result is True
     assert mock_config_entry.version == 2
     assert mock_config_entry.data == {"api_key": "1234"}
     assert mock_config_entry.options == {}
