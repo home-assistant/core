@@ -100,7 +100,7 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             http_client=get_async_client(self.hass),
         )
         options = []
-        async for model in await client.with_options(timeout=10.0).models.list():
+        async for model in client.with_options(timeout=10.0).models.list():
             options.append(SelectOptionDict(value=model.id, label=model.name))  # type: ignore[attr-defined]
             self.options[model.id] = model.name  # type: ignore[attr-defined]
 

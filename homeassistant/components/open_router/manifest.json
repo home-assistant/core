@@ -8,5 +8,6 @@
   "documentation": "https://www.home-assistant.io/integrations/open_router",
   "integration_type": "service",
   "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
   "requirements": ["openai==1.76.2", "python-open-router==0.2.0"]
 }

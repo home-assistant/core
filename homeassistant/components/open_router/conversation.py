@@ -74,8 +74,6 @@ class OpenRouterConversationEntity(
 
         messages.append({"role": "user", "content": user_input.text})
 
-        # LOGGER.debug("Prompt for %s: %s", model, messages)
-
         client = self.entry.runtime_data
 
         try:
@@ -92,7 +90,7 @@ class OpenRouterConversationEntity(
             intent_response = intent.IntentResponse(language=user_input.language)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem talking to OpenAI: {err}",
+                f"Sorry, I had a problem talking to OpenRouter: {err}",
             )
             return conversation.ConversationResult(
                 response=intent_response, conversation_id=conversation_id

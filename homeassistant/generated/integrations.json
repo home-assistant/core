@@ -4629,7 +4629,7 @@
       "iot_class": "cloud_polling"
     },
     "open_router": {
-      "name": "OpenAI Conversation",
+      "name": "OpenRouter",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"

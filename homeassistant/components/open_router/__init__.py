@@ -29,7 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -
     _ = await hass.async_add_executor_job(client.platform_headers)
 
     try:
-        await client.with_options(timeout=10.0).models.list()
+        async for _ in client.with_options(timeout=10.0).models.list():
+            break
     except AuthenticationError as err:
         LOGGER.error("Invalid API key: %s", err)
         raise ConfigEntryError("Invalid API key") from err
