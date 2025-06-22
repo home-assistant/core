@@ -1,21 +1,20 @@
 """Provides helper methods for instantiating required entities."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import SongpalCoordinator
+from .coordinator import SongpalConfigEntry, SongpalCoordinator
 from .entity import SongpalBaseEntity, SongpalSettingEntity
 
 
 def create_settings_entities_for_type(
-    entry: ConfigEntry,
+    entry: SongpalConfigEntry,
     instantiator: type[SongpalSettingEntity],
     setting_type: str,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create all required entities for the specified platform."""
 
-    coordinator: SongpalCoordinator = entry.runtime_data.coordinator
+    coordinator: SongpalCoordinator = entry.runtime_data
     all_settings = coordinator.get_available_settings()
 
     new_entities: list[SongpalBaseEntity] = []
