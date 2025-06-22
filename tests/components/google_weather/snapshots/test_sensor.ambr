@@ -163,7 +163,7 @@
     'state': '1.1',
   })
 # ---
-# name: test_sensor[sensor.home_heat_index-entry]
+# name: test_sensor[sensor.home_heat_index_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -178,7 +178,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_heat_index',
+    'entity_id': 'sensor.home_heat_index_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -193,7 +193,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Heat index',
+    'original_name': 'Heat index temperature',
     'platform': 'google_weather',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -203,16 +203,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[sensor.home_heat_index-state]
+# name: test_sensor[sensor.home_heat_index_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Home Heat index',
+      'friendly_name': 'Home Heat index temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_heat_index',
+    'entity_id': 'sensor.home_heat_index_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -700,7 +700,7 @@
     'state': 'Sunny',
   })
 # ---
-# name: test_sensor[sensor.home_wind_chill-entry]
+# name: test_sensor[sensor.home_wind_chill_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -715,7 +715,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_wind_chill',
+    'entity_id': 'sensor.home_wind_chill_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -730,7 +730,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Wind chill',
+    'original_name': 'Wind chill temperature',
     'platform': 'google_weather',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -740,16 +740,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[sensor.home_wind_chill-state]
+# name: test_sensor[sensor.home_wind_chill_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Home Wind chill',
+      'friendly_name': 'Home Wind chill temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_wind_chill',
+    'entity_id': 'sensor.home_wind_chill_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
