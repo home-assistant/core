@@ -443,6 +443,8 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             port_status = response.get("port1", {})
             self._power_state = port_status.get("power")
             mode_value = port_status.get("mode")
+            # Fix: auto mode fix for HVAC state sync. Date: 22-Jun-2025
+            mode_value = 1 if mode_value == 0 else mode_value
             self._hvac_mode = (
                 map_hvac_mode(mode_value) if self._power_state else HVACMode.OFF
             )
@@ -495,6 +497,8 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             self._hvac_mode = HVACMode.OFF
         else:
             mode_value = port_status.get("mode", 0)  # Default to 0 if not present
+            # Fix: auto mode fix for HVAC state sync. Date: 22-Jun-2025
+            mode_value = 1 if mode_value == 0 else mode_value
             self._hvac_mode = map_hvac_mode(mode_value)
 
         # Update fan mode
