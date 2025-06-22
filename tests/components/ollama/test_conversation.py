@@ -35,7 +35,7 @@ async def stream_generator(response: dict | list[dict]) -> AsyncGenerator[dict]:
         yield msg
 
 
-@pytest.mark.parametrize("agent_id", [None, "conversation.mock_title"])
+@pytest.mark.parametrize("agent_id", [None, "conversation.ollama_conversation"])
 async def test_chat(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -149,9 +149,11 @@ async def test_template_variables(
     mock_user.id = "12345"
     mock_user.name = "Test User"
 
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
+        subentry,
+        data={
             "prompt": (
                 "The user name is {{ user_name }}. "
                 "The user id is {{ llm_context.context.user_id }}."
@@ -382,10 +384,12 @@ async def test_unknown_hass_api(
     mock_init_component,
 ) -> None:
     """Test when we reference an API that no longer exists."""
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
-            **mock_config_entry.options,
+        subentry,
+        data={
+            **subentry.data,
             CONF_LLM_HASS_API: "non-existing",
         },
     )
@@ -518,8 +522,9 @@ async def test_message_history_unlimited(
     with (
         patch("ollama.AsyncClient.chat", side_effect=stream) as mock_chat,
     ):
-        hass.config_entries.async_update_entry(
-            mock_config_entry, options={ollama.CONF_MAX_HISTORY: 0}
+        subentry = next(iter(mock_config_entry.subentries.values()))
+        hass.config_entries.async_update_subentry(
+            mock_config_entry, subentry, data={ollama.CONF_MAX_HISTORY: 0}
         )
         for i in range(100):
             result = await conversation.async_converse(
@@ -563,9 +568,11 @@ async def test_template_error(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that template error handling works."""
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
+        subentry,
+        data={
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
@@ -593,7 +600,7 @@ async def test_conversation_agent(
     )
     assert agent.supported_languages == MATCH_ALL
 
-    state = hass.states.get("conversation.mock_title")
+    state = hass.states.get("conversation.ollama_conversation")
     assert state
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
@@ -609,7 +616,7 @@ async def test_conversation_agent_with_assist(
     )
     assert agent.supported_languages == MATCH_ALL
 
-    state = hass.states.get("conversation.mock_title")
+    state = hass.states.get("conversation.ollama_conversation")
     assert state
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -642,7 +649,7 @@ async def test_options(
             "test message",
             None,
             Context(),
-            agent_id="conversation.mock_title",
+            agent_id="conversation.ollama_conversation",
         )
 
         assert mock_chat.call_count == 1
@@ -667,9 +674,11 @@ async def test_reasoning_filter(
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
 
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
+        subentry,
+        data={
             ollama.CONF_THINK: think,
         },
     )

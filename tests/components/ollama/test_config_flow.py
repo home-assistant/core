@@ -155,14 +155,21 @@ async def test_form_need_download(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options(
+async def test_subentry_options(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
-    """Test the options form."""
-    options_flow = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
+    """Test the subentry options form."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+
+    # Test reconfiguration
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_type, subentry.subentry_id
     )
-    options = await hass.config_entries.options.async_configure(
+
+    assert options_flow["type"] is FlowResultType.FORM
+    assert options_flow["step_id"] == "set_options"
+
+    options = await hass.config_entries.subentries.async_configure(
         options_flow["flow_id"],
         {
             ollama.CONF_PROMPT: "test prompt",
@@ -172,8 +179,10 @@ async def test_options(
         },
     )
     await hass.async_block_till_done()
-    assert options["type"] is FlowResultType.CREATE_ENTRY
-    assert options["data"] == {
+
+    assert options["type"] is FlowResultType.ABORT
+    assert options["reason"] == "reconfigure_successful"
+    assert subentry.data == {
         ollama.CONF_PROMPT: "test prompt",
         ollama.CONF_MAX_HISTORY: 100,
         ollama.CONF_NUM_CTX: 32768,

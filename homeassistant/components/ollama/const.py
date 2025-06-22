@@ -157,3 +157,5 @@ MODEL_NAMES = [  # https://ollama.com/library
     "zephyr",
 ]
 DEFAULT_MODEL = "llama3.2:latest"
+
+DEFAULT_CONVERSATION_NAME = "Ollama Conversation"
