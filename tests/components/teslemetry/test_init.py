@@ -240,8 +240,7 @@ async def test_stale_device_removal(
         updated_device = device_registry.async_get_device(
             identifiers={(DOMAIN, "stale-vin")}
         )
-        if updated_device:
-            assert entry.entry_id not in updated_device.config_entries
+        assert entry.entry_id not in updated_device.config_entries
 
 
 async def test_device_retention_during_reload(
