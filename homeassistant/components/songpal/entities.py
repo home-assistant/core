@@ -1,7 +1,6 @@
 """Provides helper methods for instantiating required entities."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import SongpalCoordinator
@@ -9,7 +8,6 @@ from .entity import SongpalBaseEntity, SongpalSettingEntity
 
 
 def create_settings_entities_for_type(
-    hass: HomeAssistant,
     entry: ConfigEntry,
     instantiator: type[SongpalSettingEntity],
     setting_type: str,
@@ -24,7 +22,7 @@ def create_settings_entities_for_type(
     for setting_bank, settings in all_settings.items():
         new_entities.extend(
             [
-                instantiator(hass, coordinator, setting_bank, setting)
+                instantiator(coordinator, setting_bank, setting)
                 for setting in settings
                 if setting.type == setting_type
             ]

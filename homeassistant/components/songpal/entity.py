@@ -1,31 +1,28 @@
 """Base class for all Songpal entities."""
 
 import logging
+import re
 
-from homeassistant.core import HomeAssistant, callback
+from songpal.containers import Setting
+
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import SongpalCoordinator
-from .device import device_info
+from .device import device_info, device_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class SongpalBaseEntity(CoordinatorEntity):
+class SongpalBaseEntity(CoordinatorEntity[SongpalCoordinator]):
     """Songpal Base Entity Class.
 
     This provides shared functionality between all Songpal entities.
     """
 
-    coordinator: SongpalCoordinator
-
     _attr_has_entity_name = True
-
-    def __init__(self, hass: HomeAssistant, coordinator: SongpalCoordinator) -> None:
-        """Initialise entity."""
-        super().__init__(coordinator)
-        self.hass = hass
 
     @callback
     def update_state(self, data) -> None:
@@ -58,7 +55,6 @@ class SongpalSettingEntity(SongpalBaseEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         coordinator: SongpalCoordinator,
         setting_bank: str,
         setting: Setting,
@@ -74,7 +70,7 @@ class SongpalSettingEntity(SongpalBaseEntity):
 
         self.setting = setting
 
-        super().__init__(hass, coordinator)
+        super().__init__(coordinator)
 
     def update_state(self, data) -> None:
         """Process data from coordinator."""

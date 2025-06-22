@@ -38,7 +38,7 @@ async def async_setup_entry(
 
     coordinator: SongpalCoordinator = entry.runtime_data
 
-    new_entities = [SongpalMediaPlayerEntity(hass, coordinator)]
+    new_entities = [SongpalMediaPlayerEntity(coordinator)]
 
     async_add_entities(new_entities)
 
@@ -72,7 +72,7 @@ class SongpalMediaPlayerEntity(MediaPlayerEntity, SongpalBaseEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, hass: HomeAssistant, coordinator: SongpalCoordinator) -> None:
+    def __init__(self, coordinator: SongpalCoordinator) -> None:
         """Init."""
 
         self._sysinfo = None
@@ -93,7 +93,7 @@ class SongpalMediaPlayerEntity(MediaPlayerEntity, SongpalBaseEntity):
         self._active_sound_mode: Input = None
         self._sound_modes: dict[str, Setting] = {}
 
-        super().__init__(hass, coordinator)
+        super().__init__(coordinator)
 
     @property
     def name(self) -> str:
