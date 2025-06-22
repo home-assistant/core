@@ -62,6 +62,11 @@
       "scan_clients": {
         "name": "Scan clients"
       }
+    },
+    "update": {
+      "server_update": {
+        "name": "[%key:component::update::title%]"
+      }
     }
   },
   "services": {
@@ -78,10 +83,6 @@
           "description": "Name of the Plex library to refresh."
         }
       }
-    },
-    "scan_for_clients": {
-      "name": "Scan for clients",
-      "description": "Scans for available clients from the Plex server(s), local network, and plex.tv."
     }
   }
 }

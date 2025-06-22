@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from typing import Any
+
+from homeassistant.const import CONF_STATE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.template import TemplateStateFromEntityId
+from homeassistant.helpers.template import _SENTINEL
 from homeassistant.helpers.trigger_template_entity import TriggerBaseEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -29,6 +32,8 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         TriggerBaseEntity.__init__(self, hass, config)
         AbstractTemplateEntity.__init__(self, hass)
 
+        self._state_render_error = False
+
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
@@ -47,22 +52,49 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Return referenced blueprint or None."""
         return self.coordinator.referenced_blueprint
 
+    @property
+    def available(self) -> bool:
+        """Return availability of the entity."""
+        if self._state_render_error:
+            return False
+
+        return super().available
+
     @callback
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
-        return self.coordinator.data["run_variables"]
+        if self.coordinator.data is None:
+            return {}
+        return self.coordinator.data["run_variables"] or {}
+
+    def _render_templates(self, variables: dict[str, Any]) -> None:
+        """Render templates."""
+        self._state_render_error = False
+        rendered = dict(self._static_rendered)
+
+        # If state fails to render, the entity should go unavailable. Render the
+        # state as a simple template because the result should always be a string or None.
+        if CONF_STATE in self._to_render_simple:
+            if (
+                result := self._render_single_template(CONF_STATE, variables)
+            ) is _SENTINEL:
+                self._rendered = self._static_rendered
+                self._state_render_error = True
+                return
+
+            rendered[CONF_STATE] = result
+
+        self._render_single_templates(rendered, variables, [CONF_STATE])
+        self._render_attributes(rendered, variables)
+        self._rendered = rendered
 
     @callback
     def _process_data(self) -> None:
         """Process new data."""
 
-        run_variables = self.coordinator.data["run_variables"]
-        variables = {
-            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            **(run_variables or {}),
-        }
-
-        self._render_templates(variables)
+        variables = self._template_variables(self.coordinator.data["run_variables"])
+        if self._render_availability_template(variables):
+            self._render_templates(variables)
 
         self.async_set_context(self.coordinator.data["context"])
 

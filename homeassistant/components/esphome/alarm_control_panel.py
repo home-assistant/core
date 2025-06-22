@@ -50,7 +50,7 @@ _ESPHOME_ACP_STATE_TO_HASS_STATE: EsphomeEnumMapper[
 
 
 class EspHomeACPFeatures(APIIntEnum):
-    """ESPHome AlarmCintolPanel feature numbers."""
+    """ESPHome AlarmControlPanel feature numbers."""
 
     ARM_HOME = 1
     ARM_AWAY = 2

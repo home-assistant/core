@@ -1,7 +1,7 @@
 """Config flow for Samsung SyncThru."""
 
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
@@ -44,12 +44,14 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.upnp[ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
 
-        self.url = url_normalize(
-            discovery_info.upnp.get(
-                ATTR_UPNP_PRESENTATION_URL,
-                f"http://{urlparse(discovery_info.ssdp_location or '').hostname}/",
-            )
+        norm_url = url_normalize(
+            discovery_info.upnp.get(ATTR_UPNP_PRESENTATION_URL)
+            or f"http://{urlparse(discovery_info.ssdp_location or '').hostname}/"
         )
+        if TYPE_CHECKING:
+            # url_normalize only returns None if passed None, and we don't do that
+            assert norm_url is not None
+        self.url = norm_url
 
         for existing_entry in (
             x for x in self._async_current_entries() if x.data[CONF_URL] == self.url

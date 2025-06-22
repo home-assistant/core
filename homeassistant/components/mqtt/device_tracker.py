@@ -162,7 +162,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         ):
             latitude: float | None
             longitude: float | None
-            gps_accuracy: int
+            gps_accuracy: float
             # Reset manually set location to allow automatic zone detection
             self._attr_location_name = None
             if isinstance(

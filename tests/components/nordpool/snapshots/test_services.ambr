@@ -1,4 +1,10 @@
 # serializer version: 1
+# name: test_empty_response_returns_empty_list
+  dict({
+    'SE3': list([
+    ]),
+  })
+# ---
 # name: test_service_call
   dict({
     'SE3': list([

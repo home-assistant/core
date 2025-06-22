@@ -21,10 +21,10 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure:
+  test-before-configure: done
+  test-before-setup:
     status: exempt
-    comment: Device is set up from a Bluetooth discovery
-  test-before-setup: done
+    comment: Device is expected to be disconnected most of the time but will connect quickly when reachable
   unique-config-entry: done
 
   # Silver
@@ -47,8 +47,8 @@ rules:
   devices: done
   diagnostics: done
   discovery-update-info:
-    status: exempt
-    comment: Device is not connected to an ip network. Other information from discovery is immutable and does not require updating.
+    status: done
+    comment: Device is not connected to an ip network. FW version in device info is updated.
   discovery: done
   docs-data-update: done
   docs-examples: done
