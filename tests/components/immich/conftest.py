@@ -4,6 +4,8 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, patch
 
 from aioimmich import ImmichAlbums, ImmichAssests, ImmichServer, ImmichUsers
+from aioimmich.albums.models import ImmichAddAssetsToAlbumResponse
+from aioimmich.assets.models import ImmichAssetUploadResponse
 from aioimmich.server.models import (
     ImmichServerAbout,
     ImmichServerStatistics,
@@ -61,6 +63,12 @@ def mock_immich_albums() -> AsyncMock:
     mock = AsyncMock(spec=ImmichAlbums)
     mock.async_get_all_albums.return_value = [MOCK_ALBUM_WITHOUT_ASSETS]
     mock.async_get_album_info.return_value = MOCK_ALBUM_WITH_ASSETS
+    mock.async_add_assets_to_album.return_value = [
+        ImmichAddAssetsToAlbumResponse.from_dict(
+            {"id": "abcdef-0123456789", "success": True}
+        )
+    ]
+
     return mock
 
 
@@ -70,6 +78,9 @@ def mock_immich_assets() -> AsyncMock:
     mock = AsyncMock(spec=ImmichAssests)
     mock.async_view_asset.return_value = b"xxxx"
     mock.async_play_video_stream.return_value = MockStreamReaderChunked(b"xxxx")
+    mock.async_upload_asset.return_value = ImmichAssetUploadResponse.from_dict(
+        {"id": "abcdef-0123456789", "status": "created"}
+    )
     return mock
 
 
