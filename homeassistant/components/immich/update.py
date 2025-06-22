@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from awesomeversion import AwesomeVersion
-
 from homeassistant.components.update import UpdateEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,8 +21,7 @@ async def async_setup_entry(
     """Add immich server update entity."""
     coordinator = entry.runtime_data
 
-    min_version = AwesomeVersion("v1.134.0")
-    if AwesomeVersion(coordinator.data.server_about.version) >= min_version:
+    if coordinator.data.server_version_check is not None:
         async_add_entities([ImmichUpdateEntity(coordinator)])
 
 
@@ -49,6 +46,7 @@ class ImmichUpdateEntity(ImmichEntity, UpdateEntity):
     @property
     def latest_version(self) -> str:
         """Available new immich server version."""
+        assert self.coordinator.data.server_version_check
         return self.coordinator.data.server_version_check.release_version
 
     @property
