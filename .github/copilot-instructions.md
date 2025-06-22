@@ -94,6 +94,7 @@ automation application.
   - Provide descriptive state attributes
 - Testing:
   - Test location: `tests/components/{domain}/`
+  - Run tests with `pytest --no-header --no-summary -x <location>`
   - Use pytest fixtures from `tests.common`
   - Mock external dependencies
   - Use snapshots for complex data
