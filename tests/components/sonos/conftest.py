@@ -85,6 +85,15 @@ class SonosMockService:
         self.subscribe = AsyncMock(return_value=SonosMockSubscribe(ip_address))
 
 
+class SonosMockRenderingService(SonosMockService):
+    """Mock rendering service."""
+
+    def __init__(self, return_value: dict[str, str], ip_address="192.168.42.2") -> None:
+        """Initialize the instance."""
+        super().__init__("RenderingControl", ip_address)
+        self.GetVolume = Mock(return_value=30)
+
+
 class SonosMockAlarmClock(SonosMockService):
     """Mock a Sonos AlarmClock Service used in callbacks."""
 
@@ -239,7 +248,7 @@ class SoCoMockFactory:
         mock_soco.avTransport.GetPositionInfo = Mock(
             return_value=self.current_track_info
         )
-        mock_soco.renderingControl = SonosMockService("RenderingControl", ip_address)
+        mock_soco.renderingControl = SonosMockRenderingService(ip_address)
         mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology", ip_address)
         mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
         mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)

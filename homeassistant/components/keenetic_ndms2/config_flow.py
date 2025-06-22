@@ -8,12 +8,7 @@ from urllib.parse import urlparse
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -41,9 +36,8 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TELNET_PORT,
     DOMAIN,
-    ROUTER,
 )
-from .router import KeeneticRouter
+from .router import KeeneticConfigEntry
 
 
 class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -56,7 +50,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: KeeneticConfigEntry,
     ) -> KeeneticOptionsFlowHandler:
         """Get the options flow for this handler."""
         return KeeneticOptionsFlowHandler()
@@ -142,6 +136,8 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 class KeeneticOptionsFlowHandler(OptionsFlow):
     """Handle options."""
 
+    config_entry: KeeneticConfigEntry
+
     def __init__(self) -> None:
         """Initialize options flow."""
         self._interface_options: dict[str, str] = {}
@@ -150,9 +146,7 @@ class KeeneticOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-        router: KeeneticRouter = self.hass.data[DOMAIN][self.config_entry.entry_id][
-            ROUTER
-        ]
+        router = self.config_entry.runtime_data
 
         interfaces: list[InterfaceInfo] = await self.hass.async_add_executor_job(
             router.client.get_interfaces

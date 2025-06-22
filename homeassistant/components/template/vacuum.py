@@ -38,16 +38,14 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from .const import CONF_OBJECT_ID, DOMAIN
 from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA,
     TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
+    make_template_entity_common_modern_attributes_schema,
     rewrite_common_legacy_to_modern_conf,
 )
 
@@ -59,6 +57,8 @@ CONF_BATTERY_LEVEL_TEMPLATE = "battery_level_template"
 CONF_FAN_SPEED_LIST = "fan_speeds"
 CONF_FAN_SPEED = "fan_speed"
 CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
+
+DEFAULT_NAME = "Template Vacuum"
 
 ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
 _VALID_STATES = [
@@ -80,13 +80,9 @@ VACUUM_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_BATTERY_LEVEL): cv.template,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
             vol.Optional(CONF_FAN_SPEED): cv.template,
-            vol.Optional(CONF_NAME): cv.template,
-            vol.Optional(CONF_PICTURE): cv.template,
             vol.Optional(CONF_STATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
             vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
             vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
@@ -95,10 +91,7 @@ VACUUM_SCHEMA = vol.All(
             vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
             vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
         }
-    )
-    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
+    ).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
 )
 
 LEGACY_VACUUM_SCHEMA = vol.All(
@@ -353,9 +346,7 @@ class TemplateVacuum(TemplateEntity, AbstractTemplateVacuum):
         unique_id,
     ) -> None:
         """Initialize the vacuum."""
-        TemplateEntity.__init__(
-            self, hass, config=config, fallback_name=None, unique_id=unique_id
-        )
+        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
         AbstractTemplateVacuum.__init__(self, config)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
