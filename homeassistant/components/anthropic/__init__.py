@@ -6,13 +6,19 @@ from functools import partial
 
 import anthropic
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 
-from .const import CONF_CHAT_MODEL, DOMAIN, LOGGER, RECOMMENDED_CHAT_MODEL
+from .const import (
+    CONF_CHAT_MODEL,
+    DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
+    LOGGER,
+    RECOMMENDED_CHAT_MODEL,
+)
 
 PLATFORMS = (Platform.CONVERSATION,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -26,7 +32,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
         partial(anthropic.AsyncAnthropic, api_key=entry.data[CONF_API_KEY])
     )
     try:
-        model_id = entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        # Use model from first conversation subentry for validation
+        subentries = list(entry.subentries.values())
+        if subentries:
+            model_id = subentries[0].data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        else:
+            model_id = RECOMMENDED_CHAT_MODEL
         model = await client.models.retrieve(model_id=model_id, timeout=10.0)
         LOGGER.debug("Anthropic model: %s", model.display_name)
     except anthropic.AuthenticationError as err:
@@ -45,3 +56,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Anthropic."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1:
+        # Migrate from version 1 to version 2
+        # Move conversation-specific options to a subentry
+        subentry = ConfigSubentry(
+            data=entry.options,
+            subentry_type="conversation",
+            title=DEFAULT_CONVERSATION_NAME,
+            unique_id=None,
+        )
+        hass.config_entries.async_add_subentry(
+            entry,
+            subentry,
+        )
+
+        # Migrate conversation entity to be linked to subentry
+        ent_reg = er.async_get(hass)
+        conversation_entity = ent_reg.async_get_entity_id(
+            "conversation",
+            DOMAIN,
+            entry.entry_id,
+        )
+        if conversation_entity is not None:
+            ent_reg.async_update_entity(
+                conversation_entity,
+                config_subentry_id=subentry.subentry_id,
+                new_unique_id=subentry.subentry_id,
+            )
+
+        # Remove options from the main entry
+        hass.config_entries.async_update_entry(
+            entry,
+            options={},
+            version=2,
+        )
+
+    return True
