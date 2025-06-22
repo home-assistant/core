@@ -5,6 +5,8 @@ import logging
 DOMAIN = "openai_conversation"
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
+DEFAULT_CONVERSATION_NAME = "OpenAI Conversation"
+
 CONF_CHAT_MODEL = "chat_model"
 CONF_FILENAMES = "filenames"
 CONF_MAX_TOKENS = "max_tokens"

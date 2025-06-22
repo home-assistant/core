@@ -34,7 +34,7 @@ from openai.types.responses.web_search_tool_param import UserLocation
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -56,6 +56,7 @@ from .const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -76,8 +77,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
-    agent = OpenAIConversationEntity(config_entry)
-    async_add_entities([agent])
+    for subentry in config_entry.subentries.values():
+        if subentry.subentry_type != "conversation":
+            continue
+
+        async_add_entities(
+            [OpenAIConversationEntity(config_entry, subentry)],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 def _format_tool(
@@ -229,14 +236,14 @@ class OpenAIConversationEntity(
 ):
     """OpenAI conversation agent."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
     _attr_supports_streaming = True
 
-    def __init__(self, entry: OpenAIConfigEntry) -> None:
+    def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""
         self.entry = entry
-        self._attr_unique_id = entry.entry_id
+        self.subentry = subentry
+        self._attr_name = subentry.title or DEFAULT_CONVERSATION_NAME
+        self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
@@ -244,7 +251,7 @@ class OpenAIConversationEntity(
             model="ChatGPT",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
-        if self.entry.options.get(CONF_LLM_HASS_API):
+        if self.subentry.data.get(CONF_LLM_HASS_API):
             self._attr_supported_features = (
                 conversation.ConversationEntityFeature.CONTROL
             )
@@ -276,7 +283,7 @@ class OpenAIConversationEntity(
         chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
         """Process the user input and call the API."""
-        options = self.entry.options
+        options = self.subentry.data
 
         try:
             await chat_log.async_provide_llm_data(
@@ -304,7 +311,7 @@ class OpenAIConversationEntity(
         chat_log: conversation.ChatLog,
     ) -> None:
         """Generate an answer for the chat log."""
-        options = self.entry.options
+        options = self.subentry.data
 
         tools: list[ToolParam] | None = None
         if chat_log.llm_api:
