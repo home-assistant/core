@@ -234,11 +234,12 @@ async def test_stale_device_removal(
         # Verify the stale device has been removed
         assert (DOMAIN, "stale-vin") not in post_identifiers
 
-        # Verify the device itself is no longer associated with this config entry
+        # Verify the device itself has been completely removed from the registry
+        # since it had no other config entries
         updated_device = device_registry.async_get_device(
             identifiers={(DOMAIN, "stale-vin")}
         )
-        assert entry.entry_id not in updated_device.config_entries
+        assert updated_device is None
 
 
 async def test_device_retention_during_reload(
