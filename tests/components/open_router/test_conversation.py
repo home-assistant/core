@@ -1,4 +1,4 @@
-"""Tests for the OpenAI integration."""
+"""Tests for the OpenRouter integration."""
 
 from unittest.mock import AsyncMock
 
