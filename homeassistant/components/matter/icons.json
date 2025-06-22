@@ -57,6 +57,9 @@
       "bat_replacement_description": {
         "default": "mdi:battery-sync"
       },
+      "battery_voltage": {
+        "default": "mdi:current-dc"
+      },
       "flow": {
         "default": "mdi:pipe"
       },
