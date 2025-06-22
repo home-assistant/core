@@ -15,12 +15,16 @@ from .coordinator import ImmichDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ALBUM_ID = "album_id"
+CONF_CONFIG_ENTRY_ID = "config_entry_id"
+CONF_FILE = "file"
+
 SERVICE_UPLOAD_FILE = "upload_file"
 SERVICE_SCHEMA_UPLOAD_FILE = vol.Schema(
     {
-        vol.Required("config_entry_id"): str,
-        vol.Required("file"): str,
-        vol.Optional("album_id"): str,
+        vol.Required(CONF_CONFIG_ENTRY_ID): str,
+        vol.Required(CONF_FILE): str,
+        vol.Optional(CONF_ALBUM_ID): str,
     }
 )
 
@@ -34,9 +38,9 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
     )
     hass = service_call.hass
     target_entry = hass.config_entries.async_get_entry(
-        service_call.data["config_entry_id"]
+        service_call.data[CONF_CONFIG_ENTRY_ID]
     )
-    target_file = service_call.data["file"]
+    target_file = service_call.data[CONF_FILE]
 
     if not target_entry:
         raise ServiceValidationError(
@@ -64,7 +68,7 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
 
     coordinator: ImmichDataUpdateCoordinator = target_entry.runtime_data
 
-    if target_album := service_call.data.get("album_id"):
+    if target_album := service_call.data.get(CONF_ALBUM_ID):
         try:
             await coordinator.api.albums.async_get_album_info(target_album, True)
         except ImmichError as ex:
