@@ -374,7 +374,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'AC frequency',
+    'original_name': 'Frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -388,7 +388,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 AC frequency',
+      'friendly_name': 'Inverter 1 Frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -2533,7 +2533,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'AC frequency',
+    'original_name': 'Frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -2547,7 +2547,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 AC frequency',
+      'friendly_name': 'Inverter 1 Frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -8136,7 +8136,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'AC frequency',
+    'original_name': 'Frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -8150,7 +8150,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 AC frequency',
+      'friendly_name': 'Inverter 1 Frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -13365,7 +13365,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'AC frequency',
+    'original_name': 'Frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -13379,7 +13379,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 AC frequency',
+      'friendly_name': 'Inverter 1 Frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -22504,7 +22504,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'AC frequency',
+    'original_name': 'Frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -22518,7 +22518,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 AC frequency',
+      'friendly_name': 'Inverter 1 Frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -28968,7 +28968,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'AC frequency',
+    'original_name': 'Frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -28982,7 +28982,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 AC frequency',
+      'friendly_name': 'Inverter 1 Frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -30380,7 +30380,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'AC frequency',
+    'original_name': 'Frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -30394,7 +30394,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 AC frequency',
+      'friendly_name': 'Inverter 1 Frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),

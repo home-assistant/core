@@ -394,10 +394,10 @@
         "name": "AC current"
       },
       "ac_frequency": {
-        "name": "AC frequency"
+        "name": "[%key:component::sensor::entity_component::frequency::name%]"
       },
       "temperature": {
-        "name": "Temperature"
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "lifetime_energy": {
         "name": "Lifetime energy"
