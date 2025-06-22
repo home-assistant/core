@@ -114,13 +114,18 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
                 value = energy_data.values.get(equipment_id, 0.0)
                 current_hour_sum += value
                 current_hour_count += 1
-                if date.minute != 0:
-                    # API returns data every 15 minutes; aggregate to 1-hour statistics
+                if date.minute != 45:
                     continue
+                # API returns data every 15 minutes; aggregate to 1-hour statistics
+                # when we reach the energy_data for the last 15 minutes of the hour.
                 current_avg = current_hour_sum / current_hour_count
                 statistic_sum += current_avg
                 statistics.append(
-                    StatisticData(start=date, state=current_avg, sum=statistic_sum)
+                    StatisticData(
+                        start=date - timedelta(minutes=45),
+                        state=current_avg,
+                        sum=statistic_sum,
+                    )
                 )
                 current_hour_sum = 0.0
                 current_hour_count = 0
