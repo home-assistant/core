@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from pylutron import Button, Keypad, Lutron
-
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LutronData
-from .entity import LutronKeypad
+from . import DOMAIN, LutronController, LutronData
+from .entity import LutronKeypadComponent
+from .lutron_db import Button
 
 
 async def async_setup_entry(
@@ -28,12 +27,12 @@ async def async_setup_entry(
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        LutronScene(area_name, keypad, device, entry_data.client)
-        for area_name, keypad, device, led in entry_data.scenes
+        LutronScene(area_name, device_name, button, entry_data.controller, config_entry)
+        for area_name, device_name, button in entry_data.scenes
     )
 
 
-class LutronScene(LutronKeypad, Scene):
+class LutronScene(LutronKeypadComponent, Scene):
     """Representation of a Lutron Scene."""
 
     _lutron_device: Button
@@ -41,14 +40,20 @@ class LutronScene(LutronKeypad, Scene):
     def __init__(
         self,
         area_name: str,
-        keypad: Keypad,
+        device_name: str,
         lutron_device: Button,
-        controller: Lutron,
+        controller: LutronController,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the scene/button."""
-        super().__init__(area_name, lutron_device, controller, keypad)
+        super().__init__(area_name, device_name, lutron_device, controller)
+        self._config_entry = config_entry
         self._attr_name = lutron_device.name
 
-    def activate(self, **kwargs: Any) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        self._lutron_device.tap()
+        await self._controller.device_press(self._keypad_id, self._component_number)
+
+    async def async_added_to_hass(self) -> None:  # pylint: disable=hass-missing-super-call
+        """Do not register scene as this is only from HA to Lutron."""
+        return

@@ -894,8 +894,8 @@ build.json @home-assistant/supervisor
 /tests/components/luftdaten/ @fabaff @frenck
 /homeassistant/components/lupusec/ @majuss @suaveolent
 /tests/components/lupusec/ @majuss @suaveolent
-/homeassistant/components/lutron/ @cdheiser @wilburCForce
-/tests/components/lutron/ @cdheiser @wilburCForce
+/homeassistant/components/lutron/ @rzulian
+/tests/components/lutron/ @rzulian
 /homeassistant/components/lutron_caseta/ @swails @danaues @eclair4151
 /tests/components/lutron_caseta/ @swails @danaues @eclair4151
 /homeassistant/components/lyric/ @timmo001

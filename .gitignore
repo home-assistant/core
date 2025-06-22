@@ -1,5 +1,9 @@
-/config
+config/*
 config2/*
+!config/custom_components/
+!config/custom_components/lutron_custom/
+!config/custom_components/lutron_custom/**
+
 
 tests/testing_config/deps
 tests/testing_config/home-assistant.log*

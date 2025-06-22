@@ -1,12 +1,8 @@
-"""Support for Lutron Powr Savr occupancy sensors."""
+"""Support for Lutron Power Saver occupancy sensors."""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any
-
-from pylutron import OccupancyGroup
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -17,7 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN, LutronData
-from .entity import LutronDevice
+from .aiolip import LIPGroupState
+from .entity import LutronBaseEntity
+from .lutron_db import OccupancyGroup
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,14 +33,14 @@ async def async_setup_entry(
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            LutronOccupancySensor(area_name, device, entry_data.client)
+            LutronOccupancySensor(area_name, device.name, device, entry_data.controller)
             for area_name, device in entry_data.binary_sensors
         ],
         True,
     )
 
 
-class LutronOccupancySensor(LutronDevice, BinarySensorEntity):
+class LutronOccupancySensor(LutronBaseEntity, BinarySensorEntity):
     """Representation of a Lutron Occupancy Group.
 
     The Lutron integration API reports "occupancy groups" rather than
@@ -53,11 +51,12 @@ class LutronOccupancySensor(LutronDevice, BinarySensorEntity):
     _lutron_device: OccupancyGroup
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes."""
-        return {"lutron_integration_id": self._lutron_device.id}
+    async def _request_state(self):
+        await self._controller.group_get_state(self._lutron_device.id)
 
-    def _update_attrs(self) -> None:
-        """Update the state attributes."""
-        self._attr_is_on = self._lutron_device.state == OccupancyGroup.State.OCCUPIED
+    def _update_callback(self, value: int):
+        """Handle group state update."""
+        self._attr_is_on = (
+            None if value == LIPGroupState.UNKNOWN else value == LIPGroupState.OCCUPIED
+        )
+        self.async_write_ha_state()

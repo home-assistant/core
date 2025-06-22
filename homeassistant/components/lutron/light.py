@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import timedelta
+import logging
 from typing import Any
-
-from pylutron import Lutron, LutronEntity, Output
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_FLASH,
     ATTR_TRANSITION,
     ColorMode,
     LightEntity,
@@ -19,9 +18,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LutronData
+from . import DOMAIN, LIPLedState, LutronController, LutronData
 from .const import CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
-from .entity import LutronDevice
+from .entity import LutronKeypadComponent, LutronOutput
+from .lutron_db import Led, Output
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -31,15 +33,31 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Lutron light platform.
 
-    Adds dimmers from the Main Repeater associated with the config_entry as
+    Add dimmers from the Main Repeater associated with the config_entry as
     light entities.
+
+    Add keypad leds as light entities.
     """
+    _LOGGER.debug("Setting up Lutron light platform")
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         (
-            LutronLight(area_name, device, entry_data.client, config_entry)
-            for area_name, device in entry_data.lights
+            LutronLight(
+                area_name, device_name, device, entry_data.controller, config_entry
+            )
+            for area_name, device_name, device in entry_data.lights
+        ),
+        True,
+    )
+    _LOGGER.debug("Lutron light platform setup complete")
+
+    async_add_entities(
+        (
+            LutronLedLight(
+                area_name, device_name, device, entry_data.controller, config_entry
+            )
+            for area_name, device_name, device in entry_data.leds
         ),
         True,
     )
@@ -55,67 +73,126 @@ def to_hass_level(level):
     return int((level * 255) / 100)
 
 
-class LutronLight(LutronDevice, LightEntity):
+def fade_time_seconds(seconds):
+    """Return time seconds for the fade time."""
+    if seconds is None:
+        return None
+    return str(timedelta(seconds=seconds))
+
+
+class LutronLight(LutronOutput, LightEntity):
     """Representation of a Lutron Light, including dimmable."""
 
-    _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
-    _lutron_device: Output
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
     _prev_brightness: int | None = None
-    _attr_name = None
+    _attr_is_on: bool | None = None
 
     def __init__(
         self,
         area_name: str,
-        lutron_device: LutronEntity,
-        controller: Lutron,
+        device_name: str,
+        lutron_device: Output,
+        controller: LutronController,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the device."""
-        super().__init__(area_name, lutron_device, controller)
+        super().__init__(area_name, device_name, lutron_device, controller)
         self._config_entry = config_entry
+        if self._lutron_device.is_dimmable:
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_supported_features = (
+                LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
+            )
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if flash := kwargs.get(ATTR_FLASH):
-            self._lutron_device.flash(0.5 if flash == "short" else 1.5)
-        else:
-            if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
-                brightness = kwargs[ATTR_BRIGHTNESS]
-            elif self._prev_brightness == 0:
-                brightness = self._config_entry.options.get(
-                    CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
-                )
-            else:
-                brightness = self._prev_brightness
-            self._prev_brightness = brightness
-            args = {"new_level": to_lutron_level(brightness)}
-            if ATTR_TRANSITION in kwargs:
-                args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
-            self._lutron_device.set_level(**args)
 
-    def turn_off(self, **kwargs: Any) -> None:
+        # if flash := kwargs.get(ATTR_FLASH):
+        #     return self._lutron_device.flash(0.5 if flash == "short" else 1.5)
+        if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+        elif self._prev_brightness == 0:
+            brightness = self._config_entry.options.get(
+                CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
+            )
+        else:
+            # light is already on and is not dimmable
+            brightness = self._prev_brightness
+        self._prev_brightness = brightness
+        new_level = to_lutron_level(brightness)
+        fade_time = fade_time_seconds(getattr(kwargs, ATTR_TRANSITION, None))
+        await self._controller.output_set_level(
+            self._lutron_device.id, new_level, fade_time
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        args = {"new_level": 0}
-        if ATTR_TRANSITION in kwargs:
-            args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
-        self._lutron_device.set_level(**args)
+        new_level = 0
+        fade_time = fade_time_seconds(getattr(kwargs, ATTR_TRANSITION, None))
+        await self._controller.output_set_level(
+            self._lutron_device.id, new_level, fade_time
+        )
+
+    async def _request_state(self):
+        """Request the state of the light."""
+        await self._controller.output_get_level(self._lutron_device.id)
+
+    def _update_callback(self, value: float):
+        """Handle level update for light brightness."""
+        # new level for this output
+        self._attr_is_on = value > 0
+        hass_level = to_hass_level(value)
+        self._attr_brightness = hass_level
+        if self._prev_brightness is None or hass_level != 0:
+            self._prev_brightness = hass_level
+
+        self.async_write_ha_state()
+
+
+class LutronLedLight(LutronKeypadComponent, LightEntity):
+    """Representation of a Lutron Led."""
+
+    _lutron_device: Led
+    _attr_is_on: bool | None = None
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_supported_features = LightEntityFeature.FLASH
+
+    def __init__(
+        self,
+        area_name: str,
+        device_name: str,
+        lutron_device: Led,
+        controller: LutronController,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(area_name, device_name, lutron_device, controller)
+        self._config_entry = config_entry
+        self._attr_name = lutron_device.name
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on."""
+        await self._controller.device_turn_on(self._keypad_id, self._component_number)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        await self._controller.device_turn_off(self._keypad_id, self._component_number)
+
+    async def _request_state(self):
+        await self._controller.device_get_state(self._keypad_id, self._component_number)
+
+    def _update_callback(self, value: int):
+        """Handle device LED state update."""
+        self._attr_is_on = value == LIPLedState.ON
+        self.async_write_ha_state()
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
-        return {"lutron_integration_id": self._lutron_device.id}
-
-    def _request_state(self) -> None:
-        """Request the state from the device."""
-        _ = self._lutron_device.level
-
-    def _update_attrs(self) -> None:
-        """Update the state attributes."""
-        level = self._lutron_device.last_level()
-        self._attr_is_on = level > 0
-        hass_level = to_hass_level(level)
-        self._attr_brightness = hass_level
-        if self._prev_brightness is None or hass_level != 0:
-            self._prev_brightness = hass_level
+        return {
+            "keypad": self._keypad_name,
+            "led": self._lutron_device.name,
+        }

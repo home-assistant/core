@@ -2,32 +2,26 @@
 
 from enum import StrEnum
 
-from pylutron import Button, Keypad, Lutron, LutronEvent
-
 from homeassistant.components.event import EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import ATTR_ACTION, ATTR_FULL_ID, ATTR_UUID, DOMAIN, LutronData
-from .entity import LutronKeypad
+from . import ATTR_ACTION, ATTR_FULL_ID, ATTR_UUID, DOMAIN, LutronController, LutronData
+from .entity import LutronKeypadComponent
+from .lutron_db import Button
 
 
 class LutronEventType(StrEnum):
     """Lutron event types."""
 
-    SINGLE_PRESS = "single_press"
     PRESS = "press"
     RELEASE = "release"
-
-
-LEGACY_EVENT_TYPES: dict[LutronEventType, str] = {
-    LutronEventType.SINGLE_PRESS: "single",
-    LutronEventType.PRESS: "pressed",
-    LutronEventType.RELEASE: "released",
-}
+    HOLD = "hold"
+    DOUBLE_TAP = "double_tap"
+    HOLD_RELEASE = "hold_release"
 
 
 async def async_setup_entry(
@@ -39,65 +33,69 @@ async def async_setup_entry(
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        LutronEventEntity(area_name, keypad, button, entry_data.client)
-        for area_name, keypad, button in entry_data.buttons
+        LutronEventEntity(area_name, device_name, button, entry_data.controller)
+        for area_name, device_name, button in entry_data.buttons
     )
 
 
-class LutronEventEntity(LutronKeypad, EventEntity):
-    """Representation of a Lutron keypad button."""
+class LutronEventEntity(LutronKeypadComponent, EventEntity):
+    """Representation of a button on a Lutron keypad.
 
+    This is responsible for firing events as keypad buttons are press
+    (and possibly release, depending on the button type). It is not
+    represented as an entity; it simply fires events.
+    """
+
+    _lutron_device: Button
     _attr_translation_key = "button"
+    action_number_to_event = {
+        3: LutronEventType.PRESS,
+        4: LutronEventType.RELEASE,
+        5: LutronEventType.HOLD,
+        6: LutronEventType.DOUBLE_TAP,
+        32: LutronEventType.HOLD_RELEASE,
+    }
 
     def __init__(
         self,
         area_name: str,
-        keypad: Keypad,
+        device_name: str,
         button: Button,
-        controller: Lutron,
+        controller: LutronController,
     ) -> None:
         """Initialize the button."""
-        super().__init__(area_name, button, controller, keypad)
-        if (name := button.name) == "Unknown Button":
-            name += f" {button.number}"
+        super().__init__(area_name, device_name, button, controller)
+        name = button.name
         self._attr_name = name
         self._has_release_event = (
-            button.button_type is not None and "RaiseLower" in button.button_type
+            button.button_type is not None
+            and button.button_type in ("RaiseLower", "DualAction")
         )
-        if self._has_release_event:
-            self._attr_event_types = [LutronEventType.PRESS, LutronEventType.RELEASE]
-        else:
-            self._attr_event_types = [LutronEventType.SINGLE_PRESS]
+        self._attr_event_types = [
+            LutronEventType.PRESS,
+            LutronEventType.RELEASE,
+            LutronEventType.HOLD,
+            LutronEventType.HOLD_RELEASE,
+            LutronEventType.DOUBLE_TAP,
+        ]
 
-        self._full_id = slugify(f"{area_name} {name}")
-        self._id = slugify(name)
+        self._full_id = slugify(f"{area_name} {self._keypad_name}: {name}")
+        self._id = slugify(f"{self._keypad_name}: {name}")
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        self.async_on_remove(self._lutron_device.subscribe(self.handle_event, None))
+    def _update_callback(self, value: int):
+        """Trigger an event.
 
-    @callback
-    def handle_event(
-        self, button: Button, _context: None, event: LutronEvent, _params: dict
-    ) -> None:
-        """Handle received event."""
-        action: LutronEventType | None = None
-        if self._has_release_event:
-            if event == Button.Event.PRESSED:
-                action = LutronEventType.PRESS
-            else:
-                action = LutronEventType.RELEASE
-        elif event == Button.Event.PRESSED:
-            action = LutronEventType.SINGLE_PRESS
+        value is the action_number of the button that was pressed.
+        """
 
-        if action:
+        event = self.action_number_to_event[value]
+        if event:
             data = {
                 ATTR_ID: self._id,
-                ATTR_ACTION: LEGACY_EVENT_TYPES[action],
+                ATTR_ACTION: event,
                 ATTR_FULL_ID: self._full_id,
-                ATTR_UUID: button.uuid,
+                ATTR_UUID: self._lutron_device.uuid,
             }
             self.hass.bus.fire("lutron_event", data)
-            self._trigger_event(action)
+            self._trigger_event(event)
             self.schedule_update_ha_state()

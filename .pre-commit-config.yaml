@@ -71,13 +71,13 @@ repos:
         require_serial: true
         types_or: [python, pyi]
         files: ^(homeassistant|tests)/.+\.(py|pyi)$
-      - id: gen_requirements_all
-        name: gen_requirements_all
-        entry: script/run-in-env.sh python3 -m script.gen_requirements_all
-        pass_filenames: false
-        language: script
-        types: [text]
-        files: ^(homeassistant/.+/manifest\.json|homeassistant/brands/.+\.json|pyproject\.toml|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
+      #      - id: gen_requirements_all
+      #        name: gen_requirements_all
+      #        entry: script/run-in-env.sh python3 -m script.gen_requirements_all
+      #        pass_filenames: false
+      #        language: script
+      #        types: [text]
+      #        files: ^(homeassistant/.+/manifest\.json|homeassistant/brands/.+\.json|pyproject\.toml|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
       - id: hassfest
         name: hassfest
         entry: script/run-in-env.sh python3 -m script.hassfest

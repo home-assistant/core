@@ -1,0 +1,516 @@
+"""Lutron RadioRA 2 and HomeWorks QS module for parsing the Lutron DB.
+
+Return all the devices in the system
+
+Original work from https://github.com/thecynic/pylutron
+Author Dima Zavin
+"""
+
+from dataclasses import dataclass, field
+import logging
+from typing import Any
+
+import defusedxml.ElementTree as ET
+
+_LOGGER = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+
+
+class LutronXmlDbParser:
+    """The parser for Lutron XML database.
+
+    The database describes all the rooms (Area), keypads (Device), and switches
+    (Output). We handle the most relevant features, but some things like LEDs,
+    etc. are not implemented.
+    """
+
+    def __init__(self, xml_db_str, variable_ids):
+        """Initialize the XML parser, takes the raw XML data as string input."""
+        self._xml_db_str = xml_db_str
+        self.areas = []
+        self.variables = []
+        self._occupancy_groups = {}
+        self.project_name = None
+        self._variables_ids = variable_ids
+        self.lutron_guid = None
+
+    def parse(self):
+        """Create the Main entrypoint into the parser.
+
+        It interprets and creates all the relevant Lutron objects and stuffs them into the appropriate hierarchy.
+        """
+
+        def visit_area(area_to_visit, location=None):
+            for areas_xml in area_to_visit.findall("Areas"):
+                for area_xml in areas_xml.findall("Area"):
+                    area = self._parse_area(area_xml, location)
+                    self.areas.append(area)
+                    visit_area(area_xml, area.name)
+
+        root = ET.fromstring(self._xml_db_str)
+        # The structure is something like this:
+        # <Areas>
+        #   <Area ...>
+        #     <DeviceGroups ...>
+        #     <Scenes ...>
+        #     <ShadeGroups ...>
+        #     <Outputs ...>
+        #     <Areas ...>
+        #       <Area ...>
+
+        # The GUID is unique to the repeater and is useful for constructing unique
+        # identifiers that won't change over time.
+        self.lutron_guid = root.find("GUID").text
+
+        # Parse Occupancy Groups
+        # OccupancyGroups are referenced by entities in the rest of the XML.  The
+        # current structure of the code expects to go from areas -> devices ->
+        # other assets and attributes.  Here we index the groups to be bound to
+        # Areas later.
+        groups = root.find("OccupancyGroups")
+        for group_xml in groups.iter("OccupancyGroup"):
+            group = self._parse_occupancy_group(group_xml)
+            if group.group_number:
+                self._occupancy_groups[group.group_number] = group
+            else:
+                _LOGGER.warning("Occupancy Group has no number.  XML: %s", group_xml)
+
+        # First area is useless, it's the top-level project area that defines the
+        # "house". It contains the real nested Areas tree, which is the one we want.
+        top_area = root.find("Areas").find("Area")
+        self.project_name = top_area.get("Name")
+        visit_area(top_area)
+        for variable in self._variables_ids:
+            self.variables.append(self._parse_sysvar(variable))
+        return True
+
+    def _parse_area(self, area_xml, location):
+        """Parse an Area tag, which is effectively a room, depending on how the Lutron controller programming was done."""
+        location = location or ""
+        name = area_xml.get("Name")
+        occupancy_group_id = area_xml.get("OccupancyGroupAssignedToID")
+        occupancy_group = self._occupancy_groups.get(occupancy_group_id)
+        if not occupancy_group:
+            _LOGGER.warning(
+                "Occupancy Group not found for Area: %s; ID: %s",
+                name,
+                occupancy_group_id,
+            )
+        area = Area(
+            name=name,
+            location=location,
+            integration_id=int(area_xml.get("IntegrationID")),
+            occupancy_group=occupancy_group,
+        )
+        for output_xml in area_xml.find("Outputs"):
+            output = self._parse_output(output_xml)
+            area.add_output(output)
+
+        # device group in our case means keypad
+        # device_group.get('Name') is the name of the device
+        for device_group in area_xml.find("DeviceGroups"):
+            if device_group.tag == "DeviceGroup":
+                devs = device_group.find("Devices")
+            elif device_group.tag == "Device":
+                # device that is not a keypad, e.g. QS_IO_INTERFACE
+                devs = [device_group]
+            else:
+                _LOGGER.info("Unknown tag in DeviceGroups child %s", device_group.tag)
+                devs = []
+            for device_xml in devs:
+                if device_xml.tag != "Device":
+                    continue
+                if (device_type := device_xml.get("DeviceType")) is None:
+                    # phantom keypad doesn't have a DeviceType
+                    device_type = "PHANTOM"
+                if device_type in (
+                    "PHANTOM",
+                    "HWI_SEETOUCH_KEYPAD",
+                    "SEETOUCH_KEYPAD",
+                    "SEETOUCH_TABLETOP_KEYPAD",
+                    "PICO_KEYPAD",
+                    "HYBRID_SEETOUCH_KEYPAD",
+                    "MAIN_REPEATER",
+                    "HOMEOWNER_KEYPAD",
+                    "INTERNATIONAL_SEETOUCH_KEYPAD",
+                    "WCI",
+                    "QS_IO_INTERFACE",
+                    "GRAFIK_T_HYBRID_KEYPAD",
+                    "HWI_SLIM",
+                ):
+                    keypad = self._parse_keypad(device_xml, device_group, device_type)
+                    area.add_keypad(keypad)
+                elif device_xml.get("DeviceType") == "MOTION_SENSOR":
+                    motion_sensor = self._parse_motion_sensor(device_xml)
+                    area.add_sensor(motion_sensor)
+                else:
+                    _LOGGER.warning(
+                        "Unknown %s Device type", device_xml.get("DeviceType")
+                    )
+
+        return area
+
+    def _parse_output(self, output_xml):
+        """Parse an output, which is generally a switch controlling a set of lights/outlets, etc."""
+        kwargs = {
+            "name": output_xml.get("Name"),
+            "watts": int(output_xml.get("Wattage")),
+            "output_type": output_xml.get("OutputType"),
+            "integration_id": int(output_xml.get("IntegrationID")),
+            "uuid": output_xml.get("UUID"),
+        }
+        return Output(**kwargs)
+
+    def _parse_keypad(self, keypad_xml, device_group, device_type):
+        """Parse a keypad device (the Visor receiver is technically a keypad too)."""
+        # in HW the keypad standard name is CSD 001, we use the integration ID name instead
+        # Note that device_group.get('Name') is the real name of the keypad and motion sensor
+        name = keypad_xml.get("Name")
+        if keypad_xml.get("Name") == "CSD 001":
+            name = f"keypad {keypad_xml.get('IntegrationID')}"
+        keypad = Keypad(
+            name=name,
+            device_type=device_type,
+            integration_id=int(keypad_xml.get("IntegrationID")),
+            uuid=keypad_xml.get("UUID"),
+        )
+        components = keypad_xml.find("Components")
+        if components is None:
+            return keypad
+        for comp in components:
+            if comp.tag != "Component":
+                continue
+            comp_type = comp.get("ComponentType")
+            if comp_type == "BUTTON":
+                button = self._parse_button(keypad, comp)
+                keypad.add_button(button)
+            elif comp_type == "CCI":
+                button = self._parse_cci(keypad, comp)
+                keypad.add_button(button)
+            elif comp_type == "LED":
+                led = self._parse_led(keypad, comp)
+                keypad.add_led(led)
+        return keypad
+
+    def _parse_button(self, keypad, component_xml):
+        """Parse a button device that part of a keypad.
+
+        'Name' is Button x, where x is incremental position in the list and not the actual position on the keypad.
+        We don't use it. We sue component_number instead
+        """
+        # we should read button - actions  - action to get available button actions
+
+        component_number = int(component_xml.get("ComponentNumber"))
+        button_xml = component_xml.find("Button")
+        engraving = button_xml.get("Engraving")
+        button_type = button_xml.get("ButtonType")
+        direction = button_xml.get("Direction")
+        led_logic = (
+            0 if button_xml.get("LedLogic") is None else int(button_xml.get("LedLogic"))
+        )
+        name = f"Btn {component_number}"
+
+        # Hybrid keypads have dimmer buttons which have no engravings.
+        if button_type == "SingleSceneRaiseLower":
+            name = "Dimmer " + direction
+
+        return Button(
+            keypad=keypad,
+            name=name,
+            engraving=engraving,
+            number=component_number,
+            component_number=component_number,
+            button_type=button_type,
+            direction=direction,
+            led_logic=led_logic,
+            integration_id=keypad.id,
+            uuid=button_xml.get("UUID"),
+        )
+
+    def _parse_cci(self, keypad, component_xml):
+        """Parse a cci (contact closure input) device that part of a keypad."""
+        component_number = int(component_xml.get("ComponentNumber"))
+        cci_xml = component_xml.find("CCI")
+        cci_type = cci_xml.get("ButtonType")
+        led_logic = cci_xml.get("LedLogic")
+        name = f"CCI {component_number}"
+        return Button(
+            keypad=keypad,
+            name=name,
+            engraving="",
+            number=component_number,
+            component_number=component_number,
+            button_type=cci_type,
+            direction="",
+            led_logic=led_logic,
+            integration_id=keypad.id,
+            uuid=cci_xml.get("UUID"),
+        )
+
+    def _parse_led(self, keypad, component_xml):
+        """Parse an LED device that part of a keypad."""
+        component_num = int(component_xml.get("ComponentNumber"))
+        led_base = 80
+        if keypad.device_type == "MAIN_REPEATER":
+            led_base = 100
+        elif keypad.device_type == "PHANTOM":
+            led_base = 2000
+        led_num = component_num - led_base
+        name = f"LED {led_num}"
+        return Led(
+            keypad=keypad,
+            name=name,
+            number=led_num,
+            component_number=component_num,
+            integration_id=keypad.id,
+            uuid=component_xml.find("LED").get("UUID"),
+        )
+
+    def _parse_motion_sensor(self, sensor_xml):
+        """Parse a motion sensor object.
+
+        TODO: We don't actually do anything with these yet. There's a lot of info
+        that needs to be managed to do this right. We'd have to manage the occupancy
+        groups, what's assigned to them, and when they go (un)occupied. We'll handle
+        this later.
+        """
+        return MotionSensor(
+            name=sensor_xml.get("Name"),
+            integration_id=int(sensor_xml.get("IntegrationID")),
+            uuid=sensor_xml.get("UUID"),
+        )
+
+    def _parse_occupancy_group(self, group_xml):
+        """Parse an Occupancy Group object.
+
+        These are defined outside the areas in the XML.  Areas refer to these
+        objects by ID.
+        """
+        return OccupancyGroup(
+            name="Occupancy Group",
+            integration_id=None,
+            group_number=group_xml.get("OccupancyGroupNumber"),
+            uuid=group_xml.get("UUID"),
+        )
+
+    def _parse_sysvar(self, integration_id):
+        """Create a Sysvar object."""
+        return Sysvar(
+            name=f"variable {integration_id}", integration_id=integration_id, uuid=None
+        )
+
+
+@dataclass
+class Device:
+    """Base class for all the Lutron objects we'd like to manage."""
+
+    name: str
+    uuid: str | None
+    integration_id: int
+    legacy_uuid: str | None = field(init=False, default=None)
+
+    def __post_init__(self):
+        """Override to Initialize the Lutron entity."""
+        self.legacy_uuid = f"{self.integration_id}-0"
+
+    @property
+    def id(self) -> int:
+        """Alias for integration_id for backward compatibility."""
+        return self.integration_id
+
+
+@dataclass
+class Output(Device):
+    """Output entity in Lutron universe.
+
+    This generally refers to a switched/dimmed load, e.g. light fixture, outlet, etc.
+    """
+
+    watts: int = 0
+    output_type: str = ""
+
+    is_dimmable: bool = field(init=False, default=False)
+    is_light: bool = field(init=False, default=False)
+    is_shade: bool = field(init=False, default=False)
+    is_fan: bool = field(init=False, default=False)
+    is_switch: bool = field(init=False, default=False)
+
+    def __post_init__(self):
+        """Set the type of OUTPUT."""
+        super().__post_init__()
+
+        match self.output_type:
+            case t if t.startswith("CCO_") or t == "RELAY_LIGHTING":
+                self.is_switch = True
+            case t if t.startswith("MOTOR") or t == "SYSTEM_SHADE":
+                self.is_shade = True
+            case "EXHAUST_FAN_TYPE" | "CEILING_FAN_TYPE":
+                self.is_fan = True
+            case _:
+                self.is_light = True
+
+        self.is_dimmable = self.is_light and not self.output_type.startswith("NON_DIM")
+
+
+@dataclass
+class KeypadComponent(Device):
+    """Base class for a keypad component such as a button, or an LED.
+
+    The lutron component number is referenced in commands and
+    events. This is different from KeypadComponent.number because this property
+    is only used for interfacing with the controller.
+    """
+
+    keypad: Any = None
+    number: int = 0  # user-friendly number
+    component_number: int = 0  # lutron internal number
+
+    def __post_init__(self):
+        """Set the legacy UUID for keypad components."""
+        self.legacy_uuid = f"{self.keypad.integration_id}-{self.component_number}"
+
+
+@dataclass
+class Button(KeypadComponent):
+    """Object representing a keypad button."""
+
+    engraving: str = ""
+    button_type: str = ""
+    direction: str = ""
+    led_logic: int = 0
+    has_action: bool = field(init=False)
+
+    def __post_init__(self):
+        """Set if the Button has action."""
+        super().__post_init__()
+        self.has_action = self.button_type in (
+            "SingleAction",
+            "Toggle",
+            "SingleSceneRaiseLower",
+            "MasterRaiseLower",
+            "DualAction",
+            "AdvancedToggle",
+            "AdvancedConditional",
+            "SimpleConditional",
+        )
+
+
+@dataclass
+class Led(KeypadComponent):
+    """Object representing a keypad LED."""
+
+
+@dataclass
+class Keypad(Device):
+    """Object representing a Lutron keypad."""
+
+    device_type: str | None = None
+    buttons: list = field(default_factory=list)
+    leds: list = field(default_factory=list)
+    components: dict[int, Any] = field(default_factory=dict, repr=False)
+
+    def add_button(self, button: Button):
+        """Add a button that's part of this keypad."""
+        self.buttons.append(button)
+        self.components[button.component_number] = button
+
+    def add_led(self, led: Led):
+        """Add an LED that's part of this keypad."""
+        self.leds.append(led)
+        self.components[led.component_number] = led
+
+
+class MotionSensor(Device):
+    """Placeholder class for the motion sensor device.
+
+    Although sensors are represented in the XML, all the protocol
+    happens at the OccupancyGroup level. To read the state of an area,
+    use area.occupancy_group.
+
+    _CMD_TYPE = 'DEVICE'
+
+    _ACTION_BATTERY_STATUS = 22
+    """
+
+
+@dataclass
+class OccupancyGroup(Device):
+    """Represents one or more occupancy/vacancy sensors grouped into an Area."""
+
+    area: Any = None
+    group_number: str | None = None
+
+    def bind_area(self, area):
+        """Binds the OccupancyGroup to the Area."""
+        self.area = area
+        self.legacy_uuid = f"{self.area.id}-{self.group_number}"
+        self.name = f"Occ {area.name}"
+        self.integration_id = area.id
+
+
+@dataclass
+class Sysvar(Device):
+    """Represents one or more occupancy/vacancy sensors grouped into an Area."""
+
+
+class Area:
+    """An area (i.e. a room) that contains devices/outputs/etc."""
+
+    def __init__(self, name, location, integration_id, occupancy_group):
+        """Initialize the area."""
+        self._name = name
+        self._location = location
+        self._integration_id = integration_id
+        self._occupancy_group = occupancy_group
+        self._outputs = []
+        self._keypads = []
+        self._sensors = []
+        if occupancy_group:
+            occupancy_group.bind_area(self)
+
+    def add_output(self, output):
+        """Add an output object that's part of this area, only used during initial parsing."""
+        self._outputs.append(output)
+
+    def add_keypad(self, keypad):
+        """Add a keypad object that's part of this area, only used during initial parsing."""
+        self._keypads.append(keypad)
+
+    def add_sensor(self, sensor):
+        """Add a motion sensor object that's part of this area, only used during initial parsing."""
+        self._sensors.append(sensor)
+
+    @property
+    def name(self):
+        """Returns the name of this area."""
+        return self._name
+
+    @property
+    def location(self):
+        """Returns the location of this area which is the name of the parent area or the empty string."""
+        return self._location
+
+    @property
+    def id(self):
+        """The integration id of the area."""
+        return self._integration_id
+
+    @property
+    def occupancy_group(self):
+        """Returns the OccupancyGroup for this area, or None."""
+        return self._occupancy_group
+
+    @property
+    def outputs(self):
+        """Return the tuple of the Outputs from this area."""
+        return tuple(output for output in self._outputs)
+
+    @property
+    def keypads(self):
+        """Return the tuple of the Keypads from this area."""
+        return tuple(keypad for keypad in self._keypads)
+
+    @property
+    def sensors(self):
+        """Return the tuple of the MotionSensors from this area."""
+        return tuple(sensor for sensor in self._sensors)
