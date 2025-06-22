@@ -31,6 +31,8 @@ async def async_setup_entry(
 class ImmichUpdateEntity(ImmichEntity, UpdateEntity):
     """Define Immich update entity."""
 
+    _attr_translation_key = "update"
+
     def __init__(
         self,
         coordinator: ImmichDataUpdateCoordinator,
@@ -38,7 +40,6 @@ class ImmichUpdateEntity(ImmichEntity, UpdateEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_update"
-        self._attr_translation_key = "update"
 
     @property
     def installed_version(self) -> str:
