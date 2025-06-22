@@ -8685,7 +8685,7 @@ async def test_options_flow_automatic_reload(
 
     await hass.config_entries.async_setup(original_entry.entry_id)
     assert original_entry.state is config_entries.ConfigEntryState.LOADED
-    assert "loaded entry First" in caplog.text
+    assert "loaded entry Test with options {'test': 'first'}" in caplog.text
 
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
@@ -8715,7 +8715,75 @@ async def test_options_flow_automatic_reload(
         )
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "loaded entry Updated" in caplog.text
+    assert "loaded entry Test with options {'test': 'updated'}" in caplog.text
+
+
+async def test_options_flow_with_automatic_reload_no_support_update_listener(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test options flow with automatic reload does not support using update listeners."""
+    original_entry = MockConfigEntry(
+        domain="test", title="Test", data={}, options={"test": "first"}
+    )
+    original_entry.add_to_hass(hass)
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Mock setup entry."""
+        config_entries._LOGGER.info(
+            "loaded entry %s with options %s", entry.title, entry.options
+        )
+        entry.update_listeners = AsyncMock(return_value=True)
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    await hass.config_entries.async_setup(original_entry.entry_id)
+    assert original_entry.state is config_entries.ConfigEntryState.LOADED
+    assert "loaded entry Test with options {'test': 'first'}" in caplog.text
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class _OptionsFlow(config_entries.OptionsFlowWithReload):
+                """Test flow."""
+
+                async def async_step_init(self, user_input=None):
+                    """Test user step."""
+                    if user_input is not None:
+                        return self.async_create_entry(data=user_input)
+                    return self.async_show_form(
+                        step_id="init", data_schema=vol.Schema({"test": str})
+                    )
+
+            return _OptionsFlow()
+
+    with mock_config_flow("test", TestFlow):
+        result = await hass.config_entries.options.async_init(original_entry.entry_id)
+        with pytest.raises(
+            ValueError,
+            match="Config entry update listeners should not be used with OptionsFlowWithReload",
+        ):
+            result = await hass.config_entries.options.async_configure(
+                result["flow_id"], {"test": "updated"}
+            )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "loaded entry Test with options {'test': 'updated'}" not in caplog.text
 
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])

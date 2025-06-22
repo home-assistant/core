@@ -3485,14 +3485,23 @@ class OptionsFlowManager(
         entry = self.hass.config_entries.async_get_known_entry(flow.handler)
 
         if result["data"] is not None:
-            entry_updated = self.hass.config_entries.async_update_entry(
-                entry, options=result["data"]
-            )
+            automatic_reload = False
             if (
-                entry_updated is True
-                and hasattr(flow, "automatic_reload") is True
+                hasattr(flow, "automatic_reload") is True
                 and flow.automatic_reload is True  # type: ignore[attr-defined]
-                and not entry.update_listeners
+            ):
+                automatic_reload = True
+
+            if automatic_reload and entry.update_listeners:
+                raise ValueError(
+                    "Config entry update listeners should not be used with OptionsFlowWithReload"
+                )
+
+            if (
+                self.hass.config_entries.async_update_entry(
+                    entry, options=result["data"]
+                )
+                and automatic_reload is True
             ):
                 self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
