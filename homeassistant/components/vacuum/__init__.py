@@ -249,6 +249,7 @@ class StateVacuumEntity(
     __vacuum_legacy_state: bool = False
     __vacuum_legacy_battery_level: bool = False
     __vacuum_legacy_battery_icon: bool = False
+    __vacuum_legacy_battery_feature: bool = False
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
@@ -331,6 +332,25 @@ class StateVacuumEntity(
             exclude_integrations={DOMAIN},
         )
 
+    @callback
+    def _report_deprecated_battery_feature(self) -> None:
+        """Report on deprecated use of battery supported features.
+
+        Integrations should remove the battery supported feature when migrating
+        battery level and icon to a sensor.
+        """
+        report_usage(
+            f"is setting the battery supported feature which has been deprecated."
+            f" Integration {self.platform.platform_name} should remove this as part of migrating"
+            " the battery level and icon to a sensor",
+            core_behavior=ReportBehavior.LOG,
+            core_integration_behavior=ReportBehavior.LOG,
+            custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2026.7",
+            integration_domain=self.platform.platform_name if self.platform else None,
+            exclude_integrations={DOMAIN},
+        )
+
     @cached_property
     def battery_level(self) -> int | None:
         """Return the battery level of the vacuum cleaner."""
@@ -369,6 +389,9 @@ class StateVacuumEntity(
         supported_features = self.supported_features
 
         if VacuumEntityFeature.BATTERY in supported_features:
+            if self.__vacuum_legacy_battery_feature is False:
+                self._report_deprecated_battery_feature()
+                self.__vacuum_legacy_battery_feature = True
             data[ATTR_BATTERY_LEVEL] = self.battery_level
             data[ATTR_BATTERY_ICON] = self.battery_icon
 
