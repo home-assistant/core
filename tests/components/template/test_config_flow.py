@@ -132,6 +132,26 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "notify",
+            {},
+            "2024-07-09T00:00:00+00:00",
+            {},
+            {},
+            {
+                "send_message": {
+                    "action": "test.automation",
+                    "data": {"message": "{{ message }}", "title": "{{ title }}"},
+                }
+            },
+            {
+                "send_message": {
+                    "action": "test.automation",
+                    "data": {"message": "{{ message }}", "title": "{{ title }}"},
+                }
+            },
+            {},
+        ),
+        (
             "number",
             {"state": "{{ states('number.one') }}"},
             "30.0",
@@ -287,6 +307,22 @@ async def test_config_flow(
             {},
             {},
             {},
+        ),
+        (
+            "notify",
+            {},
+            {
+                "send_message": {
+                    "action": "test.automation",
+                    "data": {"message": "{{ message }}", "title": "{{ title }}"},
+                }
+            },
+            {
+                "send_message": {
+                    "action": "test.automation",
+                    "data": {"message": "{{ message }}", "title": "{{ title }}"},
+                }
+            },
         ),
         (
             "image",
@@ -490,6 +526,26 @@ async def test_config_flow_device(
                 "verify_ssl": True,
             },
             "url",
+        ),
+        (
+            "notify",
+            {},
+            {},
+            ["unknown", "unknown"],
+            {"one": "30.0", "two": "20.0"},
+            {
+                "send_message": {
+                    "action": "test.automation",
+                    "data": {"message": "{{ message }}", "title": "{{ title }}"},
+                }
+            },
+            {
+                "send_message": {
+                    "action": "test.automation",
+                    "data": {"message": "{{ message }}", "title": "{{ title }}"},
+                }
+            },
+            "state",
         ),
         (
             "number",
@@ -1286,6 +1342,22 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             },
             {},
             {},
+        ),
+        (
+            "notify",
+            {},
+            {
+                "send_message": {
+                    "action": "test.automation",
+                    "data": {"message": "{{ message }}", "title": "{{ title }}"},
+                }
+            },
+            {
+                "send_message": {
+                    "action": "test.automation",
+                    "data": {"message": "{{ message }}", "title": "{{ title }}"},
+                }
+            },
         ),
         (
             "number",
