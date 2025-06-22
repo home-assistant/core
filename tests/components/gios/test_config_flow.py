@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import STATIONS
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 
 CONFIG = {
     CONF_NAME: "Foo",
@@ -58,7 +58,9 @@ async def test_invalid_sensor_data(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.gios.coordinator.Gios._get_station",
-            return_value=json.loads(load_fixture("gios/station.json")),
+            return_value=json.loads(
+                await async_load_fixture(hass, "station.json", DOMAIN)
+            ),
         ),
         patch(
             "homeassistant.components.gios.coordinator.Gios._get_sensor",
@@ -106,15 +108,21 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.gios.coordinator.Gios._get_station",
-            return_value=json.loads(load_fixture("gios/station.json")),
+            return_value=json.loads(
+                await async_load_fixture(hass, "station.json", DOMAIN)
+            ),
         ),
         patch(
             "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
-            return_value=json.loads(load_fixture("gios/sensors.json")),
+            return_value=json.loads(
+                await async_load_fixture(hass, "sensors.json", DOMAIN)
+            ),
         ),
         patch(
             "homeassistant.components.gios.coordinator.Gios._get_indexes",
-            return_value=json.loads(load_fixture("gios/indexes.json")),
+            return_value=json.loads(
+                await async_load_fixture(hass, "indexes.json", DOMAIN)
+            ),
         ),
     ):
         flow = config_flow.GiosFlowHandler()

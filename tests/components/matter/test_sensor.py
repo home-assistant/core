@@ -17,7 +17,7 @@ from .common import (
 )
 
 
-@pytest.mark.usefixtures("matter_devices")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "matter_devices")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -156,7 +156,7 @@ async def test_battery_sensor_voltage(
     matter_node: MatterNode,
 ) -> None:
     """Test battery voltage sensor."""
-    entity_id = "sensor.eve_door_voltage"
+    entity_id = "sensor.eve_door_battery_voltage"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "3.558"

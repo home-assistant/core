@@ -73,9 +73,6 @@ async def test_no_satellite_without_voice_assistant(
     """Test that an assist satellite entity is not created if a voice assistant is not present."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={},
     )
     await hass.async_block_till_done()
@@ -96,9 +93,6 @@ async def test_pipeline_api_audio(
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.SPEAKER
@@ -245,6 +239,17 @@ async def test_pipeline_api_audio(
             {},
         )
         assert satellite.state == AssistSatelliteState.PROCESSING
+
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.INTENT_PROGRESS,
+                data={"tts_start_streaming": "1"},
+            )
+        )
+        assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
+            VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS,
+            {"tts_start_streaming": "1"},
+        )
 
         event_callback(
             PipelineEvent(
@@ -406,9 +411,6 @@ async def test_pipeline_udp_audio(
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.SPEAKER
@@ -616,9 +618,6 @@ async def test_pipeline_media_player(
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.API_AUDIO
@@ -762,9 +761,6 @@ async def test_timer_events(
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.TIMERS
@@ -833,9 +829,6 @@ async def test_unknown_timer_event(
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.TIMERS
@@ -877,9 +870,6 @@ async def test_streaming_tts_errors(
     """Test error conditions for _stream_tts_audio function."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
         },
@@ -1089,9 +1079,6 @@ async def test_announce_message(
     """Test announcement with message."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.SPEAKER
@@ -1260,9 +1247,6 @@ async def test_announce_message_with_preannounce(
     """Test announcement with message and preannounce media id."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.SPEAKER
@@ -1334,9 +1318,6 @@ async def test_non_default_supported_features(
     """Test that the start conversation and announce are not set by default."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
         },
@@ -1360,9 +1341,6 @@ async def test_start_conversation_message(
     """Test start conversation with message."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.SPEAKER
@@ -1569,9 +1547,6 @@ async def test_start_conversation_message_with_preannounce(
     """Test start conversation with message and preannounce media id."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.SPEAKER
@@ -1662,9 +1637,6 @@ async def test_satellite_unloaded_on_disconnect(
     """Test that the assist satellite platform is unloaded on disconnect."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
         },
@@ -1694,9 +1666,6 @@ async def test_pipeline_abort(
     """Test aborting a pipeline (no further processing)."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.API_AUDIO
@@ -1778,9 +1747,6 @@ async def test_get_set_configuration(
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.ANNOUNCE
@@ -1839,9 +1805,6 @@ async def test_wake_word_select(
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
-        user_service=[],
-        states=[],
         device_info={
             "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
             | VoiceAssistantFeature.ANNOUNCE

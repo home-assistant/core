@@ -673,7 +673,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'unknown',
   })
 # ---
 # name: test_binary_sensor[binary_sensor.test_charge_enable_request-entry]
@@ -3374,7 +3374,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'unknown',
   })
 # ---
 # name: test_binary_sensor_refresh[binary_sensor.test_charge_enable_request-statealt]
