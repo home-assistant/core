@@ -325,15 +325,15 @@ async def async_setup_entry(
 
     coordinators = entry.runtime_data
 
-    for coordinator in coordinators:
-        async_add_entities(
-            [
-                VolvoSensor(coordinator, description)
-                for description in _DESCRIPTIONS
-                if description.api_field in coordinator.data
-                and description.available_fn(coordinator.vehicle)
-            ]
-        )
+    async_add_entities(
+        [
+            VolvoSensor(coordinator, description)
+            for coordinator in coordinators
+            for description in _DESCRIPTIONS
+            if description.api_field in coordinator.data
+            and description.available_fn(coordinator.vehicle)
+        ]
+    )
 
 
 class VolvoSensor(VolvoEntity, SensorEntity):
