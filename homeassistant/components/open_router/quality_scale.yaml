@@ -45,7 +45,7 @@ rules:
     comment: the integration only integrates state-less entities
   parallel-updates: todo
   reauthentication-flow: todo
-  test-coverage: done
+  test-coverage: todo
 
   # Gold
   devices: done
