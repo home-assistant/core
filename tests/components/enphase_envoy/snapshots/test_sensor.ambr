@@ -318,7 +318,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_current',
@@ -332,7 +332,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 AC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -374,7 +374,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'Frequency',
+    'original_name': 'AC frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -388,7 +388,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
+      'friendly_name': 'Inverter 1 AC frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -430,7 +430,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_voltage',
@@ -444,7 +444,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 AC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -486,7 +486,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_current',
@@ -500,7 +500,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 DC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -542,7 +542,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_voltage',
@@ -556,7 +556,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 DC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -574,7 +574,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -598,7 +598,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_produced',
@@ -612,8 +612,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
@@ -630,7 +630,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -654,7 +654,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_today',
@@ -668,8 +668,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -710,7 +710,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Duration',
+    'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_last_report_duration',
@@ -724,7 +724,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Inverter 1 Duration',
+      'friendly_name': 'Inverter 1 Last report duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -791,7 +791,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -818,7 +818,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_lifetime_energy',
@@ -832,8 +832,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Lifetime energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -874,7 +874,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_max_reported',
@@ -888,7 +888,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Inverter 1 Power',
+      'friendly_name': 'Inverter 1 Lifetime maximum power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -2477,7 +2477,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_current',
@@ -2491,7 +2491,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 AC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -2533,7 +2533,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'Frequency',
+    'original_name': 'AC frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -2547,7 +2547,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
+      'friendly_name': 'Inverter 1 AC frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -2589,7 +2589,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_voltage',
@@ -2603,7 +2603,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 AC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -2645,7 +2645,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_current',
@@ -2659,7 +2659,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 DC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -2701,7 +2701,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_voltage',
@@ -2715,7 +2715,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 DC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -2733,7 +2733,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2757,7 +2757,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_produced',
@@ -2771,8 +2771,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
@@ -2789,7 +2789,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2813,7 +2813,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_today',
@@ -2827,8 +2827,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -2869,7 +2869,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Duration',
+    'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_last_report_duration',
@@ -2883,7 +2883,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Inverter 1 Duration',
+      'friendly_name': 'Inverter 1 Last report duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -2950,7 +2950,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2977,7 +2977,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_lifetime_energy',
@@ -2991,8 +2991,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Lifetime energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -3033,7 +3033,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_max_reported',
@@ -3047,7 +3047,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Inverter 1 Power',
+      'friendly_name': 'Inverter 1 Lifetime maximum power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -8080,7 +8080,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_current',
@@ -8094,7 +8094,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 AC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -8136,7 +8136,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'Frequency',
+    'original_name': 'AC frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -8150,7 +8150,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
+      'friendly_name': 'Inverter 1 AC frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -8192,7 +8192,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_voltage',
@@ -8206,7 +8206,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 AC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -8248,7 +8248,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_current',
@@ -8262,7 +8262,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 DC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -8304,7 +8304,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_voltage',
@@ -8318,7 +8318,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 DC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -8336,7 +8336,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8360,7 +8360,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_produced',
@@ -8374,8 +8374,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
@@ -8392,7 +8392,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8416,7 +8416,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_today',
@@ -8430,8 +8430,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -8472,7 +8472,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Duration',
+    'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_last_report_duration',
@@ -8486,7 +8486,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Inverter 1 Duration',
+      'friendly_name': 'Inverter 1 Last report duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -8553,7 +8553,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8580,7 +8580,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_lifetime_energy',
@@ -8594,8 +8594,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Lifetime energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -8636,7 +8636,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_max_reported',
@@ -8650,7 +8650,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Inverter 1 Power',
+      'friendly_name': 'Inverter 1 Lifetime maximum power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -13309,7 +13309,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_current',
@@ -13323,7 +13323,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 AC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -13365,7 +13365,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'Frequency',
+    'original_name': 'AC frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -13379,7 +13379,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
+      'friendly_name': 'Inverter 1 AC frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -13421,7 +13421,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_voltage',
@@ -13435,7 +13435,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 AC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -13477,7 +13477,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_current',
@@ -13491,7 +13491,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 DC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -13533,7 +13533,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_voltage',
@@ -13547,7 +13547,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 DC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -13565,7 +13565,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13589,7 +13589,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_produced',
@@ -13603,8 +13603,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
@@ -13621,7 +13621,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13645,7 +13645,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_today',
@@ -13659,8 +13659,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -13701,7 +13701,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Duration',
+    'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_last_report_duration',
@@ -13715,7 +13715,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Inverter 1 Duration',
+      'friendly_name': 'Inverter 1 Last report duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -13782,7 +13782,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -13809,7 +13809,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_lifetime_energy',
@@ -13823,8 +13823,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Lifetime energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -13865,7 +13865,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_max_reported',
@@ -13879,7 +13879,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Inverter 1 Power',
+      'friendly_name': 'Inverter 1 Lifetime maximum power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -22448,7 +22448,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_current',
@@ -22462,7 +22462,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 AC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -22504,7 +22504,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'Frequency',
+    'original_name': 'AC frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -22518,7 +22518,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
+      'friendly_name': 'Inverter 1 AC frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -22560,7 +22560,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_voltage',
@@ -22574,7 +22574,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 AC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -22616,7 +22616,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_current',
@@ -22630,7 +22630,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 DC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -22672,7 +22672,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_voltage',
@@ -22686,7 +22686,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 DC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -22704,7 +22704,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -22728,7 +22728,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_produced',
@@ -22742,8 +22742,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
@@ -22760,7 +22760,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -22784,7 +22784,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_today',
@@ -22798,8 +22798,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -22840,7 +22840,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Duration',
+    'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_last_report_duration',
@@ -22854,7 +22854,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Inverter 1 Duration',
+      'friendly_name': 'Inverter 1 Last report duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -22921,7 +22921,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -22948,7 +22948,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_lifetime_energy',
@@ -22962,8 +22962,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Lifetime energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -23004,7 +23004,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_max_reported',
@@ -23018,7 +23018,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Inverter 1 Power',
+      'friendly_name': 'Inverter 1 Lifetime maximum power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -28912,7 +28912,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_current',
@@ -28926,7 +28926,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 AC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -28968,7 +28968,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'Frequency',
+    'original_name': 'AC frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -28982,7 +28982,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
+      'friendly_name': 'Inverter 1 AC frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -29024,7 +29024,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_voltage',
@@ -29038,7 +29038,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 AC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -29080,7 +29080,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_current',
@@ -29094,7 +29094,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 DC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -29136,7 +29136,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_voltage',
@@ -29150,7 +29150,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 DC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -29168,7 +29168,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -29192,7 +29192,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_produced',
@@ -29206,8 +29206,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
@@ -29224,7 +29224,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -29248,7 +29248,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_today',
@@ -29262,8 +29262,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -29304,7 +29304,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Duration',
+    'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_last_report_duration',
@@ -29318,7 +29318,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Inverter 1 Duration',
+      'friendly_name': 'Inverter 1 Last report duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -29385,7 +29385,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -29412,7 +29412,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_lifetime_energy',
@@ -29426,8 +29426,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Lifetime energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -29468,7 +29468,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_max_reported',
@@ -29482,7 +29482,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Inverter 1 Power',
+      'friendly_name': 'Inverter 1 Lifetime maximum power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -30324,7 +30324,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_current',
@@ -30338,7 +30338,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 AC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -30380,7 +30380,7 @@
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
-    'original_name': 'Frequency',
+    'original_name': 'AC frequency',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_frequency',
@@ -30394,7 +30394,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
+      'friendly_name': 'Inverter 1 AC frequency',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
@@ -30436,7 +30436,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_ac_voltage',
@@ -30450,7 +30450,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 AC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -30492,7 +30492,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_current',
@@ -30506,7 +30506,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Inverter 1 Current',
+      'friendly_name': 'Inverter 1 DC current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
@@ -30548,7 +30548,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_dc_voltage',
@@ -30562,7 +30562,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'Inverter 1 Voltage',
+      'friendly_name': 'Inverter 1 DC voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
@@ -30580,7 +30580,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -30604,7 +30604,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_produced',
@@ -30618,8 +30618,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
@@ -30636,7 +30636,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -30660,7 +30660,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_energy_today',
@@ -30674,8 +30674,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Energy produced today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -30716,7 +30716,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Duration',
+    'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_last_report_duration',
@@ -30730,7 +30730,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Inverter 1 Duration',
+      'friendly_name': 'Inverter 1 Last report duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
@@ -30797,7 +30797,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -30824,7 +30824,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_lifetime_energy',
@@ -30838,8 +30838,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'friendly_name': 'Inverter 1 Lifetime energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -30880,7 +30880,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': 'inverter_1_max_reported',
@@ -30894,7 +30894,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Inverter 1 Power',
+      'friendly_name': 'Inverter 1 Lifetime maximum power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
