@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 from mimetypes import guess_file_type
 from pathlib import Path
+from types import MappingProxyType
 
 import openai
 from openai.types.images_response import ImagesResponse
@@ -48,9 +49,11 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     LOGGER,
+    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
@@ -61,7 +64,10 @@ from .const import (
 SERVICE_GENERATE_IMAGE = "generate_image"
 SERVICE_GENERATE_CONTENT = "generate_content"
 
-PLATFORMS = (Platform.CONVERSATION,)
+PLATFORMS = (
+    Platform.AI_TASK,
+    Platform.CONVERSATION,
+)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
@@ -295,7 +301,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
     if entry.version == 1:
         # Migrate from version 1 to version 2
         # Move conversation-specific options to a subentry
-        subentry = ConfigSubentry(
+        conversation_subentry = ConfigSubentry(
             data=entry.options,
             subentry_type="conversation",
             title=DEFAULT_CONVERSATION_NAME,
@@ -303,7 +309,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
         )
         hass.config_entries.async_add_subentry(
             entry,
-            subentry,
+            conversation_subentry,
+        )
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
+                subentry_type="ai_task",
+                title=DEFAULT_AI_TASK_NAME,
+                unique_id=None,
+            ),
         )
 
         # Migrate conversation entity to be linked to subentry
@@ -312,8 +327,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
             if entity_entry.domain == Platform.CONVERSATION:
                 ent_reg.async_update_entity(
                     entity_entry.entity_id,
-                    config_subentry_id=subentry.subentry_id,
-                    new_unique_id=subentry.subentry_id,
+                    config_subentry_id=conversation_subentry.subentry_id,
+                    new_unique_id=conversation_subentry.subentry_id,
                 )
                 break
 

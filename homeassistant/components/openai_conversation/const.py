@@ -2,10 +2,14 @@
 
 import logging
 
+from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.helpers import llm
+
 DOMAIN = "openai_conversation"
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
 DEFAULT_CONVERSATION_NAME = "OpenAI Conversation"
+DEFAULT_AI_TASK_NAME = "OpenAI AI Task"
 
 CONF_CHAT_MODEL = "chat_model"
 CONF_FILENAMES = "filenames"
@@ -31,6 +35,16 @@ RECOMMENDED_TOP_P = 1.0
 RECOMMENDED_WEB_SEARCH = False
 RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE = "medium"
 RECOMMENDED_WEB_SEARCH_USER_LOCATION = False
+
+RECOMMENDED_CONVERSATION_OPTIONS = {
+    CONF_RECOMMENDED: True,
+    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+    CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
+}
+
+RECOMMENDED_AI_TASK_OPTIONS = {
+    CONF_RECOMMENDED: True,
+}
 
 UNSUPPORTED_MODELS: list[str] = [
     "o1-mini",

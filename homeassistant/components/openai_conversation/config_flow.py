@@ -54,9 +54,12 @@ from .const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
+    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
@@ -75,12 +78,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): str,
     }
 )
-
-RECOMMENDED_OPTIONS = {
-    CONF_RECOMMENDED: True,
-    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
-    CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
-}
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
@@ -126,10 +123,16 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 subentries=[
                     {
                         "subentry_type": "conversation",
-                        "data": RECOMMENDED_OPTIONS,
+                        "data": RECOMMENDED_CONVERSATION_OPTIONS,
                         "title": DEFAULT_CONVERSATION_NAME,
                         "unique_id": None,
-                    }
+                    },
+                    {
+                        "subentry_type": "ai_task",
+                        "data": RECOMMENDED_AI_TASK_OPTIONS,
+                        "title": DEFAULT_AI_TASK_NAME,
+                        "unique_id": None,
+                    },
                 ],
             )
 
@@ -143,10 +146,13 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {"conversation": ConversationSubentryFlowHandler}
+        return {
+            "conversation": LLMSubentryFlowHandler,
+            "ai_task": LLMSubentryFlowHandler,
+        }
 
 
-class ConversationSubentryFlowHandler(ConfigSubentryFlow):
+class LLMSubentryFlowHandler(ConfigSubentryFlow):
     """Flow for managing conversation subentries."""
 
     last_rendered_recommended = False
@@ -158,7 +164,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Add a subentry."""
         self.is_new = True
-        self.options = RECOMMENDED_OPTIONS.copy()
+        if self._subentry_type == "ai_task":
+            self.options = RECOMMENDED_AI_TASK_OPTIONS.copy()
+        else:
+            self.options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
         return await self.async_step_init()
 
     async def async_step_reconfigure(
@@ -190,28 +199,34 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         step_schema: VolDictType = {}
 
         if self.is_new:
-            step_schema[vol.Required(CONF_NAME, default=DEFAULT_CONVERSATION_NAME)] = (
-                str
+            if CONF_NAME in options:
+                default_name = options[CONF_NAME]
+            elif self._subentry_type == "ai_task":
+                default_name = DEFAULT_AI_TASK_NAME
+            else:
+                default_name = DEFAULT_CONVERSATION_NAME
+            step_schema[vol.Required(CONF_NAME, default=default_name)] = str
+
+        if self._subentry_type == "conversation":
+            step_schema.update(
+                {
+                    vol.Optional(
+                        CONF_PROMPT,
+                        description={
+                            "suggested_value": options.get(
+                                CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                            )
+                        },
+                    ): TemplateSelector(),
+                    vol.Optional(CONF_LLM_HASS_API): SelectSelector(
+                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                    ),
+                }
             )
 
-        step_schema.update(
-            {
-                vol.Optional(
-                    CONF_PROMPT,
-                    description={
-                        "suggested_value": options.get(
-                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                        )
-                    },
-                ): TemplateSelector(),
-                vol.Optional(CONF_LLM_HASS_API): SelectSelector(
-                    SelectSelectorConfig(options=hass_apis, multiple=True)
-                ),
-                vol.Required(
-                    CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-                ): bool,
-            }
-        )
+        step_schema[
+            vol.Required(CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False))
+        ] = bool
 
         if user_input is not None:
             if not user_input.get(CONF_LLM_HASS_API):

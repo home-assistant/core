@@ -8,7 +8,6 @@ from openai.types.responses import Response, ResponseOutputMessage, ResponseOutp
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.openai_conversation.config_flow import RECOMMENDED_OPTIONS
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -24,9 +23,12 @@ from homeassistant.components.openai_conversation.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
+    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TOP_P,
 )
@@ -77,10 +79,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["subentries"] == [
         {
             "subentry_type": "conversation",
-            "data": RECOMMENDED_OPTIONS,
+            "data": RECOMMENDED_CONVERSATION_OPTIONS,
             "title": DEFAULT_CONVERSATION_NAME,
             "unique_id": None,
-        }
+        },
+        {
+            "subentry_type": "ai_task",
+            "data": RECOMMENDED_AI_TASK_OPTIONS,
+            "title": DEFAULT_AI_TASK_NAME,
+            "unique_id": None,
+        },
     ]
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -104,17 +112,54 @@ async def test_creating_conversation_subentry(
 
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"name": "My Custom Agent", **RECOMMENDED_OPTIONS},
+        {"name": "My Custom Agent", **RECOMMENDED_CONVERSATION_OPTIONS},
     )
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Custom Agent"
 
-    processed_options = RECOMMENDED_OPTIONS.copy()
+    processed_options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
     processed_options[CONF_PROMPT] = processed_options[CONF_PROMPT].strip()
 
     assert result2["data"] == processed_options
+
+
+async def test_creating_ai_task_subentry(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test creating an AI task subentry."""
+    with patch("openai.resources.models.AsyncModels.list"):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "ai_task"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert not result["errors"]
+
+    old_subentries = set(mock_config_entry.subentries)
+
+    with patch("openai.resources.models.AsyncModels.list"):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {"name": "My AI Task", **RECOMMENDED_AI_TASK_OPTIONS},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "My AI Task"
+    assert result2["data"] == RECOMMENDED_AI_TASK_OPTIONS
+
+    assert len(mock_config_entry.subentries) == 3
+
+    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+    new_subentry = mock_config_entry.subentries[new_subentry_id]
+
+    assert new_subentry.subentry_type == "ai_task"
+    assert new_subentry.data == RECOMMENDED_AI_TASK_OPTIONS
+    assert new_subentry.title == "My AI Task"
 
 
 async def test_subentry_recommended(
