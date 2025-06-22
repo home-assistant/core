@@ -574,3 +574,42 @@ async def test_vacuum_log_deprecated_battery_properties_using_attr(
         " please report it to the author of the 'test' custom integration"
         not in caplog.text
     )
+
+
+@pytest.mark.usefixtures("mock_as_custom_component")
+async def test_vacuum_log_deprecated_battery_supported_feature(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test incorrectly setting battery supported feature logs warning."""
+
+    entity = MockVacuum(
+        name="Testing",
+        entity_id="vacuum.test",
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+        built_in=False,
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+
+    assert (
+        "Detected that custom integration 'test' is setting the battery supported feature"
+        " which has been deprecated. Integration test should remove this as part of migrating"
+        " the battery level and icon to a sensor. This will stop working in Home Assistant 2026.7"
+        ", please report it to the author of the 'test' custom integration"
+        in caplog.text
+    )
