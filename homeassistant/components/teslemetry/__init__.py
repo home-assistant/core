@@ -179,7 +179,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             if wall_connector:
                 for connector in product["components"]["wall_connectors"]:
-                    current_devices.add((DOMAIN, connector.get("din", "")))
+                    current_devices.add((DOMAIN, connector["din"]))
 
             # Check live status endpoint works before creating its coordinator
             try:
