@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from awesomeversion import AwesomeVersion
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
+from homeassistant.components.update import UpdateEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -38,10 +38,7 @@ class ImmichUpdateEntity(ImmichEntity, UpdateEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_update"
-        self.entity_description = UpdateEntityDescription(
-            key="update",
-            translation_key="update",
-        )
+        self._attr_translation_key = "update"
 
     @property
     def installed_version(self) -> str:
