@@ -388,6 +388,20 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         except RequestException as exc:
             raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
 
+    async def set_heating_circuit(self, zone_id: int, circuit_id: int | None) -> None:
+        """Set heating circuit for zone."""
+        try:
+            await self.hass.async_add_executor_job(
+                self._tado.set_zone_heating_circuit,
+                zone_id,
+                circuit_id,
+            )
+        except RequestException as exc:
+            raise HomeAssistantError(
+                f"Error setting Tado heating circuit: {exc}"
+            ) from exc
+        await self._update_zone_control(zone_id)
+
 
 class TadoMobileDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Class to manage the mobile devices from Tado via PyTado."""
