@@ -32,9 +32,12 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data: dict[str, Any] = {}
         self.url: str | None = None
         self.name: str | None = None
+
+    @property
+    def _title(self):
+        return f"{self.name or 'DALI Gateway'} - {urlparse(self.url).hostname}"
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -75,6 +78,7 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(
                     self._get_reconfigure_entry(),
                     data_updates=data,
+                    title=self._title,
                 )
 
         step_id = "reconfigure"
@@ -92,7 +96,7 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return a config entry for the flow."""
         assert self.url is not None
         return self.async_create_entry(
-            title=f"{self.name or 'DALI Gateway'} - {urlparse(self.url).hostname}",
+            title=self._title,
             data={CONF_URL: self.url},
         )
 
