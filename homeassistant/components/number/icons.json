@@ -132,6 +132,9 @@
     "temperature": {
       "default": "mdi:thermometer"
     },
+    "temperature_interval": {
+      "default": "mdi:thermometer"
+    },
     "volatile_organic_compounds": {
       "default": "mdi:molecule"
     },

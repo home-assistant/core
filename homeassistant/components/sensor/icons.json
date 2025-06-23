@@ -151,6 +151,9 @@
     "temperature": {
       "default": "mdi:thermometer"
     },
+    "temperature_interval": {
+      "default": "mdi:thermometer"
+    },
     "timestamp": {
       "default": "mdi:clock"
     },

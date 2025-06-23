@@ -48,6 +48,7 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     ReactiveEnergyConverter,
     TemperatureConverter,
+    TemperatureIntervalConverter,
     VolumeFlowRateConverter,
 )
 
@@ -368,6 +369,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `°C`, `°F`, `K`
     """
 
+    TEMPERATURE_INTERVAL = "temperature_interval"
+    """Difference of temperatures - Temperature range.
+
+    Unit of measurement: `°C`, `°F`, `K`
+    """
+
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
     """Amount of VOC.
 
@@ -517,6 +524,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
     NumberDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
+    NumberDeviceClass.TEMPERATURE_INTERVAL: set(UnitOfTemperature),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -544,5 +552,6 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
 UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     NumberDeviceClass.TEMPERATURE: TemperatureConverter,
+    NumberDeviceClass.TEMPERATURE_INTERVAL: TemperatureIntervalConverter,
     NumberDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
 }

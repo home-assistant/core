@@ -672,6 +672,25 @@ class TemperatureConverter(BaseUnitConverter):
         return celsius + 273.15
 
 
+class TemperatureIntervalConverter(BaseUnitConverter):
+    """Utility to convert temperature intervals.
+
+    eg. a 10°C interval (10°C to 20°C) will return a 18°F (50°F to 68°F) interval
+    """
+
+    UNIT_CLASS = "temperature interval"
+    VALID_UNITS = {
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+        UnitOfTemperature.KELVIN,
+    }
+    _UNIT_CONVERSION = {
+        UnitOfTemperature.CELSIUS: 1.0,
+        UnitOfTemperature.FAHRENHEIT: 1.8,
+        UnitOfTemperature.KELVIN: 1.0,
+    }
+
+
 class UnitlessRatioConverter(BaseUnitConverter):
     """Utility to convert unitless ratios."""
 
