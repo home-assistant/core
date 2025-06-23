@@ -30,6 +30,13 @@ NUMBER_OF_RINSES_STATE_MAP = {
 NUMBER_OF_RINSES_STATE_MAP_REVERSE = {
     v: k for k, v in NUMBER_OF_RINSES_STATE_MAP.items()
 }
+PUMP_OPERATION_MODE_MAP = {
+    clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kNormal: "normal",
+    clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kMinimum: "minimum",
+    clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kMaximum: "maximum",
+    clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kLocal: "local",
+}
+PUMP_OPERATION_MODE_MAP_REVERSE = {v: k for k, v in PUMP_OPERATION_MODE_MAP.items()}
 
 type SelectCluster = (
     clusters.ModeSelect
@@ -458,5 +465,19 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterAttributeSelectEntity,
         required_attributes=(clusters.DoorLock.Attributes.SoundVolume,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="PumpConfigurationAndControlOperationMode",
+            translation_key="pump_operation_mode",
+            options=list(PUMP_OPERATION_MODE_MAP.values()),
+            measurement_to_ha=PUMP_OPERATION_MODE_MAP.get,
+            ha_to_native_value=PUMP_OPERATION_MODE_MAP_REVERSE.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            clusters.PumpConfigurationAndControl.Attributes.OperationMode,
+        ),
     ),
 ]

@@ -58,20 +58,20 @@ async def test_setup(
                 (
                     "number.mock_heater_temperature_offset",
                     0.4,
-                    "set_temperature_offset",
-                    (0.4,),
+                    "offset",
+                    4,
                 ),
                 (
                     "number.mock_heater_night_temperature_offset",
                     0.4,
-                    "set_night_temperature_offset",
-                    (0.4,),
+                    "nReduce",
+                    4,
                 ),
                 (
                     "number.mock_heater_system_led_brightness",
                     20,
-                    "set_sys_led",
-                    (20,),
+                    "sysLED",
+                    20,
                 ),
             ],
         ),
@@ -81,26 +81,26 @@ async def test_setup(
                 (
                     "number.mock_classicvario_manual_speed",
                     72.1,
-                    "set_manual_speed",
-                    (int(72.1),),
+                    "rel_manual_motor_speed",
+                    int(72.1),
                 ),
                 (
                     "number.mock_classicvario_day_speed",
                     72.1,
-                    "set_day_speed",
-                    (int(72.1),),
+                    "rel_motor_speed_day",
+                    int(72.1),
                 ),
                 (
                     "number.mock_classicvario_night_speed",
                     72.1,
-                    "set_night_speed",
-                    (int(72.1),),
+                    "rel_motor_speed_night",
+                    int(72.1),
                 ),
                 (
                     "number.mock_classicvario_system_led_brightness",
                     20,
-                    "set_sys_led",
-                    (20,),
+                    "sysLED",
+                    20,
                 ),
             ],
         ),
@@ -131,8 +131,8 @@ async def test_set_value(
             {ATTR_ENTITY_ID: item[0], ATTR_VALUE: item[1]},
             blocking=True,
         )
-        calls = [call for call in device.mock_calls if call[0] == item[2]]
-        assert len(calls) == 1 and calls[0][1] == item[3]
+        calls = [call for call in device.hub.mock_calls if call[0] == "send_packet"]
+        assert calls[-1][1][0][item[2]] == item[3]
 
 
 @pytest.mark.usefixtures("classic_vario_mock", "heater_mock")
@@ -144,17 +144,23 @@ async def test_set_value(
             [
                 (
                     "number.mock_heater_temperature_offset",
-                    "temperature_offset",
+                    "heater_data",
+                    "offset",
+                    -11,
                     -1.1,
                 ),
                 (
                     "number.mock_heater_night_temperature_offset",
-                    "night_temperature_offset",
-                    2.3,
+                    "heater_data",
+                    "nReduce",
+                    -23,
+                    -2.3,
                 ),
                 (
                     "number.mock_heater_system_led_brightness",
-                    "sys_led",
+                    "usrdta",
+                    "sysLED",
+                    87,
                     87,
                 ),
             ],
@@ -164,23 +170,31 @@ async def test_set_value(
             [
                 (
                     "number.mock_classicvario_manual_speed",
-                    "manual_speed",
+                    "classic_vario_data",
+                    "rel_manual_motor_speed",
+                    34,
                     34,
                 ),
                 (
                     "number.mock_classicvario_day_speed",
-                    "day_speed",
-                    79,
+                    "classic_vario_data",
+                    "rel_motor_speed_day",
+                    72,
+                    72,
                 ),
                 (
                     "number.mock_classicvario_night_speed",
-                    "night_speed",
-                    12,
+                    "classic_vario_data",
+                    "rel_motor_speed_night",
+                    20,
+                    20,
                 ),
                 (
                     "number.mock_classicvario_system_led_brightness",
-                    "sys_led",
-                    35,
+                    "usrdta",
+                    "sysLED",
+                    20,
+                    20,
                 ),
             ],
         ),
@@ -191,7 +205,7 @@ async def test_state_update(
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_name: str,
-    entity_list: list[tuple[str, str, float]],
+    entity_list: list[tuple[str, str, str, float, float]],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test state updates."""
@@ -205,7 +219,7 @@ async def test_state_update(
     await hass.async_block_till_done()
 
     for item in entity_list:
-        setattr(device, item[1], item[2])
+        getattr(device, item[1])[item[2]] = item[3]
         await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
         assert (state := hass.states.get(item[0]))
-        assert state.state == str(item[2])
+        assert state.state == str(item[4])

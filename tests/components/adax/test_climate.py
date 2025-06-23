@@ -20,7 +20,7 @@ async def test_climate_cloud(
 ) -> None:
     """Test states of the (cloud) Climate entity."""
     await setup_integration(hass, mock_cloud_config_entry)
-    mock_adax_cloud.get_rooms.assert_called_once()
+    mock_adax_cloud.fetch_rooms_info.assert_called_once()
 
     assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
     entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
@@ -37,7 +37,7 @@ async def test_climate_cloud(
         == CLOUD_DEVICE_DATA[0]["temperature"]
     )
 
-    mock_adax_cloud.get_rooms.side_effect = Exception()
+    mock_adax_cloud.fetch_rooms_info.side_effect = Exception()
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

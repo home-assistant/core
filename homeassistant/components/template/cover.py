@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as COVER_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
@@ -35,16 +36,17 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_OBJECT_ID, CONF_PICTURE, DOMAIN
+from . import TriggerUpdateCoordinator
+from .const import CONF_OBJECT_ID, DOMAIN
 from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
     TemplateEntity,
+    make_template_entity_common_modern_schema,
     rewrite_common_legacy_to_modern_conf,
 )
+from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,21 +99,16 @@ COVER_SCHEMA = vol.All(
             vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
             vol.Optional(CONF_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_PICTURE): cv.template,
             vol.Optional(CONF_POSITION): cv.template,
             vol.Optional(CONF_STATE): cv.template,
             vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_TILT): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
         }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema),
+    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
@@ -207,6 +204,13 @@ async def async_setup_platform(
         )
         return
 
+    if "coordinator" in discovery_info:
+        async_add_entities(
+            TriggerCoverEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
+        )
+        return
+
     _async_create_template_tracking_entities(
         async_add_entities,
         hass,
@@ -239,7 +243,13 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         self._is_closing = False
         self._tilt_value: int | None = None
 
-    def _register_scripts(
+        # The config requires (open and close scripts) or a set position script,
+        # therefore the base supported features will always include them.
+        self._attr_supported_features: CoverEntityFeature = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
+
+    def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], CoverEntityFeature | int]]:
         for action_id, supported_feature in (
@@ -447,9 +457,7 @@ class CoverTemplate(TemplateEntity, AbstractTemplateCover):
         unique_id,
     ) -> None:
         """Initialize the Template cover."""
-        TemplateEntity.__init__(
-            self, hass, config=config, fallback_name=None, unique_id=unique_id
-        )
+        TemplateEntity.__init__(self, hass, config=config, unique_id=unique_id)
         AbstractTemplateCover.__init__(self, config)
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
@@ -459,13 +467,7 @@ class CoverTemplate(TemplateEntity, AbstractTemplateCover):
         if TYPE_CHECKING:
             assert name is not None
 
-        # The config requires (open and close scripts) or a set position script,
-        # therefore the base supported features will always include them.
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-        )
-
-        for action_id, action_config, supported_feature in self._register_scripts(
+        for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
@@ -504,3 +506,62 @@ class CoverTemplate(TemplateEntity, AbstractTemplateCover):
             return
 
         self._update_opening_and_closing(result)
+
+
+class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
+    """Cover entity based on trigger data."""
+
+    domain = COVER_DOMAIN
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: ConfigType,
+    ) -> None:
+        """Initialize the entity."""
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        AbstractTemplateCover.__init__(self, config)
+
+        # Render the _attr_name before initializing TriggerCoverEntity
+        self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+
+        for action_id, action_config, supported_feature in self._iterate_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+        for key in (CONF_STATE, CONF_POSITION, CONF_TILT):
+            if isinstance(config.get(key), template.Template):
+                self._to_render_simple.append(key)
+                self._parse_result.add(key)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle update of the data."""
+        self._process_data()
+
+        if not self.available:
+            self.async_write_ha_state()
+            return
+
+        write_ha_state = False
+        for key, updater in (
+            (CONF_STATE, self._update_opening_and_closing),
+            (CONF_POSITION, self._update_position),
+            (CONF_TILT, self._update_tilt),
+        ):
+            if (rendered := self._rendered.get(key)) is not None:
+                updater(rendered)
+                write_ha_state = True
+
+        if not self._optimistic:
+            self.async_set_context(self.coordinator.data["context"])
+            write_ha_state = True
+        elif self._optimistic and len(self._rendered) > 0:
+            # In case any non optimistic template
+            write_ha_state = True
+
+        if write_ha_state:
+            self.async_write_ha_state()
