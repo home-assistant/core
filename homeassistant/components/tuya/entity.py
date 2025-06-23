@@ -18,8 +18,7 @@ from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
 
 _DPTYPE_MAPPING: dict[str, DPType] = {
-    "Bitmap": DPType.RAW,
-    "bitmap": DPType.RAW,
+    "bitmap": DPType.BITMAP,
     "bool": DPType.BOOLEAN,
     "enum": DPType.ENUM,
     "json": DPType.JSON,
@@ -141,6 +140,21 @@ class ElectricityTypeData:
         )
 
 
+@dataclass
+class BitmapTypeData:
+    """Bitmap Type Data."""
+
+    dpcode: DPCode
+    label: list[str]
+
+    @classmethod
+    def from_json(cls, dpcode: DPCode, data: str) -> BitmapTypeData | None:
+        """Load JSON string and return a BitmapTypeData object."""
+        if not (parsed := json.loads(data)):
+            return None
+        return cls(dpcode, **parsed)
+
+
 class TuyaEntity(Entity):
     """Tuya base device."""
 
@@ -195,6 +209,15 @@ class TuyaEntity(Entity):
         dpcodes: str | DPCode | tuple[DPCode, ...] | None,
         *,
         prefer_function: bool = False,
+        dptype: Literal[DPType.BITMAP],
+    ) -> BitmapTypeData | None: ...
+
+    @overload
+    def find_dpcode(
+        self,
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        *,
+        prefer_function: bool = False,
     ) -> DPCode | None: ...
 
     def find_dpcode(
@@ -203,7 +226,7 @@ class TuyaEntity(Entity):
         *,
         prefer_function: bool = False,
         dptype: DPType | None = None,
-    ) -> DPCode | EnumTypeData | IntegerTypeData | None:
+    ) -> DPCode | EnumTypeData | IntegerTypeData | BitmapTypeData | None:
         """Find a matching DP code available on for this device."""
         if dpcodes is None:
             return None
@@ -250,7 +273,19 @@ class TuyaEntity(Entity):
                         continue
                     return integer_type
 
-                if dptype not in (DPType.ENUM, DPType.INTEGER):
+                if (
+                    dptype == DPType.BITMAP
+                    and getattr(self.device, key)[dpcode].type == DPType.BITMAP
+                ):
+                    if not (
+                        bitmap_type := BitmapTypeData.from_json(
+                            dpcode, getattr(self.device, key)[dpcode].values
+                        )
+                    ):
+                        continue
+                    return bitmap_type
+
+                if dptype not in (DPType.ENUM, DPType.INTEGER, DPType.BITMAP):
                     return dpcode
 
         return None

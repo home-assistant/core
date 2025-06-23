@@ -56,6 +56,81 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "undervoltage_alarm": {
+        "name": "Low voltage alarm"
+      },
+      "ls_vol": {
+        "name": "Low voltage alarm"
+      },
+      "ov_vol": {
+        "name": "Over voltage alarm"
+      },
+      "low_current_alarm": {
+        "name": "Low current alarm"
+      },
+      "ls_cr": {
+        "name": "Low current alarm"
+      },
+      "ov_cr": {
+        "name": "Over current alarm"
+      },
+      "ls_pow": {
+        "name": "Low power alarm"
+      },
+      "ov_pwr": {
+        "name": "High power alarm"
+      },
+      "high_power_alarm": {
+        "name": "High power alarm"
+      },
+      "phase_seq_err_alarm": {
+        "name": "Phase sequence error alarm"
+      },
+      "vol_unbalance_alarm": {
+        "name": "Voltage unbalance alarm"
+      },
+      "short_circuit_alarm": {
+        "name": "Short circuit alarm"
+      },
+      "surge_alarm": {
+        "name": "Surge alarm"
+      },
+      "overload_alarm": {
+        "name": "Overload alarm"
+      },
+      "leakagecurr_alarm": {
+        "name": "Leakagecurr alarm"
+      },
+      "temp_dif_fault": {
+        "name": "Temp dif fault"
+      },
+      "fire_alarm": {
+        "name": "Fire alarm"
+      },
+      "self_test_alarm": {
+        "name": "Self test alarm"
+      },
+      "unbalance_alarm": {
+        "name": "Unbalance alarm"
+      },
+      "miss_phase_alarm": {
+        "name": "Miss phase alarm"
+      },
+      "outage_alarm": {
+        "name": "Outage alarm"
+      },
+      "magnetism_alarm": {
+        "name": "Magnetism alarm"
+      },
+      "credit_alarm": {
+        "name": "Credit alarm"
+      },
+      "no_balance_alarm": {
+        "name": "No balance alarm"
+      },
+      "high_temp": {
+        "name": "High temperature alarm"
       }
     },
     "button": {

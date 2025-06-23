@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 
 
@@ -30,6 +30,9 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     # Value or values to consider binary sensor to be "on"
     on_value: bool | float | int | str | set[bool | float | int | str] = True
+
+    # Bitmask to consider binary sensor to be "on"
+    bitmask: int = 0
 
 
 # Commonly used sensors
@@ -337,6 +340,18 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="tilt",
         ),
     ),
+    # Circuit Breaker
+    # https://developer.tuya.com/en/docs/iot/dlq?id=Kb0kidk9enyh8
+    "dlq": (
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_",
+            dpcode=DPCode.FAULT,
+            name="?",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmask=0,
+        ),
+    ),
 }
 
 
@@ -352,15 +367,40 @@ async def async_setup_entry(
         entities: list[TuyaBinarySensorEntity] = []
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
-            if descriptions := BINARY_SENSORS.get(device.category):
-                for description in descriptions:
-                    dpcode = description.dpcode or description.key
-                    if dpcode in device.status:
+            if not (descriptions := BINARY_SENSORS.get(device.category)):
+                continue
+
+            for description in descriptions:
+                dpcode = description.dpcode or description.key
+                if dpcode not in device.status:
+                    continue
+
+                if bitmap_type := TuyaEntity(device, hass_data.manager).find_dpcode(
+                    dpcode, dptype=DPType.BITMAP
+                ):
+                    bitmask = 1
+                    for label in bitmap_type.label:
                         entities.append(
                             TuyaBinarySensorEntity(
-                                device, hass_data.manager, description
+                                device,
+                                hass_data.manager,
+                                TuyaBinarySensorEntityDescription(
+                                    key=f"{description.key}{label}",
+                                    dpcode=description.dpcode,
+                                    name=label,
+                                    translation_key=label,
+                                    device_class=description.device_class,
+                                    entity_category=description.entity_category,
+                                    bitmask=bitmask,
+                                ),
                             )
                         )
+                        bitmask <<= 1
+                    continue
+
+                entities.append(
+                    TuyaBinarySensorEntity(device, hass_data.manager, description)
+                )
 
         async_add_entities(entities)
 
@@ -393,6 +433,12 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         dpcode = self.entity_description.dpcode or self.entity_description.key
         if dpcode not in self.device.status:
             return False
+
+        if self.entity_description.bitmask != 0:
+            return (
+                self.device.status[dpcode] & self.entity_description.bitmask
+                == self.entity_description.bitmask
+            )
 
         if isinstance(self.entity_description.on_value, set):
             return self.device.status[dpcode] in self.entity_description.on_value
