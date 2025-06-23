@@ -8,6 +8,7 @@ from homeassistant.components.ai_task import AITaskEntityFeature, async_generate
 from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
@@ -25,7 +26,7 @@ async def test_run_task_preferred_entity(
     client = await hass_ws_client(hass)
 
     with pytest.raises(
-        ValueError, match="No entity_id provided and no preferred entity set"
+        HomeAssistantError, match="No entity_id provided and no preferred entity set"
     ):
         await async_generate_text(
             hass,
@@ -42,7 +43,9 @@ async def test_run_task_preferred_entity(
     msg = await client.receive_json()
     assert msg["success"]
 
-    with pytest.raises(ValueError, match="AI Task entity ai_task.unknown not found"):
+    with pytest.raises(
+        HomeAssistantError, match="AI Task entity ai_task.unknown not found"
+    ):
         await async_generate_text(
             hass,
             task_name="Test Task",
@@ -74,7 +77,7 @@ async def test_run_task_preferred_entity(
 
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
-        ValueError,
+        HomeAssistantError,
         match="AI Task entity ai_task.test_task_entity does not support generating text",
     ):
         await async_generate_text(
@@ -91,7 +94,7 @@ async def test_run_text_task_unknown_entity(
     """Test running a text task with an unknown entity."""
 
     with pytest.raises(
-        ValueError, match="AI Task entity ai_task.unknown_entity not found"
+        HomeAssistantError, match="AI Task entity ai_task.unknown_entity not found"
     ):
         await async_generate_text(
             hass,
