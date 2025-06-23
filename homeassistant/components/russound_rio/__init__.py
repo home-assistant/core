@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
