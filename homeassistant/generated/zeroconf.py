@@ -342,6 +342,11 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_altruist._tcp.local.": [
+        {
+            "domain": "altruist",
+        },
+    ],
     "_amzn-alexa._tcp.local.": [
         {
             "domain": "roomba",
@@ -863,11 +868,6 @@ ZEROCONF = {
     "_soundtouch._tcp.local.": [
         {
             "domain": "soundtouch",
-        },
-    ],
-    "_spotify-connect._tcp.local.": [
-        {
-            "domain": "spotify",
         },
     ],
     "_ssh._tcp.local.": [

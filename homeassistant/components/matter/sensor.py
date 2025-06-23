@@ -38,6 +38,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
@@ -82,6 +83,21 @@ BOOST_STATE_MAP = {
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive: "inactive",
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive: "active",
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kUnknownEnumValue: None,
+}
+
+CHARGE_STATE_MAP = {
+    clusters.PowerSource.Enums.BatChargeStateEnum.kUnknown: None,
+    clusters.PowerSource.Enums.BatChargeStateEnum.kIsNotCharging: "not_charging",
+    clusters.PowerSource.Enums.BatChargeStateEnum.kIsCharging: "charging",
+    clusters.PowerSource.Enums.BatChargeStateEnum.kIsAtFullCharge: "full_charge",
+    clusters.PowerSource.Enums.BatChargeStateEnum.kUnknownEnumValue: None,
+}
+
+DEM_OPT_OUT_STATE_MAP = {
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kNoOptOut: "no_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kLocalOptOut: "local_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kGridOptOut: "grid_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kOptOut: "opt_out",
 }
 
 ESA_STATE_MAP = {
@@ -345,6 +361,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="PowerSourceBatVoltage",
+            translation_key="battery_voltage",
             native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
@@ -353,6 +370,47 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatVoltage,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatTimeRemaining",
+            translation_key="battery_time_remaining",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            suggested_unit_of_measurement=UnitOfTime.MINUTES,
+            device_class=SensorDeviceClass.DURATION,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatTimeRemaining,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatChargeState",
+            translation_key="battery_charge_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=[state for state in CHARGE_STATE_MAP.values() if state is not None],
+            measurement_to_ha=CHARGE_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatChargeState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatTimeToFullCharge",
+            translation_key="battery_time_to_full_charge",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            suggested_unit_of_measurement=UnitOfTime.MINUTES,
+            device_class=SensorDeviceClass.DURATION,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatTimeToFullCharge,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -970,30 +1028,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="MinPINCodeLength",
-            translation_key="min_pin_code_length",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            device_class=None,
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(clusters.DoorLock.Attributes.MinPINCodeLength,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
-            key="MaxPINCodeLength",
-            translation_key="max_pin_code_length",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            device_class=None,
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(clusters.DoorLock.Attributes.MaxPINCodeLength,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
             key="TargetPositionLiftPercent100ths",
             entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
             translation_key="window_covering_target_position",
             measurement_to_ha=lambda x: round((10000 - x) / 100),
             native_unit_of_measurement=PERCENTAGE,
@@ -1128,6 +1165,19 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.DeviceEnergyManagement.Attributes.ESAState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ESAOptOutState",
+            translation_key="esa_opt_out_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(DEM_OPT_OUT_STATE_MAP.values()),
+            measurement_to_ha=DEM_OPT_OUT_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.DeviceEnergyManagement.Attributes.OptOutState,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

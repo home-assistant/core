@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from google.api_core.exceptions import GoogleAPIError
+from google.api_core.exceptions import GoogleAPIError, PermissionDenied
 from google.maps.routing_v2 import Units
 import pytest
 
@@ -20,6 +20,7 @@ from homeassistant.components.google_travel_time.const import (
 from homeassistant.components.google_travel_time.sensor import SCAN_INTERVAL
 from homeassistant.const import CONF_MODE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -170,3 +171,26 @@ async def test_sensor_exception(
     await hass.async_block_till_done()
     assert hass.states.get("sensor.google_travel_time").state == STATE_UNKNOWN
     assert "Error getting travel time" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+async def test_sensor_routes_api_disabled(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    routes_mock: AsyncMock,
+    mock_config: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that exception gets caught and issue created."""
+    routes_mock.compute_routes.side_effect = PermissionDenied("Errormessage")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.google_travel_time").state == STATE_UNKNOWN
+    assert "Routes API is disabled for this API key" in caplog.text
+
+    assert len(issue_registry.issues) == 1
