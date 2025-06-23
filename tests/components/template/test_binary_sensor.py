@@ -398,7 +398,7 @@ async def setup_mock():
     """Do setup of sensor mock."""
     with patch(
         "homeassistant.components.template.binary_sensor."
-        "BinarySensorTemplate._update_state"
+        "StateBinarySensorEntity._update_state"
     ) as _update_state:
         yield _update_state
 

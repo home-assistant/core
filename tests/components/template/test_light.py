@@ -17,7 +17,6 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
-from homeassistant.components.template.light import rewrite_legacy_to_modern_conf
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -29,7 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
 from .conftest import ConfigurationStyle
@@ -287,127 +285,6 @@ TEST_UNIQUE_ID_CONFIG = {
     **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
     "unique_id": "not-so-unique-anymore",
 }
-
-
-@pytest.mark.parametrize(
-    ("old_attr", "new_attr", "attr_template"),
-    [
-        (
-            "value_template",
-            "state",
-            "{{ 1 == 1 }}",
-        ),
-        (
-            "rgb_template",
-            "rgb",
-            "{{ (255,255,255) }}",
-        ),
-        (
-            "rgbw_template",
-            "rgbw",
-            "{{ (255,255,255,255) }}",
-        ),
-        (
-            "rgbww_template",
-            "rgbww",
-            "{{ (255,255,255,255,255) }}",
-        ),
-        (
-            "effect_list_template",
-            "effect_list",
-            "{{ ['a', 'b'] }}",
-        ),
-        (
-            "effect_template",
-            "effect",
-            "{{ 'a' }}",
-        ),
-        (
-            "level_template",
-            "level",
-            "{{ 255 }}",
-        ),
-        (
-            "max_mireds_template",
-            "max_mireds",
-            "{{ 255 }}",
-        ),
-        (
-            "min_mireds_template",
-            "min_mireds",
-            "{{ 255 }}",
-        ),
-        (
-            "supports_transition_template",
-            "supports_transition",
-            "{{ True }}",
-        ),
-        (
-            "temperature_template",
-            "temperature",
-            "{{ 255 }}",
-        ),
-        (
-            "white_value_template",
-            "white_value",
-            "{{ 255 }}",
-        ),
-        (
-            "hs_template",
-            "hs",
-            "{{ (255, 255) }}",
-        ),
-        (
-            "color_template",
-            "hs",
-            "{{ (255, 255) }}",
-        ),
-    ],
-)
-async def test_legacy_to_modern_config(
-    hass: HomeAssistant, old_attr: str, new_attr: str, attr_template: str
-) -> None:
-    """Test the conversion of legacy template to modern template."""
-    config = {
-        "foo": {
-            "friendly_name": "foo bar",
-            "unique_id": "foo-bar-light",
-            "icon_template": "{{ 'mdi.abc' }}",
-            "entity_picture_template": "{{ 'mypicture.jpg' }}",
-            "availability_template": "{{ 1 == 1 }}",
-            old_attr: attr_template,
-            **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
-        }
-    }
-    altered_configs = rewrite_legacy_to_modern_conf(hass, config)
-
-    assert len(altered_configs) == 1
-
-    assert [
-        {
-            "availability": Template("{{ 1 == 1 }}", hass),
-            "icon": Template("{{ 'mdi.abc' }}", hass),
-            "name": Template("foo bar", hass),
-            "object_id": "foo",
-            "picture": Template("{{ 'mypicture.jpg' }}", hass),
-            "turn_off": {
-                "data_template": {
-                    "action": "turn_off",
-                    "caller": "{{ this.entity_id }}",
-                },
-                "service": "test.automation",
-            },
-            "turn_on": {
-                "data_template": {
-                    "action": "turn_on",
-                    "caller": "{{ this.entity_id }}",
-                },
-                "service": "test.automation",
-            },
-            "unique_id": "foo-bar-light",
-            new_attr: Template(attr_template, hass),
-        }
-    ] == altered_configs
 
 
 async def async_setup_legacy_format(
