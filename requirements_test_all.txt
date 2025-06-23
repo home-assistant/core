@@ -2019,9 +2019,6 @@ python-homewizard-energy==9.1.1
 # homeassistant.components.izone
 python-izone==1.2.9
 
-# homeassistant.components.juicenet
-python-juicenet==1.1.0
-
 # homeassistant.components.tplink
 python-kasa[speedups]==0.10.2
 
