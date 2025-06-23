@@ -26,14 +26,17 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CHAT_MODEL,
     CONF_PROMPT,
-    DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
@@ -56,6 +59,8 @@ type GoogleGenerativeAIConfigEntry = ConfigEntry[Client]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Google Generative AI Conversation."""
+
+    await async_migrate_integration(hass)
 
     async def generate_content(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
@@ -212,43 +217,56 @@ async def async_unload_entry(
     return True
 
 
-async def async_migrate_entry(
-    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
-) -> bool:
-    """Migrate old entry."""
-    if entry.version == 1:
-        # Migrate from version 1 to version 2
-        # Move conversation-specific options to a subentry
+async def async_migrate_integration(hass: HomeAssistant) -> None:
+    """Migrate integration entry structure."""
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if not any(entry.version == 1 for entry in entries):
+        return
+
+    api_keys_entries: dict[str, ConfigEntry] = {}
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    for entry in entries:
+        use_existing = False
         subentry = ConfigSubentry(
             data=entry.options,
             subentry_type="conversation",
-            title=DEFAULT_CONVERSATION_NAME,
+            title=entry.title,
             unique_id=None,
         )
-        hass.config_entries.async_add_subentry(
-            entry,
-            subentry,
-        )
+        if entry.data[CONF_API_KEY] not in api_keys_entries:
+            use_existing = True
+            api_keys_entries[entry.data[CONF_API_KEY]] = entry
 
-        # Migrate conversation entity to be linked to subentry
-        ent_reg = er.async_get(hass)
-        conversation_entity = ent_reg.async_get_entity_id(
+        parent_entry = api_keys_entries[entry.data[CONF_API_KEY]]
+
+        hass.config_entries.async_add_subentry(parent_entry, subentry)
+        conversation_entity = entity_registry.async_get_entity_id(
             "conversation",
             DOMAIN,
             entry.entry_id,
         )
         if conversation_entity is not None:
-            ent_reg.async_update_entity(
+            device_id = None
+            if device := device_registry.async_get_device(
+                {(DOMAIN, parent_entry.entry_id)}
+            ):
+                device_id = device.id
+            entity_registry.async_update_entity(
                 conversation_entity,
+                config_entry_id=parent_entry.entry_id,
                 config_subentry_id=subentry.subentry_id,
                 new_unique_id=subentry.subentry_id,
+                device_id=device_id,
             )
 
-        # Remove options from the main entry
-        hass.config_entries.async_update_entry(
-            entry,
-            options={},
-            version=2,
-        )
-
-    return True
+        if not use_existing:
+            await hass.config_entries.async_remove(entry.entry_id)
+        else:
+            hass.config_entries.async_update_entry(
+                entry,
+                options={},
+                version=2,
+            )
