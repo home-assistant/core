@@ -1156,17 +1156,12 @@ def test_deprecated_constants(
         ("rpi2", "deprecated_os_armv7"),
     ],
 )
-@pytest.mark.parametrize(
-    "arch",
-    ["armv7"],
-)
 async def test_deprecated_installation_issue_os_armv7(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     freezer: FrozenDateTimeFactory,
     board: str,
     issue_id: str,
-    arch: str,
 ) -> None:
     """Test deprecated installation issue."""
     with (
