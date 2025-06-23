@@ -911,6 +911,14 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_display_precision=0,
             entity_registry_enabled_default=False,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=0,
+            entity_registry_enabled_default=False,
+        ),
     ),
     # Robot Vacuum
     # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
