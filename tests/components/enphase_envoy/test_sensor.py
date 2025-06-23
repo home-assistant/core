@@ -805,7 +805,9 @@ async def test_sensor_inverter_detailed_data(
         assert (temperature := hass.states.get(f"{entity_base}_{sn}_temperature"))
         assert int(temperature.state) == (inverter.temperature)
         assert (
-            lifetime_energy := hass.states.get(f"{entity_base}_{sn}_lifetime_energy")
+            lifetime_energy := hass.states.get(
+                f"{entity_base}_{sn}_lifetime_energy_produced"
+            )
         )
         assert float(lifetime_energy.state) == (inverter.lifetime_energy / 1000.0)
         assert (
@@ -821,7 +823,9 @@ async def test_sensor_inverter_detailed_data(
         )
         assert int(last_report_duration.state) == (inverter.last_report_duration)
         assert (
-            energy_produced := hass.states.get(f"{entity_base}_{sn}_energy_produced")
+            energy_produced := hass.states.get(
+                f"{entity_base}_{sn}_energy_produced_since_previous_report"
+            )
         )
         assert float(energy_produced.state) == (inverter.energy_produced)
         assert (
@@ -867,10 +871,10 @@ async def test_sensor_inverter_disabled_by_integration(
             "ac_current",
             "frequency",
             "temperature",
-            "lifetime_energy",
+            "lifetime_energy_produced",
             "energy_produced_today",
             "last_report_duration",
-            "energy_produced",
+            "energy_produced_since_previous_report",
             "last_reported",
             "lifetime_maximum_power",
         )
