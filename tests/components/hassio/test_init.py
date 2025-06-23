@@ -1166,17 +1166,11 @@ async def test_deprecated_installation_issue_os_armv7(
     freezer: FrozenDateTimeFactory,
     board: str,
     issue_id: str,
+    arch: str,
 ) -> None:
     """Test deprecated installation issue."""
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.homeassistant.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant OS",
-                "arch": "armv7",
-            },
-        ),
         patch(
             "homeassistant.components.hassio._is_32_bit",
             return_value=True,
@@ -1185,7 +1179,8 @@ async def test_deprecated_installation_issue_os_armv7(
             "homeassistant.components.hassio.get_os_info", return_value={"board": board}
         ),
         patch(
-            "homeassistant.components.hassio.get_info", return_value={"hassos": True}
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": True, "arch": "armv7"},
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
@@ -1239,13 +1234,6 @@ async def test_deprecated_installation_issue_32bit_os(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.homeassistant.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant OS",
-                "arch": arch,
-            },
-        ),
-        patch(
             "homeassistant.components.hassio._is_32_bit",
             return_value=True,
         ),
@@ -1254,7 +1242,8 @@ async def test_deprecated_installation_issue_32bit_os(
             return_value={"board": "rpi3-64"},
         ),
         patch(
-            "homeassistant.components.hassio.get_info", return_value={"hassos": True}
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": True, "arch": arch},
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
@@ -1306,13 +1295,6 @@ async def test_deprecated_installation_issue_32bit_supervised(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.homeassistant.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant Supervised",
-                "arch": arch,
-            },
-        ),
-        patch(
             "homeassistant.components.hassio._is_32_bit",
             return_value=True,
         ),
@@ -1321,7 +1303,8 @@ async def test_deprecated_installation_issue_32bit_supervised(
             return_value={"board": "rpi3-64"},
         ),
         patch(
-            "homeassistant.components.hassio.get_info", return_value={"hassos": None}
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": None, "arch": arch},
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
@@ -1377,13 +1360,6 @@ async def test_deprecated_installation_issue_64bit_supervised(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.homeassistant.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant Supervised",
-                "arch": arch,
-            },
-        ),
-        patch(
             "homeassistant.components.hassio._is_32_bit",
             return_value=False,
         ),
@@ -1392,7 +1368,8 @@ async def test_deprecated_installation_issue_64bit_supervised(
             return_value={"board": "generic-x86-64"},
         ),
         patch(
-            "homeassistant.components.hassio.get_info", return_value={"hassos": None}
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": None, "arch": arch},
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
@@ -1446,13 +1423,6 @@ async def test_deprecated_installation_issue_supported_board(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.homeassistant.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant OS",
-                "arch": "aarch64",
-            },
-        ),
-        patch(
             "homeassistant.components.hassio._is_32_bit",
             return_value=False,
         ),
@@ -1460,7 +1430,8 @@ async def test_deprecated_installation_issue_supported_board(
             "homeassistant.components.hassio.get_os_info", return_value={"board": board}
         ),
         patch(
-            "homeassistant.components.hassio.get_info", return_value={"hassos": True}
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": True, "arch": "aarch64"},
         ),
     ):
         assert await async_setup_component(hass, "homeassistant", {})
