@@ -70,7 +70,7 @@ async def test_run_task_preferred_entity(
         task_name="Test Task",
         instructions="Test prompt",
     )
-    assert result.data["text"] == "Mock result"
+    assert result.data == "Mock result"
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNKNOWN
@@ -117,7 +117,7 @@ async def test_run_data_task_updates_chat_log(
         entity_id=TEST_ENTITY_ID,
         instructions="Test prompt",
     )
-    assert result.data["text"] == "Mock result"
+    assert result.data == "Mock result"
 
     with (
         chat_session.async_get_chat_session(hass, result.conversation_id) as session,

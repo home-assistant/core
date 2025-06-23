@@ -81,4 +81,4 @@ async def test_generate_data_service(
         return_response=True,
     )
 
-    assert result["data"]["text"] == "Mock result"
+    assert result["data"] == "Mock result"

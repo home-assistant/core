@@ -29,7 +29,7 @@ async def test_state_generate_data(
         entity_id=TEST_ENTITY_ID,
         instructions="Test prompt",
     )
-    assert result.data["text"] == "Mock result"
+    assert result.data == "Mock result"
 
     entity = hass.states.get(TEST_ENTITY_ID)
     assert entity.state == "2025-06-08T16:28:13+00:00"
