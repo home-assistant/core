@@ -5,7 +5,7 @@
       "description": "Use AI to run a task that generates text.",
       "fields": {
         "task_name": {
-          "name": "Task Name",
+          "name": "Task name",
           "description": "Name of the task."
         },
         "instructions": {
