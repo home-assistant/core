@@ -74,6 +74,7 @@ async def integration_fixture(
 
 @pytest.fixture(
     params=[
+        "aqara_w100",
         "air_purifier",
         "air_quality_sensor",
         "color_temperature_light",

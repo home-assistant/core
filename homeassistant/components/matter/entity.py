@@ -36,6 +36,9 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
+# Common Position Semantic Tag (8)
+POSTION_MAP = {0: "Left", 1: "Right", 2: "Top", 3: "Bottom", 4: "Middle"}
+
 
 def catch_matter_error[_R, **P](
     func: Callable[Concatenate[MatterEntity, P], Coroutine[Any, Any, _R]],
@@ -111,6 +114,37 @@ class MatterEntity(Entity):
             self._name_postfix = str(self._endpoint.endpoint_id)
             if self._platform_translation_key and not self.translation_key:
                 self._attr_translation_key = self._platform_translation_key
+
+        # Use TagList attribute and namespaces to generate postfix name
+        for tag_attr in (clusters.Descriptor.Attributes.TagList,):
+            if not (tag_attr := self.get_matter_attribute_value(tag_attr)):
+                continue
+
+            tagList = cast(
+                # cast to the generic SemanticTagStruct type just to help typing
+                list[clusters.Descriptor.Structs.SemanticTagStruct],
+                tag_attr,
+            )
+            number: int | None = None
+            position: str | None = None
+            for tag in tagList:
+                if tag.namespaceID == 7:  # Common Number Semantic Tag (7)
+                    number = tag.tag
+                elif tag.namespaceID == 8:  # Common Position Semantic Tag (8)
+                    position = POSTION_MAP.get(tag.tag)
+                else:
+                    break  # no other namespaces are supported
+
+            # self._attr_name = entity_name
+            if number is not None and position is not None:
+                # we have both number and position
+                self._name_postfix = f"{number} - {position}"
+            elif number is not None and position is None:
+                # we have only number, use it
+                self._name_postfix = str(number)
+            elif number is None and position is not None:
+                # we have only position, use it
+                self._name_postfix = position
 
         # prefer the label attribute for the entity name
         # Matter has a way for users and/or vendors to specify a name for an endpoint
