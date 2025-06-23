@@ -917,7 +917,7 @@ BULB_SERVICE_INFO = BluetoothServiceInfoBleak(
 CEILING_LIGHT_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Ceiling Light",
     manufacturer_data={
-        2409: b"\xef\xfe\xfb\x9d\x10\xfe\n\x01\x18\xf3$",
+        2409: b"\xef\xfe\xfb\x9d\x10\xfe\n\x01\x18\xf3\xa4",
     },
     service_data={
         "0000fd3d-0000-1000-8000-00805f9b34fb": b"q\x00",
