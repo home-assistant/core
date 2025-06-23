@@ -6,7 +6,11 @@ from google_weather_api import GoogleWeatherApiError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.google_weather.const import CONF_REFERRER, DOMAIN
+from homeassistant.components.google_weather.const import (
+    CONF_API_KEY_OPTIONS,
+    CONF_REFERRER,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -74,7 +78,9 @@ async def test_form_with_referrer(
             {
                 CONF_NAME: "test-name",
                 CONF_API_KEY: "test-api-key",
-                CONF_REFERRER: "test-referrer",
+                CONF_API_KEY_OPTIONS: {
+                    CONF_REFERRER: "test-referrer",
+                },
                 CONF_LOCATION: {
                     CONF_LATITUDE: 10.1,
                     CONF_LONGITUDE: 20.1,

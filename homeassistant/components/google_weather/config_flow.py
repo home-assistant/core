@@ -16,10 +16,11 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
-from .const import CONF_REFERRER, DOMAIN
+from .const import CONF_API_KEY_OPTIONS, CONF_REFERRER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         if user_input is not None:
             api_key = user_input[CONF_API_KEY]
-            referrer = user_input.get(CONF_REFERRER)
+            referrer = user_input.get(CONF_API_KEY_OPTIONS, {}).get(CONF_REFERRER)
             latitude = user_input[CONF_LOCATION][CONF_LATITUDE]
             longitude = user_input[CONF_LOCATION][CONF_LONGITUDE]
             await self.async_set_unique_id(f"{latitude}-{longitude}")
@@ -80,9 +81,17 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_API_KEY, default=user_input.get(CONF_API_KEY, vol.UNDEFINED)
                 ): str,
-                vol.Optional(
-                    CONF_REFERRER, default=user_input.get(CONF_REFERRER, vol.UNDEFINED)
-                ): str,
+                vol.Optional(CONF_API_KEY_OPTIONS): section(
+                    vol.Schema(
+                        {
+                            vol.Optional(
+                                CONF_REFERRER,
+                                default=user_input.get(CONF_REFERRER, vol.UNDEFINED),
+                            ): str,
+                        }
+                    ),
+                    {"collapsed": True},
+                ),
                 vol.Required(
                     CONF_LOCATION,
                     default=user_input.get(
