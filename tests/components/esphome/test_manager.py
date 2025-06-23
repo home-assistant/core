@@ -1181,6 +1181,29 @@ async def test_esphome_device_with_suggested_area(
     assert dev.suggested_area == "kitchen"
 
 
+async def test_esphome_device_area_priority(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that device_info.area takes priority over suggested_area."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "suggested_area": "kitchen",
+            "area": AreaInfo(area_id=0, name="Living Room"),
+        },
+    )
+    await hass.async_block_till_done()
+    entry = device.entry
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    # Should use device_info.area.name instead of suggested_area
+    assert dev.suggested_area == "Living Room"
+
+
 async def test_esphome_device_with_project(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
