@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -43,6 +44,9 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
             info = Info(auth)
             try:
                 await info.async_update()
+            except aiohttp.InvalidUrlClientError:
+                _LOGGER.debug(("Invalid URL: %s"), self.url)
+                errors["base"] = "invalid_url"
             except aiohttp.ClientConnectionError:
                 _LOGGER.debug(
                     (
@@ -60,7 +64,9 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self._create_entry()
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_URL, default="http://"): str}),
+            data_schema=vol.Schema(
+                {vol.Required(CONF_URL, default="http://"): cv.string}
+            ),
             errors=errors,
         )
 
