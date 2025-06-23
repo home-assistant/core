@@ -512,7 +512,7 @@
     'state': '33.793',
   })
 # ---
-# name: test_sensor[envoy][sensor.inverter_1_energy_produced_since_previous_report-entry]
+# name: test_sensor[envoy][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -527,7 +527,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -542,7 +542,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced since previous report',
+    'original_name': 'Energy production since previous report',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -552,23 +552,23 @@
     'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
   })
 # ---
-# name: test_sensor[envoy][sensor.inverter_1_energy_produced_since_previous_report-state]
+# name: test_sensor[envoy][sensor.inverter_1_energy_production_since_previous_report-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced since previous report',
+      'friendly_name': 'Inverter 1 Energy production since previous report',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '32.254',
   })
 # ---
-# name: test_sensor[envoy][sensor.inverter_1_energy_produced_today-entry]
+# name: test_sensor[envoy][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -583,7 +583,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -598,7 +598,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced today',
+    'original_name': 'Energy production today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -608,16 +608,16 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy][sensor.inverter_1_energy_produced_today-state]
+# name: test_sensor[envoy][sensor.inverter_1_energy_production_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced today',
+      'friendly_name': 'Inverter 1 Energy production today',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -785,7 +785,7 @@
     'state': '2025-06-20T23:06:05+00:00',
   })
 # ---
-# name: test_sensor[envoy][sensor.inverter_1_lifetime_energy_produced-entry]
+# name: test_sensor[envoy][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -800,7 +800,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -818,7 +818,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Lifetime energy produced',
+    'original_name': 'Lifetime energy production',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -828,16 +828,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[envoy][sensor.inverter_1_lifetime_energy_produced-state]
+# name: test_sensor[envoy][sensor.inverter_1_lifetime_energy_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Lifetime energy produced',
+      'friendly_name': 'Inverter 1 Lifetime energy production',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2671,7 +2671,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_produced_since_previous_report-entry]
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2686,7 +2686,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2701,7 +2701,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced since previous report',
+    'original_name': 'Energy production since previous report',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2711,23 +2711,23 @@
     'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_produced_since_previous_report-state]
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_production_since_previous_report-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced since previous report',
+      'friendly_name': 'Inverter 1 Energy production since previous report',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_produced_today-entry]
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2742,7 +2742,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2757,7 +2757,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced today',
+    'original_name': 'Energy production today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2767,16 +2767,16 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_produced_today-state]
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_production_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced today',
+      'friendly_name': 'Inverter 1 Energy production today',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2944,7 +2944,7 @@
     'state': '1970-01-01T00:00:01+00:00',
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_lifetime_energy_produced-entry]
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2959,7 +2959,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2977,7 +2977,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Lifetime energy produced',
+    'original_name': 'Lifetime energy production',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2987,16 +2987,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_lifetime_energy_produced-state]
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_lifetime_energy_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Lifetime energy produced',
+      'friendly_name': 'Inverter 1 Lifetime energy production',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3669,7 +3669,7 @@
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Aggregated battery soc',
+    'original_name': 'Aggregated battery SOC',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3683,7 +3683,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Envoy 1234 Aggregated battery soc',
+      'friendly_name': 'Envoy 1234 Aggregated battery SOC',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -8274,7 +8274,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_produced_since_previous_report-entry]
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8289,7 +8289,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8304,7 +8304,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced since previous report',
+    'original_name': 'Energy production since previous report',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -8314,23 +8314,23 @@
     'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_produced_since_previous_report-state]
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_production_since_previous_report-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced since previous report',
+      'friendly_name': 'Inverter 1 Energy production since previous report',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_produced_today-entry]
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8345,7 +8345,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8360,7 +8360,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced today',
+    'original_name': 'Energy production today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -8370,16 +8370,16 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_produced_today-state]
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_production_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced today',
+      'friendly_name': 'Inverter 1 Energy production today',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -8547,7 +8547,7 @@
     'state': '1970-01-01T00:00:01+00:00',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_lifetime_energy_produced-entry]
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8562,7 +8562,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8580,7 +8580,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Lifetime energy produced',
+    'original_name': 'Lifetime energy production',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -8590,16 +8590,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_lifetime_energy_produced-state]
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_lifetime_energy_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Lifetime energy produced',
+      'friendly_name': 'Inverter 1 Lifetime energy production',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -13503,7 +13503,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_produced_since_previous_report-entry]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13518,7 +13518,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -13533,7 +13533,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced since previous report',
+    'original_name': 'Energy production since previous report',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -13543,23 +13543,23 @@
     'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_produced_since_previous_report-state]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_production_since_previous_report-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced since previous report',
+      'friendly_name': 'Inverter 1 Energy production since previous report',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_produced_today-entry]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13574,7 +13574,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -13589,7 +13589,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced today',
+    'original_name': 'Energy production today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -13599,16 +13599,16 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_produced_today-state]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_production_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced today',
+      'friendly_name': 'Inverter 1 Energy production today',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -13776,7 +13776,7 @@
     'state': '1970-01-01T00:00:01+00:00',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_lifetime_energy_produced-entry]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13791,7 +13791,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -13809,7 +13809,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Lifetime energy produced',
+    'original_name': 'Lifetime energy production',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -13819,16 +13819,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_lifetime_energy_produced-state]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_lifetime_energy_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Lifetime energy produced',
+      'friendly_name': 'Inverter 1 Lifetime energy production',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -22642,7 +22642,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_produced_since_previous_report-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -22657,7 +22657,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22672,7 +22672,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced since previous report',
+    'original_name': 'Energy production since previous report',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22682,23 +22682,23 @@
     'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_produced_since_previous_report-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_production_since_previous_report-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced since previous report',
+      'friendly_name': 'Inverter 1 Energy production since previous report',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_produced_today-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -22713,7 +22713,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22728,7 +22728,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced today',
+    'original_name': 'Energy production today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22738,16 +22738,16 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_produced_today-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_production_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced today',
+      'friendly_name': 'Inverter 1 Energy production today',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -22915,7 +22915,7 @@
     'state': '1970-01-01T00:00:01+00:00',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_lifetime_energy_produced-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -22930,7 +22930,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22948,7 +22948,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Lifetime energy produced',
+    'original_name': 'Lifetime energy production',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -22958,16 +22958,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_lifetime_energy_produced-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_lifetime_energy_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Lifetime energy produced',
+      'friendly_name': 'Inverter 1 Lifetime energy production',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -29106,7 +29106,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_produced_since_previous_report-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -29121,7 +29121,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29136,7 +29136,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced since previous report',
+    'original_name': 'Energy production since previous report',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -29146,23 +29146,23 @@
     'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_produced_since_previous_report-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_production_since_previous_report-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced since previous report',
+      'friendly_name': 'Inverter 1 Energy production since previous report',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_produced_today-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -29177,7 +29177,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29192,7 +29192,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced today',
+    'original_name': 'Energy production today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -29202,16 +29202,16 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_produced_today-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_production_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced today',
+      'friendly_name': 'Inverter 1 Energy production today',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -29379,7 +29379,7 @@
     'state': '1970-01-01T00:00:01+00:00',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_lifetime_energy_produced-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -29394,7 +29394,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29412,7 +29412,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Lifetime energy produced',
+    'original_name': 'Lifetime energy production',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -29422,16 +29422,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_lifetime_energy_produced-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_lifetime_energy_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Lifetime energy produced',
+      'friendly_name': 'Inverter 1 Lifetime energy production',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -30518,7 +30518,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_produced_since_previous_report-entry]
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_production_since_previous_report-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -30533,7 +30533,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30548,7 +30548,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced since previous report',
+    'original_name': 'Energy production since previous report',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -30558,23 +30558,23 @@
     'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_produced_since_previous_report-state]
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_production_since_previous_report-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced since previous report',
+      'friendly_name': 'Inverter 1 Energy production since previous report',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.MILLIWATT_HOUR: 'mWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_since_previous_report',
+    'entity_id': 'sensor.inverter_1_energy_production_since_previous_report',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_produced_today-entry]
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -30589,7 +30589,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30604,7 +30604,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy produced today',
+    'original_name': 'Energy production today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -30614,16 +30614,16 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_produced_today-state]
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_production_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Energy produced today',
+      'friendly_name': 'Inverter 1 Energy production today',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'entity_id': 'sensor.inverter_1_energy_production_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -30791,7 +30791,7 @@
     'state': '1970-01-01T00:00:01+00:00',
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_lifetime_energy_produced-entry]
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -30806,7 +30806,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30824,7 +30824,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Lifetime energy produced',
+    'original_name': 'Lifetime energy production',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -30834,16 +30834,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_lifetime_energy_produced-state]
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_lifetime_energy_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Inverter 1 Lifetime energy produced',
+      'friendly_name': 'Inverter 1 Lifetime energy production',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_lifetime_energy_produced',
+    'entity_id': 'sensor.inverter_1_lifetime_energy_production',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
