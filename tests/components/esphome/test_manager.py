@@ -1539,7 +1539,7 @@ async def test_sub_device_creation(
 
     # Check main device is created
     main_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.entry.unique_id)}
+        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
     )
     assert main_device is not None
     assert main_device.suggested_area == "Main Hub"
