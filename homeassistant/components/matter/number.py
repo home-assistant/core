@@ -95,16 +95,16 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         """Update the current value."""
         send_value = int(value)
         if value_convert := self.entity_description.ha_to_native_value:
-            sendvalue = value_convert(value)
+            send_value = value_convert(value)
         if self.entity_description.command:
             # custom command defined to set the new value
             await self.send_device_command(
-                self.entity_description.command(sendvalue),
+                self.entity_description.command(send_value),
             )
             return
         # regular write attribute to set the new value
         await self.write_attribute(
-            value=sendvalue,
+            value=send_value,
         )
 
     @callback
