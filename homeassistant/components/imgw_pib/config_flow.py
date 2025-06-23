@@ -45,7 +45,9 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 imgwpib = await ImgwPib.create(
-                    client_session, hydrological_station_id=station_id
+                    client_session,
+                    hydrological_station_id=station_id,
+                    hydrological_details=False,
                 )
                 hydrological_data = await imgwpib.get_hydrological_data()
             except (ClientError, TimeoutError, ApiError):
@@ -58,7 +60,10 @@ class ImgwPibFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=title, data=user_input)
 
         try:
-            imgwpib = await ImgwPib.create(client_session)
+            imgwpib = await ImgwPib.create(
+                client_session,
+                hydrological_details=False,
+            )
             await imgwpib.update_hydrological_stations()
         except (ClientError, TimeoutError, ApiError):
             return self.async_abort(reason="cannot_connect")
