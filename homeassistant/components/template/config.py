@@ -158,8 +158,6 @@ CONFIG_SECTION_SCHEMA = vol.All(
     ),
     ensure_domains_do_not_have_trigger_or_action(
         DOMAIN_BUTTON,
-        DOMAIN_FAN,
-        DOMAIN_VACUUM,
     ),
 )
 

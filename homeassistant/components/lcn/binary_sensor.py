@@ -25,6 +25,8 @@ from .const import BINSENSOR_PORTS, CONF_DOMAIN_DATA, DOMAIN, SETPOINTS
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
+PARALLEL_UPDATES = 0
+
 
 def add_lcn_entities(
     config_entry: LcnConfigEntry,
