@@ -3,7 +3,7 @@
 from enum import StrEnum
 
 DOMAIN = "wallbox"
-UPDATE_INTERVAL = 30
+UPDATE_INTERVAL = 60
 
 BIDIRECTIONAL_MODEL_PREFIXES = ["QS"]
 
@@ -74,3 +74,4 @@ class EcoSmartMode(StrEnum):
     OFF = "off"
     ECO_MODE = "eco_mode"
     FULL_SOLAR = "full_solar"
+    DISABLED = "disabled"
