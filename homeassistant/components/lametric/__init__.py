@@ -16,7 +16,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LaMetric integration."""
     async_setup_services(hass)
-    hass.data[DOMAIN] = {"hass_config": config}
+
     return True
 
 
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMetricConfigEntry) -> 
             Platform.NOTIFY,
             DOMAIN,
             {CONF_NAME: coordinator.data.name, "entry_id": entry.entry_id},
-            hass.data[DOMAIN]["hass_config"],
+            {},
         )
     )
     return True
