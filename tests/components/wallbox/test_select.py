@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant, HomeAssistantError
 from . import (
     authorisation_response,
     http_404_error,
+    http_429_error,
     setup_integration_select,
     test_response,
     test_response_eco_mode,
@@ -109,7 +110,41 @@ async def test_wallbox_select_class_error(
             "homeassistant.components.wallbox.Wallbox.enableEcoSmart",
             new=Mock(side_effect=error),
         ),
-        pytest.raises(HomeAssistantError, match="Error communicating with Wallbox API"),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                ATTR_OPTION: mode,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(("mode", "response"), TEST_OPTIONS)
+async def test_wallbox_select_too_many_requests_error(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    mode,
+    response,
+    mock_authenticate,
+) -> None:
+    """Test wallbox select class connection error."""
+
+    await setup_integration_select(hass, entry, response)
+
+    with (
+        patch(
+            "homeassistant.components.wallbox.Wallbox.disableEcoSmart",
+            new=Mock(side_effect=http_429_error),
+        ),
+        patch(
+            "homeassistant.components.wallbox.Wallbox.enableEcoSmart",
+            new=Mock(side_effect=http_429_error),
+        ),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,

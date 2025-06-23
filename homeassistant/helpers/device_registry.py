@@ -1018,8 +1018,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             and old.area_id is None
         ):
             # Circular dep
-            # pylint: disable-next=import-outside-toplevel
-            from . import area_registry as ar
+            from . import area_registry as ar  # noqa: PLC0415
 
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
@@ -1622,8 +1621,7 @@ def async_cleanup(
 @callback
 def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     """Clean up device registry when entities removed."""
-    # pylint: disable-next=import-outside-toplevel
-    from . import entity_registry, label_registry as lr
+    from . import entity_registry, label_registry as lr  # noqa: PLC0415
 
     @callback
     def _label_removed_from_registry_filter(
