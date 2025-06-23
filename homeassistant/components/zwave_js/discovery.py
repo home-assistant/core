@@ -896,6 +896,7 @@ DISCOVERY_SCHEMAS = [
             writeable=False,
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # generic text sensors
     ZWaveDiscoverySchema(
@@ -912,12 +913,41 @@ DISCOVERY_SCHEMAS = [
         hint="numeric_sensor",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
-                CommandClass.BATTERY,
                 CommandClass.ENERGY_PRODUCTION,
                 CommandClass.SENSOR_ALARM,
                 CommandClass.SENSOR_MULTILEVEL,
             },
             type={ValueType.NUMBER},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"level", "maximumCapacity"},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"temperature"},
+        ),
+        data_template=NumericSensorDataTemplate(),
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="list",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"chargingStatus", "rechargeOrReplace"},
         ),
         data_template=NumericSensorDataTemplate(),
     ),
@@ -932,6 +962,7 @@ DISCOVERY_SCHEMAS = [
         ),
         data_template=NumericSensorDataTemplate(),
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     # Meter sensors for Meter CC
     ZWaveDiscoverySchema(
@@ -957,6 +988,7 @@ DISCOVERY_SCHEMAS = [
             writeable=True,
         ),
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
     # button for Indicator CC
     ZWaveDiscoverySchema(
@@ -980,6 +1012,7 @@ DISCOVERY_SCHEMAS = [
             writeable=True,
         ),
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
     # binary switch
     # barrier operator signaling states
@@ -1184,6 +1217,7 @@ DISCOVERY_SCHEMAS = [
             any_available_states={(0, "idle")},
         ),
         allow_multi=True,
+        entity_registry_enabled_default=False,
     ),
     # event
     # stateful = False
