@@ -754,7 +754,9 @@ def _async_setup_device_registry(
 
     device_registry = dr.async_get(hass)
     # Build sets of valid device identifiers and connections
-    valid_connections = {(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
+    valid_connections = {
+        (dr.CONNECTION_NETWORK_MAC, format_mac(device_info.mac_address))
+    }
     valid_identifiers = {
         (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
         for sub_device in device_info.devices
