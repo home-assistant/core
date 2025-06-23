@@ -278,8 +278,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ssl_certificate is not None
             and (hass.config.external_url or hass.config.internal_url) is None
         ):
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components.cloud import (
+            from homeassistant.components.cloud import (  # noqa: PLC0415
                 CloudNotAvailable,
                 async_remote_ui_url,
             )
@@ -511,12 +510,14 @@ class HomeAssistantHTTP:
     ) -> None:
         """Register a folder or file to serve as a static path."""
         frame.report_usage(
-            "calls hass.http.register_static_path which is deprecated because "
-            "it does blocking I/O in the event loop, instead "
+            "calls hass.http.register_static_path which "
+            "does blocking I/O in the event loop, instead "
             "call `await hass.http.async_register_static_paths("
             f'[StaticPathConfig("{url_path}", "{path}", {cache_headers})])`',
             exclude_integrations={"http"},
-            core_behavior=frame.ReportBehavior.LOG,
+            core_behavior=frame.ReportBehavior.ERROR,
+            core_integration_behavior=frame.ReportBehavior.ERROR,
+            custom_integration_behavior=frame.ReportBehavior.ERROR,
             breaks_in_ha_version="2025.7",
         )
         configs = [StaticPathConfig(url_path, path, cache_headers)]

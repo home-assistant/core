@@ -46,6 +46,7 @@
     'name': '**REDACTED**',
     'os_version': '2.2.2',
     'serial_number': '**REDACTED**',
+    'update': None,
     'wifi': dict({
       'active': True,
       'available': True,
