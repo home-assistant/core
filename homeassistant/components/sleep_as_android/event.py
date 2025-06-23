@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SleepAsAndroidConfigEntry
-from .const import ATTR_EVENT, SLEEP_EVENT
+from .const import ATTR_EVENT, DOMAIN
 from .entity import SleepAsAndroidEntity
 
 PARALLEL_UPDATES = 0
@@ -161,5 +161,5 @@ class SleepAsAndroidEventEntity(SleepAsAndroidEntity, EventEntity):
         """Register event callback."""
 
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, SLEEP_EVENT, self._async_handle_event)
+            async_dispatcher_connect(self.hass, DOMAIN, self._async_handle_event)
         )

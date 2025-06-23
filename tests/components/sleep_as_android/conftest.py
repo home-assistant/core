@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.sleep.const import DOMAIN
+from homeassistant.components.sleep_as_android.const import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 
 from tests.common import MockConfigEntry
@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.sleep.async_setup_entry", return_value=True
+        "homeassistant.components.sleep_as_android.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -6,7 +6,11 @@ from freezegun.api import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sleep.const import ATTR_EVENT, ATTR_VALUE1, ATTR_VALUE2
+from homeassistant.components.sleep_as_android.const import (
+    ATTR_EVENT,
+    ATTR_VALUE1,
+    ATTR_VALUE2,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
