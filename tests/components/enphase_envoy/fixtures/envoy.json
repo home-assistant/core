@@ -47,5 +47,13 @@
     "raw": {
       "varies_by": "firmware_version"
     }
+  },
+  "interface_information": {
+    "primary_interface": "eth0",
+    "interface_type": "ethernet",
+    "mac": "00:11:22:33:44:55",
+    "dhcp": true,
+    "software_build_epoch": 1719503966,
+    "timezone": "Europe/Amsterdam"
   }
 }

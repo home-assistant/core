@@ -26,11 +26,13 @@ from homeassistant.components.esphome.alarm_control_panel import EspHomeACPFeatu
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
+from .conftest import MockGenericDeviceEntryType
+
 
 async def test_generic_alarm_control_panel_requires_code(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic alarm_control_panel entity that requires a code."""
     entity_info = [
@@ -163,7 +165,7 @@ async def test_generic_alarm_control_panel_requires_code(
 async def test_generic_alarm_control_panel_no_code(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic alarm_control_panel entity that does not require a code."""
     entity_info = [
@@ -209,7 +211,7 @@ async def test_generic_alarm_control_panel_no_code(
 async def test_generic_alarm_control_panel_missing_state(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic alarm_control_panel entity that is missing state."""
     entity_info = [

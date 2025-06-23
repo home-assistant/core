@@ -61,6 +61,15 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._zones_last_update: dict[str, set[str]] = {}
         self._areas_last_update: dict[str, set[int]] = {}
 
+    def _async_add_remove_devices_and_entities(self, data: MowerDictionary) -> None:
+        """Add/remove devices and dynamic entities, when amount of devices changed."""
+        self._async_add_remove_devices(data)
+        for mower_id in data:
+            if data[mower_id].capabilities.stay_out_zones:
+                self._async_add_remove_stay_out_zones(data)
+            if data[mower_id].capabilities.work_areas:
+                self._async_add_remove_work_areas(data)
+
     async def _async_update_data(self) -> MowerDictionary:
         """Subscribe for websocket and poll data from the API."""
         if not self.ws_connected:
@@ -73,20 +82,14 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             raise UpdateFailed(err) from err
         except AuthError as err:
             raise ConfigEntryAuthFailed(err) from err
-
-        self._async_add_remove_devices(data)
-        for mower_id in data:
-            if data[mower_id].capabilities.stay_out_zones:
-                self._async_add_remove_stay_out_zones(data)
-        for mower_id in data:
-            if data[mower_id].capabilities.work_areas:
-                self._async_add_remove_work_areas(data)
+        self._async_add_remove_devices_and_entities(data)
         return data
 
     @callback
     def callback(self, ws_data: MowerDictionary) -> None:
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
         self.async_set_updated_data(ws_data)
+        self._async_add_remove_devices_and_entities(ws_data)
 
     async def client_listen(
         self,
