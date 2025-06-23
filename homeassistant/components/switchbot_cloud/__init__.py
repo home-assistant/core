@@ -337,7 +337,7 @@ def _create_handle_webhook(
         ):
             _LOGGER.debug("Received invalid data from switchbot webhook %s", repr(data))
             return
-
+        _LOGGER.debug("Received data from switchbot webhook: %s", repr(data))
         deviceMac = data["context"]["deviceMac"]
 
         if deviceMac not in coordinators_by_id:
