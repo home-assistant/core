@@ -144,13 +144,13 @@ add_charge_schedule:
       selector:
         select:
           options:
-            - "[%key:common::time::monday%]"
-            - "[%key:common::time::tuesday%]"
-            - "[%key:common::time::wednesday%]"
-            - "[%key:common::time::thursday%]"
-            - "[%key:common::time::friday%]"
-            - "[%key:common::time::saturday%]"
-            - "[%key:common::time::sunday%]"
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
           multiple: true
     enable:
       required: true
@@ -213,13 +213,13 @@ add_precondition_schedule:
       selector:
         select:
           options:
-            - "[%key:common::time::monday%]"
-            - "[%key:common::time::tuesday%]"
-            - "[%key:common::time::wednesday%]"
-            - "[%key:common::time::thursday%]"
-            - "[%key:common::time::friday%]"
-            - "[%key:common::time::saturday%]"
-            - "[%key:common::time::sunday%]"
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
           multiple: true
     enable:
       required: true
