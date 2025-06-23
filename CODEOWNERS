@@ -59,6 +59,8 @@ build.json @home-assistant/supervisor
 /tests/components/aemet/ @Noltari
 /homeassistant/components/agent_dvr/ @ispysoftware
 /tests/components/agent_dvr/ @ispysoftware
+/homeassistant/components/ai_task/ @home-assistant/core
+/tests/components/ai_task/ @home-assistant/core
 /homeassistant/components/air_quality/ @home-assistant/core
 /tests/components/air_quality/ @home-assistant/core
 /homeassistant/components/airgradient/ @airgradienthq @joostlek
@@ -91,6 +93,8 @@ build.json @home-assistant/supervisor
 /tests/components/alert/ @home-assistant/core @frenck
 /homeassistant/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
+/homeassistant/components/alexa_devices/ @chemelli74
+/tests/components/alexa_devices/ @chemelli74
 /homeassistant/components/amazon_polly/ @jschlyter
 /homeassistant/components/amberelectric/ @madpilot
 /tests/components/amberelectric/ @madpilot
@@ -305,6 +309,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/crownstone/ @Crownstone @RicArch97
 /tests/components/crownstone/ @Crownstone @RicArch97
 /homeassistant/components/cups/ @fabaff
+/tests/components/cups/ @fabaff
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
 /homeassistant/components/date/ @home-assistant/core
@@ -1273,8 +1278,8 @@ build.json @home-assistant/supervisor
 /tests/components/rehlko/ @bdraco @peterager
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
-/homeassistant/components/remote_calendar/ @Thomas55555
-/tests/components/remote_calendar/ @Thomas55555
+/homeassistant/components/remote_calendar/ @Thomas55555 @allenporter
+/tests/components/remote_calendar/ @Thomas55555 @allenporter
 /homeassistant/components/renault/ @epenet
 /tests/components/renault/ @epenet
 /homeassistant/components/renson/ @jimmyd-be
@@ -1419,6 +1424,8 @@ build.json @home-assistant/supervisor
 /tests/components/sma/ @kellerza @rklomp @erwindouna
 /homeassistant/components/smappee/ @bsmappee
 /tests/components/smappee/ @bsmappee
+/homeassistant/components/smarla/ @explicatis @rlint-explicatis
+/tests/components/smarla/ @explicatis @rlint-explicatis
 /homeassistant/components/smart_meter_texas/ @grahamwetzler
 /tests/components/smart_meter_texas/ @grahamwetzler
 /homeassistant/components/smartthings/ @joostlek
@@ -1548,8 +1555,8 @@ build.json @home-assistant/supervisor
 /tests/components/tedee/ @patrickhilker @zweckj
 /homeassistant/components/tellduslive/ @fredrike
 /tests/components/tellduslive/ @fredrike
-/homeassistant/components/template/ @Petro31 @PhracturedBlue @home-assistant/core
-/tests/components/template/ @Petro31 @PhracturedBlue @home-assistant/core
+/homeassistant/components/template/ @Petro31 @home-assistant/core
+/tests/components/template/ @Petro31 @home-assistant/core
 /homeassistant/components/tesla_fleet/ @Bre77
 /tests/components/tesla_fleet/ @Bre77
 /homeassistant/components/tesla_wall_connector/ @einarhauks

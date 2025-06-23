@@ -1,4 +1,60 @@
 # serializer version: 1
+# name: test_sensor_platform[sensor.paperless_ngx_available_storage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.paperless_ngx_available_storage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Available storage',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_available',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_storage_available',
+    'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_available_storage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'Paperless-ngx Available storage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_available_storage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25.38',
+  })
+# ---
 # name: test_sensor_platform[sensor.paperless_ngx_correspondents-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -29,9 +85,10 @@
     'original_name': 'Correspondents',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'correspondent_count',
-    'unique_id': 'paperless_ngx_test_correspondent_count',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_correspondent_count',
     'unit_of_measurement': 'correspondents',
   })
 # ---
@@ -80,9 +137,10 @@
     'original_name': 'Document types',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'document_type_count',
-    'unique_id': 'paperless_ngx_test_document_type_count',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_document_type_count',
     'unit_of_measurement': 'document types',
   })
 # ---
@@ -131,9 +189,10 @@
     'original_name': 'Documents in inbox',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'documents_inbox',
-    'unique_id': 'paperless_ngx_test_documents_inbox',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_documents_inbox',
     'unit_of_measurement': 'documents',
   })
 # ---
@@ -150,6 +209,366 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_celery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.paperless_ngx_status_celery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status Celery',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'celery_status',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_celery_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_celery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Paperless-ngx Status Celery',
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_status_celery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ok',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_classifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.paperless_ngx_status_classifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status classifier',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'classifier_status',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_classifier_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_classifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Paperless-ngx Status classifier',
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_status_classifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ok',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_database-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.paperless_ngx_status_database',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status database',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'database_status',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_database_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_database-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Paperless-ngx Status database',
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_status_database',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ok',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.paperless_ngx_status_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status index',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'index_status',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_index_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Paperless-ngx Status index',
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_status_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ok',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_redis-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.paperless_ngx_status_redis',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status Redis',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'redis_status',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_redis_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_redis-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Paperless-ngx Status Redis',
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_status_redis',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ok',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_sanity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.paperless_ngx_status_sanity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status sanity',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sanity_check_status',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_sanity_check_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_status_sanity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Paperless-ngx Status sanity',
+      'options': list([
+        'ok',
+        'error',
+        'warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_status_sanity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ok',
   })
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_tags-entry]
@@ -182,9 +601,10 @@
     'original_name': 'Tags',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tag_count',
-    'unique_id': 'paperless_ngx_test_tag_count',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_tag_count',
     'unit_of_measurement': 'tags',
   })
 # ---
@@ -233,9 +653,10 @@
     'original_name': 'Total characters',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'characters_count',
-    'unique_id': 'paperless_ngx_test_characters_count',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_characters_count',
     'unit_of_measurement': 'characters',
   })
 # ---
@@ -284,9 +705,10 @@
     'original_name': 'Total documents',
     'platform': 'paperless_ngx',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'documents_total',
-    'unique_id': 'paperless_ngx_test_documents_total',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_documents_total',
     'unit_of_measurement': 'documents',
   })
 # ---
@@ -303,5 +725,61 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '999',
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_total_storage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.paperless_ngx_total_storage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Total storage',
+    'platform': 'paperless_ngx',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_total',
+    'unique_id': '0KLG00V55WEVTJ0CJHM0GADNGH_storage_total',
+    'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+  })
+# ---
+# name: test_sensor_platform[sensor.paperless_ngx_total_storage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'Paperless-ngx Total storage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.paperless_ngx_total_storage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '62.1',
   })
 # ---

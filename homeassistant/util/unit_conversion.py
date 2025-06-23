@@ -7,6 +7,8 @@ from functools import lru_cache
 from math import floor, log10
 
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -683,6 +685,20 @@ class UnitlessRatioConverter(BaseUnitConverter):
     VALID_UNITS = {
         None,
         PERCENTAGE,
+    }
+
+
+class MassVolumeConcentrationConverter(BaseUnitConverter):
+    """Utility to convert mass volume concentration values."""
+
+    UNIT_CLASS = "concentration"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 µg/m³ = 1 mg/m³
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1.0,
+    }
+    VALID_UNITS = {
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     }
 
 
