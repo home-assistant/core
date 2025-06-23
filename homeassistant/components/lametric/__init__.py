@@ -1,7 +1,6 @@
 """Support for LaMetric time."""
 
 from homeassistant.components import notify as hass_notify
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
@@ -43,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMetricConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LaMetricConfigEntry) -> bool:
     """Unload LaMetric config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await hass_notify.async_reload(hass, DOMAIN)
