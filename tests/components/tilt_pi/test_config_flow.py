@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant import config_entries
 from homeassistant.components.tilt_pi.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -19,7 +19,7 @@ async def test_async_step_user_gets_form_and_creates_entry(
     """Test that the we can view the form and that the config flow creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -47,7 +47,7 @@ async def test_abort_if_already_configured(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -69,7 +69,7 @@ async def test_successful_recovery_after_invalid_host(
     """Test error shown when user submits invalid host."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_USER},
     )
 
     # Simulate a invalid host error by providing an invalid URL
@@ -100,7 +100,7 @@ async def test_successful_recovery_after_connection_error(
     """Test error shown when connection fails."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_USER},
     )
 
     # Simulate a connection error by raising a TimeoutError
