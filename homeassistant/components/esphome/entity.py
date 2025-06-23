@@ -24,6 +24,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_platform,
+    entity_registry as er,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -53,21 +54,51 @@ def async_static_info_updated(
 ) -> None:
     """Update entities of this platform when entities are listed."""
     current_infos = entry_data.info[info_type]
+    device_info = entry_data.device_info
+    if TYPE_CHECKING:
+        assert device_info is not None
     new_infos: dict[int, EntityInfo] = {}
     add_entities: list[_EntityT] = []
 
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+
     for info in infos:
-        if not current_infos.pop(info.key, None):
-            # Create new entity
+        new_infos[info.key] = info
+
+        # Create new entity if it doesn't exist
+        if not (old_info := current_infos.pop(info.key, None)):
             entity = entity_type(entry_data, platform.domain, info, state_type)
             add_entities.append(entity)
-        new_infos[info.key] = info
+            continue
+
+        # Entity exists - check if device_id has changed
+        if old_info.device_id == info.device_id:
+            continue
+
+        # Entity has switched devices, update its device assignment
+        unique_id = build_unique_id(device_info.mac_address, info)
+        entity_id = ent_reg.async_get_entity_id(platform.domain, DOMAIN, unique_id)
+        if not entity_id:
+            continue
+
+        # Determine the new device
+        if info.device_id:
+            # Entity now belongs to a sub device
+            new_device = dev_reg.async_get_device(
+                identifiers={(DOMAIN, f"{device_info.mac_address}_{info.device_id}")}
+            )
+        else:
+            # Entity now belongs to the main device
+            new_device = dev_reg.async_get_device(
+                connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
+            )
+
+        if new_device:
+            ent_reg.async_update_entity(entity_id, device_id=new_device.id)
 
     # Anything still in current_infos is now gone
     if current_infos:
-        device_info = entry_data.device_info
-        if TYPE_CHECKING:
-            assert device_info is not None
         entry_data.async_remove_entities(
             hass, current_infos.values(), device_info.mac_address
         )

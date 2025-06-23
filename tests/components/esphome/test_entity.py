@@ -901,3 +901,124 @@ async def test_entity_friendly_names_with_empty_device_names(
     state_4 = hass.states.get("binary_sensor.test_main_status")
     assert state_4 is not None
     assert state_4.attributes[ATTR_FRIENDLY_NAME] == "Main Device Main Status"
+
+
+async def test_entity_switches_between_devices(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that entities can switch between devices correctly."""
+    # Define sub devices
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="Sub Device 1", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="Sub Device 2", area_id=0),
+    ]
+
+    device_info = {
+        "devices": sub_devices,
+    }
+
+    # Create initial entity assigned to main device (no device_id)
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor",
+            key=1,
+            name="Test Sensor",
+            unique_id="sensor",
+            # device_id omitted - entity belongs to main device
+        ),
+    ]
+
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    # Verify entity is on main device
+    main_device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    )
+    assert main_device is not None
+
+    sensor_entity = entity_registry.async_get("binary_sensor.test_sensor")
+    assert sensor_entity is not None
+    assert sensor_entity.device_id == main_device.id
+
+    # Test 1: Main device → Sub device 1
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor",
+            key=1,
+            name="Test Sensor",
+            unique_id="sensor",
+            device_id=11111111,  # Now on sub device 1
+        ),
+    ]
+
+    # Update the entity info (this would normally come from the ESP device)
+    entry_data = device.entry.runtime_data
+    callbacks = entry_data.entity_info_callbacks.get(BinarySensorInfo, [])
+    for callback_ in callbacks:
+        callback_(updated_entity_info)
+
+    # Verify entity is now on sub device 1
+    sub_device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    )
+    assert sub_device_1 is not None
+
+    sensor_entity = entity_registry.async_get("binary_sensor.test_sensor")
+    assert sensor_entity is not None
+    assert sensor_entity.device_id == sub_device_1.id
+
+    # Test 2: Sub device 1 → Sub device 2
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor",
+            key=1,
+            name="Test Sensor",
+            unique_id="sensor",
+            device_id=22222222,  # Now on sub device 2
+        ),
+    ]
+
+    for callback_ in callbacks:
+        callback_(updated_entity_info)
+
+    # Verify entity is now on sub device 2
+    sub_device_2 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    )
+    assert sub_device_2 is not None
+
+    sensor_entity = entity_registry.async_get("binary_sensor.test_sensor")
+    assert sensor_entity is not None
+    assert sensor_entity.device_id == sub_device_2.id
+
+    # Test 3: Sub device 2 → Main device
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor",
+            key=1,
+            name="Test Sensor",
+            unique_id="sensor",
+            # device_id omitted - back to main device
+        ),
+    ]
+
+    for callback_ in callbacks:
+        callback_(updated_entity_info)
+
+    # Verify entity is back on main device
+    sensor_entity = entity_registry.async_get("binary_sensor.test_sensor")
+    assert sensor_entity is not None
+    assert sensor_entity.device_id == main_device.id
