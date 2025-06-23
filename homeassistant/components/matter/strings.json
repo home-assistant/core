@@ -330,6 +330,20 @@
       "battery_replacement_description": {
         "name": "Battery type"
       },
+      "battery_charge_state": {
+        "name": "Battery charge state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "full_charge": "Full charge",
+          "not_charging": "Not charging"
+        }
+      },
+      "battery_time_remaining": {
+        "name": "Time remaining"
+      },
+      "battery_time_to_full_charge": {
+        "name": "Time to full charge"
+      },
       "battery_voltage": {
         "name": "Battery voltage"
       },
