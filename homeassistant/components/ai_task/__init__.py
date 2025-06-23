@@ -5,6 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import (
     HassJobType,
     HomeAssistant,
@@ -17,9 +18,17 @@ from homeassistant.helpers import config_validation as cv, storage
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .const import DATA_COMPONENT, DATA_PREFERENCES, DOMAIN, AITaskEntityFeature
+from .const import (
+    ATTR_INSTRUCTIONS,
+    ATTR_TASK_NAME,
+    DATA_COMPONENT,
+    DATA_PREFERENCES,
+    DOMAIN,
+    SERVICE_GENERATE_TEXT,
+    AITaskEntityFeature,
+)
 from .entity import AITaskEntity
-from .http import async_setup as async_setup_conversation_http
+from .http import async_setup as async_setup_http
 from .task import GenTextTask, GenTextTaskResult, async_generate_text
 
 __all__ = [
@@ -45,16 +54,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_COMPONENT] = entity_component
     hass.data[DATA_PREFERENCES] = AITaskPreferences(hass)
     await hass.data[DATA_PREFERENCES].async_load()
-    async_setup_conversation_http(hass)
+    async_setup_http(hass)
     hass.services.async_register(
         DOMAIN,
-        "generate_text",
+        SERVICE_GENERATE_TEXT,
         async_service_generate_text,
         schema=vol.Schema(
             {
-                vol.Required("task_name"): cv.string,
-                vol.Optional("entity_id"): cv.entity_id,
-                vol.Required("instructions"): cv.string,
+                vol.Required(ATTR_TASK_NAME): cv.string,
+                vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+                vol.Required(ATTR_INSTRUCTIONS): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
