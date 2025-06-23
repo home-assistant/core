@@ -21,6 +21,7 @@ from yolink.const import (
     ATTR_DEVICE_POWER_FAILURE_ALARM,
     ATTR_DEVICE_SIREN,
     ATTR_DEVICE_SMART_REMOTER,
+    ATTR_DEVICE_SOIL_TH_SENSOR,
     ATTR_DEVICE_SWITCH,
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_THERMOSTAT,
@@ -76,6 +77,7 @@ class YoLinkSensorEntityDescription(SensorEntityDescription):
     """YoLink SensorEntityDescription."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
+    state_key: str = "state"
     should_update_entity: Callable = lambda state: True
     value: Callable = lambda state: state
 
@@ -102,6 +104,7 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_LOCK_V2,
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_DEVICE_SOIL_TH_SENSOR,
     ATTR_GARAGE_DOOR_CONTROLLER,
 ]
 
@@ -122,6 +125,7 @@ BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ATTR_DEVICE_WATER_METER_CONTROLLER,
     ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_SOIL_TH_SENSOR,
 ]
 
 MCU_DEV_TEMPERATURE_SENSOR = [
@@ -169,6 +173,7 @@ def cvt_volume(val: int | None) -> str | None:
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="battery",
+        state_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -178,6 +183,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     ),
     YoLinkSensorEntityDescription(
         key="humidity",
+        state_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -187,15 +193,35 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         ),
     ),
     YoLinkSensorEntityDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda device: (device.device_type in [ATTR_DEVICE_SOIL_TH_SENSOR]),
+        value=lambda value: value.get("humidity") if value is not None else None,
+        should_update_entity=lambda value: value is not None,
+    ),
+    YoLinkSensorEntityDescription(
         key="temperature",
+        state_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_TH_SENSOR],
     ),
+    YoLinkSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda device: (device.device_type in [ATTR_DEVICE_SOIL_TH_SENSOR]),
+        value=lambda value: value.get("temperature") if value is not None else None,
+        should_update_entity=lambda value: value is not None,
+    ),
     # mcu temperature
     YoLinkSensorEntityDescription(
         key="devTemperature",
+        state_key="devTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -204,6 +230,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     ),
     YoLinkSensorEntityDescription(
         key="loraInfo",
+        state_key="loraInfo",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         value=lambda value: value["signal"] if value is not None else None,
@@ -222,6 +249,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="mute",
         translation_key="power_failure_alarm_mute",
+        state_key="mute",
         device_class=SensorDeviceClass.ENUM,
         options=["muted", "unmuted"],
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_POWER_FAILURE_ALARM,
@@ -229,6 +257,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     ),
     YoLinkSensorEntityDescription(
         key="sound",
+        state_key="sound",
         translation_key="power_failure_alarm_volume",
         device_class=SensorDeviceClass.ENUM,
         options=["low", "medium", "high"],
@@ -238,6 +267,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="beep",
         translation_key="power_failure_alarm_beep",
+        state_key="beep",
         device_class=SensorDeviceClass.ENUM,
         options=["enabled", "disabled"],
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_POWER_FAILURE_ALARM,
@@ -245,6 +275,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     ),
     YoLinkSensorEntityDescription(
         key="waterDepth",
+        state_key="waterDepth",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_WATER_DEPTH_SENSOR,
@@ -252,6 +283,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="meter_reading",
         translation_key="water_meter_reading",
+        state_key="meter_reading",
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -263,6 +295,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="meter_1_reading",
         translation_key="water_meter_1_reading",
+        state_key="meter_1_reading",
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -274,6 +307,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="meter_2_reading",
         translation_key="water_meter_2_reading",
+        state_key="meter_2_reading",
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -285,6 +319,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="power",
         translation_key="current_power",
+        state_key="power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -295,6 +330,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="watt",
         translation_key="power_consumption",
+        state_key="watt",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
@@ -352,7 +388,7 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         """Update HA Entity State."""
         if (
             attr_val := self.entity_description.value(
-                state.get(self.entity_description.key)
+                state.get(self.entity_description.state_key)
             )
         ) is None and self.entity_description.should_update_entity(attr_val) is False:
             return
