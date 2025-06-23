@@ -6318,7 +6318,7 @@ async def test_label_description(
     assert_result_info(info, None)
     assert info.rate_limit is None
 
-    # Test non existing label ID
+    # Test valid label ID
     label = label_registry.async_create("choo choo", description="chugga chugga")
     info = render_to_info(hass, f"{{{{ label_description('{label.label_id}') }}}}")
     assert_result_info(info, label.description)
