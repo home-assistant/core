@@ -99,7 +99,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.sw_upload_progress.return_value = 100
         host_mock.manufacturer = "Reolink"
         host_mock.model = TEST_HOST_MODEL
-        host_mock.item_number = TEST_ITEM_NUMBER
+        host_mock.item_number.return_value = TEST_ITEM_NUMBER
         host_mock.camera_model.return_value = TEST_CAM_MODEL
         host_mock.camera_name.return_value = TEST_NVR_NAME
         host_mock.camera_hardware_version.return_value = "IPC_00001"

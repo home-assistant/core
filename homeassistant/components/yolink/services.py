@@ -25,7 +25,7 @@ _SPEAKER_HUB_PLAY_CALL_OPTIONAL_ATTRS = (
 )
 
 
-def async_register_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for YoLink integration."""
 
     async def handle_speaker_hub_play_call(service_call: ServiceCall) -> None:
