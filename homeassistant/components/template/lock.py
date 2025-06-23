@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.lock import (
+    DOMAIN as LOCK_DOMAIN,
     PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     LockEntity,
     LockEntityFeature,
@@ -23,11 +24,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_PICTURE, DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
@@ -36,6 +38,7 @@ from .template_entity import (
     make_template_entity_common_modern_schema,
     rewrite_common_legacy_to_modern_conf,
 )
+from .trigger_entity import TriggerEntity
 
 CONF_CODE_FORMAT_TEMPLATE = "code_format_template"
 CONF_CODE_FORMAT = "code_format"
@@ -123,6 +126,13 @@ async def async_setup_platform(
         )
         return
 
+    if "coordinator" in discovery_info:
+        async_add_entities(
+            TriggerLockEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
+        )
+        return
+
     _async_create_template_tracking_entities(
         async_add_entities,
         hass,
@@ -147,7 +157,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._attr_assumed_state = bool(self._optimistic)
 
-    def _register_scripts(
+    def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[tuple[str, Sequence[dict[str, Any]], LockEntityFeature | int]]:
         for action_id, supported_feature in (
@@ -314,7 +324,7 @@ class TemplateLock(TemplateEntity, AbstractTemplateLock):
         if TYPE_CHECKING:
             assert name is not None
 
-        for action_id, action_config, supported_feature in self._register_scripts(
+        for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
@@ -346,3 +356,60 @@ class TemplateLock(TemplateEntity, AbstractTemplateLock):
                 self._update_code_format,
             )
         super()._async_setup_templates()
+
+
+class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
+    """Lock entity based on trigger data."""
+
+    domain = LOCK_DOMAIN
+    extra_template_keys = (CONF_STATE,)
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: ConfigType,
+    ) -> None:
+        """Initialize the entity."""
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        AbstractTemplateLock.__init__(self, config)
+
+        self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+
+        if isinstance(config.get(CONF_CODE_FORMAT), template.Template):
+            self._to_render_simple.append(CONF_CODE_FORMAT)
+            self._parse_result.add(CONF_CODE_FORMAT)
+
+        for action_id, action_config, supported_feature in self._iterate_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle update of the data."""
+        self._process_data()
+
+        if not self.available:
+            self.async_write_ha_state()
+            return
+
+        write_ha_state = False
+        for key, updater in (
+            (CONF_STATE, self._handle_state),
+            (CONF_CODE_FORMAT, self._update_code_format),
+        ):
+            if (rendered := self._rendered.get(key)) is not None:
+                updater(rendered)
+                write_ha_state = True
+
+        if not self._optimistic:
+            self.async_set_context(self.coordinator.data["context"])
+            write_ha_state = True
+        elif self._optimistic and len(self._rendered) > 0:
+            # In case any non optimistic template
+            write_ha_state = True
+
+        if write_ha_state:
+            self.async_write_ha_state()
