@@ -1486,6 +1486,68 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensors[battery_storage][sensor.mock_battery_storage_energy_optimization_opt_out-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_opt_out',
+        'local_opt_out',
+        'grid_opt_out',
+        'opt_out',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_battery_storage_energy_optimization_opt_out',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Energy optimization opt-out',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'esa_opt_out_state',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ESAOptOutState-152-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[battery_storage][sensor.mock_battery_storage_energy_optimization_opt_out-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Battery Storage Energy optimization opt-out',
+      'options': list([
+        'no_opt_out',
+        'local_opt_out',
+        'grid_opt_out',
+        'opt_out',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_battery_storage_energy_optimization_opt_out',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_opt_out',
+  })
+# ---
 # name: test_sensors[battery_storage][sensor.mock_battery_storage_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4682,7 +4744,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'esa_op_out_state',
+    'translation_key': 'esa_opt_out_state',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-ESAOptOutState-152-7',
     'unit_of_measurement': None,
   })
@@ -5488,7 +5550,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'esa_op_out_state',
+    'translation_key': 'esa_opt_out_state',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ESAOptOutState-152-7',
     'unit_of_measurement': None,
   })
