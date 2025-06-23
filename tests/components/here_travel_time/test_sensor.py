@@ -319,8 +319,8 @@ async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock) -> Non
 
     valid_response.assert_called_with(
         transport_mode=TransportMode.TRUCK,
-        origin=Place(ORIGIN_LATITUDE, ORIGIN_LONGITUDE),
-        destination=Place(DESTINATION_LATITUDE, DESTINATION_LONGITUDE),
+        origin=Place(float(ORIGIN_LATITUDE), float(ORIGIN_LONGITUDE)),
+        destination=Place(float(DESTINATION_LATITUDE), float(DESTINATION_LONGITUDE)),
         routing_mode=RoutingMode.FAST,
         arrival_time=None,
         departure_time=None,
