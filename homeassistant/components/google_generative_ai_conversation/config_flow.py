@@ -100,6 +100,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(user_input)
             try:
                 await validate_input(user_input)
             except (APIError, Timeout) as err:

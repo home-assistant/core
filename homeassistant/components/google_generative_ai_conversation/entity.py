@@ -309,7 +309,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         self._genai_client = entry.runtime_data
         self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, subentry.subentry_id)},
             name=entry.title,
             manufacturer="Google",
             model="Generative AI",

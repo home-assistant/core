@@ -422,7 +422,7 @@ async def test_migration_from_v1_to_v2(
     )
     mock_config_entry_2.add_to_hass(hass)
 
-    device = device_registry.async_get_or_create(
+    device_1 = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
@@ -435,7 +435,7 @@ async def test_migration_from_v1_to_v2(
         DOMAIN,
         mock_config_entry.entry_id,
         config_entry=mock_config_entry,
-        device_id=device.id,
+        device_id=device_1.id,
         suggested_object_id="google_generative_ai_conversation",
     )
 
@@ -482,6 +482,17 @@ async def test_migration_from_v1_to_v2(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
+    assert not device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    )
+    assert (
+        device := device_registry.async_get_device(
+            identifiers={(DOMAIN, subentry.subentry_id)}
+        )
+    )
+    assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
+    assert device.id == device_1.id
+
     subentry = list(entry.subentries.values())[1]
 
     entity = entity_registry.async_get(
@@ -490,13 +501,16 @@ async def test_migration_from_v1_to_v2(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
-    )
     assert not device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
+    assert (
+        device := device_registry.async_get_device(
+            identifiers={(DOMAIN, subentry.subentry_id)}
+        )
+    )
+    assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
+    assert device.id == device_2.id
 
 
 async def test_migration_from_v1_to_v2_with_multiple_keys(
@@ -582,3 +596,8 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
         assert subentry.subentry_type == "conversation"
         assert subentry.data == options
         assert "Google Generative AI" in subentry.title
+
+        dev = device_registry.async_get_device(
+            identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
+        )
+        assert dev is not None
