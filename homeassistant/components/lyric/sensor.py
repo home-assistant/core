@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 from aiolyric.objects.priority import LyricAccessory, LyricRoom
@@ -22,7 +21,6 @@ from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -33,6 +31,7 @@ from .const import (
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION_HOLD,
 )
+from .coordinator import LyricDataUpdateCoordinator
 from .entity import LyricAccessoryEntity, LyricDeviceEntity
 
 LYRIC_SETPOINT_STATUS_NAMES = {
@@ -164,7 +163,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Honeywell Lyric sensor platform based on a config entry."""
-    coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
+    coordinator: LyricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         LyricSensor(
@@ -199,7 +198,7 @@ class LyricSensor(LyricDeviceEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Lyric],
+        coordinator: LyricDataUpdateCoordinator,
         description: LyricSensorEntityDescription,
         location: LyricLocation,
         device: LyricDevice,
@@ -231,7 +230,7 @@ class LyricAccessorySensor(LyricAccessoryEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Lyric],
+        coordinator: LyricDataUpdateCoordinator,
         description: LyricSensorAccessoryEntityDescription,
         location: LyricLocation,
         parentDevice: LyricDevice,
