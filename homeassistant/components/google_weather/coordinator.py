@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -31,13 +32,42 @@ class GoogleWeatherRuntimeData:
 type GoogleWeatherConfigEntry = ConfigEntry[GoogleWeatherRuntimeData]
 
 
-class GoogleWeatherCurrentConditionsCoordinator(
-    TimestampDataUpdateCoordinator[dict[str, Any]]
-):
+class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[dict[str, Any]]):
+    """Base class for Google Weather coordinators."""
+
+    config_entry: GoogleWeatherConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: GoogleWeatherConfigEntry,
+        data_type_name: str,
+        update_interval: timedelta,
+        api_method: Callable[[], Awaitable[dict[str, Any]]],
+    ) -> None:
+        """Initialize the data updater."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"Google Weather {data_type_name} coordinator for {config_entry.title}",
+            update_interval=update_interval,
+        )
+        self._data_type_name = data_type_name
+        self._api_method = api_method
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch data from API and handle errors."""
+        try:
+            return await self._api_method()
+        except GoogleWeatherApiError as err:
+            _LOGGER.error("Error fetching %s: %s", self._data_type_name, err)
+            raise UpdateFailed(f"Error fetching {self._data_type_name}") from err
+
+
+class GoogleWeatherCurrentConditionsCoordinator(GoogleWeatherBaseCoordinator):
     """Handle fetching current weather conditions."""
 
-    config_entry: GoogleWeatherConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -47,29 +77,16 @@ class GoogleWeatherCurrentConditionsCoordinator(
         """Initialize the data updater."""
         super().__init__(
             hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=f"Google Weather current conditions coordinator for {config_entry.title}",
-            update_interval=timedelta(minutes=15),
+            config_entry,
+            "current weather conditions",
+            timedelta(minutes=15),
+            api.async_get_current_conditions,
         )
-        self.api = api
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch current weather conditions."""
-        try:
-            return await self.api.async_get_current_conditions()
-        except GoogleWeatherApiError as err:
-            _LOGGER.error("Error fetching current weather conditions: %s", err)
-            raise UpdateFailed("Error fetching current weather conditions") from err
 
 
-class GoogleWeatherDailyForecastCoordinator(
-    TimestampDataUpdateCoordinator[dict[str, Any]]
-):
+class GoogleWeatherDailyForecastCoordinator(GoogleWeatherBaseCoordinator):
     """Handle fetching daily weather forecast."""
 
-    config_entry: GoogleWeatherConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -79,29 +96,16 @@ class GoogleWeatherDailyForecastCoordinator(
         """Initialize the data updater."""
         super().__init__(
             hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=f"Google Weather daily forecast coordinator for {config_entry.title}",
-            update_interval=timedelta(hours=1),
+            config_entry,
+            "daily weather forecast",
+            timedelta(hours=1),
+            api.async_get_daily_forecast,
         )
-        self.api = api
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch daily weather forecast."""
-        try:
-            return await self.api.async_get_daily_forecast()
-        except GoogleWeatherApiError as err:
-            _LOGGER.error("Error fetching daily weather forecast: %s", err)
-            raise UpdateFailed("Error fetching daily weather forecast") from err
 
 
-class GoogleWeatherHourlyForecastCoordinator(
-    TimestampDataUpdateCoordinator[dict[str, Any]]
-):
+class GoogleWeatherHourlyForecastCoordinator(GoogleWeatherBaseCoordinator):
     """Handle fetching hourly weather forecast."""
 
-    config_entry: GoogleWeatherConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -111,17 +115,8 @@ class GoogleWeatherHourlyForecastCoordinator(
         """Initialize the data updater."""
         super().__init__(
             hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=f"Google Weather hourly forecast coordinator for {config_entry.title}",
-            update_interval=timedelta(hours=1),
+            config_entry,
+            "hourly weather forecast",
+            timedelta(hours=1),
+            api.async_get_hourly_forecast,
         )
-        self.api = api
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch hourly weather forecast."""
-        try:
-            return await self.api.async_get_hourly_forecast()
-        except GoogleWeatherApiError as err:
-            _LOGGER.error("Error fetching hourly weather forecast: %s", err)
-            raise UpdateFailed("Error fetching hourly weather forecast") from err
