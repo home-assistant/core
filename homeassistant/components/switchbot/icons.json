@@ -1,5 +1,16 @@
 {
   "entity": {
+    "sensor": {
+      "water_level": {
+        "default": "mdi:water-percent",
+        "state": {
+          "empty": "mdi:water-off",
+          "low": "mdi:water-outline",
+          "medium": "mdi:water",
+          "high": "mdi:water-check"
+        }
+      }
+    },
     "fan": {
       "fan": {
         "state_attributes": {

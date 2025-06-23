@@ -162,20 +162,6 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
         """Return the state of the sensor."""
         return self.parsed_data[self._sensor]
 
-    @property
-    def icon(self) -> str | None:
-        """Return the icon based on the sensor's state."""
-
-        if self.entity_description.key != "water_level":
-            return super().icon
-        icons = {
-            "empty": "mdi:water-off",
-            "low": "mdi:water-outline",
-            "medium": "mdi:water",
-            "high": "mdi:water-check",
-        }
-        return icons.get(str(self.native_value), "mdi:water-alert")
-
 
 class SwitchbotRSSISensor(SwitchBotSensor):
     """Representation of a Switchbot RSSI sensor."""
