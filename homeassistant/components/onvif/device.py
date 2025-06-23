@@ -675,7 +675,7 @@ class ONVIFDevice:
     async def async_get_imaging_settings(
         self,
         profile: Profile,
-    ) -> dict:
+    ) -> dict | None:
         """Get imaging settings from the ONVIF imaging service."""
         # The Imaging Service is defined by ONVIF standard
         # https://www.onvif.org/specs/srv/img/ONVIF-Imaging-Service-Spec-v210.pdf

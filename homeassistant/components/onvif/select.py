@@ -82,14 +82,18 @@ class OnvifSelectEntity(
         self.device = device
         self._attr_name = f"{self.device.name} {description.name}"
         self._attr_unique_id = f"{self.mac_or_serial}_{description.key}"
-        self.entity_description = description
+        self.entity_description: ONVIFSelectEntityDescription = description
         self._attr_current_option = "AUTO"  # default value
         self.coordinator = coordinator
 
     @property
     def current_option(self) -> str | None:
         """Return the current IR Cut filter mode."""
-        value = self.coordinator.data.get("IrCutFilter", "AUTO")
+        if not isinstance(self.coordinator.data, dict):
+            value = "AUTO"
+        else:
+            value = self.coordinator.data.get("IrCutFilter", "AUTO")
+
         for k, v in self.entity_description.options_map.items():
             if v["IrCutFilter"] == value:
                 return k

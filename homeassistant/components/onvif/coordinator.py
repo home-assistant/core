@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from zeep.helpers import serialize_object
 
@@ -17,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 type OnvifConfigEntry = ConfigEntry[OnvifDataUpdateCoordinator]
 
 
-class OnvifDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class OnvifDataUpdateCoordinator(DataUpdateCoordinator[dict[Any, Any]]):
     """Data update coordinator for the Onvif integration."""
 
     config_entry: OnvifConfigEntry
