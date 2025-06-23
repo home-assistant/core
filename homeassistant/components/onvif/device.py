@@ -699,7 +699,7 @@ class ONVIFDevice:
                 )
             else:
                 LOGGER.error("Error trying to get Imaging settings: %s", err)
-
+        return None
 
 def get_device(
     hass: HomeAssistant,
