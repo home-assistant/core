@@ -7,11 +7,12 @@ import pytest
 from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sensor import SCAN_INTERVAL
+from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.util import dt as dt_util
 
 from .conftest import SonosMockEvent
@@ -63,7 +64,18 @@ async def test_battery_attributes(
 
     power_source = entity_registry.entities["sensor.zone_a_power_source"]
     power_source_state = hass.states.get(power_source.entity_id)
-    assert power_source_state.state == "SONOS_CHARGING_RING"
+    assert power_source_state.state == "charging-ring"
+
+    result = translation.async_translate_state(
+        hass,
+        power_source_state.state,
+        Platform.SENSOR,
+        DOMAIN,
+        power_source.translation_key,
+        None,
+    )
+
+    assert result == "Charging Ring"
 
 
 async def test_battery_on_s1(
