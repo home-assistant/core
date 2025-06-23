@@ -24,6 +24,7 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user step of the config flow."""
         if user_input:
+            await self.async_set_unique_id(user_input[CONF_STOP_ID])
             return self.async_create_entry(
                 title="Parada " + user_input[CONF_STOP_ID], data=user_input
             )
