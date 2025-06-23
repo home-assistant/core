@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     UnitOfTemperature,
+    UnitOfTemperatureInterval,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.significant_change import (
@@ -47,11 +48,17 @@ def async_check_significant_change(
     percentage_change: float | None = None
 
     # special for temperature
-    if device_class in (
-        NumberDeviceClass.TEMPERATURE,
-        NumberDeviceClass.TEMPERATURE_INTERVAL,
-    ):
+    if device_class == NumberDeviceClass.TEMPERATURE:
         if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT:
+            absolute_change = 1.0
+        else:
+            absolute_change = 0.5
+
+    elif device_class == NumberDeviceClass.TEMPERATURE_INTERVAL:
+        if (
+            new_attrs.get(ATTR_UNIT_OF_MEASUREMENT)
+            == UnitOfTemperatureInterval.FAHRENHEIT
+        ):
             absolute_change = 1.0
         else:
             absolute_change = 0.5

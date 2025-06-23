@@ -20,6 +20,7 @@ from homeassistant.const import (  # noqa: F401
     CONF_UNIT_OF_MEASUREMENT,
     EntityCategory,
     UnitOfTemperature,
+    UnitOfTemperatureInterval,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -173,7 +174,28 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "suggested_unit_of_measurement",
 }
 
-TEMPERATURE_UNITS = {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
+_MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT: dict[UnitOfTemperature, str] = {
+    UnitOfTemperature.CELSIUS: UnitOfTemperature.CELSIUS,
+    UnitOfTemperature.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+}
+_MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_INTERVAL_UNIT: dict[
+    UnitOfTemperature, str
+] = {
+    UnitOfTemperature.CELSIUS: UnitOfTemperatureInterval.CELSIUS,
+    UnitOfTemperature.FAHRENHEIT: UnitOfTemperatureInterval.FAHRENHEIT,
+}
+_NATIVE_TEMPERATURE_UNIT_TO_CONFIG: dict[
+    SensorDeviceClass | None, dict[str | None, dict[UnitOfTemperature, str]]
+] = {
+    SensorDeviceClass.TEMPERATURE: {
+        UnitOfTemperature.CELSIUS: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT,
+        UnitOfTemperature.FAHRENHEIT: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT,
+    },
+    SensorDeviceClass.TEMPERATURE_INTERVAL: {
+        UnitOfTemperatureInterval.CELSIUS: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_INTERVAL_UNIT,
+        UnitOfTemperatureInterval.FAHRENHEIT: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_INTERVAL_UNIT,
+    },
+}
 
 
 class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
@@ -514,11 +536,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         # Third priority: Legacy temperature conversion, which applies
         # to both registered and non registered entities
-        if native_unit_of_measurement in TEMPERATURE_UNITS and self.device_class in (
-            SensorDeviceClass.TEMPERATURE,
-            SensorDeviceClass.TEMPERATURE_INTERVAL,
-        ):
-            return self.hass.config.units.temperature_unit
+        try:
+            return _NATIVE_TEMPERATURE_UNIT_TO_CONFIG[self.device_class][
+                native_unit_of_measurement
+            ][self.hass.config.units.temperature_unit]
+        except KeyError:
+            pass
 
         # Fourth priority: Unit translation
         if (translation_key := self._unit_of_measurement_translation_key) and (

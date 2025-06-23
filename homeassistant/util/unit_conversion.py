@@ -29,6 +29,7 @@ from homeassistant.const import (
     UnitOfReactiveEnergy,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTemperatureInterval,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -678,16 +679,16 @@ class TemperatureIntervalConverter(BaseUnitConverter):
     eg. a 10°C interval (10°C to 20°C) will return a 18°F (50°F to 68°F) interval
     """
 
-    UNIT_CLASS = "temperature interval"
+    UNIT_CLASS = "temperature_interval"
     VALID_UNITS = {
-        UnitOfTemperature.CELSIUS,
-        UnitOfTemperature.FAHRENHEIT,
-        UnitOfTemperature.KELVIN,
+        UnitOfTemperatureInterval.CELSIUS,
+        UnitOfTemperatureInterval.FAHRENHEIT,
+        UnitOfTemperatureInterval.KELVIN,
     }
     _UNIT_CONVERSION = {
-        UnitOfTemperature.CELSIUS: 1.0,
-        UnitOfTemperature.FAHRENHEIT: 1.8,
-        UnitOfTemperature.KELVIN: 1.0,
+        UnitOfTemperatureInterval.CELSIUS: 1.0,
+        UnitOfTemperatureInterval.FAHRENHEIT: 1.8,
+        UnitOfTemperatureInterval.KELVIN: 1.0,
     }
 
 

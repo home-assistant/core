@@ -39,6 +39,7 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTemperatureInterval,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -372,7 +373,7 @@ class NumberDeviceClass(StrEnum):
     TEMPERATURE_INTERVAL = "temperature_interval"
     """Difference of temperatures - Temperature range.
 
-    Unit of measurement: `°C`, `°F`, `K`
+    Unit of measurement: `Δ°C`, `Δ°F`, `ΔK`
     """
 
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
@@ -524,7 +525,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
     NumberDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
-    NumberDeviceClass.TEMPERATURE_INTERVAL: set(UnitOfTemperature),
+    NumberDeviceClass.TEMPERATURE_INTERVAL: set(UnitOfTemperatureInterval),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,

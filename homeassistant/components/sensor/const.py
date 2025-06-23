@@ -39,6 +39,7 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTemperatureInterval,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
@@ -403,7 +404,7 @@ class SensorDeviceClass(StrEnum):
     TEMPERATURE_INTERVAL = "temperature_interval"
     """Difference of temperatures - Temperature range.
 
-    Unit of measurement: `°C`, `°F`, `K`
+    Unit of measurement: `Δ°C`, `Δ°F`, `ΔK`
     """
 
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
@@ -627,7 +628,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
     SensorDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.TEMPERATURE: set(UnitOfTemperature),
-    SensorDeviceClass.TEMPERATURE_INTERVAL: set(UnitOfTemperature),
+    SensorDeviceClass.TEMPERATURE_INTERVAL: set(UnitOfTemperatureInterval),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -690,7 +691,7 @@ UNITS_PRECISION = {
     SensorDeviceClass.SOUND_PRESSURE: (UnitOfSoundPressure.DECIBEL, 0),
     SensorDeviceClass.SPEED: (UnitOfSpeed.MILLIMETERS_PER_SECOND, 0),
     SensorDeviceClass.TEMPERATURE: (UnitOfTemperature.KELVIN, 1),
-    SensorDeviceClass.TEMPERATURE_INTERVAL: (UnitOfTemperature.KELVIN, 1),
+    SensorDeviceClass.TEMPERATURE_INTERVAL: (UnitOfTemperatureInterval.KELVIN, 1),
     SensorDeviceClass.VOLTAGE: (UnitOfElectricPotential.VOLT, 0),
     SensorDeviceClass.VOLUME: (UnitOfVolume.MILLILITERS, 0),
     SensorDeviceClass.VOLUME_FLOW_RATE: (UnitOfVolumeFlowRate.LITERS_PER_SECOND, 0),

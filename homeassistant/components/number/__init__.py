@@ -14,7 +14,12 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_MODE,
+    CONF_UNIT_OF_MEASUREMENT,
+    UnitOfTemperature,
+    UnitOfTemperatureInterval,
+)
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -175,6 +180,29 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "mode",
     "native_unit_of_measurement",
     "native_value",
+}
+
+_MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT: dict[UnitOfTemperature, str] = {
+    UnitOfTemperature.CELSIUS: UnitOfTemperature.CELSIUS,
+    UnitOfTemperature.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+}
+_MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_INTERVAL_UNIT: dict[
+    UnitOfTemperature, str
+] = {
+    UnitOfTemperature.CELSIUS: UnitOfTemperatureInterval.CELSIUS,
+    UnitOfTemperature.FAHRENHEIT: UnitOfTemperatureInterval.FAHRENHEIT,
+}
+_NATIVE_TEMPERATURE_UNIT_TO_CONFIG: dict[
+    NumberDeviceClass | None, dict[str | None, dict[UnitOfTemperature, str]]
+] = {
+    NumberDeviceClass.TEMPERATURE: {
+        UnitOfTemperature.CELSIUS: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT,
+        UnitOfTemperature.FAHRENHEIT: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT,
+    },
+    NumberDeviceClass.TEMPERATURE_INTERVAL: {
+        UnitOfTemperatureInterval.CELSIUS: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_INTERVAL_UNIT,
+        UnitOfTemperatureInterval.FAHRENHEIT: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_INTERVAL_UNIT,
+    },
 }
 
 
@@ -375,16 +403,12 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return self._number_option_unit_of_measurement
 
         native_unit_of_measurement = self.native_unit_of_measurement
-        # device_class is checked after native_unit_of_measurement since most
-        # of the time we can avoid the device_class check
-        if native_unit_of_measurement in (
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-        ) and self.device_class in (
-            NumberDeviceClass.TEMPERATURE,
-            NumberDeviceClass.TEMPERATURE_INTERVAL,
-        ):
-            return self.hass.config.units.temperature_unit
+        try:
+            return _NATIVE_TEMPERATURE_UNIT_TO_CONFIG[self.device_class][
+                native_unit_of_measurement
+            ][self.hass.config.units.temperature_unit]
+        except KeyError:
+            pass
 
         if (translation_key := self._unit_of_measurement_translation_key) and (
             unit_of_measurement
