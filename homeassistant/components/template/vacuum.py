@@ -25,6 +25,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
+    CONF_NAME,
     CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -32,7 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
