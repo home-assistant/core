@@ -204,6 +204,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "altruist": {
+      "name": "Altruist",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "amazon": {
       "name": "Amazon",
       "integrations": {
@@ -6426,7 +6432,10 @@
           "iot_class": "cloud_polling",
           "name": "SwitchBot Cloud"
         }
-      }
+      },
+      "iot_standards": [
+        "matter"
+      ]
     },
     "switcher_kis": {
       "name": "Switcher",
@@ -6742,11 +6751,22 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "tilt_ble": {
-      "name": "Tilt Hydrometer BLE",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
+    "tilt": {
+      "name": "Tilt",
+      "integrations": {
+        "tilt_ble": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Tilt Hydrometer BLE"
+        },
+        "tilt_pi": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Tilt Pi"
+        }
+      }
     },
     "time_date": {
       "integration_type": "service",
@@ -7480,7 +7500,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_polling",
-          "name": "Xiaomi Miio"
+          "name": "Xiaomi Home"
         },
         "xiaomi_tv": {
           "integration_type": "hub",
