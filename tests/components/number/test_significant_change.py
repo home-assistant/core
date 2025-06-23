@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     UnitOfTemperature,
+    UnitOfTemperatureInterval,
 )
 
 AQI_ATTRS = {ATTR_DEVICE_CLASS: NumberDeviceClass.AQI}
@@ -36,6 +37,14 @@ TEMP_CELSIUS_ATTRS = {
 TEMP_FREEDOM_ATTRS = {
     ATTR_DEVICE_CLASS: NumberDeviceClass.TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
+}
+TEMP_INTERVAL_CELSIUS_ATTRS = {
+    ATTR_DEVICE_CLASS: NumberDeviceClass.TEMPERATURE_INTERVAL,
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperatureInterval.CELSIUS,
+}
+TEMP_INTERVAL_FAHRENHEIT_ATTRS = {
+    ATTR_DEVICE_CLASS: NumberDeviceClass.TEMPERATURE_INTERVAL,
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperatureInterval.FAHRENHEIT,
 }
 VOLATILE_ORGANIC_COMPOUNDS_ATTRS = {
     ATTR_DEVICE_CLASS: NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
@@ -81,6 +90,13 @@ VOLATILE_ORGANIC_COMPOUNDS_ATTRS = {
         ("70", "70.5", TEMP_FREEDOM_ATTRS, False),
         ("fail", "70", TEMP_FREEDOM_ATTRS, True),
         ("70", "fail", TEMP_FREEDOM_ATTRS, False),
+        ("1", "1", TEMP_INTERVAL_CELSIUS_ATTRS, False),
+        ("12", "13", TEMP_INTERVAL_CELSIUS_ATTRS, True),
+        ("12.1", "12.2", TEMP_INTERVAL_CELSIUS_ATTRS, False),
+        ("10", "11", TEMP_INTERVAL_FAHRENHEIT_ATTRS, True),
+        ("10", "10.5", TEMP_INTERVAL_FAHRENHEIT_ATTRS, False),
+        ("fail", "0", TEMP_INTERVAL_FAHRENHEIT_ATTRS, True),
+        ("10", "fail", TEMP_INTERVAL_FAHRENHEIT_ATTRS, False),
         ("0", "1", VOLATILE_ORGANIC_COMPOUNDS_ATTRS, True),
         ("0.1", "0.5", VOLATILE_ORGANIC_COMPOUNDS_ATTRS, False),
     ],

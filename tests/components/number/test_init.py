@@ -34,6 +34,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     Platform,
     UnitOfTemperature,
+    UnitOfTemperatureInterval,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, State
@@ -384,6 +385,7 @@ async def test_set_value(
 
 @pytest.mark.parametrize(
     (
+        "device_class",
         "unit_system",
         "native_unit",
         "state_unit",
@@ -400,6 +402,7 @@ async def test_set_value(
     ),
     [
         (
+            NumberDeviceClass.TEMPERATURE,
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.FAHRENHEIT,
@@ -415,6 +418,7 @@ async def test_set_value(
             3,
         ),
         (
+            NumberDeviceClass.TEMPERATURE,
             US_CUSTOMARY_SYSTEM,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.FAHRENHEIT,
@@ -430,6 +434,7 @@ async def test_set_value(
             3,
         ),
         (
+            NumberDeviceClass.TEMPERATURE,
             METRIC_SYSTEM,
             UnitOfTemperature.FAHRENHEIT,
             UnitOfTemperature.CELSIUS,
@@ -445,9 +450,74 @@ async def test_set_value(
             3,
         ),
         (
+            NumberDeviceClass.TEMPERATURE,
             METRIC_SYSTEM,
             UnitOfTemperature.CELSIUS,
             UnitOfTemperature.CELSIUS,
+            38,
+            38,
+            10,
+            10,
+            60,
+            60,
+            -23,
+            -23,
+            3,
+            3,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            16,
+            16,
+            -2,
+            -2,
+            20,
+            20,
+            -20,
+            -20,
+            2,
+            2,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            US_CUSTOMARY_SYSTEM,
+            UnitOfTemperatureInterval.CELSIUS,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            0,
+            0,
+            5,
+            9,
+            10,
+            18,
+            -10,
+            -18,
+            1,
+            1,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            METRIC_SYSTEM,
+            UnitOfTemperatureInterval.FAHRENHEIT,
+            UnitOfTemperatureInterval.CELSIUS,
+            3.6,
+            2,
+            -1.8,
+            -1,
+            18,
+            10,
+            -9,
+            -5,
+            2,
+            2,
+        ),
+        (
+            NumberDeviceClass.TEMPERATURE_INTERVAL,
+            METRIC_SYSTEM,
+            UnitOfTemperatureInterval.CELSIUS,
+            UnitOfTemperatureInterval.CELSIUS,
             38,
             38,
             10,
@@ -463,6 +533,7 @@ async def test_set_value(
 )
 async def test_temperature_conversion(
     hass: HomeAssistant,
+    device_class,
     unit_system,
     native_unit,
     state_unit,
@@ -486,7 +557,7 @@ async def test_temperature_conversion(
         native_step=native_step,
         native_unit_of_measurement=native_unit,
         native_value=initial_native_value,
-        device_class=NumberDeviceClass.TEMPERATURE,
+        device_class=device_class,
     )
     setup_test_component_platform(hass, DOMAIN, [entity0])
 
