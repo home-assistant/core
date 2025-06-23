@@ -20,11 +20,13 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
     """Lunatone DALI IoT config flow."""
 
     VERSION = 0
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
+        self.url: str | None = None
+        self.name: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -32,10 +34,11 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+            self.url = user_input[CONF_URL]
+            self._async_abort_entries_match({CONF_URL: self.url})
             auth = Auth(
                 session=async_get_clientsession(self.hass),
-                base_url=user_input[CONF_URL],
+                base_url=self.url,
             )
             info = Info(auth)
             try:
@@ -46,18 +49,25 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
                         "Failed to connect to device %s. Check the URL and if the "
                         "device is connected to power"
                     ),
-                    user_input[CONF_URL],
+                    self.url,
                 )
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(f"lunatone-{info.data.device.serial}")
+                self.name = info.data.name
+                serial_number = info.data.device.serial
+                await self.async_set_unique_id(f"lunatone-{serial_number}")
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=f"DALI IoT Gateway {user_input[CONF_URL].split("//")[1]}",
-                    data={CONF_URL: user_input[CONF_URL]},
-                )
+                return self._create_entry()
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_URL): str}),
             errors=errors,
+        )
+
+    def _create_entry(self) -> ConfigFlowResult:
+        """Return a config entry for the flow."""
+        assert self.url is not None
+        return self.async_create_entry(
+            title=f"{self.name or "DALI Gateway"} - {self.url.split("//")[1]}",
+            data={CONF_URL: self.url},
         )
