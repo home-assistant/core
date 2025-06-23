@@ -120,6 +120,9 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.homee.disconnect()
                 await self.homee.wait_until_disconnected()
 
+                await self.async_set_unique_id(self.homee.settings.uid)
+                self._abort_if_unique_id_mismatch(reason="wrong_hub")
+
                 _LOGGER.debug(
                     "Reauthenticated homee entry with ID %s", self.homee.settings.uid
                 )

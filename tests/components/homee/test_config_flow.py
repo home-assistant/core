@@ -33,7 +33,6 @@ async def add_homee_to_hass(
 ) -> None:
     """Add the mocked Homee config entry to hass."""
     mock_config_entry.add_to_hass(hass)
-    mock_config_entry.runtime_data = mock_homee
 
 
 @pytest.mark.usefixtures("mock_homee", "mock_config_entry", "mock_setup_entry")
@@ -211,7 +210,7 @@ async def test_reauth_errors(
     assert result["step_id"] == "reauth_confirm"
 
     mock_homee.get_access_token.side_effect = side_eff
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_USERNAME: NEW_TESTUSER,
@@ -219,15 +218,15 @@ async def test_reauth_errors(
         },
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == error
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == error
 
     # Confirm that the config entry is unchanged
     assert mock_config_entry.data[CONF_USERNAME] == TESTUSER
     assert mock_config_entry.data[CONF_PASSWORD] == TESTPASS
 
     mock_homee.get_access_token.side_effect = None
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_USERNAME: NEW_TESTUSER,
@@ -235,8 +234,8 @@ async def test_reauth_errors(
         },
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
     # Confirm that the config entry has been updated
     assert mock_config_entry.data[CONF_HOST] == HOMEE_IP
