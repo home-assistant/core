@@ -24,6 +24,9 @@ HATasmota==0.10.0
 # homeassistant.components.mastodon
 Mastodon.py==2.0.1
 
+# homeassistant.components.playstation_network
+PSNAWP==3.0.0
+
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image_upload
@@ -1898,6 +1901,9 @@ pyrail==0.4.1
 
 # homeassistant.components.rainbird
 pyrainbird==6.0.1
+
+# homeassistant.components.playstation_network
+pyrate-limiter==3.7.0
 
 # homeassistant.components.risco
 pyrisco==0.6.7
