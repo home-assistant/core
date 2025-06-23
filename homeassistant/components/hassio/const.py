@@ -71,6 +71,7 @@ EVENT_ISSUE_REMOVED = "issue_removed"
 
 UPDATE_KEY_SUPERVISOR = "supervisor"
 
+COORDINATOR = "hassio_coordinator"
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
 
 
@@ -87,7 +88,8 @@ DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
-HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
+HASSIO_UPDATE_INTERVAL = timedelta(minutes=1)
+HASSIO_ADDON_UPDATE_INTERVAL = timedelta(minutes=2)
 
 ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"

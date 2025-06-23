@@ -21,17 +21,17 @@ from .const import (
     KEY_TO_UPDATE_TYPES,
     SUPERVISOR_CONTAINER,
 )
-from .coordinator import HassioDataUpdateCoordinator
+from .coordinator import HassioAddOnDataUpdateCoordinator, HassioDataUpdateCoordinator
 
 
-class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioAddonEntity(CoordinatorEntity[HassioAddOnDataUpdateCoordinator]):
     """Base entity for a Hass.io add-on."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioAddOnDataUpdateCoordinator,
         entity_description: EntityDescription,
         addon: dict[str, Any],
     ) -> None:

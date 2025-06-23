@@ -49,6 +49,7 @@ from .const import (
     DATA_SUPERVISOR_INFO,
     DATA_SUPERVISOR_STATS,
     DOMAIN,
+    HASSIO_ADDON_UPDATE_INTERVAL,
     HASSIO_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
     SUPERVISOR_CONTAINER,
@@ -279,8 +280,8 @@ def async_remove_addons_from_dev_reg(
             dev_reg.async_remove_device(dev.id)
 
 
-class HassioDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to retrieve Hass.io status."""
+class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to retrieve Hass.io Add-on status."""
 
     config_entry: ConfigEntry
 
@@ -293,7 +294,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=HASSIO_UPDATE_INTERVAL,
+            update_interval=HASSIO_ADDON_UPDATE_INTERVAL,
             # We don't want an immediate refresh since we want to avoid
             # fetching the container stats right away and avoid hammering
             # the Supervisor API on startup
@@ -305,7 +306,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self.data = {}
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
-        self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
         self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
             lambda: defaultdict(set)
         )
@@ -347,35 +347,12 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             }
             for addon in supervisor_info.get("addons", [])
         }
-        if self.is_hass_os:
-            new_data[DATA_KEY_OS] = get_os_info(self.hass)
-
-        new_data[DATA_KEY_CORE] = {
-            **(get_core_info(self.hass) or {}),
-            **get_core_stats(self.hass),
-        }
-        new_data[DATA_KEY_SUPERVISOR] = {
-            **supervisor_info,
-            **get_supervisor_stats(self.hass),
-        }
-        new_data[DATA_KEY_HOST] = get_host_info(self.hass) or {}
 
         # If this is the initial refresh, register all addons and return the dict
         if is_first_update:
             async_register_addons_in_dev_reg(
                 self.entry_id, self.dev_reg, new_data[DATA_KEY_ADDONS].values()
             )
-            async_register_core_in_dev_reg(
-                self.entry_id, self.dev_reg, new_data[DATA_KEY_CORE]
-            )
-            async_register_supervisor_in_dev_reg(
-                self.entry_id, self.dev_reg, new_data[DATA_KEY_SUPERVISOR]
-            )
-            async_register_host_in_dev_reg(self.entry_id, self.dev_reg)
-            if self.is_hass_os:
-                async_register_os_in_dev_reg(
-                    self.entry_id, self.dev_reg, new_data[DATA_KEY_OS]
-                )
 
         # Remove add-ons that are no longer installed from device registry
         supervisor_addon_devices = {
@@ -387,12 +364,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         }
         if stale_addons := supervisor_addon_devices - set(new_data[DATA_KEY_ADDONS]):
             async_remove_addons_from_dev_reg(self.dev_reg, stale_addons)
-
-        if not self.is_hass_os and (
-            dev := self.dev_reg.async_get_device(identifiers={(DOMAIN, "OS")})
-        ):
-            # Remove the OS device if it exists and the installation is not hassos
-            self.dev_reg.async_remove_device(dev.id)
 
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return an empty dict because
@@ -419,21 +390,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         container_updates = self._container_updates
 
         data = self.hass.data
-        hassio = self.hassio
-        updates = {
-            DATA_INFO: hassio.get_info(),
-            DATA_CORE_INFO: hassio.get_core_info(),
-            DATA_SUPERVISOR_INFO: hassio.get_supervisor_info(),
-            DATA_OS_INFO: hassio.get_os_info(),
-        }
-        if CONTAINER_STATS in container_updates[CORE_CONTAINER]:
-            updates[DATA_CORE_STATS] = hassio.get_core_stats()
-        if CONTAINER_STATS in container_updates[SUPERVISOR_CONTAINER]:
-            updates[DATA_SUPERVISOR_STATS] = hassio.get_supervisor_stats()
-
-        results = await asyncio.gather(*updates.values())
-        for key, result in zip(updates, results, strict=False):
-            data[key] = result
+        data[DATA_SUPERVISOR_INFO] = await self.hassio.get_supervisor_info()
 
         _addon_data = data[DATA_SUPERVISOR_INFO].get("addons", [])
         all_addons: list[str] = []
@@ -531,14 +488,159 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Refresh data."""
         if not scheduled and not raise_on_auth_failed:
-            # Force refreshing updates for non-scheduled updates
+            # Force reloading add-on updates for non-scheduled
+            # updates.
+            #
             # If `raise_on_auth_failed` is set, it means this is
             # the first refresh and we do not want to delay
             # startup or cause a timeout so we only refresh the
             # updates if this is not a scheduled refresh and
             # we are not doing the first refresh.
             try:
-                await self.supervisor_client.refresh_updates()
+                await self.supervisor_client.store.reload()
+            except SupervisorError as err:
+                _LOGGER.warning("Error on Supervisor API: %s", err)
+
+        await super()._async_refresh(
+            log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
+        )
+
+
+class HassioDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to retrieve Hass.io status."""
+
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, dev_reg: dr.DeviceRegistry
+    ) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=HASSIO_UPDATE_INTERVAL,
+            # We don't want an immediate refresh since we want to avoid
+            # fetching the container stats right away and avoid hammering
+            # the Supervisor API on startup
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
+        )
+        self.hassio = hass.data[DATA_COMPONENT]
+        self.data = {}
+        self.entry_id = config_entry.entry_id
+        self.dev_reg = dev_reg
+        self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
+        self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
+            lambda: defaultdict(set)
+        )
+        self.supervisor_client = get_supervisor_client(hass)
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update data via library."""
+        is_first_update = not self.data
+
+        try:
+            await self.force_data_refresh(is_first_update)
+        except HassioAPIError as err:
+            raise UpdateFailed(f"Error on Supervisor API: {err}") from err
+
+        new_data: dict[str, Any] = {}
+        supervisor_info = get_supervisor_info(self.hass) or {}
+
+        if self.is_hass_os:
+            new_data[DATA_KEY_OS] = get_os_info(self.hass)
+
+        new_data[DATA_KEY_CORE] = {
+            **(get_core_info(self.hass) or {}),
+            **get_core_stats(self.hass),
+        }
+        new_data[DATA_KEY_SUPERVISOR] = {
+            **supervisor_info,
+            **get_supervisor_stats(self.hass),
+        }
+        new_data[DATA_KEY_HOST] = get_host_info(self.hass) or {}
+
+        # If this is the initial refresh, register all main components
+        if is_first_update:
+            async_register_core_in_dev_reg(
+                self.entry_id, self.dev_reg, new_data[DATA_KEY_CORE]
+            )
+            async_register_supervisor_in_dev_reg(
+                self.entry_id, self.dev_reg, new_data[DATA_KEY_SUPERVISOR]
+            )
+            async_register_host_in_dev_reg(self.entry_id, self.dev_reg)
+            if self.is_hass_os:
+                async_register_os_in_dev_reg(
+                    self.entry_id, self.dev_reg, new_data[DATA_KEY_OS]
+                )
+
+        if not self.is_hass_os and (
+            dev := self.dev_reg.async_get_device(identifiers={(DOMAIN, "OS")})
+        ):
+            # Remove the OS device if it exists and the installation is not hassos
+            self.dev_reg.async_remove_device(dev.id)
+
+        return new_data
+
+    async def force_data_refresh(self, first_update: bool) -> None:
+        """Force update of the addon info."""
+        container_updates = self._container_updates
+
+        data = self.hass.data
+        hassio = self.hassio
+        updates = {
+            DATA_INFO: hassio.get_info(),
+            DATA_CORE_INFO: hassio.get_core_info(),
+            DATA_SUPERVISOR_INFO: hassio.get_supervisor_info(),
+            DATA_OS_INFO: hassio.get_os_info(),
+        }
+        if CONTAINER_STATS in container_updates[CORE_CONTAINER]:
+            updates[DATA_CORE_STATS] = hassio.get_core_stats()
+        if CONTAINER_STATS in container_updates[SUPERVISOR_CONTAINER]:
+            updates[DATA_SUPERVISOR_STATS] = hassio.get_supervisor_stats()
+
+        results = await asyncio.gather(*updates.values())
+        for key, result in zip(updates, results, strict=False):
+            data[key] = result
+
+    @callback
+    def async_enable_container_updates(
+        self, slug: str, entity_id: str, types: set[str]
+    ) -> CALLBACK_TYPE:
+        """Enable updates for an add-on."""
+        enabled_updates = self._container_updates[slug]
+        for key in types:
+            enabled_updates[key].add(entity_id)
+
+        @callback
+        def _remove() -> None:
+            for key in types:
+                enabled_updates[key].remove(entity_id)
+
+        return _remove
+
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Refresh data."""
+        if not scheduled and not raise_on_auth_failed:
+            # Force reloading updates of main components for
+            # non-scheduled updates.
+            #
+            # If `raise_on_auth_failed` is set, it means this is
+            # the first refresh and we do not want to delay
+            # startup or cause a timeout so we only refresh the
+            # updates if this is not a scheduled refresh and
+            # we are not doing the first refresh.
+            try:
+                await self.supervisor_client.reload_updates()
             except SupervisorError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
 
