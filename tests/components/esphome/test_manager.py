@@ -1546,7 +1546,7 @@ async def test_sub_device_creation(
 
     # Check sub devices are created
     sub_device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.entry.unique_id}_11111111")}
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
     )
     assert sub_device_1 is not None
     assert sub_device_1.name == "Motion Sensor"
@@ -1554,7 +1554,7 @@ async def test_sub_device_creation(
     assert sub_device_1.via_device_id == main_device.id
 
     sub_device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.entry.unique_id}_22222222")}
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
     )
     assert sub_device_2 is not None
     assert sub_device_2.name == "Light Switch"
@@ -1562,7 +1562,7 @@ async def test_sub_device_creation(
     assert sub_device_2.via_device_id == main_device.id
 
     sub_device_3 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.entry.unique_id}_33333333")}
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
     )
     assert sub_device_3 is not None
     assert sub_device_3.name == "Temperature Sensor"
