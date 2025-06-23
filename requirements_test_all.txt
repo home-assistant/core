@@ -232,7 +232,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==33.0.0
+aioesphomeapi==33.1.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -439,6 +439,9 @@ airtouch4pyapi==1.0.5
 
 # homeassistant.components.airtouch5
 airtouch5py==0.3.0
+
+# homeassistant.components.altruist
+altruistclient==0.1.1
 
 # homeassistant.components.amberelectric
 amberelectric==2.0.12
@@ -1150,7 +1153,7 @@ lektricowifi==0.1
 letpot==0.4.0
 
 # homeassistant.components.foscam
-libpyfoscam==1.2.2
+libpyfoscamcgi==0.0.6
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
@@ -2408,7 +2411,7 @@ thermobeacon-ble==0.10.0
 thermopro-ble==0.13.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==1.0.5
+thinqconnect==1.0.7
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
