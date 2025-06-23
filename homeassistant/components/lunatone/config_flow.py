@@ -60,7 +60,7 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self._create_entry()
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_URL): str}),
+            data_schema=vol.Schema({vol.Required(CONF_URL, default="http://"): str}),
             errors=errors,
         )
 
