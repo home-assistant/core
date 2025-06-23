@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .api import MillApiClient
+from .api import AuthenticationError, MillApiClient, MillApiError
 from .const import DOMAIN
 from .coordinator import MillDataCoordinator
 
@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await api.async_setup()
     try:
         await api.login()
-    except Exception as e:  # noqa: BLE001
+    except (AuthenticationError, MillApiError) as e:
         _LOGGER.error("Failed to login to Mill API during setup: %s", e)
         return False
 

@@ -8,7 +8,7 @@ from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .api import MillApiClient
+from .api import MillApiClient, MillApiError
 from .common_entity import MillEntity
 from .const import DOMAIN
 from .coordinator import MillDataCoordinator
@@ -216,7 +216,7 @@ class MillNumber(MillEntity, NumberEntity):
                 self._device_id, self._capability.value, value, self._device
             )
             await self.coordinator.async_request_refresh()
-        except Exception as e:  # noqa: BLE001
+        except (MillApiError, ValueError) as e:
             _LOGGER.error(
                 "Error setting number value for %s on %s: %s",
                 self._capability.value,

@@ -2,7 +2,7 @@
 
 from homeassistant import config_entries
 
-from .api import MillApiClient
+from .api import AuthenticationError, MillApiClient, MillApiError
 from .const import CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
 
@@ -16,7 +16,7 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await api.async_setup()
             try:
                 await api.login()
-            except Exception:  # noqa: BLE001
+            except (AuthenticationError, MillApiError):
                 return self.async_show_form(
                     step_id="user",
                     data_schema=self._get_schema(),

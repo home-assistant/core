@@ -15,7 +15,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .api import MillApiClient
+from .api import MillApiClient, MillApiError
 from .common_entity import MillEntity
 from .const import DOMAIN
 from .coordinator import MillDataCoordinator
@@ -161,7 +161,7 @@ class MillClimate(MillEntity, ClimateEntity):
 
         self._update_internal_state()
 
-    def _update_internal_state(self) -> None:  # noqa: C901
+    def _update_internal_state(self) -> None:
         """Update state method."""
         if not self._device:
             self._attr_hvac_action = HVACAction.OFF
@@ -240,52 +240,32 @@ class MillClimate(MillEntity, ClimateEntity):
 
         if self._attr_hvac_mode == HVACMode.HEAT:
             if power_on:
+                is_heating = False
                 if (
                     not self._is_socket
                     and self._device.get("lastMetrics", {}).get("heaterFlag") == 1
-                ):
-                    new_hvac_action = HVACAction.HEATING
-                elif (
+                ) or (
                     current_temp is not None
                     and target_temp is not None
                     and current_temp < target_temp
                 ):
-                    new_hvac_action = (
-                        HVACAction.HEATING if not self._is_socket else HVACAction.IDLE
-                    )
-                    if self._is_socket:
-                        new_hvac_action = HVACAction.IDLE
+                    is_heating = True
 
-                    if self._is_socket:
-                        new_hvac_action = HVACAction.HEATING
-
-                elif (
-                    current_temp is not None
-                    and target_temp is not None
-                    and current_temp >= target_temp
-                ):
-                    new_hvac_action = HVACAction.IDLE
-                else:
-                    new_hvac_action = HVACAction.IDLE if power_on else HVACAction.OFF
+                new_hvac_action = HVACAction.HEATING if is_heating else HVACAction.IDLE
             else:
                 new_hvac_action = HVACAction.OFF
 
         elif self._attr_hvac_mode == HVACMode.COOL:
             if power_on:
+                is_cooling = False
                 if (
                     current_temp is not None
                     and target_temp is not None
                     and current_temp > target_temp
                 ):
-                    new_hvac_action = HVACAction.COOLING
-                elif (
-                    current_temp is not None
-                    and target_temp is not None
-                    and current_temp <= target_temp
-                ):
-                    new_hvac_action = HVACAction.IDLE
-                else:
-                    new_hvac_action = HVACAction.IDLE if power_on else HVACAction.OFF
+                    is_cooling = True
+
+                new_hvac_action = HVACAction.COOLING if is_cooling else HVACAction.IDLE
             else:
                 new_hvac_action = HVACAction.OFF
 
@@ -347,7 +327,7 @@ class MillClimate(MillEntity, ClimateEntity):
                     self.hass.async_create_task(
                         self._delayed_refresh(3)
                     )
-                except Exception as e:  # noqa: BLE001
+                except (MillApiError, ValueError) as e:
                     _LOGGER.error(
                         "Failed to enable individual control for %s: %s",
                         self.entity_id,
@@ -384,7 +364,7 @@ class MillClimate(MillEntity, ClimateEntity):
                 self._device,
             )
             self.hass.async_create_task(self._delayed_refresh(2))
-        except Exception as e:  # noqa: BLE001
+        except (MillApiError, ValueError) as e:
             _LOGGER.error("Error setting temperature for %s: %s", self._device_id, e)
             self._attr_target_temperature = original_target_temp
             self.async_write_ha_state()
@@ -449,7 +429,7 @@ class MillClimate(MillEntity, ClimateEntity):
                     return
 
             self.hass.async_create_task(self._delayed_refresh(3))
-        except Exception as e:  # noqa: BLE001
+        except (MillApiError, ValueError) as e:
             _LOGGER.error(
                 "Error setting HVAC mode for %s to %s: %s",
                 self._device_id,

@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .api import MillApiClient
+from .api import MillApiClient, MillApiError
 from .common_entity import MillEntity
 from .const import DOMAIN, PURIFIER_FAN_MODES
 from .coordinator import MillDataCoordinator
@@ -155,7 +155,7 @@ class MillSelect(MillEntity, SelectEntity):
                 self._device_id, self._capability.value, option, self._device
             )
             self.hass.async_create_task(self._delayed_refresh(3))
-        except Exception as e:  # noqa: BLE001
+        except (MillApiError, ValueError) as e:
             _LOGGER.error(
                 "Error selecting option '%s' for %s on %s: %s",
                 option,

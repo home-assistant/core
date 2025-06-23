@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .api import MillApiClient
+from .api import MillApiClient, MillApiError
 from .common_entity import MillEntity
 from .const import DOMAIN
 from .coordinator import MillDataCoordinator
@@ -179,7 +179,7 @@ class MillSwitch(MillEntity, SwitchEntity):
                 self._device_id, self._capability.value, turn_on, self._device
             )
             self.hass.async_create_task(self._delayed_refresh(2))
-        except Exception as e:  # noqa: BLE001
+        except (MillApiError, ValueError) as e:
             _LOGGER.error(
                 f"Error {'turning on' if turn_on else 'turning off'} {cap_name} for {self._device_id}: {e}"  # noqa: G004
             )
