@@ -22,14 +22,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lunatone Light platform."""
+    info = config_entry.runtime_data.info
     devices = config_entry.runtime_data.devices
-
-    if config_entry.unique_id is None:
-        return
 
     # Add devices
     async_add_entities(
-        [LunatoneLight(device, config_entry.unique_id) for device in devices.devices],
+        [LunatoneLight(device, info.data.device.serial) for device in devices.devices],
         update_before_add=True,
     )
 
