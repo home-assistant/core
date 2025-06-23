@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from aiotedee import TedeeLock
+from aiotedee.lock import TedeeDoorState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,7 +27,8 @@ PARALLEL_UPDATES = 0
 class TedeeSensorEntityDescription(SensorEntityDescription):
     """Describes Tedee sensor entity."""
 
-    value_fn: Callable[[TedeeLock], float | None]
+    value_fn: Callable[[TedeeLock], float | str | None]
+    supported_fn: Callable[[TedeeLock], bool] = lambda _: True
 
 
 ENTITIES: tuple[TedeeSensorEntityDescription, ...] = (
@@ -47,6 +49,15 @@ ENTITIES: tuple[TedeeSensorEntityDescription, ...] = (
         value_fn=lambda lock: lock.duration_pullspring,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    TedeeSensorEntityDescription(
+        key="door_state",
+        translation_key="door_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[state.name.lower() for state in TedeeDoorState],
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda lock: lock.door_state.name.lower(),
+        supported_fn=lambda lock: lock.door_state is not TedeeDoorState.NOT_PAIRED,
+    ),
 )
 
 
@@ -63,6 +74,7 @@ async def async_setup_entry(
             TedeeSensorEntity(lock, coordinator, entity_description)
             for entity_description in ENTITIES
             for lock in locks
+            if entity_description.supported_fn(lock)
         )
 
     coordinator.new_lock_callbacks.append(_async_add_new_lock)
@@ -75,6 +87,6 @@ class TedeeSensorEntity(TedeeDescriptionEntity, SensorEntity):
     entity_description: TedeeSensorEntityDescription
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._lock)

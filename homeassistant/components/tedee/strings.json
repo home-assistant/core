@@ -62,6 +62,16 @@
     "sensor": {
       "pullspring_duration": {
         "name": "Pullspring duration"
+      },
+      "door_state": {
+        "name": "Door state",
+        "state": {
+          "not_paired": "Not paired",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "opened": "[%key:common::state::open%]",
+          "closed": "[%key:common::state::closed%]",
+          "uncalibrated": "Uncalibrated"
+        }
       }
     }
   },
