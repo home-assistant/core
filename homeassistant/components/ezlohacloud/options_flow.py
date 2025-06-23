@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .api import authenticate, create_stripe_session, signup
+from .api import authenticate, create_stripe_session, get_subscription_status, signup
 from .frp_helpers import fetch_and_update_frp_config, start_frpc, stop_frpc
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,9 +35,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         is_logged_in = config_data.get("is_logged_in", False)
         token_expiry = config_data.get("token_expiry", 0)
 
-        # Check if token is expired
-        current_time = datetime.now().timestamp()
-        if is_logged_in and current_time > token_expiry:
+        if is_logged_in and datetime.now().timestamp() > token_expiry:
             # Token has expired, log out user and return to main menu
             return await self.async_step_force_logout()
 
@@ -68,7 +66,6 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             # Save new configuration settings
             new_data = self._config_entry.data.copy()
             new_data.update(user_input)
-
             self.hass.config_entries.async_update_entry(
                 self._config_entry, data=new_data
             )
@@ -99,48 +96,41 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_force_logout(self, user_input=None):
-        # """Forcefully log out when the token expires and return to the main options screen."""
         new_data = self._config_entry.data.copy()
-        new_data["is_logged_in"] = False
-        new_data["auth_token"] = None
-        new_data["user"] = {}
-        new_data["token_expiry"] = 0  # Clear expiry time
-
+        new_data.update(
+            {
+                "is_logged_in": False,
+                "auth_token": None,
+                "user": {},
+                "token_expiry": 0,  # Clear expiry time
+            }
+        )
         self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
-
         # Instead of showing logout message, return to the main options screen
         return await self.async_step_init()
 
     async def async_step_login(self, user_input=None):
         """Handles login authentication form with HA instance UUID or empty ID if missing."""
         errors = {}
-
         if user_input is not None:
             username = user_input["username"]
             password = user_input["password"]
 
-            system_uuid = await self.hass.helpers.instance_id.async_get()
-            _LOGGER.info(
-                f"Retrieved system UUID from instance_id.async_get: {system_uuid}"
-            )
-
+            system_uuid = await self.hass.helpers.instance_id.async_get() or ""
             if not system_uuid:
                 system_uuid = ""
-                _LOGGER.warning("Home Assistant UUID missing!")
+                _LOGGER.warning("Home Assistant system_uuid missing!")
+            auth_response = await authenticate(username, password, system_uuid)
 
-            auth_response = await self.hass.async_add_executor_job(
-                authenticate, username, password, system_uuid
-            )
+            if auth_response["success"]:
+                token = auth_response["data"]["token"]
+                user_info = auth_response["data"]["user"]
 
-            if auth_response.get("success"):
-                user_info = auth_response.get("user", {})
-                _LOGGER.info("user info from login: %s", user_info)
                 expiry_time = datetime.now() + timedelta(seconds=3600)
-
                 new_data = self._config_entry.data.copy()
                 new_data.update(
                     {
-                        "auth_token": auth_response["token"],
+                        "auth_token": token,
                         "user": {
                             "uuid": user_info.get("uuid"),
                             "name": user_info.get("username", username),
@@ -160,26 +150,22 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                     self._config_entry, data=new_data
                 )
 
-                # UPDAT THE CONFIG TOML AND START THE FRPC CLIENT.
+                # UPDATE THE CONFIG TOML AND START THE FRPC CLIENT.
                 try:
                     await fetch_and_update_frp_config(
                         hass=self.hass,
-                        uuid=user_info.get("uuid"),
-                        token=auth_response["token"],
+                        uuid=user_info["uuid"],
+                        token=token,
                     )
-
                     await start_frpc(hass=self.hass, config_entry=self._config_entry)
                 except Exception as err:
                     _LOGGER.error("Failed to fetch the server details: %s", err)
-                    raise err
 
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self._config_entry.entry_id)
                 )
-
                 return self.async_abort(reason="login_successful")
-
-            errors["base"] = auth_response.get("error", "Login failed")
+            errors["base"] = auth_response["error"]
 
         return self.async_show_form(
             step_id="login",
@@ -195,18 +181,20 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_logout(self, user_input=None):
         """Handle manual logout action."""
         new_data = self._config_entry.data.copy()
-        new_data["is_logged_in"] = False
-        new_data["auth_token"] = None
-        new_data["user"] = {}
-        new_data["token_expiry"] = 0  # Clear expiry time
-
+        new_data.update(
+            {
+                "is_logged_in": False,
+                "auth_token": None,
+                "user": {},
+                "token_expiry": 0,  # Clear expiry time
+            }
+        )
         self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
         await stop_frpc(self.hass, self.hass.config_entries)
-        # Show logout success message only for manual logout
         return self.async_abort(reason="logged_out")
 
     async def async_step_signup(self, user_input=None):
-        """Handle signup form."""
+        """Handle signup and provide Stripe payment link."""
         errors = {}
 
         if user_input is not None:
@@ -214,57 +202,75 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             email = user_input["email"]
             password = user_input["password"]
 
-            # Call signup API
-            system_uuid = await self.hass.helpers.instance_id.async_get()
-            _LOGGER.info(
-                f"Retrieved system UUID from instance_id.async_get: {system_uuid}"
-            )
-
+            system_uuid = await self.hass.helpers.instance_id.async_get() or ""
             if not system_uuid:
                 system_uuid = ""
-                _LOGGER.warning("Home Assistant UUID missing!")
+                _LOGGER.warning("Home Assistant system_uuid missing!")
 
-            signup_response = await self.hass.async_add_executor_job(
-                signup, username, email, password, system_uuid
-            )
+            signup_response = await signup(username, email, password, system_uuid)
 
-            _LOGGER.debug("Signup response: %s", signup_response)
-
-            if signup_response.get("success") and "token" in signup_response:
+            if signup_response.get("success") and "data" in signup_response:
                 try:
-                    identity_token = signup_response["token"]
-                    parts = identity_token.split(".")
+                    token = signup_response["data"].get("token", "")
+                    parts = token.split(".")
                     if len(parts) != 3:
                         raise ValueError("Invalid JWT format")
 
-                    payload_b64 = parts[1]
-                    padded = payload_b64 + "=" * (-len(payload_b64) % 4)
-                    decoded_bytes = base64.urlsafe_b64decode(padded)
-                    decoded = json.loads(decoded_bytes)
+                    payload_b64 = parts[1] + "=" * (-len(parts[1]) % 4)
+                    payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+                    user_uuid = payload.get("uuid")
 
-                    user_uuid = decoded.get("uuid")
-                    base_url = "http://localhost:8123/config/integrations/integration/ezlohacloud"
+                    if not user_uuid:
+                        raise ValueError("UUID missing in token payload")
 
-                    stripe_response = await self.hass.async_add_executor_job(
-                        create_stripe_session,
-                        user_uuid,
-                        "price_1RLKzGIOARqo54014CFxqSo3",
-                        base_url,
+                    new_data = self._config_entry.data.copy()
+                    new_data.update(
+                        {
+                            "user": {
+                                "uuid": user_uuid,
+                                "name": username,
+                                "email": email,
+                                "ezlo_id": None,
+                            }
+                        }
+                    )
+                    self.hass.config_entries.async_update_entry(
+                        self._config_entry, data=new_data
                     )
 
-                    if stripe_response and stripe_response.get("checkout_url"):
-                        return self.async_external_step(
-                            step_id="stripe_finish",
-                            url=stripe_response["checkout_url"],
+                    base_url = (
+                        self.hass.config.external_url
+                        or self.hass.config.internal_url
+                        or "http://localhost:8123"
+                    )
+                    back_url = f"{base_url}/config/integrations/integration/ezlohacloud"
+
+                    stripe_response = await create_stripe_session(
+                        user_uuid,
+                        "price_1RLKzGIOARqo54014CFxqSo3",
+                        back_url,
+                    )
+
+                    if stripe_response.get("success"):
+                        data = stripe_response.get("data", {})
+                        checkout_url = data.get("checkout_url")
+                        if checkout_url:
+                            return self.async_show_form(
+                                step_id="redirecting",
+                                description_placeholders={"url": checkout_url},
+                                data_schema=vol.Schema({}),
+                            )
+                        _LOGGER.warning(
+                            "Stripe session success but no checkout_url found: %s",
+                            stripe_response,
                         )
+                        errors["base"] = "stripe_failed"
 
-                    errors["base"] = "stripe_failed"
-
-                except Exception as decode_error:
-                    _LOGGER.error("Failed to decode Ezlo identity: %s", decode_error)
+                except Exception as e:
+                    _LOGGER.error("Signup token decode failed: %s", e)
                     errors["base"] = "signup_failed"
             else:
-                errors["base"] = signup_response.get("error", "Signup failed")
+                errors["base"] = signup_response.get("error", "signup_failed")
 
         return self.async_show_form(
             step_id="signup",
@@ -279,20 +285,41 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_view_status(self, user_input=None):
-        """Show only the payment portal link without any status."""
+        user_data = self._config_entry.data.get("user", {})
+        user_uuid = user_data.get("uuid")
+
+        status_text = "Unknown"
         url = self._config_entry.data.get("payment_url", "https://example.com/cloud")
+
+        if user_uuid:
+            status_response = await get_subscription_status(user_uuid)
+            if status_response.get("success"):
+                status = status_response.get("status", "unknown").capitalize()
+                active = (
+                    "✅ Active" if status_response.get("is_active") else "❌ Inactive"
+                )
+                status_text = f"{active} ({status})"
+            else:
+                status_text = f"Error: {status_response.get('error')}"
 
         return self.async_show_form(
             step_id="view_status",
-            description_placeholders={"url": url},
+            description_placeholders={
+                "url": url,
+                "status": status_text,
+            },
             data_schema=vol.Schema({}),
         )
 
     async def async_step_stripe_finish(self, user_input=None):
-        """Called after Stripe checkout finishes."""
-        # Update subscription status
+        """Called after Stripe redirects back to HA with flow_id."""
+        _LOGGER.info("Stripe checkout finished, resuming flow.")
+
+        # You can also update config here if needed:
         new_data = self._config_entry.data.copy()
         new_data["subscription_status"] = "paid"
         self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
 
-        return await self.async_step_init()
+    async def async_step_redirecting(self, user_input=None):
+        """Placeholder to handle post-signup Stripe redirection form (no user input)."""
+        return self.async_abort(reason="stripe_redirect_finished")

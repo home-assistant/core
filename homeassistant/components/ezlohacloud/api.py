@@ -2,7 +2,7 @@
 
 import logging
 
-import requests
+import httpx
 
 from .const import EZLO_API_URI, SIGNUP_UUID
 
@@ -10,56 +10,52 @@ _LOGGER = logging.getLogger(__name__)
 
 AUTH_API_URL = f"{EZLO_API_URI}/api/auth"
 STRIPE_API_URL = f"{EZLO_API_URI}/api/stripe"
+API_URL = f"{EZLO_API_URI}/api"
 
 
-def authenticate(username, password, uuid):
-    """Calls the actual Ezlo API for authentication."""
-    _LOGGER.info("Sending login request to Ezlo API...")
-    _LOGGER.info(f"Sending login request with UUID: {uuid}")
-
+async def authenticate(username, password, uuid):
+    """Authenticate against Ezlo API (async)."""
     payload = {
         "username": username,
         "password": password,
-        "oem_id": "1",  # Required as per cURL request
-        "ha_instance_id": uuid,  # UUID is always passed
+        "oem_id": "1",
+        "ha_instance_id": uuid,
     }
-
+    # TODO: Move httpx.AsyncClient creation off event loop to avoid blocking warning
+    client = httpx.AsyncClient(timeout=10)
     try:
-        response = requests.post(f"{AUTH_API_URL}/login", json=payload, timeout=10)
-        response_data = response.json()
+        response = await client.post(f"{AUTH_API_URL}/login", json=payload)
+        response.raise_for_status()
+        data = response.json()
+        _LOGGER.info("login response: {data}")
 
-        _LOGGER.info(f"login response: {response_data}")
-
-        if response.status_code == 200:
-            _LOGGER.info("Authentication successful!")
-
-            token = response_data["token"]
-            uuid = response_data["uuid"]
-            # expiry_time = response_data["expires"]
-
+        token = data.get("token")
+        if token and "uuid" in data:
             return {
                 "success": True,
-                "token": token,
-                # "expires_at": expiry_time,
-                "user": {
-                    "username": username,
-                    "oem_id": 1,
-                    "uuid": uuid,
+                "data": {
+                    "token": token,
+                    "user": {
+                        "username": username,
+                        "uuid": data["uuid"],
+                        "oem_id": 1,
+                    },
                 },
+                "error": None,
             }
+        _LOGGER.warning("Login failed: {data}")
+        return {"success": False, "data": None, "error": "Invalid credentials"}
 
-        _LOGGER.warning(f"Login failed: {response_data}")
-        return {"success": False, "error": "Invalid credentials or API error"}
+    except httpx.RequestError as e:
+        _LOGGER.error("Auth request failed: %s", e)
+        return {"success": False, "data": None, "error": "API connection failed"}
+    finally:
+        await client.aclose()
 
-    except requests.exceptions.RequestException as e:
-        _LOGGER.error(f"API request failed: {e}")
-        return {"success": False, "error": "API connection failed"}
 
-
-def signup(username, email, password, ha_instance_id):
+async def signup(username, email, password, ha_instance_id):
     """Sends signup request to Go Auth API and returns the response."""
     _LOGGER.info("Sending signup request to Auth API...")
-
     payload = {
         "username": username,
         "password": password,
@@ -68,54 +64,85 @@ def signup(username, email, password, ha_instance_id):
         "ha_instance_id": ha_instance_id,
     }
 
+    client = httpx.AsyncClient(timeout=5)
     try:
-        response = requests.post(f"{AUTH_API_URL}/signup", json=payload, timeout=5)
+        response = await client.post(f"{AUTH_API_URL}/signup", json=payload)
         response.raise_for_status()
-
         data = response.json()
+
         token = data.get("token")
         if token:
-            _LOGGER.info("Signup successful.")
-            return {
-                "success": True,
-                "message": "Sign-up successful",
-                "token": token,
-            }
-
+            _LOGGER.info("Signup successful")
+            return {"success": True, "data": {"token": token}, "error": None}
         _LOGGER.warning("Signup failed. Response: %s", data)
-        return {"success": False, "error": "Signup failed"}
+        return {
+            "success": False,
+            "data": None,
+            "error": data.get("message", "Signup failed"),
+        }
 
-    except requests.RequestException as err:
-        _LOGGER.error("Signup API request failed: %s", err)
-        return {"success": False, "error": "API request failed"}
+    except httpx.RequestError as e:
+        _LOGGER.error("Signup failed: %s", e)
+        return {"success": False, "data": None, "error": "Network error"}
+    finally:
+        await client.aclose()
 
 
-def create_stripe_session(user_id, price_id, back_ref_url):
-    """Creates a Stripe Checkout session and returns the checkout URL."""
+async def create_stripe_session(user_id, price_id, back_ref_url):
+    """Create a Stripe Checkout session."""
     _LOGGER.info(f"Creating Stripe checkout session for user: {user_id}")
-
     payload = {
         "user_id": user_id,
         "plan_price_id": price_id,
         "back_ref_url": back_ref_url,
     }
 
+    client = httpx.AsyncClient(timeout=10)
     try:
-        response = requests.post(
-            f"{STRIPE_API_URL}/create-session", json=payload, timeout=10
-        )
+        response = await client.post(f"{STRIPE_API_URL}/create-session", json=payload)
         response.raise_for_status()
-
         data = response.json()
+
         checkout_url = data.get("checkout_url")
+        if checkout_url:
+            _LOGGER.info("Stripe checkout session created.")
+            return {
+                "success": True,
+                "data": {"checkout_url": checkout_url},
+                "error": None,
+            }
+        _LOGGER.error("Stripe response missing checkout_url: %s", data)
+        return {"success": False, "data": None, "error": "Missing checkout URL"}
 
-        if not checkout_url:
-            _LOGGER.error("Stripe response missing checkout_url: %s", data)
-            return None
+    except httpx.RequestError as e:
+        _LOGGER.error("Stripe checkout api error: %s", e)
+        return {"success": False, "data": None, "error": "Stripe checkout api error"}
+    finally:
+        await client.aclose()
 
-        _LOGGER.info("Stripe checkout session created.")
-        return {"checkout_url": checkout_url}
 
-    except requests.RequestException as err:
-        _LOGGER.error("Stripe session creation failed: %s", err)
-        return None
+async def get_subscription_status(user_uuid):
+    """Fetch subscription status from Ezlo backend."""
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            response = await client.get(
+                f"{API_URL}/subscription/status?user_uuid={user_uuid}",
+                params={"user_uuid": user_uuid},
+            )
+            response.raise_for_status()
+            data = response.json().get("data")
+
+            if data:
+                return {
+                    "success": True,
+                    "status": data.get("status", "unknown"),
+                    "is_active": data.get("is_active", False),
+                    "start_timestamp": data.get("start_timestamp", ""),
+                    "end_timestamp": data.get("end_timestamp", ""),
+                }
+
+            return {"success": False, "error": "No data returned"}
+
+    except httpx.RequestError as e:
+        _LOGGER.error("Failed to fetch subscription status: %s", e)
+        return {"success": False, "error": "Network error"}

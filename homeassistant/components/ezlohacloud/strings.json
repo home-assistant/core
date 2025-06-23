@@ -14,7 +14,11 @@
     "step": {
       "view_status": {
         "title": "Subscription Status",
-        "description": "[View subscription details]({url})"
+        "description": "[View subscription details]({url}) — Current Status: {status}"
+      },
+      "redirecting": {
+        "title": "Redirecting to Stripe",
+        "description": "Sign-up successful. Click [here]({url}) to proceed with payment."
       }
     }
   }
