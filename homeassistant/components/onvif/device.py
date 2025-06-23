@@ -664,6 +664,7 @@ class ONVIFDevice:
             req.VideoSourceToken = profile.video_source_token
             req.ImagingSettings = settings
             await imaging_service.SetImagingSettings(req)
+            return
         except ONVIFError as err:
             if "Bad Request" in err.reason:
                 LOGGER.warning(
