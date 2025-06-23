@@ -43,10 +43,7 @@ class LunatoneLight(LightEntity):
     def __init__(self, device: Device, unique_id_prefix: str) -> None:
         """Initialize a LunatoneLight."""
         self._device = device
-        self._attr_unique_id = (
-            f"{unique_id_prefix}-line{self._device.data.line}-"
-            f"address{self._device.data.address}"
-        )
+        self._attr_unique_id = f"{unique_id_prefix}-device{self._device.data.id}"
 
     @property
     def name(self) -> str:
