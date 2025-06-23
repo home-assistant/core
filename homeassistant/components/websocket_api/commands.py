@@ -790,8 +790,7 @@ async def handle_subscribe_trigger(
 ) -> None:
     """Handle subscribe trigger command."""
     # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers import trigger
+    from homeassistant.helpers import trigger  # noqa: PLC0415
 
     trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
 
@@ -841,8 +840,7 @@ async def handle_test_condition(
 ) -> None:
     """Handle test condition command."""
     # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers import condition
+    from homeassistant.helpers import condition  # noqa: PLC0415
 
     # Do static + dynamic validation of the condition
     config = await condition.async_validate_condition_config(hass, msg["condition"])
@@ -867,8 +865,10 @@ async def handle_execute_script(
 ) -> None:
     """Handle execute script command."""
     # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers.script import Script, async_validate_actions_config
+    from homeassistant.helpers.script import (  # noqa: PLC0415
+        Script,
+        async_validate_actions_config,
+    )
 
     script_config = await async_validate_actions_config(hass, msg["sequence"])
 
@@ -932,8 +932,7 @@ async def handle_validate_config(
 ) -> None:
     """Handle validate config command."""
     # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers import condition, script, trigger
+    from homeassistant.helpers import condition, script, trigger  # noqa: PLC0415
 
     result = {}
 
