@@ -1680,6 +1680,49 @@ async def test_sub_device_cleanup(
     )
 
 
+async def test_sub_device_with_empty_name(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test sub devices with empty names are handled correctly."""
+    device_registry = dr.async_get(hass)
+
+    # Define sub devices with empty names
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="", area_id=0),  # Empty name
+        SubDeviceInfo(device_id=22222222, name="Valid Name", area_id=0),
+    ]
+
+    device_info = {
+        "devices": sub_devices,
+    }
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+    await hass.async_block_till_done()
+
+    # Check sub device with empty name
+    sub_device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    )
+    assert sub_device_1 is not None
+    # Empty sub-device names should fall back to main device name
+    main_device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    )
+    assert sub_device_1.name == main_device.name
+
+    # Check sub device with valid name
+    sub_device_2 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    )
+    assert sub_device_2 is not None
+    assert sub_device_2.name == "Valid Name"
+
+
 async def test_sub_device_references_main_device_area(
     hass: HomeAssistant,
     mock_client: APIClient,

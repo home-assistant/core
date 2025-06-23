@@ -836,7 +836,7 @@ def _async_setup_device_registry(
         sub_device_entry = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")},
-            name=sub_device.name,
+            name=sub_device.name or device_entry.name,
             manufacturer=manufacturer,
             model=model,
             sw_version=sw_version,
