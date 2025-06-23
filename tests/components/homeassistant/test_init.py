@@ -738,16 +738,13 @@ async def test_deprecated_installation_issue_32bit(
             "homeassistant.components.homeassistant.async_get_system_info",
             return_value={
                 "installation_type": "Home Assistant Container",
+                "container_arch": arch,
                 "arch": arch,
             },
         ),
         patch(
             "homeassistant.components.homeassistant._is_32_bit",
             return_value=True,
-        ),
-        patch(
-            "homeassistant.components.homeassistant._get_arch",
-            return_value=arch,
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})

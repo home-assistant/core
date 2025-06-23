@@ -7,7 +7,6 @@ import logging
 import struct
 from typing import Any
 
-import aiofiles
 import voluptuous as vol
 
 from homeassistant import config as conf_util, core_config
@@ -99,12 +98,6 @@ DEPRECATION_URL = (
 def _is_32_bit() -> bool:
     size = struct.calcsize("P")
     return size * 8 == 32
-
-
-async def _get_arch() -> str:
-    async with aiofiles.open("/etc/apk/arch") as arch_file:
-        raw_arch = (await arch_file.read()).strip()
-    return {"x86": "i386", "x86_64": "amd64"}.get(raw_arch, raw_arch)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
@@ -419,7 +412,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         bit32 = _is_32_bit()
         arch = info["arch"]
         if bit32 and installation_type == "Container":
-            arch = await _get_arch()
+            arch = info.get("container_arch", arch)
             ir.async_create_issue(
                 hass,
                 DOMAIN,
