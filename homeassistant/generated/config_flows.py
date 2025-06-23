@@ -48,6 +48,7 @@ FLOWS = {
         "airzone_cloud",
         "alarmdecoder",
         "alexa_devices",
+        "altruist",
         "amberelectric",
         "ambient_network",
         "ambient_station",
