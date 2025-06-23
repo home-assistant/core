@@ -18,20 +18,20 @@ async def test_ws_preferences(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "gen_text_entity_id": None,
+        "gen_data_entity_id": None,
     }
 
     # Set preferences
     await client.send_json_auto_id(
         {
             "type": "ai_task/preferences/set",
-            "gen_text_entity_id": "ai_task.summary_1",
+            "gen_data_entity_id": "ai_task.summary_1",
         }
     )
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "gen_text_entity_id": "ai_task.summary_1",
+        "gen_data_entity_id": "ai_task.summary_1",
     }
 
     # Get updated preferences
@@ -39,20 +39,20 @@ async def test_ws_preferences(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "gen_text_entity_id": "ai_task.summary_1",
+        "gen_data_entity_id": "ai_task.summary_1",
     }
 
     # Update an existing preference
     await client.send_json_auto_id(
         {
             "type": "ai_task/preferences/set",
-            "gen_text_entity_id": "ai_task.summary_2",
+            "gen_data_entity_id": "ai_task.summary_2",
         }
     )
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "gen_text_entity_id": "ai_task.summary_2",
+        "gen_data_entity_id": "ai_task.summary_2",
     }
 
     # Get updated preferences
@@ -60,7 +60,7 @@ async def test_ws_preferences(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "gen_text_entity_id": "ai_task.summary_2",
+        "gen_data_entity_id": "ai_task.summary_2",
     }
 
     # No preferences set will preserve existing preferences
@@ -72,7 +72,7 @@ async def test_ws_preferences(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "gen_text_entity_id": "ai_task.summary_2",
+        "gen_data_entity_id": "ai_task.summary_2",
     }
 
     # Get updated preferences
@@ -80,5 +80,5 @@ async def test_ws_preferences(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "gen_text_entity_id": "ai_task.summary_2",
+        "gen_data_entity_id": "ai_task.summary_2",
     }
