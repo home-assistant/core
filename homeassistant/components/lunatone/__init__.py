@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-PLATFORMS: list[Platform] = []
+PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
