@@ -149,36 +149,30 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        charge_time: int | None = None
-        # Convert time to minutes since midnight
-        if time_obj := call.data.get(ATTR_TIME):
-            charge_time = time_obj.hour * 60 + time_obj.minute
+        time: int | None = None
+        # Convert time to minutes since minute
+        if "time" in call.data:
+            (hours, minutes, *seconds) = call.data["time"].split(":")
+            time = int(hours) * 60 + int(minutes)
+        elif call.data["enable"]:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="set_scheduled_charging_time"
+            )
 
         await handle_vehicle_command(
-            vehicle.api.set_scheduled_charging(
-                enable=call.data[ATTR_ENABLE], time=charge_time
-            )
+            vehicle.api.set_scheduled_charging(enable=call.data["enable"], time=time)
         )
-
-    def _validate_scheduled_charging(obj):
-        """Validate the scheduled charging schema."""
-        if obj[ATTR_ENABLE] and ATTR_TIME not in obj:
-            raise vol.Invalid(f"{ATTR_TIME} is required when {ATTR_ENABLE} is true")
-        return obj
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_SCHEDULED_CHARGING,
         set_scheduled_charging,
-        schema=vol.All(
-            vol.Schema(
-                {
-                    vol.Required(CONF_DEVICE_ID): cv.string,
-                    vol.Required(ATTR_ENABLE): bool,
-                    vol.Optional(ATTR_TIME): cv.time,
-                }
-            ),
-            _validate_scheduled_charging,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_DEVICE_ID): cv.string,
+                vol.Required(ATTR_ENABLE): bool,
+                vol.Optional(ATTR_TIME): str,
+            }
         ),
     )
 
@@ -188,27 +182,37 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        enable = call.data.get(ATTR_ENABLE, True)
+        enable = call.data.get("enable", True)
 
         # Preconditioning
         preconditioning_enabled = call.data.get(ATTR_PRECONDITIONING_ENABLED, False)
         preconditioning_weekdays_only = call.data.get(
             ATTR_PRECONDITIONING_WEEKDAYS, False
         )
-        departure_time: int = 0
-        if departure_time_obj := call.data.get(ATTR_DEPARTURE_TIME):
-            departure_time = departure_time_obj.hour * 60 + departure_time_obj.minute
+        departure_time: int | None = None
+        if ATTR_DEPARTURE_TIME in call.data:
+            (hours, minutes, *seconds) = call.data[ATTR_DEPARTURE_TIME].split(":")
+            departure_time = int(hours) * 60 + int(minutes)
+        elif preconditioning_enabled:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_scheduled_departure_preconditioning",
+            )
 
         # Off peak charging
         off_peak_charging_enabled = call.data.get(ATTR_OFF_PEAK_CHARGING_ENABLED, False)
         off_peak_charging_weekdays_only = call.data.get(
             ATTR_OFF_PEAK_CHARGING_WEEKDAYS, False
         )
-        end_off_peak_time: int = 0
+        end_off_peak_time: int | None = None
 
-        if end_off_peak_time_obj := call.data.get(ATTR_END_OFF_PEAK_TIME):
-            end_off_peak_time = (
-                end_off_peak_time_obj.hour * 60 + end_off_peak_time_obj.minute
+        if ATTR_END_OFF_PEAK_TIME in call.data:
+            (hours, minutes, *seconds) = call.data[ATTR_END_OFF_PEAK_TIME].split(":")
+            end_off_peak_time = int(hours) * 60 + int(minutes)
+        elif off_peak_charging_enabled:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="set_scheduled_departure_off_peak",
             )
 
         await handle_vehicle_command(
@@ -233,10 +237,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_ENABLE): bool,
                 vol.Optional(ATTR_PRECONDITIONING_ENABLED): bool,
                 vol.Optional(ATTR_PRECONDITIONING_WEEKDAYS): bool,
-                vol.Optional(ATTR_DEPARTURE_TIME): cv.time,
+                vol.Optional(ATTR_DEPARTURE_TIME): str,
                 vol.Optional(ATTR_OFF_PEAK_CHARGING_ENABLED): bool,
                 vol.Optional(ATTR_OFF_PEAK_CHARGING_WEEKDAYS): bool,
-                vol.Optional(ATTR_END_OFF_PEAK_TIME): cv.time,
+                vol.Optional(ATTR_END_OFF_PEAK_TIME): str,
             }
         ),
     )
