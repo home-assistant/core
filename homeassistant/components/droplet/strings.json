@@ -9,6 +9,9 @@
         "title": "Configure Droplet",
         "description": "Configure MQTT first."
       }
+    },
+    "abort": {
+      "not_supported": "Droplet uses auto-discovery. See Droplet app for setup instructions."
     }
   },
   "entity": {

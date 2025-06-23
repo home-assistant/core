@@ -1,145 +1,135 @@
-"""Test the Droplet config flow."""
-
-from unittest.mock import AsyncMock, patch
+"""Test Droplet config flow."""
 
 from homeassistant import config_entries
-from homeassistant.components.droplet.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.droplet.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+
+from tests.typing import MqttMockHAClient
+
+TEST_SUBSCRIBED_TOPIC = "droplet/discovery/#"
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+async def configure_device_id(hass: HomeAssistant, device_id: str) -> ConfigFlowResult:
+    """Configure a mock device with a given device ID."""
+    discovery_info = MqttServiceInfo(
+        topic="droplet/discovery/ABCD",
+        payload=f'{{"dev": {{"ids":"droplet-{device_id}", "mdl":"Droplet 1.0", "mf":"Hydrific, part of LIXIL",'
+        f'"sw": "0.6.0", "sn": "{device_id}"}}, "state_topic": "droplet-{device_id}/state", "availability_topic":'
+        f'"droplet-{device_id}/health"}}',
+        qos=0,
+        retain=False,
+        subscribed_topic=TEST_SUBSCRIBED_TOPIC,
+        timestamp=None,
     )
+    return await hass.config_entries.flow.async_init(
+        "droplet",
+        context={"source": config_entries.SOURCE_MQTT},
+        data=discovery_info,
+    )
+
+
+async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
+    """Test a normal config flow."""
+    result = await configure_device_id(hass, "ABCD")
+    assert result is not None
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["step_id"] == "confirm"
 
-    with patch(
-        "homeassistant.components.droplet.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+    assert result is not None
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
     assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+        "droplet_data_topic": "droplet-ABCD/state",
+        "droplet_health_topic": "droplet-ABCD/health",
+        "device_id": "droplet-ABCD",
+        "device_name": "Droplet",
+        "device_manufacturer": "Hydrific, part of LIXIL",
+        "device_model": "Droplet 1.0",
+        "device_sw": "0.6.0",
+        "device_sn": "ABCD",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+async def test_mqtt_setup_bad_json(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    """Test a config flow with invalid JSON."""
+    discovery_info = MqttServiceInfo(
+        topic="droplet/discovery/ABCD",
+        payload="lkjdsjlkdsf",
+        qos=0,
+        retain=False,
+        subscribed_topic=TEST_SUBSCRIBED_TOPIC,
+        timestamp=None,
     )
-
-    with patch(
-        "homeassistant.components.droplet.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    with patch(
-        "homeassistant.components.droplet.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    result = await hass.config_entries.flow.async_init(
+        "droplet",
+        context={"source": config_entries.SOURCE_MQTT},
+        data=discovery_info,
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+async def test_mqtt_setup_topic_mismatch(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    """Test a config flow with an inappropriate topic."""
+    discovery_info = MqttServiceInfo(
+        topic="droplet/discovery/ABCD",
+        payload='{"dev": {"ids":"droplet-ABCD", "mdl":"Droplet 1.0", "mf":"Hydrific, part of LIXIL",'
+        '"sw": "0.6.0", "sn": "ABCD"}, "state_topic": "droplet-EFGH/state", "availability_topic":'
+        '"droplet-ABCD/health"}',
+        qos=0,
+        retain=False,
+        subscribed_topic=TEST_SUBSCRIBED_TOPIC,
+        timestamp=None,
     )
+    result = await hass.config_entries.flow.async_init(
+        "droplet",
+        context={"source": config_entries.SOURCE_MQTT},
+        data=discovery_info,
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
 
-    with patch(
-        "homeassistant.components.droplet.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
 
+async def test_mqtt_setup_duplicate_device(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test setting up a duplicate device."""
+    # Configure a device as normal
+    result = await configure_device_id(hass, "ABCD")
+    assert result is not None
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["step_id"] == "confirm"
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+    assert result is not None
 
-    with patch(
-        "homeassistant.components.droplet.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    # Now try to configure the same device again
+    result = await configure_device_id(hass, "ABCD")
+    assert result is not None
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+
+async def test_setup_user(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
+    """Test that user setup aborts."""
+    result = await hass.config_entries.flow.async_init(
+        "droplet",
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_supported"

@@ -13,6 +13,7 @@ CONF_SERIAL = "device_sn"
 DISCOVERY_TOPIC = "droplet/discovery/#"
 
 DOMAIN = "droplet"
+DEVICE_NAME = "Droplet"
 
 KEY_CURRENT_FLOW_RATE = "current_flow_rate"
 NAME_CURRENT_FLOW_RATE = "Flow Rate"

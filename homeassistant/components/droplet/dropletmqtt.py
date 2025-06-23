@@ -11,7 +11,7 @@ class DropletDiscovery:
     data_topic: str | None
     health_topic: str | None
 
-    fw_version: str | None
+    sw_version: str | None
     manufacturer: str | None
     serial_number: str | None
     model: str | None
@@ -25,8 +25,7 @@ class DropletDiscovery:
         dev_info: dict | None
         if dev_info := payload.get("dev"):
             self.device_id = dev_info.get("ids")
-            self.name = f"Droplet-{self.device_id}"
-            self.fw_version = dev_info.get("fw")
+            self.sw_version = dev_info.get("sw")
             self.manufacturer = dev_info.get("mf")
             self.serial_number = dev_info.get("sn")
             self.model = dev_info.get("mdl")
