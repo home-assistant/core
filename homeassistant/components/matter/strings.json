@@ -343,6 +343,7 @@
       },
       "battery_time_to_full_charge": {
         "name": "Time to full charge"
+      },
       "battery_voltage": {
         "name": "Battery voltage"
       },
