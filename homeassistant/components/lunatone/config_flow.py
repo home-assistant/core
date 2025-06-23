@@ -8,7 +8,7 @@ import aiohttp
 from lunatone_dali_api_client import Auth, Info
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -16,6 +16,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_URL, default="http://"): cv.string},
+)
+RECONFIGURE_SCHEMA = DATA_SCHEMA
 
 
 class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -37,7 +43,8 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self.url = user_input[CONF_URL]
-            self._async_abort_entries_match({CONF_URL: self.url})
+            data = {CONF_URL: self.url}
+            self._async_abort_entries_match(data)
             auth = Auth(
                 session=async_get_clientsession(self.hass),
                 base_url=self.url,
@@ -61,13 +68,23 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.name = info.data.name
                 serial_number = info.data.device.serial
                 await self.async_set_unique_id(f"lunatone-{serial_number}")
-                self._abort_if_unique_id_configured()
-                return self._create_entry()
+                if self.source == SOURCE_USER:
+                    self._abort_if_unique_id_configured()
+                    return self._create_entry()
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=data,
+                )
+
+        step_id = "reconfigure"
+        data_schema = RECONFIGURE_SCHEMA
+        if self.source == SOURCE_USER:
+            step_id = "user"
+            data_schema = DATA_SCHEMA
         return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_URL, default="http://"): cv.string}
-            ),
+            step_id=step_id,
+            data_schema=data_schema,
             errors=errors,
         )
 
@@ -75,6 +92,12 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return a config entry for the flow."""
         assert self.url is not None
         return self.async_create_entry(
-            title=f"{self.name or "DALI Gateway"} - {urlparse(self.url).hostname}",
+            title=f"{self.name or 'DALI Gateway'} - {urlparse(self.url).hostname}",
             data={CONF_URL: self.url},
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        return await self.async_step_user(user_input)
