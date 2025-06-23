@@ -394,7 +394,7 @@
         "name": "AC current"
       },
       "lifetime_energy": {
-        "name": "Lifetime energy"
+        "name": "Lifetime energy produced"
       },
       "energy_today": {
         "name": "Energy produced today"
