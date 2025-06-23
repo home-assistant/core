@@ -775,7 +775,7 @@ async def test_entity_assignment_to_sub_device(
 
     # Check sub device 1 entity
     sub_device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.entry.unique_id}_11111111")}
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
     )
     assert sub_device_1 is not None
 
@@ -785,7 +785,7 @@ async def test_entity_assignment_to_sub_device(
 
     # Check sub device 2 entity
     sub_device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.entry.unique_id}_22222222")}
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
     )
     assert sub_device_2 is not None
 
