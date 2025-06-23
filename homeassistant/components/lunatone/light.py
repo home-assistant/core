@@ -24,9 +24,13 @@ async def async_setup_entry(
     """Set up the Lunatone Light platform."""
     devices = config_entry.runtime_data.devices
 
+    if config_entry.unique_id is None:
+        return
+
     # Add devices
     async_add_entities(
-        [LunatoneLight(device) for device in devices.devices], update_before_add=True
+        [LunatoneLight(device, config_entry.unique_id) for device in devices.devices],
+        update_before_add=True,
     )
 
 
@@ -36,10 +40,14 @@ class LunatoneLight(LightEntity):
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(self, device: Device) -> None:
+    def __init__(self, device: Device, unique_id_prefix: str) -> None:
         """Initialize a LunatoneLight."""
         self._device = device
         self._state = None
+        self._attr_unique_id = (
+            f"{unique_id_prefix}-line{self._device.data.line}-"
+            f"address{self._device.data.address}"
+        )
 
     @property
     def name(self) -> str:
@@ -52,15 +60,12 @@ class LunatoneLight(LightEntity):
         return self._state
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return the device info."""
+        if self.unique_id is None:
+            return None
         return DeviceInfo(
-            identifiers={
-                (
-                    DOMAIN,
-                    f"lunatone-l{self._device.data.line}-a{self._device.data.address}",
-                )
-            },
+            identifiers={(DOMAIN, self.unique_id)},
             name=self.name,
             manufacturer="Lunatone",
         )
