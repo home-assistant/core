@@ -1629,6 +1629,9 @@ async def test_sub_device_cleanup(
         devices=sub_devices_updated,
     )
 
+    # Update the mock client to return the new device info
+    mock_client.device_info = AsyncMock(return_value=device.device_info)
+
     # Simulate reconnection which triggers device registry update
     await device.mock_connect()
     await hass.async_block_till_done()
