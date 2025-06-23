@@ -73,6 +73,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             "weather": {},
             "geofence": {},
             "zone": {},
+            "zone_control": {},
         }
 
     @property
@@ -99,11 +100,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.home_name = tado_home["name"]
 
         devices = await self._async_update_devices()
-        zones = await self._async_update_zones()
+        zones, zone_controls = await self._async_update_zones()
         home = await self._async_update_home()
 
         self.data["device"] = devices
         self.data["zone"] = zones
+        self.data["zone_control"] = zone_controls
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
 
@@ -166,7 +168,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
         return mapped_devices
 
-    async def _async_update_zones(self) -> dict[int, dict]:
+    async def _async_update_zones(self) -> tuple[dict[int, dict], dict[int, dict]]:
         """Update the zone data from Tado."""
 
         try:
@@ -182,7 +184,11 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         for zone in zone_states:
             mapped_zones[int(zone)] = await self._update_zone(int(zone))
 
-        return mapped_zones
+        mapped_zone_controls: dict[int, dict] = {}
+        for zone in zone_states:
+            mapped_zone_controls[int(zone)] = await self._update_zone_control(int(zone))
+
+        return mapped_zones, mapped_zone_controls
 
     async def _update_zone(self, zone_id: int) -> dict[str, str]:
         """Update the internal data of a zone."""
@@ -198,6 +204,24 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
         _LOGGER.debug("Zone %s updated, with data: %s", zone_id, data)
         return data
+
+    async def _update_zone_control(self, zone_id: int) -> dict[str, Any]:
+        """Update the internal zone control data of a zone."""
+
+        _LOGGER.debug("Updating zone control for zone %s", zone_id)
+        try:
+            zone_control_data = await self.hass.async_add_executor_job(
+                self._tado.get_zone_control, zone_id
+            )
+        except RequestException as err:
+            _LOGGER.error(
+                "Error updating Tado zone control for zone %s: %s", zone_id, err
+            )
+            raise UpdateFailed(
+                f"Error updating Tado zone control for zone {zone_id}: {err}"
+            ) from err
+
+        return zone_control_data
 
     async def _async_update_home(self) -> dict[str, dict]:
         """Update the home data from Tado."""
