@@ -1,0 +1,10 @@
+{
+  "domain": "lunatone",
+  "name": "Lunatone",
+  "codeowners": ["@Overlap0190"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/lunatone",
+  "iot_class": "local_polling",
+  "requirements": []
+}
