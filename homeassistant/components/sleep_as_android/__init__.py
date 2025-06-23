@@ -13,14 +13,7 @@ from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
-    ATTR_EVENT,
-    ATTR_VALUE1,
-    ATTR_VALUE2,
-    ATTR_VALUE3,
-    DOMAIN,
-    SLEEP_EVENT,
-)
+from .const import ATTR_EVENT, ATTR_VALUE1, ATTR_VALUE2, ATTR_VALUE3, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.EVENT]
 
@@ -48,12 +41,7 @@ async def handle_webhook(
             text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
         )
 
-    async_dispatcher_send(
-        hass,
-        SLEEP_EVENT,
-        webhook_id,
-        data,
-    )
+    async_dispatcher_send(hass, DOMAIN, webhook_id, data)
     return Response(status=HTTPStatus.NO_CONTENT)
 
 

@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.sleep.const import DOMAIN
+from homeassistant.components.sleep_as_android.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
