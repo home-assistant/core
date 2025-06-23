@@ -843,7 +843,7 @@ async def test_device_registry_calls(
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(device_registry.devices) == 5
+        assert len(device_registry.devices) == 6
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -877,11 +877,11 @@ async def test_device_registry_calls(
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(device_registry.devices) == 5
+        assert len(device_registry.devices) == 6
 
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert len(device_registry.devices) == 5
+        assert len(device_registry.devices) == 6
 
     supervisor_mock_data = {
         "version": "1.0.0",
@@ -935,7 +935,7 @@ async def test_device_registry_calls(
     ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
         await hass.async_block_till_done()
-        assert len(device_registry.devices) == 5
+        assert len(device_registry.devices) == 6
 
 
 @pytest.mark.usefixtures("addon_installed")
