@@ -69,6 +69,29 @@ TTS_INFO = Info(
         )
     ]
 )
+TTS_STREAMING_INFO = Info(
+    tts=[
+        TtsProgram(
+            name="Test Streaming TTS",
+            description="Test Streaming TTS",
+            installed=True,
+            attribution=TEST_ATTR,
+            voices=[
+                TtsVoice(
+                    name="Test Voice",
+                    description="Test Voice",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US"],
+                    speakers=[TtsVoiceSpeaker(name="Test Speaker")],
+                    version=None,
+                )
+            ],
+            version=None,
+            supports_synthesize_streaming=True,
+        )
+    ]
+)
 WAKE_WORD_INFO = Info(
     wake=[
         WakeProgram(
