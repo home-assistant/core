@@ -400,7 +400,7 @@
         "name": "Energy produced today"
       },
       "energy_produced": {
-        "name": "Energy produced"
+        "name": "Energy produced since previous report"
       },
       "max_reported": {
         "name": "Lifetime maximum power"
