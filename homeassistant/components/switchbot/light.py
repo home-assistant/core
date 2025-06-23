@@ -107,7 +107,7 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        _LOGGER.info("Turning on light %s, address %s", kwargs, self._address)
+        _LOGGER.debug("Turning on light %s, address %s", kwargs, self._address)
         brightness = round(
             cast(int, kwargs.get(ATTR_BRIGHTNESS, self.brightness)) / 255 * 100
         )
