@@ -6,7 +6,7 @@ import openai
 
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_MODEL, MATCH_ALL
+from homeassistant.const import CONF_MODEL, MATCH_ALL, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import intent, template
@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import ulid as ulid_util
 
 from . import OpenRouterConfigEntry
-from .const import CONF_PROMPT, DEFAULT_PROMPT, LOGGER
+from .const import CONF_PROMPT, DEFAULT_PROMPT, LOGGER, DOMAIN
 
 
 async def async_setup_entry(
@@ -61,14 +61,46 @@ class OpenRouterConversationEntity(
         conversation.async_unset_agent(self.hass, self.entry)
         await super().async_will_remove_from_hass()
 
-    async def async_process(
-        self, user_input: conversation.ConversationInput
+    async def _async_handle_message(
+        self,
+        user_input: conversation.ConversationInput,
+        chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        raw_prompt = self.entry.options.get(CONF_PROMPT, DEFAULT_PROMPT)
+        options = self.entry.options
 
-        if user_input.conversation_id in self.history:
-            conversation_id = user_input.conversation_id
+        try:
+            await chat_log.async_provide_llm_data(
+                user_input.as_llm_context(DOMAIN),
+                options.get(CONF_LLM_HASS_API),
+                options.get(CONF_PROMPT),
+                user_input.extra_system_prompt,
+            )
+        except conversation.ConverseError as err:
+            return err.as_conversation_result()
+
+        await self._async_handle_chat_log(chat_log)
+
+        intent_response = intent.IntentResponse(language=user_input.language)
+        assert type(chat_log.content[-1]) is conversation.AssistantContent
+        intent_response.async_set_speech(chat_log.content[-1].content or "")
+        return conversation.ConversationResult(
+            response=intent_response,
+            conversation_id=chat_log.conversation_id,
+            continue_conversation=chat_log.continue_conversation,
+        )
+
+    async def _async_handle_chat_log(
+        self,
+        chat_log: conversation.ChatLog,
+    ) -> None:
+        """Generate an answer for the chat log."""
+        options = self.entry.options
+
+        client = self.entry.runtime_data
+
+        if chat_log.conversation_id in self.history:
+            conversation_id = chat_log.conversation_id
             messages = self.history[conversation_id]
         else:
             conversation_id = ulid_util.ulid_now()
