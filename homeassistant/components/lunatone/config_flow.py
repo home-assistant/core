@@ -2,6 +2,7 @@
 
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 import aiohttp
 from lunatone_dali_api_client import Auth, Info
@@ -74,6 +75,6 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return a config entry for the flow."""
         assert self.url is not None
         return self.async_create_entry(
-            title=f"{self.name or "DALI Gateway"} - {self.url.split("//")[1]}",
+            title=f"{self.name or "DALI Gateway"} - {urlparse(self.url).hostname}",
             data={CONF_URL: self.url},
         )
