@@ -88,6 +88,12 @@
       },
       "boost_state": {
         "name": "Boost state"
+      },
+      "dishwasher_alarm_inflow": {
+        "name": "Inflow alarm"
+      },
+      "dishwasher_alarm_door": {
+        "name": "Door alarm"
       }
     },
     "button": {
@@ -324,6 +330,23 @@
       "battery_replacement_description": {
         "name": "Battery type"
       },
+      "battery_charge_state": {
+        "name": "Battery charge state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "full_charge": "Full charge",
+          "not_charging": "Not charging"
+        }
+      },
+      "battery_time_remaining": {
+        "name": "Time remaining"
+      },
+      "battery_time_to_full_charge": {
+        "name": "Time to full charge"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
       "current_phase": {
         "name": "Current phase"
       },
@@ -338,6 +361,15 @@
           "fault": "[%key:common::state::fault%]",
           "power_adjust_active": "Power adjust",
           "paused": "[%key:common::state::paused%]"
+        }
+      },
+      "esa_opt_out_state": {
+        "name": "Energy optimization opt-out",
+        "state": {
+          "no_opt_out": "[%key:common::state::off%]",
+          "local_opt_out": "Local",
+          "grid_opt_out": "Grid",
+          "opt_out": "Local and grid"
         }
       },
       "evse_fault_state": {
