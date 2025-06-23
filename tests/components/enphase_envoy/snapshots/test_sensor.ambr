@@ -265,7 +265,7 @@
     'original_name': None,
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1',
@@ -321,7 +321,7 @@
     'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current',
     'unique_id': '1_ac_current',
@@ -342,62 +342,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.504',
-  })
-# ---
-# name: test_sensor[envoy][sensor.inverter_1_ac_frequency-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
-    'original_icon': None,
-    'original_name': 'Frequency',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_frequency',
-    'supported_features': 0,
-    'translation_key': 'ac_frequency',
-    'unique_id': '1_ac_frequency',
-    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-  })
-# ---
-# name: test_sensor[envoy][sensor.inverter_1_ac_frequency-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '50.01',
   })
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_ac_voltage-entry]
@@ -433,7 +377,7 @@
     'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_voltage',
     'unique_id': '1_ac_voltage',
@@ -489,7 +433,7 @@
     'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_current',
     'unique_id': '1_dc_current',
@@ -545,7 +489,7 @@
     'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_voltage',
     'unique_id': '1_dc_voltage',
@@ -601,7 +545,7 @@
     'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_produced',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_produced',
     'unique_id': '1_energy_produced',
@@ -624,7 +568,7 @@
     'state': '32.254',
   })
 # ---
-# name: test_sensor[envoy][sensor.inverter_1_energy_today-entry]
+# name: test_sensor[envoy][sensor.inverter_1_energy_produced_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -639,7 +583,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -657,14 +601,14 @@
     'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_today',
     'unique_id': '1_energy_today',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy][sensor.inverter_1_energy_today-state]
+# name: test_sensor[envoy][sensor.inverter_1_energy_produced_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -673,11 +617,67 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '134',
+  })
+# ---
+# name: test_sensor[envoy][sensor.inverter_1_frequency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_1_frequency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': None,
+    'original_name': 'Frequency',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1_ac_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy][sensor.inverter_1_frequency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Inverter 1 Frequency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_1_frequency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.01',
   })
 # ---
 # name: test_sensor[envoy][sensor.inverter_1_last_report_duration-entry]
@@ -713,7 +713,7 @@
     'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_report_duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_report_duration',
     'unique_id': '1_last_report_duration',
@@ -764,7 +764,7 @@
     'original_name': 'Last reported',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_reported',
     'unique_id': '1_last_reported',
@@ -821,7 +821,7 @@
     'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_lifetime_energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_energy',
     'unique_id': '1_lifetime_energy',
@@ -844,7 +844,7 @@
     'state': '130.209',
   })
 # ---
-# name: test_sensor[envoy][sensor.inverter_1_max_reported-entry]
+# name: test_sensor[envoy][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -859,7 +859,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -877,14 +877,14 @@
     'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_max_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_reported',
     'unique_id': '1_max_reported',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[envoy][sensor.inverter_1_max_reported-state]
+# name: test_sensor[envoy][sensor.inverter_1_lifetime_maximum_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -893,7 +893,7 @@
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -933,9 +933,9 @@
     'original_name': 'Temperature',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': '1_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -2424,7 +2424,7 @@
     'original_name': None,
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1',
@@ -2480,7 +2480,7 @@
     'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current',
     'unique_id': '1_ac_current',
@@ -2497,62 +2497,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_1_ac_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_ac_frequency-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
-    'original_icon': None,
-    'original_name': 'Frequency',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_frequency',
-    'supported_features': 0,
-    'translation_key': 'ac_frequency',
-    'unique_id': '1_ac_frequency',
-    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-  })
-# ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_ac_frequency-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2592,7 +2536,7 @@
     'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_voltage',
     'unique_id': '1_ac_voltage',
@@ -2648,7 +2592,7 @@
     'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_current',
     'unique_id': '1_dc_current',
@@ -2704,7 +2648,7 @@
     'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_voltage',
     'unique_id': '1_dc_voltage',
@@ -2760,7 +2704,7 @@
     'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_produced',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_produced',
     'unique_id': '1_energy_produced',
@@ -2783,7 +2727,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_today-entry]
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_produced_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2798,7 +2742,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2816,14 +2760,14 @@
     'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_today',
     'unique_id': '1_energy_today',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_today-state]
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_energy_produced_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2832,7 +2776,63 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_frequency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_1_frequency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': None,
+    'original_name': 'Frequency',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1_ac_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_frequency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Inverter 1 Frequency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_1_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2872,7 +2872,7 @@
     'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_report_duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_report_duration',
     'unique_id': '1_last_report_duration',
@@ -2923,7 +2923,7 @@
     'original_name': 'Last reported',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_reported',
     'unique_id': '1_last_reported',
@@ -2980,7 +2980,7 @@
     'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_lifetime_energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_energy',
     'unique_id': '1_lifetime_energy',
@@ -3003,7 +3003,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_max_reported-entry]
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3018,7 +3018,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3036,14 +3036,14 @@
     'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_max_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_reported',
     'unique_id': '1_max_reported',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[envoy_1p_metered][sensor.inverter_1_max_reported-state]
+# name: test_sensor[envoy_1p_metered][sensor.inverter_1_lifetime_maximum_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3052,7 +3052,7 @@
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3092,9 +3092,9 @@
     'original_name': 'Temperature',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': '1_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -8027,7 +8027,7 @@
     'original_name': None,
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1',
@@ -8083,7 +8083,7 @@
     'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current',
     'unique_id': '1_ac_current',
@@ -8100,62 +8100,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_1_ac_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_ac_frequency-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
-    'original_icon': None,
-    'original_name': 'Frequency',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_frequency',
-    'supported_features': 0,
-    'translation_key': 'ac_frequency',
-    'unique_id': '1_ac_frequency',
-    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-  })
-# ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_ac_frequency-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -8195,7 +8139,7 @@
     'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_voltage',
     'unique_id': '1_ac_voltage',
@@ -8251,7 +8195,7 @@
     'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_current',
     'unique_id': '1_dc_current',
@@ -8307,7 +8251,7 @@
     'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_voltage',
     'unique_id': '1_dc_voltage',
@@ -8363,7 +8307,7 @@
     'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_produced',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_produced',
     'unique_id': '1_energy_produced',
@@ -8386,7 +8330,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_today-entry]
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_produced_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8401,7 +8345,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8419,14 +8363,14 @@
     'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_today',
     'unique_id': '1_energy_today',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_today-state]
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_energy_produced_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -8435,7 +8379,63 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_frequency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_1_frequency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': None,
+    'original_name': 'Frequency',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1_ac_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_frequency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Inverter 1 Frequency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_1_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -8475,7 +8475,7 @@
     'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_report_duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_report_duration',
     'unique_id': '1_last_report_duration',
@@ -8526,7 +8526,7 @@
     'original_name': 'Last reported',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_reported',
     'unique_id': '1_last_reported',
@@ -8583,7 +8583,7 @@
     'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_lifetime_energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_energy',
     'unique_id': '1_lifetime_energy',
@@ -8606,7 +8606,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_max_reported-entry]
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8621,7 +8621,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8639,14 +8639,14 @@
     'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_max_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_reported',
     'unique_id': '1_max_reported',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[envoy_acb_batt][sensor.inverter_1_max_reported-state]
+# name: test_sensor[envoy_acb_batt][sensor.inverter_1_lifetime_maximum_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -8655,7 +8655,7 @@
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -8695,9 +8695,9 @@
     'original_name': 'Temperature',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': '1_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -13256,7 +13256,7 @@
     'original_name': None,
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1',
@@ -13312,7 +13312,7 @@
     'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current',
     'unique_id': '1_ac_current',
@@ -13329,62 +13329,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_1_ac_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_ac_frequency-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
-    'original_icon': None,
-    'original_name': 'Frequency',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_frequency',
-    'supported_features': 0,
-    'translation_key': 'ac_frequency',
-    'unique_id': '1_ac_frequency',
-    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_ac_frequency-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -13424,7 +13368,7 @@
     'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_voltage',
     'unique_id': '1_ac_voltage',
@@ -13480,7 +13424,7 @@
     'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_current',
     'unique_id': '1_dc_current',
@@ -13536,7 +13480,7 @@
     'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_voltage',
     'unique_id': '1_dc_voltage',
@@ -13592,7 +13536,7 @@
     'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_produced',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_produced',
     'unique_id': '1_energy_produced',
@@ -13615,7 +13559,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_today-entry]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_produced_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13630,7 +13574,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -13648,14 +13592,14 @@
     'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_today',
     'unique_id': '1_energy_today',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_today-state]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_energy_produced_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -13664,7 +13608,63 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_frequency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_1_frequency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': None,
+    'original_name': 'Frequency',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1_ac_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_frequency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Inverter 1 Frequency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_1_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -13704,7 +13704,7 @@
     'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_report_duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_report_duration',
     'unique_id': '1_last_report_duration',
@@ -13755,7 +13755,7 @@
     'original_name': 'Last reported',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_reported',
     'unique_id': '1_last_reported',
@@ -13812,7 +13812,7 @@
     'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_lifetime_energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_energy',
     'unique_id': '1_lifetime_energy',
@@ -13835,7 +13835,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_max_reported-entry]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13850,7 +13850,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -13868,14 +13868,14 @@
     'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_max_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_reported',
     'unique_id': '1_max_reported',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_1_max_reported-state]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_lifetime_maximum_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -13884,7 +13884,7 @@
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -13924,9 +13924,9 @@
     'original_name': 'Temperature',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': '1_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -22395,7 +22395,7 @@
     'original_name': None,
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1',
@@ -22451,7 +22451,7 @@
     'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current',
     'unique_id': '1_ac_current',
@@ -22468,62 +22468,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_1_ac_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_ac_frequency-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
-    'original_icon': None,
-    'original_name': 'Frequency',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_frequency',
-    'supported_features': 0,
-    'translation_key': 'ac_frequency',
-    'unique_id': '1_ac_frequency',
-    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-  })
-# ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_ac_frequency-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -22563,7 +22507,7 @@
     'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_voltage',
     'unique_id': '1_ac_voltage',
@@ -22619,7 +22563,7 @@
     'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_current',
     'unique_id': '1_dc_current',
@@ -22675,7 +22619,7 @@
     'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_voltage',
     'unique_id': '1_dc_voltage',
@@ -22731,7 +22675,7 @@
     'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_produced',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_produced',
     'unique_id': '1_energy_produced',
@@ -22754,7 +22698,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_today-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_produced_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -22769,7 +22713,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22787,14 +22731,14 @@
     'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_today',
     'unique_id': '1_energy_today',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_today-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_energy_produced_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -22803,7 +22747,63 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_frequency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_1_frequency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': None,
+    'original_name': 'Frequency',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1_ac_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_frequency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Inverter 1 Frequency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_1_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -22843,7 +22843,7 @@
     'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_report_duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_report_duration',
     'unique_id': '1_last_report_duration',
@@ -22894,7 +22894,7 @@
     'original_name': 'Last reported',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_reported',
     'unique_id': '1_last_reported',
@@ -22951,7 +22951,7 @@
     'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_lifetime_energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_energy',
     'unique_id': '1_lifetime_energy',
@@ -22974,7 +22974,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_max_reported-entry]
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -22989,7 +22989,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23007,14 +23007,14 @@
     'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_max_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_reported',
     'unique_id': '1_max_reported',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_max_reported-state]
+# name: test_sensor[envoy_metered_batt_relay][sensor.inverter_1_lifetime_maximum_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -23023,7 +23023,7 @@
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -23063,9 +23063,9 @@
     'original_name': 'Temperature',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': '1_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -28859,7 +28859,7 @@
     'original_name': None,
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1',
@@ -28915,7 +28915,7 @@
     'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current',
     'unique_id': '1_ac_current',
@@ -28932,62 +28932,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_1_ac_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_ac_frequency-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
-    'original_icon': None,
-    'original_name': 'Frequency',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_frequency',
-    'supported_features': 0,
-    'translation_key': 'ac_frequency',
-    'unique_id': '1_ac_frequency',
-    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-  })
-# ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_ac_frequency-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -29027,7 +28971,7 @@
     'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_voltage',
     'unique_id': '1_ac_voltage',
@@ -29083,7 +29027,7 @@
     'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_current',
     'unique_id': '1_dc_current',
@@ -29139,7 +29083,7 @@
     'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_voltage',
     'unique_id': '1_dc_voltage',
@@ -29195,7 +29139,7 @@
     'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_produced',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_produced',
     'unique_id': '1_energy_produced',
@@ -29218,7 +29162,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_today-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_produced_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -29233,7 +29177,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29251,14 +29195,14 @@
     'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_today',
     'unique_id': '1_energy_today',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_today-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_energy_produced_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -29267,7 +29211,63 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_frequency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_1_frequency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': None,
+    'original_name': 'Frequency',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1_ac_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_frequency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Inverter 1 Frequency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_1_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -29307,7 +29307,7 @@
     'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_report_duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_report_duration',
     'unique_id': '1_last_report_duration',
@@ -29358,7 +29358,7 @@
     'original_name': 'Last reported',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_reported',
     'unique_id': '1_last_reported',
@@ -29415,7 +29415,7 @@
     'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_lifetime_energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_energy',
     'unique_id': '1_lifetime_energy',
@@ -29438,7 +29438,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_max_reported-entry]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -29453,7 +29453,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29471,14 +29471,14 @@
     'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_max_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_reported',
     'unique_id': '1_max_reported',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_max_reported-state]
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1_lifetime_maximum_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -29487,7 +29487,7 @@
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -29527,9 +29527,9 @@
     'original_name': 'Temperature',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': '1_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -30271,7 +30271,7 @@
     'original_name': None,
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1',
@@ -30327,7 +30327,7 @@
     'original_name': 'AC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_current',
     'unique_id': '1_ac_current',
@@ -30344,62 +30344,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_1_ac_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_ac_frequency-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
-    'original_icon': None,
-    'original_name': 'Frequency',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_frequency',
-    'supported_features': 0,
-    'translation_key': 'ac_frequency',
-    'unique_id': '1_ac_frequency',
-    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-  })
-# ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_ac_frequency-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Inverter 1 Frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_ac_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -30439,7 +30383,7 @@
     'original_name': 'AC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_ac_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ac_voltage',
     'unique_id': '1_ac_voltage',
@@ -30495,7 +30439,7 @@
     'original_name': 'DC current',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_current',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_current',
     'unique_id': '1_dc_current',
@@ -30551,7 +30495,7 @@
     'original_name': 'DC voltage',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_dc_voltage',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dc_voltage',
     'unique_id': '1_dc_voltage',
@@ -30607,7 +30551,7 @@
     'original_name': 'Energy produced',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_produced',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_produced',
     'unique_id': '1_energy_produced',
@@ -30630,7 +30574,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_today-entry]
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_produced_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -30645,7 +30589,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30663,14 +30607,14 @@
     'original_name': 'Energy produced today',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_energy_today',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_today',
     'unique_id': '1_energy_today',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_today-state]
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_energy_produced_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -30679,7 +30623,63 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_energy_today',
+    'entity_id': 'sensor.inverter_1_energy_produced_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_frequency-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_1_frequency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': None,
+    'original_name': 'Frequency',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1_ac_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_frequency-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Inverter 1 Frequency',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_1_frequency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -30719,7 +30719,7 @@
     'original_name': 'Last report duration',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_report_duration',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_report_duration',
     'unique_id': '1_last_report_duration',
@@ -30770,7 +30770,7 @@
     'original_name': 'Last reported',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_last_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_reported',
     'unique_id': '1_last_reported',
@@ -30827,7 +30827,7 @@
     'original_name': 'Lifetime energy',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_lifetime_energy',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifetime_energy',
     'unique_id': '1_lifetime_energy',
@@ -30850,7 +30850,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_max_reported-entry]
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_lifetime_maximum_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -30865,7 +30865,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30883,14 +30883,14 @@
     'original_name': 'Lifetime maximum power',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_max_reported',
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_reported',
     'unique_id': '1_max_reported',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_max_reported-state]
+# name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1_lifetime_maximum_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -30899,7 +30899,7 @@
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_1_max_reported',
+    'entity_id': 'sensor.inverter_1_lifetime_maximum_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -30939,9 +30939,9 @@
     'original_name': 'Temperature',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
-    'suggested_object_id': 'inverter_1_temperature',
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': '1_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
