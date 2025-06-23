@@ -62,6 +62,9 @@
     "sensor": {
       "pullspring_duration": {
         "name": "Pullspring duration"
+      },
+      "door_state": {
+        "name": "Door state"
       }
     }
   },
