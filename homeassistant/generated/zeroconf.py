@@ -128,6 +128,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Luna": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Mini": {
         "always_discover": True,
         "domain": "lifx",
@@ -336,6 +340,11 @@ ZEROCONF = {
     "_airport._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_altruist._tcp.local.": [
+        {
+            "domain": "altruist",
         },
     ],
     "_amzn-alexa._tcp.local.": [
@@ -859,11 +868,6 @@ ZEROCONF = {
     "_soundtouch._tcp.local.": [
         {
             "domain": "soundtouch",
-        },
-    ],
-    "_spotify-connect._tcp.local.": [
-        {
-            "domain": "spotify",
         },
     ],
     "_ssh._tcp.local.": [

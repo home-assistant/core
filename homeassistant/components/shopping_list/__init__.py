@@ -92,13 +92,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Mark the first item with matching `name` as completed."""
         data = hass.data[DOMAIN]
         name = call.data[ATTR_NAME]
-
         try:
-            item = [item for item in data.items if item["name"] == name][0]
-        except IndexError:
-            _LOGGER.error("Updating of item failed: %s cannot be found", name)
-        else:
-            await data.async_update(item["id"], {"name": name, "complete": True})
+            await data.async_complete(name)
+        except NoMatchingShoppingListItem:
+            _LOGGER.error("Completing of item failed: %s cannot be found", name)
 
     async def incomplete_item_service(call: ServiceCall) -> None:
         """Mark the first item with matching `name` as incomplete."""
@@ -257,6 +254,30 @@ class ShoppingData:
                 context=context,
             )
         return removed
+
+    async def async_complete(
+        self, name: str, context: Context | None = None
+    ) -> list[dict[str, JsonValueType]]:
+        """Mark all shopping list items with the given name as complete."""
+        complete_items = [
+            item for item in self.items if item["name"] == name and not item["complete"]
+        ]
+
+        if len(complete_items) == 0:
+            raise NoMatchingShoppingListItem
+
+        for item in complete_items:
+            _LOGGER.debug("Completing %s", item)
+            item["complete"] = True
+        await self.hass.async_add_executor_job(self.save)
+        self._async_notify()
+        for item in complete_items:
+            self.hass.bus.async_fire(
+                EVENT_SHOPPING_LIST_UPDATED,
+                {"action": "complete", "item": item},
+                context=context,
+            )
+        return complete_items
 
     async def async_update(
         self, item_id: str | None, info: dict[str, Any], context: Context | None = None

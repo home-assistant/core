@@ -20,16 +20,14 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import ISYAuxControlEntity, ISYNodeEntity, ISYProgramEntity
-from .models import IsyData
+from .models import IsyConfigEntry
 
 
 @dataclass(frozen=True)
@@ -43,11 +41,11 @@ class ISYSwitchEntityDescription(SwitchEntityDescription):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IsyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ISY switch platform."""
-    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
+    isy_data = entry.runtime_data
     entities: list[
         ISYSwitchProgramEntity | ISYSwitchEntity | ISYEnableSwitchEntity
     ] = []

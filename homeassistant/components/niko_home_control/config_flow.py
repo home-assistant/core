@@ -58,15 +58,3 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
-        """Import a config entry."""
-        self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
-        error = await test_connection(import_info[CONF_HOST])
-
-        if not error:
-            return self.async_create_entry(
-                title="Niko Home Control",
-                data={CONF_HOST: import_info[CONF_HOST]},
-            )
-        return self.async_abort(reason=error)

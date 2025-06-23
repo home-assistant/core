@@ -17,6 +17,9 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+from homeassistant.components.websocket_api.commands import (
+    ALL_SERVICE_DESCRIPTIONS_JSON_CACHE,
+)
 from homeassistant.components.websocket_api.const import FEATURE_COALESCE_MESSAGES, URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
@@ -514,9 +517,12 @@ async def test_call_service_schema_validation_error(
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_call_service_error(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    websocket_client: MockHAClientWebSocket,
 ) -> None:
     """Test call service command with error."""
+    caplog.set_level(logging.ERROR)
 
     @callback
     def ha_error_call(_):
@@ -561,6 +567,7 @@ async def test_call_service_error(
     assert msg["error"]["translation_placeholders"] == {"option": "bla"}
     assert msg["error"]["translation_key"] == "custom_error"
     assert msg["error"]["translation_domain"] == "test"
+    assert "Traceback" not in caplog.text
 
     await websocket_client.send_json_auto_id(
         {
@@ -578,6 +585,7 @@ async def test_call_service_error(
     assert msg["error"]["translation_placeholders"] == {"option": "bla"}
     assert msg["error"]["translation_key"] == "custom_error"
     assert msg["error"]["translation_domain"] == "test"
+    assert "Traceback" not in caplog.text
 
     await websocket_client.send_json_auto_id(
         {
@@ -592,6 +600,7 @@ async def test_call_service_error(
     assert msg["success"] is False
     assert msg["error"]["code"] == "unknown_error"
     assert msg["error"]["message"] == "value_error"
+    assert "Traceback" in caplog.text
 
 
 async def test_subscribe_unsubscribe_events(
@@ -661,14 +670,41 @@ async def test_get_services(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
     """Test get_services command."""
-    for id_ in (5, 6):
-        await websocket_client.send_json({"id": id_, "type": "get_services"})
+    assert ALL_SERVICE_DESCRIPTIONS_JSON_CACHE not in hass.data
+    await websocket_client.send_json_auto_id({"type": "get_services"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 1, "result": {}, "success": True, "type": "result"}
 
-        msg = await websocket_client.receive_json()
-        assert msg["id"] == id_
-        assert msg["type"] == const.TYPE_RESULT
-        assert msg["success"]
-        assert msg["result"].keys() == hass.services.async_services().keys()
+    # Check cache is reused
+    old_cache = hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE]
+    await websocket_client.send_json_auto_id({"type": "get_services"})
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": 2, "result": {}, "success": True, "type": "result"}
+    assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
+
+    # Load a service and check cache is updated
+    assert await async_setup_component(hass, "logger", {})
+    await websocket_client.send_json_auto_id({"type": "get_services"})
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "id": 3,
+        "result": {"logger": {"set_default_level": ANY, "set_level": ANY}},
+        "success": True,
+        "type": "result",
+    }
+    assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is not old_cache
+
+    # Check cache is reused
+    old_cache = hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE]
+    await websocket_client.send_json_auto_id({"type": "get_services"})
+    msg = await websocket_client.receive_json()
+    assert msg == {
+        "id": 4,
+        "result": {"logger": {"set_default_level": ANY, "set_level": ANY}},
+        "success": True,
+        "type": "result",
+    }
+    assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
 
 async def test_get_config(

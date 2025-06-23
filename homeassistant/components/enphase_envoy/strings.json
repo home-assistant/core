@@ -380,6 +380,33 @@
       },
       "aggregated_soc": {
         "name": "Aggregated battery soc"
+      },
+      "dc_voltage": {
+        "name": "DC voltage"
+      },
+      "dc_current": {
+        "name": "DC current"
+      },
+      "ac_voltage": {
+        "name": "AC voltage"
+      },
+      "ac_current": {
+        "name": "AC current"
+      },
+      "lifetime_energy": {
+        "name": "Lifetime energy produced"
+      },
+      "energy_today": {
+        "name": "Energy produced today"
+      },
+      "energy_produced": {
+        "name": "Energy produced since previous report"
+      },
+      "max_reported": {
+        "name": "Lifetime maximum power"
+      },
+      "last_report_duration": {
+        "name": "Last report duration"
       }
     },
     "switch": {
