@@ -140,7 +140,6 @@ async def async_setup_entry(
 class SleepAsAndroidEventEntity(SleepAsAndroidEntity, EventEntity):
     """An event entity."""
 
-    _attr_has_entity_name = True
     entity_description: SleepAsAndroidEventEntityDescription
 
     @callback
