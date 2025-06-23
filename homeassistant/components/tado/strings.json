@@ -62,6 +62,9 @@
     "switch": {
       "child_lock": {
         "name": "Child lock"
+      },
+      "heating_circuit": {
+        "name": "Heating circuit"
       }
     },
     "sensor": {
