@@ -106,9 +106,8 @@ async def test_media_player_join_timeout(
         patch(
             "homeassistant.components.sonos.speaker.asyncio.timeout", instant_timeout
         ),
-        caplog.at_level(logging.WARNING),
+        pytest.raises(HomeAssistantError) as excinfo,
     ):
-        caplog.clear()
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_JOIN,
@@ -121,9 +120,9 @@ async def test_media_player_join_timeout(
     assert soco_bedroom.join.call_count == 1
     assert soco_bedroom.join.call_args[0][0] == soco_living_room
     assert soco_living_room.join.call_count == 0
-    assert "Timeout" in caplog.text
-    assert "Living Room" in caplog.text
-    assert "Bedroom" in caplog.text
+    assert "Timeout" in str(excinfo.value)
+    assert "Living Room" in str(excinfo.value)
+    assert "Bedroom" in str(excinfo.value)
 
 
 async def test_media_player_unjoin(
