@@ -116,7 +116,15 @@ class SonosMockEvent:
         variables: dict[str, str],
         uui_ds: str | None = None,
     ) -> None:
-        """Initialize the instance."""
+        """Initialize the instance.
+
+        Args:
+            soco: The mock SoCo device associated with this event.
+            service: The Sonos mock service that generated the event.
+            variables: A dictionary of event variables and their values.
+            uui_ds: Optional comma-separated string of unique zone IDs in the group.
+
+        """
         self.sid = f"{soco.uid}_sub0000000001"
         self.seq = "0"
         self.timestamp = 1621000000.0
