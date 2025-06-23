@@ -123,7 +123,6 @@ INVERTER_SENSORS = (
     ),
     EnvoyInverterSensorEntityDescription(
         key="ac_frequency",
-        translation_key="ac_frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.FREQUENCY,
@@ -133,7 +132,6 @@ INVERTER_SENSORS = (
     ),
     EnvoyInverterSensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -1300,11 +1298,6 @@ class EnvoyInverterEntity(EnvoySensorBaseEntity):
         """Initialize Envoy inverter entity."""
         super().__init__(coordinator, description)
         self._serial_number = serial_number
-        self.entity_id = (
-            f"sensor.inverter_{serial_number}_{description.key}"
-            if description.key is not INVERTERS_KEY
-            else f"sensor.inverter_{serial_number}"
-        )
         key = description.key
         if key == INVERTERS_KEY:
             # Originally there was only one inverter sensor, so we don't want to
