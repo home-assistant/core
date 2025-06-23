@@ -823,9 +823,6 @@ def _async_setup_device_registry(
     areas_by_id = {area.area_id: area for area in device_info.areas}
     # Create/update sub devices that should exist
     for sub_device in device_info.devices:
-        # Create a unique identifier for this sub device
-        sub_device_identifier = f"{device_info.mac_address}_{sub_device.device_id}"
-
         # Determine the area for this sub device
         sub_device_suggested_area: str | None = None
         if sub_device.area_id and sub_device.area_id in areas_by_id:
@@ -833,7 +830,7 @@ def _async_setup_device_registry(
 
         sub_device_entry = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, sub_device_identifier)},
+            identifiers={(DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")},
             name=sub_device.name,
             manufacturer=manufacturer,
             model=model,

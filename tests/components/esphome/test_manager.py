@@ -1500,3 +1500,153 @@ async def test_assist_in_progress_issue_deleted(
         )
         is None
     )
+
+
+async def test_sub_device_creation(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test sub devices are created in device registry."""
+    device_registry = dr.async_get(hass)
+
+    # Define areas
+    areas = [
+        {"area_id": 1, "name": "Living Room"},
+        {"area_id": 2, "name": "Bedroom"},
+        {"area_id": 3, "name": "Kitchen"},
+    ]
+
+    # Define sub devices
+    sub_devices = [
+        {"device_id": 11111111, "name": "Motion Sensor", "area_id": 1},
+        {"device_id": 22222222, "name": "Light Switch", "area_id": 1},
+        {"device_id": 33333333, "name": "Temperature Sensor", "area_id": 2},
+    ]
+
+    device_info = {
+        "areas": areas,
+        "devices": sub_devices,
+        "area": {"area_id": 0, "name": "Main Hub"},
+    }
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+
+    # Check main device is created
+    main_device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, device.entry.unique_id)}
+    )
+    assert main_device is not None
+    assert main_device.suggested_area == "Main Hub"
+
+    # Check sub devices are created
+    sub_device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.entry.unique_id}_11111111")}
+    )
+    assert sub_device_1 is not None
+    assert sub_device_1.name == "Motion Sensor"
+    assert sub_device_1.suggested_area == "Living Room"
+    assert sub_device_1.via_device_id == main_device.id
+
+    sub_device_2 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.entry.unique_id}_22222222")}
+    )
+    assert sub_device_2 is not None
+    assert sub_device_2.name == "Light Switch"
+    assert sub_device_2.suggested_area == "Living Room"
+    assert sub_device_2.via_device_id == main_device.id
+
+    sub_device_3 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.entry.unique_id}_33333333")}
+    )
+    assert sub_device_3 is not None
+    assert sub_device_3.name == "Temperature Sensor"
+    assert sub_device_3.suggested_area == "Bedroom"
+    assert sub_device_3.via_device_id == main_device.id
+
+
+async def test_sub_device_cleanup(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test sub devices are removed when they no longer exist."""
+    device_registry = dr.async_get(hass)
+
+    # Initial sub devices
+    sub_devices_initial = [
+        {"device_id": 11111111, "name": "Device 1", "area_id": 0},
+        {"device_id": 22222222, "name": "Device 2", "area_id": 0},
+        {"device_id": 33333333, "name": "Device 3", "area_id": 0},
+    ]
+
+    device_info = {
+        "devices": sub_devices_initial,
+    }
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+    )
+
+    # Verify all sub devices exist
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.entry.unique_id}_11111111")}
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.entry.unique_id}_22222222")}
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.entry.unique_id}_33333333")}
+        )
+        is not None
+    )
+
+    # Now update with fewer sub devices (device 2 removed)
+    sub_devices_updated = [
+        {"device_id": 11111111, "name": "Device 1", "area_id": 0},
+        {"device_id": 33333333, "name": "Device 3", "area_id": 0},
+    ]
+
+    # Update device info
+    device.device_info = DeviceInfo(
+        name="test",
+        friendly_name="Test",
+        esphome_version="1.0.0",
+        mac_address="11:22:33:44:55:AA",
+        devices=sub_devices_updated,
+    )
+
+    # Simulate reconnection which triggers device registry update
+    await device.mock_connect()
+    await hass.async_block_till_done()
+
+    # Verify device 2 was removed
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.entry.unique_id}_11111111")}
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.entry.unique_id}_22222222")}
+        )
+        is None
+    )  # Should be removed
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{device.entry.unique_id}_33333333")}
+        )
+        is not None
+    )
