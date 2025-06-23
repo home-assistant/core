@@ -129,28 +129,26 @@ class SwitchBotEvaporativeHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         _LOGGER.debug("Setting target humidity to: %s %s", humidity, self._address)
-        self._last_run_success = bool(await self._device.set_target_humidity(humidity))
+        await self._device.set_target_humidity(humidity)
         self.async_write_ha_state()
 
     @exception_handler
     async def async_set_mode(self, mode: str) -> None:
         """Set new evaporative humidifier mode."""
         _LOGGER.debug("Setting mode to: %s %s", mode, self._address)
-        self._last_run_success = bool(
-            await self._device.set_mode(HumidifierMode[mode.upper()])
-        )
+        await self._device.set_mode(HumidifierMode[mode.upper()])
         self.async_write_ha_state()
 
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the humidifier."""
         _LOGGER.debug("Turning on the humidifier %s", self._address)
-        self._last_run_success = bool(await self._device.turn_on())
+        await self._device.turn_on()
         self.async_write_ha_state()
 
     @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the humidifier."""
         _LOGGER.debug("Turning off the humidifier %s", self._address)
-        self._last_run_success = bool(await self._device.turn_off())
+        await self._device.turn_off()
         self.async_write_ha_state()
