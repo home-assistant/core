@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
-from .entity import EheimDigitalEntity
+from .entity import EheimDigitalEntity, exception_handler
 
 PARALLEL_UPDATES = 0
 
@@ -94,6 +94,7 @@ class EheimDigitalSelect(
         self._attr_unique_id = f"{self._device_address}_{description.key}"
 
     @override
+    @exception_handler
     async def async_select_option(self, option: str) -> None:
         return await self.entity_description.set_value_fn(self._device, option)
 

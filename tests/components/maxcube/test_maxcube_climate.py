@@ -179,7 +179,7 @@ async def test_thermostat_set_invalid_hvac_mode(
     hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
 ) -> None:
     """Set hvac mode to heat."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,

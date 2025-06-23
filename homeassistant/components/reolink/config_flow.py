@@ -194,6 +194,13 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
                 raise AbortFlow("already_configured")
 
+        if existing_entry and existing_entry.data[CONF_HOST] != discovery_info.ip:
+            _LOGGER.debug(
+                "Reolink DHCP reported new IP '%s', updating from old IP '%s'",
+                discovery_info.ip,
+                existing_entry.data[CONF_HOST],
+            )
+
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
         self.context["title_placeholders"] = {

@@ -276,6 +276,8 @@ async def async_setup_platform(
 class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     """Representation of a template lights features."""
 
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(  # pylint: disable=super-init-not-called
         self, config: dict[str, Any], initial_state: bool | None = False
     ) -> None:
@@ -522,8 +524,10 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
             ATTR_COLOR_TEMP_KELVIN in kwargs
             and (script := CONF_TEMPERATURE_ACTION) in self._action_scripts
         ):
+            kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            common_params[ATTR_COLOR_TEMP_KELVIN] = kelvin
             common_params["color_temp"] = color_util.color_temperature_kelvin_to_mired(
-                kwargs[ATTR_COLOR_TEMP_KELVIN]
+                kelvin
             )
 
             return (script, common_params)

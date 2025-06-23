@@ -24,8 +24,10 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Google Mail platform."""
+    """Set up the Google Mail integration."""
     hass.data.setdefault(DOMAIN, {})[DATA_HASS_CONFIG] = config
+
+    async_setup_services(hass)
 
     return True
 
@@ -51,8 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -
     await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
-
-    await async_setup_services(hass)
 
     return True
 

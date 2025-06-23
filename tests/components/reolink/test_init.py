@@ -19,7 +19,12 @@ from homeassistant.components.reolink import (
     FIRMWARE_UPDATE_INTERVAL,
     NUM_CRED_ERRORS,
 )
-from homeassistant.components.reolink.const import CONF_BC_PORT, DOMAIN
+from homeassistant.components.reolink.const import (
+    BATTERY_ALL_WAKE_UPDATE_INTERVAL,
+    BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
+    CONF_BC_PORT,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -724,6 +729,57 @@ async def test_cleanup_combined_with_NVR(
     reolink_connect.baichuan.mac_address.return_value = TEST_MAC_CAM
 
 
+async def test_cleanup_hub_and_direct_connection(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test cleanup of the device registry if IPC camera device was connected directly and through the hub/NVR."""
+    reolink_connect.channels = [0]
+    entity_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
+    dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
+    domain = Platform.SWITCH
+    start_identifiers = {
+        (DOMAIN, dev_id),  # IPC camera through hub
+        (DOMAIN, TEST_UID_CAM),  # directly connected IPC camera
+        ("OTHER_INTEGRATION", "SOME_ID"),
+    }
+
+    dev_entry = device_registry.async_get_or_create(
+        identifiers=start_identifiers,
+        connections={(CONNECTION_NETWORK_MAC, TEST_MAC_CAM)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=None,
+    )
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=entity_id,
+        config_entry=config_entry,
+        suggested_object_id=entity_id,
+        disabled_by=None,
+        device_id=dev_entry.id,
+    )
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    assert device
+    assert device.identifiers == start_identifiers
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, entity_id)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dev_id)})
+    assert device
+    assert device.identifiers == start_identifiers
+
+
 async def test_no_repair_issue(
     hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
 ) -> None:
@@ -1058,6 +1114,76 @@ async def test_privacy_mode_change_callback(
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_camera_wake_callback(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test camera wake callback."""
+
+    class callback_mock_class:
+        callback_func = None
+
+        def register_callback(
+            self, callback_id: str, callback: Callable[[], None], *args, **key_args
+        ) -> None:
+            if callback_id == "camera_0_wake":
+                self.callback_func = callback
+
+    callback_mock = callback_mock_class()
+
+    reolink_connect.model = TEST_HOST_MODEL
+    reolink_connect.baichuan.events_active = True
+    reolink_connect.baichuan.subscribe_events.reset_mock(side_effect=True)
+    reolink_connect.baichuan.register_callback = callback_mock.register_callback
+    reolink_connect.sleeping.return_value = True
+    reolink_connect.audio_record.return_value = True
+    reolink_connect.get_states = AsyncMock()
+
+    with (
+        patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]),
+        patch(
+            "homeassistant.components.reolink.host.time",
+            return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.SWITCH}.{TEST_NVR_NAME}_record_audio"
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    reolink_connect.sleeping.return_value = False
+    reolink_connect.get_states.reset_mock()
+    assert reolink_connect.get_states.call_count == 0
+
+    # simulate a TCP push callback signaling the battery camera woke up
+    reolink_connect.audio_record.return_value = False
+    assert callback_mock.callback_func is not None
+    with (
+        patch(
+            "homeassistant.components.reolink.host.time",
+            return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL
+            + BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
+            + 5,
+        ),
+        patch(
+            "homeassistant.components.reolink.time",
+            return_value=BATTERY_ALL_WAKE_UPDATE_INTERVAL
+            + BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
+            + 5,
+        ),
+    ):
+        callback_mock.callback_func()
+        await hass.async_block_till_done()
+
+    # check that a coordinator update was scheduled.
+    assert reolink_connect.get_states.call_count >= 1
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_remove(
