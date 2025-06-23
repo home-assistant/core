@@ -802,8 +802,8 @@ def _async_setup_device_registry(
         )
 
     suggested_area: str | None = None
-    if device_info.area:
-        # Prefer device_info.area over suggested_area
+    if device_info.area and device_info.area.name:
+        # Prefer device_info.area over suggested_area when area name is not empty
         suggested_area = device_info.area.name
     elif device_info.suggested_area:
         suggested_area = device_info.suggested_area
@@ -830,7 +830,7 @@ def _async_setup_device_registry(
     for sub_device in device_info.devices:
         # Determine the area for this sub device
         sub_device_suggested_area: str | None = None
-        if sub_device.area_id and sub_device.area_id in areas_by_id:
+        if sub_device.area_id is not None and sub_device.area_id in areas_by_id:
             sub_device_suggested_area = areas_by_id[sub_device.area_id].name
 
         sub_device_entry = device_registry.async_get_or_create(
