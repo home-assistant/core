@@ -226,6 +226,14 @@ class HassIO:
         """
         return self.send_command("/ingress/panels", method="get")
 
+    @api_data
+    def get_addons(self) -> Coroutine:
+        """Return data installed Add-ons.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/addons", method="get")
+
     @_api_bool
     async def update_hass_api(
         self, http_config: dict[str, Any], refresh_token: RefreshToken

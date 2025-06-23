@@ -30,6 +30,7 @@ from .const import (
     CONTAINER_INFO,
     CONTAINER_STATS,
     CORE_CONTAINER,
+    DATA_ADDONS,
     DATA_ADDONS_INFO,
     DATA_ADDONS_STATS,
     DATA_COMPONENT,
@@ -111,6 +112,16 @@ def get_network_info(hass: HomeAssistant) -> dict[str, Any] | None:
     Async friendly.
     """
     return hass.data.get(DATA_NETWORK_INFO)
+
+
+@callback
+@bind_hass
+def get_addons(hass: HomeAssistant) -> dict[str, Any] | None:
+    """Return Addons info.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_ADDONS)
 
 
 @callback
@@ -321,7 +332,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
         new_data: dict[str, Any] = {}
-        supervisor_info = get_supervisor_info(self.hass) or {}
+        addons = get_addons(self.hass) or {}
         addons_info = get_addons_info(self.hass) or {}
         addons_stats = get_addons_stats(self.hass)
         store_data = get_store(self.hass)
@@ -345,7 +356,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
                     addon.get(ATTR_REPOSITORY), addon.get(ATTR_REPOSITORY, "")
                 ),
             }
-            for addon in supervisor_info.get("addons", [])
+            for addon in addons.get("addons", [])
         }
 
         # If this is the initial refresh, register all addons and return the dict
@@ -390,9 +401,9 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator):
         container_updates = self._container_updates
 
         data = self.hass.data
-        data[DATA_SUPERVISOR_INFO] = await self.hassio.get_supervisor_info()
+        data[DATA_ADDONS] = await self.hassio.get_addons()
 
-        _addon_data = data[DATA_SUPERVISOR_INFO].get("addons", [])
+        _addon_data = data[DATA_ADDONS].get("addons", [])
         all_addons: list[str] = []
         started_addons: list[str] = []
         for addon in _addon_data:
