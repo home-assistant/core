@@ -379,7 +379,7 @@
         "name": "Aggregated Battery capacity"
       },
       "aggregated_soc": {
-        "name": "Aggregated battery soc"
+        "name": "Aggregated battery SOC"
       },
       "dc_voltage": {
         "name": "DC voltage"
@@ -394,13 +394,13 @@
         "name": "AC current"
       },
       "lifetime_energy": {
-        "name": "Lifetime energy produced"
+        "name": "[%key:component::enphase_envoy::entity::sensor::lifetime_production::name%]"
       },
       "energy_today": {
-        "name": "Energy produced today"
+        "name": "[%key:component::enphase_envoy::entity::sensor::daily_production::name%]"
       },
       "energy_produced": {
-        "name": "Energy produced since previous report"
+        "name": "Energy production since previous report"
       },
       "max_reported": {
         "name": "Lifetime maximum power"
