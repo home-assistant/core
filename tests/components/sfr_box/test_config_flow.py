@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -46,7 +46,7 @@ async def test_config_flow_skip_auth(
     with patch(
         "homeassistant.components.sfr_box.config_flow.SFRBox.system_get_info",
         return_value=SystemInfo(
-            **json.loads(load_fixture("system_getInfo.json", DOMAIN))
+            **json.loads(await async_load_fixture(hass, "system_getInfo.json", DOMAIN))
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -84,7 +84,7 @@ async def test_config_flow_with_auth(
     with patch(
         "homeassistant.components.sfr_box.config_flow.SFRBox.system_get_info",
         return_value=SystemInfo(
-            **json.loads(load_fixture("system_getInfo.json", DOMAIN))
+            **json.loads(await async_load_fixture(hass, "system_getInfo.json", DOMAIN))
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -150,7 +150,9 @@ async def test_config_flow_duplicate_host(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    system_info = SystemInfo(**json.loads(load_fixture("system_getInfo.json", DOMAIN)))
+    system_info = SystemInfo(
+        **json.loads(await async_load_fixture(hass, "system_getInfo.json", DOMAIN))
+    )
     # Ensure mac doesn't match existing mock entry
     system_info.mac_addr = "aa:bb:cc:dd:ee:ff"
     with patch(
@@ -184,7 +186,9 @@ async def test_config_flow_duplicate_mac(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    system_info = SystemInfo(**json.loads(load_fixture("system_getInfo.json", DOMAIN)))
+    system_info = SystemInfo(
+        **json.loads(await async_load_fixture(hass, "system_getInfo.json", DOMAIN))
+    )
     with patch(
         "homeassistant.components.sfr_box.config_flow.SFRBox.system_get_info",
         return_value=system_info,

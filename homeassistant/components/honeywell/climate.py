@@ -31,16 +31,15 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import HoneywellData
+from . import HoneywellConfigEntry, HoneywellData
 from .const import (
     _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
@@ -97,13 +96,15 @@ SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: HoneywellConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Honeywell thermostat."""
     cool_away_temp = entry.options.get(CONF_COOL_AWAY_TEMPERATURE)
     heat_away_temp = entry.options.get(CONF_HEAT_AWAY_TEMPERATURE)
 
-    data: HoneywellData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     _async_migrate_unique_id(hass, data.devices)
     async_add_entities(
         [
@@ -131,7 +132,7 @@ def _async_migrate_unique_id(
 
 def remove_stale_devices(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HoneywellConfigEntry,
     devices: dict[str, SomeComfortDevice],
 ) -> None:
     """Remove stale devices from device registry."""
@@ -164,7 +165,6 @@ class HoneywellUSThermostat(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "honeywell"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -294,7 +294,7 @@ class HoneywellUSThermostat(ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         if self.hvac_mode == HVACMode.OFF:
-            return None
+            return HVACAction.OFF
         return HW_MODE_TO_HA_HVAC_ACTION.get(self._device.equipment_output_status)
 
     @property
@@ -398,7 +398,7 @@ class HoneywellUSThermostat(ClimateEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="temp_failed_value",
-                translation_placeholders={"temp": temperature},
+                translation_placeholders={"temperature": temperature},
             ) from err
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -422,7 +422,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="temp_failed_value",
-                    translation_placeholders={"temp": str(temperature)},
+                    translation_placeholders={"temperature": str(temperature)},
                 ) from err
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:

@@ -1,6 +1,5 @@
 """The tests for the Alexa component."""
 
-from asyncio import AbstractEventLoop
 import datetime
 from http import HTTPStatus
 
@@ -24,13 +23,11 @@ NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
 
 @pytest.fixture
-def alexa_client(
-    event_loop: AbstractEventLoop,
+async def alexa_client(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
 ) -> TestClient:
     """Initialize a Home Assistant server for testing this module."""
-    loop = event_loop
 
     @callback
     def mock_service(call):
@@ -38,38 +35,36 @@ def alexa_client(
 
     hass.services.async_register("test", "alexa", mock_service)
 
-    assert loop.run_until_complete(
-        async_setup_component(
-            hass,
-            alexa.DOMAIN,
-            {
-                # Key is here to verify we allow other keys in config too
-                "homeassistant": {},
-                "alexa": {
-                    "flash_briefings": {
-                        "password": "pass/abc",
-                        "weather": [
-                            {
-                                "title": "Weekly forecast",
-                                "text": "This week it will be sunny.",
-                            },
-                            {
-                                "title": "Current conditions",
-                                "text": "Currently it is 80 degrees fahrenheit.",
-                            },
-                        ],
-                        "news_audio": {
-                            "title": "NPR",
-                            "audio": NPR_NEWS_MP3_URL,
-                            "display_url": "https://npr.org",
-                            "uid": "uuid",
+    assert await async_setup_component(
+        hass,
+        alexa.DOMAIN,
+        {
+            # Key is here to verify we allow other keys in config too
+            "homeassistant": {},
+            "alexa": {
+                "flash_briefings": {
+                    "password": "pass/abc",
+                    "weather": [
+                        {
+                            "title": "Weekly forecast",
+                            "text": "This week it will be sunny.",
                         },
-                    }
-                },
+                        {
+                            "title": "Current conditions",
+                            "text": "Currently it is 80 degrees fahrenheit.",
+                        },
+                    ],
+                    "news_audio": {
+                        "title": "NPR",
+                        "audio": NPR_NEWS_MP3_URL,
+                        "display_url": "https://npr.org",
+                        "uid": "uuid",
+                    },
+                }
             },
-        )
+        },
     )
-    return loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
 def _flash_briefing_req(client, briefing_id, password="pass%2Fabc"):

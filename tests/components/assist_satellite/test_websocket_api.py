@@ -313,6 +313,37 @@ async def test_get_configuration(
         }
 
 
+async def test_get_configuration_not_implemented(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test getting stub satellite configuration when the entity doesn't implement the method."""
+    ws_client = await hass_ws_client(hass)
+
+    with patch.object(
+        entity, "async_get_configuration", side_effect=NotImplementedError()
+    ):
+        await ws_client.send_json_auto_id(
+            {
+                "type": "assist_satellite/get_configuration",
+                "entity_id": ENTITY_ID,
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+
+        # Stub configuration
+        assert msg["result"] == {
+            "active_wake_words": [],
+            "available_wake_words": [],
+            "max_active_wake_words": 1,
+            "pipeline_entity_id": None,
+            "vad_entity_id": None,
+        }
+
+
 async def test_set_wake_words(
     hass: HomeAssistant,
     init_components: ConfigEntry,
@@ -414,6 +445,7 @@ async def test_connection_test(
 
     assert len(entity.announcements) == 1
     assert entity.announcements[0].message == ""
+    assert entity.announcements[0].preannounce_media_id is None
     announcement_media_id = entity.announcements[0].media_id
     hass_url = "http://10.10.10.10:8123"
     assert announcement_media_id.startswith(

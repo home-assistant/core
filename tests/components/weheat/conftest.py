@@ -81,7 +81,7 @@ def mock_user_id() -> Generator[AsyncMock]:
     """Mock the user API call."""
     with (
         patch(
-            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
+            "homeassistant.components.weheat.config_flow.async_get_user_id_from_token",
             return_value=USER_UUID_1,
         ) as user_mock,
     ):
@@ -93,7 +93,7 @@ def mock_weheat_discover(mock_heat_pump_info) -> Generator[AsyncMock]:
     """Mock an Weheat discovery."""
     with (
         patch(
-            "homeassistant.components.weheat.HeatPumpDiscovery.discover_active",
+            "homeassistant.components.weheat.HeatPumpDiscovery.async_discover_active",
             autospec=True,
         ) as mock_discover,
     ):
@@ -121,6 +121,16 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.cop = 4.5
     mock_heat_pump_instance.heat_pump_state = HeatPump.State.HEATING
     mock_heat_pump_instance.energy_total = 12345
+    mock_heat_pump_instance.energy_output = 56789
+    mock_heat_pump_instance.compressor_rpm = 4500
+    mock_heat_pump_instance.compressor_percentage = 100
+    mock_heat_pump_instance.dhw_flow_volume = 1.12
+    mock_heat_pump_instance.central_heating_flow_volume = 1.23
+    mock_heat_pump_instance.indoor_unit_water_pump_state = False
+    mock_heat_pump_instance.indoor_unit_auxiliary_pump_state = False
+    mock_heat_pump_instance.indoor_unit_dhw_valve_or_pump_state = None
+    mock_heat_pump_instance.indoor_unit_gas_boiler_state = False
+    mock_heat_pump_instance.indoor_unit_electric_heater_state = True
 
     return mock_heat_pump_instance
 

@@ -89,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
 
-    coordinator = ToonDataUpdateCoordinator(hass, entry=entry, session=session)
+    coordinator = ToonDataUpdateCoordinator(hass, entry, session)
     await coordinator.toon.activate_agreement(
         agreement_id=entry.data[CONF_AGREEMENT_ID]
     )

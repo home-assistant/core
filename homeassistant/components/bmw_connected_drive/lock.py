@@ -12,23 +12,26 @@ from bimmer_connected.vehicle.doors_windows import LockState
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BMWConfigEntry
+from . import DOMAIN, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
 
+PARALLEL_UPDATES = 1
+
 DOOR_LOCK_STATE = "door_lock_state"
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BMWConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the MyBMW lock from config entry."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     if not coordinator.read_only:
         async_add_entities(
@@ -67,7 +70,11 @@ class BMWLock(BMWBaseEntity, LockEntity):
             # Set the state to unknown if the command fails
             self._attr_is_locked = None
             self.async_write_ha_state()
-            raise HomeAssistantError(ex) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="remote_service_error",
+                translation_placeholders={"exception": str(ex)},
+            ) from ex
         finally:
             # Always update the listeners to get the latest state
             self.coordinator.async_update_listeners()
@@ -87,7 +94,11 @@ class BMWLock(BMWBaseEntity, LockEntity):
             # Set the state to unknown if the command fails
             self._attr_is_locked = None
             self.async_write_ha_state()
-            raise HomeAssistantError(ex) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="remote_service_error",
+                translation_placeholders={"exception": str(ex)},
+            ) from ex
         finally:
             # Always update the listeners to get the latest state
             self.coordinator.async_update_listeners()

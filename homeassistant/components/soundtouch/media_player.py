@@ -27,7 +27,7 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
     format_mac,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 
@@ -47,7 +47,7 @@ ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bose SoundTouch media player based on a config entry."""
     device = hass.data[DOMAIN][entry.entry_id].device

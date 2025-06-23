@@ -6,7 +6,7 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 from pyoverkiz.enums import OverkizCommand, Protocol
-from pyoverkiz.exceptions import OverkizException
+from pyoverkiz.exceptions import BaseOverkizException
 from pyoverkiz.models import Command, Device, StateDefinition
 from pyoverkiz.types import StateType as OverkizStateType
 
@@ -105,7 +105,7 @@ class OverkizExecutor:
                 "Home Assistant",
             )
         # Catch Overkiz exceptions to support `continue_on_error` functionality
-        except OverkizException as exception:
+        except BaseOverkizException as exception:
             raise HomeAssistantError(exception) from exception
 
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need to register it here

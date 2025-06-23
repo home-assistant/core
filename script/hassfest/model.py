@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import IntEnum
 import json
 import pathlib
 from typing import Any, Literal
@@ -29,10 +30,14 @@ class Config:
     root: pathlib.Path
     action: Literal["validate", "generate"]
     requirements: bool
-    core_integrations_path: pathlib.Path
+    core_integrations_path: pathlib.Path = field(init=False)
     errors: list[Error] = field(default_factory=list)
     cache: dict[str, Any] = field(default_factory=dict)
     plugins: set[str] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        """Post init."""
+        self.core_integrations_path = self.root / "homeassistant/components"
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
@@ -152,8 +157,10 @@ class Integration:
     @property
     def core(self) -> bool:
         """Core integration."""
-        return self.path.as_posix().startswith(
-            self._config.core_integrations_path.as_posix()
+        return (
+            self.path.absolute()
+            .as_posix()
+            .startswith(self._config.core_integrations_path.as_posix())
         )
 
     @property
@@ -215,6 +222,15 @@ class Integration:
         """Add a warning."""
         self.warnings.append(Error(*args, **kwargs))
 
+    def add_warning_or_error(
+        self, warning_only: bool, *args: Any, **kwargs: Any
+    ) -> None:
+        """Add an error or a warning."""
+        if warning_only:
+            self.add_warning(*args, **kwargs)
+        else:
+            self.add_error(*args, **kwargs)
+
     def load_manifest(self) -> None:
         """Load manifest."""
         manifest_path = self.path / "manifest.json"
@@ -230,3 +246,12 @@ class Integration:
 
         self._manifest = manifest
         self.manifest_path = manifest_path
+
+
+class ScaledQualityScaleTiers(IntEnum):
+    """Supported manifest quality scales."""
+
+    BRONZE = 1
+    SILVER = 2
+    GOLD = 3
+    PLATINUM = 4

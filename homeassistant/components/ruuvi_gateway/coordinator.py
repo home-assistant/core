@@ -2,34 +2,41 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from aioruuvigateway.api import get_gateway_history_data
 from aioruuvigateway.models import TagData
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import SCAN_INTERVAL
 
 
 class RuuviGatewayUpdateCoordinator(DataUpdateCoordinator[list[TagData]]):
     """Polls the gateway for data and returns a list of TagData objects that have changed since the last poll."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         logger: logging.Logger,
-        *,
-        name: str,
-        update_interval: timedelta | None = None,
-        host: str,
-        token: str,
     ) -> None:
         """Initialize the coordinator using the given configuration (host, token)."""
-        super().__init__(hass, logger, name=name, update_interval=update_interval)
-        self.host = host
-        self.token = token
+        super().__init__(
+            hass,
+            logger,
+            config_entry=config_entry,
+            name=config_entry.title,
+            update_interval=SCAN_INTERVAL,
+        )
+        self.host = config_entry.data[CONF_HOST]
+        self.token = config_entry.data[CONF_TOKEN]
         self.last_tag_datas: dict[str, TagData] = {}
 
     async def _async_update_data(self) -> list[TagData]:

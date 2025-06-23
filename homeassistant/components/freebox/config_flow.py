@@ -6,9 +6,9 @@ from typing import Any
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 from .router import get_api, get_hosts_list_if_supported
@@ -99,7 +99,7 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="link", errors=errors)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Initialize flow from zeroconf."""
         zeroconf_properties = discovery_info.properties

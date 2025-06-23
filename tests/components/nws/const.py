@@ -86,28 +86,32 @@ SENSOR_EXPECTED_OBSERVATION_IMPERIAL = {
         round(
             TemperatureConverter.convert(
                 5, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
-            )
+            ),
+            1,
         )
     ),
     "temperature": str(
         round(
             TemperatureConverter.convert(
                 10, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
-            )
+            ),
+            1,
         )
     ),
     "windChill": str(
         round(
             TemperatureConverter.convert(
                 5, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
-            )
+            ),
+            1,
         )
     ),
     "heatIndex": str(
         round(
             TemperatureConverter.convert(
                 15, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
-            )
+            ),
+            1,
         )
     ),
     "relativeHumidity": "10",
@@ -115,14 +119,14 @@ SENSOR_EXPECTED_OBSERVATION_IMPERIAL = {
         round(
             SpeedConverter.convert(
                 10, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
-            )
+            ),
         )
     ),
     "windGust": str(
         round(
             SpeedConverter.convert(
                 20, UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.MILES_PER_HOUR
-            )
+            ),
         )
     ),
     "windDirection": "180",
@@ -176,7 +180,7 @@ WEATHER_EXPECTED_OBSERVATION_METRIC = {
     ATTR_WEATHER_HUMIDITY: 10,
 }
 
-NONE_OBSERVATION = {key: None for key in DEFAULT_OBSERVATION}
+NONE_OBSERVATION = dict.fromkeys(DEFAULT_OBSERVATION)
 
 DEFAULT_FORECAST = [
     {
@@ -234,5 +238,4 @@ EXPECTED_FORECAST_METRIC = {
     ),
     ATTR_FORECAST_HUMIDITY: 75,
 }
-
-NONE_FORECAST = [{key: None for key in DEFAULT_FORECAST[0]}]
+NONE_FORECAST = [dict.fromkeys(DEFAULT_FORECAST[0])]

@@ -1,6 +1,7 @@
 {
   "domain": "homeassistant_alerts",
   "name": "Home Assistant Alerts",
+  "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_alerts",

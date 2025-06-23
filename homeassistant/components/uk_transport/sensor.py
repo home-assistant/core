@@ -17,11 +17,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_MODE, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +32,7 @@ ATTR_NEXT_BUSES = "next_buses"
 ATTR_STATION_CODE = "station_code"
 ATTR_CALLING_AT = "calling_at"
 ATTR_NEXT_TRAINS = "next_trains"
+ATTR_LAST_UPDATED = "last_updated"
 
 CONF_API_APP_KEY = "app_key"
 CONF_API_APP_ID = "app_id"
@@ -163,7 +163,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         self._destination_re = re.compile(f"{bus_direction}", re.IGNORECASE)
 
         sensor_name = f"Next bus to {bus_direction}"
-        stop_url = f"bus/stop/{stop_atcocode}/live.json"
+        stop_url = f"bus/stop/{stop_atcocode}.json"
 
         UkTransportSensor.__init__(self, sensor_name, api_app_id, api_app_key, stop_url)
         self.update = Throttle(interval)(self._update)
@@ -200,7 +200,9 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:
-            attrs = {ATTR_NEXT_BUSES: self._next_buses}
+            attrs = {
+                ATTR_NEXT_BUSES: self._next_buses,
+            }
             for key in (
                 ATTR_ATCOCODE,
                 ATTR_LOCALITY,
@@ -224,7 +226,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
         self._next_trains = []
 
         sensor_name = f"Next train to {calling_at}"
-        query_url = f"train/station/{station_code}/live.json"
+        query_url = f"train/station/{station_code}.json"
 
         UkTransportSensor.__init__(
             self, sensor_name, api_app_id, api_app_key, query_url
@@ -273,6 +275,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
             attrs = {
                 ATTR_STATION_CODE: self._station_code,
                 ATTR_CALLING_AT: self._calling_at,
+                ATTR_LAST_UPDATED: self._data[ATTR_REQUEST_TIME],
             }
             if self._next_trains:
                 attrs[ATTR_NEXT_TRAINS] = self._next_trains

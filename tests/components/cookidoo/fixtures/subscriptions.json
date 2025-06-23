@@ -1,0 +1,12 @@
+{
+  "data": {
+    "active": true,
+    "start_date": "2024-12-16T00:00:00Z",
+    "expires": "2025-12-16T23:59:00Z",
+    "type": "REGULAR",
+    "extended_type": "REGULAR",
+    "subscription_level": "FULL",
+    "subscription_source": "COMMERCE",
+    "status": "ACTIVE"
+  }
+}

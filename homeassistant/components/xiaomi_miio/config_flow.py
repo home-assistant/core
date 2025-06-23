@@ -11,16 +11,11 @@ from micloud import MiCloud
 from micloud.micloudexception import MiCloudAccessDenied
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_CLOUD_COUNTRY,
@@ -40,6 +35,7 @@ from .const import (
     SetupException,
 )
 from .device import ConnectXiaomiDevice
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,10 +58,6 @@ DEVICE_CLOUD_CONFIG = vol.Schema(
 
 class OptionsFlowHandler(OptionsFlow):
     """Options for the component."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Init object."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -120,9 +112,11 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: XiaomiMiioConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -149,7 +143,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_cloud()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         name = discovery_info.name

@@ -10,6 +10,7 @@ from typing import Final
 import voluptuous as vol
 from xknx import XKNX
 from xknx.core import XknxConnectionState
+from xknx.core.state_updater import StateTrackerType, TrackerOptions
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTBase
 from xknx.exceptions import ConversionError, CouldNotParseTelegram, XKNXException
@@ -29,7 +30,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -55,6 +55,7 @@ from .const import (
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_LOG_SIZE,
+    CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
@@ -91,7 +92,7 @@ from .schema import (
     WeatherSchema,
 )
 from .services import register_knx_services
-from .storage.config_store import KNXConfigStore
+from .storage.config_store import STORAGE_KEY as CONFIG_STORAGE_KEY, KNXConfigStore
 from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY, Telegrams
 from .websocket import register_panel
 
@@ -102,20 +103,6 @@ _KNX_YAML_CONFIG: Final = "knx_yaml_config"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            # deprecated since 2021.12
-            cv.deprecated(CONF_KNX_STATE_UPDATER),
-            cv.deprecated(CONF_KNX_RATE_LIMIT),
-            cv.deprecated(CONF_KNX_ROUTING),
-            cv.deprecated(CONF_KNX_TUNNELING),
-            cv.deprecated(CONF_KNX_INDIVIDUAL_ADDRESS),
-            cv.deprecated(CONF_KNX_MCAST_GRP),
-            cv.deprecated(CONF_KNX_MCAST_PORT),
-            cv.deprecated("event_filter"),
-            # deprecated since 2021.4
-            cv.deprecated("config_file"),
-            # deprecated since 2021.2
-            cv.deprecated("fire_event"),
-            cv.deprecated("fire_event_filter"),
             vol.Schema(
                 {
                     **EventSchema.SCHEMA,
@@ -241,6 +228,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             with contextlib.suppress(FileNotFoundError):
                 (storage_dir / knxkeys_filename).unlink()
         with contextlib.suppress(FileNotFoundError):
+            (storage_dir / CONFIG_STORAGE_KEY).unlink()
+        with contextlib.suppress(FileNotFoundError):
             (storage_dir / PROJECT_STORAGE_KEY).unlink()
         with contextlib.suppress(FileNotFoundError):
             (storage_dir / TELEGRAMS_STORAGE_KEY).unlink()
@@ -285,11 +274,18 @@ class KNXModule:
         self.project = KNXProject(hass=hass, entry=entry)
         self.config_store = KNXConfigStore(hass=hass, config_entry=entry)
 
+        default_state_updater = (
+            TrackerOptions(tracker_type=StateTrackerType.EXPIRE, update_interval_min=60)
+            if self.entry.data[CONF_KNX_STATE_UPDATER]
+            else TrackerOptions(
+                tracker_type=StateTrackerType.INIT, update_interval_min=60
+            )
+        )
         self.xknx = XKNX(
             address_format=self.project.get_address_format(),
             connection_config=self.connection_config(),
             rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
-            state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
+            state_updater=default_state_updater,
         )
         self.xknx.connection_manager.register_connection_state_changed_cb(
             self.connection_state_changed_cb
@@ -367,6 +363,7 @@ class KNXModule:
         if _conn_type == CONF_KNX_TUNNELING_TCP:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP,
+                individual_address=self.entry.data.get(CONF_KNX_TUNNEL_ENDPOINT_IA),
                 gateway_ip=self.entry.data[CONF_HOST],
                 gateway_port=self.entry.data[CONF_PORT],
                 auto_reconnect=True,
@@ -379,6 +376,7 @@ class KNXModule:
         if _conn_type == CONF_KNX_TUNNELING_TCP_SECURE:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+                individual_address=self.entry.data.get(CONF_KNX_TUNNEL_ENDPOINT_IA),
                 gateway_ip=self.entry.data[CONF_HOST],
                 gateway_port=self.entry.data[CONF_PORT],
                 secure_config=SecureConfig(
@@ -413,6 +411,9 @@ class KNXModule:
             )
         return ConnectionConfig(
             auto_reconnect=True,
+            individual_address=self.entry.data.get(
+                CONF_KNX_TUNNEL_ENDPOINT_IA,  # may be configured at knxkey upload
+            ),
             secure_config=SecureConfig(
                 knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
                 knxkeys_file_path=_knxkeys_file,
@@ -485,7 +486,7 @@ class KNXModule:
                 transcoder := DPTBase.parse_transcoder(dpt)
             ):
                 self._address_filter_transcoder.update(
-                    {_filter: transcoder for _filter in _filters}
+                    dict.fromkeys(_filters, transcoder)
                 )
 
         return self.xknx.telegram_queue.register_telegram_received_cb(

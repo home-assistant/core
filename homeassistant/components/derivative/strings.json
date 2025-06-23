@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add Derivative sensor",
+        "title": "Create Derivative sensor",
         "description": "Create a sensor that estimates the derivative of a sensor.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
@@ -15,7 +15,7 @@
         },
         "data_description": {
           "round": "Controls the number of decimal digits in the output.",
-          "time_window": "If set, the sensor's value is a time weighted moving average of derivatives within this window.",
+          "time_window": "If set, the sensor's value is a time-weighted moving average of derivatives within this window.",
           "unit_prefix": "The output will be scaled according to the selected metric prefix and time unit of the derivative."
         }
       }

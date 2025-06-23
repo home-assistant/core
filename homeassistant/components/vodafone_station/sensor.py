@@ -12,17 +12,19 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN, LINE_TYPES
-from .coordinator import VodafoneStationRouter
+from .const import _LOGGER, LINE_TYPES
+from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
-UPTIME_DEVIATION = 45
+UPTIME_DEVIATION = 60
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -43,12 +45,10 @@ def _calculate_uptime(
 ) -> datetime:
     """Calculate device uptime."""
 
-    assert isinstance(last_value, datetime)
-
     delta_uptime = coordinator.api.convert_uptime(coordinator.data.sensors[key])
 
     if (
-        not last_value
+        not isinstance(last_value, datetime)
         or abs((delta_uptime - last_value).total_seconds()) > UPTIME_DEVIATION
     ):
         return delta_uptime
@@ -167,12 +167,14 @@ SENSOR_TYPES: Final = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: VodafoneConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up Vodafone Station sensors")
 
-    coordinator: VodafoneStationRouter = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     sensors_data = coordinator.data.sensors
 

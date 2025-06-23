@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -38,7 +38,9 @@ from .models import SnoozConfigurationData
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Snooz device from a config entry."""
 
@@ -83,7 +85,6 @@ class SnoozFan(FanEntity, RestoreEntity):
     _attr_should_poll = False
     _is_on: bool | None = None
     _percentage: int | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, data: SnoozConfigurationData) -> None:
         """Initialize a Snooz fan entity."""

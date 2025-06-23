@@ -1,18 +1,40 @@
 """Entity representing a Jewish Calendar sensor."""
 
-from typing import Any
+from dataclasses import dataclass
+import datetime as dt
+
+from hdate import HDateInfo, Location, Zmanim
+from hdate.translator import Language, set_language
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import (
-    CONF_CANDLE_LIGHT_MINUTES,
-    CONF_DIASPORA,
-    CONF_HAVDALAH_OFFSET_MINUTES,
-    DOMAIN,
-)
+from .const import DOMAIN
+
+type JewishCalendarConfigEntry = ConfigEntry[JewishCalendarData]
+
+
+@dataclass
+class JewishCalendarDataResults:
+    """Jewish Calendar results dataclass."""
+
+    daytime_date: HDateInfo
+    after_shkia_date: HDateInfo
+    after_tzais_date: HDateInfo
+    zmanim: Zmanim
+
+
+@dataclass
+class JewishCalendarData:
+    """Jewish Calendar runtime dataclass."""
+
+    language: Language
+    diaspora: bool
+    location: Location
+    candle_lighting_offset: int
+    havdalah_offset: int
+    results: JewishCalendarDataResults | None = None
 
 
 class JewishCalendarEntity(Entity):
@@ -22,8 +44,7 @@ class JewishCalendarEntity(Entity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
-        data: dict[str, Any],
+        config_entry: JewishCalendarConfigEntry,
         description: EntityDescription,
     ) -> None:
         """Initialize a Jewish Calendar entity."""
@@ -32,10 +53,15 @@ class JewishCalendarEntity(Entity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, config_entry.entry_id)},
-            name=config_entry.title,
         )
-        self._location = data[CONF_LOCATION]
-        self._hebrew = data[CONF_LANGUAGE] == "hebrew"
-        self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
-        self._havdalah_offset = data[CONF_HAVDALAH_OFFSET_MINUTES]
-        self._diaspora = data[CONF_DIASPORA]
+        self.data = config_entry.runtime_data
+        set_language(self.data.language)
+
+    def make_zmanim(self, date: dt.date) -> Zmanim:
+        """Create a Zmanim object."""
+        return Zmanim(
+            date=date,
+            location=self.data.location,
+            candle_lighting_offset=self.data.candle_lighting_offset,
+            havdalah_offset=self.data.havdalah_offset,
+        )

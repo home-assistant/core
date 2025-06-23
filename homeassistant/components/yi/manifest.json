@@ -7,5 +7,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["aioftp"],
+  "quality_scale": "legacy",
   "requirements": ["aioftp==0.21.3"]
 }

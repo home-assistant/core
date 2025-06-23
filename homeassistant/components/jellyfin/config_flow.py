@@ -8,18 +8,14 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.util.uuid import random_uuid_hex
 
-from . import JellyfinConfigEntry
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
 from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, SUPPORTED_AUDIO_CODECS
+from .coordinator import JellyfinConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,12 +139,12 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: JellyfinConfigEntry,
-    ) -> OptionsFlowWithConfigEntry:
+    ) -> OptionsFlowHandler:
         """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
-class OptionsFlowHandler(OptionsFlowWithConfigEntry):
+class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for jellyfin."""
 
     async def async_step_init(

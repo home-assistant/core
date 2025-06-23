@@ -5,7 +5,6 @@ from __future__ import annotations
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.protocol import RemoteConfig
 
-from homeassistant import config_entries
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
@@ -13,10 +12,9 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import FluxLedUpdateCoordinator
+from .coordinator import FluxLedConfigEntry
 from .entity import FluxBaseEntity
 
 _RESTART_KEY = "restart"
@@ -34,11 +32,11 @@ UNPAIR_REMOTES_DESCRIPTION = ButtonEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FluxLedConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Magic Home button based on a config entry."""
-    coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     device = coordinator.device
     entities: list[FluxButton] = [
         FluxButton(coordinator.device, entry, RESTART_BUTTON_DESCRIPTION)
@@ -59,7 +57,7 @@ class FluxButton(FluxBaseEntity, ButtonEntity):
     def __init__(
         self,
         device: AIOWifiLedBulb,
-        entry: config_entries.ConfigEntry,
+        entry: FluxLedConfigEntry,
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize the button."""

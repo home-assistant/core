@@ -86,7 +86,3 @@ class OAuth2FlowHandler(
 
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=profile.display_name, data=data)
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML."""
-        return await self.async_oauth_create_entry(import_data)

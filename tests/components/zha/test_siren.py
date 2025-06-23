@@ -28,7 +28,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import find_entity_id
 

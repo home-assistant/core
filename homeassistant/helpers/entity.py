@@ -7,7 +7,7 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
-from enum import Enum, IntFlag, auto
+from enum import Enum, auto
 import functools as ft
 import logging
 import math
@@ -18,7 +18,7 @@ import time
 from types import FunctionType
 from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -49,11 +49,7 @@ from homeassistant.core import (
     get_release_channel,
 )
 from homeassistant.core_config import DATA_CUSTOMIZE
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    InvalidStateError,
-    NoEntitySpecifiedError,
-)
+from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
@@ -203,7 +199,6 @@ class EntityInfo(TypedDict):
     """Entity info."""
 
     domain: str
-    custom_component: bool
     config_entry: NotRequired[str]
 
 
@@ -281,7 +276,7 @@ class CachedProperties(type):
     """
 
     def __new__(
-        mcs,  # noqa: N804  ruff bug, ruff does not understand this is a metaclass
+        mcs,
         name: str,
         bases: tuple[type, ...],
         namespace: dict[Any, Any],
@@ -385,7 +380,7 @@ class CachedProperties(type):
         for parent in cls.__mro__[:0:-1]:
             if "_CachedProperties__cached_properties" not in parent.__dict__:
                 continue
-            cached_properties = getattr(parent, "_CachedProperties__cached_properties")
+            cached_properties = getattr(parent, "_CachedProperties__cached_properties")  # noqa: B009
             for property_name in cached_properties:
                 if property_name in seen_props:
                     continue
@@ -645,6 +640,22 @@ class Entity(
         return (
             f"component.{platform.platform_name}.entity.{platform.domain}"
             f".{self.translation_key}.name"
+        )
+
+    @cached_property
+    def _unit_of_measurement_translation_key(self) -> str | None:
+        """Return translation key for unit of measurement."""
+        if self.translation_key is None:
+            return None
+        if self.platform is None:
+            raise ValueError(
+                f"Entity {type(self)} cannot have a translation key for "
+                "unit of measurement before being added to the entity platform"
+            )
+        platform = self.platform
+        return (
+            f"component.{platform.platform_name}.entity.{platform.domain}"
+            f".{self.translation_key}.unit_of_measurement"
         )
 
     def _substitute_name_placeholders(self, name: str) -> str:
@@ -1012,7 +1023,7 @@ class Entity(
             return STATE_UNAVAILABLE
         if (state := self.state) is None:
             return STATE_UNKNOWN
-        if type(state) is str:  # noqa: E721
+        if type(state) is str:
             # fast path for strings
             return state
         if isinstance(state, float):
@@ -1069,9 +1080,9 @@ class Entity(
         state = self._stringify_state(available)
         if available:
             if state_attributes := self.state_attributes:
-                attr.update(state_attributes)
+                attr |= state_attributes
             if extra_state_attributes := self.extra_state_attributes:
-                attr.update(extra_state_attributes)
+                attr |= extra_state_attributes
 
         if (unit_of_measurement := self.unit_of_measurement) is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
@@ -1111,9 +1122,6 @@ class Entity(
             # Polling returned after the entity has already been removed
             return
 
-        hass = self.hass
-        entity_id = self.entity_id
-
         if (entry := self.registry_entry) and entry.disabled_by:
             if not self._disabled_reported:
                 self._disabled_reported = True
@@ -1122,7 +1130,7 @@ class Entity(
                         "Entity %s is incorrectly being triggered for updates while it"
                         " is disabled. This is a bug in the %s integration"
                     ),
-                    entity_id,
+                    self.entity_id,
                     self.platform.platform_name,
                 )
             return
@@ -1164,7 +1172,7 @@ class Entity(
                                 "Entity %s (%s) is updating its capabilities too often,"
                                 " please %s"
                             ),
-                            entity_id,
+                            self.entity_id,
                             type(self),
                             report_issue,
                         )
@@ -1181,7 +1189,7 @@ class Entity(
             report_issue = self._suggest_report_issue()
             _LOGGER.warning(
                 "Updating state for %s (%s) took %.3f seconds. Please %s",
-                entity_id,
+                self.entity_id,
                 type(self),
                 time_now - state_calculate_start,
                 report_issue,
@@ -1192,13 +1200,13 @@ class Entity(
             # set and since try is near zero cost
             # on py3.11+ its faster to assume it is
             # set and catch the exception if it is not.
-            customize = hass.data[DATA_CUSTOMIZE]
+            custom = self.hass.data[DATA_CUSTOMIZE].get(self.entity_id)
         except KeyError:
             pass
         else:
             # Overwrite properties that have been set in the config file.
-            if custom := customize.get(entity_id):
-                attr.update(custom)
+            if custom:
+                attr |= custom
 
         if (
             self._context_set is not None
@@ -1207,23 +1215,16 @@ class Entity(
             self._context = None
             self._context_set = None
 
-        try:
-            hass.states.async_set_internal(
-                entity_id,
-                state,
-                attr,
-                self.force_update,
-                self._context,
-                self._state_info,
-                time_now,
-            )
-        except InvalidStateError:
-            _LOGGER.exception(
-                "Failed to set state for %s, fall back to %s", entity_id, STATE_UNKNOWN
-            )
-            hass.states.async_set(
-                entity_id, STATE_UNKNOWN, {}, self.force_update, self._context
-            )
+        # Intentionally called with positional args for performance reasons
+        self.hass.states.async_set_internal(
+            self.entity_id,
+            state,
+            attr,
+            self.force_update,
+            self._context,
+            self._state_info,
+            time_now,
+        )
 
     def schedule_update_ha_state(self, force_refresh: bool = False) -> None:
         """Schedule an update ha state change task.
@@ -1448,10 +1449,8 @@ class Entity(
 
         Not to be extended by integrations.
         """
-        is_custom_component = "custom_components" in type(self).__module__
         entity_info: EntityInfo = {
             "domain": self.platform.platform_name,
-            "custom_component": is_custom_component,
         }
         if self.platform.config_entry:
             entity_info["config_entry"] = self.platform.config_entry.entry_id
@@ -1464,9 +1463,9 @@ class Entity(
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
-            assert (
-                not self.registry_entry.disabled_by
-            ), f"Entity '{self.entity_id}' is being added while it's disabled"
+            assert not self.registry_entry.disabled_by, (
+                f"Entity '{self.entity_id}' is being added while it's disabled"
+            )
 
             self.async_on_remove(
                 async_track_entity_registry_updated_event(
@@ -1621,31 +1620,6 @@ class Entity(
         platform_name = self.platform.platform_name if self.platform else None
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__
-        )
-
-    @callback
-    def _report_deprecated_supported_features_values(
-        self, replacement: IntFlag
-    ) -> None:
-        """Report deprecated supported features values."""
-        if self._deprecated_supported_features_reported is True:
-            return
-        self._deprecated_supported_features_reported = True
-        report_issue = self._suggest_report_issue()
-        report_issue += (
-            " and reference "
-            "https://developers.home-assistant.io/blog/2023/12/28/support-feature-magic-numbers-deprecation"
-        )
-        _LOGGER.warning(
-            (
-                "Entity %s (%s) is using deprecated supported features"
-                " values which will be removed in HA Core 2025.1. Instead it should use"
-                " %s, please %s"
-            ),
-            self.entity_id,
-            type(self),
-            repr(replacement),
-            report_issue,
         )
 
 

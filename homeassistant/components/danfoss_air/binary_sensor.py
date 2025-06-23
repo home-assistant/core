@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as DANFOSS_AIR_DOMAIN
+from . import DOMAIN
 
 
 def setup_platform(
@@ -22,7 +22,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the available Danfoss Air sensors etc."""
-    data = hass.data[DANFOSS_AIR_DOMAIN]
+    data = hass.data[DOMAIN]
 
     sensors = [
         [

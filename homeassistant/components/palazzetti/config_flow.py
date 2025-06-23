@@ -9,12 +9,15 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN, LOGGER
 
 
 class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Palazzetti config flow."""
+
+    _discovered_device: PalazzettiClient
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -47,4 +50,42 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
+        )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery."""
+
+        LOGGER.debug(
+            "DHCP discovery detected Palazzetti: %s", discovery_info.macaddress
+        )
+
+        await self.async_set_unique_id(dr.format_mac(discovery_info.macaddress))
+        self._abort_if_unique_id_configured()
+        self._discovered_device = PalazzettiClient(hostname=discovery_info.ip)
+        try:
+            await self._discovered_device.connect()
+        except CommunicationError:
+            return self.async_abort(reason="cannot_connect")
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._discovered_device.name,
+                data={CONF_HOST: self._discovered_device.host},
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={
+                "name": self._discovered_device.name,
+                "host": self._discovered_device.host,
+            },
         )

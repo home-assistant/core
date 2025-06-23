@@ -17,7 +17,7 @@ from homeassistant.const import ATTR_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from . import RainMachineConfigEntry, RainMachineData, async_update_programs_and_zones
@@ -174,7 +174,7 @@ RESTRICTIONS_SWITCH_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RainMachineConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RainMachine switches based on a config entry."""
     platform = entity_platform.async_get_current_platform()

@@ -28,6 +28,8 @@ from .data import AzureDevOpsData
 BUILDS_QUERY: Final = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
 IGNORED_CATEGORIES: Final[list[Category]] = [Category.COMPLETED, Category.REMOVED]
 
+type AzureDevOpsConfigEntry = ConfigEntry[AzureDevOpsDataUpdateCoordinator]
+
 
 def ado_exception_none_handler(func: Callable) -> Callable:
     """Handle exceptions or None to always return a value or raise."""
@@ -50,28 +52,29 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
     """Class to manage and fetch Azure DevOps data."""
 
     client: DevOpsClient
+    config_entry: AzureDevOpsConfigEntry
     organization: str
     project: Project
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: AzureDevOpsConfigEntry,
         logger: logging.Logger,
-        *,
-        entry: ConfigEntry,
     ) -> None:
         """Initialize global Azure DevOps data updater."""
-        self.title = entry.title
+        self.title = config_entry.title
 
         super().__init__(
             hass=hass,
             logger=logger,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=300),
         )
 
         self.client = DevOpsClient(session=async_get_clientsession(hass))
-        self.organization = entry.data[CONF_ORG]
+        self.organization = config_entry.data[CONF_ORG]
 
     @ado_exception_none_handler
     async def authorize(

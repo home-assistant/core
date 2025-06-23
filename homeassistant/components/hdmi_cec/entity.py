@@ -36,7 +36,7 @@ class CecEntity(Entity):
         """Initialize the device."""
         self._device = device
         self._logical_address = logical
-        self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
+        self.entity_id = f"{DOMAIN}.{self._logical_address}"
         self._set_attr_name()
         self._attr_icon = ICONS_BY_TYPE.get(self._device.type, ICON_UNKNOWN)
 
@@ -57,7 +57,7 @@ class CecEntity(Entity):
         self._attr_available = False
         self.schedule_update_ha_state(False)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register HDMI callbacks after initialization."""
         self._device.set_update_callback(self._update)
         self.hass.bus.async_listen(

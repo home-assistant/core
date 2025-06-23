@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+from pyschlage.lock import AUTO_LOCK_TIMES
+
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import LockData, SchlageDataUpdateCoordinator
+from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
 _DESCRIPTIONS = (
@@ -17,27 +17,18 @@ _DESCRIPTIONS = (
         key="auto_lock_time",
         translation_key="auto_lock_time",
         entity_category=EntityCategory.CONFIG,
-        # valid values are from Schlage UI and validated by pyschlage
-        options=[
-            "0",
-            "15",
-            "30",
-            "60",
-            "120",
-            "240",
-            "300",
-        ],
+        options=[str(n) for n in AUTO_LOCK_TIMES],
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: SchlageConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up selects based on a config entry."""
-    coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     def _add_new_locks(locks: dict[str, LockData]) -> None:
         async_add_entities(

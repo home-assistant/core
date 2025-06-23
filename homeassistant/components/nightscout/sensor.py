@@ -9,11 +9,11 @@ from typing import Any
 from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DATE
+from homeassistant.const import ATTR_DATE, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
 
@@ -27,7 +27,7 @@ DEFAULT_NAME = "Blood Glucose"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
@@ -37,7 +37,10 @@ async def async_setup_entry(
 class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
-    _attr_native_unit_of_measurement = "mg/dL"
+    _attr_device_class = SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION
+    _attr_native_unit_of_measurement = (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
+    )
     _attr_icon = "mdi:cloud-question"
 
     def __init__(self, api: NightscoutAPI, name: str, unique_id: str | None) -> None:

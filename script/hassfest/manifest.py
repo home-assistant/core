@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import IntEnum
+from enum import StrEnum, auto
 import json
 from pathlib import Path
 import subprocess
@@ -19,25 +19,32 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
+from script.util import sort_manifest as util_sort_manifest
 
-from .model import Config, Integration
+from .model import Config, Integration, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
+_CORE_DOCUMENTATION_BASE = "https://www.home-assistant.io/integrations"
 
-class QualityScale(IntEnum):
+
+class NonScaledQualityScaleTiers(StrEnum):
     """Supported manifest quality scales."""
 
-    INTERNAL = -1
-    SILVER = 1
-    GOLD = 2
-    PLATINUM = 3
+    CUSTOM = auto()
+    NO_SCORE = auto()
+    INTERNAL = auto()
+    LEGACY = auto()
 
 
-SUPPORTED_QUALITY_SCALES = [enum.name.lower() for enum in QualityScale]
+SUPPORTED_QUALITY_SCALES = [
+    value.name.lower()
+    for enum in [ScaledQualityScaleTiers, NonScaledQualityScaleTiers]
+    for value in enum
+]
 SUPPORTED_IOT_CLASSES = [
     "assumed_state",
     "calculated",
@@ -111,34 +118,28 @@ NO_IOT_CLASS = [
     "websocket_api",
     "zone",
 ]
-# Grandfather rule for older integrations
-# https://github.com/home-assistant/developers.home-assistant/pull/1512
-NO_DIAGNOSTICS = [
-    "dlna_dms",
-    "hyperion",
-    "nightscout",
-    "pvpc_hourly_pricing",
-    "risco",
-    "smarttub",
-    "songpal",
-    "vizio",
-    "yeelight",
-]
 
 
-def documentation_url(value: str) -> str:
+def core_documentation_url(value: str) -> str:
     """Validate that a documentation url has the correct path and domain."""
     if value in DOCUMENTATION_URL_EXCEPTIONS:
         return value
+    if not value.startswith(_CORE_DOCUMENTATION_BASE):
+        raise vol.Invalid(
+            f"Documentation URL does not begin with {_CORE_DOCUMENTATION_BASE}"
+        )
 
+    return value
+
+
+def custom_documentation_url(value: str) -> str:
+    """Validate that a custom integration documentation url is correct."""
     parsed_url = urlparse(value)
     if parsed_url.scheme != DOCUMENTATION_URL_SCHEMA:
         raise vol.Invalid("Documentation url is not prefixed with https")
-    if parsed_url.netloc == DOCUMENTATION_URL_HOST and not parsed_url.path.startswith(
-        DOCUMENTATION_URL_PATH_PREFIX
-    ):
+    if value.startswith(_CORE_DOCUMENTATION_BASE):
         raise vol.Invalid(
-            "Documentation url does not begin with www.home-assistant.io/integrations"
+            "Documentation URL should point to the custom integration documentation"
         )
 
     return value
@@ -267,8 +268,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
-        vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
-        vol.Optional("issue_tracker"): vol.Url(),
+        vol.Required("documentation"): vol.All(vol.Url(), core_documentation_url),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],
@@ -303,7 +303,9 @@ def manifest_schema(value: dict[str, Any]) -> vol.Schema:
 
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
+        vol.Required("documentation"): vol.All(vol.Url(), custom_documentation_url),
         vol.Optional("version"): vol.All(str, verify_version),
+        vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("import_executor"): bool,
     }
 )
@@ -359,55 +361,36 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "Virtual integration points to non-existing supported_by integration",
         )
 
-    if (quality_scale := integration.manifest.get("quality_scale")) and QualityScale[
-        quality_scale.upper()
-    ] > QualityScale.SILVER:
+    if (
+        (quality_scale := integration.manifest.get("quality_scale"))
+        and quality_scale.upper() in ScaledQualityScaleTiers
+        and ScaledQualityScaleTiers[quality_scale.upper()]
+        >= ScaledQualityScaleTiers.SILVER
+    ):
         if not integration.manifest.get("codeowners"):
             integration.add_error(
                 "manifest",
                 f"{quality_scale} integration does not have a code owner",
-            )
-        if (
-            domain not in NO_DIAGNOSTICS
-            and not (integration.path / "diagnostics.py").exists()
-        ):
-            integration.add_error(
-                "manifest",
-                f"{quality_scale} integration does not implement diagnostics",
-            )
-
-    if domain in NO_DIAGNOSTICS:
-        if quality_scale and QualityScale[quality_scale.upper()] < QualityScale.GOLD:
-            integration.add_error(
-                "manifest",
-                "{quality_scale} integration should be "
-                "removed from NO_DIAGNOSTICS in script/hassfest/manifest.py",
-            )
-        elif (integration.path / "diagnostics.py").exists():
-            integration.add_error(
-                "manifest",
-                "Implements diagnostics and can be "
-                "removed from NO_DIAGNOSTICS in script/hassfest/manifest.py",
             )
 
     if not integration.core:
         validate_version(integration)
 
 
-_SORT_KEYS = {"domain": ".domain", "name": ".name"}
-
-
-def _sort_manifest_keys(key: str) -> str:
-    return _SORT_KEYS.get(key, key)
-
-
 def sort_manifest(integration: Integration, config: Config) -> bool:
     """Sort manifest."""
-    keys = list(integration.manifest.keys())
-    if (keys_sorted := sorted(keys, key=_sort_manifest_keys)) != keys:
-        manifest = {key: integration.manifest[key] for key in keys_sorted}
+    if integration.manifest_path is None:
+        integration.add_error(
+            "manifest",
+            "Manifest path not set, unable to sort manifest keys",
+        )
+        return False
+
+    if util_sort_manifest(integration.manifest):
         if config.action == "generate":
-            integration.manifest_path.write_text(json.dumps(manifest, indent=2))
+            integration.manifest_path.write_text(
+                json.dumps(integration.manifest, indent=2) + "\n"
+            )
             text = "have been sorted"
         else:
             text = "are not sorted correctly"

@@ -24,6 +24,7 @@ class LondonTubeCoordinator(DataUpdateCoordinator[dict[str, dict[str, str]]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=None,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

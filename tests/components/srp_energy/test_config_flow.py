@@ -100,10 +100,6 @@ async def test_form_invalid_auth(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.srp_energy.config.abort.unknown"],
-)
 async def test_form_unknown_error(
     hass: HomeAssistant,
     mock_srp_energy_config_flow: MagicMock,

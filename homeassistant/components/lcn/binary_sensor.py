@@ -11,27 +11,24 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ADD_ENTITIES_CALLBACKS,
-    BINSENSOR_PORTS,
-    CONF_DOMAIN_DATA,
-    DOMAIN,
-    SETPOINTS,
-)
+from .const import BINSENSOR_PORTS, CONF_DOMAIN_DATA, DOMAIN, SETPOINTS
 from .entity import LcnEntity
-from .helpers import InputType
+from .helpers import InputType, LcnConfigEntry
 
 
 def add_lcn_entities(
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LcnConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     entity_configs: Iterable[ConfigType],
 ) -> None:
     """Add entities for this domain."""
@@ -49,8 +46,8 @@ def add_lcn_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LcnConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
     add_entities = partial(
@@ -59,7 +56,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data.add_entities_callbacks.update(
         {DOMAIN_BINARY_SENSOR: add_entities}
     )
 
@@ -75,7 +72,7 @@ async def async_setup_entry(
 class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
     """Representation of a LCN binary sensor for regulator locks."""
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN binary sensor."""
         super().__init__(config, config_entry)
 
@@ -115,6 +112,9 @@ class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
             await self.device_connection.cancel_status_request_handler(
                 self.setpoint_variable
             )
+        async_delete_issue(
+            self.hass, DOMAIN, f"deprecated_binary_sensor_{self.entity_id}"
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
@@ -131,7 +131,7 @@ class LcnRegulatorLockSensor(LcnEntity, BinarySensorEntity):
 class LcnBinarySensor(LcnEntity, BinarySensorEntity):
     """Representation of a LCN binary sensor for binary sensor ports."""
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN binary sensor."""
         super().__init__(config, config_entry)
 
@@ -167,7 +167,7 @@ class LcnBinarySensor(LcnEntity, BinarySensorEntity):
 class LcnLockKeysSensor(LcnEntity, BinarySensorEntity):
     """Representation of a LCN sensor for key locks."""
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN sensor."""
         super().__init__(config, config_entry)
 
@@ -201,6 +201,9 @@ class LcnLockKeysSensor(LcnEntity, BinarySensorEntity):
         await super().async_will_remove_from_hass()
         if not self.device_connection.is_group:
             await self.device_connection.cancel_status_request_handler(self.source)
+        async_delete_issue(
+            self.hass, DOMAIN, f"deprecated_binary_sensor_{self.entity_id}"
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""

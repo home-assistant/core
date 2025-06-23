@@ -12,6 +12,7 @@ from gardena_bluetooth.exceptions import (
 )
 from gardena_bluetooth.parse import Characteristic, CharacteristicType
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -19,6 +20,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 SCAN_INTERVAL = timedelta(seconds=60)
 LOGGER = logging.getLogger(__name__)
+
+type GardenaBluetoothConfigEntry = ConfigEntry[GardenaBluetoothCoordinator]
 
 
 class DeviceUnavailable(HomeAssistantError):
@@ -28,9 +31,12 @@ class DeviceUnavailable(HomeAssistantError):
 class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
     """Class to manage fetching data."""
 
+    config_entry: GardenaBluetoothConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: GardenaBluetoothConfigEntry,
         logger: logging.Logger,
         client: Client,
         characteristics: set[str],
@@ -41,6 +47,7 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         super().__init__(
             hass=hass,
             logger=logger,
+            config_entry=config_entry,
             name="Gardena Bluetooth Data Update Coordinator",
             update_interval=SCAN_INTERVAL,
         )

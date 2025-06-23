@@ -45,7 +45,12 @@ from .utils import (
     async_create_api_client,
     async_get_devices,
 )
-from .views import ThumbnailProxyView, VideoProxyView
+from .views import (
+    SnapshotProxyView,
+    ThumbnailProxyView,
+    VideoEventProxyView,
+    VideoProxyView,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,7 +178,9 @@ async def _async_setup_entry(
     data_service.async_setup()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.http.register_view(ThumbnailProxyView(hass))
+    hass.http.register_view(SnapshotProxyView(hass))
     hass.http.register_view(VideoProxyView(hass))
+    hass.http.register_view(VideoEventProxyView(hass))
 
 
 async def _async_options_updated(hass: HomeAssistant, entry: UFPConfigEntry) -> None:

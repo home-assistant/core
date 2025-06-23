@@ -1,0 +1,116 @@
+{
+  "components": {
+    "button4": {
+      "button": {
+        "button": {
+          "value": "pushed",
+          "timestamp": "2025-02-10T08:01:11.326Z"
+        },
+        "numberOfButtons": {
+          "value": 1,
+          "timestamp": "2023-12-04T16:51:16.695Z"
+        },
+        "supportedButtonValues": {
+          "value": ["pushed", "held", "down_hold"],
+          "timestamp": "2023-12-04T16:51:16.717Z"
+        }
+      }
+    },
+    "button5": {
+      "button": {
+        "button": {
+          "value": "pushed",
+          "timestamp": "2025-03-09T16:37:40.792Z"
+        },
+        "numberOfButtons": {
+          "value": 1,
+          "timestamp": "2023-12-04T16:51:16.762Z"
+        },
+        "supportedButtonValues": {
+          "value": ["pushed", "held", "down_hold"],
+          "timestamp": "2023-12-04T16:51:16.813Z"
+        }
+      }
+    },
+    "button2": {
+      "button": {
+        "button": {
+          "value": "pushed",
+          "timestamp": "2025-02-10T08:00:57.171Z"
+        },
+        "numberOfButtons": {
+          "value": 1,
+          "timestamp": "2023-12-04T16:51:16.861Z"
+        },
+        "supportedButtonValues": {
+          "value": ["pushed", "held", "down_hold"],
+          "timestamp": "2023-12-04T16:51:16.906Z"
+        }
+      }
+    },
+    "button3": {
+      "button": {
+        "button": {
+          "value": "pushed",
+          "timestamp": "2025-01-30T05:53:00.663Z"
+        },
+        "numberOfButtons": {
+          "value": 1,
+          "timestamp": "2023-12-04T16:51:16.852Z"
+        },
+        "supportedButtonValues": {
+          "value": ["pushed", "held", "down_hold"],
+          "timestamp": "2023-12-04T16:51:16.848Z"
+        }
+      }
+    },
+    "button6": {
+      "button": {
+        "button": {
+          "value": "pushed",
+          "timestamp": "2024-10-02T13:11:07.346Z"
+        },
+        "numberOfButtons": {
+          "value": 1,
+          "timestamp": "2023-12-04T16:51:16.816Z"
+        },
+        "supportedButtonValues": {
+          "value": ["pushed", "held", "down_hold"],
+          "timestamp": "2023-12-04T16:51:16.848Z"
+        }
+      }
+    },
+    "main": {
+      "refresh": {},
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2025-03-10T10:32:19.528Z"
+        },
+        "type": {
+          "value": null
+        }
+      }
+    },
+    "button1": {
+      "button": {
+        "button": {
+          "value": "pushed",
+          "timestamp": "2025-01-30T05:52:46.718Z"
+        },
+        "numberOfButtons": {
+          "value": 1,
+          "timestamp": "2023-12-04T16:51:16.717Z"
+        },
+        "supportedButtonValues": {
+          "value": ["pushed", "held", "down_hold"],
+          "timestamp": "2023-12-04T16:51:16.767Z"
+        }
+      }
+    }
+  }
+}

@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -26,6 +27,7 @@
     'original_name': 'Battery',
     'platform': 'aquacell',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DSN-battery',
@@ -47,6 +49,55 @@
     'state': '40',
   })
 # ---
+# name: test_sensors[sensor.aquacell_name_last_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aquacell_name_last_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last update',
+    'platform': 'aquacell',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_update',
+    'unique_id': 'DSN-last_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.aquacell_name_last_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'AquaCell name Last update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aquacell_name_last_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-05-10T07:44:30+00:00',
+  })
+# ---
 # name: test_sensors[sensor.aquacell_name_salt_left_side_percentage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -56,6 +107,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -76,6 +128,7 @@
     'original_name': 'Salt left side percentage',
     'platform': 'aquacell',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salt_left_side_percentage',
     'unique_id': 'DSN-salt_left_side_percentage',
@@ -104,6 +157,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -118,12 +172,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Salt left side time remaining',
     'platform': 'aquacell',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salt_left_side_time_remaining',
     'unique_id': 'DSN-salt_left_side_time_remaining',
@@ -154,6 +212,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -174,6 +233,7 @@
     'original_name': 'Salt right side percentage',
     'platform': 'aquacell',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salt_right_side_percentage',
     'unique_id': 'DSN-salt_right_side_percentage',
@@ -202,6 +262,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -216,12 +277,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Salt right side time remaining',
     'platform': 'aquacell',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salt_right_side_time_remaining',
     'unique_id': 'DSN-salt_right_side_time_remaining',
@@ -256,6 +321,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -276,6 +342,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'aquacell',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wi_fi_strength',
     'unique_id': 'DSN-wi_fi_strength',

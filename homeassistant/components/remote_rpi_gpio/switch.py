@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from gpiozero import LED
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -12,7 +13,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -57,37 +58,23 @@ def setup_platform(
 class RemoteRPiGPIOSwitch(SwitchEntity):
     """Representation of a Remote Raspberry Pi GPIO."""
 
+    _attr_assumed_state = True
     _attr_should_poll = False
 
-    def __init__(self, name, led):
+    def __init__(self, name: str | None, led: LED) -> None:
         """Initialize the pin."""
-        self._name = name or DEVICE_DEFAULT_NAME
-        self._state = False
+        self._attr_name = name or DEVICE_DEFAULT_NAME
+        self._attr_is_on = False
         self._switch = led
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def assumed_state(self):
-        """If unable to access real state of the entity."""
-        return True
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         write_output(self._switch, 1)
-        self._state = True
+        self._attr_is_on = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         write_output(self._switch, 0)
-        self._state = False
+        self._attr_is_on = False
         self.schedule_update_ha_state()

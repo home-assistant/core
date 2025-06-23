@@ -21,10 +21,10 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import SolarlogConfigEntry
+from .coordinator import SolarlogConfigEntry
 from .entity import SolarLogCoordinatorEntity, SolarLogInverterEntity
 
 
@@ -276,7 +276,7 @@ INVERTER_SENSOR_TYPES: tuple[SolarLogInverterSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SolarlogConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add solarlog entry."""
     coordinator = entry.runtime_data

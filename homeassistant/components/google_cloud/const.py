@@ -20,6 +20,10 @@ CONF_GAIN = "gain"
 CONF_PROFILES = "profiles"
 CONF_TEXT_TYPE = "text_type"
 
+DEFAULT_SPEED = 1.0
+DEFAULT_PITCH = 0
+DEFAULT_GAIN = 0
+
 # STT constants
 CONF_STT_MODEL = "stt_model"
 

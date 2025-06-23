@@ -4,22 +4,19 @@ from __future__ import annotations
 
 from enum import StrEnum
 import logging
+from typing import Any
 
 from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
 
 from homeassistant.components.vacuum import (
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_RETURNING,
     StateVacuumEntity,
     StateVacuumEntityDescription,
+    VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.const import STATE_IDLE, STATE_PAUSED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThinqConfigEntry
 from .entity import ThinQEntity
@@ -46,21 +43,21 @@ class State(StrEnum):
 
 
 ROBOT_STATUS_TO_HA = {
-    "charging": STATE_DOCKED,
-    "diagnosis": STATE_IDLE,
-    "homing": STATE_RETURNING,
-    "initializing": STATE_IDLE,
-    "macrosector": STATE_IDLE,
-    "monitoring_detecting": STATE_IDLE,
-    "monitoring_moving": STATE_IDLE,
-    "monitoring_positioning": STATE_IDLE,
-    "pause": STATE_PAUSED,
-    "reservation": STATE_IDLE,
-    "setdate": STATE_IDLE,
-    "sleep": STATE_IDLE,
-    "standby": STATE_IDLE,
-    "working": STATE_CLEANING,
-    "error": STATE_ERROR,
+    "charging": VacuumActivity.DOCKED,
+    "diagnosis": VacuumActivity.IDLE,
+    "homing": VacuumActivity.RETURNING,
+    "initializing": VacuumActivity.IDLE,
+    "macrosector": VacuumActivity.IDLE,
+    "monitoring_detecting": VacuumActivity.IDLE,
+    "monitoring_moving": VacuumActivity.IDLE,
+    "monitoring_positioning": VacuumActivity.IDLE,
+    "pause": VacuumActivity.PAUSED,
+    "reservation": VacuumActivity.IDLE,
+    "setdate": VacuumActivity.IDLE,
+    "sleep": VacuumActivity.IDLE,
+    "standby": VacuumActivity.IDLE,
+    "working": VacuumActivity.CLEANING,
+    "error": VacuumActivity.ERROR,
 }
 ROBOT_BATT_TO_HA = {
     "moveless": 5,
@@ -77,7 +74,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ThinqConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an entry for vacuum platform."""
     entities: list[ThinQStateVacuumEntity] = []
@@ -114,7 +111,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         super()._update_status()
 
         # Update state.
-        self._attr_state = ROBOT_STATUS_TO_HA[self.data.current_state]
+        self._attr_activity = ROBOT_STATUS_TO_HA[self.data.current_state]
 
         # Update battery.
         if (level := self.data.battery) is not None:
@@ -135,7 +132,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         """Start the device."""
         if self.data.current_state == State.SLEEP:
             value = State.WAKE_UP
-        elif self._attr_state == STATE_PAUSED:
+        elif self._attr_activity == VacuumActivity.PAUSED:
             value = State.RESUME
         else:
             value = State.START
@@ -158,7 +155,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             )
         )
 
-    async def async_return_to_base(self, **kwargs) -> None:
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
         _LOGGER.debug(
             "[%s:%s] async_return_to_base",

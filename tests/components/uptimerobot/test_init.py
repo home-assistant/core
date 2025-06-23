@@ -239,7 +239,6 @@ async def test_device_management(
         freezer.tick(COORDINATOR_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        await hass.async_block_till_done()
 
     devices = dr.async_entries_for_config_entry(device_registry, mock_entry.entry_id)
     assert len(devices) == 1

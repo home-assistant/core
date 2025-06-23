@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     model = await mower.get_model()
     LOGGER.debug("Connected to Automower: %s", model)
 
-    coordinator = HusqvarnaCoordinator(hass, mower, address, channel_id, model)
+    coordinator = HusqvarnaCoordinator(hass, entry, mower, address, channel_id, model)
 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

@@ -6,12 +6,15 @@ components. Instead call the service directly.
 
 from unittest.mock import Mock
 
-from homeassistant.components.camera import Camera
-from homeassistant.components.camera.webrtc import (
+from webrtc_models import RTCIceCandidateInit
+
+from homeassistant.components.camera import (
+    Camera,
     CameraWebRTCProvider,
-    async_register_webrtc_provider,
+    WebRTCAnswer,
+    WebRTCSendMessage,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import callback
 
 EMPTY_8_6_JPEG = b"empty_8_6"
 WEBRTC_ANSWER = "a=sendonly"
@@ -32,23 +35,41 @@ def mock_turbo_jpeg(
     return mocked_turbo_jpeg
 
 
-async def add_webrtc_provider(hass: HomeAssistant) -> CameraWebRTCProvider:
-    """Add test WebRTC provider."""
+class SomeTestProvider(CameraWebRTCProvider):
+    """Test provider."""
 
-    class SomeTestProvider(CameraWebRTCProvider):
-        """Test provider."""
+    def __init__(self) -> None:
+        """Initialize the provider."""
+        self._is_supported = True
 
-        async def async_is_supported(self, stream_source: str) -> bool:
-            """Determine if the provider supports the stream source."""
-            return True
+    @property
+    def domain(self) -> str:
+        """Return the integration domain of the provider."""
+        return "some_test"
 
-        async def async_handle_web_rtc_offer(
-            self, camera: Camera, offer_sdp: str
-        ) -> str | None:
-            """Handle the WebRTC offer and return an answer."""
-            return "answer"
+    @callback
+    def async_is_supported(self, stream_source: str) -> bool:
+        """Determine if the provider supports the stream source."""
+        return self._is_supported
 
-    provider = SomeTestProvider()
-    async_register_webrtc_provider(hass, provider)
-    await hass.async_block_till_done()
-    return provider
+    async def async_handle_async_webrtc_offer(
+        self,
+        camera: Camera,
+        offer_sdp: str,
+        session_id: str,
+        send_message: WebRTCSendMessage,
+    ) -> None:
+        """Handle the WebRTC offer and return the answer via the provided callback.
+
+        Return value determines if the offer was handled successfully.
+        """
+        send_message(WebRTCAnswer(answer="answer"))
+
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidateInit
+    ) -> None:
+        """Handle the WebRTC candidate."""
+
+    @callback
+    def async_close_session(self, session_id: str) -> None:
+        """Close the session."""

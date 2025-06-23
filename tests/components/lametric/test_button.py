@@ -42,7 +42,7 @@ async def test_button_app_next(
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.configuration_url is None
+    assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
         (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
     }
@@ -52,6 +52,7 @@ async def test_button_app_next(
     assert device_entry.model_id == "LM 37X8"
     assert device_entry.name == "Frenck's LaMetric"
     assert device_entry.sw_version == "2.2.2"
+    assert device_entry.serial_number == "SA110405124500W00BS9"
     assert device_entry.hw_version is None
 
     await hass.services.async_call(
@@ -88,7 +89,7 @@ async def test_button_app_previous(
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.configuration_url is None
+    assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
         (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
     }
@@ -136,7 +137,7 @@ async def test_button_dismiss_current_notification(
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.configuration_url is None
+    assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
         (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
     }
@@ -184,7 +185,7 @@ async def test_button_dismiss_all_notifications(
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry
-    assert device_entry.configuration_url is None
+    assert device_entry.configuration_url == "https://127.0.0.1/"
     assert device_entry.connections == {
         (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")
     }

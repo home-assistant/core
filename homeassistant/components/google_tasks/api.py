@@ -9,6 +9,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import BatchHttpRequest, HttpRequest
+from httplib2 import ServerNotFoundError
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -115,7 +116,7 @@ class AsyncConfigEntryAuth:
         def response_handler(_, response, exception: HttpError) -> None:
             if exception is not None:
                 raise GoogleTasksApiError(
-                    f"Google Tasks API responded with error ({exception.status_code})"
+                    f"Google Tasks API responded with error ({exception.reason or exception.status_code})"
                 ) from exception
             if response:
                 data = json.loads(response)
@@ -150,9 +151,9 @@ class AsyncConfigEntryAuth:
     async def _execute(self, request: HttpRequest | BatchHttpRequest) -> Any:
         try:
             result = await self._hass.async_add_executor_job(request.execute)
-        except HttpError as err:
+        except (HttpError, ServerNotFoundError) as err:
             raise GoogleTasksApiError(
-                f"Google Tasks API responded with error ({err.status_code})"
+                f"Google Tasks API responded with: {err.reason or err.status_code})"
             ) from err
         if result:
             _raise_if_error(result)

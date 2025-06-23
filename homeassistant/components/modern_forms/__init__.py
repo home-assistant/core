@@ -9,7 +9,7 @@ from typing import Any, Concatenate
 from aiomodernforms import ModernFormsConnectionError, ModernFormsError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Modern Forms device from a config entry."""
 
     # Create Modern Forms instance for this entry
-    coordinator = ModernFormsDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])
+    coordinator = ModernFormsDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})

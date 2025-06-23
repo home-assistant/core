@@ -10,7 +10,7 @@ from thinqconnect.integration import ActiveMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThinqConfigEntry
 from .coordinator import DeviceDataUpdateCoordinator
@@ -98,7 +98,13 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
         AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
         SELECT_DESC[ThinQProperty.CURRENT_JOB_MODE],
     ),
-    DeviceType.DEHUMIDIFIER: (AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],),
+    DeviceType.DEHUMIDIFIER: (
+        AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
+        SelectEntityDescription(
+            key=ThinQProperty.CURRENT_JOB_MODE,
+            translation_key="current_job_mode_dehumidifier",
+        ),
+    ),
     DeviceType.DISH_WASHER: (
         OPERATION_SELECT_DESC[ThinQProperty.DISH_WASHER_OPERATION_MODE],
     ),
@@ -115,6 +121,12 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
     ),
     DeviceType.REFRIGERATOR: (SELECT_DESC[ThinQProperty.FRESH_AIR_FILTER],),
     DeviceType.STYLER: (OPERATION_SELECT_DESC[ThinQProperty.STYLER_OPERATION_MODE],),
+    DeviceType.VENTILATOR: (
+        SelectEntityDescription(
+            key=ThinQProperty.CURRENT_JOB_MODE,
+            translation_key="current_job_mode_ventilator",
+        ),
+    ),
     DeviceType.WASHCOMBO_MAIN: (
         OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],
     ),
@@ -142,7 +154,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ThinqConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an entry for select platform."""
     entities: list[ThinQSelectEntity] = []

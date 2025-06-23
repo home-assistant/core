@@ -378,7 +378,7 @@ def _get_annotation(item: Any) -> tuple[str, int | str] | None:
     if not hasattr(item, "__config_file__"):
         return None
 
-    return (getattr(item, "__config_file__"), getattr(item, "__line__", "?"))
+    return (item.__config_file__, getattr(item, "__line__", "?"))
 
 
 def _get_by_path(data: dict | list, items: list[Hashable]) -> Any:
@@ -814,6 +814,8 @@ def _get_log_message_and_stack_print_pref(
         "domain": domain,
         "error": str(exception),
         "p_name": platform_path,
+        "config_file": "?",
+        "line": "?",
     }
 
     show_stack_trace: bool | None = _CONFIG_LOG_SHOW_STACK_TRACE.get(
@@ -1319,8 +1321,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
 
     This method is a coroutine.
     """
-    # pylint: disable-next=import-outside-toplevel
-    from .helpers import check_config
+    from .helpers import check_config  # noqa: PLC0415
 
     res = await check_config.async_check_ha_config_file(hass)
 

@@ -4,7 +4,7 @@ import logging
 
 from aiopvapi.resources.shade import BaseShade, ShadePosition
 
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 

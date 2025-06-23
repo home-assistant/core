@@ -11,8 +11,12 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.ring import DOMAIN
-from homeassistant.components.ring.const import CONF_LISTEN_CREDENTIALS, SCAN_INTERVAL
-from homeassistant.components.ring.coordinator import RingEventListener
+from homeassistant.components.ring.const import (
+    CONF_CONFIG_ENTRY_MINOR_VERSION,
+    CONF_LISTEN_CREDENTIALS,
+    SCAN_INTERVAL,
+)
+from homeassistant.components.ring.coordinator import RingConfigEntry, RingEventListener
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -76,12 +80,12 @@ async def test_auth_failed_on_setup(
     ("error_type", "log_msg"),
     [
         (
-            RingTimeout,
-            "Timeout communicating with API: ",
+            RingTimeout("Some internal error info"),
+            "Timeout communicating with Ring API",
         ),
         (
-            RingError,
-            "Error communicating with API: ",
+            RingError("Some internal error info"),
+            "Error communicating with Ring API",
         ),
     ],
     ids=["timeout-error", "other-error"],
@@ -91,6 +95,7 @@ async def test_error_on_setup(
     mock_ring_client,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
     error_type,
     log_msg,
 ) -> None:
@@ -162,11 +167,11 @@ async def test_auth_failure_on_device_update(
     [
         (
             RingTimeout,
-            "Error fetching devices data: Timeout communicating with API: ",
+            "Error fetching devices data: Timeout communicating with Ring API",
         ),
         (
             RingError,
-            "Error fetching devices data: Error communicating with API: ",
+            "Error fetching devices data: Error communicating with Ring API",
         ),
     ],
     ids=["timeout-error", "other-error"],
@@ -174,7 +179,7 @@ async def test_auth_failure_on_device_update(
 async def test_error_on_global_update(
     hass: HomeAssistant,
     mock_ring_client,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: RingConfigEntry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     error_type,
@@ -185,15 +190,35 @@ async def test_error_on_global_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_ring_client.async_update_devices.side_effect = error_type
+    coordinator = mock_config_entry.runtime_data.devices_coordinator
+    assert coordinator
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    with patch.object(
+        coordinator, "_async_update_data", wraps=coordinator._async_update_data
+    ) as refresh_spy:
+        error = error_type("Some internal error info 1")
+        mock_ring_client.async_update_devices.side_effect = error
 
-    assert log_msg in caplog.text
+        freezer.tick(SCAN_INTERVAL * 2)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+        refresh_spy.assert_called()
+        assert coordinator.last_exception.__cause__ == error
+        assert log_msg in caplog.text
+
+        # Check log is not being spammed.
+        refresh_spy.reset_mock()
+        error2 = error_type("Some internal error info 2")
+        caplog.clear()
+        mock_ring_client.async_update_devices.side_effect = error2
+        freezer.tick(SCAN_INTERVAL * 2)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        refresh_spy.assert_called()
+        assert coordinator.last_exception.__cause__ == error2
+        assert log_msg not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -201,11 +226,11 @@ async def test_error_on_global_update(
     [
         (
             RingTimeout,
-            "Error fetching devices data: Timeout communicating with API for device Front: ",
+            "Error fetching devices data: Timeout communicating with Ring API",
         ),
         (
             RingError,
-            "Error fetching devices data: Error communicating with API for device Front: ",
+            "Error fetching devices data: Error communicating with Ring API",
         ),
     ],
     ids=["timeout-error", "other-error"],
@@ -214,7 +239,7 @@ async def test_error_on_device_update(
     hass: HomeAssistant,
     mock_ring_client,
     mock_ring_devices,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: RingConfigEntry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
     error_type,
@@ -225,27 +250,47 @@ async def test_error_on_device_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    front_door_doorbell = mock_ring_devices.get_device(765432)
-    front_door_doorbell.async_history.side_effect = error_type
+    coordinator = mock_config_entry.runtime_data.devices_coordinator
+    assert coordinator
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    with patch.object(
+        coordinator, "_async_update_data", wraps=coordinator._async_update_data
+    ) as refresh_spy:
+        error = error_type("Some internal error info 1")
+        front_door_doorbell = mock_ring_devices.get_device(765432)
+        front_door_doorbell.async_history.side_effect = error
 
-    assert log_msg in caplog.text
-    assert hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+        freezer.tick(SCAN_INTERVAL * 2)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        refresh_spy.assert_called()
+        assert coordinator.last_exception.__cause__ == error
+        assert log_msg in caplog.text
+
+        # Check log is not being spammed.
+        error2 = error_type("Some internal error info 2")
+        front_door_doorbell.async_history.side_effect = error2
+        refresh_spy.reset_mock()
+        caplog.clear()
+        freezer.tick(SCAN_INTERVAL * 2)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        refresh_spy.assert_called()
+        assert coordinator.last_exception.__cause__ == error2
+        assert log_msg not in caplog.text
 
 
 @pytest.mark.parametrize(
-    ("domain", "old_unique_id"),
+    ("domain", "old_unique_id", "new_unique_id"),
     [
-        (
-            LIGHT_DOMAIN,
-            123456,
-        ),
-        (
+        pytest.param(LIGHT_DOMAIN, 123456, "123456", id="Light integer"),
+        pytest.param(
             CAMERA_DOMAIN,
             654321,
+            "654321-last_recording",
+            id="Camera integer",
         ),
     ],
 )
@@ -256,6 +301,7 @@ async def test_update_unique_id(
     mock_ring_client,
     domain: str,
     old_unique_id: int | str,
+    new_unique_id: str,
 ) -> None:
     """Test unique_id update of integration."""
     entry = MockConfigEntry(
@@ -266,6 +312,7 @@ async def test_update_unique_id(
             "token": {"access_token": "mock-token"},
         },
         unique_id="foo@bar.com",
+        minor_version=1,
     )
     entry.add_to_hass(hass)
 
@@ -281,8 +328,9 @@ async def test_update_unique_id(
 
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
-    assert entity_migrated.unique_id == str(old_unique_id)
+    assert entity_migrated.unique_id == new_unique_id
     assert (f"Fixing non string unique id {old_unique_id}") in caplog.text
+    assert entry.minor_version == CONF_CONFIG_ENTRY_MINOR_VERSION
 
 
 async def test_update_unique_id_existing(
@@ -301,6 +349,7 @@ async def test_update_unique_id_existing(
             "token": {"access_token": "mock-token"},
         },
         unique_id="foo@bar.com",
+        minor_version=1,
     )
     entry.add_to_hass(hass)
 
@@ -331,16 +380,17 @@ async def test_update_unique_id_existing(
         f"already exists for '{entity_existing.entity_id}', "
         "You may have to delete unavailable ring entities"
     ) in caplog.text
+    assert entry.minor_version == CONF_CONFIG_ENTRY_MINOR_VERSION
 
 
-async def test_update_unique_id_no_update(
+async def test_update_unique_id_camera_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
     mock_ring_client,
 ) -> None:
-    """Test unique_id update of integration."""
-    correct_unique_id = "123456"
+    """Test camera unique id with no suffix is updated."""
+    correct_unique_id = "123456-last_recording"
     entry = MockConfigEntry(
         title="Ring",
         domain=DOMAIN,
@@ -349,6 +399,7 @@ async def test_update_unique_id_no_update(
             "token": {"access_token": "mock-token"},
         },
         unique_id="foo@bar.com",
+        minor_version=1,
     )
     entry.add_to_hass(hass)
 
@@ -358,14 +409,16 @@ async def test_update_unique_id_no_update(
         unique_id="123456",
         config_entry=entry,
     )
-    assert entity.unique_id == correct_unique_id
+    assert entity.unique_id == "123456"
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
     assert entity_migrated.unique_id == correct_unique_id
+    assert entity.disabled is False
     assert "Fixing non string unique id" not in caplog.text
+    assert entry.minor_version == CONF_CONFIG_ENTRY_MINOR_VERSION
 
 
 async def test_token_updated(
@@ -433,6 +486,7 @@ async def test_no_listen_start(
         version=1,
         data={"username": "foo", "token": {}},
     )
+    mock_entry.add_to_hass(hass)
     # Create a binary sensor entity so it is not ignored by the deprecation check
     # and the listener will start
     entity_registry.async_get_or_create(
@@ -446,7 +500,6 @@ async def test_no_listen_start(
 
     mock_ring_event_listener_class.return_value.started = False
 
-    mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -477,7 +530,7 @@ async def test_migrate_create_device_id(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.minor_version == 2
+    assert entry.minor_version == CONF_CONFIG_ENTRY_MINOR_VERSION
     assert CONF_DEVICE_ID in entry.data
     assert entry.data[CONF_DEVICE_ID] == MOCK_HARDWARE_ID
 

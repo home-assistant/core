@@ -11,7 +11,7 @@
         }
       },
       "manual": {
-        "title": "Manual configure a Hue bridge",
+        "title": "Manually configure a Hue bridge",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
@@ -46,8 +46,8 @@
       "button_2": "Second button",
       "button_3": "Third button",
       "button_4": "Fourth button",
-      "double_buttons_1_3": "First and Third buttons",
-      "double_buttons_2_4": "Second and Fourth buttons",
+      "double_buttons_1_3": "First and third button",
+      "double_buttons_2_4": "Second and fourth button",
       "dim_down": "Dim down",
       "dim_up": "Dim up",
       "turn_off": "[%key:common::action::turn_off%]",
@@ -57,7 +57,7 @@
       "3": "[%key:component::hue::device_automation::trigger_subtype::button_3%]",
       "4": "[%key:component::hue::device_automation::trigger_subtype::button_4%]",
       "clock_wise": "Rotation clockwise",
-      "counter_clock_wise": "Rotation counter-clockwise"
+      "counter_clock_wise": "Rotation counterclockwise"
     },
     "trigger_type": {
       "remote_button_long_release": "\"{subtype}\" released after long press",
@@ -96,7 +96,29 @@
           "event_type": {
             "state": {
               "clock_wise": "Clockwise",
-              "counter_clock_wise": "Counter clockwise"
+              "counter_clock_wise": "Counterclockwise"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "hue_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "candle": "Candle",
+              "sparkle": "Sparkle",
+              "glisten": "Glisten",
+              "sunrise": "Sunrise",
+              "sunset": "Sunset",
+              "fire": "Fire",
+              "prism": "Prism",
+              "opal": "Opal",
+              "underwater": "Underwater",
+              "cosmos": "Cosmos",
+              "sunbeam": "Sunbeam",
+              "enchant": "Enchant"
             }
           }
         }
@@ -137,15 +159,15 @@
   "services": {
     "hue_activate_scene": {
       "name": "Activate scene",
-      "description": "Activates a hue scene stored in the hue hub.",
+      "description": "Activates a Hue scene stored in the Hue hub.",
       "fields": {
         "group_name": {
           "name": "Group",
-          "description": "Name of hue group/room from the hue app."
+          "description": "Name of Hue group/room from the Hue app."
         },
         "scene_name": {
           "name": "Scene",
-          "description": "Name of hue scene from the hue app."
+          "description": "Name of Hue scene from the Hue app."
         },
         "dynamic": {
           "name": "Dynamic",
@@ -174,6 +196,12 @@
           "description": "Set brightness for the scene."
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_effect_none": {
+      "title": "Light turned on with deprecated effect",
+      "description": "A light was turned on with the deprecated effect `None`. This has been replaced with `off`. Please update any automations, scenes, or scripts that use this effect."
     }
   }
 }

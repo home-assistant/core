@@ -6,13 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from solarlog_cli.solarlog_models import InverterData, SolarlogData
 
-from homeassistant.components.solarlog.const import (
-    CONF_HAS_PWD,
-    DOMAIN as SOLARLOG_DOMAIN,
-)
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
+from homeassistant.components.solarlog.const import CONF_HAS_PWD, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
-from .const import HOST, NAME
+from .const import HOST
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -34,11 +31,10 @@ INVERTER_DATA = {
 def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
-        domain=SOLARLOG_DOMAIN,
+        domain=DOMAIN,
         title="solarlog",
         data={
             CONF_HOST: HOST,
-            CONF_NAME: NAME,
             CONF_HAS_PWD: True,
             CONF_PASSWORD: "pwd",
         },
@@ -52,7 +48,7 @@ def mock_solarlog_connector():
     """Build a fixture for the SolarLog API that connects successfully and returns one device."""
 
     data = SolarlogData.from_dict(
-        load_json_object_fixture("solarlog_data.json", SOLARLOG_DOMAIN)
+        load_json_object_fixture("solarlog_data.json", DOMAIN)
     )
     data.inverter_data = INVERTER_DATA
 

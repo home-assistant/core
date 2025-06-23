@@ -9,7 +9,6 @@ from aiohttp import ClientConnectionError
 from pydaikin.daikin_base import Appliance
 from pydaikin.factory import DaikinFactory
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -22,9 +21,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.util.ssl import client_context_no_verify
 
-from .const import DOMAIN, KEY_MAC, TIMEOUT
-from .coordinator import DaikinCoordinator
+from .const import KEY_MAC, TIMEOUT
+from .coordinator import DaikinConfigEntry, DaikinCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bool:
     """Establish connection with Daikin."""
     conf = entry.data
     # For backwards compat, set unique ID
@@ -49,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 key=entry.data.get(CONF_API_KEY),
                 uuid=entry.data.get(CONF_UUID),
                 password=entry.data.get(CONF_PASSWORD),
+                ssl_context=client_context_no_verify(),
             )
         _LOGGER.debug("Connection to %s successful", host)
     except TimeoutError as err:
@@ -58,29 +59,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("ClientConnectionError to %s", host)
         raise ConfigEntryNotReady from err
 
-    coordinator = DaikinCoordinator(hass, device)
+    coordinator = DaikinCoordinator(hass, entry, device)
 
     await coordinator.async_config_entry_first_refresh()
 
     await async_migrate_unique_id(hass, entry, device)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_unique_id(
-    hass: HomeAssistant, config_entry: ConfigEntry, device: Appliance
+    hass: HomeAssistant, config_entry: DaikinConfigEntry, device: Appliance
 ) -> None:
     """Migrate old entry."""
     dev_reg = dr.async_get(hass)

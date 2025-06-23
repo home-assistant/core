@@ -1,0 +1,205 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      '26e93f1a-c828-11ea-87d0-0242ac130003': dict({
+        'consumptionUnitId': '26e93f1a-c828-11ea-87d0-0242ac130003',
+        'consumptions': list([
+          dict({
+            'date': dict({
+              'month': 5,
+              'year': 2024,
+            }),
+            'readings': list([
+              dict({
+                'additionalValue': '38,0',
+                'type': 'heating',
+                'value': '35',
+              }),
+              dict({
+                'additionalValue': '57,0',
+                'type': 'warmwater',
+                'value': '1,0',
+              }),
+              dict({
+                'type': 'water',
+                'value': '5,0',
+              }),
+            ]),
+          }),
+          dict({
+            'date': dict({
+              'month': 4,
+              'year': 2024,
+            }),
+            'readings': list([
+              dict({
+                'additionalValue': '113,0',
+                'type': 'heating',
+                'value': '104',
+              }),
+              dict({
+                'additionalValue': '61,1',
+                'type': 'warmwater',
+                'value': '1,1',
+              }),
+              dict({
+                'type': 'water',
+                'value': '6,8',
+              }),
+            ]),
+          }),
+        ]),
+        'costs': list([
+          dict({
+            'costsByEnergyType': list([
+              dict({
+                'type': 'heating',
+                'value': 21,
+              }),
+              dict({
+                'type': 'warmwater',
+                'value': 7,
+              }),
+              dict({
+                'type': 'water',
+                'value': 3,
+              }),
+            ]),
+            'date': dict({
+              'month': 5,
+              'year': 2024,
+            }),
+          }),
+          dict({
+            'costsByEnergyType': list([
+              dict({
+                'type': 'heating',
+                'value': 62,
+              }),
+              dict({
+                'type': 'warmwater',
+                'value': 7,
+              }),
+              dict({
+                'type': 'water',
+                'value': 2,
+              }),
+            ]),
+            'date': dict({
+              'month': 4,
+              'year': 2024,
+            }),
+          }),
+        ]),
+      }),
+      'eaf5c5c8-889f-4a3c-b68c-e9a676505762': dict({
+        'consumptionUnitId': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762',
+        'consumptions': list([
+          dict({
+            'date': dict({
+              'month': 5,
+              'year': 2024,
+            }),
+            'readings': list([
+              dict({
+                'additionalValue': '38,0',
+                'type': 'heating',
+                'value': '35',
+              }),
+              dict({
+                'additionalValue': '57,0',
+                'type': 'warmwater',
+                'value': '1,0',
+              }),
+              dict({
+                'type': 'water',
+                'value': '5,0',
+              }),
+            ]),
+          }),
+          dict({
+            'date': dict({
+              'month': 4,
+              'year': 2024,
+            }),
+            'readings': list([
+              dict({
+                'additionalValue': '113,0',
+                'type': 'heating',
+                'value': '104',
+              }),
+              dict({
+                'additionalValue': '61,1',
+                'type': 'warmwater',
+                'value': '1,1',
+              }),
+              dict({
+                'type': 'water',
+                'value': '6,8',
+              }),
+            ]),
+          }),
+        ]),
+        'costs': list([
+          dict({
+            'costsByEnergyType': list([
+              dict({
+                'type': 'heating',
+                'value': 21,
+              }),
+              dict({
+                'type': 'warmwater',
+                'value': 7,
+              }),
+              dict({
+                'type': 'water',
+                'value': 3,
+              }),
+            ]),
+            'date': dict({
+              'month': 5,
+              'year': 2024,
+            }),
+          }),
+          dict({
+            'costsByEnergyType': list([
+              dict({
+                'type': 'heating',
+                'value': 62,
+              }),
+              dict({
+                'type': 'warmwater',
+                'value': 7,
+              }),
+              dict({
+                'type': 'water',
+                'value': 2,
+              }),
+            ]),
+            'date': dict({
+              'month': 4,
+              'year': 2024,
+            }),
+          }),
+        ]),
+      }),
+    }),
+    'details': dict({
+      '26e93f1a-c828-11ea-87d0-0242ac130003': dict({
+        'address': dict({
+          'houseNumber': '**REDACTED**',
+          'street': '**REDACTED**',
+        }),
+        'id': '26e93f1a-c828-11ea-87d0-0242ac130003',
+      }),
+      'eaf5c5c8-889f-4a3c-b68c-e9a676505762': dict({
+        'address': dict({
+          'houseNumber': '**REDACTED**',
+          'street': '**REDACTED**',
+        }),
+        'id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762',
+      }),
+    }),
+  })
+# ---

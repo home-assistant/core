@@ -11,7 +11,6 @@ from hko import HKO, HKOError
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_FOG,
-    ATTR_CONDITION_HAIL,
     ATTR_CONDITION_LIGHTNING_RAINY,
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_POURING,
@@ -26,6 +25,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -65,12 +65,21 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type HKOConfigEntry = ConfigEntry[HKOUpdateCoordinator]
+
 
 class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """HKO Update Coordinator."""
 
+    config_entry: HKOConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, session: ClientSession, district: str, location: str
+        self,
+        hass: HomeAssistant,
+        config_entry: HKOConfigEntry,
+        session: ClientSession,
+        district: str,
+        location: str,
     ) -> None:
         """Update data via library."""
         self.location = location
@@ -80,6 +89,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=15),
         )
@@ -136,7 +146,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return the condition corresponding to the weather info."""
         info = info.lower()
         if WEATHER_INFO_RAIN in info:
-            return ATTR_CONDITION_HAIL
+            return ATTR_CONDITION_RAINY
         if WEATHER_INFO_SNOW in info and WEATHER_INFO_RAIN in info:
             return ATTR_CONDITION_SNOWY_RAINY
         if WEATHER_INFO_SNOW in info:

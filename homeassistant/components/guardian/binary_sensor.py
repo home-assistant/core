@@ -12,17 +12,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GuardianData
+from . import GuardianConfigEntry
 from .const import (
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
     CONF_UID,
-    DOMAIN,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
 from .coordinator import GuardianDataUpdateCoordinator
@@ -86,10 +84,12 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GuardianConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    data: GuardianData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     uid = entry.data[CONF_UID]
 
     async_finish_entity_domain_replacements(
@@ -149,7 +149,7 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GuardianConfigEntry,
         coordinator: GuardianDataUpdateCoordinator,
         description: BinarySensorEntityDescription,
     ) -> None:
@@ -171,7 +171,7 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GuardianConfigEntry,
         coordinators: dict[str, GuardianDataUpdateCoordinator],
         description: ValveControllerBinarySensorDescription,
     ) -> None:

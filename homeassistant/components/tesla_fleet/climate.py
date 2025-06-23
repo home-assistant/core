@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslaFleetConfigEntry
 from .const import DOMAIN, TeslaFleetClimateSide
@@ -38,7 +38,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tesla Fleet Climate platform from a config entry."""
 
@@ -74,7 +74,6 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         | ClimateEntityFeature.PRESET_MODE
     )
     _attr_preset_modes = ["off", "keep", "dog", "camp"]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -84,7 +83,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate."""
 
-        self.read_only = Scope.VEHICLE_CMDS not in scopes or data.signing
+        self.read_only = Scope.VEHICLE_CMDS not in scopes
 
         if self.read_only:
             self._attr_supported_features = ClimateEntityFeature(0)
@@ -165,12 +164,6 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
-        if hvac_mode not in self.hvac_modes:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_hvac_mode",
-                translation_placeholders={"hvac_mode": hvac_mode},
-            )
         if hvac_mode == HVACMode.OFF:
             await self.async_turn_off()
         else:
@@ -220,7 +213,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
     _attr_max_temp = COP_LEVELS["High"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(COP_MODES.values())
-    _enable_turn_on_off_backwards_compatibility = False
+
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -231,7 +224,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         """Initialize the cabin overheat climate entity."""
 
         # Scopes
-        self.read_only = Scope.VEHICLE_CMDS not in scopes or data.signing
+        self.read_only = Scope.VEHICLE_CMDS not in scopes
 
         # Supported Features
         if self.read_only:
