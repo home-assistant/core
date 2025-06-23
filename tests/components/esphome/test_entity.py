@@ -12,6 +12,7 @@ from aioesphomeapi import (
     DeviceInfo,
     SensorInfo,
     SensorState,
+    SubDeviceInfo,
     build_unique_id,
 )
 import pytest
@@ -712,8 +713,8 @@ async def test_entity_assignment_to_sub_device(
 
     # Define sub devices
     sub_devices = [
-        {"device_id": 11111111, "name": "Motion Sensor", "area_id": 0},
-        {"device_id": 22222222, "name": "Door Sensor", "area_id": 0},
+        SubDeviceInfo(device_id=11111111, name="Motion Sensor", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="Door Sensor", area_id=0),
     ]
 
     device_info = {

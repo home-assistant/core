@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, call
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
+    AreaInfo,
     DeviceInfo,
     EncryptionPlaintextAPIError,
     HomeassistantServiceCall,
@@ -14,6 +15,7 @@ from aioesphomeapi import (
     InvalidEncryptionKeyAPIError,
     LogLevel,
     RequiresEncryptionAPIError,
+    SubDeviceInfo,
     UserService,
     UserServiceArg,
     UserServiceArgType,
@@ -1512,22 +1514,22 @@ async def test_sub_device_creation(
 
     # Define areas
     areas = [
-        {"area_id": 1, "name": "Living Room"},
-        {"area_id": 2, "name": "Bedroom"},
-        {"area_id": 3, "name": "Kitchen"},
+        AreaInfo(area_id=1, name="Living Room"),
+        AreaInfo(area_id=2, name="Bedroom"),
+        AreaInfo(area_id=3, name="Kitchen"),
     ]
 
     # Define sub devices
     sub_devices = [
-        {"device_id": 11111111, "name": "Motion Sensor", "area_id": 1},
-        {"device_id": 22222222, "name": "Light Switch", "area_id": 1},
-        {"device_id": 33333333, "name": "Temperature Sensor", "area_id": 2},
+        SubDeviceInfo(device_id=11111111, name="Motion Sensor", area_id=1),
+        SubDeviceInfo(device_id=22222222, name="Light Switch", area_id=1),
+        SubDeviceInfo(device_id=33333333, name="Temperature Sensor", area_id=2),
     ]
 
     device_info = {
         "areas": areas,
         "devices": sub_devices,
-        "area": {"area_id": 0, "name": "Main Hub"},
+        "area": AreaInfo(area_id=0, name="Main Hub"),
     }
 
     device = await mock_esphome_device(
@@ -1578,9 +1580,9 @@ async def test_sub_device_cleanup(
 
     # Initial sub devices
     sub_devices_initial = [
-        {"device_id": 11111111, "name": "Device 1", "area_id": 0},
-        {"device_id": 22222222, "name": "Device 2", "area_id": 0},
-        {"device_id": 33333333, "name": "Device 3", "area_id": 0},
+        SubDeviceInfo(device_id=11111111, name="Device 1", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="Device 2", area_id=0),
+        SubDeviceInfo(device_id=33333333, name="Device 3", area_id=0),
     ]
 
     device_info = {
@@ -1614,8 +1616,8 @@ async def test_sub_device_cleanup(
 
     # Now update with fewer sub devices (device 2 removed)
     sub_devices_updated = [
-        {"device_id": 11111111, "name": "Device 1", "area_id": 0},
-        {"device_id": 33333333, "name": "Device 3", "area_id": 0},
+        SubDeviceInfo(device_id=11111111, name="Device 1", area_id=0),
+        SubDeviceInfo(device_id=33333333, name="Device 3", area_id=0),
     ]
 
     # Update device info
