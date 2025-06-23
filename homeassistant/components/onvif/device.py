@@ -45,9 +45,17 @@ from .const import (
 from .event import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
 
-# will be good to have a setting to adjust full rotation time
-def calculate_sleep_time(distance, full_rotation_time):
-    # Calculate the sleep time for the given distance
+def calculate_sleep_time(distance: float, full_rotation_time: float) -> float:
+    """
+    Calculate the sleep time based on the given distance and full rotation time.
+
+    Args:
+        distance (float): The distance to be covered.
+        full_rotation_time (float): The time required for a full rotation in seconds.
+
+    Returns:
+        float: The calculated sleep time in seconds.
+    """
     sleep_time_seconds = distance * full_rotation_time
 
     return sleep_time_seconds
@@ -532,7 +540,7 @@ class ONVIFDevice:
 
         try:
             # list for extra functions in future, home mode as a possibility
-            if move_mode not in ["EmulateRelativeMove"]:
+            if move_mode != EMULATE_RELATIVE_MOVE:
                 req = ptz_service.create_type(move_mode)
                 req.ProfileToken = profile.token
 
@@ -563,15 +571,16 @@ class ONVIFDevice:
                     await ptz_service.Stop(
                         {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
                     )
-                except:
-
-                    time_to_move = calculate_sleep_time(continuous_duration, full_rotation_time=8)
-                    await asyncio.sleep(time_to_move)
-                    req = ptz_service.create_type(move_mode)
-                    req.ProfileToken = profile.token
-                    velocity = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
-                    req.Velocity = velocity
-                    await ptz_service.ContinuousMove(req)
+                except Fault as e:
+                    if "Action Not Implemented" in str(e):
+                        time_to_move = calculate_sleep_time(continuous_duration, full_rotation_time=8)
+                        await asyncio.sleep(time_to_move)
+                        req = ptz_service.create_type(move_mode)
+                        req.ProfileToken = profile.token
+                        velocity = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
+                        req.Velocity = velocity
+                        await ptz_service.ContinuousMove(req)
+                    raise
 
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
@@ -624,11 +633,13 @@ class ONVIFDevice:
                     req.Velocity = velocity
                     await ptz_service.ContinuousMove(req)
 
-                except:
-                    LOGGER.warning(
-                        "RelativeMove not supported on device '%s'", self.name
-                    )
-                    return
+
+                except Fault as fault:
+                    if "Action Not Implemented" in str(e):
+                        LOGGER.warning(
+                            "RelativeMove not supported on device '%s'", self.name
+                        )
+                    raise
 
             elif move_mode == ABSOLUTE_MOVE:
                 # Guard against unsupported operation
@@ -642,14 +653,10 @@ class ONVIFDevice:
                     "PanTilt": {"x": pan_val, "y": tilt_val},
                     "Zoom": {"x": zoom_val},
                 }
-                speed_zoom_val, speed_tilt_val, speed_pan_val = 0,0,0
 
-                if pan is not None:
-                    speed_pan_val = speed_val
-                if tilt is not None:
-                    speed_tilt_val = speed_val
-                if zoom is not None:
-                    speed_zoom_val = speed_val
+                speed_pan_val = speed_val if pan else 0
+                speed_tilt_val = speed_val if tilt else 0
+                speed_zoom_val = speed_val if zoom else 0
 
                 req.Speed = {
                     "PanTilt": {"x": speed_pan_val, "y": speed_tilt_val},
@@ -686,14 +693,17 @@ class ONVIFDevice:
             elif move_mode == STOP_MOVE:
                 try:
                     await ptz_service.Stop(req)
-                except:
-                    LOGGER.info("Performing stop, using continous move")
-                    if profile.ptz.continuous:
-                        req = ptz_service.create_type(CONTINUOUS_MOVE)
-                        req.ProfileToken = profile.token
-                        velocity = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
-                        req.Velocity = velocity
-                        await ptz_service.ContinuousMove(req)
+                except Fault as e:
+                    if "Action Not Implemented" in str(e):
+                        LOGGER.warning("Performing stop, using continuous move, device doesn't support stop command")
+                        if profile.ptz.continuous:
+                            req = ptz_service.create_type(CONTINUOUS_MOVE)
+                            req.ProfileToken = profile.token
+                            velocity = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
+                            req.Velocity = velocity
+                            await ptz_service.ContinuousMove(req)
+                    else:
+                        raise # re-raise for other errors
 
 
 
