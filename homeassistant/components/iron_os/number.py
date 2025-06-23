@@ -26,7 +26,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import IronOSConfigEntry
-from .const import MAX_TEMP, MAX_TEMP_F, MIN_TEMP, MIN_TEMP_F
+from .const import (
+    MAX_TEMP,
+    MAX_TEMP_F,
+    MIN_BOOST_TEMP,
+    MIN_BOOST_TEMP_F,
+    MIN_TEMP,
+    MIN_TEMP_F,
+)
 from .coordinator import IronOSCoordinators
 from .entity import IronOSBaseEntity
 
@@ -109,8 +116,8 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         value_fn=lambda _, settings: settings.get("boost_temp"),
         characteristic=CharSetting.BOOST_TEMP,
         mode=NumberMode.BOX,
-        native_min_value=0,
-        native_min_value_f=0,
+        native_min_value=MIN_BOOST_TEMP,
+        native_min_value_f=MIN_BOOST_TEMP_F,
         native_max_value=MAX_TEMP,
         native_max_value_f=MAX_TEMP_F,
         native_step=10,
@@ -455,3 +462,13 @@ class IronOSNumberEntity(IronOSBaseEntity, NumberEntity):
             is UnitOfTemperature.CELSIUS
             and self.settings.data.get("temp_unit") is TempUnit.FAHRENHEIT
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if (
+            self.entity_description.key is PinecilNumber.BOOST_TEMP
+            and not self.native_value
+        ):
+            return super().available or False
+        return super().available

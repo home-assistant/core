@@ -6,7 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'max': 450,
-      'min': 0,
+      'min': 250,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 10,
     }),
@@ -44,7 +44,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Boost temperature',
       'max': 450,
-      'min': 0,
+      'min': 250,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 10,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,

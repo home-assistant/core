@@ -13,3 +13,5 @@ MAX_TEMP: int = 450
 MAX_TEMP_F: int = 850
 MIN_TEMP: int = 10
 MIN_TEMP_F: int = 50
+MIN_BOOST_TEMP: int = 250
+MIN_BOOST_TEMP_F: int = 480

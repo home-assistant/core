@@ -9,7 +9,11 @@ from pynecil import CharSetting, CommunicationError, TempUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.iron_os.const import MAX_TEMP_F, MIN_TEMP_F
+from homeassistant.components.iron_os.const import (
+    MAX_TEMP_F,
+    MIN_BOOST_TEMP_F,
+    MIN_TEMP_F,
+)
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -61,7 +65,7 @@ async def test_state(
     ("entity_id", "min_value", "max_value"),
     [
         ("number.pinecil_setpoint_temperature", MIN_TEMP_F, MAX_TEMP_F),
-        ("number.pinecil_boost_temperature", 0, MAX_TEMP_F),
+        ("number.pinecil_boost_temperature", MIN_BOOST_TEMP_F, MAX_TEMP_F),
         ("number.pinecil_long_press_temperature_step", 5, 90),
         ("number.pinecil_short_press_temperature_step", 1, 50),
         ("number.pinecil_sleep_temperature", MIN_TEMP_F, MAX_TEMP_F),
