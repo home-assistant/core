@@ -1597,19 +1597,19 @@ async def test_sub_device_cleanup(
     # Verify all sub devices exist
     assert (
         device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.entry.unique_id}_11111111")}
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
         )
         is not None
     )
     assert (
         device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.entry.unique_id}_22222222")}
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
         )
         is not None
     )
     assert (
         device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.entry.unique_id}_33333333")}
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
         )
         is not None
     )
@@ -1636,19 +1636,19 @@ async def test_sub_device_cleanup(
     # Verify device 2 was removed
     assert (
         device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.entry.unique_id}_11111111")}
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
         )
         is not None
     )
     assert (
         device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.entry.unique_id}_22222222")}
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
         )
         is None
     )  # Should be removed
     assert (
         device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.entry.unique_id}_33333333")}
+            identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
         )
         is not None
     )

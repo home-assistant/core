@@ -764,7 +764,7 @@ async def test_entity_assignment_to_sub_device(
 
     # Check main device
     main_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.entry.unique_id)}
+        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
     )
     assert main_device is not None
 
