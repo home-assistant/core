@@ -93,7 +93,7 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        sendvalue = int(value)
+        send_value = int(value)
         if value_convert := self.entity_description.ha_to_native_value:
             sendvalue = value_convert(value)
         if self.entity_description.command:
