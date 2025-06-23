@@ -507,6 +507,9 @@
       "telephoto_sub": {
         "name": "Telephoto fluent"
       },
+      "telephoto_main": {
+        "name": "Telephoto clear"
+      },
       "telephoto_snapshots_sub": {
         "name": "Telephoto snapshots fluent"
       },
