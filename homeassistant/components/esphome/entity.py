@@ -79,8 +79,9 @@ def async_static_info_updated(
         # Entity has switched devices, update its device assignment
         unique_id = build_unique_id(device_info.mac_address, info)
         entity_id = ent_reg.async_get_entity_id(platform.domain, DOMAIN, unique_id)
-        if not entity_id:
-            continue
+        # entity_id should never be None here because old_info is not None,
+        # which means the entity was previously created and is in the registry
+        assert entity_id is not None
 
         # Determine the new device
         if info.device_id:
