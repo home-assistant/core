@@ -199,6 +199,12 @@ def climate_heatit_z_trm3_no_value_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("climate_heatit_z_trm3_no_value_state.json", DOMAIN)
 
 
+@pytest.fixture(name="ring_keypad_state", scope="package")
+def ring_keypad_state_fixture() -> dict[str, Any]:
+    """Load the Ring keypad state fixture data."""
+    return load_json_object_fixture("ring_keypad_state.json", DOMAIN)
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="package")
 def nortek_thermostat_state_fixture() -> dict[str, Any]:
     """Load the nortek thermostat node state fixture data."""
@@ -293,6 +299,12 @@ def fibaro_fgr223_shutter_state_fixture() -> dict[str, Any]:
 def shelly_europe_ltd_qnsh_001p10_state_fixture() -> dict[str, Any]:
     """Load the Shelly QNSH 001P10 node state fixture data."""
     return load_json_object_fixture("shelly_europe_ltd_qnsh_001p10_state.json", DOMAIN)
+
+
+@pytest.fixture(name="touchwand_glass9_state", scope="package")
+def touchwand_glass9_state_fixture() -> dict[str, Any]:
+    """Load the Touchwand Glass 9 shutter node state fixture data."""
+    return load_json_object_fixture("touchwand_glass9_state.json", DOMAIN)
 
 
 @pytest.fixture(name="merten_507801_state", scope="package")
@@ -876,6 +888,14 @@ def nortek_thermostat_removed_event_fixture(client) -> Node:
     return Event("node removed", event_data)
 
 
+@pytest.fixture(name="ring_keypad")
+def ring_keypad_fixture(client: MagicMock, ring_keypad_state: NodeDataType) -> Node:
+    """Mock a Ring keypad node."""
+    node = Node(client, copy.deepcopy(ring_keypad_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="integration")
 async def integration_fixture(
     hass: HomeAssistant,
@@ -1022,6 +1042,14 @@ def shelly_qnsh_001P10_cover_shutter_fixture(
 ) -> Node:
     """Mock a Shelly QNSH 001P10 Shutter node."""
     node = Node(client, copy.deepcopy(shelly_europe_ltd_qnsh_001p10_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="touchwand_glass9")
+def touchwand_glass9_fixture(client, touchwand_glass9_state) -> Node:
+    """Mock a Touchwand glass9 node."""
+    node = Node(client, copy.deepcopy(touchwand_glass9_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
