@@ -496,6 +496,9 @@
       "formaldehyde": {
         "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
       },
+      "leakage_current": {
+        "name": "Leakage current"
+      },
       "luminosity": {
         "name": "Luminosity"
       },
