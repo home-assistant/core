@@ -2,7 +2,6 @@
 
 import logging
 from typing import Any
-from urllib.parse import urlparse
 
 import aiohttp
 from lunatone_dali_api_client import Auth, Info
@@ -34,10 +33,11 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.url: str | None = None
         self.name: str | None = None
+        self.serial_number: int | None = None
 
     @property
     def _title(self):
-        return f"{self.name or 'DALI Gateway'} - {urlparse(self.url).hostname}"
+        return f"{self.name or 'DALI Gateway'} {self.serial_number}"
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -69,8 +69,8 @@ class LunatoneDALIIoTConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 self.name = info.data.name
-                serial_number = info.data.device.serial
-                await self.async_set_unique_id(f"lunatone-{serial_number}")
+                self.serial_number = info.data.device.serial
+                await self.async_set_unique_id(f"lunatone-{self.serial_number}")
                 if self.source == SOURCE_USER:
                     self._abort_if_unique_id_configured()
                     return self._create_entry()
