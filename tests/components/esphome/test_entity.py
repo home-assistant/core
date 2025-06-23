@@ -964,11 +964,13 @@ async def test_entity_switches_between_devices(
         ),
     ]
 
-    # Update the entity info (this would normally come from the ESP device)
-    entry_data = device.entry.runtime_data
-    callbacks = entry_data.entity_info_callbacks.get(BinarySensorInfo, [])
-    for callback_ in callbacks:
-        callback_(updated_entity_info)
+    # Update the entity info by changing what the mock returns
+    mock_client.list_entities_services = AsyncMock(
+        return_value=(updated_entity_info, [])
+    )
+    # Trigger a reconnect to simulate the entity info update
+    await device.mock_disconnect(expected_disconnect=False)
+    await device.mock_connect()
 
     # Verify entity is now on sub device 1
     sub_device_1 = device_registry.async_get_device(
@@ -991,8 +993,11 @@ async def test_entity_switches_between_devices(
         ),
     ]
 
-    for callback_ in callbacks:
-        callback_(updated_entity_info)
+    mock_client.list_entities_services = AsyncMock(
+        return_value=(updated_entity_info, [])
+    )
+    await device.mock_disconnect(expected_disconnect=False)
+    await device.mock_connect()
 
     # Verify entity is now on sub device 2
     sub_device_2 = device_registry.async_get_device(
@@ -1015,10 +1020,91 @@ async def test_entity_switches_between_devices(
         ),
     ]
 
-    for callback_ in callbacks:
-        callback_(updated_entity_info)
+    mock_client.list_entities_services = AsyncMock(
+        return_value=(updated_entity_info, [])
+    )
+    await device.mock_disconnect(expected_disconnect=False)
+    await device.mock_connect()
 
     # Verify entity is back on main device
     sensor_entity = entity_registry.async_get("binary_sensor.test_sensor")
     assert sensor_entity is not None
     assert sensor_entity.device_id == main_device.id
+
+
+async def test_entity_switches_devices_entity_not_in_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test entity device switch when entity is not in registry."""
+    # Define sub devices
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="Sub Device 1", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="Sub Device 2", area_id=0),
+    ]
+
+    device_info = {
+        "devices": sub_devices,
+    }
+
+    # Create initial entity on sub device 1
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor",
+            key=1,
+            name="Test Sensor",
+            unique_id="sensor",
+            device_id=11111111,
+        ),
+    ]
+
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    # Verify entity is created on sub device 1
+    sub_device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    )
+    assert sub_device_1 is not None
+
+    sensor_entity = entity_registry.async_get("binary_sensor.test_sensor")
+    assert sensor_entity is not None
+    assert sensor_entity.device_id == sub_device_1.id
+
+    # Remove the entity from registry
+    entity_registry.async_remove(sensor_entity.entity_id)
+
+    # Verify it's removed
+    assert entity_registry.async_get("binary_sensor.test_sensor") is None
+
+    # Try to update entity to move to sub device 2
+    updated_entity_info = [
+        BinarySensorInfo(
+            object_id="sensor",
+            key=1,
+            name="Test Sensor",
+            unique_id="sensor",
+            device_id=22222222,  # Try to move to sub device 2
+        ),
+    ]
+
+    # Update should not fail even though entity is not in registry
+    mock_client.list_entities_services = AsyncMock(
+        return_value=(updated_entity_info, [])
+    )
+    await device.mock_disconnect(expected_disconnect=False)
+    await device.mock_connect()
+
+    # Entity should remain not in registry
+    assert entity_registry.async_get("binary_sensor.test_sensor") is None
