@@ -77,6 +77,7 @@ async def integration_fixture(
         "aqara_w100",
         "air_purifier",
         "air_quality_sensor",
+        "battery_storage",
         "color_temperature_light",
         "cooktop",
         "dimmable_light",
