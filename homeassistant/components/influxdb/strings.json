@@ -2,10 +2,11 @@
   "config": {
     "step": {
       "user": {
-        "data": {
-          "api_version": "Version"
+        "menu_options": {
+          "configure_v1": "InfluxDB v1.x",
+          "configure_v2": "InfluxDB v2.x"
         },
-        "title": "Select InfluxDB Version"
+        "title": "Choose InfluxDB Version"
       },
       "configure_v1": {
         "data": {
@@ -38,7 +39,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "ssl_error": "SSL certificate error",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_auth_v2": "Invalid organization, bucket or token",
+      "invalid_config": "Invalid organization, bucket or token",
       "invalid_database": "Invalid database",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

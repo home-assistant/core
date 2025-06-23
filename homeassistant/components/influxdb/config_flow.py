@@ -129,7 +129,7 @@ async def _validate_influxdb_connection(
         elif "authorization failed" in ex.args[0]:
             errors = {"base": "invalid_auth"}
         elif "token" in ex.args[0]:
-            errors = {"base": "invalid_auth_v2"}
+            errors = {"base": "invalid_config"}
         else:
             errors = {"base": "cannot_connect"}
     except Exception:
@@ -163,22 +163,10 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
-
-        if user_input is not None:
-            api_version = user_input[CONF_API_VERSION]
-
-            if api_version == "1.x":
-                return await self.async_step_configure_v1()
-
-            return await self.async_step_configure_v2()
-
-        list_of_types = ["1.x", "2.x"]
-
-        schema = vol.Schema(
-            {vol.Required(CONF_API_VERSION, default="2.x"): vol.In(list_of_types)}
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["configure_v1", "configure_v2"],
         )
-
-        return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_configure_v1(
         self, user_input: dict[str, Any] | None = None
