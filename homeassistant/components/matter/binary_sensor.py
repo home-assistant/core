@@ -377,4 +377,34 @@ DISCOVERY_SCHEMAS = [
         ),
         allow_multi=True,
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="DishwasherAlarmInflowError",
+            translation_key="dishwasher_alarm_inflow",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            measurement_to_ha=lambda x: (
+                x == clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kInflowError
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.DishwasherAlarm.Attributes.State,),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="DishwasherAlarmDoorError",
+            translation_key="dishwasher_alarm_door",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            measurement_to_ha=lambda x: (
+                x == clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDoorError
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.DishwasherAlarm.Attributes.State,),
+        allow_multi=True,
+    ),
 ]
