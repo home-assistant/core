@@ -18,6 +18,16 @@ TEST_URL = f"http://{TEST_HOST}:{TEST_PORT}"
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.tilt_pi.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
