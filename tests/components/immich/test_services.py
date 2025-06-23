@@ -37,6 +37,7 @@ async def test_upload_file(
     tmp_path: Path,
 ) -> None:
     """Test upload_file service."""
+    hass.config.allowlist_external_dirs = {tmp_path}
     test_file = tmp_path / "image.png"
     test_file.write_bytes(b"abcdef")
 
@@ -64,6 +65,7 @@ async def test_upload_file_to_album(
     tmp_path: Path,
 ) -> None:
     """Test upload_file service with target album_id."""
+    hass.config.allowlist_external_dirs = {tmp_path}
     test_file = tmp_path / "image.png"
     test_file.write_bytes(b"abcdef")
 
@@ -130,23 +132,48 @@ async def test_upload_file_config_entry_not_loaded(
         )
 
 
-async def test_upload_file_file_not_found(
+async def test_upload_file_path_not_allowed(
     hass: HomeAssistant,
     mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test upload_file service raising file_not_found."""
+    """Test upload_file service raising path_not_allowed."""
+    hass.config.allowlist_external_dirs = {}
     await setup_integration(hass, mock_config_entry)
 
     with pytest.raises(
-        ServiceValidationError, match="File `not_existing.file` not found"
+        ServiceValidationError,
+        match="Cannot read `/blabla/not_existing.file`, no access to path;",
     ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPLOAD_FILE,
             {
                 "config_entry_id": mock_config_entry.entry_id,
-                "file": "not_existing.file",
+                "file": "/blabla/not_existing.file",
+            },
+            blocking=True,
+        )
+
+
+async def test_upload_file_file_not_found(
+    hass: HomeAssistant,
+    mock_immich: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test upload_file service raising file_not_found."""
+    hass.config.allowlist_external_dirs = {"/blabla"}
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        ServiceValidationError, match="File `/blabla/not_existing.file` not found"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPLOAD_FILE,
+            {
+                "config_entry_id": mock_config_entry.entry_id,
+                "file": "/blabla/not_existing.file",
             },
             blocking=True,
         )
@@ -159,6 +186,7 @@ async def test_upload_file_album_not_found(
     tmp_path: Path,
 ) -> None:
     """Test upload_file service raising album_not_found."""
+    hass.config.allowlist_external_dirs = {tmp_path}
     test_file = tmp_path / "image.png"
     test_file.write_bytes(b"abcdef")
 
@@ -196,6 +224,7 @@ async def test_upload_file_upload_failed(
     tmp_path: Path,
 ) -> None:
     """Test upload_file service raising upload_failed."""
+    hass.config.allowlist_external_dirs = {tmp_path}
     test_file = tmp_path / "image.png"
     test_file.write_bytes(b"abcdef")
 
@@ -230,6 +259,7 @@ async def test_upload_file_to_album_upload_failed(
     tmp_path: Path,
 ) -> None:
     """Test upload_file service with target album_id raising upload_failed."""
+    hass.config.allowlist_external_dirs = {tmp_path}
     test_file = tmp_path / "image.png"
     test_file.write_bytes(b"abcdef")
 

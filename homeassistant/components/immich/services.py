@@ -54,6 +54,13 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
             translation_key="config_entry_not_loaded",
         )
 
+    if not hass.config.is_allowed_path(target_file):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="path_not_allowed",
+            translation_placeholders={"file": target_file},
+        )
+
     if not os.path.isfile(target_file):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
