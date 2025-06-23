@@ -802,11 +802,11 @@ def _async_setup_device_registry(
         )
 
     suggested_area: str | None = None
-    if device_info.suggested_area:
-        suggested_area = device_info.suggested_area
-    elif device_info.area:
-        # Use main device area if suggested_area is not set
+    if device_info.area:
+        # Prefer device_info.area over suggested_area
         suggested_area = device_info.area.name
+    elif device_info.suggested_area:
+        suggested_area = device_info.suggested_area
 
     # Create/update main device
     device_entry = device_registry.async_get_or_create(
@@ -823,6 +823,9 @@ def _async_setup_device_registry(
     # Handle sub devices
     # Find available areas from device_info
     areas_by_id = {area.area_id: area for area in device_info.areas}
+    # Add the main device's area if it exists
+    if device_info.area:
+        areas_by_id[device_info.area.area_id] = device_info.area
     # Create/update sub devices that should exist
     for sub_device in device_info.devices:
         # Determine the area for this sub device
