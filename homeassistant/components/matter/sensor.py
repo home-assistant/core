@@ -98,6 +98,7 @@ DEM_OPT_OUT_STATE_MAP = {
     clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kLocalOptOut: "local_opt_out",
     clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kGridOptOut: "grid_opt_out",
     clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kOptOut: "opt_out",
+}
 
 ESA_STATE_MAP = {
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOffline: "offline",
