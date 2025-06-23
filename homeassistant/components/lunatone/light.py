@@ -1,4 +1,4 @@
-"""Platform for light integration."""
+"""Platform for Lunatone light integration."""
 
 from __future__ import annotations
 
@@ -43,7 +43,6 @@ class LunatoneLight(LightEntity):
     def __init__(self, device: Device, unique_id_prefix: str) -> None:
         """Initialize a LunatoneLight."""
         self._device = device
-        self._state = None
         self._attr_unique_id = (
             f"{unique_id_prefix}-line{self._device.data.line}-"
             f"address{self._device.data.address}"
@@ -57,7 +56,7 @@ class LunatoneLight(LightEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if light is on."""
-        return self._state
+        return self._device.data.features.switchable.status
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -84,5 +83,3 @@ class LunatoneLight(LightEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         await self._device.async_update()
-        features = self._device.data.features
-        self._state = features.switchable.status
