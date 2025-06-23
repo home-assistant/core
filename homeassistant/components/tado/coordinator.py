@@ -74,6 +74,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             "geofence": {},
             "zone": {},
             "zone_control": {},
+            "heating_circuits": {},
         }
 
     @property
@@ -102,10 +103,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         devices = await self._async_update_devices()
         zones, zone_controls = await self._async_update_zones()
         home = await self._async_update_home()
+        heating_circuits = await self._async_update_heating_circuits()
 
         self.data["device"] = devices
         self.data["zone"] = zones
         self.data["zone_control"] = zone_controls
+        self.data["heating_circuits"] = heating_circuits
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
 
@@ -240,6 +243,23 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         )
 
         return {"weather": weather, "geofence": geofence}
+
+    async def _async_update_heating_circuits(self) -> dict[int, dict]:
+        """Update the heating circuits data from Tado."""
+
+        try:
+            heating_circuits = await self.hass.async_add_executor_job(
+                self._tado.get_heating_circuits
+            )
+        except RequestException as err:
+            _LOGGER.error("Error updating Tado heating circuits: %s", err)
+            raise UpdateFailed(f"Error updating Tado heating circuits: {err}") from err
+
+        mapped_heating_circuits: dict[int, dict] = {}
+        for circuit in heating_circuits:
+            mapped_heating_circuits[circuit["number"]] = circuit
+
+        return mapped_heating_circuits
 
     async def get_capabilities(self, zone_id: int | str) -> dict:
         """Fetch the capabilities from Tado."""
