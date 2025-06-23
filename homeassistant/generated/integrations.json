@@ -6426,7 +6426,10 @@
           "iot_class": "cloud_polling",
           "name": "SwitchBot Cloud"
         }
-      }
+      },
+      "iot_standards": [
+        "matter"
+      ]
     },
     "switcher_kis": {
       "name": "Switcher",
