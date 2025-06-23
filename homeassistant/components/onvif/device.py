@@ -664,7 +664,6 @@ class ONVIFDevice:
             req.VideoSourceToken = profile.video_source_token
             req.ImagingSettings = settings
             await imaging_service.SetImagingSettings(req)
-            return
         except ONVIFError as err:
             if "Bad Request" in err.reason:
                 LOGGER.warning(
@@ -672,6 +671,7 @@ class ONVIFDevice:
                 )
             else:
                 LOGGER.error("Error trying to set Imaging settings: %s", err)
+        return
 
     async def async_get_imaging_settings(
         self,
