@@ -481,6 +481,25 @@ def get_influx_connection(  # noqa: C901
     return InfluxClient(databases, write_v1, query_v1, close_v1)
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the InfluxDB component."""
+    conf = config.get(DOMAIN)
+
+    if conf is not None:
+        if CONF_HOST not in conf and conf[CONF_API_VERSION] == DEFAULT_API_VERSION:
+            conf[CONF_HOST] = DEFAULT_HOST
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=conf,
+            )
+        )
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
     """Set up InfluxDB from a config entry."""
     data = entry.data
@@ -520,7 +539,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
         raise ConfigEntryNotReady(err) from err
 
     event_to_json = _generate_event_to_json(config)
-    max_tries = config.get(CONF_RETRY_COUNT)
+    max_tries = config[CONF_RETRY_COUNT]
     influx_thread = hass.data[DOMAIN] = InfluxThread(
         hass, entry, influx, event_to_json, max_tries
     )
@@ -540,25 +559,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) ->
     return True
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the InfluxDB component."""
-    conf = config.get(DOMAIN)
-
-    if conf is not None:
-        if CONF_HOST not in conf and conf[CONF_API_VERSION] == DEFAULT_API_VERSION:
-            conf[CONF_HOST] = DEFAULT_HOST
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=conf,
-            )
-        )
-
-    return True
-
-
 class InfluxThread(threading.Thread):
     """A threaded event handler class."""
 
@@ -566,9 +566,9 @@ class InfluxThread(threading.Thread):
         self,
         hass: HomeAssistant,
         entry: InfluxDBConfigEntry,
-        influx,
-        event_to_json,
-        max_tries,
+        influx: InfluxClient,
+        event_to_json: Callable[[Event], dict[str, Any] | None],
+        max_tries: int,
     ) -> None:
         """Initialize the listener."""
         threading.Thread.__init__(self, name=DOMAIN)
