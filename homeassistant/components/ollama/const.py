@@ -1,6 +1,11 @@
 """Constants for the Ollama integration."""
 
+import ollama
+
+from homeassistant.config_entries import ConfigEntry
+
 DOMAIN = "ollama"
+type OllamaConfigEntry = ConfigEntry[ollama.AsyncClient]
 
 CONF_MODEL = "model"
 CONF_PROMPT = "prompt"
@@ -157,5 +162,3 @@ MODEL_NAMES = [  # https://ollama.com/library
     "zephyr",
 ]
 DEFAULT_MODEL = "llama3.2:latest"
-
-DEFAULT_CONVERSATION_NAME = "Ollama Conversation"

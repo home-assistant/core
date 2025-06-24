@@ -12,7 +12,8 @@
       }
     },
     "abort": {
-      "download_failed": "Model downloading failed"
+      "download_failed": "Model downloading failed",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -49,7 +50,8 @@
         }
       },
       "abort": {
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+        "entry_not_loaded": "Cannot add things while the configuration is disabled."
       }
     }
   }

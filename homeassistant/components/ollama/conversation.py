@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent, llm
+from homeassistant.helpers import device_registry as dr, intent, llm
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -188,6 +188,13 @@ class OllamaConversationEntity(
         self.subentry = subentry
         self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
+            manufacturer="Ollama",
+            model=entry.data[CONF_MODEL],
+            entry_type=dr.DeviceEntryType.SERVICE,
+        )
         if self.subentry.data.get(CONF_LLM_HASS_API):
             self._attr_supported_features = (
                 conversation.ConversationEntityFeature.CONTROL
@@ -254,7 +261,7 @@ class OllamaConversationEntity(
         """Generate an answer for the chat log."""
         settings = {**self.entry.data, **self.subentry.data}
 
-        client = self.hass.data[DOMAIN][self.entry.entry_id]
+        client = self.entry.runtime_data
         model = settings[CONF_MODEL]
 
         tools: list[dict[str, Any]] | None = None

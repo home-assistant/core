@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -44,7 +45,6 @@ from .const import (
     CONF_NUM_CTX,
     CONF_PROMPT,
     CONF_THINK,
-    DEFAULT_CONVERSATION_NAME,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
@@ -95,6 +95,8 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
+
+        self._async_abort_entries_match({CONF_URL: self.url})
 
         try:
             self.client = ollama.AsyncClient(
@@ -148,13 +150,13 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_download()
 
         return self.async_create_entry(
-            title=_get_title(self.model),
+            title=self.url,
             data={CONF_URL: self.url, CONF_MODEL: self.model},
             subentries=[
                 {
                     "subentry_type": "conversation",
                     "data": {},
-                    "title": DEFAULT_CONVERSATION_NAME,
+                    "title": _get_title(self.model),
                     "unique_id": None,
                 }
             ],
@@ -203,7 +205,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     "subentry_type": "conversation",
                     "data": {},
-                    "title": DEFAULT_CONVERSATION_NAME,
+                    "title": _get_title(self.model),
                     "unique_id": None,
                 }
             ],
@@ -236,6 +238,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Set conversation options."""
+        # abort if entry is not loaded
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
         errors: dict[str, str] = {}
 
         if user_input is None:
@@ -279,7 +285,7 @@ def ollama_config_option_schema(
 
     if is_new:
         schema: dict[vol.Required | vol.Optional, Any] = {
-            vol.Required(CONF_NAME, default=DEFAULT_CONVERSATION_NAME): str,
+            vol.Required(CONF_NAME, default="Ollama Conversation"): str,
         }
     else:
         schema = {}
