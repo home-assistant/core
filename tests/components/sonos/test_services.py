@@ -104,7 +104,6 @@ async def test_media_player_join_timeout(
     soco_bedroom = sonos_setup_two_speakers[1]
 
     expected = "Timeout while waiting for Sonos player to join the group ['Living Room: Living Room, Bedroom']"
-
     with (
         patch(
             "homeassistant.components.sonos.speaker.asyncio.timeout", instant_timeout
