@@ -59,7 +59,6 @@ class MatterRangeNumberEntityDescription(
 
     # command: a custom callback to create the command to send to the device
     # the callback's argument will be the index of the selected list value
-    # if omitted the command will just be a write_attribute command to the primary attribute
     command: Callable[[int], ClusterCommand]
 
 
@@ -93,15 +92,12 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        send_value = int(value)
         if value_convert := self.entity_description.ha_to_native_value:
             send_value = value_convert(value)
-        if self.entity_description.command:
-            # custom command defined to set the new value
-            await self.send_device_command(
-                self.entity_description.command(send_value),
-            )
-            return
+        # custom command defined to set the new value
+        await self.send_device_command(
+            self.entity_description.command(send_value),
+        )
 
     @callback
     def _update_from_device(self) -> None:
