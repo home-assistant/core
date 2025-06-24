@@ -161,8 +161,6 @@ async def test_flow_reauth(
         {CONF_NPSSO: "NEW_NPSSO_TOKEN"},
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 

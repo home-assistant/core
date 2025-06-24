@@ -87,34 +87,30 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 npsso = parse_npsso_token(user_input[CONF_NPSSO])
-            except PSNAWPInvalidTokenError:
-                errors["base"] = "invalid_account"
-            else:
                 psn = PlaystationNetwork(self.hass, npsso)
-                try:
-                    user: User = await psn.get_user()
-                except PSNAWPAuthenticationError:
-                    errors["base"] = "invalid_auth"
-                except PSNAWPNotFoundError:
-                    errors["base"] = "invalid_account"
-                except PSNAWPError:
-                    errors["base"] = "cannot_connect"
-                except Exception:
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
-                else:
-                    await self.async_set_unique_id(user.account_id)
-                    self._abort_if_unique_id_mismatch(
-                        description_placeholders={
-                            "wrong_account": user.online_id,
-                            CONF_NAME: entry.title,
-                        }
-                    )
+                user: User = await psn.get_user()
+            except PSNAWPAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except (PSNAWPNotFoundError, PSNAWPInvalidTokenError):
+                errors["base"] = "invalid_account"
+            except PSNAWPError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(user.account_id)
+                self._abort_if_unique_id_mismatch(
+                    description_placeholders={
+                        "wrong_account": user.online_id,
+                        CONF_NAME: entry.title,
+                    }
+                )
 
-                    return self.async_update_reload_and_abort(
-                        entry,
-                        data_updates={CONF_NPSSO: npsso},
-                    )
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_NPSSO: npsso},
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
