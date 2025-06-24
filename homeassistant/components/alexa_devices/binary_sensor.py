@@ -30,7 +30,7 @@ class AmazonBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Alexa Devices binary sensor entity description."""
 
     is_on_fn: Callable[[AmazonDevice, str], bool]
-    is_supported: Callable[[AmazonDevice, str], bool] = lambda _device, _key: True
+    is_supported: Callable[[AmazonDevice, str], bool] = lambda device, key: True
 
 
 BINARY_SENSORS: Final = (
@@ -38,61 +38,49 @@ BINARY_SENSORS: Final = (
         key="online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda _device, _: _device.online,
+        is_on_fn=lambda device, _: device.online,
     ),
     AmazonBinarySensorEntityDescription(
         key="bluetooth",
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="bluetooth",
-        is_on_fn=lambda _device, _: _device.bluetooth_state,
+        is_on_fn=lambda device, _: device.bluetooth_state,
     ),
     AmazonBinarySensorEntityDescription(
         key="babyCryDetectionState",
         translation_key="baby_cry_detection",
-        is_on_fn=lambda _device, _key: (
-            _device.sensors[_key].value != SENSOR_STATE_OFF
-        ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
+        is_on_fn=lambda device, key: (device.sensors[key].value != SENSOR_STATE_OFF),
+        is_supported=lambda device, key: device.sensors.get(key) is not None,
     ),
     AmazonBinarySensorEntityDescription(
         key="beepingApplianceDetectionState",
         translation_key="beeping_appliance_detection",
-        is_on_fn=lambda _device, _key: (
-            _device.sensors[_key].value != SENSOR_STATE_OFF
-        ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
+        is_on_fn=lambda device, key: (device.sensors[key].value != SENSOR_STATE_OFF),
+        is_supported=lambda device, key: device.sensors.get(key) is not None,
     ),
     AmazonBinarySensorEntityDescription(
         key="coughDetectionState",
         translation_key="cough_detection",
-        is_on_fn=lambda _device, _key: (
-            _device.sensors[_key].value != SENSOR_STATE_OFF
-        ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
+        is_on_fn=lambda device, key: (device.sensors[key].value != SENSOR_STATE_OFF),
+        is_supported=lambda device, key: device.sensors.get(key) is not None,
     ),
     AmazonBinarySensorEntityDescription(
         key="dogBarkDetectionState",
         translation_key="dog_bark_detection",
-        is_on_fn=lambda _device, _key: (
-            _device.sensors[_key].value != SENSOR_STATE_OFF
-        ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
+        is_on_fn=lambda device, key: (device.sensors[key].value != SENSOR_STATE_OFF),
+        is_supported=lambda device, key: device.sensors.get(key) is not None,
     ),
     AmazonBinarySensorEntityDescription(
         key="humanPresenceDetectionState",
         device_class=BinarySensorDeviceClass.MOTION,
-        is_on_fn=lambda _device, _key: (
-            _device.sensors[_key].value != SENSOR_STATE_OFF
-        ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
+        is_on_fn=lambda device, key: (device.sensors[key].value != SENSOR_STATE_OFF),
+        is_supported=lambda device, key: device.sensors.get(key) is not None,
     ),
     AmazonBinarySensorEntityDescription(
         key="waterSoundsDetectionState",
         translation_key="water_sounds_detection",
-        is_on_fn=lambda _device, _key: (
-            _device.sensors[_key].value != SENSOR_STATE_OFF
-        ),
-        is_supported=lambda _device, _key: _device.sensors.get(_key) is not None,
+        is_on_fn=lambda device, key: (device.sensors[key].value != SENSOR_STATE_OFF),
+        is_supported=lambda device, key: device.sensors.get(key) is not None,
     ),
 )
 
