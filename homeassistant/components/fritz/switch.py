@@ -25,14 +25,9 @@ from .const import (
     WIFI_STANDARD,
     MeshRoles,
 )
-from .coordinator import (
-    FRITZ_DATA_KEY,
-    AvmWrapper,
-    FritzConfigEntry,
-    FritzData,
-    device_filter_out_from_trackers,
-)
+from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzBoxBaseEntity, FritzDeviceBase
+from .helpers import device_filter_out_from_trackers
 from .models import FritzDevice, SwitchInfo
 
 _LOGGER = logging.getLogger(__name__)
