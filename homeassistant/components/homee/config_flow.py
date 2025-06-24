@@ -129,8 +129,6 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): str
                 }
             ),
-            description_placeholders={
-                "name": reconfigure_entry.runtime_data.settings.uid
-            },
+            description_placeholders={"name": str(reconfigure_entry.unique_id)},
             errors=errors,
         )
