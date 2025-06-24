@@ -68,6 +68,11 @@
       "usage_by_videos": {
         "name": "Disk used by videos"
       }
+    },
+    "update": {
+      "update": {
+        "name": "Version"
+      }
     }
   }
 }

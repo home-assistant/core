@@ -166,9 +166,9 @@ async def async_attach_trigger(
             if (
                 config[ATTR_PARTIAL_DICT_MATCH]
                 and isinstance(event_data[key], dict)
-                and isinstance(event_data_filter[key], dict)
+                and isinstance(val, dict)
             ):
-                for key2, val2 in event_data_filter[key].items():
+                for key2, val2 in val.items():
                     if key2 not in event_data[key] or event_data[key][key2] != val2:
                         return
                 continue
