@@ -107,6 +107,38 @@ def mock_all(
         },
     )
     aioclient_mock.get(
+        "http://127.0.0.1/addons",
+        json={
+            "result": "ok",
+            "data": {
+                "addons": [
+                    {
+                        "name": "test",
+                        "slug": "test",
+                        "state": "started",
+                        "update_available": True,
+                        "icon": False,
+                        "version": "2.0.0",
+                        "version_latest": "2.0.1",
+                        "repository": "core",
+                        "url": "https://github.com/home-assistant/addons/test",
+                    },
+                    {
+                        "name": "test2",
+                        "slug": "test2",
+                        "state": "stopped",
+                        "update_available": False,
+                        "icon": False,
+                        "version": "3.1.0",
+                        "version_latest": "3.2.0",
+                        "repository": "core",
+                        "url": "https://github.com",
+                    },
+                ],
+            },
+        },
+    )
+    aioclient_mock.get(
         "http://127.0.0.1/core/stats",
         json={
             "result": "ok",
