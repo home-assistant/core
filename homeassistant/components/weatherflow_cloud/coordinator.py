@@ -126,7 +126,6 @@ class BaseWebsocketCoordinator(
             hass=hass, config_entry=config_entry, rest_api=rest_api, stations=stations
         )
 
-        self._event_type = event_type
         self.websocket_api = websocket_api
 
         # Configure the websocket data structure
