@@ -15,6 +15,7 @@ from homeassistant.components.webhook import (
     Response,
     async_generate_url,
     async_register,
+    async_unregister,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -75,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: WatergateConfigEntry) -> bool:
     """Unload a config entry."""
     webhook_id = entry.data[CONF_WEBHOOK_ID]
-    hass.components.webhook.async_unregister(webhook_id)
+    async_unregister(hass, webhook_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

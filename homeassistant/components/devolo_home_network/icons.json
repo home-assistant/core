@@ -13,6 +13,14 @@
         "default": "mdi:wifi-plus"
       }
     },
+    "device_tracker": {
+      "device_tracker": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "home": "mdi:lan-connect"
+        }
+      }
+    },
     "sensor": {
       "connected_plc_devices": {
         "default": "mdi:lan"

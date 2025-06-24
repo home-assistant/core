@@ -13,19 +13,23 @@
           "brand": "Brand"
         },
         "data_description": {
-          "brand": "Please choose the brand of the mobile app you use, or the brand of the appliances in your account"
+          "username": "The username or email address you use to log in to the Whirlpool/Maytag app",
+          "password": "The password you use to log in to the Whirlpool/Maytag app",
+          "region": "The region where your appliances where purchased",
+          "brand": "The brand of the mobile app you use, or the brand of the appliances in your account"
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "For 'brand', please choose the brand of the mobile app you use, or the brand of the appliances in your account",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
-          "region": "Region",
-          "brand": "Brand"
+          "region": "[%key:component::whirlpool::config::step::user::data::region%]",
+          "brand": "[%key:component::whirlpool::config::step::user::data::brand%]"
         },
         "data_description": {
-          "brand": "Please choose the brand of the mobile app you use, or the brand of the appliances in your account"
+          "password": "[%key:component::whirlpool::config::step::user::data_description::password%]",
+          "brand": "[%key:component::whirlpool::config::step::user::data_description::brand%]",
+          "region": "[%key:component::whirlpool::config::step::user::data_description::region%]"
         }
       }
     },
@@ -43,35 +47,66 @@
   },
   "entity": {
     "sensor": {
-      "whirlpool_machine": {
+      "washer_state": {
         "name": "State",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "setting": "Setting",
-          "delay_countdown": "Delay Countdown",
-          "delay_paused": "Delay Paused",
-          "smart_delay": "Smart Delay",
-          "smart_grid_pause": "[%key:component::whirlpool::entity::sensor::whirlpool_machine::state::smart_delay%]",
+          "delay_countdown": "Delay countdown",
+          "delay_paused": "Delay paused",
+          "smart_delay": "Smart delay",
+          "smart_grid_pause": "[%key:component::whirlpool::entity::sensor::washer_state::state::smart_delay%]",
           "pause": "[%key:common::state::paused%]",
-          "running_maincycle": "Running Maincycle",
-          "running_postcycle": "Running Postcycle",
+          "running_maincycle": "Running maincycle",
+          "running_postcycle": "Running postcycle",
           "exception": "Exception",
           "complete": "Complete",
-          "power_failure": "Power Failure",
-          "service_diagnostic_mode": "Service Diagnostic Mode",
-          "factory_diagnostic_mode": "Factory Diagnostic Mode",
-          "life_test": "Life Test",
-          "customer_focus_mode": "Customer Focus Mode",
-          "demo_mode": "Demo Mode",
-          "hard_stop_or_error": "Hard Stop or Error",
-          "system_initialize": "System Initialize",
-          "cycle_filling": "Cycle Filling",
-          "cycle_rinsing": "Cycle Rinsing",
-          "cycle_sensing": "Cycle Sensing",
-          "cycle_soaking": "Cycle Soaking",
-          "cycle_spinning": "Cycle Spinning",
-          "cycle_washing": "Cycle Washing",
-          "door_open": "Door Open"
+          "power_failure": "Power failure",
+          "service_diagnostic_mode": "Service diagnostic mode",
+          "factory_diagnostic_mode": "Factory diagnostic mode",
+          "life_test": "Life test",
+          "customer_focus_mode": "Customer focus mode",
+          "demo_mode": "Demo mode",
+          "hard_stop_or_error": "Hard stop or error",
+          "system_initialize": "System initialize",
+          "cycle_filling": "Cycle filling",
+          "cycle_rinsing": "Cycle rinsing",
+          "cycle_sensing": "Cycle sensing",
+          "cycle_soaking": "Cycle soaking",
+          "cycle_spinning": "Cycle spinning",
+          "cycle_washing": "Cycle washing",
+          "door_open": "Door open"
+        }
+      },
+      "dryer_state": {
+        "name": "[%key:component::whirlpool::entity::sensor::washer_state::name%]",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "setting": "[%key:component::whirlpool::entity::sensor::washer_state::state::setting%]",
+          "delay_countdown": "[%key:component::whirlpool::entity::sensor::washer_state::state::delay_countdown%]",
+          "delay_paused": "[%key:component::whirlpool::entity::sensor::washer_state::state::delay_paused%]",
+          "smart_delay": "[%key:component::whirlpool::entity::sensor::washer_state::state::smart_delay%]",
+          "smart_grid_pause": "[%key:component::whirlpool::entity::sensor::washer_state::state::smart_delay%]",
+          "pause": "[%key:common::state::paused%]",
+          "running_maincycle": "[%key:component::whirlpool::entity::sensor::washer_state::state::running_maincycle%]",
+          "running_postcycle": "[%key:component::whirlpool::entity::sensor::washer_state::state::running_postcycle%]",
+          "exception": "[%key:component::whirlpool::entity::sensor::washer_state::state::exception%]",
+          "complete": "[%key:component::whirlpool::entity::sensor::washer_state::state::complete%]",
+          "power_failure": "[%key:component::whirlpool::entity::sensor::washer_state::state::power_failure%]",
+          "service_diagnostic_mode": "[%key:component::whirlpool::entity::sensor::washer_state::state::service_diagnostic_mode%]",
+          "factory_diagnostic_mode": "[%key:component::whirlpool::entity::sensor::washer_state::state::factory_diagnostic_mode%]",
+          "life_test": "[%key:component::whirlpool::entity::sensor::washer_state::state::life_test%]",
+          "customer_focus_mode": "[%key:component::whirlpool::entity::sensor::washer_state::state::customer_focus_mode%]",
+          "demo_mode": "[%key:component::whirlpool::entity::sensor::washer_state::state::demo_mode%]",
+          "hard_stop_or_error": "[%key:component::whirlpool::entity::sensor::washer_state::state::hard_stop_or_error%]",
+          "system_initialize": "[%key:component::whirlpool::entity::sensor::washer_state::state::system_initialize%]",
+          "cycle_filling": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_filling%]",
+          "cycle_rinsing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_rinsing%]",
+          "cycle_sensing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_sensing%]",
+          "cycle_soaking": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_soaking%]",
+          "cycle_spinning": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_spinning%]",
+          "cycle_washing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_washing%]",
+          "door_open": "[%key:component::whirlpool::entity::sensor::washer_state::state::door_open%]"
         }
       },
       "whirlpool_tank": {
@@ -93,6 +128,9 @@
   "exceptions": {
     "account_locked": {
       "message": "[%key:component::whirlpool::common::account_locked_error%]"
+    },
+    "appliances_fetch_failed": {
+      "message": "Failed to fetch appliances"
     }
   }
 }

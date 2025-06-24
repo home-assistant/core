@@ -552,6 +552,12 @@ def async_track_entity_registry_updated_event(
 
 
 @callback
+def async_has_entity_registry_updated_listeners(hass: HomeAssistant) -> bool:
+    """Check if async_track_entity_registry_updated_event has been called yet."""
+    return _KEYED_TRACK_ENTITY_REGISTRY_UPDATED.key in hass.data
+
+
+@callback
 def _async_device_registry_updated_filter(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[EventDeviceRegistryUpdatedData]], Any]]],

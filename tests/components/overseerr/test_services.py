@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from python_overseerr import OverseerrConnectionError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overseerr.const import (
     ATTR_CONFIG_ENTRY_ID,

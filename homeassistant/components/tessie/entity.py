@@ -155,7 +155,7 @@ class TessieWallConnectorEntity(TessieBaseEntity):
             via_device=(DOMAIN, str(data.id)),
             serial_number=din.split("-")[-1],
         )
-
+        assert data.live_coordinator
         super().__init__(data.live_coordinator, key)
 
     @property

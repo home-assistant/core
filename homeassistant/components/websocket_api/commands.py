@@ -59,7 +59,11 @@ from homeassistant.loader import (
     async_get_integration_descriptions,
     async_get_integrations,
 )
-from homeassistant.setup import async_get_loaded_integrations, async_get_setup_timings
+from homeassistant.setup import (
+    async_get_loaded_integrations,
+    async_get_setup_timings,
+    async_wait_component,
+)
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
@@ -98,6 +102,7 @@ def async_register_commands(
     async_reg(hass, handle_subscribe_entities)
     async_reg(hass, handle_supported_features)
     async_reg(hass, handle_integration_descriptions)
+    async_reg(hass, handle_integration_wait)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -295,7 +300,9 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
-        connection.logger.exception("Unexpected exception")
+        connection.logger.error(
+            "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
+        )
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
@@ -728,8 +735,7 @@ async def handle_subscribe_trigger(
 ) -> None:
     """Handle subscribe trigger command."""
     # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers import trigger
+    from homeassistant.helpers import trigger  # noqa: PLC0415
 
     trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
 
@@ -779,8 +785,7 @@ async def handle_test_condition(
 ) -> None:
     """Handle test condition command."""
     # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers import condition
+    from homeassistant.helpers import condition  # noqa: PLC0415
 
     # Do static + dynamic validation of the condition
     config = await condition.async_validate_condition_config(hass, msg["condition"])
@@ -805,8 +810,10 @@ async def handle_execute_script(
 ) -> None:
     """Handle execute script command."""
     # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers.script import Script, async_validate_actions_config
+    from homeassistant.helpers.script import (  # noqa: PLC0415
+        Script,
+        async_validate_actions_config,
+    )
 
     script_config = await async_validate_actions_config(hass, msg["sequence"])
 
@@ -870,8 +877,7 @@ async def handle_validate_config(
 ) -> None:
     """Handle validate config command."""
     # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers import condition, script, trigger
+    from homeassistant.helpers import condition, script, trigger  # noqa: PLC0415
 
     result = {}
 
@@ -923,3 +929,21 @@ async def handle_integration_descriptions(
 ) -> None:
     """Get metadata for all brands and integrations."""
     connection.send_result(msg["id"], await async_get_integration_descriptions(hass))
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "integration/wait",
+        vol.Required("domain"): str,
+    }
+)
+@decorators.async_response
+async def handle_integration_wait(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle wait for integration command."""
+
+    domain: str = msg["domain"]
+    connection.send_result(
+        msg["id"], {"integration_loaded": await async_wait_component(hass, domain)}
+    )

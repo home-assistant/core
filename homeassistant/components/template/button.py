@@ -26,29 +26,19 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_PRESS, DOMAIN
-from .template_entity import (
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
-    TemplateEntity,
-)
+from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Template Button"
 DEFAULT_OPTIMISTIC = False
 
-BUTTON_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
-)
+BUTTON_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    }
+).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
 CONFIG_BUTTON_SCHEMA = vol.Schema(
     {
@@ -120,7 +110,8 @@ class TemplateButtonEntity(TemplateEntity, ButtonEntity):
         """Initialize the button."""
         super().__init__(hass, config=config, unique_id=unique_id)
         assert self._attr_name is not None
-        if action := config.get(CONF_PRESS):
+        # Scripts can be an empty list, therefore we need to check for None
+        if (action := config.get(CONF_PRESS)) is not None:
             self.add_script(CONF_PRESS, action, self._attr_name, DOMAIN)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state = None

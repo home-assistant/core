@@ -11,7 +11,10 @@ from homeassistant import setup
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.button import DEFAULT_NAME
+from homeassistant.components.template.const import CONF_PICTURE
 from homeassistant.const import (
+    ATTR_ENTITY_PICTURE,
+    ATTR_ICON,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
@@ -91,6 +94,45 @@ async def test_missing_optional_config(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     _verify(hass, STATE_UNKNOWN)
+
+
+async def test_missing_emtpy_press_action_config(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test: missing optional template is ok."""
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "button": {
+                        "press": [],
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_UNKNOWN)
+
+    now = dt.datetime.now(dt.UTC)
+    freezer.move_to(now)
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {CONF_ENTITY_ID: _TEST_BUTTON},
+        blocking=True,
+    )
+
+    _verify(
+        hass,
+        now.isoformat(),
+    )
 
 
 async def test_missing_required_keys(hass: HomeAssistant) -> None:
@@ -205,6 +247,49 @@ async def test_name_template(hass: HomeAssistant) -> None:
             CONF_FRIENDLY_NAME: "Button 2",
         },
         "button.button_2",
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "attribute", "test_template", "expected"),
+    [
+        (CONF_ICON, ATTR_ICON, "mdi:test{{ 1 + 1 }}", "mdi:test2"),
+        (CONF_PICTURE, ATTR_ENTITY_PICTURE, "test{{ 1 + 1 }}.jpg", "test2.jpg"),
+    ],
+)
+async def test_templated_optional_config(
+    hass: HomeAssistant,
+    field: str,
+    attribute: str,
+    test_template: str,
+    expected: str,
+) -> None:
+    """Test optional config templates."""
+    with assert_setup_component(1, "template"):
+        assert await setup.async_setup_component(
+            hass,
+            "template",
+            {
+                "template": {
+                    "button": {
+                        "press": {"service": "script.press"},
+                        field: test_template,
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(
+        hass,
+        STATE_UNKNOWN,
+        {
+            attribute: expected,
+        },
+        "button.template_button",
     )
 
 

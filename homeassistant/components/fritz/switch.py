@@ -38,6 +38,9 @@ from .entity import FritzBoxBaseEntity, FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
+# Set a sane value to avoid too many updates
+PARALLEL_UPDATES = 5
+
 
 async def _async_deflection_entities_list(
     avm_wrapper: AvmWrapper, device_friendly_name: str
@@ -511,16 +514,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._name = f"{device.hostname} Internet Access"
         self._attr_unique_id = f"{self._mac}_internet_access"
         self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            default_manufacturer="AVM",
-            default_model="FRITZ!Box Tracked device",
-            default_name=device.hostname,
-            via_device=(
-                DOMAIN,
-                avm_wrapper.unique_id,
-            ),
-        )
 
     @property
     def is_on(self) -> bool | None:

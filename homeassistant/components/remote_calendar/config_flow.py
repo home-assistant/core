@@ -1,11 +1,10 @@
 """Config flow for Remote Calendar integration."""
 
+from http import HTTPStatus
 import logging
 from typing import Any
 
 from httpx import HTTPError, InvalidURL
-from ical.calendar_stream import IcsCalendarStream
-from ical.exceptions import CalendarParseError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -13,6 +12,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_CALENDAR_NAME, DOMAIN
+from .ics import InvalidIcsException, parse_calendar
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,18 +50,22 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         client = get_async_client(self.hass)
         try:
             res = await client.get(user_input[CONF_URL], follow_redirects=True)
+            if res.status_code == HTTPStatus.FORBIDDEN:
+                errors["base"] = "forbidden"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=STEP_USER_DATA_SCHEMA,
+                    errors=errors,
+                )
             res.raise_for_status()
         except (HTTPError, InvalidURL) as err:
             errors["base"] = "cannot_connect"
             _LOGGER.debug("An error occurred: %s", err)
         else:
             try:
-                await self.hass.async_add_executor_job(
-                    IcsCalendarStream.calendar_from_ics, res.text
-                )
-            except CalendarParseError as err:
+                await parse_calendar(self.hass, res.text)
+            except InvalidIcsException:
                 errors["base"] = "invalid_ics_file"
-                _LOGGER.debug("Invalid .ics file: %s", err)
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_CALENDAR_NAME], data=user_input

@@ -1,5 +1,29 @@
 {
   "entity": {
+    "climate": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "mdi:hand-back-left"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "mdi:hand-back-left",
+              "auto": "mdi:auto-mode",
+              "summer": "mdi:sun-thermometer-outline"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "brightness": {
         "default": "mdi:brightness-5"

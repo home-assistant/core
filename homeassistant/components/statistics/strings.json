@@ -32,6 +32,8 @@
       "options": {
         "description": "Read the documentation for further details on how to configure the statistics sensor using these options.",
         "data": {
+          "entity_id": "[%key:component::statistics::config::step::user::data::entity_id%]",
+          "state_characteristic": "[%key:component::statistics::config::step::state_characteristic::data::state_characteristic%]",
           "sampling_size": "Sampling size",
           "max_age": "Max age",
           "keep_last_sample": "Keep last sample",
@@ -39,6 +41,8 @@
           "precision": "Precision"
         },
         "data_description": {
+          "entity_id": "[%key:component::statistics::config::step::user::data_description::entity_id%]",
+          "state_characteristic": "[%key:component::statistics::config::step::state_characteristic::data_description::state_characteristic%]",
           "sampling_size": "Maximum number of source sensor measurements stored.",
           "max_age": "Maximum age of source sensor measurements stored.",
           "keep_last_sample": "Defines whether the most recent sampled value should be preserved regardless of the 'Max age' setting.",
@@ -60,6 +64,8 @@
       "init": {
         "description": "[%key:component::statistics::config::step::options::description%]",
         "data": {
+          "entity_id": "[%key:component::statistics::config::step::user::data::entity_id%]",
+          "state_characteristic": "[%key:component::statistics::config::step::state_characteristic::data::state_characteristic%]",
           "sampling_size": "[%key:component::statistics::config::step::options::data::sampling_size%]",
           "max_age": "[%key:component::statistics::config::step::options::data::max_age%]",
           "keep_last_sample": "[%key:component::statistics::config::step::options::data::keep_last_sample%]",
@@ -67,6 +73,8 @@
           "precision": "[%key:component::statistics::config::step::options::data::precision%]"
         },
         "data_description": {
+          "entity_id": "[%key:component::statistics::config::step::user::data_description::entity_id%]",
+          "state_characteristic": "[%key:component::statistics::config::step::state_characteristic::data_description::state_characteristic%]",
           "sampling_size": "[%key:component::statistics::config::step::options::data_description::sampling_size%]",
           "max_age": "[%key:component::statistics::config::step::options::data_description::max_age%]",
           "keep_last_sample": "[%key:component::statistics::config::step::options::data_description::keep_last_sample%]",

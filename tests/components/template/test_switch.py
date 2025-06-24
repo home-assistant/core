@@ -37,6 +37,12 @@ TEST_OBJECT_ID = "test_template_switch"
 TEST_ENTITY_ID = f"switch.{TEST_OBJECT_ID}"
 TEST_STATE_ENTITY_ID = "switch.test_state"
 
+TEST_EVENT_TRIGGER = {
+    "trigger": {"platform": "event", "event_type": "test_event"},
+    "variables": {"type": "{{ trigger.event.data.type }}"},
+    "action": [{"event": "action_event", "event_data": {"type": "{{ type }}"}}],
+}
+
 SWITCH_TURN_ON = {
     "service": "test.automation",
     "data_template": {
@@ -100,6 +106,33 @@ async def async_setup_modern_format(
     await hass.async_block_till_done()
 
 
+async def async_setup_trigger_format(
+    hass: HomeAssistant, count: int, switch_config: dict[str, Any]
+) -> None:
+    """Do setup of switch integration via modern format."""
+    config = {"template": {**TEST_EVENT_TRIGGER, "switch": switch_config}}
+
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+async def async_ensure_triggered_entity_updates(
+    hass: HomeAssistant, style: ConfigurationStyle, **kwargs
+) -> None:
+    """Trigger template entities."""
+    if style == ConfigurationStyle.TRIGGER:
+        hass.bus.async_fire("test_event", {"type": "test_event", **kwargs})
+        await hass.async_block_till_done()
+
+
 @pytest.fixture
 async def setup_switch(
     hass: HomeAssistant,
@@ -112,6 +145,8 @@ async def setup_switch(
         await async_setup_legacy_format(hass, count, switch_config)
     elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(hass, count, switch_config)
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(hass, count, switch_config)
 
 
 @pytest.fixture
@@ -135,6 +170,15 @@ async def setup_state_switch(
         )
     elif style == ConfigurationStyle.MODERN:
         await async_setup_modern_format(
+            hass,
+            count,
+            {
+                **NAMED_SWITCH_ACTIONS,
+                "state": state_template,
+            },
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
             hass,
             count,
             {
@@ -176,6 +220,16 @@ async def setup_single_attribute_switch(
                 **extra,
             },
         )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {
+                **NAMED_SWITCH_ACTIONS,
+                "state": "{{ 1 == 1 }}",
+                **extra,
+            },
+        )
 
 
 @pytest.fixture
@@ -201,6 +255,55 @@ async def setup_optimistic_switch(
             count,
             {
                 **NAMED_SWITCH_ACTIONS,
+            },
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {
+                **NAMED_SWITCH_ACTIONS,
+            },
+        )
+
+
+@pytest.fixture
+async def setup_single_attribute_optimistic_switch(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    attribute: str,
+    attribute_template: str,
+) -> None:
+    """Do setup of switch integration testing a single attribute."""
+    extra = {attribute: attribute_template} if attribute and attribute_template else {}
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_format(
+            hass,
+            count,
+            {
+                TEST_OBJECT_ID: {
+                    **SWITCH_ACTIONS,
+                    **extra,
+                }
+            },
+        )
+    elif style == ConfigurationStyle.MODERN:
+        await async_setup_modern_format(
+            hass,
+            count,
+            {
+                **NAMED_SWITCH_ACTIONS,
+                **extra,
+            },
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass,
+            count,
+            {
+                **NAMED_SWITCH_ACTIONS,
+                **extra,
             },
         )
 
@@ -238,10 +341,14 @@ async def test_legacy_to_modern_config(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ True }}")])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-async def test_setup(hass: HomeAssistant, setup_state_switch) -> None:
+async def test_setup(
+    hass: HomeAssistant, style: ConfigurationStyle, setup_state_switch
+) -> None:
     """Test template."""
+    await async_ensure_triggered_entity_updates(hass, style)
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.name == TEST_OBJECT_ID
@@ -326,18 +433,25 @@ async def test_flow_preview(
     ("count", "state_template"), [(1, "{{ states.switch.test_state.state }}")]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-async def test_template_state_text(hass: HomeAssistant, setup_state_switch) -> None:
+async def test_template_state_text(
+    hass: HomeAssistant, style: ConfigurationStyle, setup_state_switch
+) -> None:
     """Test the state text of a template."""
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
+
+    await async_ensure_triggered_entity_updates(hass, style)
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_ON
 
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
     await hass.async_block_till_done()
+
+    await async_ensure_triggered_entity_updates(hass, style)
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
@@ -352,12 +466,14 @@ async def test_template_state_text(hass: HomeAssistant, setup_state_switch) -> N
     ],
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_template_state_boolean(
-    hass: HomeAssistant, expected: str, setup_state_switch
+    hass: HomeAssistant, expected: str, style: ConfigurationStyle, setup_state_switch
 ) -> None:
     """Test the setting of the state with boolean template."""
+    await async_ensure_triggered_entity_updates(hass, style)
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == expected
 
@@ -371,20 +487,105 @@ async def test_template_state_boolean(
     [
         (ConfigurationStyle.LEGACY, "icon_template"),
         (ConfigurationStyle.MODERN, "icon"),
+        (ConfigurationStyle.TRIGGER, "icon"),
     ],
 )
 async def test_icon_template(
-    hass: HomeAssistant, setup_single_attribute_switch
+    hass: HomeAssistant, style: ConfigurationStyle, setup_single_attribute_switch
 ) -> None:
     """Test the state text of a template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("icon") == ""
+    assert state.attributes.get("icon") in ("", None)
 
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
 
+    await async_ensure_triggered_entity_updates(hass, style)
+
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes["icon"] == "mdi:check"
+
+
+@pytest.mark.parametrize(
+    ("config_attr", "attribute", "expected"),
+    [("icon", "icon", "mdi:icon"), ("picture", "entity_picture", "picture.jpg")],
+)
+async def test_attributes_with_optimistic_state(
+    hass: HomeAssistant,
+    config_attr: str,
+    attribute: str,
+    expected: str,
+    calls: list[ServiceCall],
+) -> None:
+    """Test attributes when trigger entity is optimistic."""
+    await async_setup_trigger_format(
+        hass,
+        1,
+        {
+            **NAMED_SWITCH_ACTIONS,
+            config_attr: "{{ trigger.event.data.attr }}",
+        },
+    )
+
+    hass.states.async_set(TEST_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+    assert state.attributes.get(attribute) is None
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes.get(attribute) is None
+
+    assert len(calls) == 1
+    assert calls[-1].data["action"] == "turn_on"
+    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+    assert state.attributes.get(attribute) is None
+
+    assert len(calls) == 2
+    assert calls[-1].data["action"] == "turn_off"
+    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+
+    await async_ensure_triggered_entity_updates(
+        hass, ConfigurationStyle.TRIGGER, attr=expected
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+    assert state.attributes.get(attribute) == expected
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes.get(attribute) == expected
+
+    assert len(calls) == 3
+    assert calls[-1].data["action"] == "turn_on"
+    assert calls[-1].data["caller"] == TEST_ENTITY_ID
 
 
 @pytest.mark.parametrize(
@@ -396,17 +597,20 @@ async def test_icon_template(
     [
         (ConfigurationStyle.LEGACY, "entity_picture_template"),
         (ConfigurationStyle.MODERN, "picture"),
+        (ConfigurationStyle.TRIGGER, "picture"),
     ],
 )
 async def test_entity_picture_template(
-    hass: HomeAssistant, setup_single_attribute_switch
+    hass: HomeAssistant, style: ConfigurationStyle, setup_single_attribute_switch
 ) -> None:
     """Test entity_picture template."""
     state = hass.states.get(TEST_ENTITY_ID)
-    assert state.attributes.get("entity_picture") == ""
+    assert state.attributes.get("entity_picture") in ("", None)
 
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
+
+    await async_ensure_triggered_entity_updates(hass, style)
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes["entity_picture"] == "/local/switch.png"
@@ -415,7 +619,7 @@ async def test_entity_picture_template(
 @pytest.mark.parametrize(("count", "state_template"), [(0, "{% if rubbish %}")])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN],
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_template_syntax_error(hass: HomeAssistant, setup_state_switch) -> None:
     """Test templating syntax error."""
@@ -613,14 +817,20 @@ async def test_missing_off_does_not_create(
     ("count", "state_template"), [(1, "{{ states('switch.test_state') }}")]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_on_action(
-    hass: HomeAssistant, setup_state_switch, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    setup_state_switch,
+    calls: list[ServiceCall],
 ) -> None:
     """Test on action."""
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
     await hass.async_block_till_done()
+
+    await async_ensure_triggered_entity_updates(hass, style)
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
@@ -639,7 +849,8 @@ async def test_on_action(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_on_action_optimistic(
     hass: HomeAssistant, setup_optimistic_switch, calls: list[ServiceCall]
@@ -670,14 +881,20 @@ async def test_on_action_optimistic(
     ("count", "state_template"), [(1, "{{ states.switch.test_state.state }}")]
 )
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_off_action(
-    hass: HomeAssistant, setup_state_switch, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    setup_state_switch,
+    calls: list[ServiceCall],
 ) -> None:
     """Test off action."""
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
+
+    await async_ensure_triggered_entity_updates(hass, style)
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_ON
@@ -696,7 +913,8 @@ async def test_off_action(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN]
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_off_action_optimistic(
     hass: HomeAssistant, setup_optimistic_switch, calls: list[ServiceCall]
@@ -760,6 +978,24 @@ async def test_off_action_optimistic(
             },
             template.DOMAIN,
         ),
+        (
+            {
+                "template": {
+                    "trigger": {"trigger": "event", "event_type": "test_event"},
+                    "switch": [
+                        {
+                            "name": "s1",
+                            **SWITCH_ACTIONS,
+                        },
+                        {
+                            "name": "s2",
+                            **SWITCH_ACTIONS,
+                        },
+                    ],
+                }
+            },
+            template.DOMAIN,
+        ),
     ],
 )
 async def test_restore_state(
@@ -800,19 +1036,24 @@ async def test_restore_state(
     [
         (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
+        (ConfigurationStyle.TRIGGER, "availability"),
     ],
 )
 async def test_available_template_with_entities(
-    hass: HomeAssistant, setup_single_attribute_switch
+    hass: HomeAssistant, style: ConfigurationStyle, setup_single_attribute_switch
 ) -> None:
     """Test availability templates with values from other entities."""
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
     await hass.async_block_till_done()
 
+    await async_ensure_triggered_entity_updates(hass, style)
+
     assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
 
     hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
     await hass.async_block_till_done()
+
+    await async_ensure_triggered_entity_updates(hass, style)
 
     assert hass.states.get(TEST_ENTITY_ID).state == STATE_UNAVAILABLE
 
@@ -981,3 +1222,49 @@ async def test_device_id(
     template_entity = entity_registry.async_get("switch.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("style", "switch_config"),
+    [
+        (
+            ConfigurationStyle.LEGACY,
+            {
+                TEST_OBJECT_ID: {
+                    "turn_on": [],
+                    "turn_off": [],
+                },
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "name": TEST_OBJECT_ID,
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+    ],
+)
+async def test_empty_action_config(hass: HomeAssistant, setup_switch) -> None:
+    """Test configuration with empty script."""
+    await hass.services.async_call(
+        switch.DOMAIN,
+        switch.SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        switch.DOMAIN,
+        switch.SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF

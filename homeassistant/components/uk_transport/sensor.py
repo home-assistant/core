@@ -163,7 +163,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         self._destination_re = re.compile(f"{bus_direction}", re.IGNORECASE)
 
         sensor_name = f"Next bus to {bus_direction}"
-        stop_url = f"bus/stop/{stop_atcocode}/live.json"
+        stop_url = f"bus/stop/{stop_atcocode}.json"
 
         UkTransportSensor.__init__(self, sensor_name, api_app_id, api_app_key, stop_url)
         self.update = Throttle(interval)(self._update)
@@ -226,7 +226,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
         self._next_trains = []
 
         sensor_name = f"Next train to {calling_at}"
-        query_url = f"train/station/{station_code}/live.json"
+        query_url = f"train/station/{station_code}.json"
 
         UkTransportSensor.__init__(
             self, sensor_name, api_app_id, api_app_key, query_url

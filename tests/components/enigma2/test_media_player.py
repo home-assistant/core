@@ -37,7 +37,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_object_fixture,
+    async_load_json_object_fixture,
 )
 
 
@@ -228,8 +228,10 @@ async def test_update_data_standby(
 ) -> None:
     """Test data handling."""
 
-    openwebif_device_mock.get_status_info.return_value = load_json_object_fixture(
-        "device_statusinfo_standby.json", DOMAIN
+    openwebif_device_mock.get_status_info.return_value = (
+        await async_load_json_object_fixture(
+            hass, "device_statusinfo_standby.json", DOMAIN
+        )
     )
     openwebif_device_mock.status = OpenWebIfStatus(
         currservice=OpenWebIfServiceEvent(), in_standby=True

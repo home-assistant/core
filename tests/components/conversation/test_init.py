@@ -220,6 +220,13 @@ async def test_get_agent_info(
     agent_info = conversation.async_get_agent_info(hass)
     assert agent_info == snapshot
 
+    default_agent = conversation.async_get_agent(hass)
+    default_agent._attr_supports_streaming = True
+    assert (
+        conversation.async_get_agent_info(hass, "homeassistant").supports_streaming
+        is True
+    )
+
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 async def test_prepare_agent(

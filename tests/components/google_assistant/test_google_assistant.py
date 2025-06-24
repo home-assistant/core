@@ -1,6 +1,5 @@
 """The tests for the Google Assistant component."""
 
-from asyncio import AbstractEventLoop
 from http import HTTPStatus
 import json
 from unittest.mock import patch
@@ -38,32 +37,28 @@ def auth_header(hass_access_token: str) -> dict[str, str]:
 
 
 @pytest.fixture
-def assistant_client(
-    event_loop: AbstractEventLoop,
+async def assistant_client(
     hass: core.HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> TestClient:
     """Create web client for the Google Assistant API."""
-    loop = event_loop
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass,
-            "google_assistant",
-            {
-                "google_assistant": {
-                    "project_id": PROJECT_ID,
-                    "entity_config": {
-                        "light.ceiling_lights": {
-                            "aliases": ["top lights", "ceiling lights"],
-                            "name": "Roof Lights",
-                        }
-                    },
-                }
-            },
-        )
+    await setup.async_setup_component(
+        hass,
+        "google_assistant",
+        {
+            "google_assistant": {
+                "project_id": PROJECT_ID,
+                "entity_config": {
+                    "light.ceiling_lights": {
+                        "aliases": ["top lights", "ceiling lights"],
+                        "name": "Roof Lights",
+                    }
+                },
+            }
+        },
     )
 
-    return loop.run_until_complete(hass_client_no_auth())
+    return await hass_client_no_auth()
 
 
 @pytest.fixture(autouse=True)
@@ -87,16 +82,12 @@ async def wanted_platforms_only() -> None:
 
 
 @pytest.fixture
-def hass_fixture(
-    event_loop: AbstractEventLoop, hass: core.HomeAssistant
-) -> core.HomeAssistant:
+async def hass_fixture(hass: core.HomeAssistant) -> core.HomeAssistant:
     """Set up a Home Assistant instance for these tests."""
-    loop = event_loop
-
     # We need to do this to get access to homeassistant/turn_(on,off)
-    loop.run_until_complete(setup.async_setup_component(hass, core.DOMAIN, {}))
+    await setup.async_setup_component(hass, core.DOMAIN, {})
 
-    loop.run_until_complete(setup.async_setup_component(hass, "demo", {}))
+    await setup.async_setup_component(hass, "demo", {})
 
     return hass
 

@@ -32,11 +32,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
-from .template_entity import (
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
-    TemplateEntity,
-)
+from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,20 +43,14 @@ CONF_SELECT_OPTION = "select_option"
 DEFAULT_NAME = "Template Select"
 DEFAULT_OPTIMISTIC = False
 
-SELECT_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Required(CONF_STATE): cv.template,
-            vol.Required(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
-            vol.Required(ATTR_OPTIONS): cv.template,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
-)
+SELECT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_STATE): cv.template,
+        vol.Required(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
+        vol.Required(ATTR_OPTIONS): cv.template,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    }
+).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
 
 SELECT_CONFIG_SCHEMA = vol.Schema(
@@ -141,7 +131,8 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         super().__init__(hass, config=config, unique_id=unique_id)
         assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
-        if select_option := config.get(CONF_SELECT_OPTION):
+        # Scripts can be an empty list, therefore we need to check for None
+        if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
             self.add_script(CONF_SELECT_OPTION, select_option, self._attr_name, DOMAIN)
         self._options_template = config[ATTR_OPTIONS]
         self._attr_assumed_state = self._optimistic = config.get(CONF_OPTIMISTIC, False)
@@ -197,7 +188,8 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
-        if select_option := config.get(CONF_SELECT_OPTION):
+        # Scripts can be an empty list, therefore we need to check for None
+        if (select_option := config.get(CONF_SELECT_OPTION)) is not None:
             self.add_script(
                 CONF_SELECT_OPTION,
                 select_option,

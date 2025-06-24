@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "description": "Sign-in with your Verisure My Pages account.",
+          "description": "Sign in with your Verisure My Pages account.",
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
@@ -11,7 +11,7 @@
       "mfa": {
         "data": {
           "description": "Your account has 2-step verification enabled. Please enter the verification code Verisure sends to you.",
-          "code": "Verification Code"
+          "code": "Verification code"
         }
       },
       "installation": {
@@ -37,7 +37,7 @@
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unknown_mfa": "Unknown error occurred during MFA set up"
+      "unknown_mfa": "Unknown error occurred during MFA setup"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",

@@ -17,6 +17,9 @@ from . import SqueezeboxConfigEntry
 from .const import STATUS_SENSOR_NEEDSRESTART, STATUS_SENSOR_RESCAN
 from .entity import LMSStatusEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=STATUS_SENSOR_RESCAN,

@@ -82,10 +82,10 @@ def _client_context_no_verify(ssl_cipher_list: SSLCipherList) -> ssl.SSLContext:
     return sslcontext
 
 
-@cache
-def _client_context(
+def _create_client_context(
     ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
 ) -> ssl.SSLContext:
+    """Return an independent SSL context for making requests."""
     # Reuse environment variable definition from requests, since it's already a
     # requirement. If the environment variable has no value, fall back to using
     # certs from certifi package.
@@ -98,6 +98,14 @@ def _client_context(
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
 
     return sslcontext
+
+
+@cache
+def _client_context(
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+) -> ssl.SSLContext:
+    # Cached version of _create_client_context
+    return _create_client_context(ssl_cipher_list)
 
 
 # Create this only once and reuse it
@@ -137,6 +145,14 @@ def client_context(
 ) -> ssl.SSLContext:
     """Return an SSL context for making requests."""
     return _SSL_CONTEXTS.get(ssl_cipher_list, _DEFAULT_SSL_CONTEXT)
+
+
+def create_client_context(
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+) -> ssl.SSLContext:
+    """Return an independent SSL context for making requests."""
+    # This explicitly uses the non-cached version to create a client context
+    return _create_client_context(ssl_cipher_list)
 
 
 def create_no_verify_ssl_context(
