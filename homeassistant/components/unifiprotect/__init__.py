@@ -8,7 +8,6 @@ import logging
 from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Bootstrap
-from uiprotect.data.types import FirmwareReleaseChannel
 from uiprotect.exceptions import ClientError, NotAuthorized
 
 # Import the test_util.anonymize module from the uiprotect package
@@ -29,7 +28,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     AUTH_RETRIES,
-    CONF_ALLOW_EA,
     DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
@@ -57,10 +55,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=DEVICE_UPDATE_INTERVAL)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-EARLY_ACCESS_URL = (
-    "https://www.home-assistant.io/integrations/unifiprotect#software-support"
-)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -123,47 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
 
-    if not entry.options.get(CONF_ALLOW_EA, False) and (
-        await nvr_info.get_is_prerelease()
-        or nvr_info.release_channel != FirmwareReleaseChannel.RELEASE
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "ea_channel_warning",
-            is_fixable=True,
-            is_persistent=False,
-            learn_more_url=EARLY_ACCESS_URL,
-            severity=IssueSeverity.WARNING,
-            translation_key="ea_channel_warning",
-            translation_placeholders={"version": str(nvr_info.version)},
-            data={"entry_id": entry.entry_id},
-        )
-
-    try:
-        await _async_setup_entry(hass, entry, data_service, bootstrap)
-    except Exception as err:
-        if await nvr_info.get_is_prerelease():
-            # If they are running a pre-release, its quite common for setup
-            # to fail so we want to create a repair issue for them so its
-            # obvious what the problem is.
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"ea_setup_failed_{nvr_info.version}",
-                is_fixable=False,
-                is_persistent=False,
-                learn_more_url="https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access",
-                severity=IssueSeverity.ERROR,
-                translation_key="ea_setup_failed",
-                translation_placeholders={
-                    "error": str(err),
-                    "version": str(nvr_info.version),
-                },
-            )
-            ir.async_delete_issue(hass, DOMAIN, "ea_channel_warning")
-            _LOGGER.exception("Error setting up UniFi Protect integration")
-        raise
+    await _async_setup_entry(hass, entry, data_service, bootstrap)
 
     return True
 

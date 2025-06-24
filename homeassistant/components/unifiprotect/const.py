@@ -26,7 +26,6 @@ CONF_DISABLE_RTSP = "disable_rtsp"
 CONF_ALL_UPDATES = "all_updates"
 CONF_OVERRIDE_CHOST = "override_connection_host"
 CONF_MAX_MEDIA = "max_media"
-CONF_ALLOW_EA = "allow_ea_channel"
 
 CONFIG_OPTIONS = [
     CONF_ALL_UPDATES,
