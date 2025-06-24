@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
@@ -152,10 +153,10 @@ def patch_file_upload(return_value=PATH_FIXTURE, side_effect=None):
 async def test_setup_v1(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_client,
-    config_base,
-    config_url,
-    get_write_api,
+    mock_client: MagicMock,
+    config_base: dict[str, Any],
+    config_url: dict[str, Any],
+    get_write_api: Any,
 ) -> None:
     """Test we can setup an InfluxDB v1."""
     result = await hass.config_entries.flow.async_init(
@@ -223,10 +224,10 @@ async def test_setup_v1(
 async def test_setup_v1_ssl_cert(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_client,
-    config_base,
-    config_url,
-    get_write_api,
+    mock_client: MagicMock,
+    config_base: dict[str, Any],
+    config_url: dict[str, Any],
+    get_write_api: Any,
 ) -> None:
     """Test we can setup an InfluxDB v1 with SSL Certificate."""
     result = await hass.config_entries.flow.async_init(
@@ -291,9 +292,9 @@ async def test_setup_v1_ssl_cert(
 async def test_setup_v2(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_client,
-    config_base,
-    get_write_api,
+    mock_client: MagicMock,
+    config_base: dict[str, Any],
+    get_write_api: Any,
 ) -> None:
     """Test we can setup an InfluxDB v2."""
     result = await hass.config_entries.flow.async_init(
@@ -352,9 +353,9 @@ async def test_setup_v2(
 async def test_setup_v2_ssl_cert(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_client,
-    config_base,
-    get_write_api,
+    mock_client: MagicMock,
+    config_base: dict[str, Any],
+    get_write_api: Any,
 ) -> None:
     """Test we can setup an InfluxDB v2 with SSL Certificate."""
     result = await hass.config_entries.flow.async_init(
@@ -482,12 +483,12 @@ async def test_setup_v2_ssl_cert(
 async def test_setup_connection_error(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_client,
-    config_base,
-    api_version,
-    get_write_api,
-    test_exception,
-    reason,
+    mock_client: MagicMock,
+    config_base: dict[str, Any],
+    api_version: str,
+    get_write_api: Any,
+    test_exception: Exception,
+    reason: str,
 ) -> None:
     """Test connection error during setup of InfluxDB v2."""
     write_api = get_write_api(mock_client)
@@ -517,6 +518,15 @@ async def test_setup_connection_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
 
+    write_api.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        config_base,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("mock_client", "config_base", "get_write_api", "db_name", CONF_HOST),
@@ -541,11 +551,11 @@ async def test_setup_connection_error(
 async def test_import(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_client,
-    config_base,
-    get_write_api,
-    db_name,
-    host,
+    mock_client: MagicMock,
+    config_base: dict[str, Any],
+    get_write_api: Any,
+    db_name: str,
+    host: str,
 ) -> None:
     """Test we can import."""
     result = await hass.config_entries.flow.async_init(
