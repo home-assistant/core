@@ -413,12 +413,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 description_placeholders=self._get_translation_placeholders(),
             )
 
-        if not await self._probe_firmware_info(probe_methods=(ApplicationType.SPINEL,)):
-            return self.async_abort(
-                reason="unsupported_firmware",
-                description_placeholders=self._get_translation_placeholders(),
-            )
-
         # OTBR discovery is done automatically via hassio
         return self._async_flow_finished()
 
