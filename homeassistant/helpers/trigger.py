@@ -70,7 +70,7 @@ TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 
 
 # Basic schemas to sanity check the trigger descriptions,
-# full validation is done by hassfest.services
+# full validation is done by hassfest.triggers
 _FIELD_SCHEMA = vol.Schema(
     {},
     extra=vol.ALLOW_EXTRA,
