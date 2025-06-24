@@ -50,12 +50,12 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_fault_device() -> CustomerDevice:
+def mock_device_with_fault() -> CustomerDevice:
     """Mock Tuya device with fault bitmap data."""
     device = MagicMock(spec=CustomerDevice)
-    device.id = "test_device_id"
-    device.name = "Test Fault Device"
-    device.product_name = "Test Fault Device"
+    device.id = "test_device_with_fault_id"
+    device.name = "Test Device With Fault"
+    device.product_name = "Test Device With Fault"
     device.product_id = "test_product"
     device.category = "test_category"
     device.online = True
@@ -66,6 +66,21 @@ def mock_fault_device() -> CustomerDevice:
             values='{"label": ["Fault 1", "Fault 2", "Fault 3"]}',
         ),
     }
+    return device
+
+
+@pytest.fixture
+def mock_device_without_fault() -> CustomerDevice:
+    """Mock Tuya device without fault bitmap data."""
+    device = MagicMock(spec=CustomerDevice)
+    device.id = "test_device_without_fault_id"
+    device.name = "Test Device Without Fault"
+    device.product_name = "Test Device Without Fault"
+    device.product_id = "test_product"
+    device.category = "test_category"
+    device.online = True
+    device.status = {}
+    device.status_range = {}
     return device
 
 
@@ -81,13 +96,17 @@ async def test_fault_sensor_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
-    mock_fault_device: CustomerDevice,
+    mock_device_with_fault: CustomerDevice,
+    mock_device_without_fault: CustomerDevice,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test fault sensor entity discovery and setup."""
     # Setup
-    mock_manager.device_map = {mock_fault_device.id: mock_fault_device}
+    mock_manager.device_map = {
+        mock_device_with_fault.id: mock_device_with_fault,
+        mock_device_without_fault.id: mock_device_without_fault,
+    }
     mock_config_entry.add_to_hass(hass)
 
     # Initialize the component
@@ -116,14 +135,14 @@ async def test_fault_sensor_state_updates(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
-    mock_fault_device: CustomerDevice,
+    mock_device_with_fault: CustomerDevice,
     device_listener: DeviceListener,
     fault_value: int,
     expected_states: list[str],
 ) -> None:
     """Test fault sensor state updates based on bitmap values."""
     # Setup
-    mock_manager.device_map = {mock_fault_device.id: mock_fault_device}
+    mock_manager.device_map = {mock_device_with_fault.id: mock_device_with_fault}
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -133,15 +152,15 @@ async def test_fault_sensor_state_updates(
         await hass.async_block_till_done()
 
     # Update fault status
-    mock_fault_device.status[DPCode.FAULT] = fault_value
-    device_listener.update_device(mock_fault_device, [DPCode.FAULT])
+    mock_device_with_fault.status[DPCode.FAULT] = fault_value
+    device_listener.update_device(mock_device_with_fault, [DPCode.FAULT])
     await hass.async_block_till_done()
 
     # Verify states
     fault_sensors = [
-        "binary_sensor.test_fault_device_fault_1",
-        "binary_sensor.test_fault_device_fault_2",
-        "binary_sensor.test_fault_device_fault_3",
+        "binary_sensor.test_device_with_fault_fault_1",
+        "binary_sensor.test_device_with_fault_fault_2",
+        "binary_sensor.test_device_with_fault_fault_3",
     ]
 
     for sensor_id, expected_state in zip(fault_sensors, expected_states, strict=True):
