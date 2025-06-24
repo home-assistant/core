@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from .common import configure_mock
+from . import configure_mock
 from .const import MOCK_ACCESS_TOKEN, SERVER_TOKEN_RESPONSE
 
 from tests.common import MockConfigEntry

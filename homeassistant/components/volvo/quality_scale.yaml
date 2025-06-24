@@ -61,7 +61,8 @@ rules:
   dynamic-devices:
     status: exempt
     comment: |
-      No dynamic devices possible.
+      Devices are handpicked because there is a rate limit on the API, which we
+      would hit if all devices (vehicles) are added under the same API key.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done

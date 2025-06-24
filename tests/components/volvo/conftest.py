@@ -3,19 +3,15 @@
 from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 from unittest.mock import AsyncMock, patch
 
-from _pytest.fixtures import SubRequest
 import pytest
 from volvocarsapi.api import VolvoCarsApi
-from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
+from volvocarsapi.auth import TOKEN_URL
 from volvocarsapi.models import (
     VolvoCarsAvailableCommand,
     VolvoCarsLocation,
     VolvoCarsVehicle,
 )
-from volvocarsapi.scopes import DEFAULT_SCOPES
-from yarl import URL
 
-from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
@@ -23,46 +19,27 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.volvo.const import CONF_VIN, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from .common import async_load_fixture_as_json, async_load_fixture_as_value_field
+from . import async_load_fixture_as_json, async_load_fixture_as_value_field
 from .const import (
     CLIENT_ID,
     CLIENT_SECRET,
+    DEFAULT_API_KEY,
     DEFAULT_MODEL,
     DEFAULT_VIN,
     MOCK_ACCESS_TOKEN,
-    REDIRECT_URI,
     SERVER_TOKEN_RESPONSE,
 )
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
-def pytest_configure(config: pytest.Config):
-    """Configure pytest."""
-    config.addinivalue_line("markers", "use_model(name): mark test to use given model")
-
-
-def model(name: str):
+@pytest.fixture(params=[DEFAULT_MODEL])
+def full_model(request: pytest.FixtureRequest) -> str:
     """Define which model to use when running the test. Use as a decorator."""
-    return pytest.mark.use_model(name)
-
-
-@pytest.fixture
-def model_from_marker(full_model_from_marker: str) -> str:  # pylint: disable=hass-argument-type
-    """Get model from marker."""
-    return full_model_from_marker[: full_model_from_marker.index("_")]
-
-
-@pytest.fixture
-def full_model_from_marker(request: SubRequest) -> str:  # pylint: disable=hass-argument-type
-    """Get full model from marker."""
-    marker = request.node.get_closest_marker("use_model")
-    return marker.args[0] if marker is not None else DEFAULT_MODEL
+    return request.param
 
 
 @pytest.fixture
@@ -73,7 +50,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         unique_id=DEFAULT_VIN,
         data={
             "auth_implementation": DOMAIN,
-            CONF_API_KEY: "abcdef0123456879abcdef",
+            CONF_API_KEY: DEFAULT_API_KEY,
             CONF_VIN: DEFAULT_VIN,
             CONF_TOKEN: {
                 "access_token": MOCK_ACCESS_TOKEN,
@@ -88,52 +65,50 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-async def mock_api(
-    hass: HomeAssistant, full_model_from_marker: str
-) -> AsyncGenerator[AsyncMock]:
+async def mock_api(hass: HomeAssistant, full_model: str) -> AsyncGenerator[AsyncMock]:
     """Mock the Volvo API."""
-    model = full_model_from_marker
-
     with patch(
         "homeassistant.components.volvo.VolvoCarsApi",
-        spec_set=VolvoCarsApi,
+        autospec=True,
     ) as mock_api:
-        vehicle_data = await async_load_fixture_as_json(hass, "vehicle", model)
+        vehicle_data = await async_load_fixture_as_json(hass, "vehicle", full_model)
         vehicle = VolvoCarsVehicle.from_dict(vehicle_data)
 
-        commands_data = (await async_load_fixture_as_json(hass, "commands", model)).get(
-            "data"
-        )
+        commands_data = (
+            await async_load_fixture_as_json(hass, "commands", full_model)
+        ).get("data")
         commands = [VolvoCarsAvailableCommand.from_dict(item) for item in commands_data]
 
-        location_data = await async_load_fixture_as_json(hass, "location", model)
+        location_data = await async_load_fixture_as_json(hass, "location", full_model)
         location = {"location": VolvoCarsLocation.from_dict(location_data)}
 
         availability = await async_load_fixture_as_value_field(
-            hass, "availability", model
+            hass, "availability", full_model
         )
-        brakes = await async_load_fixture_as_value_field(hass, "brakes", model)
+        brakes = await async_load_fixture_as_value_field(hass, "brakes", full_model)
         diagnostics = await async_load_fixture_as_value_field(
-            hass, "diagnostics", model
+            hass, "diagnostics", full_model
         )
-        doors = await async_load_fixture_as_value_field(hass, "doors", model)
+        doors = await async_load_fixture_as_value_field(hass, "doors", full_model)
         engine_status = await async_load_fixture_as_value_field(
-            hass, "engine_status", model
+            hass, "engine_status", full_model
         )
         engine_warnings = await async_load_fixture_as_value_field(
-            hass, "engine_warnings", model
+            hass, "engine_warnings", full_model
         )
         fuel_status = await async_load_fixture_as_value_field(
-            hass, "fuel_status", model
+            hass, "fuel_status", full_model
         )
-        odometer = await async_load_fixture_as_value_field(hass, "odometer", model)
+        odometer = await async_load_fixture_as_value_field(hass, "odometer", full_model)
         recharge_status = await async_load_fixture_as_value_field(
-            hass, "recharge_status", model
+            hass, "recharge_status", full_model
         )
-        statistics = await async_load_fixture_as_value_field(hass, "statistics", model)
-        tyres = await async_load_fixture_as_value_field(hass, "tyres", model)
-        warnings = await async_load_fixture_as_value_field(hass, "warnings", model)
-        windows = await async_load_fixture_as_value_field(hass, "windows", model)
+        statistics = await async_load_fixture_as_value_field(
+            hass, "statistics", full_model
+        )
+        tyres = await async_load_fixture_as_value_field(hass, "tyres", full_model)
+        warnings = await async_load_fixture_as_value_field(hass, "warnings", full_model)
+        windows = await async_load_fixture_as_value_field(hass, "windows", full_model)
 
         api: VolvoCarsApi = mock_api.return_value
         api.async_get_brakes_status = AsyncMock(return_value=brakes)
@@ -165,41 +140,6 @@ async def setup_credentials(hass: HomeAssistant) -> None:
         DOMAIN,
         ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
-
-
-@pytest.fixture
-async def config_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-) -> config_entries.ConfigFlowResult:
-    """Initialize a new config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": REDIRECT_URI,
-        },
-    )
-
-    result_url = URL(result["url"])
-    assert f"{result_url.origin()}{result_url.path}" == AUTHORIZE_URL
-    assert result_url.query["response_type"] == "code"
-    assert result_url.query["client_id"] == CLIENT_ID
-    assert result_url.query["redirect_uri"] == REDIRECT_URI
-    assert result_url.query["state"] == state
-    assert result_url.query["code_challenge"]
-    assert result_url.query["code_challenge_method"] == "S256"
-    assert result_url.query["scope"] == " ".join(DEFAULT_SCOPES)
-
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
-
-    return result
 
 
 @pytest.fixture

@@ -35,7 +35,6 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
     """Volvo base coordinator."""
 
     config_entry: VolvoConfigEntry
-    vehicle: VolvoCarsVehicle
 
     def __init__(
         self,

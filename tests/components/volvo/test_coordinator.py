@@ -16,7 +16,7 @@ from homeassistant.components.volvo.coordinator import (
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .common import configure_mock
+from . import configure_mock
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 

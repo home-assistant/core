@@ -4,9 +4,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 from volvocarsapi.api import _API_CONNECTED_ENDPOINT, _API_URL
-from volvocarsapi.auth import TOKEN_URL
+from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
 from volvocarsapi.models import VolvoApiException
+from volvocarsapi.scopes import DEFAULT_SCOPES
+from yarl import URL
 
+from homeassistant import config_entries
 from homeassistant.components.volvo.const import CONF_VIN, DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -14,8 +17,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .common import async_load_fixture_as_json
-from .const import DEFAULT_MODEL, DEFAULT_VIN, REDIRECT_URI, SERVER_TOKEN_RESPONSE
+from . import async_load_fixture_as_json
+from .const import (
+    CLIENT_ID,
+    DEFAULT_API_KEY,
+    DEFAULT_MODEL,
+    DEFAULT_VIN,
+    REDIRECT_URI,
+    SERVER_TOKEN_RESPONSE,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -35,6 +45,9 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert config_flow["type"] is FlowResultType.CREATE_ENTRY
+    assert config_flow["data"][CONF_API_KEY] == DEFAULT_API_KEY
+    assert config_flow["data"][CONF_VIN] == DEFAULT_VIN
+    assert config_flow["context"]["unique_id"] == DEFAULT_VIN
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -169,6 +182,41 @@ async def test_api_failure_flow(
         hass, config_flow, aioclient_mock, configure=False
     )
     assert config_flow["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.fixture
+async def config_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> config_entries.ConfigFlowResult:
+    """Initialize a new config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT_URI,
+        },
+    )
+
+    result_url = URL(result["url"])
+    assert f"{result_url.origin()}{result_url.path}" == AUTHORIZE_URL
+    assert result_url.query["response_type"] == "code"
+    assert result_url.query["client_id"] == CLIENT_ID
+    assert result_url.query["redirect_uri"] == REDIRECT_URI
+    assert result_url.query["state"] == state
+    assert result_url.query["code_challenge"]
+    assert result_url.query["code_challenge_method"] == "S256"
+    assert result_url.query["scope"] == " ".join(DEFAULT_SCOPES)
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    return result
 
 
 async def _async_run_flow_to_completion(
