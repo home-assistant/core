@@ -464,6 +464,82 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "playstation_network",
+        "macaddress": "AC8995*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "1C98C1*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "5C843C*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "605BB4*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "8060B7*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "78C881*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "00D9D1*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "00E421*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "0CFE45*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "2CCC44*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "BC60A7*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "C863F1*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "F8461C*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "70662A*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "09E29*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "B40AD8*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "A8474A*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "280DFC*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "D44B5E*",
+    },
+    {
         "domain": "powerwall",
         "hostname": "1118431-*",
     },

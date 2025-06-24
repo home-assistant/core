@@ -151,6 +151,7 @@ async def async_setup_entry(
         SwitchBotCloudSensor(data.api, device, coordinator, description)
         for device, coordinator in data.devices.sensors
         for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
+        if device.device_type in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES
     )
 
 
