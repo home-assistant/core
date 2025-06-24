@@ -38,6 +38,7 @@ async def test_load_unload_v1(
     assert weak_ref() is None
 
 
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
 async def test_load_unload_v2(
     hass: HomeAssistant,
     mock_config_entry_v2: MockConfigEntry,
