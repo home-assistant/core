@@ -336,13 +336,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     "" if unit is None else unit
                 )
 
-            # filter out all derivatives older than `time_window` from our window list
-            self._state_list = [
-                (time_start, time_end, state)
-                for time_start, time_end, state in self._state_list
-                if (new_state.last_reported - time_end).total_seconds()
-                < self._time_window
-            ]
+            self._prune_state_list(new_state.last_reported)
 
             try:
                 elapsed_time = (
@@ -380,25 +374,14 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 (old_last_reported, new_state.last_reported, new_derivative)
             )
 
-            def calculate_weight(
-                start: datetime, end: datetime, now: datetime
-            ) -> float:
-                window_start = now - timedelta(seconds=self._time_window)
-                if start < window_start:
-                    weight = (end - window_start).total_seconds() / self._time_window
-                else:
-                    weight = (end - start).total_seconds() / self._time_window
-                return weight
-
             # If outside of time window just report derivative (is the same as modeling it in the window),
             # otherwise take the weighted average with the previous derivatives
             if elapsed_time > self._time_window:
                 derivative = new_derivative
             else:
-                derivative = Decimal("0.00")
-                for start, end, value in self._state_list:
-                    weight = calculate_weight(start, end, new_state.last_reported)
-                    derivative = derivative + (value * Decimal(weight))
+                derivative = self._calc_derivative_from_state_list(
+                    new_state.last_reported
+                )
             self._attr_native_value = round(derivative, self._round_digits)
             self.async_write_ha_state()
 
