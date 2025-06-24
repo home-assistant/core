@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
+import logging
 import math
 from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast
 
@@ -32,8 +33,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 # Import config flow so that it's added to the registry
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData, build_device_unique_id
+from .entry_data import (
+    ESPHomeConfigEntry,
+    RuntimeEntryData,
+    build_device_unique_id,
+    build_unique_id,
+)
 from .enum_mapper import EsphomeEnumMapper
+
+_LOGGER = logging.getLogger(__name__)
 
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
@@ -80,8 +88,34 @@ def async_static_info_updated(
         new_unique_id = build_device_unique_id(device_info.mac_address, info)
         entity_id = ent_reg.async_get_entity_id(platform.domain, DOMAIN, old_unique_id)
 
-        # Entity must exist in registry since we found it in current_infos
-        assert entity_id is not None
+        # If not found by exact match, search for entity with base unique_id
+        # This happens when the YAML config was modified and renamed the device_id
+        if entity_id is None:
+            base_unique_id = build_unique_id(device_info.mac_address, info)
+            # Search all entities for this config entry
+            for entry in ent_reg.entities.get_entries_for_config_entry_id(
+                entry_data.entry_id
+            ):
+                if entry.platform != DOMAIN or entry.domain != platform.domain:
+                    continue
+                # Check if it's the exact base unique_id or starts with base_unique_id@
+                if entry.unique_id == base_unique_id or (
+                    entry.unique_id and entry.unique_id.startswith(f"{base_unique_id}@")
+                ):
+                    entity_id = entry.entity_id
+                    break
+
+        # If entity not found in registry, add it as new
+        if entity_id is None:
+            _LOGGER.info(
+                "Entity with unique_id %s not found in registry when device_id changed from %s to %s, adding as new entity",
+                old_unique_id,
+                old_info.device_id,
+                info.device_id,
+            )
+            entity = entity_type(entry_data, platform.domain, info, state_type)
+            add_entities.append(entity)
+            continue
 
         updates: dict[str, Any] = {}
 
