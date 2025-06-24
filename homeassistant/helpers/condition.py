@@ -120,16 +120,6 @@ class ConditionProtocol(Protocol):
     ) -> dict[str, type[Condition]]:
         """Return the conditions provided by this integration."""
 
-    async def async_validate_condition_config(
-        self, hass: HomeAssistant, config: ConfigType
-    ) -> ConfigType:
-        """Validate config."""
-
-    def async_condition_from_config(
-        self, hass: HomeAssistant, config: ConfigType
-    ) -> ConditionCheckerType:
-        """Evaluate state based on configuration."""
-
 
 type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
 
