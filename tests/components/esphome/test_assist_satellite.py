@@ -1837,8 +1837,7 @@ async def test_intent_progress_optimization(
         {"tts_start_streaming": "1"},
     )
 
-    # Test that intent progress with no data still sends the event
-    # (because None is falsy, so the condition doesn't match)
+    # Test that intent progress with no data is *not* sent
     mock_client.send_voice_assistant_event.reset_mock()
     satellite.on_pipeline_event(
         PipelineEvent(
@@ -1846,10 +1845,7 @@ async def test_intent_progress_optimization(
             data=None,
         )
     )
-    assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS,
-        {"tts_start_streaming": "1"},
-    )
+    mock_client.send_voice_assistant_event.assert_not_called()
 
 
 async def test_wake_word_select(
