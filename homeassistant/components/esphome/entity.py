@@ -105,17 +105,8 @@ def async_static_info_updated(
                     entity_id = entry.entity_id
                     break
 
-        # If entity not found in registry, add it as new
-        if entity_id is None:
-            _LOGGER.info(
-                "Entity with unique_id %s not found in registry when device_id changed from %s to %s, adding as new entity",
-                old_unique_id,
-                old_info.device_id,
-                info.device_id,
-            )
-            entity = entity_type(entry_data, platform.domain, info, state_type)
-            add_entities.append(entity)
-            continue
+        # Entity must exist in registry since we found it in current_infos
+        assert entity_id is not None
 
         updates: dict[str, Any] = {}
 
