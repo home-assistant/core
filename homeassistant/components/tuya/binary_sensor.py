@@ -144,6 +144,11 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             translation_key="feeding",
             on_value="feeding",
         ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            translation_key="charge_state",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
     ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
