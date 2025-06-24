@@ -30,11 +30,10 @@ from .coordinator import (
     AvmWrapper,
     FritzConfigEntry,
     FritzData,
-    FritzDevice,
-    SwitchInfo,
     device_filter_out_from_trackers,
 )
 from .entity import FritzBoxBaseEntity, FritzDeviceBase
+from .models import FritzDevice, SwitchInfo
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -24,10 +24,10 @@ from .coordinator import (
     AvmWrapper,
     FritzConfigEntry,
     FritzData,
-    FritzDevice,
     _is_tracked,
 )
 from .entity import FritzDeviceBase
+from .models import FritzDevice
 
 _LOGGER = logging.getLogger(__name__)
 
