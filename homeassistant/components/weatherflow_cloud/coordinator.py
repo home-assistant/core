@@ -197,18 +197,7 @@ class WeatherFlowWindCoordinator(BaseWebsocketCoordinator[EventDataRapidWind]):
 class WeatherFlowObservationCoordinator(BaseWebsocketCoordinator[WebsocketObservation]):
     """Coordinator specifically for observation data."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        rest_api: WeatherFlowRestAPI,
-        websocket_api: WeatherFlowWebsocketAPI,
-        stations: StationsResponseREST,
-    ) -> None:
-        """Initialize observation coordinator."""
-        super().__init__(
-            hass, config_entry, rest_api, websocket_api, stations, EventType.OBSERVATION
-        )
+    _event_type = EventType.OBSERVATION
 
     def _create_listen_message(self, device_id: int) -> ListenStartMessage:
         """Create observation listen message."""
