@@ -50,12 +50,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def format_condition_hourly(condition: str):
+def format_condition_hourly(condition: str) -> str:
     """Return condition from dict CONDITION_MAP_HOURLY."""
     return CONDITION_MAP_HOURLY.get(condition, condition)
 
 
-def format_condition_daily(condition: str):
+def format_condition_daily(condition: str) -> str:
     """Return condition from dict CONDITION_MAP_DAILY."""
     return CONDITION_MAP_DAILY.get(condition, condition)
 
