@@ -60,7 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         access_token=entry.data[CONF_API_TOKEN], device_ids=websocket_device_ids
     )
 
-    # Create specific coordinators - much cleaner!
     websocket_observation_coordinator = WeatherFlowObservationCoordinator(
         hass=hass,
         config_entry=entry,
