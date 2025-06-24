@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
+from pydreo.exceptions import DreoBusinessException, DreoException
 import pytest
 
 from homeassistant.components.dreo.const import DOMAIN
@@ -21,9 +21,9 @@ async def test_setup_success(hass: HomeAssistant, mock_config_entry) -> None:
     mock_config_entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.dreo.HsCloud") as mock_client_class,
+        patch("homeassistant.components.dreo.DreoClient") as mock_client_class,
         patch(
-            "homeassistant.components.dreo.config_flow.HsCloud"
+            "homeassistant.components.dreo.config_flow.DreoClient"
         ) as mock_config_flow_client,
     ):
         mock_client = mock_client_class.return_value
@@ -76,9 +76,9 @@ async def test_setup_connection_error(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.login.side_effect = HsCloudException("Connection failed")
+        mock_client.login.side_effect = DreoException("Connection failed")
 
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
@@ -98,16 +98,16 @@ async def test_setup_authentication_error(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.dreo.HsCloud") as mock_client_class,
+        patch("homeassistant.components.dreo.DreoClient") as mock_client_class,
         patch(
-            "homeassistant.components.dreo.config_flow.HsCloud"
+            "homeassistant.components.dreo.config_flow.DreoClient"
         ) as mock_config_flow_client,
     ):
         mock_client = mock_client_class.return_value
-        mock_client.login.side_effect = HsCloudBusinessException("Invalid credentials")
+        mock_client.login.side_effect = DreoBusinessException("Invalid credentials")
 
         mock_config_flow_client.return_value.login.side_effect = (
-            HsCloudBusinessException("Invalid credentials")
+            DreoBusinessException("Invalid credentials")
         )
 
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -127,7 +127,7 @@ async def test_setup_with_multiple_devices(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -190,9 +190,9 @@ async def test_unload_config_entry(hass: HomeAssistant, mock_config_entry) -> No
     mock_config_entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.dreo.HsCloud") as mock_client_class,
+        patch("homeassistant.components.dreo.DreoClient") as mock_client_class,
         patch(
-            "homeassistant.components.dreo.config_flow.HsCloud"
+            "homeassistant.components.dreo.config_flow.DreoClient"
         ) as mock_config_flow_client,
     ):
         mock_client = mock_client_class.return_value
@@ -240,7 +240,7 @@ async def test_setup_with_no_devices(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = []
@@ -266,7 +266,7 @@ async def test_setup_with_invalid_device_data(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -310,7 +310,7 @@ async def test_coordinator_setup_and_refresh(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -360,7 +360,7 @@ async def test_coordinator_api_none_response_handling(
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -403,7 +403,7 @@ async def test_coordinator_api_exception_handling(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -421,7 +421,7 @@ async def test_coordinator_api_exception_handling(hass: HomeAssistant) -> None:
 
         mock_client.get_status.side_effect = [
             {"power_switch": True, "connected": True, "speed": 3},
-            HsCloudException("API Error"),
+            DreoException("API Error"),
         ]
 
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -447,7 +447,7 @@ async def test_coordinator_generic_exception_handling(hass: HomeAssistant) -> No
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [

@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
+from pydreo.exceptions import DreoBusinessException, DreoException
 import pytest
 
 from homeassistant.components.dreo.config_flow import DreoFlowHandler
@@ -31,7 +31,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
     user_input = {CONF_USERNAME: "test@example.com", CONF_PASSWORD: "password123"}
 
     with patch(
-        "homeassistant.components.dreo.config_flow.HsCloud"
+        "homeassistant.components.dreo.config_flow.DreoClient"
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
@@ -56,10 +56,10 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
     user_input = {CONF_USERNAME: "test@example.com", CONF_PASSWORD: "password123"}
 
     with patch(
-        "homeassistant.components.dreo.config_flow.HsCloud"
+        "homeassistant.components.dreo.config_flow.DreoClient"
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.login.side_effect = HsCloudException("Connection error")
+        mock_client.login.side_effect = DreoException("Connection error")
 
         result = await flow.async_step_user(user_input)
 
@@ -77,10 +77,10 @@ async def test_user_step_invalid_auth(hass: HomeAssistant) -> None:
     user_input = {CONF_USERNAME: "test@example.com", CONF_PASSWORD: "wrongpassword"}
 
     with patch(
-        "homeassistant.components.dreo.config_flow.HsCloud"
+        "homeassistant.components.dreo.config_flow.DreoClient"
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.login.side_effect = HsCloudBusinessException("Invalid credentials")
+        mock_client.login.side_effect = DreoBusinessException("Invalid credentials")
 
         result = await flow.async_step_user(user_input)
 
@@ -98,7 +98,7 @@ async def test_user_step_unique_id_already_configured(hass: HomeAssistant) -> No
     user_input = {CONF_USERNAME: "existing@example.com", CONF_PASSWORD: "password123"}
 
     with (
-        patch("homeassistant.components.dreo.config_flow.HsCloud") as mock_client_class,
+        patch("homeassistant.components.dreo.config_flow.DreoClient") as mock_client_class,
         patch.object(flow, "_abort_if_unique_id_configured") as mock_abort,
     ):
         mock_client = mock_client_class.return_value
@@ -130,7 +130,7 @@ async def test_validate_login_success(hass: HomeAssistant) -> None:
     flow.hass = hass
 
     with patch(
-        "homeassistant.components.dreo.config_flow.HsCloud"
+        "homeassistant.components.dreo.config_flow.DreoClient"
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
@@ -148,10 +148,10 @@ async def test_validate_login_connection_error(hass: HomeAssistant) -> None:
     flow.hass = hass
 
     with patch(
-        "homeassistant.components.dreo.config_flow.HsCloud"
+        "homeassistant.components.dreo.config_flow.DreoClient"
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.login.side_effect = HsCloudException("Network error")
+        mock_client.login.side_effect = DreoException("Network error")
 
         is_valid, error = await flow._validate_login("test_user", "test_pass")
 
@@ -165,10 +165,10 @@ async def test_validate_login_invalid_credentials(hass: HomeAssistant) -> None:
     flow.hass = hass
 
     with patch(
-        "homeassistant.components.dreo.config_flow.HsCloud"
+        "homeassistant.components.dreo.config_flow.DreoClient"
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.login.side_effect = HsCloudBusinessException("Invalid auth")
+        mock_client.login.side_effect = DreoBusinessException("Invalid auth")
 
         is_valid, error = await flow._validate_login("test_user", "test_pass")
 

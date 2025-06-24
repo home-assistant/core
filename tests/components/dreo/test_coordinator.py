@@ -6,7 +6,7 @@ Most coordinator functionality should be tested through platform tests (test_fan
 
 from unittest.mock import AsyncMock, Mock
 
-from hscloud.hscloudexception import HsCloudException
+from pydreo.exceptions import DreoException
 import pytest
 
 from homeassistant.components.dreo.coordinator import (
@@ -156,15 +156,15 @@ async def test_coordinator_async_update_data_no_processor() -> None:
         await coordinator._async_update_data()
 
 
-async def test_coordinator_async_update_data_hscloud_exception() -> None:
-    """Test coordinator update when HsCloudException is raised."""
+async def test_coordinator_async_update_data_dreo_exception() -> None:
+    """Test coordinator update when DreoException is raised."""
     hass = Mock(spec=HomeAssistant)
     client = Mock()
     device_id = "test_device"
     device_type = "fan"
     model_config = {"preset_modes": ["Sleep", "Auto", "Natural", "Normal"]}
 
-    hass.async_add_executor_job = AsyncMock(side_effect=HsCloudException("API Error"))
+    hass.async_add_executor_job = AsyncMock(side_effect=DreoException("API Error"))
 
     coordinator = DreoDataUpdateCoordinator(
         hass, client, device_id, device_type, model_config
@@ -207,7 +207,6 @@ async def test_process_fan_data_edge_cases() -> None:
     assert fan_data.mode is None
     assert fan_data.oscillate is None
     assert fan_data.speed_percentage is None
-
 
     status_zero_oscillate = {
         "connected": True,

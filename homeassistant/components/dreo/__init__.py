@@ -85,17 +85,12 @@ async def async_setup_device_coordinator(
     if not device_id or not device_model or not device_type:
         return
 
-
     if model_config is None:
-        _LOGGER.warning(
-            "Model config is not available for model %s", device_model
-        )
+        _LOGGER.warning("Model config is not available for model %s", device_model)
         return
-
 
     if device_id in coordinators:
         return
-
 
     coordinator = DreoDataUpdateCoordinator(
         hass, client, device_id, device_type, model_config
