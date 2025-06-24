@@ -61,6 +61,70 @@
           "prior": "The baseline probabilty the sensor should be 'on', this is usually the percentage of time it is true. For example, for a sensor 'Everyone sleeping' it might be 8 hours a day, 33%.",
           "device_class": "Choose the device class you would like the sensor to show as."
         }
+      },
+      "observation_selector": {
+        "title": "[%key:component::bayesian::config_subentries::observation::step::user::title%]",
+        "description": "[%key:component::bayesian::config_subentries::observation::step::user::description%]",
+        "menu_options": {
+          "state": "[%key:component::bayesian::config_subentries::observation::step::user::menu_options::state%]",
+          "numeric_state": "[%key:component::bayesian::config_subentries::observation::step::user::menu_options::numeric_state%]",
+          "template": "[%key:component::bayesian::config_subentries::observation::step::user::menu_options::template%]"
+        }
+      },
+      "state": {
+        "title": "[%key:component::bayesian::config_subentries::observation::step::state::title%]",
+        "description": "[%key:component::bayesian::config_subentries::observation::step::state::description%]",
+
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "entity_id": "[%key:component::bayesian::config_subentries::observation::step::state::data::entity_id%]",
+          "to_state": "[%key:component::bayesian::config_subentries::observation::step::state::data::to_state%]",
+          "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]"
+        },
+        "data_description": {
+          "name": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::name%]",
+          "entity_id": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::entity_id%]",
+          "to_state": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::to_state%]",
+          "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_false%]"
+        }
+      },
+      "numeric_state": {
+        "title": "[%key:component::bayesian::config_subentries::observation::step::state::title%]",
+        "description": "[%key:component::bayesian::config_subentries::observation::step::state::description%]",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "entity_id": "[%key:component::bayesian::config_subentries::observation::step::state::data::entity_id%]",
+          "above": "[%key:component::bayesian::config_subentries::observation::step::numeric_state::data::above%]",
+          "below": "[%key:component::bayesian::config_subentries::observation::step::numeric_state::data::below%]",
+          "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]"
+        },
+        "data_description": {
+          "name": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::name%]",
+          "entity_id": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::entity_id%]",
+          "above": "[%key:component::bayesian::config_subentries::observation::step::numeric_state::data_description::above%]",
+          "below": "[%key:component::bayesian::config_subentries::observation::step::numeric_state::data_description::below%]",
+          "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_false%]"
+        }
+      },
+      "template": {
+        "title": "[%key:component::bayesian::config_subentries::observation::step::state::title%]",
+        "description": "[%key:component::bayesian::config_subentries::observation::step::template::description%]",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "value_template": "[%key:component::bayesian::config_subentries::observation::step::template::data::value_template%]",
+          "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]"
+        },
+        "data_description": {
+          "name": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::name%]",
+          "value_template": "[%key:component::bayesian::config_subentries::observation::step::template::data_description::value_template%]",
+          "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::prob_given_false%]"
+        }
       }
     }
   },

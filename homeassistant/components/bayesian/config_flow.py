@@ -33,7 +33,9 @@ from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import (
+    ConfigFlowResult,
     ConfigSubentry,
+    ConfigSubentryData,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
@@ -59,6 +61,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .binary_sensor import above_greater_than_below, no_overlapping
 from .const import (
+    CONF_OBSERVATIONS,
     CONF_P_GIVEN_F,
     CONF_P_GIVEN_T,
     CONF_PRIOR,
@@ -301,7 +304,7 @@ def _convert_fractions_to_percentages(
     }
 
 
-async def _select_observation_schema(
+def _select_observation_schema(
     obs_type: ObservationTypes,
 ) -> vol.Schema:
     """Return the schema for editing the correct observation (SubEntry) type."""
@@ -321,7 +324,7 @@ async def _get_base_suggested_values(
     return _convert_fractions_to_percentages(dict(handler.options))
 
 
-async def _get_observation_values_for_editing(
+def _get_observation_values_for_editing(
     subentry: ConfigSubentry,
 ) -> dict[str, Any]:
     """Return the values for editing in the observation subentry."""
@@ -337,8 +340,8 @@ async def _validate_user(
     return {**user_input}
 
 
-async def _validate_observation_subentry(
-    obs_type: ObservationTypes,
+def _validate_observation_subentry(
+    obs_type: ObservationTypes | str,
     user_input: dict[str, Any],
     other_subentries: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
@@ -366,10 +369,46 @@ async def _validate_observation_subentry(
     return user_input
 
 
+async def _validate_subentry_from_config_entry(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to add a sub-item so we update the options directly.
+    observations: list[dict[str, Any]] = handler.options.setdefault(
+        CONF_OBSERVATIONS, []
+    )
+    if handler.parent_handler.cur_step is not None:
+        user_input[CONF_PLATFORM] = handler.parent_handler.cur_step["step_id"]
+        user_input = _validate_observation_subentry(
+            user_input[CONF_PLATFORM], user_input
+        )
+    observations.append(user_input)
+    return {}
+
+
 CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
     str(USER): SchemaFlowFormStep(
         CONFIG_SCHEMA,
         validate_user_input=_validate_user,
+        next_step=str(OBSERVATION_SELECTOR),
+    ),
+    str(OBSERVATION_SELECTOR): SchemaFlowMenuStep(
+        [typ.value for typ in ObservationTypes]
+    ),
+    str(ObservationTypes.STATE): SchemaFlowFormStep(
+        STATE_SUBSCHEMA,
+        # next_step=_add_more_or_end,
+        validate_user_input=_validate_subentry_from_config_entry,
+    ),
+    str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
+        NUMERIC_STATE_SUBSCHEMA,
+        # next_step=_add_more_or_end,
+        validate_user_input=_validate_subentry_from_config_entry,
+    ),
+    str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
+        TEMPLATE_SUBSCHEMA,
+        # next_step=_add_more_or_end,
+        validate_user_input=_validate_subentry_from_config_entry,
     ),
 }
 
@@ -380,7 +419,6 @@ OPTIONS_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
         validate_user_input=_validate_user,
     ),
 }
-OPTIONS_FLOW.update(CONFIG_FLOW)
 
 
 class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
@@ -405,6 +443,28 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         name: str = options[CONF_NAME]
         return name
 
+    @callback
+    def async_create_entry(
+        self,
+        data: Mapping[str, Any],
+        **kwargs: Any,
+    ) -> ConfigFlowResult:
+        """Finish config flow and create a config entry."""
+        subentries: list[ConfigSubentryData] = [
+            ConfigSubentryData(
+                data=observation,
+                title=observation[CONF_NAME],
+                subentry_type="observation",
+                unique_id=None,
+            )
+            for observation in data[CONF_OBSERVATIONS]
+        ]
+        data = dict(data)
+        data.pop(CONF_OBSERVATIONS)
+
+        self.async_config_flow_finished(data)
+        return super().async_create_entry(data=data, subentries=subentries, **kwargs)
+
 
 class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for adding and modifying a topic."""
@@ -412,7 +472,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """User flow to add a new topic."""
+        """User flow to add a new observation."""
 
         return self.async_show_menu(
             step_id="user",
@@ -428,7 +488,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             try:
-                user_input = await _validate_observation_subentry(
+                user_input = _validate_observation_subentry(
                     ObservationTypes.STATE, user_input
                 )
                 return self.async_create_entry(
@@ -479,7 +539,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
                 for subentry in self._get_entry().subentries.values()
             ]
             try:
-                user_input = await _validate_observation_subentry(
+                user_input = _validate_observation_subentry(
                     ObservationTypes.NUMERIC_STATE,
                     user_input,
                     other_subentries=other_subentries,
@@ -528,7 +588,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             try:
-                user_input = await _validate_observation_subentry(
+                user_input = _validate_observation_subentry(
                     ObservationTypes.TEMPLATE, user_input
                 )
                 return self.async_create_entry(
@@ -581,7 +641,7 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
             other_subentries.remove(dict(sub_entry.data))
         if user_input is not None:
             try:
-                user_input = await _validate_observation_subentry(
+                user_input = _validate_observation_subentry(
                     sub_entry.data[CONF_PLATFORM],
                     user_input,
                     other_subentries=other_subentries,
@@ -598,10 +658,8 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=await _select_observation_schema(
-                    sub_entry.data[CONF_PLATFORM]
-                ),
-                suggested_values=await _get_observation_values_for_editing(sub_entry),
+                data_schema=_select_observation_schema(sub_entry.data[CONF_PLATFORM]),
+                suggested_values=_get_observation_values_for_editing(sub_entry),
             ),
             errors=errors,
             description_placeholders={
