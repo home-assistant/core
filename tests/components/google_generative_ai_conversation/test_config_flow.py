@@ -394,7 +394,7 @@ async def test_subentry_options_switching(
         return_value=get_models_pager(),
     ):
         options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-            hass, subentry.subentry_type, subentry.subentry_id
+            hass, subentry.subentry_id
         )
     if will_options_be_rendered_again(current_options, new_options):
         retry_options = {
