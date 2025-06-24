@@ -1156,11 +1156,11 @@ async def test_camera_wake_callback(
 
 async def test_baichaun_only(
     hass: HomeAssistant,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test initializing a baichuan only device."""
-    reolink_connect.baichuan_only = True
+    reolink_host.baichuan_only = True
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
