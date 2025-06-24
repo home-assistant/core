@@ -1,5 +1,6 @@
 """Ezlo HA Cloud integration options flow for Home Assistant."""
 
+import asyncio
 import base64
 from datetime import datetime, timedelta
 import json
@@ -11,7 +12,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 
 from .api import authenticate, create_stripe_session, get_subscription_status, signup
-from .frp_helpers import fetch_and_update_frp_config, start_frpc, stop_frpc
+from .frp_helpers import fetch_and_update_frp_config, stop_frpc
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,7 +158,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                         uuid=user_info["uuid"],
                         token=token,
                     )
-                    await start_frpc(hass=self.hass, config_entry=self._config_entry)
+                    # await start_frpc(hass=self.hass, config_entry=self._config_entry)
                 except Exception as err:
                     _LOGGER.error("Failed to fetch the server details: %s", err)
 
@@ -223,15 +224,24 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                     if not user_uuid:
                         raise ValueError("UUID missing in token payload")
 
+                    # user_info = {
+                    #     "uuid": user_uuid,
+                    #     "username": username,
+                    #     "email": email,
+                    #     "ezlo_user_id": payload.get("ezlo_user_id", ""),
+                    # }
+                    # await self._handle_successful_login(token, user_info)
+
                     new_data = self._config_entry.data.copy()
                     new_data.update(
                         {
+                            "auth_token": token,
                             "user": {
                                 "uuid": user_uuid,
                                 "name": username,
                                 "email": email,
-                                "ezlo_id": None,
-                            }
+                                "ezlo_id": payload.get("ezlo_user_id", ""),
+                            },
                         }
                     )
                     self.hass.config_entries.async_update_entry(
@@ -254,6 +264,12 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                     if stripe_response.get("success"):
                         data = stripe_response.get("data", {})
                         checkout_url = data.get("checkout_url")
+                        # Start background polling
+                        self.hass.async_create_task(
+                            self._poll_payment_and_login(
+                                user_uuid, token, username, email, payload
+                            )
+                        )
                         if checkout_url:
                             return self.async_show_form(
                                 step_id="redirecting",
@@ -283,6 +299,67 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             ),
             errors=errors,
         )
+
+    async def _handle_successful_login(self, token: str, user_info: dict) -> None:
+        """Shared logic to handle successful login or signup."""
+        expiry_time = datetime.now() + timedelta(seconds=3600)
+
+        new_data = self._config_entry.data.copy()
+        new_data.update(
+            {
+                "auth_token": token,
+                "user": {
+                    "uuid": user_info.get("uuid"),
+                    "name": user_info.get("username"),
+                    "email": user_info.get("email", ""),
+                    "ezlo_id": user_info.get("ezlo_user_id", ""),
+                },
+                "is_logged_in": True,
+                "token_expiry": expiry_time.timestamp(),
+            }
+        )
+
+        self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
+
+        # UPDATE THE CONFIG TOML AND START THE FRPC CLIENT.
+        try:
+            await fetch_and_update_frp_config(
+                hass=self.hass,
+                uuid=user_info["uuid"],
+                token=token,
+            )
+            # await start_frpc(hass=self.hass, config_entry=self._config_entry)
+        except Exception as err:
+            _LOGGER.error("Failed to fetch the server details: %s", err)
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(self._config_entry.entry_id)
+        )
+
+    async def _poll_payment_and_login(
+        self, user_uuid: str, token: str, username: str, email: str, payload: dict
+    ):
+        """Background task to poll payment status and login."""
+        timeout = 15 * 60  # 15 minutes
+        interval = 5  # seconds
+        attempts = timeout // interval
+        for _ in range(attempts):
+            await asyncio.sleep(interval)
+            status_response = await get_subscription_status(user_uuid)
+
+            if status_response.get("success") and status_response.get("is_active"):
+                _LOGGER.info("Subscription activated. Completing login.")
+                await self._handle_successful_login(
+                    token,
+                    {
+                        "uuid": user_uuid,
+                        "username": username,
+                        "email": email,
+                        "ezlo_user_id": payload.get("ezlo_user_id", ""),
+                    },
+                )
+                return
+
+        _LOGGER.warning("Polling timeout: User did not complete Stripe payment.")
 
     async def async_step_view_status(self, user_input=None):
         user_data = self._config_entry.data.get("user", {})
@@ -321,5 +398,14 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
 
     async def async_step_redirecting(self, user_input=None):
-        """Placeholder to handle post-signup Stripe redirection form (no user input)."""
+        """User redirected from Stripe. Check payment status for completeness."""
+        user_data = self._config_entry.data.get("user", {})
+        user_uuid = user_data.get("uuid")
+
+        _LOGGER.info("Stripe redirection for UUID: %s", user_uuid)
+
+        # If background polling already logged in the user, just abort
+        if self._config_entry.data.get("is_logged_in"):
+            return self.async_abort(reason="login_successful")
+
         return self.async_abort(reason="stripe_redirect_finished")

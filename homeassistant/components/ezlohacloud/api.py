@@ -1,5 +1,7 @@
 """Ezlo HA Cloud integration API for Home Assistant."""
 
+import base64
+import json
 import logging
 
 import httpx
@@ -27,26 +29,44 @@ async def authenticate(username, password, uuid):
         response = await client.post(f"{AUTH_API_URL}/login", json=payload)
         response.raise_for_status()
         data = response.json()
-        _LOGGER.info("login response: {data}")
+        _LOGGER.info("login response: %s", data)
 
         token = data.get("token")
-        if token and "uuid" in data:
+        if token:
+            parts = token.split(".")
+            if len(parts) != 3:
+                raise ValueError("Invalid JWT format")
+
+            payload_b64 = parts[1] + "=" * (-len(parts[1]) % 4)
+            payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+
+            user_uuid = payload.get("uuid")
+            ezlo_id = payload.get("ezlo_user_id")
+            email = payload.get("email", "")
+            username = payload.get("username", username)
+
+            if not user_uuid:
+                raise ValueError("UUID missing in token payload")
+
             return {
                 "success": True,
                 "data": {
                     "token": token,
                     "user": {
+                        "uuid": user_uuid,
                         "username": username,
-                        "uuid": data["uuid"],
+                        "email": email,
+                        "ezlo_id": ezlo_id,
                         "oem_id": 1,
                     },
                 },
                 "error": None,
             }
-        _LOGGER.warning("Login failed: {data}")
+
+        _LOGGER.warning("Login failed: %s", data)
         return {"success": False, "data": None, "error": "Invalid credentials"}
 
-    except httpx.RequestError as e:
+    except Exception as e:
         _LOGGER.error("Auth request failed: %s", e)
         return {"success": False, "data": None, "error": "API connection failed"}
     finally:
