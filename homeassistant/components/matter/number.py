@@ -103,7 +103,6 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
             )
             return
 
-
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
