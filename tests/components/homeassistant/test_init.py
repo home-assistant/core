@@ -24,6 +24,7 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_SAVE_PERSISTENT_STATES,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -668,6 +669,7 @@ async def test_deprecated_installation_issue_32bit_core(
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 1
@@ -707,6 +709,7 @@ async def test_deprecated_installation_issue_64bit_core(
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 1
@@ -748,6 +751,7 @@ async def test_deprecated_installation_issue_32bit(
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 1
