@@ -68,10 +68,8 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
         is_on_fn=lambda lock: lock.door_state is TedeeDoorState.OPENED,
         device_class=BinarySensorDeviceClass.DOOR,
         supported_fn=lambda lock: lock.door_state is not TedeeDoorState.NOT_PAIRED,
-        available_fn=lambda lock: (
-            lock.door_state is not TedeeDoorState.UNCALIBRATED
-            and lock.door_state is not TedeeDoorState.DISCONNECTED
-        ),
+        available_fn=lambda lock: lock.door_state
+        not in [TedeeDoorState.UNCALIBRATED, TedeeDoorState.DISCONNECTED],
     ),
 )
 
