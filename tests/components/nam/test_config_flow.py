@@ -125,8 +125,8 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
             user_input=VALID_AUTH,
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_unsuccessful(hass: HomeAssistant) -> None:
@@ -151,8 +151,8 @@ async def test_reauth_unsuccessful(hass: HomeAssistant) -> None:
             user_input=VALID_AUTH,
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_unsuccessful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_unsuccessful"
 
 
 @pytest.mark.parametrize(
@@ -292,7 +292,9 @@ async def test_zeroconf(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_with_auth(hass: HomeAssistant) -> None:
+async def test_zeroconf_with_auth(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test that the zeroconf step with auth works."""
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
@@ -314,14 +316,9 @@ async def test_zeroconf_with_auth(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
     assert context["title_placeholders"]["host"] == "10.10.2.3"
 
-    with (
-        patch(
-            "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-            return_value="aa:bb:cc:dd:ee:ff",
-        ),
-        patch(
-            "homeassistant.components.nam.async_setup_entry", return_value=True
-        ) as mock_setup_entry,
+    with patch(
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+        return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
