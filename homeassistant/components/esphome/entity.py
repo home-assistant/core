@@ -80,6 +80,7 @@ def async_static_info_updated(
         new_unique_id = build_device_unique_id(device_info.mac_address, info)
         entity_id = ent_reg.async_get_entity_id(platform.domain, DOMAIN, old_unique_id)
 
+        # Entity must exist in registry since we found it in current_infos
         assert entity_id is not None
 
         updates: dict[str, Any] = {}
