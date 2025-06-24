@@ -6,10 +6,12 @@ DOMAIN = "google_generative_ai_conversation"
 LOGGER = logging.getLogger(__package__)
 CONF_PROMPT = "prompt"
 
+DEFAULT_CONVERSATION_NAME = "Google AI Conversation"
+
 ATTR_MODEL = "model"
 CONF_RECOMMENDED = "recommended"
 CONF_CHAT_MODEL = "chat_model"
-RECOMMENDED_CHAT_MODEL = "models/gemini-2.0-flash"
+RECOMMENDED_CHAT_MODEL = "models/gemini-2.5-flash"
 RECOMMENDED_TTS_MODEL = "gemini-2.5-flash-preview-tts"
 CONF_TEMPERATURE = "temperature"
 RECOMMENDED_TEMPERATURE = 1.0
