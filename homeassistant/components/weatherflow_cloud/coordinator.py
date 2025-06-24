@@ -187,6 +187,4 @@ class WeatherFlowCloudDataCallbackCoordinator[
 
     def get_station_name(self, station_id: int) -> str:
         """Return station name for id."""
-        if name := self.stations.station_map[station_id].name:
-            return name
-        return ""
+        return self.stations.station_map[station_id].name or ""
