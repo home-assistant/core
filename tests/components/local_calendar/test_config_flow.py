@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.components.local_calendar.const import (
     ATTR_CREATE_EMPTY,
     ATTR_IMPORT_ICS_FILE,
+    CONF_CALENDAR_COLOR,
     CONF_CALENDAR_NAME,
     CONF_ICS_FILE,
     CONF_IMPORT,
@@ -79,6 +80,7 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_CALENDAR_COLOR: [18, 52, 86],
                 CONF_CALENDAR_NAME: "My Calendar",
             },
         )
@@ -90,6 +92,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_CALENDAR_NAME: "My Calendar",
         CONF_IMPORT: ATTR_CREATE_EMPTY,
         CONF_STORAGE_KEY: "my_calendar",
+        CONF_CALENDAR_COLOR: [18, 52, 86],
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -175,3 +178,32 @@ async def test_invalid_ics(
     )
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {CONF_ICS_FILE: "invalid_ics_file"}
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options flow for Local Calendar."""
+    entry = MockConfigEntry(
+        domain="local_calendar",
+        data={
+            "calendar_name": "Test Calendar",
+            "calendar_color": [1, 2, 3],
+            "import": ATTR_CREATE_EMPTY,
+            "storage_key": "test_calendar",
+        },
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    # Start options flow
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Change color
+    new_color = [10, 20, 30]
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_CALENDAR_COLOR: new_color}
+    )
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {CONF_CALENDAR_COLOR: new_color}
+    await hass.async_block_till_done()

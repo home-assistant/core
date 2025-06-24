@@ -5,8 +5,9 @@
       "user": {
         "description": "Please choose a name for your new calendar",
         "data": {
-          "calendar_name": "Calendar Name",
-          "import": "Starting Data"
+          "calendar_name": "Calendar name",
+          "calendar_color": "Calendar color",
+          "import": "Starting data"
         }
       },
       "import": {
@@ -25,6 +26,15 @@
       "options": {
         "create_empty": "Create an empty calendar",
         "import_ics_file": "Upload an iCalendar file (.ics)"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "calendar_color": "[%key:component::local_calendar::config::step::user::data::calendar_color%]"
+        }
       }
     }
   }
