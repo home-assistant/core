@@ -1764,10 +1764,21 @@
         "name": "Lifetime"
       },
       "last_action_source": {
-        "name": "Last action source"
+        "name": "Last action source",
+        "state": {
+          "zigbee": "Zigbee",
+          "keypad": "Keypad",
+          "fingerprint": "Fingerprint",
+          "rfid": "RFID",
+          "self": "Self"
+        }
       },
       "last_action": {
-        "name": "Last action"
+        "name": "Last action",
+        "state": {
+          "lock": "[%key:common::state::locked%]",
+          "unlock": "[%key:common::state::unlocked%]"
+        }
       },
       "last_action_user": {
         "name": "Last action user"
