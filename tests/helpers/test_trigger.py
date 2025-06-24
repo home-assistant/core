@@ -507,7 +507,7 @@ async def test_async_get_all_descriptions(
         ]
     )
 
-    # system_health does not have services and should not be in descriptions
+    # system_health does not have triggers and should not be in descriptions
     assert descriptions == {
         DOMAIN_SUN: {
             "fields": {
