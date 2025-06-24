@@ -80,7 +80,8 @@
           "entity_id": "[%key:component::bayesian::config_subentries::observation::step::state::data::entity_id%]",
           "to_state": "[%key:component::bayesian::config_subentries::observation::step::state::data::to_state%]",
           "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_true%]",
-          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]"
+          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]",
+          "add_another": "Add another observation?"
         },
         "data_description": {
           "name": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::name%]",
@@ -99,7 +100,8 @@
           "above": "[%key:component::bayesian::config_subentries::observation::step::numeric_state::data::above%]",
           "below": "[%key:component::bayesian::config_subentries::observation::step::numeric_state::data::below%]",
           "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_true%]",
-          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]"
+          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
         },
         "data_description": {
           "name": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::name%]",
@@ -117,7 +119,8 @@
           "name": "[%key:common::config_flow::data::name%]",
           "value_template": "[%key:component::bayesian::config_subentries::observation::step::template::data::value_template%]",
           "prob_given_true": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_true%]",
-          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]"
+          "prob_given_false": "[%key:component::bayesian::config_subentries::observation::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
         },
         "data_description": {
           "name": "[%key:component::bayesian::config_subentries::observation::step::state::data_description::name%]",

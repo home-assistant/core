@@ -51,6 +51,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector, translation
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -263,6 +264,8 @@ TEMPLATE_SUBSCHEMA = vol.Schema(
     },
 ).extend(OBSERVATION_BOILERPLATE.schema)
 
+ADD_ANOTHER_BOX_SCHEMA = vol.Schema({vol.Optional("add_another"): cv.boolean})
+
 
 def _convert_percentages_to_fractions(
     data: dict[str, str | float | int],
@@ -373,17 +376,31 @@ async def _validate_subentry_from_config_entry(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     # Standard behavior is to merge the result with the options.
-    # In this case, we want to add a sub-item so we update the options directly.
+    # In this case, we want to add a subentry so we update the options directly.
     observations: list[dict[str, Any]] = handler.options.setdefault(
         CONF_OBSERVATIONS, []
     )
+
+    # add_another is really just a variable for controlling the flow
+    # It is only shown in the ConfigFlow and not the Subentry Flow
+    add_another: bool = user_input.pop("add_another", False)
+
     if handler.parent_handler.cur_step is not None:
         user_input[CONF_PLATFORM] = handler.parent_handler.cur_step["step_id"]
         user_input = _validate_observation_subentry(
             user_input[CONF_PLATFORM], user_input
         )
     observations.append(user_input)
-    return {}
+    return {"add_another": True} if add_another else {}
+
+
+async def _add_more_or_end(
+    user_input: dict[str, Any],
+) -> str | None:
+    """Choose whether to add another observation or end the flow."""
+    if user_input.get("add_another", False):
+        return OBSERVATION_SELECTOR
+    return None
 
 
 CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
@@ -396,21 +413,22 @@ CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
         [typ.value for typ in ObservationTypes]
     ),
     str(ObservationTypes.STATE): SchemaFlowFormStep(
-        STATE_SUBSCHEMA,
-        # next_step=_add_more_or_end,
+        STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
+        next_step=_add_more_or_end,
         validate_user_input=_validate_subentry_from_config_entry,
     ),
     str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
-        NUMERIC_STATE_SUBSCHEMA,
-        # next_step=_add_more_or_end,
+        NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
+        next_step=_add_more_or_end,
         validate_user_input=_validate_subentry_from_config_entry,
     ),
     str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
-        TEMPLATE_SUBSCHEMA,
-        # next_step=_add_more_or_end,
+        TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
+        next_step=_add_more_or_end,
         validate_user_input=_validate_subentry_from_config_entry,
     ),
 }
+
 
 OPTIONS_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
     str(OptionsFlowSteps.INIT): SchemaFlowFormStep(
