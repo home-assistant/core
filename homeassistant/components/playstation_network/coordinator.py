@@ -62,7 +62,12 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
         """Get the latest data from the PSN."""
         try:
             return await self.psn.get_data()
-        except (PSNAWPAuthenticationError, PSNAWPServerError) as error:
+        except PSNAWPAuthenticationError as error:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="not_ready",
+            ) from error
+        except PSNAWPServerError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
