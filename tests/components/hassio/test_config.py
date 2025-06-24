@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.hassio.const import DATA_CONFIG_STORE, DOMAIN

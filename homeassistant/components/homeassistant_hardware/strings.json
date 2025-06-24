@@ -28,7 +28,7 @@
         },
         "confirm_zigbee": {
           "title": "Zigbee setup complete",
-          "description": "Your {model} is now a Zigbee coordinator and will be shown as discovered by the Zigbee Home Automation integration once you exit."
+          "description": "Your {model} is now a Zigbee coordinator and will be shown as discovered by the Zigbee Home Automation integration."
         },
         "install_otbr_addon": {
           "title": "Installing OpenThread Border Router add-on",
@@ -44,7 +44,7 @@
         },
         "confirm_otbr": {
           "title": "OpenThread Border Router setup complete",
-          "description": "Your {model} is now an OpenThread Border Router and will show up in the Thread integration once you exit."
+          "description": "Your {model} is now an OpenThread Border Router and will show up in the Thread integration."
         }
       },
       "abort": {

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Sign-in with Blink account",
+        "title": "Sign in with Blink account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -30,7 +30,7 @@
     "step": {
       "simple_options": {
         "data": {
-          "scan_interval": "Scan Interval (seconds)"
+          "scan_interval": "Scan interval (seconds)"
         },
         "title": "Blink options",
         "description": "Configure Blink integration"
@@ -93,7 +93,7 @@
         },
         "config_entry_id": {
           "name": "Integration ID",
-          "description": "The Blink Integration ID."
+          "description": "The Blink integration ID."
         }
       }
     }

@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
-from bond_async import Bond
+from bond_async import Bond, RequestorUUID
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
@@ -34,7 +34,12 @@ TOKEN_SCHEMA = vol.Schema({})
 
 async def async_get_token(hass: HomeAssistant, host: str) -> str | None:
     """Try to fetch the token from the bond device."""
-    bond = Bond(host, "", session=async_get_clientsession(hass))
+    bond = Bond(
+        host,
+        "",
+        session=async_get_clientsession(hass),
+        requestor_uuid=RequestorUUID.HOME_ASSISTANT,
+    )
     response: dict[str, str] = {}
     with contextlib.suppress(ClientConnectionError):
         response = await bond.token()
@@ -45,7 +50,10 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[st
     """Validate the user input allows us to connect."""
 
     bond = Bond(
-        data[CONF_HOST], data[CONF_ACCESS_TOKEN], session=async_get_clientsession(hass)
+        data[CONF_HOST],
+        data[CONF_ACCESS_TOKEN],
+        session=async_get_clientsession(hass),
+        requestor_uuid=RequestorUUID.HOME_ASSISTANT,
     )
     try:
         hub = BondHub(bond, data[CONF_HOST])

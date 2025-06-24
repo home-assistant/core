@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from pypoint import PointSession
-from tempora.utc import fromtimestamp
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -62,7 +61,9 @@ class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
                 or device.device_id not in self.device_updates
                 or self.device_updates[device.device_id] < last_updated
             ):
-                self.device_updates[device.device_id] = last_updated or fromtimestamp(0)
+                self.device_updates[device.device_id] = (
+                    last_updated or datetime.fromtimestamp(0)
+                )
                 self.data[device.device_id] = {
                     k: await device.sensor(k)
                     for k in ("temperature", "humidity", "sound_pressure")

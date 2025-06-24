@@ -10,15 +10,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, FreeboxHomeCategory
+from .const import FreeboxHomeCategory
 from .entity import FreeboxHomeEntity
-from .router import FreeboxRouter
+from .router import FreeboxConfigEntry, FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,11 +34,11 @@ RAID_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FreeboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensors."""
-    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
+    router = entry.runtime_data
 
     _LOGGER.debug("%s - %s - %s raid(s)", router.name, router.mac, len(router.raids))
 

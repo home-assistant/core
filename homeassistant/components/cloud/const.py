@@ -81,7 +81,6 @@ CONF_ACME_SERVER = "acme_server"
 CONF_CLOUDHOOK_SERVER = "cloudhook_server"
 CONF_RELAYER_SERVER = "relayer_server"
 CONF_REMOTESTATE_SERVER = "remotestate_server"
-CONF_THINGTALK_SERVER = "thingtalk_server"
 CONF_SERVICEHANDLERS_SERVER = "servicehandlers_server"
 
 MODE_DEV = "development"
