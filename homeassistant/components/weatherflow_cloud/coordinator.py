@@ -120,7 +120,6 @@ class BaseWebsocketCoordinator(
         rest_api: WeatherFlowRestAPI,
         websocket_api: WeatherFlowWebsocketAPI,
         stations: StationsResponseREST,
-        event_type: EventType,
     ) -> None:
         """Initialize Coordinator."""
         super().__init__(
