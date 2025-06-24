@@ -97,7 +97,7 @@ async def test_power_source_unknown_state(
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test sonos device with battery state."""
+    """Test bad value for power source."""
     soco.get_battery_info.return_value = {
         "Level": 100,
         "PowerSource": "BAD_POWER_SOURCE",
