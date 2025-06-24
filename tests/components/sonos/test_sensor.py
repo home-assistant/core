@@ -9,6 +9,12 @@ from soco.exceptions import NotSupportedException
 from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
+from homeassistant.components.sonos.sensor import (
+    HA_POWER_SOURCE_BATTERY,
+    HA_POWER_SOURCE_CHARGING_RING,
+    HA_POWER_SOURCE_USB,
+    SensorDeviceClass,
+)
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -50,6 +56,7 @@ async def test_battery_attributes(
     hass: HomeAssistant, async_autosetup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with battery state."""
+    await hass.async_block_till_done(wait_background_tasks=True)
     battery = entity_registry.entities["sensor.zone_a_battery"]
     battery_state = hass.states.get(battery.entity_id)
     assert battery_state.state == "100"
@@ -64,8 +71,13 @@ async def test_battery_attributes(
 
     power_source = entity_registry.entities["sensor.zone_a_power_source"]
     power_source_state = hass.states.get(power_source.entity_id)
-    assert power_source_state.state == "charging-ring"
-
+    assert power_source_state.state == HA_POWER_SOURCE_CHARGING_RING
+    assert power_source_state.attributes.get("device_class") == SensorDeviceClass.ENUM
+    assert power_source_state.attributes.get("options") == [
+        HA_POWER_SOURCE_BATTERY,
+        HA_POWER_SOURCE_CHARGING_RING,
+        HA_POWER_SOURCE_USB,
+    ]
     result = translation.async_translate_state(
         hass,
         power_source_state.state,
@@ -74,7 +86,6 @@ async def test_battery_attributes(
         power_source.translation_key,
         None,
     )
-
     assert result == "Charging Ring"
 
 
