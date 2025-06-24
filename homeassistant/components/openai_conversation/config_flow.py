@@ -13,6 +13,7 @@ from voluptuous_openapi import convert
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -110,6 +111,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
 
+        self._async_abort_entries_match(user_input)
         try:
             await validate_input(self.hass, user_input)
         except openai.APIConnectionError:
@@ -175,6 +177,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage initial options."""
+        # abort if entry is not loaded
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
         options = self.options
 
         hass_apis: list[SelectOptionDict] = [

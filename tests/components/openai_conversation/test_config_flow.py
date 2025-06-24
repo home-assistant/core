@@ -30,7 +30,7 @@ from homeassistant.components.openai_conversation.const import (
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TOP_P,
 )
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -85,6 +85,33 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_duplicate_entry(hass: HomeAssistant) -> None:
+    """Test we abort on duplicate config entry."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "bla"},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
+
+    with patch(
+        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "bla",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_creating_conversation_subentry(
     hass: HomeAssistant,
     mock_init_component: None,
@@ -117,13 +144,33 @@ async def test_creating_conversation_subentry(
     assert result2["data"] == processed_options
 
 
+async def test_creating_conversation_subentry_not_loaded(
+    hass: HomeAssistant,
+    mock_init_component,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a conversation subentry when entry is not loaded."""
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    with patch(
+        "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+        return_value=[],
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+
+
 async def test_subentry_recommended(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
     """Test the subentry flow with recommended settings."""
     subentry = next(iter(mock_config_entry.subentries.values()))
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_type, subentry.subentry_id
+        hass, subentry.subentry_id
     )
     options = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
@@ -144,7 +191,7 @@ async def test_subentry_unsupported_model(
     """Test the subentry form giving error about models not supported."""
     subentry = next(iter(mock_config_entry.subentries.values()))
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_type, subentry.subentry_id
+        hass, subentry.subentry_id
     )
     assert subentry_flow["type"] == FlowResultType.FORM
     assert subentry_flow["step_id"] == "init"
@@ -551,8 +598,9 @@ async def test_subentry_switching(
     hass.config_entries.async_update_subentry(
         mock_config_entry, subentry, data=current_options
     )
+    await hass.async_block_till_done()
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_type, subentry.subentry_id
+        hass, subentry.subentry_id
     )
     assert subentry_flow["step_id"] == "init"
 
@@ -589,7 +637,7 @@ async def test_subentry_web_search_user_location(
     """Test fetching user location."""
     subentry = next(iter(mock_config_entry.subentries.values()))
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_type, subentry.subentry_id
+        hass, subentry.subentry_id
     )
     assert subentry_flow["type"] == FlowResultType.FORM
     assert subentry_flow["step_id"] == "init"

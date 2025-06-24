@@ -11,6 +11,9 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "config_subentries": {
@@ -59,7 +62,8 @@
         }
       },
       "abort": {
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+        "entry_not_loaded": "Cannot add things while the configuration is disabled."
       },
       "error": {
         "model_not_supported": "This model is not supported, please select a different model"

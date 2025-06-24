@@ -56,7 +56,6 @@ from .const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
-    DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
@@ -242,13 +241,13 @@ class OpenAIConversationEntity(
         """Initialize the agent."""
         self.entry = entry
         self.subentry = subentry
-        self._attr_name = subentry.title or DEFAULT_CONVERSATION_NAME
+        self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
             manufacturer="OpenAI",
-            model="ChatGPT",
+            model=entry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
         if self.subentry.data.get(CONF_LLM_HASS_API):
