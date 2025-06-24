@@ -1,4 +1,4 @@
-"""Test pushbullet integration."""
+"""Test pushover integration."""
 
 from unittest.mock import MagicMock, patch
 
