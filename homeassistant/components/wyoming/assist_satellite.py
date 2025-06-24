@@ -773,6 +773,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                         if not data_chunk:
                             # No audio after header
                             continue
+                    else:
+                        # Header is incomplete
+                        continue
 
                 # Streaming audio
                 assert sample_rate is not None
