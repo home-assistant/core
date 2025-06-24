@@ -1,37 +1,32 @@
 """The Bizkaibus bus tracker component."""
 
+from bizkaibus.bizkaibus import BizkaibusData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_STOP_ID, DOMAIN
-from .coordinator import BizkaibusUpdateCoordinator
-from .sensor import BizkaibusSensor
+from .const import CONF_STOP_ID
+from .coordinator import BizkaibusConfigEntry, BizkaibusUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend({vol.Required(CONF_STOP_ID): cv.string})
-CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_STOP_ID): cv.string})
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bizkaibus component."""
-    # hass.states.async_set("hello_state.world", "Paulus")
 
     # Return boolean to indicate that initialization was successful.
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BizkaibusConfigEntry) -> bool:
     """Config entry example."""
-    # assuming API object stored here by __init__.py
-    my_api = hass.data[DOMAIN][entry.entry_id]
+
+    my_api = BizkaibusData(entry.data[CONF_STOP_ID])
     coordinator = BizkaibusUpdateCoordinator(hass, my_api)
 
     # Fetch initial data so we have data when entities subscribe
@@ -44,5 +39,8 @@ async def async_setup_entry(
     #
     await coordinator.async_config_entry_first_refresh()
 
-    async_add_entities(BizkaibusSensor(coordinator))
+    entry.runtime_data = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True

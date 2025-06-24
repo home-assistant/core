@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from bizkaibus.bizkaibus import BizkaibusData
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -16,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, DOMAIN
 from .coordinator import BizkaibusConfigEntry, BizkaibusUpdateCoordinator
 
 ATTR_DUE_IN = "Due in"
@@ -47,8 +46,6 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
 
-    api = BizkaibusData("2001")
-    coordinator = BizkaibusUpdateCoordinator(hass, api)
     async_add_entities([BizkaibusSensor(coordinator)], True)
 
 
@@ -65,5 +62,6 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.api.stop)},
             entry_type=DeviceEntryType.SERVICE,
         )
