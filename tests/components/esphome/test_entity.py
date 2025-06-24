@@ -779,7 +779,7 @@ async def test_entity_assignment_to_sub_device(
     )
     assert sub_device_1 is not None
 
-    motion_sensor = entity_registry.async_get("binary_sensor.test_motion")
+    motion_sensor = entity_registry.async_get("binary_sensor.motion_sensor_motion")
     assert motion_sensor is not None
     assert motion_sensor.device_id == sub_device_1.id
 
@@ -789,14 +789,14 @@ async def test_entity_assignment_to_sub_device(
     )
     assert sub_device_2 is not None
 
-    door_sensor = entity_registry.async_get("binary_sensor.test_door")
+    door_sensor = entity_registry.async_get("binary_sensor.door_sensor_door")
     assert door_sensor is not None
     assert door_sensor.device_id == sub_device_2.id
 
     # Check states
     assert hass.states.get("binary_sensor.test_main_sensor").state == STATE_ON
-    assert hass.states.get("binary_sensor.test_motion").state == STATE_OFF
-    assert hass.states.get("binary_sensor.test_door").state == STATE_ON
+    assert hass.states.get("binary_sensor.motion_sensor_motion").state == STATE_OFF
+    assert hass.states.get("binary_sensor.door_sensor_door").state == STATE_ON
 
     # Check entity friendly names
     # Main device entity should have: "{device_name} {entity_name}"
@@ -804,11 +804,11 @@ async def test_entity_assignment_to_sub_device(
     assert main_sensor_state.attributes[ATTR_FRIENDLY_NAME] == "Test Main Sensor"
 
     # Sub device 1 entity should have: "Motion Sensor Motion"
-    motion_sensor_state = hass.states.get("binary_sensor.test_motion")
+    motion_sensor_state = hass.states.get("binary_sensor.motion_sensor_motion")
     assert motion_sensor_state.attributes[ATTR_FRIENDLY_NAME] == "Motion Sensor Motion"
 
     # Sub device 2 entity should have: "Door Sensor Door"
-    door_sensor_state = hass.states.get("binary_sensor.test_door")
+    door_sensor_state = hass.states.get("binary_sensor.door_sensor_door")
     assert door_sensor_state.attributes[ATTR_FRIENDLY_NAME] == "Door Sensor Door"
 
 
@@ -879,6 +879,7 @@ async def test_entity_friendly_names_with_empty_device_names(
     )
 
     # Check entity friendly name on sub-device with empty name
+    # Since sub device has empty name, it falls back to main device name "test"
     state_1 = hass.states.get("binary_sensor.test_motion")
     assert state_1 is not None
     # With has_entity_name, friendly name is "{device_name} {entity_name}"
@@ -886,13 +887,13 @@ async def test_entity_friendly_names_with_empty_device_names(
     assert state_1.attributes[ATTR_FRIENDLY_NAME] == "Main Device Motion Detected"
 
     # Check entity friendly name on sub-device with valid name
-    state_2 = hass.states.get("binary_sensor.test_status")
+    state_2 = hass.states.get("binary_sensor.kitchen_light_status")
     assert state_2 is not None
     # Device has name "Kitchen Light", entity has name "Status"
     assert state_2.attributes[ATTR_FRIENDLY_NAME] == "Kitchen Light Status"
 
     # Test entity with empty name on sub-device
-    state_3 = hass.states.get("binary_sensor.test")
+    state_3 = hass.states.get("binary_sensor.kitchen_light")
     assert state_3 is not None
     # Entity has empty name, so friendly name is just the device name
     assert state_3.attributes[ATTR_FRIENDLY_NAME] == "Kitchen Light"
@@ -1030,3 +1031,134 @@ async def test_entity_switches_between_devices(
     sensor_entity = entity_registry.async_get("binary_sensor.test_sensor")
     assert sensor_entity is not None
     assert sensor_entity.device_id == main_device.id
+
+
+async def test_entity_id_uses_sub_device_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that entity_id uses sub device name when entity belongs to sub device."""
+    # Define sub devices
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="motion_sensor", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="door_sensor", area_id=0),
+    ]
+
+    device_info = {
+        "devices": sub_devices,
+        "name": "main_device",
+    }
+
+    # Create entities that belong to different devices
+    entity_info = [
+        # Entity for main device (device_id=0)
+        BinarySensorInfo(
+            object_id="main_sensor",
+            key=1,
+            name="Main Sensor",
+            unique_id="main_sensor",
+            device_id=0,
+        ),
+        # Entity for sub device 1
+        BinarySensorInfo(
+            object_id="motion",
+            key=2,
+            name="Motion",
+            unique_id="motion",
+            device_id=11111111,
+        ),
+        # Entity for sub device 2
+        BinarySensorInfo(
+            object_id="door",
+            key=3,
+            name="Door",
+            unique_id="door",
+            device_id=22222222,
+        ),
+        # Entity without name on sub device
+        BinarySensorInfo(
+            object_id="sensor_no_name",
+            key=4,
+            name="",
+            unique_id="sensor_no_name",
+            device_id=11111111,
+        ),
+    ]
+
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+        BinarySensorState(key=2, state=False, missing_state=False),
+        BinarySensorState(key=3, state=True, missing_state=False),
+        BinarySensorState(key=4, state=True, missing_state=False),
+    ]
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    # Check entity_id for main device entity
+    # Should be: binary_sensor.{main_device_name}_{object_id}
+    assert hass.states.get("binary_sensor.main_device_main_sensor") is not None
+
+    # Check entity_id for sub device 1 entity
+    # Should be: binary_sensor.{sub_device_name}_{object_id}
+    assert hass.states.get("binary_sensor.motion_sensor_motion") is not None
+
+    # Check entity_id for sub device 2 entity
+    # Should be: binary_sensor.{sub_device_name}_{object_id}
+    assert hass.states.get("binary_sensor.door_sensor_door") is not None
+
+    # Check entity_id for entity without name on sub device
+    # Should be: binary_sensor.{sub_device_name}
+    assert hass.states.get("binary_sensor.motion_sensor") is not None
+
+
+async def test_entity_id_with_empty_sub_device_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test entity_id when sub device has empty name (falls back to main device name)."""
+    # Define sub device with empty name
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="", area_id=0),  # Empty name
+    ]
+
+    device_info = {
+        "devices": sub_devices,
+        "name": "main_device",
+    }
+
+    # Create entity on sub device with empty name
+    entity_info = [
+        BinarySensorInfo(
+            object_id="sensor",
+            key=1,
+            name="Sensor",
+            unique_id="sensor",
+            device_id=11111111,
+        ),
+    ]
+
+    states = [
+        BinarySensorState(key=1, state=True, missing_state=False),
+    ]
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        device_info=device_info,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    # When sub device has empty name, entity_id should use main device name
+    # Should be: binary_sensor.{main_device_name}_{object_id}
+    assert hass.states.get("binary_sensor.main_device_sensor") is not None

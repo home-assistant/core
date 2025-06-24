@@ -160,6 +160,7 @@ class RuntimeEntryData:
     assist_satellite_set_wake_word_callbacks: list[Callable[[str], None]] = field(
         default_factory=list
     )
+    device_id_to_name: dict[int, str] = field(default_factory=dict)
 
     @property
     def name(self) -> str:

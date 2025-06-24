@@ -527,6 +527,11 @@ class ESPHomeManager:
                 device_info.name,
                 device_mac,
             )
+        # Build device_id_to_name mapping for efficient lookup
+        entry_data.device_id_to_name = {
+            sub_device.device_id: sub_device.name or device_info.name
+            for sub_device in device_info.devices
+        }
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
 
         entry_data.async_update_device_state()
