@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, Mock
 
+from aiohttp import ClientResponseError
+import pytest
 from weatherflow4py.models.ws.types import EventType
 from weatherflow4py.models.ws.websocket_request import (
     ListenStartMessage,
@@ -14,10 +16,13 @@ from weatherflow4py.models.ws.websocket_response import (
 )
 
 from homeassistant.components.weatherflow_cloud.coordinator import (
+    WeatherFlowCloudUpdateCoordinatorREST,
     WeatherFlowObservationCoordinator,
     WeatherFlowWindCoordinator,
 )
+from homeassistant.config_entries import ConfigEntryAuthFailed
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
@@ -158,3 +163,61 @@ async def test_observation_coordinator_message_handling(
 
     # Verify data was stored correctly (for observations, the message IS the data)
     assert coordinator._ws_data[station_id][device_id] == mock_message
+
+
+async def test_rest_coordinator_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rest_api: AsyncMock,
+    mock_stations_data: Mock,
+) -> None:
+    """Test REST coordinator handling of 401 auth error."""
+    # Create the coordinator
+    coordinator = WeatherFlowCloudUpdateCoordinatorREST(
+        hass=hass,
+        config_entry=mock_config_entry,
+        rest_api=mock_rest_api,
+        stations=mock_stations_data,
+    )
+
+    # Mock a 401 auth error
+    mock_rest_api.get_all_data.side_effect = ClientResponseError(
+        request_info=Mock(),
+        history=Mock(),
+        status=401,
+        message="Unauthorized",
+    )
+
+    # Verify the error is properly converted to ConfigEntryAuthFailed
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._async_update_data()
+
+
+async def test_rest_coordinator_other_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rest_api: AsyncMock,
+    mock_stations_data: Mock,
+) -> None:
+    """Test REST coordinator handling of non-auth errors."""
+    # Create the coordinator
+    coordinator = WeatherFlowCloudUpdateCoordinatorREST(
+        hass=hass,
+        config_entry=mock_config_entry,
+        rest_api=mock_rest_api,
+        stations=mock_stations_data,
+    )
+
+    # Mock a 500 server error
+    mock_rest_api.get_all_data.side_effect = ClientResponseError(
+        request_info=Mock(),
+        history=Mock(),
+        status=500,
+        message="Internal Server Error",
+    )
+
+    # Verify the error is properly converted to UpdateFailed
+    with pytest.raises(
+        UpdateFailed, match="Update failed: 500, message='Internal Server Error'"
+    ):
+        await coordinator._async_update_data()

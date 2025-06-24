@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -343,11 +343,6 @@ class WeatherFlowSensorBase(WeatherFlowCloudEntity, SensorEntity, ABC):
         if self.device_id is not None:
             return f"{self.station_id}_{self.device_id}_{self.entity_description.key}"
         return f"{self.station_id}_{self.entity_description.key}"
-
-    @property
-    @abstractmethod
-    def native_value(self) -> StateType | date | datetime | Decimal:
-        """Abstract method for native value."""
 
     @property
     def available(self) -> bool:
