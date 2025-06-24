@@ -1010,8 +1010,10 @@ class LocationSelector(Selector[LocationSelectorConfig]):
         return location
 
 
-class MediaSelectorConfig(BaseSelectorConfig):
+class MediaSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a media selector config."""
+
+    accept: list[str]
 
 
 @SELECTORS.register("media")
