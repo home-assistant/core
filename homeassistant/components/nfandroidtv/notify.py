@@ -19,7 +19,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -84,9 +84,10 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         if self.notify is None:
             try:
                 self.notify = Notifications(self.host)
-            except ConnectError:
-                _LOGGER.warning("Failed to connect to host: %s", self.host)
-                return
+            except ConnectError as err:
+                raise HomeAssistantError(
+                    "Failed to connect to host: %s", self.host
+                ) from err
 
         data: dict | None = kwargs.get(ATTR_DATA)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
@@ -200,8 +201,10 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 icon=icon,
                 image_file=image_file,
             )
-        except ConnectError:
-            _LOGGER.warning("Failed to connect to host: %s", self.host)
+        except ConnectError as err:
+            raise HomeAssistantError(
+                "Failed to connect to host: %s", self.host
+            ) from err
 
     def load_file(
         self,
