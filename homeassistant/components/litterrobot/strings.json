@@ -119,7 +119,8 @@
         }
       },
       "total_cycles": {
-        "name": "Total cycles"
+        "name": "Total cycles",
+        "unit_of_measurement": "cycles"
       },
       "waste_drawer": {
         "name": "Waste drawer"
