@@ -43,6 +43,8 @@ from . import (
     _get_write_api_mock_v2,
 )
 
+from tests.common import MockConfigEntry
+
 PATH_FIXTURE = Path("/influxdb.crt")
 FIXTURE_UPLOAD_UUID = "0123456789abcdef0123456789abcdef"
 
@@ -529,6 +531,43 @@ async def test_setup_connection_error(
 
 
 @pytest.mark.parametrize(
+    ("mock_client", "config_base", "get_write_api"),
+    [
+        (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_single_instance(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    config_base: dict[str, Any],
+    get_write_api: Any,
+) -> None:
+    """Test we cannot setup a second entry for InfluxDB."""
+    mock_entry = MockConfigEntry(
+        domain="influxdb",
+        data=config_base,
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+@pytest.mark.parametrize(
     ("mock_client", "config_base", "get_write_api", "db_name", CONF_HOST),
     [
         (
@@ -634,3 +673,42 @@ async def test_import_connection_error(
 
     assert result["type"] == "abort"
     assert result["reason"] == reason
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_base", "get_write_api"),
+    [
+        (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_single_instance_import(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    config_base: dict[str, Any],
+    get_write_api: Any,
+) -> None:
+    """Test we cannot setup a second entry for InfluxDB."""
+    mock_entry = MockConfigEntry(
+        domain="influxdb",
+        data=config_base,
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=config_base,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
