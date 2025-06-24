@@ -1745,8 +1745,7 @@ def async_config_entry_disabled_by_changed(
 @callback
 def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
     """Clean up device registry when entities removed."""
-    # pylint: disable-next=import-outside-toplevel
-    from . import category_registry as cr, event, label_registry as lr
+    from . import category_registry as cr, event, label_registry as lr  # noqa: PLC0415
 
     @callback
     def _removed_from_registry_filter(

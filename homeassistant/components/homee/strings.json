@@ -160,12 +160,36 @@
       }
     },
     "event": {
+      "button_state": {
+        "name": "Switch",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "upper": "Upper button",
+              "lower": "Lower button",
+              "released": "Released"
+            }
+          }
+        }
+      },
+      "button_state_instance": {
+        "name": "Switch {instance}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "upper": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::upper%]",
+              "lower": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::lower%]",
+              "released": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::released%]"
+            }
+          }
+        }
+      },
       "up_down_remote": {
         "name": "Up/down remote",
         "state_attributes": {
           "event_type": {
             "state": {
-              "release": "Released",
+              "release": "[%key:component::homee::entity::event::button_state::state_attributes::event_type::state::released%]",
               "up": "Up",
               "down": "Down",
               "stop": "Stop",
