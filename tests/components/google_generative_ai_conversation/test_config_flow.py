@@ -42,6 +42,12 @@ from tests.common import MockConfigEntry
 
 def get_models_pager():
     """Return a generator that yields the models."""
+    model_25_flash = Mock(
+        display_name="Gemini 2.5 Flash",
+        supported_actions=["generateContent"],
+    )
+    model_25_flash.name = "models/gemini-2.5-flash"
+
     model_20_flash = Mock(
         display_name="Gemini 2.0 Flash",
         supported_actions=["generateContent"],
@@ -60,17 +66,11 @@ def get_models_pager():
     )
     model_15_pro.name = "models/gemini-1.5-pro-latest"
 
-    model_10_pro = Mock(
-        display_name="Gemini 1.0 Pro",
-        supported_actions=["generateContent"],
-    )
-    model_10_pro.name = "models/gemini-pro"
-
     async def models_pager():
+        yield model_25_flash
         yield model_20_flash
         yield model_15_flash
         yield model_15_pro
-        yield model_10_pro
 
     return models_pager()
 
