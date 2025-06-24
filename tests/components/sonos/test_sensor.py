@@ -1,6 +1,8 @@
 """Tests for the Sonos battery sensor platform."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
+from typing import Any
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -16,12 +18,12 @@ from homeassistant.components.sonos.sensor import (
     SensorDeviceClass,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.util import dt as dt_util
 
-from .conftest import SonosMockEvent
+from .conftest import MockSoCo, SonosMockEvent
 
 from tests.common import async_fire_time_changed
 
@@ -56,7 +58,6 @@ async def test_battery_attributes(
     hass: HomeAssistant, async_autosetup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with battery state."""
-    await hass.async_block_till_done(wait_background_tasks=True)
     battery = entity_registry.entities["sensor.zone_a_battery"]
     battery_state = hass.states.get(battery.entity_id)
     assert battery_state.state == "100"
@@ -87,6 +88,30 @@ async def test_battery_attributes(
         None,
     )
     assert result == "Charging Ring"
+
+
+async def test_power_source_unknown_state(
+    hass: HomeAssistant,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    soco: MockSoCo,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sonos device with battery state."""
+    soco.get_battery_info.return_value = {
+        "Level": 100,
+        "PowerSource": "BAD_POWER_SOURCE",
+    }
+
+    with caplog.at_level("WARNING"):
+        await async_setup_sonos()
+        assert "Unknown power source" in caplog.text
+        assert "BAD_POWER_SOURCE" in caplog.text
+        assert "Zone A" in caplog.text
+
+    power_source = entity_registry.entities["sensor.zone_a_power_source"]
+    power_source_state = hass.states.get(power_source.entity_id)
+    assert power_source_state.state == STATE_UNKNOWN
 
 
 async def test_battery_on_s1(

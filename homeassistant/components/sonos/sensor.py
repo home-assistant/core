@@ -147,14 +147,14 @@ class SonosPowerSourceEntity(SonosEntity, SensorEntity):
         """Return the state of the sensor."""
         if not (power_source := self.speaker.power_source):
             return None
-        if power_source not in power_source_map:
+        if not (value := power_source_map.get(power_source)):
             _LOGGER.warning(
                 "Unknown power source '%s' for speaker %s",
                 power_source,
                 self.speaker.zone_name,
             )
             return None
-        return power_source_map.get(power_source)
+        return value
 
     @property
     def available(self) -> bool:
