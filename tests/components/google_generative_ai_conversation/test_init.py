@@ -7,7 +7,13 @@ import pytest
 from requests.exceptions import Timeout
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.google_generative_ai_conversation.const import DOMAIN
+from homeassistant.components.google_generative_ai_conversation.const import (
+    DEFAULT_AI_TASK_NAME,
+    DEFAULT_CONVERSATION_NAME,
+    DOMAIN,
+    RECOMMENDED_AI_TASK_OPTIONS,
+    RECOMMENDED_CONVERSATION_OPTIONS,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -722,3 +728,70 @@ async def test_migration_from_v1_to_v2_with_same_keys(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
+
+
+async def test_migrate_entry_from_v2_0_to_v2_1(hass: HomeAssistant) -> None:
+    """Test migration from version 2.0 to version 2.1."""
+    # Create a v2.0 config entry (subversion 0) with only conversation subentry
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        version=2,
+        minor_version=0,
+        subentries_data=[
+            {
+                "data": RECOMMENDED_CONVERSATION_OPTIONS,
+                "subentry_type": "conversation",
+                "title": DEFAULT_CONVERSATION_NAME,
+                "unique_id": None,
+            }
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    # Verify initial state
+    assert mock_config_entry.version == 2
+    assert mock_config_entry.minor_version == 0
+    assert len(mock_config_entry.subentries) == 1
+    assert (
+        list(mock_config_entry.subentries.values())[0].subentry_type == "conversation"
+    )
+
+    # Run setup to trigger migration
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert result is True
+        await hass.async_block_till_done()
+
+    # Verify migration completed
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+
+    # Check version and subversion were updated
+    assert entry.version == 2
+    assert entry.minor_version == 1
+
+    # Check we now have both conversation and ai_task subentries
+    assert len(entry.subentries) == 2
+
+    subentries = {
+        subentry.subentry_type: subentry for subentry in entry.subentries.values()
+    }
+    assert "conversation" in subentries
+    assert "ai_task" in subentries
+
+    # Find and verify the ai_task subentry
+    ai_task_subentry = subentries["ai_task"]
+    assert ai_task_subentry is not None
+    assert ai_task_subentry.title == DEFAULT_AI_TASK_NAME
+    assert ai_task_subentry.data == RECOMMENDED_AI_TASK_OPTIONS
+
+    # Verify conversation subentry is still there and unchanged
+    conversation_subentry = subentries["conversation"]
+    assert conversation_subentry is not None
+    assert conversation_subentry.title == DEFAULT_CONVERSATION_NAME
+    assert conversation_subentry.data == RECOMMENDED_CONVERSATION_OPTIONS

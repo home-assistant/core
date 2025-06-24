@@ -6,9 +6,6 @@ import pytest
 from requests.exceptions import Timeout
 
 from homeassistant import config_entries
-from homeassistant.components.google_generative_ai_conversation.config_flow import (
-    RECOMMENDED_OPTIONS,
-)
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_DANGEROUS_BLOCK_THRESHOLD,
@@ -22,9 +19,12 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
+    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TOP_K,
@@ -115,10 +115,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["subentries"] == [
         {
             "subentry_type": "conversation",
-            "data": RECOMMENDED_OPTIONS,
+            "data": RECOMMENDED_CONVERSATION_OPTIONS,
             "title": DEFAULT_CONVERSATION_NAME,
             "unique_id": None,
-        }
+        },
+        {
+            "subentry_type": "ai_task",
+            "data": RECOMMENDED_AI_TASK_OPTIONS,
+            "title": DEFAULT_AI_TASK_NAME,
+            "unique_id": None,
+        },
     ]
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -172,17 +178,62 @@ async def test_creating_conversation_subentry(
     ):
         result2 = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
-            {CONF_NAME: "Mock name", **RECOMMENDED_OPTIONS},
+            {CONF_NAME: "Mock name", **RECOMMENDED_CONVERSATION_OPTIONS},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Mock name"
 
-    processed_options = RECOMMENDED_OPTIONS.copy()
+    processed_options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
     processed_options[CONF_PROMPT] = processed_options[CONF_PROMPT].strip()
 
     assert result2["data"] == processed_options
+
+
+async def test_creating_ai_task_subentry(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating an AI task subentry."""
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "ai_task"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM, result
+    assert result["step_id"] == "set_options"
+    assert not result["errors"]
+
+    old_subentries = set(mock_config_entry.subentries)
+
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_NAME: "Mock AI Task", **RECOMMENDED_AI_TASK_OPTIONS},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Mock AI Task"
+    assert result2["data"] == RECOMMENDED_AI_TASK_OPTIONS
+
+    assert len(mock_config_entry.subentries) == 3
+
+    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+    new_subentry = mock_config_entry.subentries[new_subentry_id]
+
+    assert new_subentry.subentry_type == "ai_task"
+    assert new_subentry.data == RECOMMENDED_AI_TASK_OPTIONS
+    assert new_subentry.title == "Mock AI Task"
 
 
 async def test_creating_conversation_subentry_not_loaded(
@@ -190,8 +241,9 @@ async def test_creating_conversation_subentry_not_loaded(
     mock_init_component: None,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test creating a conversation subentry."""
+    """Test that subentry fails to init if entry not loaded."""
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
     with patch(
         "google.genai.models.AsyncModels.list",
         return_value=get_models_pager(),
