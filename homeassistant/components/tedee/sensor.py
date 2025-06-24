@@ -26,7 +26,7 @@ PARALLEL_UPDATES = 0
 class TedeeSensorEntityDescription(SensorEntityDescription):
     """Describes Tedee sensor entity."""
 
-    value_fn: Callable[[TedeeLock], float | str | None]
+    value_fn: Callable[[TedeeLock], float | None]
 
 
 ENTITIES: tuple[TedeeSensorEntityDescription, ...] = (
@@ -75,6 +75,6 @@ class TedeeSensorEntity(TedeeDescriptionEntity, SensorEntity):
     entity_description: TedeeSensorEntityDescription
 
     @property
-    def native_value(self) -> float | str | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._lock)
