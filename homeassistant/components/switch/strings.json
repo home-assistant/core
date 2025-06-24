@@ -55,5 +55,13 @@
       "name": "[%key:common::action::toggle%]",
       "description": "Toggles a switch on/off."
     }
+  },
+  "selector": {
+    "device_class": {
+      "options": {
+        "outlet": "[%key:component::switch::entity_component::outlet::name%]",
+        "switch": "[%key:component::switch::title%]"
+      }
+    }
   }
 }

@@ -134,6 +134,13 @@ def make_selector_config_schema(schema_dict: dict | None = None) -> vol.Schema:
         )
     )
 
+CLASS_CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    {
+        vol.Optional("multiple", default=False): cv.boolean,
+        vol.Optional("no_sort", default=False): cv.boolean,
+    }
+)
+
 
 class BaseSelectorConfig(TypedDict, total=False):
     """Class to common options of all selectors."""
@@ -1394,6 +1401,115 @@ class StatisticSelector(Selector[StatisticSelectorConfig]):
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
         return [vol.Schema(str)(val) for val in data]
+
+
+class DeviceClassSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a device class selector config."""
+
+    device_classes: Sequence[StrEnum] | Sequence[str]
+    multiple: bool
+    no_sort: bool
+
+
+class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
+    """Selector for an entity platform device class."""
+
+    selector_type: str
+    _default_device_classes: Callable[..., list[str]]
+
+    CONFIG_SCHEMA: vol.Schema
+
+    def __call__(self, data: Any) -> Any:
+        """Return valid device classes."""
+        device_classes: Sequence[str] = []
+        if config_device_classes := self.config.get(
+            "device_classes", self._default_device_classes()
+        ):
+            if isinstance(config_device_classes[0], StrEnum):
+                device_classes = [
+                    device_class.value
+                    for device_class in cast(Sequence[StrEnum], config_device_classes)
+                ]
+            else:
+                device_classes = config_device_classes
+
+        parent_schema: vol.In | vol.Any = vol.In(device_classes)
+
+        if not self.config["multiple"]:
+            return parent_schema(vol.Schema(str)(data))
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [parent_schema(vol.Schema(str)(val)) for val in data]
+
+
+@SELECTORS.register("sensor_device_class")
+class SensorDeviceClassSelector(DeviceClassSelector):
+    """Selector for a sensor device class."""
+
+    def _default_device_classes(self) -> list[str]:
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.sensor import SensorDeviceClass
+
+        return [device_class.value for device_class in SensorDeviceClass]
+
+    selector_type = "sensor_device_class"
+
+    CONFIG_SCHEMA = CLASS_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional(
+                "device_classes",
+            ): [vol.All(vol.Any([str], [StrEnum]))]
+        }
+    )
+
+
+class SensorStateClassSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a sensor state class selector config."""
+
+    state_classes: Sequence[StrEnum] | Sequence[str]
+    multiple: bool
+    no_sort: bool
+
+
+@SELECTORS.register("sensor_state_class")
+class SensorStateClassSelector(Selector[SensorStateClassSelectorConfig]):
+    """Selector for a sensor state class."""
+
+    selector_type = "sensor_state_class"
+
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("state_classes"): [str],
+            vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("no_sort", default=False): cv.boolean,
+        }
+    )
+
+    def __call__(self, data: Any) -> Any:
+        """Return valid device classes."""
+
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.sensor import SensorStateClass
+
+        state_classes: Sequence[str] = []
+        if config_state_classes := self.config.get(
+            "state_classes", [state_class.value for state_class in SensorStateClass]
+        ):
+            if isinstance(config_state_classes[0], StrEnum):
+                state_classes = [
+                    state_class.value
+                    for state_class in cast(Sequence[StrEnum], config_state_classes)
+                ]
+            else:
+                state_classes = config_state_classes
+
+        parent_schema: vol.In | vol.Any = vol.In(state_classes)
+
+        if not self.config["multiple"]:
+            return parent_schema(vol.Schema(str)(data))
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
 class TargetSelectorConfig(BaseSelectorConfig, total=False):

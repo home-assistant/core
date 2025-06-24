@@ -51,7 +51,6 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     STATE_CLASS_UNITS,
     SensorDeviceClass,
-    SensorStateClass,
 )
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import (
@@ -108,6 +107,7 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    DeviceClassSelectorConfig,
     FileSelector,
     FileSelectorConfig,
     NumberSelector,
@@ -118,6 +118,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    SensorDeviceClassSelector,
+    SensorStateClassSelector,
+    SensorStateClassSelectorConfig,
     TemplateSelector,
     TemplateSelectorConfig,
     TextSelector,
@@ -703,14 +706,7 @@ SCALE_SELECTOR = NumberSelector(
         step=1,
     )
 )
-SENSOR_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in SensorDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_sensor",
-        sort=True,
-    )
-)
+SENSOR_DEVICE_CLASS_SELECTOR = SensorDeviceClassSelector(DeviceClassSelectorConfig())
 SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[EntityCategory.DIAGNOSTIC.value],
@@ -719,13 +715,7 @@ SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
         sort=True,
     )
 )
-SENSOR_STATE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in SensorStateClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key=CONF_STATE_CLASS,
-    )
-)
+SENSOR_STATE_CLASS_SELECTOR = SensorStateClassSelector(SensorStateClassSelector())
 SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[platform.value for platform in VALID_COLOR_MODES],
