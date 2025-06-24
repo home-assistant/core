@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Any
 
-from hscloud.hscloud import HsCloud
-from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
+from pydreo.client import DreoClient
+from pydreo.exceptions import DreoBusinessException, DreoException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -14,6 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .coordinator import DreoDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 type DreoConfigEntry = ConfigEntry[DreoData]
 
@@ -24,16 +27,16 @@ PLATFORMS = [Platform.FAN]
 class DreoData:
     """Dreo Data."""
 
-    client: HsCloud
+    client: DreoClient
     devices: list[dict[str, Any]]
     coordinators: dict[str, DreoDataUpdateCoordinator]
 
 
 async def async_login(
     hass: HomeAssistant, username: str, password: str
-) -> tuple[HsCloud, list[dict[str, Any]]]:
+) -> tuple[DreoClient, list[dict[str, Any]]]:
     """Log into Dreo and return client and device data."""
-    client = HsCloud(username, password)
+    client = DreoClient(username, password)
 
     def setup_client():
         client.login()
@@ -41,9 +44,9 @@ async def async_login(
 
     try:
         devices = await hass.async_add_executor_job(setup_client)
-    except HsCloudBusinessException as ex:
+    except DreoBusinessException as ex:
         raise ConfigEntryAuthFailed("Invalid username or password") from ex
-    except HsCloudException as ex:
+    except DreoException as ex:
         raise ConfigEntryNotReady(f"Error communicating with Dreo API: {ex}") from ex
 
     return client, devices
@@ -68,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
 
 async def async_setup_device_coordinator(
     hass: HomeAssistant,
-    client: HsCloud,
+    client: DreoClient,
     device: dict[str, Any],
     coordinators: dict[str, DreoDataUpdateCoordinator],
 ) -> None:
@@ -77,22 +80,26 @@ async def async_setup_device_coordinator(
     device_model = device.get("model")
     device_id = device.get("deviceSn")
     device_type = device.get("deviceType")
+    model_config = device.get("config")
 
     if not device_id or not device_model or not device_type:
+        return
+
+    if model_config is None:
+        _LOGGER.warning("Model config is not available for model %s", device_model)
         return
 
     if device_id in coordinators:
         return
 
     coordinator = DreoDataUpdateCoordinator(
-        hass, client, device_id, device_model, device_type
+        hass, client, device_id, device_type, model_config
     )
 
     if coordinator.data_processor is None:
         return
 
     await coordinator.async_config_entry_first_refresh()
-
     coordinators[device_id] = coordinator
 
 

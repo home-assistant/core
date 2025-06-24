@@ -2,9 +2,10 @@
 
 from unittest.mock import MagicMock, patch
 
-from hscloud.hscloudexception import HsCloudException
+from pydreo.exceptions import DreoException
 import pytest
 
+from homeassistant.components.dreo.fan import async_setup_entry
 from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
@@ -27,7 +28,7 @@ from . import init_integration
 
 async def test_fan_setup_and_device_info(hass: HomeAssistant) -> None:
     """Test fan setup and device info."""
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -38,6 +39,10 @@ async def test_fan_setup_and_device_info(hass: HomeAssistant) -> None:
                 "moduleFirmwareVersion": "1.0.0",
                 "mcuFirmwareVersion": "2.0.0",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.return_value = {
@@ -82,7 +87,7 @@ async def test_fan_setup_and_device_info(hass: HomeAssistant) -> None:
 
 async def test_fan_turn_on_service(hass: HomeAssistant) -> None:
     """Test fan turn on service."""
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -91,6 +96,10 @@ async def test_fan_turn_on_service(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Bedroom Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.return_value = {
@@ -119,7 +128,7 @@ async def test_fan_turn_on_service(hass: HomeAssistant) -> None:
 
 async def test_fan_turn_off_service(hass: HomeAssistant) -> None:
     """Test fan turn off service."""
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -128,6 +137,10 @@ async def test_fan_turn_off_service(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Kitchen Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.return_value = {
@@ -152,7 +165,7 @@ async def test_fan_turn_off_service(hass: HomeAssistant) -> None:
 
 async def test_fan_set_percentage_service(hass: HomeAssistant) -> None:
     """Test fan set percentage service."""
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -161,6 +174,10 @@ async def test_fan_set_percentage_service(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Office Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.return_value = {
@@ -187,7 +204,7 @@ async def test_fan_set_percentage_service(hass: HomeAssistant) -> None:
 
 async def test_fan_set_preset_mode_service(hass: HomeAssistant) -> None:
     """Test fan set preset mode service."""
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -196,6 +213,10 @@ async def test_fan_set_preset_mode_service(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Garage Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.return_value = {
@@ -223,7 +244,7 @@ async def test_fan_set_preset_mode_service(hass: HomeAssistant) -> None:
 
 async def test_fan_oscillate_service(hass: HomeAssistant) -> None:
     """Test fan oscillate service."""
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -232,6 +253,10 @@ async def test_fan_oscillate_service(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Patio Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.return_value = {
@@ -259,7 +284,7 @@ async def test_fan_oscillate_service(hass: HomeAssistant) -> None:
 
 async def test_fan_unavailable_when_disconnected(hass: HomeAssistant) -> None:
     """Test fan shows unavailable when device is disconnected."""
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -268,6 +293,10 @@ async def test_fan_unavailable_when_disconnected(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Offline Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.return_value = {
@@ -286,7 +315,7 @@ async def test_fan_unavailable_when_disconnected(hass: HomeAssistant) -> None:
 
 async def test_fan_coordinator_error_handling(hass: HomeAssistant) -> None:
     """Test fan coordinator error handling."""
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -295,11 +324,15 @@ async def test_fan_coordinator_error_handling(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Error Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.side_effect = [
             {"power_switch": True, "connected": True},
-            HsCloudException("API Error"),
+            DreoException("API Error"),
         ]
 
         config_entry = await init_integration(hass)
@@ -313,7 +346,7 @@ async def test_fan_coordinator_error_handling(hass: HomeAssistant) -> None:
 
 async def test_fan_state_updates_from_coordinator(hass: HomeAssistant) -> None:
     """Test fan state updates when coordinator data changes."""
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -322,6 +355,10 @@ async def test_fan_state_updates_from_coordinator(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Update Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
 
@@ -353,7 +390,7 @@ async def test_fan_state_updates_from_coordinator(hass: HomeAssistant) -> None:
 
 async def test_fan_unsupported_device_not_created(hass: HomeAssistant) -> None:
     """Test that unsupported devices are not created as fan entities."""
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -362,6 +399,10 @@ async def test_fan_unsupported_device_not_created(hass: HomeAssistant) -> None:
                 "model": "UNKNOWN-MODEL",
                 "deviceName": "Unsupported Device",
                 "deviceType": "heater",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.return_value = {
@@ -383,7 +424,7 @@ async def test_fan_unsupported_device_not_created(hass: HomeAssistant) -> None:
 
 async def test_fan_service_error_handling(hass: HomeAssistant) -> None:
     """Test fan service call error handling."""
-    with patch("homeassistant.components.dreo.HsCloud") as mock_client_class:
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.login = MagicMock()
         mock_client.get_devices.return_value = [
@@ -392,13 +433,17 @@ async def test_fan_service_error_handling(hass: HomeAssistant) -> None:
                 "model": "DR-HTF001S",
                 "deviceName": "Service Error Fan",
                 "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
             }
         ]
         mock_client.get_status.return_value = {
             "power_switch": False,
             "connected": True,
         }
-        mock_client.update_status.side_effect = HsCloudException("Service error")
+        mock_client.update_status.side_effect = DreoException("Service error")
 
         config_entry = await init_integration(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -411,3 +456,214 @@ async def test_fan_service_error_handling(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "fan.service_error_fan"},
             blocking=True,
         )
+
+
+async def test_fan_setup_missing_coordinator(hass: HomeAssistant) -> None:
+    """Test fan setup when coordinator is missing from coordinators dict."""
+    with (
+        patch("homeassistant.components.dreo.DreoClient") as mock_client_class,
+        patch("homeassistant.components.dreo.fan._LOGGER") as mock_logger,
+    ):
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = [
+            {
+                "deviceSn": "test-fan-missing-coord",
+                "model": "DR-HTF001S",
+                "deviceName": "Missing Coordinator Fan",
+                "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
+            }
+        ]
+        mock_client.get_status.return_value = {
+            "power_switch": True,
+            "connected": True,
+        }
+
+        config_entry = await init_integration(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        original_coordinators = config_entry.runtime_data.coordinators.copy()
+        config_entry.runtime_data.coordinators.clear()
+
+        await async_setup_entry(hass, config_entry, lambda entities, update_before_add=False, *, config_subentry_id=None: None)
+
+        mock_logger.error.assert_called_with(
+            "Coordinator not found for device %s", "test-fan-missing-coord"
+        )
+
+        config_entry.runtime_data.coordinators.update(original_coordinators)
+
+
+async def test_fan_setup_no_devices(hass: HomeAssistant) -> None:
+    """Test fan setup when no devices are found."""
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = []
+
+        config_entry = await init_integration(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    fan_entities = [e for e in entities if e.domain == FAN_DOMAIN]
+    assert len(fan_entities) == 0
+
+
+async def test_fan_setup_missing_device_info(hass: HomeAssistant) -> None:
+    """Test fan setup with devices missing required information."""
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = [
+            {
+                "model": "DR-HTF001S",
+                "deviceName": "No SN Fan",
+                "deviceType": "fan",
+                "config": {"preset_modes": ["Sleep", "Auto"], "speed_range": [1, 6]},
+            },
+            {
+                "deviceSn": "",
+                "model": "DR-HTF001S",
+                "deviceName": "Empty SN Fan",
+                "deviceType": "fan",
+                "config": {"preset_modes": ["Sleep", "Auto"], "speed_range": [1, 6]},
+            },
+            {
+                "deviceSn": "test-no-type",
+                "model": "DR-HTF001S",
+                "deviceName": "No Type Fan",
+                "config": {"preset_modes": ["Sleep", "Auto"], "speed_range": [1, 6]},
+            },
+        ]
+
+        config_entry = await init_integration(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    fan_entities = [e for e in entities if e.domain == FAN_DOMAIN]
+    assert len(fan_entities) == 0
+
+
+async def test_fan_state_with_none_available(hass: HomeAssistant) -> None:
+    """Test fan state when coordinator data has available = None."""
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = [
+            {
+                "deviceSn": "test-fan-none-available",
+                "model": "DR-HTF001S",
+                "deviceName": "None Available Fan",
+                "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
+            }
+        ]
+        mock_client.get_status.return_value = {
+            "power_switch": True,
+            "connected": True,
+        }
+
+        config_entry = await init_integration(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = config_entry.runtime_data.coordinators["test-fan-none-available"]
+
+    if coordinator.data:
+        coordinator.data.available = None
+        coordinator.async_update_listeners()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("fan.none_available_fan")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_fan_execute_command_with_zero_speed(hass: HomeAssistant) -> None:
+    """Test fan command execution with zero speed percentage."""
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = [
+            {
+                "deviceSn": "test-fan-zero-speed",
+                "model": "DR-HTF001S",
+                "deviceName": "Zero Speed Fan",
+                "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                    "speed_range": [1, 6],
+                },
+            }
+        ]
+        mock_client.get_status.return_value = {
+            "power_switch": True,
+            "connected": True,
+            "speed": 3,
+        }
+        mock_client.update_status = MagicMock()
+
+        config_entry = await init_integration(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        "set_percentage",
+        {ATTR_ENTITY_ID: "fan.zero_speed_fan", ATTR_PERCENTAGE: 0},
+        blocking=True,
+    )
+
+    mock_client.update_status.assert_called_with(
+        "test-fan-zero-speed", power_switch=False
+    )
+
+
+async def test_fan_execute_command_without_speed_range(hass: HomeAssistant) -> None:
+    """Test fan command execution when speed_range is not configured."""
+    with patch("homeassistant.components.dreo.DreoClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.login = MagicMock()
+        mock_client.get_devices.return_value = [
+            {
+                "deviceSn": "test-fan-no-speed-range",
+                "model": "DR-HTF001S",
+                "deviceName": "No Speed Range Fan",
+                "deviceType": "fan",
+                "config": {
+                    "preset_modes": ["Sleep", "Auto", "Natural", "Normal"],
+                },
+            }
+        ]
+        mock_client.get_status.return_value = {
+            "power_switch": False,
+            "connected": True,
+        }
+        mock_client.update_status = MagicMock()
+
+        config_entry = await init_integration(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        "set_percentage",
+        {ATTR_ENTITY_ID: "fan.no_speed_range_fan", ATTR_PERCENTAGE: 50},
+        blocking=True,
+    )
+
+    mock_client.update_status.assert_called_with(
+        "test-fan-no-speed-range", power_switch=True
+    )

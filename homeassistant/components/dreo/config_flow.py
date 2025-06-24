@@ -3,8 +3,8 @@
 import hashlib
 from typing import Any
 
-from hscloud.hscloud import HsCloud
-from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
+from pydreo.client import DreoClient
+from pydreo.exceptions import DreoBusinessException, DreoException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -31,13 +31,13 @@ class DreoFlowHandler(ConfigFlow, domain=DOMAIN):
         self, username: str, password: str
     ) -> tuple[bool, str | None]:
         """Validate login credentials."""
-        client = HsCloud(username, password)
+        client = DreoClient(username, password)
 
         try:
             await self.hass.async_add_executor_job(client.login)
-        except HsCloudException:
+        except DreoException:
             return False, "cannot_connect"
-        except HsCloudBusinessException:
+        except DreoBusinessException:
             return False, "invalid_auth"
         return True, None
 
