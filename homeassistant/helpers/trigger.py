@@ -375,7 +375,7 @@ async def async_validate_trigger_config(
         if hasattr(platform, "async_get_triggers"):
             trigger_descriptors = await platform.async_get_triggers(hass)
             trigger_key: str = conf[CONF_PLATFORM]
-            if not (trigger := trigger_descriptors[trigger_key]):
+            if not (trigger := trigger_descriptors.get(trigger_key)):
                 raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
             conf = await trigger.async_validate_trigger_config(hass, conf)
         elif hasattr(platform, "async_validate_trigger_config"):

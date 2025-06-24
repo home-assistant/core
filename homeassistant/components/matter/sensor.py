@@ -93,6 +93,13 @@ CHARGE_STATE_MAP = {
     clusters.PowerSource.Enums.BatChargeStateEnum.kUnknownEnumValue: None,
 }
 
+DEM_OPT_OUT_STATE_MAP = {
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kNoOptOut: "no_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kLocalOptOut: "local_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kGridOptOut: "grid_opt_out",
+    clusters.DeviceEnergyManagement.Enums.OptOutStateEnum.kOptOut: "opt_out",
+}
+
 ESA_STATE_MAP = {
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOffline: "offline",
     clusters.DeviceEnergyManagement.Enums.ESAStateEnum.kOnline: "online",
@@ -1158,6 +1165,19 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.DeviceEnergyManagement.Attributes.ESAState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ESAOptOutState",
+            translation_key="esa_opt_out_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(DEM_OPT_OUT_STATE_MAP.values()),
+            measurement_to_ha=DEM_OPT_OUT_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.DeviceEnergyManagement.Attributes.OptOutState,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

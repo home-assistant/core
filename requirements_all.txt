@@ -24,6 +24,9 @@ HATasmota==0.10.0
 # homeassistant.components.mastodon
 Mastodon.py==2.0.1
 
+# homeassistant.components.playstation_network
+PSNAWP==3.0.0
+
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image_upload
@@ -244,7 +247,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==33.0.0
+aioesphomeapi==33.1.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -405,7 +408,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.2
 
 # homeassistant.components.tedee
-aiotedee==0.2.23
+aiotedee==0.2.25
 
 # homeassistant.components.tractive
 aiotractive==0.6.0
@@ -460,6 +463,9 @@ airtouch5py==0.3.0
 
 # homeassistant.components.alpha_vantage
 alpha-vantage==2.3.1
+
+# homeassistant.components.altruist
+altruistclient==0.1.1
 
 # homeassistant.components.amberelectric
 amberelectric==2.0.12
@@ -1168,7 +1174,7 @@ holidays==0.75
 home-assistant-frontend==20250531.3
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.6.10
+home-assistant-intents==2025.6.23
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.0.6
@@ -1334,7 +1340,7 @@ lektricowifi==0.1
 letpot==0.4.0
 
 # homeassistant.components.foscam
-libpyfoscam==1.2.2
+libpyfoscamcgi==0.0.6
 
 # homeassistant.components.vivotek
 libpyvivotek==0.4.0
@@ -1959,7 +1965,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.0.1
+pyenphase==2.1.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2278,6 +2284,9 @@ pyrail==0.4.1
 # homeassistant.components.rainbird
 pyrainbird==6.0.1
 
+# homeassistant.components.playstation_network
+pyrate-limiter==3.7.0
+
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
 
@@ -2435,7 +2444,7 @@ python-google-drive-api==0.1.0
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==9.1.1
+python-homewizard-energy==9.2.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2445,9 +2454,6 @@ python-izone==1.2.9
 
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.9
-
-# homeassistant.components.juicenet
-python-juicenet==1.1.0
 
 # homeassistant.components.tplink
 python-kasa[speedups]==0.10.2
@@ -3006,7 +3012,7 @@ unifi_ap==0.0.2
 unifiled==0.11
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.30
+universal-silabs-flasher==0.0.31
 
 # homeassistant.components.upb
 upb-lib==0.6.1
@@ -3027,6 +3033,9 @@ vacuum-map-parser-roborock==0.1.4
 
 # homeassistant.components.vallox
 vallox-websocket-api==5.3.0
+
+# homeassistant.components.vegehub
+vegehub==0.1.24
 
 # homeassistant.components.rdw
 vehicle==2.2.2

@@ -93,6 +93,9 @@
       "battery_time_to_full_charge": {
         "default": "mdi:battery-clock"
       },
+      "esa_opt_out_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
       "evse_state": {
         "default": "mdi:ev-station"
       },

@@ -363,6 +363,15 @@
           "paused": "[%key:common::state::paused%]"
         }
       },
+      "esa_opt_out_state": {
+        "name": "Energy optimization opt-out",
+        "state": {
+          "no_opt_out": "[%key:common::state::off%]",
+          "local_opt_out": "Local",
+          "grid_opt_out": "Grid",
+          "opt_out": "Local and grid"
+        }
+      },
       "evse_fault_state": {
         "name": "Fault state",
         "state": {
