@@ -6,7 +6,7 @@ import asyncio
 from collections import defaultdict
 import contextlib
 import logging
-from typing import Any
+from typing import Any, Final, TypedDict
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -136,7 +136,17 @@ from .migrate import async_migrate_discovered_value
 from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
-DATA_DRIVER_EVENTS = "driver_events"
+DATA_DRIVER_EVENTS: Final = "driver_events"
+
+
+class ZwaveJSData(TypedDict):
+    """TypedDict for zwave_js runtime data."""
+
+    client: ZwaveClient
+    driver_events: DriverEvents
+
+
+type ZwaveJSConfigEntry = ConfigEntry[ZwaveJSData]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -182,7 +192,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await async_ensure_addon_running(hass, entry)
@@ -260,10 +270,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     LOGGER.debug("Connection to Zwave JS Server initialized")
 
-    entry_runtime_data = entry.runtime_data = {
+    driver_events = DriverEvents(hass, entry)
+    entry_runtime_data: ZwaveJSData = {
         DATA_CLIENT: client,
+        DATA_DRIVER_EVENTS: driver_events,
     }
-    entry_runtime_data[DATA_DRIVER_EVENTS] = driver_events = DriverEvents(hass, entry)
+    entry.runtime_data = entry_runtime_data
 
     driver = client.driver
     # When the driver is ready we know it's set on the client.
@@ -348,7 +360,7 @@ class DriverEvents:
 
     driver: Driver
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:
         """Set up the driver events instance."""
         self.config_entry = entry
         self.dev_reg = dr.async_get(hass)
@@ -1045,7 +1057,7 @@ class NodeEvents:
 
 async def client_listen(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: ZwaveClient,
     driver_ready: asyncio.Event,
 ) -> None:
@@ -1072,7 +1084,7 @@ async def client_listen(
         hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -1094,7 +1106,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:
     """Remove a config entry."""
     if not entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
         return
@@ -1116,7 +1128,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         LOGGER.error(err)
 
 
-async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_ensure_addon_running(
+    hass: HomeAssistant, entry: ZwaveJSConfigEntry
+) -> None:
     """Ensure that Z-Wave JS add-on is installed and running."""
     addon_manager = _get_addon_manager(hass)
     try:

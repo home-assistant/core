@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 import voluptuous as vol
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
@@ -28,7 +27,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -51,6 +49,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
 
+from . import ZwaveJSConfigEntry
 from .binary_sensor import is_valid_notification_binary_sensor
 from .const import (
     ATTR_METER_TYPE,
@@ -576,11 +575,11 @@ def get_entity_description(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZwaveJSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave sensor from config entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data[DATA_CLIENT]
     driver = client.driver
     assert driver is not None  # Driver is ready before platforms are loaded.
 
@@ -717,7 +716,7 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -756,7 +755,7 @@ class ZWaveNumericSensor(ZwaveSensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -831,7 +830,7 @@ class ZWaveListSensor(ZwaveSensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -870,7 +869,7 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
@@ -906,7 +905,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
     _attr_translation_key = "node_status"
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, node: ZwaveNode
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, node: ZwaveNode
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
@@ -968,7 +967,7 @@ class ZWaveControllerStatusSensor(SensorEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "controller_status"
 
-    def __init__(self, config_entry: ConfigEntry, driver: Driver) -> None:
+    def __init__(self, config_entry: ZwaveJSConfigEntry, driver: Driver) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
         self.controller = driver.controller
@@ -1030,7 +1029,7 @@ class ZWaveStatisticsSensor(SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         statistics_src: ZwaveNode | Controller,
         description: ZWaveJSStatisticsSensorEntityDescription,

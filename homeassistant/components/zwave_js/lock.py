@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import (
     ATTR_CODE_SLOT,
@@ -20,13 +19,13 @@ from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.util.lock import clear_usercode, set_configuration, set_usercode
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity, LockState
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import ZwaveJSConfigEntry
 from .const import (
     ATTR_AUTO_RELOCK_TIME,
     ATTR_BLOCK_TO_BLOCK,
@@ -61,11 +60,11 @@ UNIT16_SCHEMA = vol.All(vol.Coerce(int), vol.Range(min=0, max=65535))
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZwaveJSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave lock from config entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_lock(info: ZwaveDiscoveryInfo) -> None:

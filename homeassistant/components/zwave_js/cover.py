@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
     CURRENT_VALUE_PROPERTY,
     TARGET_STATE_PROPERTY,
@@ -34,11 +33,11 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import ZwaveJSConfigEntry
 from .const import (
     COVER_POSITION_PROPERTY_KEYS,
     COVER_TILT_PROPERTY_KEYS,
@@ -54,11 +53,11 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZwaveJSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Cover from Config Entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_cover(info: ZwaveDiscoveryInfo) -> None:
@@ -288,7 +287,7 @@ class ZWaveMultilevelSwitchCover(CoverPositionMixin):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
@@ -318,7 +317,7 @@ class ZWaveTiltCover(ZWaveMultilevelSwitchCover, CoverTiltMixin):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
@@ -336,7 +335,7 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
     """Representation of a Z-Wave Window Covering cover device."""
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize."""
         super().__init__(config_entry, driver, info)
@@ -438,7 +437,7 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
