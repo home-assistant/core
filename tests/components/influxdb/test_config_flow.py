@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pytest
@@ -11,9 +11,25 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.influxdb import (
     API_VERSION_2,
+    CONF_API_VERSION,
+    CONF_BUCKET,
+    CONF_DB_NAME,
+    CONF_ORG,
+    CONF_SSL_CA_CERT,
     DEFAULT_API_VERSION,
     DOMAIN,
     ApiException,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PATH,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -28,6 +44,15 @@ from . import (
 
 PATH_FIXTURE = Path("/influxdb.crt")
 FIXTURE_UPLOAD_UUID = "0123456789abcdef0123456789abcdef"
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.influxdb.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(name="mock_client")
@@ -75,49 +100,49 @@ def patch_file_upload(return_value=PATH_FIXTURE, side_effect=None):
         (
             DEFAULT_API_VERSION,
             {
-                "url": "http://localhost:8086",
-                "verify_ssl": False,
-                "database": "home_assistant",
-                "username": "user",
-                "password": "pass",
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: False,
+                CONF_DB_NAME: "home_assistant",
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
             },
             {
-                "host": "localhost",
-                "port": 8086,
-                "ssl": False,
-                "path": "/",
-            },
-            _get_write_api_mock_v1,
-        ),
-        (
-            DEFAULT_API_VERSION,
-            {
-                "url": "http://localhost:8086",
-                "verify_ssl": False,
-                "database": "home_assistant",
-            },
-            {
-                "host": "localhost",
-                "port": 8086,
-                "ssl": False,
-                "path": "/",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8086,
+                CONF_SSL: False,
+                CONF_PATH: "/",
             },
             _get_write_api_mock_v1,
         ),
         (
             DEFAULT_API_VERSION,
             {
-                "url": "https://influxdb.mydomain.com",
-                "verify_ssl": True,
-                "database": "home_assistant",
-                "username": "user",
-                "password": "pass",
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: False,
+                CONF_DB_NAME: "home_assistant",
             },
             {
-                "host": "influxdb.mydomain.com",
-                "port": 443,
-                "ssl": True,
-                "path": "/",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8086,
+                CONF_SSL: False,
+                CONF_PATH: "/",
+            },
+            _get_write_api_mock_v1,
+        ),
+        (
+            DEFAULT_API_VERSION,
+            {
+                CONF_URL: "https://influxdb.mydomain.com",
+                CONF_VERIFY_SSL: True,
+                CONF_DB_NAME: "home_assistant",
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+            },
+            {
+                CONF_HOST: "influxdb.mydomain.com",
+                CONF_PORT: 443,
+                CONF_SSL: True,
+                CONF_PATH: "/",
             },
             _get_write_api_mock_v1,
         ),
@@ -125,7 +150,12 @@ def patch_file_upload(return_value=PATH_FIXTURE, side_effect=None):
     indirect=["mock_client"],
 )
 async def test_setup_v1(
-    hass: HomeAssistant, mock_client, config_base, config_url, get_write_api
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client,
+    config_base,
+    config_url,
+    get_write_api,
 ) -> None:
     """Test we can setup an InfluxDB v1."""
     result = await hass.config_entries.flow.async_init(
@@ -144,24 +174,21 @@ async def test_setup_v1(
     assert result["step_id"] == "configure_v1"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.influxdb.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            config_base,
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        config_base,
+    )
 
     data = {
-        "api_version": "1",
-        "host": config_url["host"],
-        "port": config_url["port"],
-        "username": config_base.get("username"),
-        "password": config_base.get("password"),
-        "database": config_base["database"],
-        "ssl": config_url["ssl"],
-        "path": config_url["path"],
-        "verify_ssl": config_base["verify_ssl"],
+        CONF_API_VERSION: "1",
+        CONF_HOST: config_url[CONF_HOST],
+        CONF_PORT: config_url[CONF_PORT],
+        CONF_USERNAME: config_base.get(CONF_USERNAME),
+        CONF_PASSWORD: config_base.get(CONF_PASSWORD),
+        CONF_DB_NAME: config_base[CONF_DB_NAME],
+        CONF_SSL: config_url[CONF_SSL],
+        CONF_PATH: config_url[CONF_PATH],
+        CONF_VERIFY_SSL: config_base[CONF_VERIFY_SSL],
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -175,18 +202,18 @@ async def test_setup_v1(
         (
             DEFAULT_API_VERSION,
             {
-                "url": "https://influxdb.mydomain.com",
-                "verify_ssl": True,
-                "database": "home_assistant",
-                "username": "user",
-                "password": "pass",
-                "ssl_ca_cert": FIXTURE_UPLOAD_UUID,
+                CONF_URL: "https://influxdb.mydomain.com",
+                CONF_VERIFY_SSL: True,
+                CONF_DB_NAME: "home_assistant",
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+                CONF_SSL_CA_CERT: FIXTURE_UPLOAD_UUID,
             },
             {
-                "host": "influxdb.mydomain.com",
-                "port": 443,
-                "ssl": True,
-                "path": "/",
+                CONF_HOST: "influxdb.mydomain.com",
+                CONF_PORT: 443,
+                CONF_SSL: True,
+                CONF_PATH: "/",
             },
             _get_write_api_mock_v1,
         ),
@@ -194,7 +221,12 @@ async def test_setup_v1(
     indirect=["mock_client"],
 )
 async def test_setup_v1_ssl_cert(
-    hass: HomeAssistant, mock_client, config_base, config_url, get_write_api
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client,
+    config_base,
+    config_url,
+    get_write_api,
 ) -> None:
     """Test we can setup an InfluxDB v1 with SSL Certificate."""
     result = await hass.config_entries.flow.async_init(
@@ -214,7 +246,6 @@ async def test_setup_v1_ssl_cert(
     assert result["errors"] == {}
 
     with (
-        patch("homeassistant.components.influxdb.async_setup_entry", return_value=True),
         patch_file_upload(),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -223,16 +254,16 @@ async def test_setup_v1_ssl_cert(
         )
 
     data = {
-        "api_version": "1",
-        "host": config_url["host"],
-        "port": config_url["port"],
-        "username": config_base.get("username"),
-        "password": config_base.get("password"),
-        "database": config_base["database"],
-        "ssl": config_url["ssl"],
-        "path": config_url["path"],
-        "verify_ssl": config_base["verify_ssl"],
-        "ssl_ca_cert": "/.storage/influxdb.crt",
+        CONF_API_VERSION: "1",
+        CONF_HOST: config_url[CONF_HOST],
+        CONF_PORT: config_url[CONF_PORT],
+        CONF_USERNAME: config_base.get(CONF_USERNAME),
+        CONF_PASSWORD: config_base.get(CONF_PASSWORD),
+        CONF_DB_NAME: config_base[CONF_DB_NAME],
+        CONF_SSL: config_url[CONF_SSL],
+        CONF_PATH: config_url[CONF_PATH],
+        CONF_VERIFY_SSL: config_base[CONF_VERIFY_SSL],
+        CONF_SSL_CA_CERT: "/.storage/influxdb.crt",
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -246,11 +277,11 @@ async def test_setup_v1_ssl_cert(
         (
             API_VERSION_2,
             {
-                "url": "http://localhost:8086",
-                "verify_ssl": True,
-                "organization": "my_org",
-                "bucket": "home_assistant",
-                "token": "token",
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: True,
+                CONF_ORG: "my_org",
+                CONF_BUCKET: "home_assistant",
+                CONF_TOKEN: "token",
             },
             _get_write_api_mock_v2,
         ),
@@ -258,7 +289,11 @@ async def test_setup_v1_ssl_cert(
     indirect=["mock_client"],
 )
 async def test_setup_v2(
-    hass: HomeAssistant, mock_client, config_base, get_write_api
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client,
+    config_base,
+    get_write_api,
 ) -> None:
     """Test we can setup an InfluxDB v2."""
     result = await hass.config_entries.flow.async_init(
@@ -277,21 +312,18 @@ async def test_setup_v2(
     assert result["step_id"] == "configure_v2"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.influxdb.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            config_base,
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        config_base,
+    )
 
     data = {
-        "api_version": "2",
-        "url": config_base["url"],
-        "organization": config_base["organization"],
-        "bucket": config_base.get("bucket"),
-        "token": config_base.get("token"),
-        "verify_ssl": config_base["verify_ssl"],
+        CONF_API_VERSION: "2",
+        CONF_URL: config_base[CONF_URL],
+        CONF_ORG: config_base[CONF_ORG],
+        CONF_BUCKET: config_base.get(CONF_BUCKET),
+        CONF_TOKEN: config_base.get(CONF_TOKEN),
+        CONF_VERIFY_SSL: config_base[CONF_VERIFY_SSL],
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -305,12 +337,12 @@ async def test_setup_v2(
         (
             API_VERSION_2,
             {
-                "url": "http://localhost:8086",
-                "verify_ssl": True,
-                "organization": "my_org",
-                "bucket": "home_assistant",
-                "token": "token",
-                "ssl_ca_cert": FIXTURE_UPLOAD_UUID,
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: True,
+                CONF_ORG: "my_org",
+                CONF_BUCKET: "home_assistant",
+                CONF_TOKEN: "token",
+                CONF_SSL_CA_CERT: FIXTURE_UPLOAD_UUID,
             },
             _get_write_api_mock_v2,
         ),
@@ -318,7 +350,11 @@ async def test_setup_v2(
     indirect=["mock_client"],
 )
 async def test_setup_v2_ssl_cert(
-    hass: HomeAssistant, mock_client, config_base, get_write_api
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client,
+    config_base,
+    get_write_api,
 ) -> None:
     """Test we can setup an InfluxDB v2 with SSL Certificate."""
     result = await hass.config_entries.flow.async_init(
@@ -338,7 +374,6 @@ async def test_setup_v2_ssl_cert(
     assert result["errors"] == {}
 
     with (
-        patch("homeassistant.components.influxdb.async_setup_entry", return_value=True),
         patch_file_upload(),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -347,13 +382,13 @@ async def test_setup_v2_ssl_cert(
         )
 
     data = {
-        "api_version": "2",
-        "url": config_base["url"],
-        "organization": config_base["organization"],
-        "bucket": config_base.get("bucket"),
-        "token": config_base.get("token"),
-        "verify_ssl": config_base["verify_ssl"],
-        "ssl_ca_cert": "/.storage/influxdb.crt",
+        CONF_API_VERSION: "2",
+        CONF_URL: config_base[CONF_URL],
+        CONF_ORG: config_base[CONF_ORG],
+        CONF_BUCKET: config_base.get(CONF_BUCKET),
+        CONF_TOKEN: config_base.get(CONF_TOKEN),
+        CONF_VERIFY_SSL: config_base[CONF_VERIFY_SSL],
+        CONF_SSL_CA_CERT: "/.storage/influxdb.crt",
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -374,11 +409,11 @@ async def test_setup_v2_ssl_cert(
         (
             DEFAULT_API_VERSION,
             {
-                "url": "http://localhost:8086",
-                "verify_ssl": False,
-                "database": "home_assistant",
-                "username": "user",
-                "password": "pass",
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: False,
+                CONF_DB_NAME: "home_assistant",
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
             },
             DEFAULT_API_VERSION,
             _get_write_api_mock_v1,
@@ -388,11 +423,11 @@ async def test_setup_v2_ssl_cert(
         (
             DEFAULT_API_VERSION,
             {
-                "url": "http://localhost:8086",
-                "verify_ssl": False,
-                "database": "home_assistant",
-                "username": "user",
-                "password": "pass",
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: False,
+                CONF_DB_NAME: "home_assistant",
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
             },
             DEFAULT_API_VERSION,
             _get_write_api_mock_v1,
@@ -402,11 +437,11 @@ async def test_setup_v2_ssl_cert(
         (
             DEFAULT_API_VERSION,
             {
-                "url": "http://localhost:8086",
-                "verify_ssl": False,
-                "database": "home_assistant",
-                "username": "user",
-                "password": "pass",
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: False,
+                CONF_DB_NAME: "home_assistant",
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
             },
             DEFAULT_API_VERSION,
             _get_write_api_mock_v1,
@@ -416,11 +451,11 @@ async def test_setup_v2_ssl_cert(
         (
             API_VERSION_2,
             {
-                "url": "http://localhost:8086",
-                "verify_ssl": True,
-                "organization": "my_org",
-                "bucket": "home_assistant",
-                "token": "token",
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: True,
+                CONF_ORG: "my_org",
+                CONF_BUCKET: "home_assistant",
+                CONF_TOKEN: "token",
             },
             API_VERSION_2,
             _get_write_api_mock_v2,
@@ -430,11 +465,11 @@ async def test_setup_v2_ssl_cert(
         (
             API_VERSION_2,
             {
-                "url": "http://localhost:8086",
-                "verify_ssl": True,
-                "organization": "my_org",
-                "bucket": "home_assistant",
-                "token": "token",
+                CONF_URL: "http://localhost:8086",
+                CONF_VERIFY_SSL: True,
+                CONF_ORG: "my_org",
+                CONF_BUCKET: "home_assistant",
+                CONF_TOKEN: "token",
             },
             API_VERSION_2,
             _get_write_api_mock_v2,
@@ -446,6 +481,7 @@ async def test_setup_v2_ssl_cert(
 )
 async def test_setup_connection_error(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_client,
     config_base,
     api_version,
@@ -464,14 +500,9 @@ async def test_setup_connection_error(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
 
-    if api_version == DEFAULT_API_VERSION:
-        api = "configure_v1"
-    else:
-        api = "configure_v2"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"next_step_id": api},
+        {"next_step_id": f"configure_v{api_version}"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -488,39 +519,42 @@ async def test_setup_connection_error(
 
 
 @pytest.mark.parametrize(
-    ("mock_client", "config_base", "get_write_api", "db_name", "host"),
+    ("mock_client", "config_base", "get_write_api", "db_name", CONF_HOST),
     [
         (
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             _get_write_api_mock_v1,
-            BASE_V1_CONFIG["database"],
-            BASE_V1_CONFIG["host"],
+            BASE_V1_CONFIG[CONF_DB_NAME],
+            BASE_V1_CONFIG[CONF_HOST],
         ),
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
-            BASE_V2_CONFIG["bucket"],
-            BASE_V2_CONFIG["url"],
+            BASE_V2_CONFIG[CONF_BUCKET],
+            BASE_V2_CONFIG[CONF_URL],
         ),
     ],
     indirect=["mock_client"],
 )
 async def test_import(
-    hass: HomeAssistant, mock_client, config_base, get_write_api, db_name, host
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client,
+    config_base,
+    get_write_api,
+    db_name,
+    host,
 ) -> None:
     """Test we can import."""
-    with patch(
-        "homeassistant.components.influxdb.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config_base,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=config_base,
+    )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{db_name} ({host})"
     assert result["data"] == config_base
 
