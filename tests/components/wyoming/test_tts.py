@@ -253,6 +253,9 @@ async def test_get_tts_audio_streaming(
         stream.async_set_message_stream(message_gen())
         data = b"".join([chunk async for chunk in stream.async_stream_result()])
 
+        # Ensure client was disconnected properly
+        assert mock_client.is_connected is False
+
     assert data is not None
     with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
         assert wav_file.getframerate() == 16000

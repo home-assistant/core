@@ -174,18 +174,23 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         if voice_name is not None:
             voice = SynthesizeVoice(name=voice_name, speaker=voice_speaker)
 
-        async def data_gen():
-            async with AsyncTcpClient(self.service.host, self.service.port) as client:
-                # Stream text chunks to client
-                self.config_entry.async_create_background_task(
-                    self.hass,
-                    self._write_tts_message(request.message_gen, client, voice),
-                    "wyoming tts write",
-                )
+        client = AsyncTcpClient(self.service.host, self.service.port)
+        await client.connect()
 
-                # Stream audio bytes from client
+        # Stream text chunks to client
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._write_tts_message(request.message_gen, client, voice),
+            "wyoming tts write",
+        )
+
+        async def data_gen():
+            # Stream audio bytes from client
+            try:
                 async for data_chunk in self._read_tts_audio(client):
                     yield data_chunk
+            finally:
+                await client.disconnect()
 
         return tts.TTSAudioResponse("wav", data_gen())
 

@@ -178,9 +178,15 @@ class MockAsyncTcpClient:
         self.port: int | None = None
         self.written: list[Event] = []
         self.responses = responses
+        self.is_connected: bool | None = None
 
     async def connect(self) -> None:
         """Connect."""
+        self.is_connected = True
+
+    async def disconnect(self) -> None:
+        """Disconnect."""
+        self.is_connected = False
 
     async def write_event(self, event: Event):
         """Send."""
