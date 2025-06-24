@@ -24,6 +24,20 @@ from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
+SONOS_POWER_SOURCE_BATTERY = "BATTERY"
+SONOS_POWER_SOURCE_CHARGING_RING = "SONOS_CHARGING_RING"
+SONOS_POWER_SOURCE_USB = "USB_POWER"
+
+HA_POWER_SOURCE_BATTERY = "battery"
+HA_POWER_SOURCE_CHARGING_RING = "charging-ring"
+HA_POWER_SOURCE_USB = "usb"
+
+power_source_map = {
+    SONOS_POWER_SOURCE_BATTERY: HA_POWER_SOURCE_BATTERY,
+    SONOS_POWER_SOURCE_CHARGING_RING: HA_POWER_SOURCE_CHARGING_RING,
+    SONOS_POWER_SOURCE_USB: HA_POWER_SOURCE_USB,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -107,23 +121,20 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
         return self.speaker.available and self.speaker.power_source is not None
 
 
-power_source_map = {
-    "BATTERY": "battery",
-    "SONOS_CHARGING_RING": "charging-ring",
-    "USB_POWER": "usb",
-}
-
-
 class SonosPowerSourceEntity(SonosEntity, SensorEntity):
-    """Representation of a Sonos Battery entity."""
+    """Representation of a Sonos Power Source entity."""
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_options = ["battery", "charging-ring", "usb"]
+    _attr_options = [
+        HA_POWER_SOURCE_BATTERY,
+        HA_POWER_SOURCE_CHARGING_RING,
+        HA_POWER_SOURCE_USB,
+    ]
     _attr_translation_key = "power_source"
 
     def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
-        """Initialize the battery sensor."""
+        """Initialize the power source sensor."""
         super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{self.soco.uid}-power_source"
 
