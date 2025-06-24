@@ -135,6 +135,12 @@ def mock_rest_api():
 
 
 @pytest.fixture
+def mock_stations_data(mock_rest_api):
+    """Mock stations data for coordinator tests."""
+    return mock_rest_api.async_get_stations.return_value
+
+
+@pytest.fixture
 async def mock_websocket_api():
     """Mock WeatherFlowWebsocketAPI."""
     mock_websocket = AsyncMock()
@@ -144,8 +150,7 @@ async def mock_websocket_api():
     mock_ws_instance = AsyncMock(spec=WeatherFlowWebsocketAPI)
     mock_ws_instance.connect = AsyncMock()
     mock_ws_instance.send_message = AsyncMock()
-    mock_ws_instance.register_observation_callback = MagicMock()
-    mock_ws_instance.register_wind_callback = MagicMock()
+    mock_ws_instance.register_callback = MagicMock()
     mock_ws_instance.websocket = mock_websocket
 
     with (

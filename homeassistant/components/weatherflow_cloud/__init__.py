@@ -6,13 +6,6 @@ import asyncio
 from dataclasses import dataclass
 
 from weatherflow4py.api import WeatherFlowRestAPI
-from weatherflow4py.models.ws.obs import WebsocketObservation
-from weatherflow4py.models.ws.types import EventType
-from weatherflow4py.models.ws.websocket_request import (
-    ListenStartMessage,
-    RapidWindListenStartMessage,
-)
-from weatherflow4py.models.ws.websocket_response import EventDataRapidWind, RapidWindWS
 from weatherflow4py.ws import WeatherFlowWebsocketAPI
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,8 +15,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 from .coordinator import (
-    WeatherFlowCloudDataCallbackCoordinator,
     WeatherFlowCloudUpdateCoordinatorREST,
+    WeatherFlowObservationCoordinator,
+    WeatherFlowWindCoordinator,
 )
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WEATHER]
@@ -34,12 +28,8 @@ class WeatherFlowCoordinators:
     """Data Class for Entry Data."""
 
     rest: WeatherFlowCloudUpdateCoordinatorREST
-    wind: WeatherFlowCloudDataCallbackCoordinator[
-        EventDataRapidWind, RapidWindListenStartMessage, RapidWindWS
-    ]
-    observation: WeatherFlowCloudDataCallbackCoordinator[
-        WebsocketObservation, ListenStartMessage, WebsocketObservation
-    ]
+    wind: WeatherFlowWindCoordinator
+    observation: WeatherFlowObservationCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -62,9 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await rest_data_coordinator.async_config_entry_first_refresh()
 
     # Construct Websocket Coordinators
-    LOGGER.debug(
-        "Initializing WeatherFlowCloudDataUpdateCoordinatorWebsocketWind coordinator"
-    )
+    LOGGER.debug("Initializing websocket coordinators")
     websocket_device_ids = rest_data_coordinator.device_ids
 
     # Build API once
@@ -72,31 +60,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         access_token=entry.data[CONF_API_TOKEN], device_ids=websocket_device_ids
     )
 
-    websocket_observation_coordinator = WeatherFlowCloudDataCallbackCoordinator[
-        WebsocketObservation, WebsocketObservation, ListenStartMessage
-    ](
+    # Create specific coordinators - much cleaner!
+    websocket_observation_coordinator = WeatherFlowObservationCoordinator(
         hass=hass,
         config_entry=entry,
         rest_api=rest_api,
         websocket_api=websocket_api,
         stations=stations,
-        listen_request_type=ListenStartMessage,
-        event_type=EventType.OBSERVATION,
     )
 
-    websocket_wind_coordinator = WeatherFlowCloudDataCallbackCoordinator[
-        EventDataRapidWind, EventDataRapidWind, RapidWindListenStartMessage
-    ](
+    websocket_wind_coordinator = WeatherFlowWindCoordinator(
         hass=hass,
         config_entry=entry,
-        stations=stations,
         rest_api=rest_api,
         websocket_api=websocket_api,
-        listen_request_type=RapidWindListenStartMessage,
-        event_type=EventType.RAPID_WIND,
+        stations=stations,
     )
 
-    # Run setup method.
+    # Run setup method
     await asyncio.gather(
         websocket_wind_coordinator.async_setup(),
         websocket_observation_coordinator.async_setup(),

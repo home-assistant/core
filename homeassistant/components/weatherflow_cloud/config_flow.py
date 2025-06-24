@@ -49,15 +49,12 @@ class WeatherFlowCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await _validate_api_token(api_token)
             if not errors:
                 # Update the existing entry and abort
-                if existing_entry := self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
-                ):
-                    return self.async_update_reload_and_abort(
-                        existing_entry,
-                        data={CONF_API_TOKEN: api_token},
-                        reason="reauth_successful",
-                        reload_even_if_entry_is_unchanged=False,
-                    )
+                existing_entry = self._get_reauth_entry()
+                return self.async_update_reload_and_abort(
+                    existing_entry,
+                    data={CONF_API_TOKEN: api_token},
+                    reason="reauth_successful",
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",

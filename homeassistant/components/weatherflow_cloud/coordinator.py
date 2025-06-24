@@ -1,7 +1,8 @@
-"""Data coordinators."""
+"""Improved coordinator design with better type safety."""
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
+from typing import Generic, TypeVar
 
 from aiohttp import ClientResponseError
 from weatherflow4py.api import WeatherFlowRestAPI
@@ -28,8 +29,10 @@ from homeassistant.util.ssl import client_context
 
 from .const import DOMAIN, LOGGER
 
+T = TypeVar("T")
 
-class BaseWeatherFlowCoordinator[T](DataUpdateCoordinator[dict[int, T]], ABC):
+
+class BaseWeatherFlowCoordinator(DataUpdateCoordinator[dict[int, T]], ABC, Generic[T]):
     """Base class for WeatherFlow coordinators."""
 
     def __init__(
@@ -46,7 +49,6 @@ class BaseWeatherFlowCoordinator[T](DataUpdateCoordinator[dict[int, T]], ABC):
         self._rest_api = rest_api
         self.stations = stations
         self.device_to_station_map = stations.device_station_map
-
         self.device_ids = list(stations.device_station_map.keys())
 
         super().__init__(
@@ -59,8 +61,8 @@ class BaseWeatherFlowCoordinator[T](DataUpdateCoordinator[dict[int, T]], ABC):
         )
 
     @abstractmethod
-    def get_station_name(self, station_id: int):
-        """Define a default implementation - that should always be overridden."""
+    def get_station_name(self, station_id: int) -> str:
+        """Get station name for the given station ID."""
 
 
 class WeatherFlowCloudUpdateCoordinatorREST(
@@ -76,7 +78,6 @@ class WeatherFlowCloudUpdateCoordinatorREST(
         stations: StationsResponseREST,
     ) -> None:
         """Initialize global WeatherFlow forecast data updater."""
-
         super().__init__(
             hass,
             config_entry,
@@ -105,18 +106,10 @@ class WeatherFlowCloudUpdateCoordinatorREST(
         return self.data[station_id].station.name
 
 
-class WeatherFlowCloudDataCallbackCoordinator[
-    T: EventDataRapidWind | WebsocketObservation,
-    M: RapidWindListenStartMessage | ListenStartMessage,
-    C: RapidWindWS | ObservationTempestWS,
-](BaseWeatherFlowCoordinator[dict[int, T | None]]):
-    """A Generic coordinator to handle Websocket connections.
-
-    This class takes 3 generics - T, M, and C.
-    T - The type of data that will be stored in the coordinator.
-    M - The type of message that will be sent to the websocket API.
-    C - The type of message that will be received from the websocket API.
-    """
+class BaseWebsocketCoordinator(
+    BaseWeatherFlowCoordinator[dict[int, T | None]], ABC, Generic[T]
+):
+    """Base class for websocket coordinators."""
 
     def __init__(
         self,
@@ -125,61 +118,42 @@ class WeatherFlowCloudDataCallbackCoordinator[
         rest_api: WeatherFlowRestAPI,
         websocket_api: WeatherFlowWebsocketAPI,
         stations: StationsResponseREST,
-        listen_request_type: type[M],
         event_type: EventType,
     ) -> None:
         """Initialize Coordinator."""
-
         super().__init__(
             hass=hass, config_entry=config_entry, rest_api=rest_api, stations=stations
         )
 
         self._event_type = event_type
         self.websocket_api = websocket_api
-        self._listen_request_type = listen_request_type
 
-        # configure the websocket data structure
+        # Configure the websocket data structure
         self._ws_data: dict[int, dict[int, T | None]] = {
             station: dict.fromkeys(devices)
             for station, devices in self.stations.station_device_map.items()
         }
 
-    async def _generic_callback(self, data: C) -> None:
-        """Handle incoming websocket data
-        
-        RapidWindWS data will be parsed from the ob field, whereas
-        ObservationTempestWS will be parsed directly."""
-        device_id = data.device_id
-        station_id = self.device_to_station_map[device_id]
-
-        # Handle possible message types with isinstance
-        if isinstance(data, RapidWindWS):
-            processed_data = data.ob
-        elif isinstance(data, ObservationTempestWS):
-            processed_data = data
-        else:
-            LOGGER.warning("Unknown message type received: %s", type(data))
-            return
-
-        self._ws_data[station_id][device_id] = processed_data
-        self.async_set_updated_data(self._ws_data)
-        return
-
     async def async_setup(self) -> None:
         """Set up the websocket connection."""
-        assert self.websocket_api is not None
-
         await self.websocket_api.connect(client_context())
-        # Register callback
         self.websocket_api.register_callback(
             message_type=self._event_type,
-            callback=self._generic_callback,
+            callback=self._handle_websocket_message,
         )
-        # Subscribe to messages
+
+        # Subscribe to messages for all devices
         for device_id in self.device_ids:
-            await self.websocket_api.send_message(
-                self._listen_request_type(device_id=str(device_id))
-            )
+            message = self._create_listen_message(device_id)
+            await self.websocket_api.send_message(message)
+
+    @abstractmethod
+    def _create_listen_message(self, device_id: int):
+        """Create the appropriate listen message for this coordinator type."""
+
+    @abstractmethod
+    async def _handle_websocket_message(self, data) -> None:
+        """Handle incoming websocket data."""
 
     def get_station(self, station_id: int):
         """Return station for id."""
@@ -188,3 +162,68 @@ class WeatherFlowCloudDataCallbackCoordinator[
     def get_station_name(self, station_id: int) -> str:
         """Return station name for id."""
         return self.stations.station_map[station_id].name or ""
+
+
+class WeatherFlowWindCoordinator(BaseWebsocketCoordinator[EventDataRapidWind]):
+    """Coordinator specifically for rapid wind data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        rest_api: WeatherFlowRestAPI,
+        websocket_api: WeatherFlowWebsocketAPI,
+        stations: StationsResponseREST,
+    ) -> None:
+        """Initialize wind coordinator."""
+        super().__init__(
+            hass, config_entry, rest_api, websocket_api, stations, EventType.RAPID_WIND
+        )
+
+    def _create_listen_message(self, device_id: int) -> RapidWindListenStartMessage:
+        """Create rapid wind listen message."""
+        return RapidWindListenStartMessage(device_id=str(device_id))
+
+    async def _handle_websocket_message(self, data: RapidWindWS) -> None:
+        """Handle rapid wind websocket data."""
+        device_id = data.device_id
+        station_id = self.device_to_station_map[device_id]
+
+        # Extract the observation data from the RapidWindWS message
+        self._ws_data[station_id][device_id] = data.ob
+        self.async_set_updated_data(self._ws_data)
+
+
+class WeatherFlowObservationCoordinator(BaseWebsocketCoordinator[WebsocketObservation]):
+    """Coordinator specifically for observation data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        rest_api: WeatherFlowRestAPI,
+        websocket_api: WeatherFlowWebsocketAPI,
+        stations: StationsResponseREST,
+    ) -> None:
+        """Initialize observation coordinator."""
+        super().__init__(
+            hass, config_entry, rest_api, websocket_api, stations, EventType.OBSERVATION
+        )
+
+    def _create_listen_message(self, device_id: int) -> ListenStartMessage:
+        """Create observation listen message."""
+        return ListenStartMessage(device_id=str(device_id))
+
+    async def _handle_websocket_message(self, data: ObservationTempestWS) -> None:
+        """Handle observation websocket data."""
+        device_id = data.device_id
+        station_id = self.device_to_station_map[device_id]
+
+        # For observations, the data IS the observation
+        self._ws_data[station_id][device_id] = data
+        self.async_set_updated_data(self._ws_data)
+
+
+# Type aliases for better readability
+type WeatherFlowWindCallback = WeatherFlowWindCoordinator
+type WeatherFlowObservationCallback = WeatherFlowObservationCoordinator

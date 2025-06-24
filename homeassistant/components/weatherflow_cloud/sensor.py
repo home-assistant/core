@@ -9,13 +9,8 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from weatherflow4py.models.rest.observation import Observation
-from weatherflow4py.models.ws.websocket_request import (
-    ListenStartMessage,
-    RapidWindListenStartMessage,
-)
 from weatherflow4py.models.ws.websocket_response import (
     EventDataRapidWind,
-    RapidWindWS,
     WebsocketObservation,
 )
 
@@ -39,12 +34,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import UTC
 
-from . import (
-    WeatherFlowCloudDataCallbackCoordinator,
-    WeatherFlowCloudUpdateCoordinatorREST,
-    WeatherFlowCoordinators,
-)
+from . import WeatherFlowCloudUpdateCoordinatorREST, WeatherFlowCoordinators
 from .const import DOMAIN
+from .coordinator import WeatherFlowObservationCoordinator, WeatherFlowWindCoordinator
 from .entity import WeatherFlowCloudEntity
 
 
@@ -282,12 +274,8 @@ async def async_setup_entry(
 
     coordinators: WeatherFlowCoordinators = hass.data[DOMAIN][entry.entry_id]
     rest_coordinator = coordinators.rest
-    wind_coordinator: WeatherFlowCloudDataCallbackCoordinator[
-        EventDataRapidWind, EventDataRapidWind, RapidWindListenStartMessage
-    ] = coordinators.wind
-    observation_coordinator: WeatherFlowCloudDataCallbackCoordinator[
-        WebsocketObservation, WebsocketObservation, ListenStartMessage
-    ] = coordinators.observation
+    wind_coordinator = coordinators.wind  # Now properly typed
+    observation_coordinator = coordinators.observation  # Now properly typed
 
     entities: list[SensorEntity] = [
         WeatherFlowCloudSensorREST(rest_coordinator, sensor_description, station_id)
@@ -325,23 +313,16 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-# Define type aliases for the observation types
-type ObservationType = EventDataRapidWind | WebsocketObservation
-type MessageType = RapidWindListenStartMessage | ListenStartMessage
-type ResponseType = RapidWindWS | WebsocketObservation
-
-# Define a type alias for the callback coordinator
-type WeatherFlowCallback = WeatherFlowCloudDataCallbackCoordinator[
-    ObservationType, MessageType, ResponseType
-]
-
-
 class WeatherFlowSensorBase(WeatherFlowCloudEntity, SensorEntity, ABC):
     """Common base class."""
 
     def __init__(
         self,
-        coordinator: WeatherFlowCloudUpdateCoordinatorREST | WeatherFlowCallback,
+        coordinator: (
+            WeatherFlowCloudUpdateCoordinatorREST
+            | WeatherFlowWindCoordinator
+            | WeatherFlowObservationCoordinator
+        ),
         description: (
             WeatherFlowCloudSensorEntityDescription
             | WeatherFlowCloudSensorEntityDescriptionWebsocketWind
@@ -411,22 +392,6 @@ class WeatherFlowWebsocketSensorWind(WeatherFlowSensorBase):
             data = self.coordinator.data[self.station_id][self.device_id]
             return self.entity_description.value_fn(data)
         return None
-
-    # @property
-    # def icon(self) -> str | None:
-    #     """Get icon."""
-    #
-    #     value = (
-    #         int(self.native_value)
-    #         if self.native_value is not None
-    #         and isinstance(self.native_value, (int, float, str))
-    #         else None
-    #     )
-    #
-    #     if value and self.entity_description.icon_fn is not None:
-    #         return self.entity_description.icon_fn(value)
-    #     return None
-    #
 
 
 class WeatherFlowCloudSensorREST(WeatherFlowSensorBase):
