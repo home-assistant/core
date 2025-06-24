@@ -58,11 +58,14 @@ TILT_DEVICE_MAP = {
     BlindType.VenetianBlind: CoverDeviceClass.BLIND,
     BlindType.ShangriLaBlind: CoverDeviceClass.BLIND,
     BlindType.DoubleRoller: CoverDeviceClass.SHADE,
+    BlindType.RollerTiltMotor: CoverDeviceClass.BLIND,
+}
+
+DUAL_SHADE_DEVICE_MAP = {
     BlindType.DualShade: CoverDeviceClass.SHADE,
     BlindType.VerticalBlind: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindRight: CoverDeviceClass.BLIND,
-    BlindType.RollerTiltMotor: CoverDeviceClass.BLIND,
 }
 
 TILT_ONLY_DEVICE_MAP = {
@@ -108,6 +111,15 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TILT_DEVICE_MAP[blind.type],
+                )
+            )
+
+        elif blind.type in DUAL_SHADE_DEVICE_MAP:
+            entities.append(
+                MotionDualShadeDevice(
+                    coordinator,
+                    blind,
+                    DUAL_SHADE_DEVICE_MAP[blind.type],
                 )
             )
 
@@ -297,6 +309,47 @@ class MotionTiltDevice(MotionPositionDevice):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         angle = kwargs[ATTR_TILT_POSITION] * 180 / 100
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._blind.Set_angle, angle)
+
+
+class MotionDualShadeDevice(MotionTiltDevice):
+    """Representation of a Motion DualShade Device with reversed tilt direction."""
+
+    @property
+    def current_cover_tilt_position(self) -> int | None:
+        """Return current angle of cover.
+
+        None is unknown, 0 is closed/minimum tilt, 100 is fully open/maximum tilt.
+        For DualShade, the tilt direction is reversed.
+        """
+        if self._blind.angle is None:
+            return None
+        return 100 - (self._blind.angle * 100 / 180)
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt.
+
+        For DualShade, opening means setting angle to 0.
+        """
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._blind.Set_angle, 0)
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt.
+
+        For DualShade, closing means setting angle to 180.
+        """
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._blind.Set_angle, 180)
+
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover tilt to a specific position.
+
+        For DualShade, the tilt direction is reversed.
+        """
+        # Reverse the tilt position: 0% -> 180°, 100% -> 0°
+        angle = (100 - kwargs[ATTR_TILT_POSITION]) * 180 / 100
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Set_angle, angle)
 
