@@ -1,48 +1,81 @@
 """Tests for the influxdb component."""
 
 from homeassistant.components import influxdb
+from homeassistant.components.influxdb import (
+    CONF_API_VERSION,
+    CONF_BUCKET,
+    CONF_COMPONENT_CONFIG,
+    CONF_COMPONENT_CONFIG_DOMAIN,
+    CONF_COMPONENT_CONFIG_GLOB,
+    CONF_DB_NAME,
+    CONF_IGNORE_ATTRIBUTES,
+    CONF_MEASUREMENT_ATTR,
+    CONF_ORG,
+    CONF_RETRY_COUNT,
+    CONF_SSL_CA_CERT,
+    CONF_TAGS,
+    CONF_TAGS_ATTRIBUTES,
+)
+from homeassistant.const import (
+    CONF_EXCLUDE,
+    CONF_HOST,
+    CONF_INCLUDE,
+    CONF_PASSWORD,
+    CONF_PATH,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.helpers.entityfilter import (
+    CONF_DOMAINS,
+    CONF_ENTITIES,
+    CONF_ENTITY_GLOBS,
+)
 
 BASE_V1_CONFIG = {
-    "api_version": influxdb.DEFAULT_API_VERSION,
-    "host": "localhost",
-    "port": None,
-    "username": None,
-    "password": None,
-    "ssl": None,
-    "path": None,
-    "database": "home_assistant",
-    "verify_ssl": True,
-    "ssl_ca_cert": None,
+    CONF_API_VERSION: influxdb.DEFAULT_API_VERSION,
+    CONF_HOST: "localhost",
+    CONF_PORT: None,
+    CONF_USERNAME: None,
+    CONF_PASSWORD: None,
+    CONF_SSL: None,
+    CONF_PATH: None,
+    CONF_DB_NAME: "home_assistant",
+    CONF_VERIFY_SSL: True,
+    CONF_SSL_CA_CERT: None,
 }
 BASE_V2_CONFIG = {
-    "api_version": influxdb.API_VERSION_2,
-    "url": "https://us-west-2-1.aws.cloud2.influxdata.com",
-    "token": "token",
-    "organization": "org",
-    "bucket": "Home Assistant",
-    "verify_ssl": True,
-    "ssl_ca_cert": None,
+    CONF_API_VERSION: influxdb.API_VERSION_2,
+    CONF_URL: "https://us-west-2-1.aws.cloud2.influxdata.com",
+    CONF_TOKEN: "token",
+    CONF_ORG: "org",
+    CONF_BUCKET: "Home Assistant",
+    CONF_VERIFY_SSL: True,
+    CONF_SSL_CA_CERT: None,
 }
 BASE_OPTIONS = {
-    "max_retries": 0,
-    "include": {
-        "entity_globs": [],
-        "entities": [],
-        "domains": [],
+    CONF_RETRY_COUNT: 0,
+    CONF_INCLUDE: {
+        CONF_ENTITY_GLOBS: [],
+        CONF_ENTITIES: [],
+        CONF_DOMAINS: [],
     },
-    "exclude": {
-        "entity_globs": [],
-        "entities": [],
-        "domains": [],
+    CONF_EXCLUDE: {
+        CONF_ENTITY_GLOBS: [],
+        CONF_ENTITIES: [],
+        CONF_DOMAINS: [],
     },
-    "tags": {},
-    "tags_attributes": [],
-    "measurement_attr": "unit_of_measurement",
-    "ignore_attributes": [],
-    "component_config": {},
-    "component_config_glob": {},
-    "component_config_domain": {},
-    "bucket": "Home Assistant",
+    CONF_TAGS: {},
+    CONF_TAGS_ATTRIBUTES: [],
+    CONF_MEASUREMENT_ATTR: "unit_of_measurement",
+    CONF_IGNORE_ATTRIBUTES: [],
+    CONF_COMPONENT_CONFIG: {},
+    CONF_COMPONENT_CONFIG_GLOB: {},
+    CONF_COMPONENT_CONFIG_DOMAIN: {},
+    CONF_BUCKET: "Home Assistant",
 }
 
 INFLUX_PATH = "homeassistant.components.influxdb"
