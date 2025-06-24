@@ -100,7 +100,6 @@ async def test_switch(
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    reolink_host.camera_online.return_value = True
 
 
 async def test_host_switch(
@@ -167,7 +166,6 @@ async def test_host_switch(
             blocking=True,
         )
 
-    reolink_host.set_email.reset_mock(side_effect=True)
 
 
 async def test_chime_switch(
@@ -231,7 +229,6 @@ async def test_chime_switch(
             blocking=True,
         )
 
-    reolink_chime.set_option.reset_mock(side_effect=True)
 
 
 @pytest.mark.parametrize(
@@ -301,8 +298,6 @@ async def test_cleanup_hub_switches(
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
 
-    reolink_host.is_hub = False
-    reolink_host.supported.return_value = True
 
 
 @pytest.mark.parametrize(
@@ -374,5 +369,3 @@ async def test_hub_switches_repair_issue(
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
     assert (DOMAIN, "hub_switch_deprecated") in issue_registry.issues
 
-    reolink_host.is_hub = False
-    reolink_host.supported.return_value = True
