@@ -113,7 +113,6 @@ class GoogleGenerativeAITextToSpeechEntity(TextToSpeechEntity):
         self._attr_unique_id = f"{entry.entry_id}_tts"
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
             manufacturer="Google",
             model="Generative AI",
             entry_type=dr.DeviceEntryType.SERVICE,

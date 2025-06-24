@@ -24,7 +24,7 @@ from google.genai.types import (
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
@@ -301,17 +301,16 @@ async def _transform_stream(
 class GoogleGenerativeAILLMBaseEntity(Entity):
     """Google Generative AI base entity."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
-
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""
         self.entry = entry
+        self.subentry = subentry
+        self._attr_name = subentry.title
         self._genai_client = entry.runtime_data
-        self._attr_unique_id = entry.entry_id
+        self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
             manufacturer="Google",
             model="Generative AI",
             entry_type=dr.DeviceEntryType.SERVICE,
@@ -322,7 +321,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         chat_log: conversation.ChatLog,
     ) -> None:
         """Generate an answer for the chat log."""
-        options = self.entry.options
+        options = self.subentry.data
 
         tools: list[Tool | Callable[..., Any]] | None = None
         if chat_log.llm_api:
