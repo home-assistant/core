@@ -47,7 +47,7 @@
           "s2_unauthenticated_key": "S2 Unauthenticated Key",
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
-        "description": "Select your Z-Wave antenna",
+        "description": "Select your Z-Wave adapter",
         "title": "Enter the Z-Wave add-on configuration"
       },
       "configure_addon_reconfigure": {
