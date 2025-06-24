@@ -17,6 +17,8 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "firmware_upgrade_required": "A firmware upgrade is required for your device. To upgrade the firmware of your device, please use the Airthings app (Android/iOS).",
+      "unsupported_device": "Unsupported device",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
@@ -25,14 +27,32 @@
       "radon_1day_avg": {
         "name": "Radon 1-day average"
       },
-      "radon_longterm_avg": {
-        "name": "Radon longterm average"
-      },
       "radon_1day_level": {
         "name": "Radon 1-day level"
       },
+      "radon_longterm_avg": {
+        "name": "Radon longterm average"
+      },
       "radon_longterm_level": {
         "name": "Radon longterm level"
+      },
+      "radon_week_avg": {
+        "name": "Radon week average"
+      },
+      "radon_week_level": {
+        "name": "Radon week level"
+      },
+      "radon_month_avg": {
+        "name": "Radon month average"
+      },
+      "radon_month_level": {
+        "name": "Radon month level"
+      },
+      "radon_year_avg": {
+        "name": "Radon year average"
+      },
+      "radon_year_level": {
+        "name": "Radon year level"
       },
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
