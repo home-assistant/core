@@ -37,8 +37,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 npsso = parse_npsso_token(user_input[CONF_NPSSO])
             except PSNAWPInvalidTokenError:
                 errors["base"] = "invalid_account"
-
-            if npsso:
+            else:
                 psn = PlaystationNetwork(self.hass, npsso)
                 try:
                     user: User = await psn.get_user()
