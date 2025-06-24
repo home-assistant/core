@@ -1,0 +1,96 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'client': dict({
+      'is_connected': True,
+      'is_registered': True,
+      'tv_info': dict({
+        'hello': dict({
+          'deviceUUID': '**REDACTED**',
+        }),
+        'software': dict({
+          'major_ver': 'major',
+          'minor_ver': 'minor',
+        }),
+        'system': dict({
+          'modelName': 'MODEL',
+          'serialNumber': '1234567890',
+        }),
+      }),
+      'tv_state': dict({
+        'apps': dict({
+          'com.webos.app.livetv': dict({
+            'icon': '**REDACTED**',
+            'id': 'com.webos.app.livetv',
+            'largeIcon': '**REDACTED**',
+            'title': 'Live TV',
+          }),
+        }),
+        'channel_info': None,
+        'channels': list([
+          dict({
+            'channelId': 'ch1id',
+            'channelName': 'Channel 1',
+            'channelNumber': '1',
+          }),
+          dict({
+            'channelId': 'ch2id',
+            'channelName': 'Channel Name 2',
+            'channelNumber': '20',
+          }),
+        ]),
+        'current_app_id': 'com.webos.app.livetv',
+        'current_channel': dict({
+          'channelId': 'ch1id',
+          'channelName': 'Channel 1',
+          'channelNumber': '1',
+        }),
+        'inputs': dict({
+          'in1': dict({
+            'appId': 'app0',
+            'id': 'in1',
+            'label': 'Input01',
+          }),
+          'in2': dict({
+            'appId': 'app1',
+            'id': 'in2',
+            'label': 'Input02',
+          }),
+        }),
+        'is_on': True,
+        'is_screen_on': False,
+        'media_state': list([
+          dict({
+            'playState': '',
+          }),
+        ]),
+        'muted': False,
+        'power_state': dict({
+        }),
+        'sound_output': 'speaker',
+        'volume': 37,
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'client_secret': '**REDACTED**',
+        'host': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'webostv',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'LG webOS TV MODEL',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---

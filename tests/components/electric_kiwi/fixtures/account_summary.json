@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "account_summary",
+    "total_running_balance": "184.09",
+    "total_account_balance": "-102.22",
+    "total_billing_days": 31,
+    "next_billing_date": "2025-02-19",
+    "service_names": ["power"],
+    "services": {
+      "power": {
+        "connections": [
+          {
+            "id": 515363,
+            "running_balance": "12.98",
+            "unbilled_days": 5,
+            "hop_percentage": "11.2",
+            "start_date": "2025-01-19",
+            "service_label": "Power"
+          }
+        ]
+      }
+    },
+    "date_to_pay": "",
+    "invoice_id": "",
+    "total_invoiced_charges": "",
+    "default_to_pay": "",
+    "invoice_exists": 1,
+    "display_date": "2025-01-19",
+    "last_billed_date": "2025-01-18",
+    "last_billed_amount": "-21.02",
+    "summary": {
+      "electricity_used": "12.98",
+      "other_charges": "0.00",
+      "payments": "0.00",
+      "credits": "0.00",
+      "mobile_charges": "0.00",
+      "broadband_charges": "0.00",
+      "addon_unbilled_charges": {}
+    },
+    "is_prepay": "N"
+  },
+  "status": 1
+}

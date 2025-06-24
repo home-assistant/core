@@ -252,7 +252,7 @@ async def test_zha_retry_unique_ids(
     ) as mock_connect:
         with patch(
             "homeassistant.config_entries.async_call_later",
-            lambda hass, delay, action: async_call_later(hass, 0, action),
+            lambda hass, delay, action: async_call_later(hass, 0.01, action),
         ):
             await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done(wait_background_tasks=True)

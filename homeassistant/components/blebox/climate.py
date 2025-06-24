@@ -3,7 +3,6 @@
 from datetime import timedelta
 from typing import Any
 
-from blebox_uniapi.box import Box
 import blebox_uniapi.climate
 
 from homeassistant.components.climate import (
@@ -12,18 +11,16 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, PRODUCT
+from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
 BLEBOX_TO_HVACMODE = {
-    None: None,
     0: HVACMode.OFF,
     1: HVACMode.HEAT,
     2: HVACMode.COOL,
@@ -39,14 +36,13 @@ BLEBOX_TO_HVACACTION = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BleBoxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox climate entity."""
-    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-
     entities = [
-        BleBoxClimateEntity(feature) for feature in product.features.get("climates", [])
+        BleBoxClimateEntity(feature)
+        for feature in config_entry.runtime_data.features.get("climates", [])
     ]
     async_add_entities(entities, True)
 
@@ -60,15 +56,16 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return list of supported HVAC modes."""
+        if self._feature.mode is None:
+            return [HVACMode.OFF]
         return [HVACMode.OFF, BLEBOX_TO_HVACMODE[self._feature.mode]]
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode | None:
         """Return the desired HVAC mode."""
         if self._feature.is_on is None:
             return None
@@ -79,7 +76,7 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
         return HVACMode.HEAT if self._feature.is_on else HVACMode.OFF
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction | None:
         """Return the actual current HVAC action."""
         if self._feature.hvac_action is not None:
             if not self._feature.is_on:
@@ -92,22 +89,22 @@ class BleBoxClimateEntity(BleBoxEntity[blebox_uniapi.climate.Climate], ClimateEn
         return HVACAction.HEATING if self._feature.is_heating else HVACAction.IDLE
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature supported."""
         return self._feature.max_temp
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the maximum temperature supported."""
         return self._feature.min_temp
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._feature.current
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the desired thermostat temperature."""
         return self._feature.desired
 

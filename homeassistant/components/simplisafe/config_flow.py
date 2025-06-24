@@ -67,7 +67,7 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> SimpliSafeOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return SimpliSafeOptionsFlowHandler(config_entry)
+        return SimpliSafeOptionsFlowHandler()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -152,10 +152,6 @@ class SimpliSafeFlowHandler(ConfigFlow, domain=DOMAIN):
 
 class SimpliSafeOptionsFlowHandler(OptionsFlow):
     """Handle a SimpliSafe options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

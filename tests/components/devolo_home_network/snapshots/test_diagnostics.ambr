@@ -32,8 +32,10 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
-      'unique_id': None,
+      'unique_id': '1234567890',
       'version': 1,
     }),
   })

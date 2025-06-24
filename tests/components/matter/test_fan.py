@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, call
 
 from matter_server.client.models.node import MatterNode
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -51,7 +51,7 @@ async def test_fan_base(
     matter_node: MatterNode,
 ) -> None:
     """Test Fan platform."""
-    entity_id = "fan.air_purifier_fan"
+    entity_id = "fan.air_purifier"
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["preset_modes"] == [
@@ -119,7 +119,7 @@ async def test_fan_turn_on_with_percentage(
     matter_node: MatterNode,
 ) -> None:
     """Test turning on the fan with a specific percentage."""
-    entity_id = "fan.air_purifier_fan"
+    entity_id = "fan.air_purifier"
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
@@ -157,7 +157,7 @@ async def test_fan_turn_on_with_preset_mode(
     matter_node: MatterNode,
 ) -> None:
     """Test turning on the fan with a specific preset mode."""
-    entity_id = "fan.mocked_fan_switch_fan"
+    entity_id = "fan.mocked_fan_switch"
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
@@ -233,7 +233,7 @@ async def test_fan_turn_off(
     matter_node: MatterNode,
 ) -> None:
     """Test turning off the fan."""
-    entity_id = "fan.air_purifier_fan"
+    entity_id = "fan.air_purifier"
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_OFF,
@@ -276,7 +276,7 @@ async def test_fan_oscillate(
     matter_node: MatterNode,
 ) -> None:
     """Test oscillating the fan."""
-    entity_id = "fan.air_purifier_fan"
+    entity_id = "fan.air_purifier"
     for oscillating, value in ((True, 1), (False, 0)):
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -300,7 +300,7 @@ async def test_fan_set_direction(
     matter_node: MatterNode,
 ) -> None:
     """Test oscillating the fan."""
-    entity_id = "fan.air_purifier_fan"
+    entity_id = "fan.air_purifier"
     for direction, value in ((DIRECTION_FORWARD, 0), (DIRECTION_REVERSE, 1)):
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -323,7 +323,7 @@ async def test_fan_set_direction(
     [
         (
             "fan",
-            "fan.mocked_fan_switch_fan",
+            "fan.mocked_fan_switch",
             {
                 "1/514/65532": 0,
             },
@@ -331,7 +331,7 @@ async def test_fan_set_direction(
         ),
         (
             "fan",
-            "fan.mocked_fan_switch_fan",
+            "fan.mocked_fan_switch",
             {
                 "1/514/65532": 1,
             },
@@ -343,7 +343,7 @@ async def test_fan_set_direction(
         ),
         (
             "fan",
-            "fan.mocked_fan_switch_fan",
+            "fan.mocked_fan_switch",
             {
                 "1/514/65532": 4,
             },
@@ -355,7 +355,7 @@ async def test_fan_set_direction(
         ),
         (
             "fan",
-            "fan.mocked_fan_switch_fan",
+            "fan.mocked_fan_switch",
             {
                 "1/514/65532": 36,
             },
@@ -387,7 +387,7 @@ async def test_fan_supported_features(
     [
         (
             "fan",
-            "fan.mocked_fan_switch_fan",
+            "fan.mocked_fan_switch",
             {"1/514/1": 0, "1/514/65532": 0},
             [
                 "low",
@@ -397,7 +397,7 @@ async def test_fan_supported_features(
         ),
         (
             "fan",
-            "fan.mocked_fan_switch_fan",
+            "fan.mocked_fan_switch",
             {"1/514/1": 1, "1/514/65532": 0},
             [
                 "low",
@@ -406,25 +406,25 @@ async def test_fan_supported_features(
         ),
         (
             "fan",
-            "fan.mocked_fan_switch_fan",
+            "fan.mocked_fan_switch",
             {"1/514/1": 2, "1/514/65532": 0},
             ["low", "medium", "high", "auto"],
         ),
         (
             "fan",
-            "fan.mocked_fan_switch_fan",
+            "fan.mocked_fan_switch",
             {"1/514/1": 4, "1/514/65532": 0},
             ["high", "auto"],
         ),
         (
             "fan",
-            "fan.mocked_fan_switch_fan",
+            "fan.mocked_fan_switch",
             {"1/514/1": 5, "1/514/65532": 0},
             ["high"],
         ),
         (
             "fan",
-            "fan.mocked_fan_switch_fan",
+            "fan.mocked_fan_switch",
             {"1/514/1": 5, "1/514/65532": 8, "1/514/9": 3},
             ["high", "natural_wind", "sleep_wind"],
         ),

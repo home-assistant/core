@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -26,6 +27,7 @@
     'original_name': 'FRITZ!OS',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': '1C:ED:6F:12:34:11-update',
@@ -36,6 +38,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
       'friendly_name': 'Mock Title FRITZ!OS',
       'in_progress': False,
@@ -63,6 +66,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -83,6 +87,7 @@
     'original_name': 'FRITZ!OS',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': '1C:ED:6F:12:34:11-update',
@@ -93,6 +98,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
       'friendly_name': 'Mock Title FRITZ!OS',
       'in_progress': False,
@@ -120,6 +126,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -140,6 +147,7 @@
     'original_name': 'FRITZ!OS',
     'platform': 'fritz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': '1C:ED:6F:12:34:11-update',
@@ -150,6 +158,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
       'friendly_name': 'Mock Title FRITZ!OS',
       'in_progress': False,

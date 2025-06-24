@@ -11,14 +11,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import BSBLanData
-from .const import DOMAIN
+from . import BSBLanConfigEntry, BSBLanData
 from .coordinator import BSBLanCoordinatorData
 from .entity import BSBLanEntity
 
@@ -52,11 +50,11 @@ SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: BSBLanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BSB-Lan sensor based on a config entry."""
-    data: BSBLanData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities(BSBLanSensor(data, description) for description in SENSOR_TYPES)
 
 
@@ -74,11 +72,9 @@ class BSBLanSensor(BSBLanEntity, SensorEntity):
         super().__init__(data.coordinator, data)
         self.entity_description = description
         self._attr_unique_id = f"{data.device.MAC}-{description.key}"
+        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        value = self.entity_description.value_fn(self.coordinator.data)
-        if value == "---":
-            return None
-        return value
+        return self.entity_description.value_fn(self.coordinator.data)

@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
@@ -60,7 +60,7 @@ class MatterUpdateExtraStoredData(ExtraStoredData):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter lock from Config Entry."""
     matter = get_matter(hass)
@@ -100,21 +100,23 @@ class MatterUpdate(MatterEntity, UpdateEntity):
             == clusters.OtaSoftwareUpdateRequestor.Enums.UpdateStateEnum.kIdle
         ):
             self._attr_in_progress = False
+            self._attr_update_percentage = None
             return
 
         update_progress: int = self.get_matter_attribute_value(
             clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateStateProgress
         )
 
+        self._attr_in_progress = True
         if (
             update_state
             == clusters.OtaSoftwareUpdateRequestor.Enums.UpdateStateEnum.kDownloading
             and update_progress is not None
             and update_progress > 0
         ):
-            self._attr_in_progress = update_progress
+            self._attr_update_percentage = update_progress
         else:
-            self._attr_in_progress = True
+            self._attr_update_percentage = None
 
     async def async_update(self) -> None:
         """Call when the entity needs to be updated."""
@@ -249,7 +251,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.UPDATE,
         entity_description=UpdateEntityDescription(
-            key="MatterUpdate", device_class=UpdateDeviceClass.FIRMWARE, name=None
+            key="MatterUpdate", device_class=UpdateDeviceClass.FIRMWARE
         ),
         entity_class=MatterUpdate,
         required_attributes=(
@@ -259,5 +261,6 @@ DISCOVERY_SCHEMAS = [
             clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateState,
             clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateStateProgress,
         ),
+        allow_none_value=True,
     ),
 ]

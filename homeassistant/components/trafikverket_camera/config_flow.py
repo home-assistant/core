@@ -5,9 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from pytrafikverket.exceptions import InvalidAuthentication, NoCameraFound, UnknownError
-from pytrafikverket.models import CameraInfoModel
-from pytrafikverket.trafikverket_camera import TrafikverketCamera
+from pytrafikverket import (
+    CameraInfoModel,
+    InvalidAuthentication,
+    NoCameraFound,
+    TrafikverketCamera,
+    UnknownError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (

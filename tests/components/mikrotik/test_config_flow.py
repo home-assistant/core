@@ -14,6 +14,7 @@ from homeassistant.components.mikrotik.const import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -179,7 +180,10 @@ async def test_reauth_success(hass: HomeAssistant, api) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["description_placeholders"] == {CONF_USERNAME: "username"}
+    assert result["description_placeholders"] == {
+        CONF_NAME: "Mock Title",
+        CONF_USERNAME: "username",
+    }
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

@@ -6,14 +6,20 @@ import pypck
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ADDRESS,
     CONF_BRIGHTNESS,
-    CONF_HOST,
+    CONF_DEVICE_ID,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CONF_KEYS,
@@ -42,18 +48,18 @@ from .const import (
     VAR_UNITS,
     VARIABLES,
 )
-from .helpers import (
-    DeviceConnectionType,
-    get_device_connection,
-    is_address,
-    is_states_string,
-)
+from .helpers import DeviceConnectionType, LcnConfigEntry, is_states_string
 
 
 class LcnServiceCall:
     """Parent class for all LCN service calls."""
 
-    schema = vol.Schema({vol.Required(CONF_ADDRESS): is_address})
+    schema = vol.Schema(
+        {
+            vol.Required(CONF_DEVICE_ID): cv.string,
+        }
+    )
+    supports_response = SupportsResponse.NONE
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize service call."""
@@ -61,19 +67,30 @@ class LcnServiceCall:
 
     def get_device_connection(self, service: ServiceCall) -> DeviceConnectionType:
         """Get address connection object."""
-        address, host_name = service.data[CONF_ADDRESS]
+        entries: list[LcnConfigEntry] = self.hass.config_entries.async_loaded_entries(
+            DOMAIN
+        )
+        device_id = service.data[CONF_DEVICE_ID]
+        device_registry = dr.async_get(self.hass)
+        if not (device := device_registry.async_get(device_id)) or not (
+            entry := next(
+                (
+                    entry
+                    for entry in entries
+                    if entry.entry_id == device.primary_config_entry
+                ),
+                None,
+            )
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_device_id",
+                translation_placeholders={"device_id": device_id},
+            )
 
-        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if config_entry.data[CONF_HOST] == host_name:
-                device_connection = get_device_connection(
-                    self.hass, address, config_entry
-                )
-                if device_connection is None:
-                    raise ValueError("Wrong address.")
-                return device_connection
-        raise ValueError("Invalid host name.")
+        return entry.runtime_data.device_connections[device_id]
 
-    async def async_call_service(self, service: ServiceCall) -> None:
+    async def async_call_service(self, service: ServiceCall) -> ServiceResponse:
         """Execute service call."""
         raise NotImplementedError
 
@@ -429,3 +446,12 @@ SERVICES = (
     (LcnService.DYN_TEXT, DynText),
     (LcnService.PCK, Pck),
 )
+
+
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Register services for LCN."""
+    for service_name, service in SERVICES:
+        hass.services.async_register(
+            DOMAIN, service_name, service(hass).async_call_service, service.schema
+        )

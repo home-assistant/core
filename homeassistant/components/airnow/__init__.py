@@ -15,12 +15,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import AirNowDataUpdateCoordinator
+from .coordinator import AirNowConfigEntry, AirNowDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
-
-type AirNowConfigEntry = ConfigEntry[AirNowDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bool:
@@ -38,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirNowConfigEntry) -> bo
     # Setup the Coordinator
     session = async_get_clientsession(hass)
     coordinator = AirNowDataUpdateCoordinator(
-        hass, session, api_key, latitude, longitude, distance, update_interval
+        hass, entry, session, api_key, latitude, longitude, distance, update_interval
     )
 
     # Sync with Coordinator

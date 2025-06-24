@@ -39,8 +39,8 @@
   },
   "services": {
     "update_file_path": {
-      "name": "Updates file path",
-      "description": "Use this action to change the file displayed by the camera.",
+      "name": "Update file path",
+      "description": "Changes the file displayed by the camera.",
       "fields": {
         "file_path": {
           "name": "File path",
@@ -52,12 +52,6 @@
   "exceptions": {
     "file_path_not_accessible": {
       "message": "Path {file_path} is not accessible"
-    }
-  },
-  "issues": {
-    "no_access_path": {
-      "title": "Incorrect file path",
-      "description": "While trying to import your configuration the provided file path {file_path} could not be read.\nPlease update your configuration to a correct file path and restart to fix this issue."
     }
   }
 }

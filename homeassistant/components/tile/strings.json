@@ -33,5 +33,12 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "lost": {
+        "name": "Lost"
+      }
+    }
   }
 }

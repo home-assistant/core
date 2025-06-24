@@ -46,7 +46,7 @@ class RfxtrxEntity(RestoreEntity):
         self._attr_device_info = DeviceInfo(
             identifiers=_get_identifiers_from_device_tuple(device_id),
             model=device.type_string,
-            name=f"{device.type_string} {device.id_string}",
+            name=f"{device.type_string} {device_id.id_string}",
         )
         self._attr_unique_id = "_".join(x for x in device_id)
         self._device = device
@@ -54,7 +54,7 @@ class RfxtrxEntity(RestoreEntity):
         self._device_id = device_id
         # If id_string is 213c7f2:1, the group_id is 213c7f2, and the device will respond to
         # group events regardless of their group indices.
-        (self._group_id, _, _) = cast(str, device.id_string).partition(":")
+        (self._group_id, _, _) = device_id.id_string.partition(":")
 
     async def async_added_to_hass(self) -> None:
         """Restore RFXtrx device state (ON/OFF)."""

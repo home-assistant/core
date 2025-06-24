@@ -1,0 +1,102 @@
+{
+  "id": 2,
+  "name": "Another Test Light",
+  "profile": 1002,
+  "image": "default",
+  "favorite": 0,
+  "order": 48,
+  "protocol": 21,
+  "sub_protocol": 3,
+  "routing": 0,
+  "state": 1,
+  "state_changed": 1694024544,
+  "added": 1679551927,
+  "history": 1,
+  "cube_type": 8,
+  "note": "",
+  "services": 7,
+  "phonetic_name": "",
+  "owner": 2,
+  "security": 0,
+  "attributes": [
+    {
+      "id": 12,
+      "node_id": 2,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 1.0,
+      "target_value": 1.0,
+      "last_value": 1.0,
+      "unit": "",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 1,
+      "state": 1,
+      "last_changed": 1694024544,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "can_observe": [300],
+        "automations": ["toggle"],
+        "history": {
+          "day": 35,
+          "week": 5,
+          "month": 1,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 13,
+      "node_id": 2,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 100,
+      "current_value": 100.0,
+      "target_value": 100.0,
+      "last_value": 100.0,
+      "unit": "%",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 2,
+      "state": 1,
+      "last_changed": 1694024544,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["step"]
+      }
+    },
+    {
+      "id": 14,
+      "node_id": 2,
+      "instance": 0,
+      "minimum": 2000,
+      "maximum": 7000,
+      "current_value": 3700.0,
+      "target_value": 3700.0,
+      "last_value": 3700.0,
+      "unit": "K",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 42,
+      "state": 1,
+      "last_changed": 1694024544,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["step"]
+      }
+    }
+  ]
+}

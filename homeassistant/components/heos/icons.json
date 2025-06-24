@@ -1,5 +1,23 @@
 {
   "services": {
+    "get_queue": {
+      "service": "mdi:playlist-music"
+    },
+    "remove_from_queue": {
+      "service": "mdi:playlist-remove"
+    },
+    "move_queue_item": {
+      "service": "mdi:playlist-edit"
+    },
+    "group_volume_set": {
+      "service": "mdi:volume-medium"
+    },
+    "group_volume_down": {
+      "service": "mdi:volume-low"
+    },
+    "group_volume_up": {
+      "service": "mdi:volume-high"
+    },
     "sign_in": {
       "service": "mdi:login"
     },

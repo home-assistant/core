@@ -3,9 +3,11 @@
     "flow_title": "{host}",
     "step": {
       "reauth_confirm": {
-        "description": "Please enter the correct password for host: {host}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::vodafone_station::config::step::user::data_description::password%]"
         }
       },
       "user": {
@@ -15,7 +17,21 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Vodafone Station."
+          "host": "The hostname or IP address of your Vodafone Station.",
+          "username": "The username for your Vodafone Station.",
+          "password": "The password for your Vodafone Station."
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "[%key:component::vodafone_station::config::step::user::data_description::host%]",
+          "username": "[%key:component::vodafone_station::config::step::user::data_description::username%]",
+          "password": "[%key:component::vodafone_station::config::step::user::data_description::password%]"
         }
       }
     },
@@ -23,16 +39,17 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "already_logged": "User already logged-in, please try again later.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "model_not_supported": "The device model is currently unsupported.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
-      "already_logged": "User already logged-in, please try again later.",
+      "already_logged": "[%key:component::vodafone_station::config::abort::already_logged%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "model_not_supported": "The device model is currently unsupported.",
+      "model_not_supported": "[%key:component::vodafone_station::config::abort::model_not_supported%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
@@ -41,20 +58,35 @@
       "init": {
         "data": {
           "consider_home": "Seconds to consider a device at 'home'"
+        },
+        "data_description": {
+          "consider_home": "The number of seconds to wait until marking a device as not home after it disconnects from the network."
         }
       }
     }
   },
   "entity": {
     "button": {
-      "dsl_reconnect": { "name": "DSL reconnect" },
-      "fiber_reconnect": { "name": "Fiber reconnect" },
-      "internet_key_reconnect": { "name": "Internet key reconnect" }
+      "dsl_reconnect": {
+        "name": "DSL reconnect"
+      },
+      "fiber_reconnect": {
+        "name": "Fiber reconnect"
+      },
+      "internet_key_reconnect": {
+        "name": "Internet key reconnect"
+      }
     },
     "sensor": {
-      "external_ipv4": { "name": "WAN IPv4 address" },
-      "external_ipv6": { "name": "WAN IPv6 address" },
-      "external_ip_key": { "name": "WAN internet key address" },
+      "external_ipv4": {
+        "name": "WAN IPv4 address"
+      },
+      "external_ipv6": {
+        "name": "WAN IPv6 address"
+      },
+      "external_ip_key": {
+        "name": "WAN internet key address"
+      },
       "active_connection": {
         "name": "Active connection",
         "state": {
@@ -64,15 +96,44 @@
           "internet_key": "Internet key"
         }
       },
-      "down_stream": { "name": "WAN download rate" },
-      "up_stream": { "name": "WAN upload rate" },
-      "fw_version": { "name": "Firmware version" },
-      "phone_num1": { "name": "Phone number (1)" },
-      "phone_num2": { "name": "Phone number (2)" },
-      "sys_uptime": { "name": "Uptime" },
-      "sys_cpu_usage": { "name": "CPU usage" },
-      "sys_memory_usage": { "name": "Memory usage" },
-      "sys_reboot_cause": { "name": "Reboot cause" }
+      "down_stream": {
+        "name": "WAN download rate"
+      },
+      "up_stream": {
+        "name": "WAN upload rate"
+      },
+      "fw_version": {
+        "name": "Firmware version"
+      },
+      "phone_num1": {
+        "name": "Phone number (1)"
+      },
+      "phone_num2": {
+        "name": "Phone number (2)"
+      },
+      "sys_uptime": {
+        "name": "Uptime"
+      },
+      "sys_cpu_usage": {
+        "name": "CPU usage"
+      },
+      "sys_memory_usage": {
+        "name": "Memory usage"
+      },
+      "sys_reboot_cause": {
+        "name": "Reboot cause"
+      }
+    }
+  },
+  "exceptions": {
+    "update_failed": {
+      "message": "Error fetching data: {error}"
+    },
+    "cannot_execute_action": {
+      "message": "Cannot execute requested action: {error}"
+    },
+    "cannot_authenticate": {
+      "message": "Error authenticating: {error}"
     }
   }
 }

@@ -8,7 +8,6 @@ import logging
 from time import localtime, strftime, time
 from typing import Any
 
-from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import voluptuous as vol
@@ -34,11 +33,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     DOMAIN,
@@ -49,6 +46,7 @@ from .const import (
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION_HOLD,
 )
+from .coordinator import LyricDataUpdateCoordinator
 from .entity import LyricDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,10 +120,12 @@ SCHEMA_HOLD_TIME: VolDictType = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Honeywell Lyric climate platform based on a config entry."""
-    coordinator: DataUpdateCoordinator[Lyric] = hass.data[DOMAIN][entry.entry_id]
+    coordinator: LyricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         (
@@ -163,7 +163,7 @@ class LyricThermostatType(enum.Enum):
 class LyricClimate(LyricDeviceEntity, ClimateEntity):
     """Defines a Honeywell Lyric climate entity."""
 
-    coordinator: DataUpdateCoordinator[Lyric]
+    coordinator: LyricDataUpdateCoordinator
     entity_description: ClimateEntityDescription
 
     _attr_name = None
@@ -174,11 +174,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         PRESET_TEMPORARY_HOLD,
         PRESET_VACATION_HOLD,
     ]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Lyric],
+        coordinator: LyricDataUpdateCoordinator,
         description: ClimateEntityDescription,
         location: LyricLocation,
         device: LyricDevice,

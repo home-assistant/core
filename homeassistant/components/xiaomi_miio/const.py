@@ -27,9 +27,6 @@ CONF_MANUAL = "manual"
 # Options flow
 CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 
-# Keys
-KEY_COORDINATOR = "coordinator"
-KEY_DEVICE = "device"
 
 # Attributes
 ATTR_AVAILABLE = "available"
@@ -94,6 +91,7 @@ MODEL_AIRFRESH_T2017 = "dmaker.airfresh.t2017"
 MODEL_FAN_1C = "dmaker.fan.1c"
 MODEL_FAN_P10 = "dmaker.fan.p10"
 MODEL_FAN_P11 = "dmaker.fan.p11"
+MODEL_FAN_P18 = "dmaker.fan.p18"
 MODEL_FAN_P5 = "dmaker.fan.p5"
 MODEL_FAN_P9 = "dmaker.fan.p9"
 MODEL_FAN_SA1 = "zhimi.fan.sa1"
@@ -118,6 +116,7 @@ MODELS_FAN_MIOT = [
     MODEL_FAN_1C,
     MODEL_FAN_P10,
     MODEL_FAN_P11,
+    MODEL_FAN_P18,
     MODEL_FAN_P9,
     MODEL_FAN_ZA5,
 ]
@@ -491,7 +490,7 @@ FEATURE_FLAGS_FAN_P9 = (
     | FEATURE_SET_DELAY_OFF_COUNTDOWN
 )
 
-FEATURE_FLAGS_FAN_P10_P11 = (
+FEATURE_FLAGS_FAN_P10_P11_P18 = (
     FEATURE_SET_BUZZER
     | FEATURE_SET_CHILD_LOCK
     | FEATURE_SET_OSCILLATION_ANGLE

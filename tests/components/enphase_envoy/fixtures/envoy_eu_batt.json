@@ -208,7 +208,17 @@
         "serial_number": "1",
         "last_report_date": 1,
         "last_report_watts": 1,
-        "max_report_watts": 1
+        "max_report_watts": 1,
+        "dc_voltage": null,
+        "dc_current": null,
+        "ac_voltage": null,
+        "ac_current": null,
+        "ac_frequency": null,
+        "temperature": null,
+        "energy_produced": null,
+        "energy_today": null,
+        "lifetime_energy": null,
+        "last_report_duration": null
       }
     },
     "tariff": {
@@ -223,7 +233,8 @@
         "reserved_soc": 0.0,
         "very_low_soc": 5,
         "charge_from_grid": true,
-        "date": "1714749724"
+        "date": "1714749724",
+        "opt_schedules": true
       },
       "single_rate": {
         "rate": 0.0,

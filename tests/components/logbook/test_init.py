@@ -10,6 +10,7 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.components import logbook, recorder
 
 # pylint: disable-next=hass-component-root-import
@@ -40,12 +41,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-import homeassistant.core as ha
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import MockRow, mock_humanify
 
@@ -330,7 +330,7 @@ def create_state_changed_event_from_old_new(
         row_id=1,
         event_type=PSEUDO_EVENT_STATE_CHANGED,
         event_data="{}",
-        time_fired_ts=dt_util.utc_to_timestamp(event_time_fired),
+        time_fired_ts=event_time_fired.timestamp(),
         context_id_bin=None,
         context_user_id_bin=None,
         context_parent_id_bin=None,

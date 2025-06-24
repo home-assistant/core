@@ -9,6 +9,8 @@ from whois.exceptions import (
     UnknownDateFormat,
     UnknownTld,
     WhoisCommandFailed,
+    WhoisPrivateRegistry,
+    WhoisQuotaExceeded,
 )
 
 from homeassistant.components.whois.const import DOMAIN
@@ -52,6 +54,8 @@ async def test_full_user_flow(
         (FailedParsingWhoisOutput, "unexpected_response"),
         (UnknownDateFormat, "unknown_date_format"),
         (WhoisCommandFailed, "whois_command_failed"),
+        (WhoisPrivateRegistry, "private_registry"),
+        (WhoisQuotaExceeded, "quota_exceeded"),
     ],
 )
 async def test_full_flow_with_error(

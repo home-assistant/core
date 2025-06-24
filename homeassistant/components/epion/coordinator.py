@@ -5,6 +5,7 @@ from typing import Any
 
 from epion import Epion, EpionAuthenticationError, EpionConnectionError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -13,15 +14,20 @@ from .const import REFRESH_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+type EpionConfigEntry = ConfigEntry[EpionCoordinator]
+
 
 class EpionCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Epion data update coordinator."""
 
-    def __init__(self, hass: HomeAssistant, epion_api: Epion) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: EpionConfigEntry, epion_api: Epion
+    ) -> None:
         """Initialize the Epion coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name="Epion",
             update_interval=REFRESH_INTERVAL,
         )

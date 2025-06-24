@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -35,11 +35,11 @@ async def test_valve(
     matter_node: MatterNode,
 ) -> None:
     """Test valve entity is created for a Matter ValveConfigurationAndControl Cluster."""
-    entity_id = "valve.valve_valve"
+    entity_id = "valve.valve"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "closed"
-    assert state.attributes["friendly_name"] == "Valve Valve"
+    assert state.attributes["friendly_name"] == "Valve"
 
     # test close_valve action
     await hass.services.async_call(

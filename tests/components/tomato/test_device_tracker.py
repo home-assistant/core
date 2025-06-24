@@ -8,7 +8,7 @@ import requests_mock
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-import homeassistant.components.tomato.device_tracker as tomato
+from homeassistant.components.tomato import device_tracker as tomato
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,

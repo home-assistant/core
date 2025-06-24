@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RoomID

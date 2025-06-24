@@ -15,11 +15,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD
-from .coordinator import ShellyConfigEntry
+from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -35,11 +35,14 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
+    get_blu_trv_device_info,
     get_device_entry_gen,
     get_virtual_component_ids,
     is_block_momentary_input,
     is_rpc_momentary_input,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -57,6 +60,36 @@ class RpcBinarySensorDescription(RpcEntityDescription, BinarySensorEntityDescrip
 @dataclass(frozen=True, kw_only=True)
 class RestBinarySensorDescription(RestEntityDescription, BinarySensorEntityDescription):
     """Class to describe a REST binary sensor."""
+
+
+class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
+    """Represent a RPC binary sensor entity."""
+
+    entity_description: RpcBinarySensorDescription
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if RPC sensor state is on."""
+        return bool(self.attribute_value)
+
+
+class RpcBluTrvBinarySensor(RpcBinarySensor):
+    """Represent a RPC BluTrv binary sensor."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcBinarySensorDescription,
+    ) -> None:
+        """Initialize."""
+
+        super().__init__(coordinator, key, attribute, description)
+        ble_addr: str = coordinator.device.config[key]["addr"]
+        self._attr_device_info = get_blu_trv_device_info(
+            coordinator.device.config[key], ble_addr, coordinator.mac
+        )
 
 
 SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
@@ -99,6 +132,7 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         device_class=BinarySensorDeviceClass.GAS,
         translation_key="gas",
         value=lambda value: value in ["mild", "heavy"],
+        # Deprecated, remove in 2025.10
         extra_state_attributes=lambda block: {"detected": block.gas},
     ),
     ("sensor", "smoke"): BlockBinarySensorDescription(
@@ -156,7 +190,6 @@ RPC_SENSORS: Final = {
     "input": RpcBinarySensorDescription(
         key="input",
         sub_key="state",
-        name="Input",
         device_class=BinarySensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         removal_condition=is_rpc_momentary_input,
@@ -230,7 +263,27 @@ RPC_SENSORS: Final = {
     "boolean": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
-        has_entity_name=True,
+    ),
+    "calibration": RpcBinarySensorDescription(
+        key="blutrv",
+        sub_key="errors",
+        name="Calibration",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value=lambda status, _: False if status is None else "not_calibrated" in status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_class=RpcBluTrvBinarySensor,
+    ),
+    "flood": RpcBinarySensorDescription(
+        key="flood",
+        sub_key="alarm",
+        name="Flood",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
+    "mute": RpcBinarySensorDescription(
+        key="flood",
+        sub_key="mute",
+        name="Mute",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
@@ -238,7 +291,7 @@ RPC_SENSORS: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -317,17 +370,6 @@ class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if REST sensor state is on."""
-        return bool(self.attribute_value)
-
-
-class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
-    """Represent a RPC binary sensor entity."""
-
-    entity_description: RpcBinarySensorDescription
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if RPC sensor state is on."""
         return bool(self.attribute_value)
 
 

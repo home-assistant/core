@@ -38,7 +38,7 @@ async def test_empty_callbacks(hass: HomeAssistant) -> None:
     """Ensure we handle a missing callback in a subscription."""
     subscriber = HarmonySubscriberMixin(hass)
 
-    callbacks = {k: None for k in _ALL_CALLBACK_NAMES}
+    callbacks = dict.fromkeys(_ALL_CALLBACK_NAMES)
     subscriber.async_subscribe(HarmonyCallback(**callbacks))
     _call_all_callbacks(subscriber)
     await hass.async_block_till_done()

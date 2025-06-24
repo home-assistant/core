@@ -5,7 +5,6 @@
       'data': dict({
         'has_password': True,
         'host': '**REDACTED**',
-        'name': 'Solarlog test 1 2 3',
         'password': 'pwd',
       }),
       'disabled_by': None,
@@ -19,6 +18,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'solarlog',
       'unique_id': None,
       'version': 1,

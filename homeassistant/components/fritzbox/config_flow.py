@@ -11,9 +11,13 @@ from pyfritzhome import Fritzhome, LoginError
 from requests.exceptions import HTTPError
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 
@@ -43,10 +47,11 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _name: str
+
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
-        self._name: str | None = None
         self._password: str | None = None
         self._username: str | None = None
 
@@ -108,7 +113,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info.ssdp_location).hostname
@@ -120,9 +125,8 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="ignore_ip6_link_local")
 
-        if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
-            if uuid.startswith("uuid:"):
-                uuid = uuid[5:]
+        if uuid := discovery_info.upnp.get(ATTR_UPNP_UDN):
+            uuid = uuid.removeprefix("uuid:")
             await self.async_set_unique_id(uuid)
             self._abort_if_unique_id_configured({CONF_HOST: host})
 
@@ -137,7 +141,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
                 return self.async_abort(reason="already_configured")
 
-        self._name = str(discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME) or host)
+        self._name = str(discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME) or host)
 
         self.context["title_placeholders"] = {"name": self._name}
         return await self.async_step_confirm()
@@ -158,7 +162,6 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             result = await self.async_try_connect()
 
             if result == RESULT_SUCCESS:
-                assert self._name is not None
                 return self._get_entry(self._name)
             if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)

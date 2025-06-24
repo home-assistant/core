@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import aiohttp
 from spotifyaio import Device, SpotifyClient, SpotifyConnectionError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -21,7 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .browse_media import async_browse_media
 from .const import DOMAIN, LOGGER, SPOTIFY_SCOPES
-from .coordinator import SpotifyCoordinator
+from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
 from .models import SpotifyData
 from .util import (
     is_spotify_media_type,
@@ -29,18 +28,15 @@ from .util import (
     spotify_uri_from_media_browser_url,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SENSOR]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 __all__ = [
-    "async_browse_media",
     "DOMAIN",
-    "spotify_uri_from_media_browser_url",
+    "async_browse_media",
     "is_spotify_media_type",
     "resolve_spotify_media_type",
+    "spotify_uri_from_media_browser_url",
 ]
-
-
-type SpotifyConfigEntry = ConfigEntry[SpotifyData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
@@ -66,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
 
     spotify.refresh_token_function = _refresh_token
 
-    coordinator = SpotifyCoordinator(hass, spotify)
+    coordinator = SpotifyCoordinator(hass, entry, spotify)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -80,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
         hass,
         LOGGER,
         name=f"{entry.title} Devices",
+        config_entry=entry,
         update_interval=timedelta(minutes=5),
         update_method=_update_devices,
     )
@@ -94,6 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
     """Unload Spotify config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -1,17 +1,16 @@
 """Tests for rest component."""
 
 from datetime import timedelta
-from http import HTTPStatus
 import ssl
 from unittest.mock import patch
 
 import pytest
-import respx
 
 from homeassistant import config as hass_config
 from homeassistant.components.rest.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_PACKAGES,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     UnitOfInformation,
@@ -25,14 +24,16 @@ from tests.common import (
     async_fire_time_changed,
     get_fixture_path,
 )
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@respx.mock
-async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) -> None:
+async def test_setup_with_endpoint_timeout_with_recovery(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with an endpoint that times out that recovers."""
     await async_setup_component(hass, "homeassistant", {})
 
-    respx.get("http://localhost").mock(side_effect=TimeoutError())
+    aioclient_mock.get("http://localhost", exc=TimeoutError())
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -72,8 +73,9 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) ->
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
-    respx.get("http://localhost").respond(
-        status_code=HTTPStatus.OK,
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://localhost",
         json={
             "sensor1": "1",
             "sensor2": "2",
@@ -98,7 +100,8 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) ->
     assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
 
     # Now the end point flakes out again
-    respx.get("http://localhost").mock(side_effect=TimeoutError())
+    aioclient_mock.clear_requests()
+    aioclient_mock.get("http://localhost", exc=TimeoutError())
 
     # Refresh the coordinator
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
@@ -112,8 +115,9 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) ->
     # We request a manual refresh when the
     # endpoint is working again
 
-    respx.get("http://localhost").respond(
-        status_code=HTTPStatus.OK,
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://localhost",
         json={
             "sensor1": "1",
             "sensor2": "2",
@@ -134,14 +138,15 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) ->
     assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
 
 
-@respx.mock
 async def test_setup_with_ssl_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup with an ssl error."""
     await async_setup_component(hass, "homeassistant", {})
 
-    respx.get("https://localhost").mock(side_effect=ssl.SSLError("ssl error"))
+    aioclient_mock.get("https://localhost", exc=ssl.SSLError("ssl error"))
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -174,12 +179,13 @@ async def test_setup_with_ssl_error(
     assert "ssl error" in caplog.text
 
 
-@respx.mock
-async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
+async def test_setup_minimum_resource_template(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with minimum configuration (resource_template)."""
 
-    respx.get("http://localhost").respond(
-        status_code=HTTPStatus.OK,
+    aioclient_mock.get(
+        "http://localhost",
         json={
             "sensor1": "1",
             "sensor2": "2",
@@ -232,11 +238,10 @@ async def test_setup_minimum_resource_template(hass: HomeAssistant) -> None:
     assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
 
 
-@respx.mock
-async def test_reload(hass: HomeAssistant) -> None:
+async def test_reload(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Verify we can reload."""
 
-    respx.get("http://localhost") % HTTPStatus.OK
+    aioclient_mock.get("http://localhost", text="")
 
     assert await async_setup_component(
         hass,
@@ -281,11 +286,12 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.fallover")
 
 
-@respx.mock
-async def test_reload_and_remove_all(hass: HomeAssistant) -> None:
+async def test_reload_and_remove_all(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify we can reload and remove all."""
 
-    respx.get("http://localhost") % HTTPStatus.OK
+    aioclient_mock.get("http://localhost", text="")
 
     assert await async_setup_component(
         hass,
@@ -328,11 +334,12 @@ async def test_reload_and_remove_all(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.mockreset") is None
 
 
-@respx.mock
-async def test_reload_fails_to_read_configuration(hass: HomeAssistant) -> None:
+async def test_reload_fails_to_read_configuration(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Verify reload when configuration is missing or broken."""
 
-    respx.get("http://localhost") % HTTPStatus.OK
+    aioclient_mock.get("http://localhost", text="")
 
     assert await async_setup_component(
         hass,
@@ -372,12 +379,13 @@ async def test_reload_fails_to_read_configuration(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 1
 
 
-@respx.mock
-async def test_multiple_rest_endpoints(hass: HomeAssistant) -> None:
+async def test_multiple_rest_endpoints(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test multiple rest endpoints."""
 
-    respx.get("http://date.jsontest.com").respond(
-        status_code=HTTPStatus.OK,
+    aioclient_mock.get(
+        "http://date.jsontest.com",
         json={
             "date": "03-17-2021",
             "milliseconds_since_epoch": 1616008268573,
@@ -385,16 +393,16 @@ async def test_multiple_rest_endpoints(hass: HomeAssistant) -> None:
         },
     )
 
-    respx.get("http://time.jsontest.com").respond(
-        status_code=HTTPStatus.OK,
+    aioclient_mock.get(
+        "http://time.jsontest.com",
         json={
             "date": "03-17-2021",
             "milliseconds_since_epoch": 1616008299665,
             "time": "07:11:39 PM",
         },
     )
-    respx.get("http://localhost").respond(
-        status_code=HTTPStatus.OK,
+    aioclient_mock.get(
+        "http://localhost",
         json={
             "value": "1",
         },
@@ -468,7 +476,7 @@ async def test_config_schema_via_packages(hass: HomeAssistant) -> None:
         "pack_11": {"rest": {"resource": "http://url1"}},
         "pack_list": {"rest": [{"resource": "http://url2"}]},
     }
-    config = {HOMEASSISTANT_DOMAIN: {hass_config.CONF_PACKAGES: packages}}
+    config = {HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages}}
     await hass_config.merge_packages_config(hass, config, packages)
 
     assert len(config) == 2
@@ -477,12 +485,13 @@ async def test_config_schema_via_packages(hass: HomeAssistant) -> None:
     assert config["rest"][1]["resource"] == "http://url2"
 
 
-@respx.mock
-async def test_setup_minimum_payload_template(hass: HomeAssistant) -> None:
+async def test_setup_minimum_payload_template(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup with minimum configuration (payload_template)."""
 
-    respx.post("http://localhost", json={"data": "value"}).respond(
-        status_code=HTTPStatus.OK,
+    aioclient_mock.post(
+        "http://localhost",
         json={
             "sensor1": "1",
             "sensor2": "2",

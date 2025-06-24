@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Host
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,8 +16,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import (
     ReolinkChannelCoordinatorEntity,
@@ -26,7 +24,9 @@ from .entity import (
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -57,6 +57,7 @@ LIGHT_ENTITIES = (
     ReolinkLightEntityDescription(
         key="floodlight",
         cmd_key="GetWhiteLed",
+        cmd_id=[291, 289, 438],
         translation_key="floodlight",
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         is_on_fn=lambda api, ch: api.whiteled_state(ch),
@@ -91,7 +92,7 @@ HOST_LIGHT_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink light entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
@@ -151,37 +152,28 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
 
         return round(255 * bright_pct / 100.0)
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        try:
-            await self.entity_description.turn_on_off_fn(
-                self._host.api, self._channel, False
-            )
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.turn_on_off_fn(
+            self._host.api, self._channel, False
+        )
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if (
             brightness := kwargs.get(ATTR_BRIGHTNESS)
         ) is not None and self.entity_description.set_brightness_fn is not None:
             brightness_pct = int(brightness / 255.0 * 100)
-            try:
-                await self.entity_description.set_brightness_fn(
-                    self._host.api, self._channel, brightness_pct
-                )
-            except InvalidParameterError as err:
-                raise ServiceValidationError(err) from err
-            except ReolinkError as err:
-                raise HomeAssistantError(err) from err
-
-        try:
-            await self.entity_description.turn_on_off_fn(
-                self._host.api, self._channel, True
+            await self.entity_description.set_brightness_fn(
+                self._host.api, self._channel, brightness_pct
             )
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+
+        await self.entity_description.turn_on_off_fn(
+            self._host.api, self._channel, True
+        )
         self.async_write_ha_state()
 
 
@@ -206,18 +198,14 @@ class ReolinkHostLightEntity(ReolinkHostCoordinatorEntity, LightEntity):
         """Return true if light is on."""
         return self.entity_description.is_on_fn(self._host.api)
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        try:
-            await self.entity_description.turn_on_off_fn(self._host.api, False)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.turn_on_off_fn(self._host.api, False)
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
-        try:
-            await self.entity_description.turn_on_off_fn(self._host.api, True)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.turn_on_off_fn(self._host.api, True)
         self.async_write_ha_state()

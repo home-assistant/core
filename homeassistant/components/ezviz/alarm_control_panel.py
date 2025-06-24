@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pyezviz import PyEzvizError
-from pyezviz.constants import DefenseModeType
+from pyezvizapi import PyEzvizError
+from pyezvizapi.constants import DefenseModeType
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -15,14 +15,13 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
-from .coordinator import EzvizDataUpdateCoordinator
+from .const import DOMAIN, MANUFACTURER
+from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,12 +48,12 @@ ALARM_TYPE = EzvizAlarmControlPanelEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EzvizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ezviz alarm control panel."""
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
 
     device_info = DeviceInfo(
         identifiers={(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]

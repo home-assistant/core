@@ -4,7 +4,6 @@
     'attributes': dict({
       'friendly_name': 'Statistical characteristic',
       'icon': 'mdi:calculator',
-      'state_class': 'measurement',
     }),
     'state': 'unavailable',
   })

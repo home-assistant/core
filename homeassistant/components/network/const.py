@@ -6,13 +6,11 @@ from typing import Final
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 DOMAIN: Final = "network"
 STORAGE_KEY: Final = "core.network"
 STORAGE_VERSION: Final = 1
-
-DATA_NETWORK: Final = "network"
 
 ATTR_ADAPTERS: Final = "adapters"
 ATTR_CONFIGURED_ADAPTERS: Final = "configured_adapters"

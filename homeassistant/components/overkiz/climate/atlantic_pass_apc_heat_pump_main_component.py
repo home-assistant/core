@@ -41,7 +41,6 @@ class AtlanticPassAPCHeatPumpMainComponent(OverkizEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def hvac_mode(self) -> HVACMode:

@@ -2,16 +2,13 @@
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
-from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, PLATFORMS
-from .coordinator import JellyfinDataUpdateCoordinator
-
-type JellyfinConfigEntry = ConfigEntry[JellyfinDataUpdateCoordinator]
+from .const import CONF_CLIENT_DEVICE_ID, DEFAULT_NAME, DOMAIN, PLATFORMS
+from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
@@ -35,9 +32,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> 
 
     server_info: dict[str, Any] = connect_result["Servers"][0]
 
-    coordinator = JellyfinDataUpdateCoordinator(hass, client, server_info, user_id)
-
+    coordinator = JellyfinDataUpdateCoordinator(
+        hass, entry, client, server_info, user_id
+    )
     await coordinator.async_config_entry_first_refresh()
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        entry_type=dr.DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, coordinator.server_id)},
+        manufacturer=DEFAULT_NAME,
+        name=coordinator.server_name,
+        sw_version=coordinator.server_version,
+    )
 
     entry.runtime_data = coordinator
     entry.async_on_unload(client.stop)

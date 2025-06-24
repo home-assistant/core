@@ -4,23 +4,24 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pybalboa import SpaClient, SpaControl
+from pybalboa import SpaControl
 from pybalboa.enums import OffOnState, UnknownState
 
 from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import BalboaConfigEntry
 from .entity import BalboaEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BalboaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the spa's lights."""
-    spa: SpaClient = hass.data[DOMAIN][entry.entry_id]
+    spa = entry.runtime_data
     async_add_entities(BalboaLightEntity(control) for control in spa.lights)
 
 

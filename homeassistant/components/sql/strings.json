@@ -5,7 +5,7 @@
     },
     "error": {
       "db_url_invalid": "Database URL invalid",
-      "query_invalid": "SQL Query invalid",
+      "query_invalid": "SQL query invalid",
       "query_no_read_only": "SQL query must be read-only",
       "multiple_queries": "Multiple SQL queries are not supported",
       "column_invalid": "The column `{column}` is not returned by the query"
@@ -15,22 +15,22 @@
         "data": {
           "db_url": "Database URL",
           "name": "[%key:common::config_flow::data::name%]",
-          "query": "Select Query",
+          "query": "Select query",
           "column": "Column",
-          "unit_of_measurement": "Unit of Measure",
-          "value_template": "Value Template",
-          "device_class": "Device Class",
-          "state_class": "State Class"
+          "unit_of_measurement": "Unit of measurement",
+          "value_template": "Value template",
+          "device_class": "Device class",
+          "state_class": "State class"
         },
         "data_description": {
-          "db_url": "Database URL, leave empty to use HA recorder database",
-          "name": "Name that will be used for Config Entry and also the Sensor",
+          "db_url": "Leave empty to use Home Assistant Recorder database",
+          "name": "Name that will be used for config entry and also the sensor",
           "query": "Query to run, needs to start with 'SELECT'",
           "column": "Column for returned query to present as state",
-          "unit_of_measurement": "Unit of Measure (optional)",
-          "value_template": "Value Template (optional)",
+          "unit_of_measurement": "The unit of measurement for the sensor (optional)",
+          "value_template": "Template to extract a value from the payload (optional)",
           "device_class": "The type/class of the sensor to set the icon in the frontend",
-          "state_class": "The state_class of the sensor"
+          "state_class": "The state class of the sensor"
         }
       }
     }
@@ -106,6 +106,7 @@
         "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
         "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
         "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
+        "reactive_energy": "[%key:component::sensor::entity_component::reactive_energy::name%]",
         "reactive_power": "[%key:component::sensor::entity_component::reactive_power::name%]",
         "signal_strength": "[%key:component::sensor::entity_component::signal_strength::name%]",
         "sound_pressure": "[%key:component::sensor::entity_component::sound_pressure::name%]",
@@ -127,6 +128,7 @@
     "state_class": {
       "options": {
         "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+        "measurement_angle": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement_angle%]",
         "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
         "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
       }

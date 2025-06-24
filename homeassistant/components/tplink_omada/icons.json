@@ -27,5 +27,10 @@
         "default": "mdi:memory"
       }
     }
+  },
+  "services": {
+    "reconnect_client": {
+      "service": "mdi:sync"
+    }
   }
 }

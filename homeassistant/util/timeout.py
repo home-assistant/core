@@ -16,7 +16,7 @@ from .async_ import run_callback_threadsafe
 ZONE_GLOBAL = "global"
 
 
-class _State(str, enum.Enum):
+class _State(enum.Enum):
     """States of a task."""
 
     INIT = "INIT"
@@ -148,6 +148,7 @@ class _GlobalTaskContext:
         task: asyncio.Task[Any],
         timeout: float,
         cool_down: float,
+        cancel_message: str | None,
     ) -> None:
         """Initialize internal timeout context manager."""
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
@@ -160,11 +161,17 @@ class _GlobalTaskContext:
         self._wait_zone: asyncio.Event = asyncio.Event()
         self._state: _State = _State.INIT
         self._cool_down: float = cool_down
+        self._cancelling = 0
+        self._cancel_message = cancel_message
 
     async def __aenter__(self) -> Self:
         self._manager.global_tasks.append(self)
         self._start_timer()
         self._state = _State.ACTIVE
+        # Remember if the task was already cancelling
+        # so when we __aexit__ we can decide if we should
+        # raise asyncio.TimeoutError or let the cancellation propagate
+        self._cancelling = self._task.cancelling()
         return self
 
     async def __aexit__(
@@ -177,7 +184,15 @@ class _GlobalTaskContext:
         self._manager.global_tasks.remove(self)
 
         # Timeout on exit
-        if exc_type is asyncio.CancelledError and self.state == _State.TIMEOUT:
+        if exc_type is asyncio.CancelledError and self.state is _State.TIMEOUT:
+            # The timeout was hit, and the task was cancelled
+            # so we need to uncancel the task since the cancellation
+            # should not leak out of the context manager
+            if self._task.uncancel() > self._cancelling:
+                # If the task was already cancelling don't raise
+                # asyncio.TimeoutError and instead return None
+                # to allow the cancellation to propagate
+                return None
             raise TimeoutError
 
         self._state = _State.EXIT
@@ -229,7 +244,9 @@ class _GlobalTaskContext:
         """Cancel own task."""
         if self._task.done():
             return
-        self._task.cancel("Global task timeout")
+        self._task.cancel(
+            f"Global task timeout{': ' + self._cancel_message if self._cancel_message else ''}"
+        )
 
     def pause(self) -> None:
         """Pause timers while it freeze."""
@@ -257,6 +274,7 @@ class _ZoneTaskContext:
         zone: _ZoneTimeoutManager,
         task: asyncio.Task[Any],
         timeout: float,
+        cancel_message: str | None,
     ) -> None:
         """Initialize internal timeout context manager."""
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
@@ -266,6 +284,8 @@ class _ZoneTaskContext:
         self._time_left: float = timeout
         self._expiration_time: float | None = None
         self._timeout_handler: asyncio.Handle | None = None
+        self._cancelling = 0
+        self._cancel_message = cancel_message
 
     @property
     def state(self) -> _State:
@@ -280,6 +300,11 @@ class _ZoneTaskContext:
         if self._zone.freezes_done:
             self._start_timer()
 
+        # Remember if the task was already cancelling
+        # so when we __aexit__ we can decide if we should
+        # raise asyncio.TimeoutError or let the cancellation propagate
+        self._cancelling = self._task.cancelling()
+
         return self
 
     async def __aexit__(
@@ -292,7 +317,15 @@ class _ZoneTaskContext:
         self._stop_timer()
 
         # Timeout on exit
-        if exc_type is asyncio.CancelledError and self.state == _State.TIMEOUT:
+        if exc_type is asyncio.CancelledError and self.state is _State.TIMEOUT:
+            # The timeout was hit, and the task was cancelled
+            # so we need to uncancel the task since the cancellation
+            # should not leak out of the context manager
+            if self._task.uncancel() > self._cancelling:
+                # If the task was already cancelling don't raise
+                # asyncio.TimeoutError and instead return None
+                # to allow the cancellation to propagate
+                return None
             raise TimeoutError
 
         self._state = _State.EXIT
@@ -327,7 +360,9 @@ class _ZoneTaskContext:
         # Timeout
         if self._task.done():
             return
-        self._task.cancel("Zone timeout")
+        self._task.cancel(
+            f"Zone timeout{': ' + self._cancel_message if self._cancel_message else ''}"
+        )
 
     def pause(self) -> None:
         """Pause timers while it freeze."""
@@ -459,7 +494,11 @@ class TimeoutManager:
             task.zones_done_signal()
 
     def async_timeout(
-        self, timeout: float, zone_name: str = ZONE_GLOBAL, cool_down: float = 0
+        self,
+        timeout: float,
+        zone_name: str = ZONE_GLOBAL,
+        cool_down: float = 0,
+        cancel_message: str | None = None,
     ) -> _ZoneTaskContext | _GlobalTaskContext:
         """Timeout based on a zone.
 
@@ -470,7 +509,9 @@ class TimeoutManager:
 
         # Global Zone
         if zone_name == ZONE_GLOBAL:
-            return _GlobalTaskContext(self, current_task, timeout, cool_down)
+            return _GlobalTaskContext(
+                self, current_task, timeout, cool_down, cancel_message
+            )
 
         # Zone Handling
         if zone_name in self.zones:
@@ -479,7 +520,7 @@ class TimeoutManager:
             self.zones[zone_name] = zone = _ZoneTimeoutManager(self, zone_name)
 
         # Create Task
-        return _ZoneTaskContext(zone, current_task, timeout)
+        return _ZoneTaskContext(zone, current_task, timeout, cancel_message)
 
     def async_freeze(
         self, zone_name: str = ZONE_GLOBAL

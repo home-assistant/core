@@ -12,26 +12,23 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import CONNECTED_WIFI_CLIENTS, DOMAIN, WIFI_APTYPE, WIFI_BANDS
+from .coordinator import DevoloDataUpdateCoordinator, DevoloHomeNetworkConfigEntry
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DevoloHomeNetworkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     device = entry.runtime_data.device
-    coordinators: dict[str, DataUpdateCoordinator[list[ConnectedStationInfo]]] = (
+    coordinators: dict[str, DevoloDataUpdateCoordinator[list[ConnectedStationInfo]]] = (
         entry.runtime_data.coordinators
     )
     registry = er.async_get(hass)
@@ -51,7 +48,7 @@ async def async_setup_entry(
                 )
             )
             tracked.add(station.mac_address)
-            async_add_entities(new_entities)
+        async_add_entities(new_entities)
 
     @callback
     def restore_entities() -> None:
@@ -83,14 +80,19 @@ async def async_setup_entry(
     )
 
 
-class DevoloScannerEntity(
-    CoordinatorEntity[DataUpdateCoordinator[list[ConnectedStationInfo]]], ScannerEntity
+# The pylint disable is needed because of https://github.com/pylint-dev/pylint/issues/9138
+class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
+    CoordinatorEntity[DevoloDataUpdateCoordinator[list[ConnectedStationInfo]]],
+    ScannerEntity,
 ):
     """Representation of a devolo device tracker."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "device_tracker"
+
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[ConnectedStationInfo]],
+        coordinator: DevoloDataUpdateCoordinator[list[ConnectedStationInfo]],
         device: Device,
         mac: str,
     ) -> None:
@@ -98,6 +100,7 @@ class DevoloScannerEntity(
         super().__init__(coordinator)
         self._device = device
         self._attr_mac_address = mac
+        self._attr_name = mac
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -122,13 +125,6 @@ class DevoloScannerEntity(
                 else STATE_UNKNOWN
             )
         return attrs
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        if self.is_connected:
-            return "mdi:lan-connect"
-        return "mdi:lan-disconnect"
 
     @property
     def is_connected(self) -> bool:

@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.device_tracker import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .account import IcloudAccount, IcloudDevice
+from .account import IcloudAccount, IcloudConfigEntry, IcloudDevice
 from .const import (
     DEVICE_LOCATION_HORIZONTAL_ACCURACY,
     DEVICE_LOCATION_LATITUDE,
@@ -21,10 +20,12 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: IcloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for iCloud component."""
-    account: IcloudAccount = hass.data[DOMAIN][entry.unique_id]
+    account = entry.runtime_data
     tracked = set[str]()
 
     @callback
@@ -68,18 +69,24 @@ class IcloudTrackerEntity(TrackerEntity):
         self._attr_unique_id = device.unique_id
 
     @property
-    def location_accuracy(self):
+    def location_accuracy(self) -> float:
         """Return the location accuracy of the device."""
+        if TYPE_CHECKING:
+            assert self._device.location is not None
         return self._device.location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
 
     @property
-    def latitude(self):
+    def latitude(self) -> float:
         """Return latitude value of the device."""
+        if TYPE_CHECKING:
+            assert self._device.location is not None
         return self._device.location[DEVICE_LOCATION_LATITUDE]
 
     @property
-    def longitude(self):
+    def longitude(self) -> float:
         """Return longitude value of the device."""
+        if TYPE_CHECKING:
+            assert self._device.location is not None
         return self._device.location[DEVICE_LOCATION_LONGITUDE]
 
     @property

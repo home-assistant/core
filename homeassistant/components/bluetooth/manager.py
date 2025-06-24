@@ -22,7 +22,14 @@ from homeassistant.core import (
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN
+from .const import (
+    CONF_SOURCE,
+    CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DEVICE_ID,
+    CONF_SOURCE_DOMAIN,
+    CONF_SOURCE_MODEL,
+    DOMAIN,
+)
 from .match import (
     ADDRESS,
     CALLBACK,
@@ -44,11 +51,11 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     """Manage Bluetooth for Home Assistant."""
 
     __slots__ = (
-        "hass",
-        "storage",
-        "_integration_matcher",
         "_callback_index",
         "_cancel_logging_listener",
+        "_integration_matcher",
+        "hass",
+        "storage",
     )
 
     def __init__(
@@ -240,6 +247,38 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         unregister()
         self._async_save_scanner_history(scanner)
 
+    @hass_callback
+    def async_register_hass_scanner(
+        self,
+        scanner: BaseHaScanner,
+        connection_slots: int | None = None,
+        source_domain: str | None = None,
+        source_model: str | None = None,
+        source_config_entry_id: str | None = None,
+        source_device_id: str | None = None,
+    ) -> CALLBACK_TYPE:
+        """Register a scanner."""
+        cancel = self.async_register_scanner(scanner, connection_slots)
+        if (
+            isinstance(scanner, BaseHaRemoteScanner)
+            and source_domain
+            and source_config_entry_id
+        ):
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+                    data={
+                        CONF_SOURCE: scanner.source,
+                        CONF_SOURCE_DOMAIN: source_domain,
+                        CONF_SOURCE_MODEL: source_model,
+                        CONF_SOURCE_CONFIG_ENTRY_ID: source_config_entry_id,
+                        CONF_SOURCE_DEVICE_ID: source_device_id,
+                    },
+                )
+            )
+        return cancel
+
     def async_register_scanner(
         self,
         scanner: BaseHaScanner,
@@ -252,6 +291,18 @@ class HomeAssistantBluetoothManager(BluetoothManager):
 
         unregister = super().async_register_scanner(scanner, connection_slots)
         return partial(self._async_unregister_scanner, scanner, unregister)
+
+    @hass_callback
+    def async_remove_scanner(self, source: str) -> None:
+        """Remove a scanner."""
+        self.storage.async_remove_advertisement_history(source)
+        if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, source
+        ):
+            self.hass.async_create_task(
+                self.hass.config_entries.async_remove(entry.entry_id),
+                f"Removing {source} Bluetooth config entry",
+            )
 
     @hass_callback
     def _handle_config_entry_removed(

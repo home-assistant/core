@@ -179,4 +179,4 @@ class MyStromSwitchMock(MyStromDeviceMock):
         """Return the URI."""
         if not self._requested_state:
             return None
-        return f"http://{self._state["ip"]}"
+        return f"http://{self._state['ip']}"

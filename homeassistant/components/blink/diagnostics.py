@@ -4,24 +4,21 @@ from __future__ import annotations
 
 from typing import Any
 
-from blinkpy.blinkpy import Blink
-
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .coordinator import BlinkConfigEntry
 
 TO_REDACT = {"serial", "macaddress", "username", "password", "token", "unique_id"}
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BlinkConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    api: Blink = hass.data[DOMAIN][config_entry.entry_id].api
+    api = config_entry.runtime_data.api
 
     data = {
         camera.name: dict(camera.attributes.items())

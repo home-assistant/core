@@ -1,6 +1,7 @@
 """Configuration for Elmax tests."""
 
 from collections.abc import Generator
+from datetime import datetime, timedelta
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -11,11 +12,13 @@ from elmax_api.constants import (
     ENDPOINT_LOGIN,
 )
 from httpx import Response
+import jwt
 import pytest
 import respx
 
 from . import (
     MOCK_DIRECT_HOST,
+    MOCK_DIRECT_HOST_V6,
     MOCK_DIRECT_PORT,
     MOCK_DIRECT_SSL,
     MOCK_PANEL_ID,
@@ -27,6 +30,7 @@ from tests.common import load_fixture
 MOCK_DIRECT_BASE_URI = (
     f"{'https' if MOCK_DIRECT_SSL else 'http'}://{MOCK_DIRECT_HOST}:{MOCK_DIRECT_PORT}"
 )
+MOCK_DIRECT_BASE_URI_V6 = f"{'https' if MOCK_DIRECT_SSL else 'http'}://[{MOCK_DIRECT_HOST_V6}]:{MOCK_DIRECT_PORT}"
 
 
 @pytest.fixture(autouse=True)
@@ -56,17 +60,32 @@ def httpx_mock_cloud_fixture() -> Generator[respx.MockRouter]:
         yield respx_mock
 
 
+@pytest.fixture
+def base_uri() -> str:
+    """Configure the base-uri for the respx mock fixtures."""
+    return MOCK_DIRECT_BASE_URI
+
+
 @pytest.fixture(autouse=True)
-def httpx_mock_direct_fixture() -> Generator[respx.MockRouter]:
+def httpx_mock_direct_fixture(base_uri: str) -> Generator[respx.MockRouter]:
     """Configure httpx fixture for direct Panel-API communication."""
-    with respx.mock(
-        base_url=MOCK_DIRECT_BASE_URI, assert_all_called=False
-    ) as respx_mock:
+    with respx.mock(base_url=base_uri, assert_all_called=False) as respx_mock:
         # Mock Login POST.
         login_route = respx_mock.post(f"/api/v2/{ENDPOINT_LOGIN}", name="login")
-        login_route.return_value = Response(
-            200, json=json.loads(load_fixture("direct/login.json", "elmax"))
+
+        login_json = json.loads(load_fixture("direct/login.json", "elmax"))
+        decoded_jwt = jwt.decode_complete(
+            login_json["token"].split(" ")[1],
+            algorithms="HS256",
+            options={"verify_signature": False},
         )
+        expiration = datetime.now() + timedelta(hours=1)
+        decoded_jwt["payload"]["exp"] = int(expiration.timestamp())
+        jws_string = jwt.encode(
+            payload=decoded_jwt["payload"], algorithm="HS256", key=""
+        )
+        login_json["token"] = f"JWT {jws_string}"
+        login_route.return_value = Response(200, json=login_json)
 
         # Mock Device list GET.
         list_devices_route = respx_mock.get(

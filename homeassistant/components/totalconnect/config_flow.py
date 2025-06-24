@@ -193,15 +193,11 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> TotalConnectOptionsFlowHandler:
         """Get options flow."""
-        return TotalConnectOptionsFlowHandler(config_entry)
+        return TotalConnectOptionsFlowHandler()
 
 
 class TotalConnectOptionsFlowHandler(OptionsFlow):
     """TotalConnect options flow handler."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, bool] | None = None

@@ -31,7 +31,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     EntitySelector,
     LocationSelector,
@@ -113,7 +113,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> HERETravelTimeOptionsFlow:
         """Get the options flow."""
-        return HERETravelTimeOptionsFlow(config_entry)
+        return HERETravelTimeOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -297,9 +297,8 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 class HERETravelTimeOptionsFlow(OptionsFlow):
     """Handle HERE Travel Time options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize HERE Travel Time options flow."""
-        self.config_entry = config_entry
         self._config: dict[str, Any] = {}
 
     async def async_step_init(

@@ -15,22 +15,24 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'River Name (Station Name)',
       'unique_id': '123',
       'version': 1,
     }),
     'hydrological_data': dict({
-      'flood_alarm': False,
+      'flood_alarm': None,
       'flood_alarm_level': dict({
         'name': 'Flood Alarm Level',
         'unit': None,
-        'value': 630.0,
+        'value': None,
       }),
-      'flood_warning': False,
+      'flood_warning': None,
       'flood_warning_level': dict({
         'name': 'Flood Warning Level',
         'unit': None,
-        'value': 590.0,
+        'value': None,
       }),
       'river': 'River Name',
       'station': 'Station Name',

@@ -26,6 +26,9 @@ class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
         self._avm_wrapper = avm_wrapper
         self._mac: str = device.mac_address
         self._name: str = device.hostname or DEFAULT_DEVICE_NAME
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac_address)}
+        )
 
     @property
     def name(self) -> str:
@@ -68,23 +71,14 @@ class FritzBoxBaseEntity:
         """Init device info class."""
         self._avm_wrapper = avm_wrapper
         self._device_name = device_name
-
-    @property
-    def mac_address(self) -> str:
-        """Return the mac address of the main device."""
-        return self._avm_wrapper.mac
+        self.mac_address = self._avm_wrapper.mac
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
-            configuration_url=f"http://{self._avm_wrapper.host}",
             connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
             identifiers={(DOMAIN, self._avm_wrapper.unique_id)},
-            manufacturer="AVM",
-            model=self._avm_wrapper.model,
-            name=self._device_name,
-            sw_version=self._avm_wrapper.current_firmware,
         )
 
 

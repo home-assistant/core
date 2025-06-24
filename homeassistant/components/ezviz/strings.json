@@ -29,7 +29,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Enter credentials to reauthenticate to ezviz cloud account",
+        "description": "Enter credentials to reauthenticate to EZVIZ cloud account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -45,7 +45,7 @@
     "abort": {
       "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "ezviz_cloud_account_missing": "Ezviz cloud account missing. Please reconfigure Ezviz cloud account",
+      "ezviz_cloud_account_missing": "EZVIZ cloud account missing. Please reconfigure EZVIZ cloud account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
@@ -53,8 +53,8 @@
     "step": {
       "init": {
         "data": {
-          "timeout": "Request Timeout (seconds)",
-          "ffmpeg_arguments": "Arguments passed to ffmpeg for cameras"
+          "timeout": "Request timeout (seconds)",
+          "ffmpeg_arguments": "Arguments passed to FFmpeg for cameras"
         }
       }
     }
@@ -185,22 +185,22 @@
   },
   "services": {
     "set_alarm_detection_sensibility": {
-      "name": "Detection sensitivity",
-      "description": "Sets the detection sensibility level.",
+      "name": "Set detection sensibility",
+      "description": "Changes the sensibility level of the motion detection.",
       "fields": {
         "level": {
-          "name": "Sensitivity level",
-          "description": "Sensibility level (1-6) for type 0 (Normal camera) or (1-100) for type 3 (PIR sensor camera)."
+          "name": "Level",
+          "description": "Sensibility level. 1-6 for type 0 (normal camera), or 1-100 for type 3 (PIR sensor camera)."
         },
         "type_value": {
-          "name": "Detection type",
-          "description": "Type of detection. Options : 0 - Camera or 3 - PIR Sensor Camera."
+          "name": "Type",
+          "description": "Detection type. 0 for normal camera, or 3 for PIR sensor camera."
         }
       }
     },
     "wake_device": {
       "name": "Wake camera",
-      "description": "This can be used to wake the camera/device from hibernation."
+      "description": "Wakes a camera from sleep mode. Especially useful for battery cameras."
     }
   }
 }

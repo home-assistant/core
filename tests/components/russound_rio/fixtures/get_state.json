@@ -1,0 +1,75 @@
+{
+  "S": {
+    "3": {
+      "name": "Streamer",
+      "type": "Misc Audio"
+    },
+    "2": {
+      "name": "Liv. Rm TV",
+      "type": "Misc Audio"
+    },
+    "5": {
+      "name": "Source 5",
+      "type": null
+    },
+    "4": {
+      "name": "Basement TV",
+      "type": null
+    },
+    "1": {
+      "name": "Tuner",
+      "type": "DMS-3.1 Media Streamer",
+      "channelName": null,
+      "coverArtURL": null,
+      "mode": "Unknown",
+      "shuffleMode": null,
+      "repeatMode": null,
+      "volume": "0",
+      "rating": null,
+      "playlistName": "Please Wait...",
+      "artistName": null,
+      "albumName": null,
+      "songName": "Connecting to media source."
+    },
+    "6": {
+      "name": "Source 6",
+      "type": null
+    },
+    "8": {
+      "name": "Source 8",
+      "type": null
+    },
+    "7": {
+      "name": "Source 7",
+      "type": null
+    }
+  },
+  "System": {
+    "status": "OFF"
+  },
+  "C": {
+    "1": {
+      "Z": {
+        "1": {
+          "name": "Deck",
+          "treble": "0",
+          "balance": "0",
+          "loudness": "OFF",
+          "turnOnVolume": "10",
+          "doNotDisturb": "OFF",
+          "currentSource": "2",
+          "volume": "0",
+          "status": "OFF",
+          "mute": "OFF",
+          "partyMode": "OFF",
+          "bass": "0",
+          "page": "OFF",
+          "sharedSource": "OFF",
+          "sleepTimeRemaining": "0",
+          "lastError": null,
+          "enabled_sources": [3, 2]
+        }
+      }
+    }
+  }
+}

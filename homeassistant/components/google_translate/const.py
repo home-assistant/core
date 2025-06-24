@@ -88,6 +88,7 @@ SUPPORT_LANGUAGES = [
     "uk",
     "ur",
     "vi",
+    "yue",
     # dialects
     "zh-CN",
     "zh-cn",

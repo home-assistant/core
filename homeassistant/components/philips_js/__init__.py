@@ -7,7 +7,6 @@ import logging
 from haphilipsjs import PhilipsTV
 from haphilipsjs.typing import SystemType
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_HOST,
@@ -18,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_SYSTEM
-from .coordinator import PhilipsTVDataUpdateCoordinator
+from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -29,8 +28,6 @@ PLATFORMS = [
 ]
 
 LOGGER = logging.getLogger(__name__)
-
-PhilipsTVConfigEntry = ConfigEntry[PhilipsTVDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PhilipsTVConfigEntry) -> bool:
@@ -44,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PhilipsTVConfigEntry) ->
         password=entry.data.get(CONF_PASSWORD),
         system=system,
     )
-    coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi, entry.options)
+    coordinator = PhilipsTVDataUpdateCoordinator(hass, entry, tvapi)
 
     await coordinator.async_refresh()
 
