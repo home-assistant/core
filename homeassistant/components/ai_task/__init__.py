@@ -24,20 +24,20 @@ from .const import (
     DATA_COMPONENT,
     DATA_PREFERENCES,
     DOMAIN,
-    SERVICE_GENERATE_TEXT,
+    SERVICE_GENERATE_DATA,
     AITaskEntityFeature,
 )
 from .entity import AITaskEntity
 from .http import async_setup as async_setup_http
-from .task import GenTextTask, GenTextTaskResult, async_generate_text
+from .task import GenDataTask, GenDataTaskResult, async_generate_data
 
 __all__ = [
     "DOMAIN",
     "AITaskEntity",
     "AITaskEntityFeature",
-    "GenTextTask",
-    "GenTextTaskResult",
-    "async_generate_text",
+    "GenDataTask",
+    "GenDataTaskResult",
+    "async_generate_data",
     "async_setup",
     "async_setup_entry",
     "async_unload_entry",
@@ -57,8 +57,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_http(hass)
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GENERATE_TEXT,
-        async_service_generate_text,
+        SERVICE_GENERATE_DATA,
+        async_service_generate_data,
         schema=vol.Schema(
             {
                 vol.Required(ATTR_TASK_NAME): cv.string,
@@ -82,18 +82,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-async def async_service_generate_text(call: ServiceCall) -> ServiceResponse:
+async def async_service_generate_data(call: ServiceCall) -> ServiceResponse:
     """Run the run task service."""
-    result = await async_generate_text(hass=call.hass, **call.data)
-    return result.as_dict()  # type: ignore[return-value]
+    result = await async_generate_data(hass=call.hass, **call.data)
+    return result.as_dict()
 
 
 class AITaskPreferences:
     """AI Task preferences."""
 
-    KEYS = ("gen_text_entity_id",)
+    KEYS = ("gen_data_entity_id",)
 
-    gen_text_entity_id: str | None = None
+    gen_data_entity_id: str | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the preferences."""
@@ -113,11 +113,11 @@ class AITaskPreferences:
     def async_set_preferences(
         self,
         *,
-        gen_text_entity_id: str | None | UndefinedType = UNDEFINED,
+        gen_data_entity_id: str | None | UndefinedType = UNDEFINED,
     ) -> None:
         """Set the preferences."""
         changed = False
-        for key, value in (("gen_text_entity_id", gen_text_entity_id),):
+        for key, value in (("gen_data_entity_id", gen_data_entity_id),):
             if value is not UNDEFINED:
                 if getattr(self, key) != value:
                     setattr(self, key, value)
