@@ -38,7 +38,6 @@ class FireflyBaseEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             model=NAME,
-            name=coordinator.config_entry.data[CONF_HOST],
             configuration_url=URL(coordinator.config_entry.data[CONF_HOST]),
             identifiers={(DOMAIN, coordinator.config_entry.unique_id or "")},
         )
