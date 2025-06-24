@@ -2251,15 +2251,15 @@ async def test_trigger(hass: HomeAssistant) -> None:
     assert test(hass, {"trigger": {"id": "123456"}})
 
 
-async def test_platform_async_validate_condition_config(hass: HomeAssistant) -> None:
-    """Test platform.async_validate_condition_config will be called if it exists."""
+async def test_platform_async_get_conditions(hass: HomeAssistant) -> None:
+    """Test platform.async_get_conditions will be called if it exists."""
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
     with patch(
-        "homeassistant.components.device_automation.condition.async_validate_condition_config",
-        AsyncMock(),
-    ) as device_automation_validate_condition_mock:
+        "homeassistant.components.device_automation.condition.async_get_conditions",
+        AsyncMock(return_value={"device": AsyncMock()}),
+    ) as device_automation_async_get_conditions_mock:
         await condition.async_validate_condition_config(hass, config)
-        device_automation_validate_condition_mock.assert_awaited()
+        device_automation_async_get_conditions_mock.assert_awaited()
 
 
 @pytest.mark.parametrize("enabled_value", [True, "{{ 1 == 1 }}"])
