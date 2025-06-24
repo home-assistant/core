@@ -135,7 +135,6 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_confirm_discovery()
 
         await self.async_set_unique_id(format_mac(nam.mac))
-        self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
         return await self.async_step_confirm_discovery()
 
