@@ -48,17 +48,9 @@ async def get_voices_models(
     """Get available voices and models as dicts."""
     httpx_client = get_async_client(hass)
     client = AsyncElevenLabs(api_key=api_key, httpx_client=httpx_client)
-    try:
-        voices = (await client.voices.get_all()).voices
-    except ApiError as exc:
-        _LOGGER.error("Failure retrieving voices: %s", exc)
-        raise
+    voices = (await client.voices.get_all()).voices
+    models = await client.models.list()
 
-    try:
-        models = await client.models.list()
-    except ApiError as exc:
-        _LOGGER.error("Failure retrieving models: %s", exc)
-        raise
     voices_dict = {
         voice.voice_id: voice.name
         for voice in sorted(voices, key=lambda v: v.name or "")
