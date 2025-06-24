@@ -6,8 +6,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from hscloud.hscloud import HsCloud
-from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
+from pydreo.client import DreoClient
+from pydreo.exceptions import DreoBusinessException, DreoException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -27,16 +27,16 @@ PLATFORMS = [Platform.FAN]
 class DreoData:
     """Dreo Data."""
 
-    client: HsCloud
+    client: DreoClient
     devices: list[dict[str, Any]]
     coordinators: dict[str, DreoDataUpdateCoordinator]
 
 
 async def async_login(
     hass: HomeAssistant, username: str, password: str
-) -> tuple[HsCloud, list[dict[str, Any]]]:
+) -> tuple[DreoClient, list[dict[str, Any]]]:
     """Log into Dreo and return client and device data."""
-    client = HsCloud(username, password)
+    client = DreoClient(username, password)
 
     def setup_client():
         client.login()
@@ -44,9 +44,9 @@ async def async_login(
 
     try:
         devices = await hass.async_add_executor_job(setup_client)
-    except HsCloudBusinessException as ex:
+    except DreoBusinessException as ex:
         raise ConfigEntryAuthFailed("Invalid username or password") from ex
-    except HsCloudException as ex:
+    except DreoException as ex:
         raise ConfigEntryNotReady(f"Error communicating with Dreo API: {ex}") from ex
 
     return client, devices
@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DreoConfigEntry) 
 
 async def async_setup_device_coordinator(
     hass: HomeAssistant,
-    client: HsCloud,
+    client: DreoClient,
     device: dict[str, Any],
     coordinators: dict[str, DreoDataUpdateCoordinator],
 ) -> None:

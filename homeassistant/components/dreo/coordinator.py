@@ -7,8 +7,8 @@ from datetime import timedelta
 import logging
 from typing import Any, NoReturn
 
-from hscloud.hscloud import HsCloud
-from hscloud.hscloudexception import HsCloudException
+from pydreo.client import DreoClient
+from pydreo.exceptions import DreoException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -90,7 +90,7 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
     def __init__(
         self,
         hass: HomeAssistant,
-        client: HsCloud,
+        client: DreoClient,
         device_id: str,
         device_type: str,
         model_config: dict[str, Any],
@@ -147,7 +147,7 @@ class DreoDataUpdateCoordinator(DataUpdateCoordinator[DreoDeviceData | None]):
                 _raise_no_processor()
 
             return self.data_processor(status, self.model_config)
-        except HsCloudException as error:
+        except DreoException as error:
             raise UpdateFailed(f"Error communicating with Dreo API: {error}") from error
         except Exception as error:
             raise UpdateFailed(f"Unexpected error: {error}") from error

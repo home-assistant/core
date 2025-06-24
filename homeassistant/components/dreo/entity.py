@@ -3,11 +3,11 @@
 from functools import partial
 from typing import Any
 
-from hscloud.hscloudexception import (
-    HsCloudAccessDeniedException,
-    HsCloudBusinessException,
-    HsCloudException,
-    HsCloudFlowControlException,
+from pydreo.exceptions import (
+    DreoAccessDeniedException,
+    DreoBusinessException,
+    DreoException,
+    DreoFlowControlException,
 )
 
 from homeassistant.exceptions import HomeAssistantError
@@ -64,10 +64,10 @@ class DreoEntity(CoordinatorEntity[DreoDataUpdateCoordinator]):
             )
             await self.coordinator.async_refresh()
         except (
-            HsCloudException,
-            HsCloudBusinessException,
-            HsCloudAccessDeniedException,
-            HsCloudFlowControlException,
+            DreoException,
+            DreoBusinessException,
+            DreoAccessDeniedException,
+            DreoFlowControlException,
         ) as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key=error_translation_key
