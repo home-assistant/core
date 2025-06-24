@@ -24,6 +24,9 @@ HATasmota==0.10.0
 # homeassistant.components.mastodon
 Mastodon.py==2.0.1
 
+# homeassistant.components.playstation_network
+PSNAWP==3.0.0
+
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image_upload
@@ -387,7 +390,7 @@ aiosyncthing==0.5.1
 aiotankerkoenig==0.4.2
 
 # homeassistant.components.tedee
-aiotedee==0.2.23
+aiotedee==0.2.25
 
 # homeassistant.components.tractive
 aiotractive==0.6.0
@@ -1634,7 +1637,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.0.1
+pyenphase==2.1.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1899,6 +1902,9 @@ pyrail==0.4.1
 # homeassistant.components.rainbird
 pyrainbird==6.0.1
 
+# homeassistant.components.playstation_network
+pyrate-limiter==3.7.0
+
 # homeassistant.components.risco
 pyrisco==0.6.7
 
@@ -2018,9 +2024,6 @@ python-homewizard-energy==9.1.1
 
 # homeassistant.components.izone
 python-izone==1.2.9
-
-# homeassistant.components.juicenet
-python-juicenet==1.1.0
 
 # homeassistant.components.tplink
 python-kasa[speedups]==0.10.2

@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "npsso": "NPSSO token"
+        },
+        "data_description": {
+          "npsso": "The NPSSO token is generated during successful login of your PlayStation Network account and is used to authenticate your requests from with Home Assistant."
+        },
+        "description": "To obtain your NPSSO token, log in to your [PlayStation account]({psn_link}) first. Then [click here]({npsso_link}) to retrieve the token."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_account": "[%key:common::config_flow::error::invalid_access_token%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    }
+  },
+  "exceptions": {
+    "not_ready": {
+      "message": "Authentication to the PlayStation Network failed."
+    },
+    "update_failed": {
+      "message": "Data retrieval failed when trying to access the PlayStation Network."
+    }
+  }
+}
