@@ -52,7 +52,6 @@ from .const import (
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
-    DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
@@ -339,10 +338,11 @@ class AnthropicConversationEntity(
         """Initialize the agent."""
         self.entry = entry
         self.subentry = subentry
-        self._attr_name = subentry.title or DEFAULT_CONVERSATION_NAME
+        self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
             manufacturer="Anthropic",
             model="Claude",
             entry_type=dr.DeviceEntryType.SERVICE,

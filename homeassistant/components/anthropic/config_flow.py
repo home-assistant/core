@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -82,6 +83,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            self._async_abort_entries_match(user_input)
             try:
                 await validate_input(self.hass, user_input)
             except anthropic.APITimeoutError:
@@ -140,6 +142,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Set conversation options."""
+        # abort if entry is not loaded
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
         errors: dict[str, str] = {}
 
         if user_input is None:
