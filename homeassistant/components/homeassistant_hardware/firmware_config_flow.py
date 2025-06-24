@@ -349,6 +349,16 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         otbr_manager = get_otbr_addon_manager(self.hass)
 
         if not self.addon_start_task:
+            # Before we start the addon, confirm that the correct firmware is running
+            # and populate `self._probed_firmware_info` with the correct information
+            if not await self._probe_firmware_info(
+                probe_methods=(ApplicationType.SPINEL,)
+            ):
+                return self.async_abort(
+                    reason="unsupported_firmware",
+                    description_placeholders=self._get_translation_placeholders(),
+                )
+
             addon_info = await self._async_get_addon_info(otbr_manager)
 
             assert self._device is not None

@@ -630,6 +630,7 @@ async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
     with mock_firmware_info(
         hass,
         probe_app_type=ApplicationType.EZSP,
+        flash_app_type=ApplicationType.SPINEL,
     ) as mock_otbr_manager:
         # First step is confirmation
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -688,10 +689,6 @@ async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "confirm_otbr"
 
-    with mock_firmware_info(
-        hass,
-        probe_app_type=ApplicationType.SPINEL,
-    ):
         # We are now done
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={}
