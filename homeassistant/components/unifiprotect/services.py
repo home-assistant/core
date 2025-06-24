@@ -303,6 +303,7 @@ SERVICES = [
 ]
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the global UniFi Protect services."""
 

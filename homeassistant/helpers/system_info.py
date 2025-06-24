@@ -42,8 +42,7 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     # may not be loaded yet and we don't want to
     # do blocking I/O in the event loop to import it.
     if TYPE_CHECKING:
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components import hassio
+        from homeassistant.components import hassio  # noqa: PLC0415
     else:
         hassio = await async_import_module(hass, "homeassistant.components.hassio")
 

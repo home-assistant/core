@@ -1365,3 +1365,110 @@ async def test_announce(
         # Stop the satellite
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+async def test_tts_timeout(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test entity state goes back to IDLE on a timeout."""
+    events = [
+        Info(satellite=SATELLITE_INFO.satellite).event(),
+        RunPipeline(start_stage=PipelineStage.TTS, end_stage=PipelineStage.TTS).event(),
+    ]
+
+    pipeline_kwargs: dict[str, Any] = {}
+    pipeline_event_callback: Callable[[assist_pipeline.PipelineEvent], None] | None = (
+        None
+    )
+    run_pipeline_called = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(
+        hass: HomeAssistant,
+        context,
+        event_callback,
+        stt_metadata,
+        stt_stream,
+        **kwargs,
+    ) -> None:
+        nonlocal pipeline_kwargs, pipeline_event_callback
+        pipeline_kwargs = kwargs
+        pipeline_event_callback = event_callback
+
+        run_pipeline_called.set()
+
+    response_finished = asyncio.Event()
+
+    def tts_response_finished(self):
+        response_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient(events),
+        ),
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            async_pipeline_from_audio_stream,
+        ),
+        patch("homeassistant.components.wyoming.assist_satellite._PING_SEND_DELAY", 0),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.WyomingAssistSatellite.tts_response_finished",
+            tts_response_finished,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite._TTS_TIMEOUT_EXTRA",
+            0,
+        ),
+    ):
+        entry = await setup_config_entry(hass)
+        device: SatelliteDevice = hass.data[wyoming.DOMAIN][entry.entry_id].device
+        assert device is not None
+
+        satellite_entry = next(
+            (
+                maybe_entry
+                for maybe_entry in er.async_entries_for_device(
+                    entity_registry, device.device_id
+                )
+                if maybe_entry.domain == assist_satellite.DOMAIN
+            ),
+            None,
+        )
+        assert satellite_entry is not None
+
+        async with asyncio.timeout(1):
+            await run_pipeline_called.wait()
+
+            # Reset so we can check the pipeline is automatically restarted below
+            run_pipeline_called.clear()
+
+        assert pipeline_event_callback is not None
+        assert pipeline_kwargs.get("device_id") == device.device_id
+
+        pipeline_event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.TTS_START,
+                {
+                    "tts_input": "test text to speak",
+                    "voice": "test voice",
+                },
+            )
+        )
+        mock_tts_result_stream = MockResultStream(hass, "wav", get_test_wav())
+        pipeline_event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.TTS_END,
+                {"tts_output": {"token": mock_tts_result_stream.token}},
+            )
+        )
+        async with asyncio.timeout(1):
+            # tts_response_finished should be called on timeout
+            await response_finished.wait()
+
+        # Stop the satellite
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()

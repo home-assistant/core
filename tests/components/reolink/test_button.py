@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 async def test_button(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
 ) -> None:
     """Test button entity with ptz up."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BUTTON]):
@@ -37,9 +37,9 @@ async def test_button(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    reolink_connect.set_ptz_command.assert_called_once()
+    reolink_host.set_ptz_command.assert_called_once()
 
-    reolink_connect.set_ptz_command.side_effect = ReolinkError("Test error")
+    reolink_host.set_ptz_command.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -48,13 +48,11 @@ async def test_button(
             blocking=True,
         )
 
-    reolink_connect.set_ptz_command.reset_mock(side_effect=True)
-
 
 async def test_ptz_move_service(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
 ) -> None:
     """Test ptz_move entity service using PTZ button entity."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BUTTON]):
@@ -70,9 +68,9 @@ async def test_ptz_move_service(
         {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 5},
         blocking=True,
     )
-    reolink_connect.set_ptz_command.assert_called_with(0, command="Up", speed=5)
+    reolink_host.set_ptz_command.assert_called_with(0, command="Up", speed=5)
 
-    reolink_connect.set_ptz_command.side_effect = ReolinkError("Test error")
+    reolink_host.set_ptz_command.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
@@ -81,14 +79,12 @@ async def test_ptz_move_service(
             blocking=True,
         )
 
-    reolink_connect.set_ptz_command.reset_mock(side_effect=True)
-
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_host_button(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
 ) -> None:
     """Test host button entity with reboot."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BUTTON]):
@@ -104,9 +100,9 @@ async def test_host_button(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    reolink_connect.reboot.assert_called_once()
+    reolink_host.reboot.assert_called_once()
 
-    reolink_connect.reboot.side_effect = ReolinkError("Test error")
+    reolink_host.reboot.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -114,5 +110,3 @@ async def test_host_button(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-
-    reolink_connect.reboot.reset_mock(side_effect=True)

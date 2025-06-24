@@ -79,7 +79,7 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 16
+STORAGE_VERSION_MINOR = 18
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -198,6 +198,7 @@ class RegistryEntry:
     original_device_class: str | None = attr.ib()
     original_icon: str | None = attr.ib()
     original_name: str | None = attr.ib()
+    suggested_object_id: str | None = attr.ib()
     supported_features: int = attr.ib()
     translation_key: str | None = attr.ib()
     unit_of_measurement: str | None = attr.ib()
@@ -359,6 +360,7 @@ class RegistryEntry:
                     "original_icon": self.original_icon,
                     "original_name": self.original_name,
                     "platform": self.platform,
+                    "suggested_object_id": self.suggested_object_id,
                     "supported_features": self.supported_features,
                     "translation_key": self.translation_key,
                     "unique_id": self.unique_id,
@@ -404,13 +406,25 @@ class DeletedRegistryEntry:
     entity_id: str = attr.ib()
     unique_id: str = attr.ib()
     platform: str = attr.ib()
+
+    aliases: set[str] = attr.ib()
+    area_id: str | None = attr.ib()
+    categories: dict[str, str] = attr.ib()
     config_entry_id: str | None = attr.ib()
     config_subentry_id: str | None = attr.ib()
+    created_at: datetime = attr.ib()
+    device_class: str | None = attr.ib()
+    disabled_by: RegistryEntryDisabler | None = attr.ib()
     domain: str = attr.ib(init=False, repr=False)
+    hidden_by: RegistryEntryHider | None = attr.ib()
+    icon: str | None = attr.ib()
     id: str = attr.ib()
+    labels: set[str] = attr.ib()
+    modified_at: datetime = attr.ib()
+    name: str | None = attr.ib()
+    options: ReadOnlyEntityOptionsType = attr.ib(converter=_protect_entity_options)
     orphaned_timestamp: float | None = attr.ib()
-    created_at: datetime = attr.ib(factory=utcnow)
-    modified_at: datetime = attr.ib(factory=utcnow)
+
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
@@ -424,12 +438,22 @@ class DeletedRegistryEntry:
         return json_fragment(
             json_bytes(
                 {
+                    "aliases": list(self.aliases),
+                    "area_id": self.area_id,
+                    "categories": self.categories,
                     "config_entry_id": self.config_entry_id,
                     "config_subentry_id": self.config_subentry_id,
                     "created_at": self.created_at,
+                    "device_class": self.device_class,
+                    "disabled_by": self.disabled_by,
                     "entity_id": self.entity_id,
+                    "hidden_by": self.hidden_by,
+                    "icon": self.icon,
                     "id": self.id,
+                    "labels": list(self.labels),
                     "modified_at": self.modified_at,
+                    "name": self.name,
+                    "options": self.options,
                     "orphaned_timestamp": self.orphaned_timestamp,
                     "platform": self.platform,
                     "unique_id": self.unique_id,
@@ -547,6 +571,25 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     entity["config_subentry_id"] = None
                 for entity in data["deleted_entities"]:
                     entity["config_subentry_id"] = None
+
+            if old_minor_version < 17:
+                # Version 1.17 adds suggested_object_id
+                for entity in data["entities"]:
+                    entity["suggested_object_id"] = None
+
+            if old_minor_version < 18:
+                # Version 1.18 adds user customizations to deleted entities
+                for entity in data["deleted_entities"]:
+                    entity["aliases"] = []
+                    entity["area_id"] = None
+                    entity["categories"] = {}
+                    entity["device_class"] = None
+                    entity["disabled_by"] = None
+                    entity["hidden_by"] = None
+                    entity["icon"] = None
+                    entity["labels"] = []
+                    entity["name"] = None
+                    entity["options"] = {}
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -806,6 +849,9 @@ class EntityRegistry(BaseRegistry):
         self,
         domain: str,
         suggested_object_id: str,
+        *,
+        current_entity_id: str | None = None,
+        reserved_entity_ids: set[str] | None = None,
     ) -> str:
         """Generate an entity ID that does not conflict.
 
@@ -819,7 +865,10 @@ class EntityRegistry(BaseRegistry):
         test_string = preferred_string[:MAX_LENGTH_STATE_ENTITY_ID]
 
         tries = 1
-        while not self._entity_id_available(test_string):
+        while (
+            not self._entity_id_available(test_string)
+            and test_string != current_entity_id
+        ) or (reserved_entity_ids and test_string in reserved_entity_ids):
             tries += 1
             len_suffix = len(str(tries)) + 1
             test_string = (
@@ -836,6 +885,7 @@ class EntityRegistry(BaseRegistry):
         unique_id: str,
         *,
         # To influence entity ID generation
+        calculated_object_id: str | None = None,
         suggested_object_id: str | None = None,
         # To disable or hide an entity if it gets created
         disabled_by: RegistryEntryDisabler | None = None,
@@ -901,15 +951,40 @@ class EntityRegistry(BaseRegistry):
         entity_registry_id: str | None = None
         created_at = utcnow()
         deleted_entity = self.deleted_entities.pop((domain, platform, unique_id), None)
+        options: Mapping[str, Mapping[str, Any]] | None
         if deleted_entity is not None:
-            # Restore id
-            entity_registry_id = deleted_entity.id
+            aliases = deleted_entity.aliases
+            area_id = deleted_entity.area_id
+            categories = deleted_entity.categories
             created_at = deleted_entity.created_at
+            device_class = deleted_entity.device_class
+            disabled_by = deleted_entity.disabled_by
+            # Restore entity_id if it's available
+            if self._entity_id_available(deleted_entity.entity_id):
+                entity_id = deleted_entity.entity_id
+            entity_registry_id = deleted_entity.id
+            hidden_by = deleted_entity.hidden_by
+            icon = deleted_entity.icon
+            labels = deleted_entity.labels
+            name = deleted_entity.name
+            options = deleted_entity.options
+        else:
+            aliases = set()
+            area_id = None
+            categories = {}
+            device_class = None
+            icon = None
+            labels = set()
+            name = None
+            options = get_initial_options() if get_initial_options else None
 
-        entity_id = self.async_generate_entity_id(
-            domain,
-            suggested_object_id or f"{platform}_{unique_id}",
-        )
+        if not entity_id:
+            entity_id = self.async_generate_entity_id(
+                domain,
+                suggested_object_id
+                or calculated_object_id
+                or f"{platform}_{unique_id}",
+            )
 
         if (
             disabled_by is None
@@ -923,25 +998,31 @@ class EntityRegistry(BaseRegistry):
             """Return None if value is UNDEFINED, otherwise return value."""
             return None if value is UNDEFINED else value
 
-        initial_options = get_initial_options() if get_initial_options else None
-
         entry = RegistryEntry(
+            aliases=aliases,
+            area_id=area_id,
+            categories=categories,
             capabilities=none_if_undefined(capabilities),
             config_entry_id=none_if_undefined(config_entry_id),
             config_subentry_id=none_if_undefined(config_subentry_id),
             created_at=created_at,
+            device_class=device_class,
             device_id=none_if_undefined(device_id),
             disabled_by=disabled_by,
             entity_category=none_if_undefined(entity_category),
             entity_id=entity_id,
             hidden_by=hidden_by,
             has_entity_name=none_if_undefined(has_entity_name) or False,
+            icon=icon,
             id=entity_registry_id,
-            options=initial_options,
+            labels=labels,
+            name=name,
+            options=options,
             original_device_class=none_if_undefined(original_device_class),
             original_icon=none_if_undefined(original_icon),
             original_name=none_if_undefined(original_name),
             platform=platform,
+            suggested_object_id=suggested_object_id,
             supported_features=none_if_undefined(supported_features) or 0,
             translation_key=none_if_undefined(translation_key),
             unique_id=unique_id,
@@ -964,17 +1045,36 @@ class EntityRegistry(BaseRegistry):
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
         self.hass.verify_event_loop_thread("entity_registry.async_remove")
+        if entity_id not in self.entities:
+            # Allow attempts to remove an entity which does not exist. If this is
+            # not allowed, there will be races during cleanup where we iterate over
+            # lists of entities to remove, but there are listeners for entity
+            # registry events which delete entities at the same time.
+            # For example, if we clean up entities A and B, there might be a listener
+            # which deletes entity B when entity A is being removed.
+            return
         entity = self.entities.pop(entity_id)
         config_entry_id = entity.config_entry_id
         key = (entity.domain, entity.platform, entity.unique_id)
         # If the entity does not belong to a config entry, mark it as orphaned
         orphaned_timestamp = None if config_entry_id else time.time()
         self.deleted_entities[key] = DeletedRegistryEntry(
+            aliases=entity.aliases,
+            area_id=entity.area_id,
+            categories=entity.categories,
             config_entry_id=config_entry_id,
             config_subentry_id=entity.config_subentry_id,
             created_at=entity.created_at,
+            device_class=entity.device_class,
+            disabled_by=entity.disabled_by,
             entity_id=entity_id,
+            hidden_by=entity.hidden_by,
+            icon=entity.icon,
             id=entity.id,
+            labels=entity.labels,
+            modified_at=utcnow(),
+            name=entity.name,
+            options=entity.options,
             orphaned_timestamp=orphaned_timestamp,
             platform=entity.platform,
             unique_id=entity.unique_id,
@@ -1378,6 +1478,7 @@ class EntityRegistry(BaseRegistry):
                     original_icon=entity["original_icon"],
                     original_name=entity["original_name"],
                     platform=entity["platform"],
+                    suggested_object_id=entity["suggested_object_id"],
                     supported_features=entity["supported_features"],
                     translation_key=entity["translation_key"],
                     unique_id=entity["unique_id"],
@@ -1402,12 +1503,30 @@ class EntityRegistry(BaseRegistry):
                     entity["unique_id"],
                 )
                 deleted_entities[key] = DeletedRegistryEntry(
+                    aliases=set(entity["aliases"]),
+                    area_id=entity["area_id"],
+                    categories=entity["categories"],
                     config_entry_id=entity["config_entry_id"],
                     config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
+                    device_class=entity["device_class"],
+                    disabled_by=(
+                        RegistryEntryDisabler(entity["disabled_by"])
+                        if entity["disabled_by"]
+                        else None
+                    ),
                     entity_id=entity["entity_id"],
+                    hidden_by=(
+                        RegistryEntryHider(entity["hidden_by"])
+                        if entity["hidden_by"]
+                        else None
+                    ),
+                    icon=entity["icon"],
                     id=entity["id"],
+                    labels=set(entity["labels"]),
                     modified_at=datetime.fromisoformat(entity["modified_at"]),
+                    name=entity["name"],
+                    options=entity["options"],
                     orphaned_timestamp=entity["orphaned_timestamp"],
                     platform=entity["platform"],
                     unique_id=entity["unique_id"],
@@ -1437,12 +1556,29 @@ class EntityRegistry(BaseRegistry):
                 categories = entry.categories.copy()
                 del categories[scope]
                 self.async_update_entity(entity_id, categories=categories)
+        for key, deleted_entity in list(self.deleted_entities.items()):
+            if (
+                existing_category_id := deleted_entity.categories.get(scope)
+            ) and category_id == existing_category_id:
+                categories = deleted_entity.categories.copy()
+                del categories[scope]
+                self.deleted_entities[key] = attr.evolve(
+                    deleted_entity, categories=categories
+                )
+                self.async_schedule_save()
 
     @callback
     def async_clear_label_id(self, label_id: str) -> None:
         """Clear label from registry entries."""
         for entry in self.entities.get_entries_for_label(label_id):
             self.async_update_entity(entry.entity_id, labels=entry.labels - {label_id})
+        for key, deleted_entity in list(self.deleted_entities.items()):
+            if label_id not in deleted_entity.labels:
+                continue
+            self.deleted_entities[key] = attr.evolve(
+                deleted_entity, labels=deleted_entity.labels - {label_id}
+            )
+            self.async_schedule_save()
 
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
@@ -1507,6 +1643,11 @@ class EntityRegistry(BaseRegistry):
         """Clear area id from registry entries."""
         for entry in self.entities.get_entries_for_area_id(area_id):
             self.async_update_entity(entry.entity_id, area_id=None)
+        for key, deleted_entity in list(self.deleted_entities.items()):
+            if deleted_entity.area_id != area_id:
+                continue
+            self.deleted_entities[key] = attr.evolve(deleted_entity, area_id=None)
+            self.async_schedule_save()
 
 
 @callback
@@ -1604,8 +1745,7 @@ def async_config_entry_disabled_by_changed(
 @callback
 def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
     """Clean up device registry when entities removed."""
-    # pylint: disable-next=import-outside-toplevel
-    from . import category_registry as cr, event, label_registry as lr
+    from . import category_registry as cr, event, label_registry as lr  # noqa: PLC0415
 
     @callback
     def _removed_from_registry_filter(

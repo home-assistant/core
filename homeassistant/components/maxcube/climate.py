@@ -93,7 +93,7 @@ class MaxCubeClimate(ClimateEntity):
         ]
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         temp = self._device.min_temperature or MIN_TEMPERATURE
         # OFF_TEMPERATURE (always off) a is valid temperature to maxcube but not to Home Assistant.
@@ -101,7 +101,7 @@ class MaxCubeClimate(ClimateEntity):
         return max(temp, MIN_TEMPERATURE)
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.max_temperature or MAX_TEMPERATURE
 
@@ -133,8 +133,6 @@ class MaxCubeClimate(ClimateEntity):
             self._set_target(MAX_DEVICE_MODE_MANUAL, temp)
         elif hvac_mode == HVACMode.AUTO:
             self._set_target(MAX_DEVICE_MODE_AUTOMATIC, None)
-        else:
-            raise ValueError(f"unsupported HVAC mode {hvac_mode}")
 
     def _set_target(self, mode: int | None, temp: float | None) -> None:
         """Set the mode and/or temperature of the thermostat.

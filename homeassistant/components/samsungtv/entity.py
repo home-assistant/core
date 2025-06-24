@@ -41,7 +41,6 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
         self._attr_unique_id = config_entry.unique_id or config_entry.entry_id
         self._attr_device_info = DeviceInfo(
             manufacturer=config_entry.data.get(CONF_MANUFACTURER),
-            model=config_entry.data.get(CONF_MODEL),
             model_id=config_entry.data.get(CONF_MODEL),
         )
         if self.unique_id:
@@ -55,7 +54,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
     @property
     def available(self) -> bool:
         """Return the availability of the device."""
-        if self._bridge.auth_failed:
+        if not super().available or self._bridge.auth_failed:
             return False
         return (
             self.coordinator.is_on
@@ -77,10 +76,10 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
 
     def _wake_on_lan(self) -> None:
         """Wake the device via wake on lan."""
-        send_magic_packet(self._mac, ip_address=self._host)
+        send_magic_packet(self._mac, ip_address=self._host)  # type: ignore[arg-type]
         # If the ip address changed since we last saw the device
         # broadcast a packet as well
-        send_magic_packet(self._mac)
+        send_magic_packet(self._mac)  # type: ignore[arg-type]
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""

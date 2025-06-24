@@ -1,7 +1,7 @@
 """Test Renault diagnostics."""
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.renault import DOMAIN
 from homeassistant.config_entries import ConfigEntry

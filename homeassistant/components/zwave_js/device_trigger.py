@@ -29,7 +29,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import trigger
 from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
@@ -67,6 +66,8 @@ from .triggers.value_updated import (
     ATTR_FROM,
     ATTR_TO,
     PLATFORM_TYPE as VALUE_UPDATED_PLATFORM_TYPE,
+    async_attach_trigger as attach_value_updated_trigger,
+    async_validate_trigger_config as validate_value_updated_trigger_config,
 )
 
 # Trigger types
@@ -448,10 +449,10 @@ async def async_attach_trigger(
                 ATTR_TO,
             ],
         )
-        zwave_js_config = await trigger.async_validate_trigger_config(
+        zwave_js_config = await validate_value_updated_trigger_config(
             hass, zwave_js_config
         )
-        return await trigger.async_attach_trigger(
+        return await attach_value_updated_trigger(
             hass, zwave_js_config, action, trigger_info
         )
 

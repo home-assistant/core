@@ -119,7 +119,7 @@ def _check_stream_client_error(
 
     Raise StreamOpenClientError if an http client error is encountered.
     """
-    from .worker import try_open_stream  # pylint: disable=import-outside-toplevel
+    from .worker import try_open_stream  # noqa: PLC0415
 
     pyav_options, _ = _convert_stream_options(hass, source, options or {})
     try:
@@ -234,7 +234,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def set_pyav_logging(enable: bool) -> None:
     """Turn PyAV logging on or off."""
-    import av  # pylint: disable=import-outside-toplevel
+    import av  # noqa: PLC0415
 
     av.logging.set_level(av.logging.VERBOSE if enable else av.logging.FATAL)
 
@@ -267,8 +267,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await hass.async_add_executor_job(set_pyav_logging, debug_enabled)
 
     # Keep import here so that we can import stream integration without installing reqs
-    # pylint: disable-next=import-outside-toplevel
-    from .recorder import async_setup_recorder
+    from .recorder import async_setup_recorder  # noqa: PLC0415
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
@@ -460,8 +459,7 @@ class Stream:
     def _run_worker(self) -> None:
         """Handle consuming streams and restart keepalive streams."""
         # Keep import here so that we can import stream integration without installing reqs
-        # pylint: disable-next=import-outside-toplevel
-        from .worker import StreamState, stream_worker
+        from .worker import StreamState, stream_worker  # noqa: PLC0415
 
         stream_state = StreamState(self.hass, self.outputs, self._diagnostics)
         wait_timeout = 0
@@ -556,8 +554,7 @@ class Stream:
         """Make a .mp4 recording from a provided stream."""
 
         # Keep import here so that we can import stream integration without installing reqs
-        # pylint: disable-next=import-outside-toplevel
-        from .recorder import RecorderOutput
+        from .recorder import RecorderOutput  # noqa: PLC0415
 
         # Check for file access
         if not self.hass.config.is_allowed_path(video_path):

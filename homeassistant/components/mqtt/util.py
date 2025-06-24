@@ -163,16 +163,14 @@ async def async_forward_entry_setup_and_setup_discovery(
     tasks: list[asyncio.Task] = []
     if "device_automation" in new_platforms:
         # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from . import device_automation
+        from . import device_automation  # noqa: PLC0415
 
         tasks.append(
             create_eager_task(device_automation.async_setup_entry(hass, config_entry))
         )
     if "tag" in new_platforms:
         # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from . import tag
+        from . import tag  # noqa: PLC0415
 
         tasks.append(create_eager_task(tag.async_setup_entry(hass, config_entry)))
     if new_entity_platforms := (new_platforms - {"tag", "device_automation"}):

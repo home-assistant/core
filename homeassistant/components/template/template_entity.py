@@ -76,23 +76,43 @@ TEMPLATE_ENTITY_ICON_SCHEMA = vol.Schema(
     }
 )
 
-TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
+TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
     }
-).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
+)
+
+TEMPLATE_ENTITY_COMMON_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_AVAILABILITY): cv.template,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema)
+)
 
 
-def make_template_entity_common_schema(default_name: str) -> vol.Schema:
+def make_template_entity_common_modern_schema(
+    default_name: str,
+) -> vol.Schema:
     """Return a schema with default name."""
     return vol.Schema(
         {
-            vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
             vol.Optional(CONF_AVAILABILITY): cv.template,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
         }
     ).extend(make_template_entity_base_schema(default_name).schema)
+
+
+def make_template_entity_common_modern_attributes_schema(
+    default_name: str,
+) -> vol.Schema:
+    """Return a schema with default name."""
+    return make_template_entity_common_modern_schema(default_name).extend(
+        TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema
+    )
 
 
 TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY = vol.Schema(
@@ -268,7 +288,7 @@ class TemplateEntity(AbstractTemplateEntity):
         unique_id: str | None = None,
     ) -> None:
         """Template Entity."""
-        super().__init__(hass)
+        AbstractTemplateEntity.__init__(self, hass)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._attr_extra_state_attributes = {}

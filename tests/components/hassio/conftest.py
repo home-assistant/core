@@ -63,7 +63,7 @@ async def hassio_client_supervisor(
 
 
 @pytest.fixture
-def hassio_handler(
+async def hassio_handler(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> Generator[HassIO]:
     """Create mock hassio handler."""
@@ -260,3 +260,16 @@ def all_setup_requests(
             },
         },
     )
+
+
+@pytest.fixture
+def arch() -> str:
+    """Arch found in apk file."""
+    return "amd64"
+
+
+@pytest.fixture(autouse=True)
+def mock_arch_file(arch: str) -> Generator[None]:
+    """Mock arch file."""
+    with patch("homeassistant.components.hassio._get_arch", return_value=arch):
+        yield

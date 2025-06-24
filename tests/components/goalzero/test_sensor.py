@@ -97,7 +97,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_total_run_time")
     assert state.state == "1720984"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.SECONDS
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_wi_fi_ssid")

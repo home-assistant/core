@@ -36,6 +36,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 63>,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-1-MatterFan-514-0',
@@ -67,6 +68,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_fans[extractor_hood][fan.mock_extractor_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.mock_extractor_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 56>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-MatterFan-514-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fans[extractor_hood][fan.mock_extractor_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Extractor hood',
+      'preset_mode': None,
+      'preset_modes': list([
+        'low',
+        'medium',
+        'high',
+      ]),
+      'supported_features': <FanEntityFeature: 56>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.mock_extractor_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_fans[fan][fan.mocked_fan_switch-entry]
@@ -106,6 +168,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 57>,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-MatterFan-514-0',
@@ -173,6 +236,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 57>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterFan-514-0',
@@ -238,6 +302,7 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 56>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterFan-514-0',

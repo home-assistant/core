@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.bluesound import DOMAIN as BLUESOUND_DOMAIN
+from homeassistant.components.bluesound import DOMAIN
 from homeassistant.components.bluesound.const import ATTR_MASTER
 from homeassistant.components.bluesound.media_player import (
     SERVICE_CLEAR_TIMER,
@@ -230,7 +230,7 @@ async def test_set_sleep_timer(
 ) -> None:
     """Test the set sleep timer action."""
     await hass.services.async_call(
-        BLUESOUND_DOMAIN,
+        DOMAIN,
         SERVICE_SET_TIMER,
         {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
@@ -247,7 +247,7 @@ async def test_clear_sleep_timer(
     player_mocks.player_data.player.sleep_timer.side_effect = [15, 30, 45, 60, 90, 0]
 
     await hass.services.async_call(
-        BLUESOUND_DOMAIN,
+        DOMAIN,
         SERVICE_CLEAR_TIMER,
         {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
@@ -262,7 +262,7 @@ async def test_join_cannot_join_to_self(
     """Test that joining to self is not allowed."""
     with pytest.raises(ServiceValidationError, match="Cannot join player to itself"):
         await hass.services.async_call(
-            BLUESOUND_DOMAIN,
+            DOMAIN,
             SERVICE_JOIN,
             {
                 ATTR_ENTITY_ID: "media_player.player_name1111",
@@ -280,7 +280,7 @@ async def test_join(
 ) -> None:
     """Test the join action."""
     await hass.services.async_call(
-        BLUESOUND_DOMAIN,
+        DOMAIN,
         SERVICE_JOIN,
         {
             ATTR_ENTITY_ID: "media_player.player_name1111",
@@ -311,7 +311,7 @@ async def test_unjoin(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        BLUESOUND_DOMAIN,
+        DOMAIN,
         "unjoin",
         {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,

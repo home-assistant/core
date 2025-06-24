@@ -63,6 +63,7 @@ class AiohttpClientMocker:
         cookies=None,
         side_effect=None,
         closing=None,
+        timeout=None,
     ):
         """Mock a request."""
         if not isinstance(url, RETYPE):
@@ -70,21 +71,21 @@ class AiohttpClientMocker:
         if params:
             url = url.with_query(params)
 
-        self._mocks.append(
-            AiohttpClientMockResponse(
-                method=method,
-                url=url,
-                status=status,
-                response=content,
-                json=json,
-                text=text,
-                cookies=cookies,
-                exc=exc,
-                headers=headers,
-                side_effect=side_effect,
-                closing=closing,
-            )
+        resp = AiohttpClientMockResponse(
+            method=method,
+            url=url,
+            status=status,
+            response=content,
+            json=json,
+            text=text,
+            cookies=cookies,
+            exc=exc,
+            headers=headers,
+            side_effect=side_effect,
+            closing=closing,
         )
+        self._mocks.append(resp)
+        return resp
 
     def get(self, *args, **kwargs):
         """Register a mock get request."""

@@ -7,7 +7,7 @@ from unittest.mock import patch
 import wave
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from wyoming.audio import AudioChunk, AudioStop
 
 from homeassistant.components import tts, wyoming

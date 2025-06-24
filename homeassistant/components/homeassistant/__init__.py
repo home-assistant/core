@@ -4,8 +4,10 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
+import struct
 from typing import Any
 
+import aiofiles
 import voluptuous as vol
 
 from homeassistant import config as conf_util, core_config
@@ -31,14 +33,21 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv, recorder, restore_state
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    recorder,
+    restore_state,
+)
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
 from homeassistant.helpers.signal import KEY_HA_STOP
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
@@ -80,6 +89,22 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
 SCHEMA_RESTART = vol.Schema({vol.Optional(ATTR_SAFE_MODE, default=False): bool})
 
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
+
+DEPRECATION_URL = (
+    "https://www.home-assistant.io/blog/2025/05/22/"
+    "deprecating-core-and-supervised-installation-methods-and-32-bit-systems/"
+)
+
+
+def _is_32_bit() -> bool:
+    size = struct.calcsize("P")
+    return size * 8 == 32
+
+
+async def _get_arch() -> str:
+    async with aiofiles.open("/etc/apk/arch") as arch_file:
+        raw_arch = (await arch_file.read()).strip()
+    return {"x86": "i386", "x86_64": "amd64"}.get(raw_arch, raw_arch)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
@@ -385,6 +410,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await exposed_entities.async_initialize()
     hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
     async_set_stop_handler(hass, _async_stop)
+
+    info = await async_get_system_info(hass)
+
+    installation_type = info["installation_type"][15:]
+    if installation_type in {"Core", "Container"}:
+        deprecated_method = installation_type == "Core"
+        bit32 = _is_32_bit()
+        arch = info["arch"]
+        if bit32 and installation_type == "Container":
+            arch = await _get_arch()
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_container",
+                learn_more_url=DEPRECATION_URL,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_container",
+                translation_placeholders={"arch": arch},
+            )
+        deprecated_architecture = bit32 and installation_type != "Container"
+        if deprecated_method or deprecated_architecture:
+            issue_id = "deprecated"
+            if deprecated_method:
+                issue_id += "_method"
+            if deprecated_architecture:
+                issue_id += "_architecture"
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                learn_more_url=DEPRECATION_URL,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key=issue_id,
+                translation_placeholders={
+                    "installation_type": installation_type,
+                    "arch": arch,
+                },
+            )
 
     return True
 

@@ -318,11 +318,36 @@ PROPERTY_SENSOR_MAPPINGS: dict[str, PropertyZWaveJSEntityDescription] = {
 
 
 # Mappings for boolean sensors
-BOOLEAN_SENSOR_MAPPINGS: dict[int, BinarySensorEntityDescription] = {
-    CommandClass.BATTERY: BinarySensorEntityDescription(
-        key=str(CommandClass.BATTERY),
+BOOLEAN_SENSOR_MAPPINGS: dict[tuple[int, int | str], BinarySensorEntityDescription] = {
+    (CommandClass.BATTERY, "backup"): BinarySensorEntityDescription(
+        key="battery_backup",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    (CommandClass.BATTERY, "disconnected"): BinarySensorEntityDescription(
+        key="battery_disconnected",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    (CommandClass.BATTERY, "isLow"): BinarySensorEntityDescription(
+        key="battery_is_low",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    (CommandClass.BATTERY, "lowFluid"): BinarySensorEntityDescription(
+        key="battery_low_fluid",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    (CommandClass.BATTERY, "overheating"): BinarySensorEntityDescription(
+        key="battery_overheating",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    (CommandClass.BATTERY, "rechargeable"): BinarySensorEntityDescription(
+        key="battery_rechargeable",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 }
 
@@ -432,8 +457,9 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
         # Entity class attributes
         self._attr_name = self.generate_name(include_value_name=True)
+        primary_value = self.info.primary_value
         if description := BOOLEAN_SENSOR_MAPPINGS.get(
-            self.info.primary_value.command_class
+            (primary_value.command_class, primary_value.property_)
         ):
             self.entity_description = description
 
