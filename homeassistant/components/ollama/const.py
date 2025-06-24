@@ -1,11 +1,6 @@
 """Constants for the Ollama integration."""
 
-import ollama
-
-from homeassistant.config_entries import ConfigEntry
-
 DOMAIN = "ollama"
-type OllamaConfigEntry = ConfigEntry[ollama.AsyncClient]
 
 CONF_MODEL = "model"
 CONF_PROMPT = "prompt"

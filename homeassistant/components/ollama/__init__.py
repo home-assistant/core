@@ -29,7 +29,6 @@ from .const import (
     CONF_THINK,
     DEFAULT_TIMEOUT,
     DOMAIN,
-    OllamaConfigEntry,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +46,8 @@ __all__ = [
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
+
+type OllamaConfigEntry = ConfigEntry[ollama.AsyncClient]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
