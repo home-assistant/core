@@ -71,6 +71,9 @@ async def test_run_task_preferred_entity(
         instructions="Test prompt",
     )
     assert result.data == "Mock result"
+    as_dict = result.as_dict()
+    assert as_dict["conversation_id"] == result.conversation_id
+    assert as_dict["data"] == "Mock result"
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNKNOWN

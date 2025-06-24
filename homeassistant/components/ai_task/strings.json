@@ -2,7 +2,7 @@
   "services": {
     "generate_data": {
       "name": "Generate data",
-      "description": "Use AI to run a task that generates data.",
+      "description": "Uses AI to run a task that generates data.",
       "fields": {
         "task_name": {
           "name": "Task name",

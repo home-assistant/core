@@ -70,5 +70,6 @@ class GenDataTaskResult:
     def as_dict(self) -> dict[str, Any]:
         """Return result as a dict."""
         return {
+            "conversation_id": self.conversation_id,
             "data": self.data,
         }
