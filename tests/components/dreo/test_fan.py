@@ -490,7 +490,11 @@ async def test_fan_setup_missing_coordinator(hass: HomeAssistant) -> None:
         original_coordinators = config_entry.runtime_data.coordinators.copy()
         config_entry.runtime_data.coordinators.clear()
 
-        await async_setup_entry(hass, config_entry, lambda entities, update_before_add=False, *, config_subentry_id=None: None)
+        await async_setup_entry(
+            hass,
+            config_entry,
+            lambda entities, update_before_add=False, *, config_subentry_id=None: None,
+        )
 
         mock_logger.error.assert_called_with(
             "Coordinator not found for device %s", "test-fan-missing-coord"

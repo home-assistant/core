@@ -106,8 +106,8 @@ async def test_setup_authentication_error(hass: HomeAssistant) -> None:
         mock_client = mock_client_class.return_value
         mock_client.login.side_effect = DreoBusinessException("Invalid credentials")
 
-        mock_config_flow_client.return_value.login.side_effect = (
-            DreoBusinessException("Invalid credentials")
+        mock_config_flow_client.return_value.login.side_effect = DreoBusinessException(
+            "Invalid credentials"
         )
 
         await hass.config_entries.async_setup(mock_entry.entry_id)

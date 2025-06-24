@@ -1025,9 +1025,6 @@ home-assistant-intents==2025.6.10
 # homeassistant.components.homematicip_cloud
 homematicip==2.0.6
 
-# homeassistant.components.dreo
-hscloud==1.0.6
-
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
 
@@ -1614,6 +1611,9 @@ pydiscovergy==3.0.2
 
 # homeassistant.components.hydrawise
 pydrawise==2025.6.0
+
+# homeassistant.components.dreo
+pydreo-cloud==0.0.6
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0

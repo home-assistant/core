@@ -98,7 +98,9 @@ async def test_user_step_unique_id_already_configured(hass: HomeAssistant) -> No
     user_input = {CONF_USERNAME: "existing@example.com", CONF_PASSWORD: "password123"}
 
     with (
-        patch("homeassistant.components.dreo.config_flow.DreoClient") as mock_client_class,
+        patch(
+            "homeassistant.components.dreo.config_flow.DreoClient"
+        ) as mock_client_class,
         patch.object(flow, "_abort_if_unique_id_configured") as mock_abort,
     ):
         mock_client = mock_client_class.return_value
