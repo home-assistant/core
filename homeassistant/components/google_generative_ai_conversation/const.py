@@ -6,6 +6,8 @@ DOMAIN = "google_generative_ai_conversation"
 LOGGER = logging.getLogger(__package__)
 CONF_PROMPT = "prompt"
 
+DEFAULT_CONVERSATION_NAME = "Google AI Conversation"
+
 ATTR_MODEL = "model"
 CONF_RECOMMENDED = "recommended"
 CONF_CHAT_MODEL = "chat_model"
