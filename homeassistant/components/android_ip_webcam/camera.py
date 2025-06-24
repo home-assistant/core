@@ -7,7 +7,6 @@ from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_PORT,
     CONF_USERNAME,
     HTTP_BASIC_AUTHENTICATION,
 )
@@ -55,23 +54,13 @@ class IPWebcamCamera(MjpegCamera):
 
     async def stream_source(self) -> str:
         """Get the stream source for the Android IP camera."""
-        rtsp_protocol = "rtsp"
-
-        host = self._coordinator.config_entry.data[CONF_HOST]
-        port = self._coordinator.config_entry.data[CONF_PORT]
-
-        video_codec = "h264"  # most compatible & recommended
-        # while "opus" is compatible with more devices,
-        # HA's stream integration requires AAC or MP3,
-        # and IP webcam doesn't provide MP3 audio.
-        # aac is supported on select devices >= android 4.1.
-        # The stream will be quiet on devices that don't support aac,
-        # but it won't fail.
-        audio_codec = "aac"
-
-        if self._cam_username and self._cam_password:
-            return (
-                f"{rtsp_protocol}://{self._cam_username}:{self._cam_password}"
-                f"@{host}:{port}/{video_codec}_{audio_codec}.sdp"
-            )
-        return f"{rtsp_protocol}://{host}:{port}/{video_codec}_{audio_codec}.sdp"
+        return self._coordinator.cam.get_rtsp_url(
+            video_codec="h264",  # most compatible & recommended
+            # while "opus" is compatible with more devices,
+            # HA's stream integration requires AAC or MP3,
+            # and IP webcam doesn't provide MP3 audio.
+            # aac is supported on select devices >= android 4.1.
+            # The stream will be quiet on devices that don't support aac,
+            # but it won't fail.
+            audio_codec="aac",
+        )
