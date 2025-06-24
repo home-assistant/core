@@ -37,22 +37,22 @@
         "name": "Radon longterm level"
       },
       "radon_week_avg": {
-        "name": "Radon week average"
+        "name": "Radon weekly average"
       },
       "radon_week_level": {
-        "name": "Radon week level"
+        "name": "Radon weekly level"
       },
       "radon_month_avg": {
-        "name": "Radon month average"
+        "name": "Radon monthly average"
       },
       "radon_month_level": {
-        "name": "Radon month level"
+        "name": "Radon monthly level"
       },
       "radon_year_avg": {
-        "name": "Radon year average"
+        "name": "Radon yearly average"
       },
       "radon_year_level": {
-        "name": "Radon year level"
+        "name": "Radon yearly level"
       },
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
