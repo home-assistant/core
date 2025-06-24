@@ -653,7 +653,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
             )
         elif entry is not None:
             self._attr_unique_id = entry.unique_id
-            self._attr_name = cast(str, entry.original_name)
 
     @callback
     def _update_callback(self) -> None:

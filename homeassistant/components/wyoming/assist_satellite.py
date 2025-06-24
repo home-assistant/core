@@ -739,7 +739,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                         timestamp=timestamp,
                     )
                     await self._client.write_event(chunk.event())
-                    timestamp += chunk.seconds
+                    timestamp += chunk.milliseconds
                     total_seconds += chunk.seconds
 
                 await self._client.write_event(AudioStop(timestamp=timestamp).event())

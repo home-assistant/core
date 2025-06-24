@@ -194,13 +194,13 @@ async def test_browsing(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_AT_sub_id}"
     )
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} lens 0 Autotrack low res."
+    assert browse.title == f"{TEST_NVR_NAME} lens 0 Telephoto low res."
 
     browse = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_AT_main_id}"
     )
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} lens 0 Autotrack high res."
+    assert browse.title == f"{TEST_NVR_NAME} lens 0 Telephoto high res."
 
     browse = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_main_id}"

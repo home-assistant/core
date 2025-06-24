@@ -9,7 +9,10 @@ import voluptuous as vol
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.condition import ConditionProtocol, trace_condition_function
+from homeassistant.helpers.condition import (
+    ConditionCheckerType,
+    trace_condition_function,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import DeviceAutomationType, async_get_device_automation_platform
@@ -19,12 +22,23 @@ if TYPE_CHECKING:
     from homeassistant.helpers import condition
 
 
-class DeviceAutomationConditionProtocol(ConditionProtocol, Protocol):
+class DeviceAutomationConditionProtocol(Protocol):
     """Define the format of device_condition modules.
 
-    Each module must define either CONDITION_SCHEMA or async_validate_condition_config
-    from ConditionProtocol.
+    Each module must define either CONDITION_SCHEMA or async_validate_condition_config.
     """
+
+    CONDITION_SCHEMA: vol.Schema
+
+    async def async_validate_condition_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+
+    def async_condition_from_config(
+        self, hass: HomeAssistant, config: ConfigType
+    ) -> ConditionCheckerType:
+        """Evaluate state based on configuration."""
 
     async def async_get_condition_capabilities(
         self, hass: HomeAssistant, config: ConfigType
