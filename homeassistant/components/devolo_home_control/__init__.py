@@ -18,7 +18,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DOMAIN, GATEWAY_SERIAL_PATTERN, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 
 type DevoloHomeControlConfigEntry = ConfigEntry[list[HomeControl]]
 
@@ -32,10 +32,6 @@ async def async_setup_entry(
     gateway_ids = await hass.async_add_executor_job(
         check_mydevolo_and_get_gateway_ids, mydevolo
     )
-
-    if entry.unique_id and GATEWAY_SERIAL_PATTERN.match(entry.unique_id):
-        uuid = await hass.async_add_executor_job(mydevolo.uuid)
-        hass.config_entries.async_update_entry(entry, unique_id=uuid)
 
     def shutdown(event: Event) -> None:
         for gateway in entry.runtime_data:

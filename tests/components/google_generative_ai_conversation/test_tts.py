@@ -122,7 +122,9 @@ async def mock_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
 async def mock_config_entry_setup(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Mock config entry setup."""
     default_config = {tts.CONF_LANG: "en-US"}
-    config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=default_config | config, version=2
+    )
 
     client_mock = Mock()
     client_mock.models.get = None
