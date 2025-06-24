@@ -2,8 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
-from pylamarzocco.const import FirmwareType
+from pylamarzocco.const import FirmwareType, MachineState, WidgetType
+from pylamarzocco.models import MachineStatus
 
 from homeassistant.const import CONF_ADDRESS, CONF_MAC
 from homeassistant.helpers.device_registry import (
@@ -32,6 +34,7 @@ class LaMarzoccoBaseEntity(
     """Common elements for all entities."""
 
     _attr_has_entity_name = True
+    _unavailable_when_machine_off = True
 
     def __init__(
         self,
@@ -62,6 +65,21 @@ class LaMarzoccoBaseEntity(
             )
         if connections:
             self._attr_device_info.update(DeviceInfo(connections=connections))
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if (
+            self._unavailable_when_machine_off
+            and cast(
+                MachineStatus,
+                self.coordinator.device.dashboard.config[WidgetType.CM_MACHINE_STATUS],
+            ).status
+            is MachineState.OFF
+        ):
+            return False
+
+        return super().available
 
 
 class LaMarzoccoEntity(LaMarzoccoBaseEntity):
