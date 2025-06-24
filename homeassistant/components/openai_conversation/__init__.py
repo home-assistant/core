@@ -134,7 +134,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             None,
         )
         if not conversation_subentry:
-            raise HomeAssistantError("No conversation configuration found")
+            raise ServiceValidationError("No conversation configuration found")
 
         model: str = conversation_subentry.data.get(
             CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL
