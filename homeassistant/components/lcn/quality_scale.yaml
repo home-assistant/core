@@ -60,8 +60,8 @@ rules:
     status: exempt
     comment: |
       Since all entities are configured manually, names are user-defined.
-  exception-translations: done
-  icon-translations: done
+  exception-translations: todo
+  icon-translations: todo
   reconfiguration-flow: done
   repair-issues: done
   stale-devices:
