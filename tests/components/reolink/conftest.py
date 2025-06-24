@@ -274,6 +274,7 @@ def reolink_chime(reolink_host: MagicMock) -> None:
         "people": {"switch": 0, "musicId": 1},
         "visitor": {"switch": 1, "musicId": 2},
     }
+    TEST_CHIME.remove = AsyncMock()
 
     reolink_host.chime_list = [TEST_CHIME]
     reolink_host.chime.return_value = TEST_CHIME
