@@ -86,7 +86,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 self.notify = Notifications(self.host)
             except ConnectError as err:
                 raise HomeAssistantError(
-                    "Failed to connect to host: %s", self.host
+                    f"Failed to connect to host: {self.host}"
                 ) from err
 
         data: dict | None = kwargs.get(ATTR_DATA)
@@ -202,9 +202,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                 image_file=image_file,
             )
         except ConnectError as err:
-            raise HomeAssistantError(
-                "Failed to connect to host: %s", self.host
-            ) from err
+            raise HomeAssistantError(f"Failed to connect to host: {self.host}") from err
 
     def load_file(
         self,
