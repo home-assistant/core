@@ -52,7 +52,7 @@ async def test_form_create_entry_without_auth(
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        return_value="AA:BB:CC:DD:EE:FF",
+        return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -79,7 +79,7 @@ async def test_form_create_entry_with_auth(
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        side_effect=[AuthFailedError("Authorization has failed"), "AA:BB:CC:DD:EE:FF"],
+        side_effect=[AuthFailedError("Authorization has failed"), "aa:bb:cc:dd:ee:ff"],
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -118,7 +118,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        return_value="AA:BB:CC:DD:EE:FF",
+        return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -247,7 +247,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        return_value="AA:BB:CC:DD:EE:FF",
+        return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -265,7 +265,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
     """Test we get the form."""
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        return_value="AA:BB:CC:DD:EE:FF",
+        return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -399,7 +399,7 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        return_value="AA:BB:CC:DD:EE:FF",
+        return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -449,7 +449,7 @@ async def test_reconfigure_not_successful(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        return_value="AA:BB:CC:DD:EE:FF",
+        return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -486,7 +486,7 @@ async def test_reconfigure_not_the_same_device(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
-        return_value="AA:BB:CC:DD:EE:FF",
+        return_value="aa:bb:cc:dd:ee:ff",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
