@@ -1,35 +1,20 @@
 """Tests for the OpenAI integration."""
 
-from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import httpx
 from openai import AuthenticationError, RateLimitError
-from openai.types import ResponseFormatText
 from openai.types.responses import (
-    Response,
-    ResponseCompletedEvent,
-    ResponseContentPartAddedEvent,
-    ResponseContentPartDoneEvent,
-    ResponseCreatedEvent,
     ResponseError,
     ResponseErrorEvent,
-    ResponseFailedEvent,
     ResponseFunctionCallArgumentsDeltaEvent,
     ResponseFunctionCallArgumentsDoneEvent,
     ResponseFunctionToolCall,
     ResponseFunctionWebSearch,
-    ResponseIncompleteEvent,
-    ResponseInProgressEvent,
     ResponseOutputItemAddedEvent,
     ResponseOutputItemDoneEvent,
-    ResponseOutputMessage,
-    ResponseOutputText,
     ResponseReasoningItem,
     ResponseStreamEvent,
-    ResponseTextConfig,
-    ResponseTextDeltaEvent,
-    ResponseTextDoneEvent,
     ResponseWebSearchCallCompletedEvent,
     ResponseWebSearchCallInProgressEvent,
     ResponseWebSearchCallSearchingEvent,
@@ -54,97 +39,13 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
+from .common import create_message_item
+
 from tests.common import MockConfigEntry
 from tests.components.conversation import (
     MockChatLog,
     mock_chat_log,  # noqa: F401
 )
-
-
-@pytest.fixture
-def mock_create_stream() -> Generator[AsyncMock]:
-    """Mock stream response."""
-
-    async def mock_generator(events, **kwargs):
-        response = Response(
-            id="resp_A",
-            created_at=1700000000,
-            error=None,
-            incomplete_details=None,
-            instructions=kwargs.get("instructions"),
-            metadata=kwargs.get("metadata", {}),
-            model=kwargs.get("model", "gpt-4o-mini"),
-            object="response",
-            output=[],
-            parallel_tool_calls=kwargs.get("parallel_tool_calls", True),
-            temperature=kwargs.get("temperature", 1.0),
-            tool_choice=kwargs.get("tool_choice", "auto"),
-            tools=kwargs.get("tools"),
-            top_p=kwargs.get("top_p", 1.0),
-            max_output_tokens=kwargs.get("max_output_tokens", 100000),
-            previous_response_id=kwargs.get("previous_response_id"),
-            reasoning=kwargs.get("reasoning"),
-            status="in_progress",
-            text=kwargs.get(
-                "text", ResponseTextConfig(format=ResponseFormatText(type="text"))
-            ),
-            truncation=kwargs.get("truncation", "disabled"),
-            usage=None,
-            user=kwargs.get("user"),
-            store=kwargs.get("store", True),
-        )
-        yield ResponseCreatedEvent(
-            response=response,
-            type="response.created",
-        )
-        yield ResponseInProgressEvent(
-            response=response,
-            type="response.in_progress",
-        )
-        response.status = "completed"
-
-        for value in events:
-            if isinstance(value, ResponseOutputItemDoneEvent):
-                response.output.append(value.item)
-            elif isinstance(value, IncompleteDetails):
-                response.status = "incomplete"
-                response.incomplete_details = value
-                break
-            if isinstance(value, ResponseError):
-                response.status = "failed"
-                response.error = value
-                break
-
-            yield value
-
-            if isinstance(value, ResponseErrorEvent):
-                return
-
-        if response.status == "incomplete":
-            yield ResponseIncompleteEvent(
-                response=response,
-                type="response.incomplete",
-            )
-        elif response.status == "failed":
-            yield ResponseFailedEvent(
-                response=response,
-                type="response.failed",
-            )
-        else:
-            yield ResponseCompletedEvent(
-                response=response,
-                type="response.completed",
-            )
-
-    with patch(
-        "openai.resources.responses.AsyncResponses.create",
-        AsyncMock(),
-    ) as mock_create:
-        mock_create.side_effect = lambda **kwargs: mock_generator(
-            mock_create.return_value.pop(0), **kwargs
-        )
-
-        yield mock_create
 
 
 async def test_entity(
@@ -153,20 +54,18 @@ async def test_entity(
     mock_init_component,
 ) -> None:
     """Test entity properties."""
-    state = hass.states.get("conversation.openai")
+    state = hass.states.get("conversation.openai_conversation")
     assert state
     assert state.attributes["supported_features"] == 0
 
-    hass.config_entries.async_update_entry(
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
-            **mock_config_entry.options,
-            CONF_LLM_HASS_API: "assist",
-        },
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_LLM_HASS_API: "assist"},
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
-    state = hass.states.get("conversation.openai")
+    state = hass.states.get("conversation.openai_conversation")
     assert state
     assert (
         state.attributes["supported_features"]
@@ -261,7 +160,7 @@ async def test_incomplete_response(
         "Please tell me a big story",
         "mock-conversation-id",
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -285,7 +184,7 @@ async def test_incomplete_response(
         "please tell me a big story",
         "mock-conversation-id",
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -324,7 +223,7 @@ async def test_failed_response(
         "next natural number please",
         "mock-conversation-id",
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
@@ -341,80 +240,6 @@ async def test_conversation_agent(
         mock_config_entry.entry_id
     )
     assert agent.supported_languages == "*"
-
-
-def create_message_item(
-    id: str, text: str | list[str], output_index: int
-) -> list[ResponseStreamEvent]:
-    """Create a message item."""
-    if isinstance(text, str):
-        text = [text]
-
-    content = ResponseOutputText(annotations=[], text="", type="output_text")
-    events = [
-        ResponseOutputItemAddedEvent(
-            item=ResponseOutputMessage(
-                id=id,
-                content=[],
-                type="message",
-                role="assistant",
-                status="in_progress",
-            ),
-            output_index=output_index,
-            type="response.output_item.added",
-        ),
-        ResponseContentPartAddedEvent(
-            content_index=0,
-            item_id=id,
-            output_index=output_index,
-            part=content,
-            type="response.content_part.added",
-        ),
-    ]
-
-    content.text = "".join(text)
-    events.extend(
-        ResponseTextDeltaEvent(
-            content_index=0,
-            delta=delta,
-            item_id=id,
-            output_index=output_index,
-            type="response.output_text.delta",
-        )
-        for delta in text
-    )
-
-    events.extend(
-        [
-            ResponseTextDoneEvent(
-                content_index=0,
-                item_id=id,
-                output_index=output_index,
-                text="".join(text),
-                type="response.output_text.done",
-            ),
-            ResponseContentPartDoneEvent(
-                content_index=0,
-                item_id=id,
-                output_index=output_index,
-                part=content,
-                type="response.content_part.done",
-            ),
-            ResponseOutputItemDoneEvent(
-                item=ResponseOutputMessage(
-                    id=id,
-                    content=[content],
-                    role="assistant",
-                    status="completed",
-                    type="message",
-                ),
-                output_index=output_index,
-                type="response.output_item.done",
-            ),
-        ]
-    )
-
-    return events
 
 
 def create_function_tool_call_item(
@@ -583,7 +408,7 @@ async def test_function_call(
         "Please call the test function",
         mock_chat_log.conversation_id,
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert mock_create_stream.call_args.kwargs["input"][2] == {
@@ -630,7 +455,7 @@ async def test_function_call_without_reasoning(
         "Please call the test function",
         mock_chat_log.conversation_id,
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -686,7 +511,7 @@ async def test_function_call_invalid(
             "Please call the test function",
             "mock-conversation-id",
             Context(),
-            agent_id="conversation.openai",
+            agent_id="conversation.openai_conversation",
         )
 
 
@@ -720,7 +545,7 @@ async def test_assist_api_tools_conversion(
     ]
 
     await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id="conversation.openai"
+        hass, "hello", None, Context(), agent_id="conversation.openai_conversation"
     )
 
     tools = mock_create_stream.mock_calls[0][2]["tools"]
@@ -735,10 +560,12 @@ async def test_web_search(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Test web_search_tool."""
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
-            **mock_config_entry.options,
+        subentry,
+        data={
+            **subentry.data,
             CONF_WEB_SEARCH: True,
             CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
             CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -764,7 +591,7 @@ async def test_web_search(
         "What's on the latest news?",
         mock_chat_log.conversation_id,
         Context(),
-        agent_id="conversation.openai",
+        agent_id="conversation.openai_conversation",
     )
 
     assert mock_create_stream.mock_calls[0][2]["tools"] == [
