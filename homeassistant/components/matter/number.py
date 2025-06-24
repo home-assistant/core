@@ -102,10 +102,11 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
                 self.entity_description.command(send_value),
             )
             return
-        # regular write attribute to set the new value
-        await self.write_attribute(
-            value=send_value,
-        )
+        else:
+            # regular write attribute to set the new value
+            await self.write_attribute(
+                value=send_value,
+            )
 
     @callback
     def _update_from_device(self) -> None:
