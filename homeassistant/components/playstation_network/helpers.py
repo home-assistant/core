@@ -8,7 +8,7 @@ from typing import Any
 
 from psnawp_api import PSNAWP
 from psnawp_api.models.client import Client
-from psnawp_api.models.trophies import PlatformType
+from psnawp_api.models.trophies import PlatformType, TrophySummary
 from psnawp_api.models.user import User
 from pyrate_limiter import Duration, Rate
 
@@ -41,6 +41,8 @@ class PlaystationNetworkData:
     available: bool = False
     active_sessions: dict[PlatformType, SessionData] = field(default_factory=dict)
     registered_platforms: set[PlatformType] = field(default_factory=set)
+    trophy_summary: TrophySummary | None = None
+    profile: dict[str, Any] = field(default_factory=dict)
 
 
 class PlaystationNetwork:
@@ -75,6 +77,9 @@ class PlaystationNetwork:
         } & SUPPORTED_PLATFORMS
 
         data.presence = self.user.get_presence()
+
+        data.trophy_summary = self.client.trophy_summary()
+        data.profile = self.user.profile()
 
         # check legacy platforms if owned
         if LEGACY_PLATFORMS & data.registered_platforms:

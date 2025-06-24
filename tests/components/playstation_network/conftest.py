@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from psnawp_api.models.trophies import TrophySet, TrophySummary
 import pytest
 
 from homeassistant.components.playstation_network.const import CONF_NPSSO, DOMAIN
@@ -89,6 +90,34 @@ def mock_psnawpapi(mock_user: MagicMock) -> Generator[MagicMock]:
                 "accountDeviceVector": "abcdefghijklmnopqrstuv",
             }
         ]
+        client.me.return_value.trophy_summary.return_value = TrophySummary(
+            PSN_ID, 1079, 19, 10, TrophySet(14450, 8722, 11754, 1398)
+        )
+        client.user.return_value.profile.return_value = {
+            "onlineId": "testuser",
+            "personalDetail": {
+                "firstName": "Rick",
+                "lastName": "Astley",
+                "profilePictures": [
+                    {
+                        "size": "xl",
+                        "url": "http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png",
+                    }
+                ],
+            },
+            "aboutMe": "Never Gonna Give You Up",
+            "avatars": [
+                {
+                    "size": "xl",
+                    "url": "http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png",
+                }
+            ],
+            "languages": ["de-DE"],
+            "isPlus": True,
+            "isOfficiallyVerified": False,
+            "isMe": True,
+        }
+
         yield client
 
 
