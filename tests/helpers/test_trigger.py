@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
 from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
+from homeassistant.components.tag import DOMAIN as DOMAIN_TAG
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import trigger
@@ -478,12 +479,20 @@ async def test_async_get_all_descriptions(
     hass: HomeAssistant, sun_service_descriptions: str
 ) -> None:
     """Test async_get_all_descriptions."""
+    tag_service_descriptions = """
+        tag: {}
+        """
+
     assert await async_setup_component(hass, DOMAIN_SUN, {})
     assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
     await hass.async_block_till_done()
 
     def _load_yaml(fname, secrets=None):
-        with io.StringIO(sun_service_descriptions) as file:
+        if fname.endswith("sun/triggers.yaml"):
+            service_descriptions = sun_service_descriptions
+        elif fname.endswith("tag/triggers.yaml"):
+            service_descriptions = tag_service_descriptions
+        with io.StringIO(service_descriptions) as file:
             return parse_yaml(file)
 
     with (
@@ -522,6 +531,37 @@ async def test_async_get_all_descriptions(
 
     # Verify the cache returns the same object
     assert await trigger.async_get_all_descriptions(hass) is descriptions
+
+    # Load the tag integration and check a new cache object is created
+    assert await async_setup_component(hass, DOMAIN_TAG, {})
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_triggers", return_value=True),
+    ):
+        new_descriptions = await trigger.async_get_all_descriptions(hass)
+    assert new_descriptions is not descriptions
+    assert new_descriptions == {
+        DOMAIN_SUN: {
+            "fields": {
+                "event": {
+                    "example": "sunrise",
+                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                },
+                "offset": {"selector": {"time": None}},
+            }
+        },
+        DOMAIN_TAG: {
+            "fields": {},
+        },
+    }
+
+    # Verify the cache returns the same object
+    assert await trigger.async_get_all_descriptions(hass) is new_descriptions
 
 
 @pytest.mark.parametrize(
