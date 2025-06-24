@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from pyfirefly import (
     Firefly,
@@ -15,6 +14,7 @@ from pyfirefly import (
 )
 from pyfirefly.models import Account, Bill, Budget, Category, Currency
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -23,8 +23,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-if TYPE_CHECKING:
-    from . import FireflyConfigEntry
+type FireflyConfigEntry = ConfigEntry[FireflyDataUpdateCoordinator]
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -33,7 +32,6 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 class FireflyCoordinatorData:
     """Data structure for Firefly III coordinator data."""
 
-    api: Firefly
     accounts: list[Account]
     categories: list[Category]
     category_details: list[Category]
@@ -59,7 +57,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
         )
         self.firefly = firefly
 
-    async def _async_setup(self):
+    async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
             await self.firefly.get_about()
@@ -92,7 +90,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
         try:
             accounts = await self.firefly.get_accounts()
             categories = await self.firefly.get_categories()
-            category_details: list[Category] = [
+            category_details = [
                 await self.firefly.get_category(
                     category_id=int(category.id), start=start_str, end=end_str
                 )
@@ -101,8 +99,6 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             native_currency = await self.firefly.get_currency_native()
             budgets = await self.firefly.get_budgets()
             bills = await self.firefly.get_bills()
-
-            _LOGGER.debug("Fetched data for native currency: %s", native_currency)
         except FireflyAuthenticationError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -123,7 +119,6 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             ) from err
 
         return FireflyCoordinatorData(
-            api=self.firefly,
             accounts=accounts,
             categories=categories,
             category_details=category_details,

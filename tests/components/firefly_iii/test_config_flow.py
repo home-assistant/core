@@ -11,7 +11,7 @@ import pytest
 
 from homeassistant.components.firefly_iii.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -20,7 +20,7 @@ from .conftest import MOCK_TEST_CONFIG
 from tests.common import MockConfigEntry
 
 MOCK_USER_SETUP = {
-    CONF_HOST: "https://127.0.0.1:8080/",
+    CONF_URL: "https://127.0.0.1:8080/",
     CONF_API_KEY: "test_api_key",
     CONF_VERIFY_SSL: True,
 }
@@ -123,7 +123,7 @@ async def test_duplicate_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "https://127.0.0.1:8080/",
+            CONF_URL: "https://127.0.0.1:8080/",
             CONF_API_KEY: "test_api_key",
         },
         unique_id="test_api_key",

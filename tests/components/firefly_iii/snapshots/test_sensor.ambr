@@ -4,7 +4,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -23,14 +25,14 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:bank',
+    'original_icon': 'mdi:hand-coin',
     'original_name': 'Credit Card',
     'platform': 'firefly_iii',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account',
-    'unique_id': 'None_account_4',
+    'unique_id': 'None_account_type_4',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -38,10 +40,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'account_role': 'creditCard',
+      'account_type': 'liability',
       'current_balance': '-250.00',
       'device_class': 'monetary',
       'friendly_name': 'https://127.0.0.1:8080/ Credit Card',
-      'icon': 'mdi:bank',
+      'icon': 'mdi:hand-coin',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'AMS',
     }),
     'context': <ANY>,
@@ -57,7 +61,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -76,7 +82,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:label',
+    'original_icon': None,
     'original_name': 'Lunch',
     'platform': 'firefly_iii',
     'previous_unique_id': None,
@@ -92,7 +98,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'https://127.0.0.1:8080/ Lunch',
-      'icon': 'mdi:label',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'AMS',
     }),
     'context': <ANY>,
@@ -108,7 +114,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -134,7 +142,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account',
-    'unique_id': 'None_account_2',
+    'unique_id': 'None_account_type_2',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -142,10 +150,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'account_role': 'defaultAsset',
+      'account_type': 'asset',
       'current_balance': '123.45',
       'device_class': 'monetary',
       'friendly_name': 'https://127.0.0.1:8080/ My checking account',
       'icon': 'mdi:account-cash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'AMS',
     }),
     'context': <ANY>,
@@ -161,7 +171,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -187,7 +199,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account',
-    'unique_id': 'None_account_3',
+    'unique_id': 'None_account_type_3',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -195,10 +207,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'account_role': 'savingsAsset',
+      'account_type': 'expense',
       'current_balance': '5000.00',
       'device_class': 'monetary',
       'friendly_name': 'https://127.0.0.1:8080/ Savings Account',
       'icon': 'mdi:cash-minus',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'AMS',
     }),
     'context': <ANY>,

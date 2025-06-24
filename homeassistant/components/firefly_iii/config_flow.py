@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.water_heater import HomeAssistant
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_URL): str,
         vol.Required(CONF_API_KEY): str,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
@@ -35,13 +35,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
     """Validate the user input allows us to connect."""
 
-    client = Firefly(
-        api_url=data[CONF_HOST],
-        api_key=data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
-    )
-
     try:
+        client = Firefly(
+            api_url=data[CONF_URL],
+            api_key=data[CONF_API_KEY],
+            session=async_get_clientsession(hass),
+        )
         await client.get_about()
     except FireflyAuthenticationError:
         raise InvalidAuth from None
@@ -79,7 +78,7 @@ class FireflyConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user_input[CONF_API_KEY])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=user_input[CONF_URL], data=user_input
                 )
 
         return self.async_show_form(

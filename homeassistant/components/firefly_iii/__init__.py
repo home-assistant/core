@@ -5,16 +5,13 @@ from __future__ import annotations
 from aiohttp import CookieJar
 from pyfirefly import Firefly
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL, Platform
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .coordinator import FireflyDataUpdateCoordinator
+from .coordinator import FireflyConfigEntry, FireflyDataUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type FireflyConfigEntry = ConfigEntry[FireflyDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FireflyConfigEntry) -> bool:
@@ -26,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FireflyConfigEntry) -> b
         cookie_jar=CookieJar(unsafe=True),
     )
     client = Firefly(
-        api_url=entry.data[CONF_HOST],
+        api_url=entry.data[CONF_URL],
         api_key=entry.data[CONF_API_KEY],
         session=session,
     )

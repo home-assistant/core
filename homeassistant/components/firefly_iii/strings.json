@@ -3,12 +3,12 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
+          "url": "[%key:common::config_flow::data::url%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The host/URL, including the port, of your Firefly instance",
+          "url": "[%key:common::config_flow::data::url%]",
           "api_key": "The API key for authenticating with Firefly",
           "verify_ssl": "Verify the SSL certificate of the Firefly instance"
         },
