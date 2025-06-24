@@ -101,7 +101,6 @@ async def test_switch(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-
 async def test_host_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -167,7 +166,6 @@ async def test_host_switch(
         )
 
 
-
 async def test_chime_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -228,7 +226,6 @@ async def test_chime_switch(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-
 
 
 @pytest.mark.parametrize(
@@ -299,7 +296,6 @@ async def test_cleanup_hub_switches(
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
 
 
-
 @pytest.mark.parametrize(
     (
         "original_id",
@@ -368,4 +364,3 @@ async def test_hub_switches_repair_issue(
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
     assert (DOMAIN, "hub_switch_deprecated") in issue_registry.issues
-
