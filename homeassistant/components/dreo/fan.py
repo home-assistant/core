@@ -46,7 +46,7 @@ async def async_setup_entry(
             if device_type != FAN_DEVICE_TYPE:
                 continue
 
-            device_id = str(device.get("deviceSn", ""))
+            device_id = device.get("deviceSn")
             if not device_id:
                 continue
 
@@ -105,10 +105,6 @@ class DreoFan(DreoEntity, FanEntity):
             return
 
         fan_state_data = self.coordinator.data
-        if fan_state_data.available is None:
-            self._attr_available = False
-            return
-
         self._attr_available = fan_state_data.available
 
         if not fan_state_data.is_on:
