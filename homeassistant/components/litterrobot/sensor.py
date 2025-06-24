@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _WhiskerEntityT
@@ -179,7 +180,19 @@ PET_SENSORS: list[RobotSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfMass.POUNDS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda pet: pet.weight,
-    )
+    ),
+    RobotSensorEntityDescription[Pet](
+        key="visits_today",
+        translation_key="visits_today",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=(
+            lambda pet: sum(
+                weight.timestamp >= dt_util.start_of_local_day()
+                for weight in pet.weight_history
+            )
+        ),
+    ),
 ]
 
 
@@ -225,3 +238,10 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
         if (icon := self.entity_description.icon_fn(self.state)) is not None:
             return icon
         return super().icon
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        if self.entity_description.key == "visits_today":
+            return dt_util.start_of_local_day()
+        return super().last_reset
