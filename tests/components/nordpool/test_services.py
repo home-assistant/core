@@ -74,7 +74,6 @@ async def test_service_call(
     ("error", "key"),
     [
         (NordPoolAuthenticationError, "authentication_error"),
-        (NordPoolEmptyResponseError, "empty_response"),
         (NordPoolError, "connection_error"),
     ],
 )
@@ -104,6 +103,33 @@ async def test_service_call_failures(
             return_response=True,
         )
     assert err.value.translation_key == key
+
+
+@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+async def test_empty_response_returns_empty_list(
+    hass: HomeAssistant,
+    load_int: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test get_prices_for_date service call return empty list for empty response."""
+    service_data = TEST_SERVICE_DATA.copy()
+    service_data[ATTR_CONFIG_ENTRY] = load_int.entry_id
+
+    with (
+        patch(
+            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
+            side_effect=NordPoolEmptyResponseError,
+        ),
+    ):
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_PRICES_FOR_DATE,
+            service_data,
+            blocking=True,
+            return_response=True,
+        )
+
+    assert response == snapshot
 
 
 @pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")

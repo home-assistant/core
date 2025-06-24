@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfEnergy,
@@ -32,15 +33,41 @@ from .const import (
     STATE_PROGRAM_PHASE,
     STATE_STATUS_TAGS,
     MieleAppliance,
+    PlatePowerStep,
+    StateDryingStep,
     StateProgramType,
     StateStatus,
 )
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 from .entity import MieleEntity
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 DISABLED_TEMPERATURE = -32768
+
+DEFAULT_PLATE_COUNT = 4
+
+PLATE_COUNT = {
+    "KM7678": 6,
+    "KM7697": 6,
+    "KM7878": 6,
+    "KM7897": 6,
+    "KMDA7633": 5,
+    "KMDA7634": 5,
+    "KMDA7774": 5,
+    "KMX": 6,
+}
+
+
+def _get_plate_count(tech_type: str) -> int:
+    """Get number of zones for hob."""
+    stripped = tech_type.replace(" ", "")
+    for prefix, plates in PLATE_COUNT.items():
+        if stripped.startswith(prefix):
+            return plates
+    return DEFAULT_PLATE_COUNT
 
 
 def _convert_duration(value_list: list[int]) -> int | None:
@@ -53,7 +80,7 @@ class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
     value_fn: Callable[[MieleDevice], StateType]
-    zone: int | None = None
+    zone: int = 1
 
 
 @dataclass
@@ -208,6 +235,27 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
     MieleSensorDefinition(
         types=(
             MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.WASHER_DRYER,
+        ),
+        description=MieleSensorDescription(
+            key="energy_forecast",
+            translation_key="energy_forecast",
+            value_fn=(
+                lambda value: value.energy_forecast * 100
+                if value.energy_forecast is not None
+                else None
+            ),
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
             MieleAppliance.DISHWASHER,
             MieleAppliance.WASHER_DRYER,
         ),
@@ -218,6 +266,24 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.WATER,
             state_class=SensorStateClass.TOTAL_INCREASING,
             native_unit_of_measurement=UnitOfVolume.LITERS,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.WASHER_DRYER,
+        ),
+        description=MieleSensorDescription(
+            key="water_forecast",
+            translation_key="water_forecast",
+            value_fn=(
+                lambda value: value.water_forecast * 100
+                if value.water_forecast is not None
+                else None
+            ),
+            native_unit_of_measurement=PERCENTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -338,7 +404,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         ),
         description=MieleSensorDescription(
             key="state_temperature_1",
-            zone=1,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
@@ -381,11 +446,11 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             MieleAppliance.OVEN,
             MieleAppliance.OVEN_MICROWAVE,
             MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MK2,
         ),
         description=MieleSensorDescription(
             key="state_core_target_temperature",
             translation_key="core_target_temperature",
-            zone=1,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
@@ -399,6 +464,29 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
     ),
     MieleSensorDefinition(
         types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MK2,
+        ),
+        description=MieleSensorDescription(
+            key="state_target_temperature",
+            translation_key="target_temperature",
+            zone=1,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=(
+                lambda value: cast(int, value.state_target_temperature[0].temperature)
+                / 100.0
+            ),
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
             MieleAppliance.OVEN,
             MieleAppliance.OVEN_MICROWAVE,
             MieleAppliance.STEAM_OVEN_COMBI,
@@ -406,7 +494,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
         description=MieleSensorDescription(
             key="state_core_temperature",
             translation_key="core_temperature",
-            zone=1,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             state_class=SensorStateClass.MEASUREMENT,
@@ -414,6 +501,42 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 lambda value: cast(int, value.state_core_temperature[0].temperature)
                 / 100.0
             ),
+        ),
+    ),
+    *(
+        MieleSensorDefinition(
+            types=(
+                MieleAppliance.HOB_HIGHLIGHT,
+                MieleAppliance.HOB_INDUCT_EXTR,
+                MieleAppliance.HOB_INDUCTION,
+            ),
+            description=MieleSensorDescription(
+                key="state_plate_step",
+                translation_key="plate",
+                translation_placeholders={"plate_no": str(i)},
+                zone=i,
+                device_class=SensorDeviceClass.ENUM,
+                options=sorted(PlatePowerStep.keys()),
+                value_fn=lambda value: None,
+            ),
+        )
+        for i in range(1, 7)
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+        ),
+        description=MieleSensorDescription(
+            key="state_drying_step",
+            translation_key="drying_step",
+            value_fn=lambda value: StateDryingStep(
+                cast(int, value.state_drying_step)
+            ).name,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorDeviceClass.ENUM,
+            options=sorted(StateDryingStep.keys()),
         ),
     ),
 )
@@ -426,33 +549,51 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data
+    added_devices: set[str] = set()
 
-    entities: list = []
-    entity_class: type[MieleSensor]
-    for device_id, device in coordinator.data.devices.items():
-        for definition in SENSOR_TYPES:
-            if device.device_type in definition.types:
-                match definition.description.key:
-                    case "state_status":
-                        entity_class = MieleStatusSensor
-                    case "state_program_id":
-                        entity_class = MieleProgramIdSensor
-                    case "state_program_phase":
-                        entity_class = MielePhaseSensor
-                    case _:
-                        entity_class = MieleSensor
+    def _async_add_new_devices() -> None:
+        nonlocal added_devices
+        entities: list = []
+        entity_class: type[MieleSensor]
+        new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
+        added_devices = current_devices
+
+        for device_id, device in coordinator.data.devices.items():
+            for definition in SENSOR_TYPES:
                 if (
-                    definition.description.device_class == SensorDeviceClass.TEMPERATURE
-                    and definition.description.value_fn(device)
-                    == DISABLED_TEMPERATURE / 100
+                    device_id in new_devices_set
+                    and device.device_type in definition.types
                 ):
-                    # Don't create entity if API signals that datapoint is disabled
-                    continue
-                entities.append(
-                    entity_class(coordinator, device_id, definition.description)
-                )
+                    match definition.description.key:
+                        case "state_status":
+                            entity_class = MieleStatusSensor
+                        case "state_program_id":
+                            entity_class = MieleProgramIdSensor
+                        case "state_program_phase":
+                            entity_class = MielePhaseSensor
+                        case "state_plate_step":
+                            entity_class = MielePlateSensor
+                        case _:
+                            entity_class = MieleSensor
+                    if (
+                        definition.description.device_class
+                        == SensorDeviceClass.TEMPERATURE
+                        and definition.description.value_fn(device)
+                        == DISABLED_TEMPERATURE / 100
+                    ) or (
+                        definition.description.key == "state_plate_step"
+                        and definition.description.zone
+                        > _get_plate_count(device.tech_type)
+                    ):
+                        # Don't create entity if API signals that datapoint is disabled
+                        continue
+                    entities.append(
+                        entity_class(coordinator, device_id, definition.description)
+                    )
+        async_add_entities(entities)
 
-    async_add_entities(entities)
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+    _async_add_new_devices()
 
 
 APPLIANCE_ICONS = {
@@ -494,6 +635,40 @@ class MieleSensor(MieleEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
+
+
+class MielePlateSensor(MieleSensor):
+    """Representation of a Sensor."""
+
+    entity_description: MieleSensorDescription
+
+    def __init__(
+        self,
+        coordinator: MieleDataUpdateCoordinator,
+        device_id: str,
+        description: MieleSensorDescription,
+    ) -> None:
+        """Initialize the plate sensor."""
+        super().__init__(coordinator, device_id, description)
+        self._attr_unique_id = f"{device_id}-{description.key}-{description.zone}"
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the plate sensor."""
+        # state_plate_step is [] if all zones are off
+
+        return (
+            PlatePowerStep(
+                cast(
+                    int,
+                    self.device.state_plate_step[
+                        self.entity_description.zone - 1
+                    ].value_raw,
+                )
+            ).name
+            if self.device.state_plate_step
+            else PlatePowerStep.plate_step_0
+        )
 
 
 class MieleStatusSensor(MieleSensor):

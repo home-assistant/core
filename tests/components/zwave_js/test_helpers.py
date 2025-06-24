@@ -23,6 +23,12 @@ from tests.common import MockConfigEntry
 CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
 
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return []
+
+
 async def test_async_get_node_status_sensor_entity_id(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

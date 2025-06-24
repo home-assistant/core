@@ -36,14 +36,14 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
         ),
         "average_speed": (
             "AverageDownloadRate",
-            "1.250000",
+            "1.25",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
         "download_paused": ("DownloadPaused", "False", None, None),
         "speed": (
             "DownloadRate",
-            "2.500000",
+            "2.5",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
@@ -70,7 +70,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
         "uptime": ("UpTimeSec", uptime.isoformat(), None, SensorDeviceClass.TIMESTAMP),
         "speed_limit": (
             "DownloadLimit",
-            "1.000000",
+            "1.0",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),

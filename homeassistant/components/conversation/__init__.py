@@ -203,7 +203,11 @@ def async_get_agent_info(
         name = agent.name
         if not isinstance(name, str):
             name = agent.entity_id
-        return AgentInfo(id=agent.entity_id, name=name)
+        return AgentInfo(
+            id=agent.entity_id,
+            name=name,
+            supports_streaming=agent.supports_streaming,
+        )
 
     manager = get_agent_manager(hass)
 
@@ -267,7 +271,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     # Temporary migration. We can remove this in 2024.10
-    from homeassistant.components.assist_pipeline import (  # pylint: disable=import-outside-toplevel
+    from homeassistant.components.assist_pipeline import (  # noqa: PLC0415
         async_migrate_engine,
     )
 

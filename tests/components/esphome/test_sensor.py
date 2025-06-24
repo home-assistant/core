@@ -203,7 +203,7 @@ async def test_generic_numeric_sensor_legacy_last_reset_convert(
             key=1,
             name="my sensor",
             unique_id="my_sensor",
-            last_reset_type=LastResetType.AUTO,
+            legacy_last_reset_type=LastResetType.AUTO,
             state_class=ESPHomeSensorStateClass.MEASUREMENT,
         )
     ]

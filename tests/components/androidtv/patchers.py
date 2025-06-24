@@ -1,5 +1,6 @@
 """Define patches used for androidtv tests."""
 
+import os.path
 from typing import Any
 from unittest.mock import patch
 
@@ -11,6 +12,8 @@ from homeassistant.components.androidtv.const import (
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
 )
+
+_original_isfile = os.path.isfile
 
 ADB_SERVER_HOST = "127.0.0.1"
 KEY_PYTHON = "python"
@@ -185,7 +188,9 @@ def patch_androidtv_update(
 
 def isfile(filepath):
     """Mock `os.path.isfile`."""
-    return filepath.endswith("adbkey")
+    if str(filepath).endswith("adbkey"):
+        return True
+    return _original_isfile(filepath)
 
 
 PATCH_SCREENCAP = patch(

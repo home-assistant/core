@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Iterable
 from copy import deepcopy
+from dataclasses import dataclass
 import re
 from typing import cast
 
 import pypck
+from pypck.connection import PchkConnectionManager
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -33,12 +36,27 @@ from .const import (
     CONF_HARDWARE_TYPE,
     CONF_SCENES,
     CONF_SOFTWARE_SERIAL,
-    CONNECTION,
-    DEVICE_CONNECTIONS,
     DOMAIN,
 )
 
+
+@dataclass
+class LcnRuntimeData:
+    """Data for LCN config entry."""
+
+    connection: PchkConnectionManager
+    """Connection to PCHK host."""
+
+    device_connections: dict[str, DeviceConnectionType]
+    """Logical addresses of devices connected to the host."""
+
+    add_entities_callbacks: dict[str, Callable[[Iterable[ConfigType]], None]]
+    """Callbacks to add entities for platforms."""
+
+
 # typing
+type LcnConfigEntry = ConfigEntry[LcnRuntimeData]
+
 type AddressType = tuple[int, int, bool]
 type DeviceConnectionType = pypck.module.ModuleConnection | pypck.module.GroupConnection
 
@@ -62,10 +80,10 @@ DOMAIN_LOOKUP = {
 
 
 def get_device_connection(
-    hass: HomeAssistant, address: AddressType, config_entry: ConfigEntry
+    hass: HomeAssistant, address: AddressType, config_entry: LcnConfigEntry
 ) -> DeviceConnectionType:
     """Return a lcn device_connection."""
-    host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+    host_connection = config_entry.runtime_data.connection
     addr = pypck.lcn_addr.LcnAddr(*address)
     return host_connection.get_address_conn(addr)
 
@@ -165,7 +183,7 @@ def purge_device_registry(
         device_registry.async_remove_device(device_id)
 
 
-def register_lcn_host_device(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+def register_lcn_host_device(hass: HomeAssistant, config_entry: LcnConfigEntry) -> None:
     """Register LCN host for given config_entry in device registry."""
     device_registry = dr.async_get(hass)
 
@@ -179,7 +197,7 @@ def register_lcn_host_device(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 
 def register_lcn_address_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: LcnConfigEntry
 ) -> None:
     """Register LCN modules and groups defined in config_entry as devices in device registry.
 
@@ -217,9 +235,9 @@ def register_lcn_address_devices(
             model=device_model,
         )
 
-        hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONNECTIONS][
-            device_entry.id
-        ] = get_device_connection(hass, address, config_entry)
+        config_entry.runtime_data.device_connections[device_entry.id] = (
+            get_device_connection(hass, address, config_entry)
+        )
 
 
 async def async_update_device_config(
@@ -254,7 +272,7 @@ async def async_update_device_config(
 
 
 async def async_update_config_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: LcnConfigEntry
 ) -> None:
     """Fill missing values in config_entry with infos from LCN bus."""
     device_configs = deepcopy(config_entry.data[CONF_DEVICES])
@@ -281,26 +299,6 @@ def get_device_config(
         if tuple(device_config[CONF_ADDRESS]) == address:
             return cast(ConfigType, device_config)
     return None
-
-
-def is_address(value: str) -> tuple[AddressType, str]:
-    """Validate the given address string.
-
-    Examples for S000M005 at myhome:
-        myhome.s000.m005
-        myhome.s0.m5
-        myhome.0.5    ("m" is implicit if missing)
-
-    Examples for s000g011
-        myhome.0.g11
-        myhome.s0.g11
-    """
-    if matcher := PATTERN_ADDRESS.match(value):
-        is_group = matcher.group("type") == "g"
-        addr = (int(matcher.group("seg_id")), int(matcher.group("id")), is_group)
-        conn_id = matcher.group("conn_id")
-        return addr, conn_id
-    raise ValueError(f"{value} is not a valid address string")
 
 
 def is_states_string(states_string: str) -> list[str]:
