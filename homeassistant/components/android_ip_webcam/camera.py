@@ -36,14 +36,12 @@ class IPWebcamCamera(MjpegCamera):
 
     def __init__(self, coordinator: AndroidIPCamDataUpdateCoordinator) -> None:
         """Initialize the camera."""
-        self._cam_username = coordinator.config_entry.data.get(CONF_USERNAME)
-        self._cam_password = coordinator.config_entry.data.get(CONF_PASSWORD, "")
         super().__init__(
             mjpeg_url=coordinator.cam.mjpeg_url,
             still_image_url=coordinator.cam.image_url,
             authentication=HTTP_BASIC_AUTHENTICATION,
-            username=self._cam_username,
-            password=self._cam_password,
+            username=coordinator.config_entry.data.get(CONF_USERNAME),
+            password=coordinator.config_entry.data.get(CONF_PASSWORD, ""),
         )
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-camera"
         self._attr_device_info = DeviceInfo(
