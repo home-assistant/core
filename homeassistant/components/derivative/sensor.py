@@ -225,7 +225,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
     def _calc_derivative_from_state_list(self, current_time: datetime) -> Decimal:
         def calculate_weight(start: datetime, end: datetime, now: datetime) -> float:
             window_start = now - timedelta(seconds=self._time_window)
-            return (end - max(start, window_start).total_seconds() / self._time_window
+            return (end - max(start, window_start)).total_seconds() / self._time_window
 
         derivative = Decimal("0.00")
         for start, end, value in self._state_list:
