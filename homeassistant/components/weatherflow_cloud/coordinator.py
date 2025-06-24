@@ -111,6 +111,8 @@ class BaseWebsocketCoordinator(
 ):
     """Base class for websocket coordinators."""
 
+    _event_type: EventType
+
     def __init__(
         self,
         hass: HomeAssistant,
