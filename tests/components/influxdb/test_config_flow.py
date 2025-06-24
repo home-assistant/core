@@ -132,13 +132,12 @@ async def test_setup_v1(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
-    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"api_version": "1.x"},
+        {"next_step_id": "configure_v1"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -202,13 +201,12 @@ async def test_setup_v1_ssl_cert(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
-    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"api_version": "1.x"},
+        {"next_step_id": "configure_v1"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -267,13 +265,12 @@ async def test_setup_v2(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
-    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"api_version": "2.x"},
+        {"next_step_id": "configure_v2"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -328,13 +325,12 @@ async def test_setup_v2_ssl_cert(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
-    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"api_version": "2.x"},
+        {"next_step_id": "configure_v2"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -443,7 +439,7 @@ async def test_setup_v2_ssl_cert(
             API_VERSION_2,
             _get_write_api_mock_v2,
             ApiException("token"),
-            "invalid_auth_v2",
+            "invalid_config",
         ),
     ],
     indirect=["mock_client"],
@@ -465,18 +461,17 @@ async def test_setup_connection_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
-    assert result["errors"] is None
 
     if api_version == DEFAULT_API_VERSION:
-        api = "1.x"
+        api = "configure_v1"
     else:
-        api = "2.x"
+        api = "configure_v2"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"api_version": api},
+        {"next_step_id": api},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -568,7 +563,7 @@ async def test_import(
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
             ApiException(http_resp=MagicMock()),
-            "invalid_auth_v2",
+            "invalid_config",
         ),
         (
             API_VERSION_2,
