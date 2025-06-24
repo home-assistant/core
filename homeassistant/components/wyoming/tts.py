@@ -1,6 +1,5 @@
 """Support for Wyoming text-to-speech services."""
 
-import asyncio
 from collections import defaultdict
 from collections.abc import AsyncGenerator
 import io
@@ -169,111 +168,84 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         self, request: tts.TTSAudioRequest
     ) -> tts.TTSAudioResponse:
         """Generate speech from an incoming message."""
-        audio_event_stream = self._generate_tts_audio(request)
-        audio_start_received = False
+        voice_name: str | None = request.options.get(tts.ATTR_VOICE)
+        voice_speaker: str | None = request.options.get(ATTR_SPEAKER)
+        voice: SynthesizeVoice | None = None
+        if voice_name is not None:
+            voice = SynthesizeVoice(name=voice_name, speaker=voice_speaker)
 
         async def data_gen():
-            nonlocal audio_start_received
+            async with AsyncTcpClient(self.service.host, self.service.port) as client:
+                # Stream text chunks to client
+                self.config_entry.async_create_background_task(
+                    self.hass,
+                    self._write_tts_message(request.message_gen, client, voice),
+                    "wyoming tts write",
+                )
 
-            async for audio_event in audio_event_stream:
-                if audio_start_received and isinstance(audio_event, AudioChunk):
-                    yield audio_event.audio
-                elif (not audio_start_received) and isinstance(audio_event, AudioStart):
-                    # Send WAV header once
-                    audio_start_received = True
+                # Stream audio bytes from client
+                async for data_chunk in self._read_tts_audio(client):
+                    yield data_chunk
 
+        return tts.TTSAudioResponse("wav", data_gen())
+
+    async def _write_tts_message(
+        self,
+        message_gen: AsyncGenerator[str],
+        client: AsyncTcpClient,
+        voice: SynthesizeVoice | None,
+    ) -> None:
+        """Write text chunks to the client."""
+        try:
+            # Start stream
+            await client.write_event(SynthesizeStart(voice=voice).event())
+
+            # Accumulate entire message for synthesize event.
+            message = ""
+            async for message_chunk in message_gen:
+                message += message_chunk
+
+                await client.write_event(SynthesizeChunk(text=message_chunk).event())
+
+            # Send entire message for backwards compatibility
+            await client.write_event(Synthesize(text=message, voice=voice).event())
+
+            # End stream
+            await client.write_event(SynthesizeStop().event())
+        except (OSError, WyomingError):
+            # Disconnected
+            _LOGGER.warning("Unexpected disconnection from TTS client")
+
+    async def _read_tts_audio(self, client: AsyncTcpClient) -> AsyncGenerator[bytes]:
+        """Read audio events from the client and yield WAV audio chunks.
+
+        The WAV header is sent first with a frame count of 0 to indicate that
+        we're streaming and don't know the number of frames ahead of time.
+        """
+        wav_header_sent = False
+
+        try:
+            while event := await client.read_event():
+                if wav_header_sent and AudioChunk.is_type(event.type):
+                    # PCM audio
+                    yield AudioChunk.from_event(event).audio
+                elif (not wav_header_sent) and AudioStart.is_type(event.type):
+                    # WAV header with nframes = 0 for streaming
+                    audio_start = AudioStart.from_event(event)
                     with io.BytesIO() as wav_io:
                         wav_file: wave.Wave_write = wave.open(wav_io, "wb")
                         with wav_file:
-                            wav_file.setframerate(audio_event.rate)
-                            wav_file.setsampwidth(audio_event.width)
-                            wav_file.setnchannels(audio_event.channels)
+                            wav_file.setframerate(audio_start.rate)
+                            wav_file.setsampwidth(audio_start.width)
+                            wav_file.setnchannels(audio_start.channels)
 
                         wav_io.seek(0)
                         yield wav_io.getvalue()
 
-        return tts.TTSAudioResponse("wav", data_gen())
-
-    async def _generate_tts_audio(
-        self, request: tts.TTSAudioRequest
-    ) -> AsyncGenerator[AudioStart | AudioChunk]:
-        """Generate speech from an incoming message."""
-        voice_name: str | None = request.options.get(tts.ATTR_VOICE)
-        voice_speaker: str | None = request.options.get(ATTR_SPEAKER)
-
-        message = ""
-
-        try:
-            async with AsyncTcpClient(self.service.host, self.service.port) as client:
-                voice: SynthesizeVoice | None = None
-                if voice_name is not None:
-                    voice = SynthesizeVoice(name=voice_name, speaker=voice_speaker)
-
-                # Start stream
-                await client.write_event(SynthesizeStart(voice=voice).event())
-
-                async def write_text_chunks():
-                    nonlocal message
-                    async for text_chunk in request.message_gen:
-                        message += text_chunk
-                        await client.write_event(
-                            SynthesizeChunk(text=text_chunk).event()
-                        )
-
-                write_task = self.config_entry.async_create_background_task(
-                    self.hass, write_text_chunks(), "wyoming tts write"
-                )
-                read_task = self.config_entry.async_create_background_task(
-                    self.hass, client.read_event(), "wyoming tts read"
-                )
-                pending = {read_task, write_task}
-
-                while pending:
-                    done, pending = await asyncio.wait(
-                        pending, return_when=asyncio.FIRST_COMPLETED
-                    )
-
-                    if write_task in done:
-                        break
-
-                    if read_task in done:
-                        # Process event from client
-                        event = await read_task
-                        if event is None:
-                            _LOGGER.debug("Connection lost")
-                            return
-
-                        if AudioChunk.is_type(event.type):
-                            yield AudioChunk.from_event(event)
-                        elif AudioStart.is_type(event.type):
-                            yield AudioStart.from_event(event)
-
-                        read_task = self.config_entry.async_create_background_task(
-                            self.hass, client.read_event(), "wyoming tts read"
-                        )
-                        pending.add(read_task)
-
-                # Send entire message for backwards compatibility
-                synthesize = Synthesize(text=message, voice=voice)
-                await client.write_event(synthesize.event())
-
-                # End stream
-                await client.write_event(SynthesizeStop().event())
-
-                # Wait for final audio.
-                # This may include the audio-start message if the text was small enough.
-                event = await read_task
-                while event is not None:
-                    if AudioChunk.is_type(event.type):
-                        yield AudioChunk.from_event(event)
-                    elif AudioStart.is_type(event.type):
-                        yield AudioStart.from_event(event)
-                    elif SynthesizeStopped.is_type(event.type):
-                        # End of final audio
-                        break
-
-                    event = await client.read_event()
-
+                    wav_header_sent = True
+                elif SynthesizeStopped.is_type(event.type):
+                    # All TTS audio has been received
+                    break
         except (OSError, WyomingError):
             # Disconnected
-            pass
+            _LOGGER.warning("Unexpected disconnection from TTS client")
