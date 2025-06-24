@@ -3,6 +3,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 import logging
+import re
 from unittest.mock import Mock, patch
 
 import pytest
@@ -102,11 +103,13 @@ async def test_media_player_join_timeout(
     soco_living_room = sonos_setup_two_speakers[0]
     soco_bedroom = sonos_setup_two_speakers[1]
 
+    expected = "Timeout while waiting for Sonos player to join the group ['Living Room: Living Room, Bedroom']"
+
     with (
         patch(
             "homeassistant.components.sonos.speaker.asyncio.timeout", instant_timeout
         ),
-        pytest.raises(HomeAssistantError) as excinfo,
+        pytest.raises(HomeAssistantError, match=re.escape(expected)),
     ):
         await hass.services.async_call(
             MP_DOMAIN,
@@ -120,9 +123,6 @@ async def test_media_player_join_timeout(
     assert soco_bedroom.join.call_count == 1
     assert soco_bedroom.join.call_args[0][0] == soco_living_room
     assert soco_living_room.join.call_count == 0
-    assert "Timeout" in str(excinfo.value)
-    assert "Living Room" in str(excinfo.value)
-    assert "Bedroom" in str(excinfo.value)
 
 
 async def test_media_player_unjoin(
