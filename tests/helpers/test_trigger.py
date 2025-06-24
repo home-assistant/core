@@ -442,7 +442,7 @@ async def test_pluggable_action(
 
 
 @pytest.mark.parametrize(
-    "sun_service_descriptions",
+    "sun_trigger_descriptions",
     [
         """
         sun:
@@ -476,10 +476,10 @@ async def test_pluggable_action(
     ],
 )
 async def test_async_get_all_descriptions(
-    hass: HomeAssistant, sun_service_descriptions: str
+    hass: HomeAssistant, sun_trigger_descriptions: str
 ) -> None:
     """Test async_get_all_descriptions."""
-    tag_service_descriptions = """
+    tag_trigger_descriptions = """
         tag: {}
         """
 
@@ -489,10 +489,10 @@ async def test_async_get_all_descriptions(
 
     def _load_yaml(fname, secrets=None):
         if fname.endswith("sun/triggers.yaml"):
-            service_descriptions = sun_service_descriptions
+            trigger_descriptions = sun_trigger_descriptions
         elif fname.endswith("tag/triggers.yaml"):
-            service_descriptions = tag_service_descriptions
-        with io.StringIO(service_descriptions) as file:
+            trigger_descriptions = tag_trigger_descriptions
+        with io.StringIO(trigger_descriptions) as file:
             return parse_yaml(file)
 
     with (

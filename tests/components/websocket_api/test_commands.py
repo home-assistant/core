@@ -718,22 +718,22 @@ async def test_subscribe_triggers(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
 ) -> None:
-    """Test get_triggers command."""
-    sun_service_descriptions = """
+    """Test trigger_platforms/subscribe command."""
+    sun_trigger_descriptions = """
         sun: {}
         """
-    tag_service_descriptions = """
+    tag_trigger_descriptions = """
         tag: {}
         """
 
     def _load_yaml(fname, secrets=None):
         if fname.endswith("sun/triggers.yaml"):
-            service_descriptions = sun_service_descriptions
+            trigger_descriptions = sun_trigger_descriptions
         elif fname.endswith("tag/triggers.yaml"):
-            service_descriptions = tag_service_descriptions
+            trigger_descriptions = tag_trigger_descriptions
         else:
             raise FileNotFoundError
-        with io.StringIO(service_descriptions) as file:
+        with io.StringIO(trigger_descriptions) as file:
             return parse_yaml(file)
 
     mock_load_yaml.side_effect = _load_yaml
