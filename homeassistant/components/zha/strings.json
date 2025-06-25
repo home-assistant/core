@@ -1155,6 +1155,21 @@
       },
       "update_frequency": {
         "name": "Update frequency"
+      },
+      "sound_volume": {
+        "name": "Sound volume"
+      },
+      "lift_drive_up_time": {
+        "name": "Lift drive up time"
+      },
+      "lift_drive_down_time": {
+        "name": "Lift drive down time"
+      },
+      "tilt_open_close_and_step_time": {
+        "name": "Tilt open close and step time"
+      },
+      "tilt_position_percentage_after_move_to_level": {
+        "name": "Tilt position percentage after move to level"
       }
     },
     "select": {
@@ -1388,6 +1403,12 @@
       },
       "external_switch_type": {
         "name": "External switch type"
+      },
+      "switch_indication": {
+        "name": "Switch indication"
+      },
+      "switch_actions": {
+        "name": "Switch actions"
       }
     },
     "sensor": {
@@ -1741,6 +1762,32 @@
       },
       "lifetime": {
         "name": "Lifetime"
+      },
+      "last_action_source": {
+        "name": "Last action source",
+        "state": {
+          "zigbee": "Zigbee",
+          "keypad": "Keypad",
+          "fingerprint": "Fingerprint",
+          "rfid": "RFID",
+          "self": "Self"
+        }
+      },
+      "last_action": {
+        "name": "Last action",
+        "state": {
+          "lock": "[%key:common::state::locked%]",
+          "unlock": "[%key:common::state::unlocked%]"
+        }
+      },
+      "last_action_user": {
+        "name": "Last action user"
+      },
+      "last_pin_code": {
+        "name": "Last PIN code"
+      },
+      "opening": {
+        "name": "Opening"
       }
     },
     "switch": {
@@ -1956,6 +2003,9 @@
       },
       "external_temperature_sensor": {
         "name": "External temperature sensor"
+      },
+      "auto_relock": {
+        "name": "Auto relock"
       }
     }
   }

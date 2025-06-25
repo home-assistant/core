@@ -22,6 +22,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -30,7 +31,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     RECOMMENDED_TOP_P,
     RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
 )
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -41,6 +42,12 @@ from tests.common import MockConfigEntry
 
 def get_models_pager():
     """Return a generator that yields the models."""
+    model_25_flash = Mock(
+        display_name="Gemini 2.5 Flash",
+        supported_actions=["generateContent"],
+    )
+    model_25_flash.name = "models/gemini-2.5-flash"
+
     model_20_flash = Mock(
         display_name="Gemini 2.0 Flash",
         supported_actions=["generateContent"],
@@ -59,17 +66,11 @@ def get_models_pager():
     )
     model_15_pro.name = "models/gemini-1.5-pro-latest"
 
-    model_10_pro = Mock(
-        display_name="Gemini 1.0 Pro",
-        supported_actions=["generateContent"],
-    )
-    model_10_pro.name = "models/gemini-pro"
-
     async def models_pager():
+        yield model_25_flash
         yield model_20_flash
         yield model_15_flash
         yield model_15_pro
-        yield model_10_pro
 
     return models_pager()
 
@@ -110,8 +111,98 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "api_key": "bla",
     }
-    assert result2["options"] == RECOMMENDED_OPTIONS
+    assert result2["options"] == {}
+    assert result2["subentries"] == [
+        {
+            "subentry_type": "conversation",
+            "data": RECOMMENDED_OPTIONS,
+            "title": DEFAULT_CONVERSATION_NAME,
+            "unique_id": None,
+        }
+    ]
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_duplicate_entry(hass: HomeAssistant) -> None:
+    """Test we get the form."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "bla"},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "bla",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_creating_conversation_subentry(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a conversation subentry."""
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "set_options"
+    assert not result["errors"]
+
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_NAME: "Mock name", **RECOMMENDED_OPTIONS},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Mock name"
+
+    processed_options = RECOMMENDED_OPTIONS.copy()
+    processed_options[CONF_PROMPT] = processed_options[CONF_PROMPT].strip()
+
+    assert result2["data"] == processed_options
+
+
+async def test_creating_conversation_subentry_not_loaded(
+    hass: HomeAssistant,
+    mock_init_component: None,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a conversation subentry."""
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    with patch(
+        "google.genai.models.AsyncModels.list",
+        return_value=get_models_pager(),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
 
 
 def will_options_be_rendered_again(current_options, new_options) -> bool:
@@ -283,7 +374,7 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")
-async def test_options_switching(
+async def test_subentry_options_switching(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     current_options,
@@ -292,17 +383,18 @@ async def test_options_switching(
     errors,
 ) -> None:
     """Test the options form."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
     with patch("google.genai.models.AsyncModels.get"):
-        hass.config_entries.async_update_entry(
-            mock_config_entry, options=current_options
+        hass.config_entries.async_update_subentry(
+            mock_config_entry, subentry, data=current_options
         )
         await hass.async_block_till_done()
     with patch(
         "google.genai.models.AsyncModels.list",
         return_value=get_models_pager(),
     ):
-        options_flow = await hass.config_entries.options.async_init(
-            mock_config_entry.entry_id
+        options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
         )
     if will_options_be_rendered_again(current_options, new_options):
         retry_options = {
@@ -313,7 +405,7 @@ async def test_options_switching(
             "google.genai.models.AsyncModels.list",
             return_value=get_models_pager(),
         ):
-            options_flow = await hass.config_entries.options.async_configure(
+            options_flow = await hass.config_entries.subentries.async_configure(
                 options_flow["flow_id"],
                 retry_options,
             )
@@ -321,14 +413,15 @@ async def test_options_switching(
         "google.genai.models.AsyncModels.list",
         return_value=get_models_pager(),
     ):
-        options = await hass.config_entries.options.async_configure(
+        options = await hass.config_entries.subentries.async_configure(
             options_flow["flow_id"],
             new_options,
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     if errors is None:
-        assert options["type"] is FlowResultType.CREATE_ENTRY
-        assert options["data"] == expected_options
+        assert options["type"] is FlowResultType.ABORT
+        assert options["reason"] == "reconfigure_successful"
+        assert subentry.data == expected_options
 
     else:
         assert options["type"] is FlowResultType.FORM
@@ -375,7 +468,10 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test the reauth flow."""
     hass.config.components.add("google_generative_ai_conversation")
     mock_config_entry = MockConfigEntry(
-        domain=DOMAIN, state=config_entries.ConfigEntryState.LOADED, title="Gemini"
+        domain=DOMAIN,
+        state=config_entries.ConfigEntryState.LOADED,
+        title="Gemini",
+        version=2,
     )
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.async_start_reauth(hass)

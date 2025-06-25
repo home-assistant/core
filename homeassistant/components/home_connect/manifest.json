@@ -14,7 +14,7 @@
       "macaddress": "68A40E*"
     },
     {
-      "hostname": "(siemens|neff)-*",
+      "hostname": "(bosch|neff|siemens)-*",
       "macaddress": "38B4D3*"
     }
   ],

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
@@ -42,6 +43,7 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_OBJECT_ID, DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .template_entity import (
     LEGACY_FIELDS as TEMPLATE_ENTITY_LEGACY_FIELDS,
@@ -49,6 +51,7 @@ from .template_entity import (
     make_template_entity_common_modern_schema,
     rewrite_common_legacy_to_modern_conf,
 )
+from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [
@@ -253,6 +256,13 @@ async def async_setup_platform(
         )
         return
 
+    if "coordinator" in discovery_info:
+        async_add_entities(
+            TriggerAlarmControlPanelEntity(hass, discovery_info["coordinator"], config)
+            for config in discovery_info["entities"]
+        )
+        return
+
     _async_create_template_tracking_entities(
         async_add_entities,
         hass,
@@ -276,8 +286,11 @@ class AbstractTemplateAlarmControlPanel(
         self._attr_code_format = config[CONF_CODE_FORMAT].value
 
         self._state: AlarmControlPanelState | None = None
+        self._attr_supported_features: AlarmControlPanelEntityFeature = (
+            AlarmControlPanelEntityFeature(0)
+        )
 
-    def _register_scripts(
+    def _iterate_scripts(
         self, config: dict[str, Any]
     ) -> Generator[
         tuple[str, Sequence[dict[str, Any]], AlarmControlPanelEntityFeature | int]
@@ -423,8 +436,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AbstractTemplateAlarmControlPane
         if TYPE_CHECKING:
             assert name is not None
 
-        self._attr_supported_features = AlarmControlPanelEntityFeature(0)
-        for action_id, action_config, supported_feature in self._register_scripts(
+        for action_id, action_config, supported_feature in self._iterate_scripts(
             config
         ):
             self.add_script(action_id, action_config, name, DOMAIN)
@@ -456,3 +468,55 @@ class AlarmControlPanelTemplate(TemplateEntity, AbstractTemplateAlarmControlPane
                 "_state", self._template, None, self._update_state
             )
         super()._async_setup_templates()
+
+
+class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControlPanel):
+    """Alarm Control Panel entity based on trigger data."""
+
+    domain = ALARM_CONTROL_PANEL_DOMAIN
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: ConfigType,
+    ) -> None:
+        """Initialize the entity."""
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        AbstractTemplateAlarmControlPanel.__init__(self, config)
+
+        self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+
+        if isinstance(config.get(CONF_STATE), template.Template):
+            self._to_render_simple.append(CONF_STATE)
+            self._parse_result.add(CONF_STATE)
+
+        for action_id, action_config, supported_feature in self._iterate_scripts(
+            config
+        ):
+            self.add_script(action_id, action_config, name, DOMAIN)
+            self._attr_supported_features |= supported_feature
+
+        self._attr_device_info = async_device_info_to_link_from_device_id(
+            hass,
+            config.get(CONF_DEVICE_ID),
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last state."""
+        await super().async_added_to_hass()
+        await self._async_handle_restored_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle update of the data."""
+        self._process_data()
+
+        if not self.available:
+            self.async_write_ha_state()
+            return
+
+        if (rendered := self._rendered.get(CONF_STATE)) is not None:
+            self._handle_state(rendered)
+            self.async_set_context(self.coordinator.data["context"])
+            self.async_write_ha_state()

@@ -54,6 +54,11 @@
       "turn_on_volume": {
         "name": "Turn-on volume"
       }
+    },
+    "switch": {
+      "loudness": {
+        "name": "Loudness"
+      }
     }
   },
   "exceptions": {

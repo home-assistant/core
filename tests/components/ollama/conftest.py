@@ -30,7 +30,15 @@ def mock_config_entry(
     entry = MockConfigEntry(
         domain=ollama.DOMAIN,
         data=TEST_USER_DATA,
-        options=mock_config_entry_options,
+        version=2,
+        subentries_data=[
+            {
+                "data": mock_config_entry_options,
+                "subentry_type": "conversation",
+                "title": "Ollama Conversation",
+                "unique_id": None,
+            }
+        ],
     )
     entry.add_to_hass(hass)
     return entry
@@ -41,8 +49,10 @@ def mock_config_entry_with_assist(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> MockConfigEntry:
     """Mock a config entry with assist."""
-    hass.config_entries.async_update_entry(
-        mock_config_entry, options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST}
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
     )
     return mock_config_entry
 

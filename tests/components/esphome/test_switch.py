@@ -37,14 +37,14 @@ async def test_switch_generic_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("switch.test_myswitch")
+    state = hass.states.get("switch.test_my_switch")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_myswitch"},
+        {ATTR_ENTITY_ID: "switch.test_my_switch"},
         blocking=True,
     )
     mock_client.switch_command.assert_has_calls([call(1, True)])
@@ -52,7 +52,7 @@ async def test_switch_generic_entity(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_myswitch"},
+        {ATTR_ENTITY_ID: "switch.test_my_switch"},
         blocking=True,
     )
     mock_client.switch_command.assert_has_calls([call(1, False)])

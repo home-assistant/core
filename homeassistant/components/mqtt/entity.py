@@ -313,6 +313,11 @@ def async_setup_entity_entry_helper(
                 component_config.pop("platform")
                 component_config.update(availability_config)
                 component_config.update(device_mqtt_options)
+                if (
+                    CONF_ENTITY_CATEGORY in component_config
+                    and component_config[CONF_ENTITY_CATEGORY] is None
+                ):
+                    component_config.pop(CONF_ENTITY_CATEGORY)
 
                 try:
                     config = platform_schema_modern(component_config)

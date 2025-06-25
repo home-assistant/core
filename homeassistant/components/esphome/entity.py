@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
+import logging
 import math
 from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast
 
@@ -13,7 +14,6 @@ from aioesphomeapi import (
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
-    build_unique_id,
 )
 import voluptuous as vol
 
@@ -24,6 +24,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_platform,
+    entity_registry as er,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -32,8 +33,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 # Import config flow so that it's added to the registry
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData, build_device_unique_id
 from .enum_mapper import EsphomeEnumMapper
+
+_LOGGER = logging.getLogger(__name__)
 
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
@@ -53,21 +56,74 @@ def async_static_info_updated(
 ) -> None:
     """Update entities of this platform when entities are listed."""
     current_infos = entry_data.info[info_type]
+    device_info = entry_data.device_info
+    if TYPE_CHECKING:
+        assert device_info is not None
     new_infos: dict[int, EntityInfo] = {}
     add_entities: list[_EntityT] = []
 
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+
     for info in infos:
-        if not current_infos.pop(info.key, None):
-            # Create new entity
+        new_infos[info.key] = info
+
+        # Create new entity if it doesn't exist
+        if not (old_info := current_infos.pop(info.key, None)):
             entity = entity_type(entry_data, platform.domain, info, state_type)
             add_entities.append(entity)
-        new_infos[info.key] = info
+            continue
+
+        # Entity exists - check if device_id has changed
+        if old_info.device_id == info.device_id:
+            continue
+
+        # Entity has switched devices, need to migrate unique_id
+        old_unique_id = build_device_unique_id(device_info.mac_address, old_info)
+        entity_id = ent_reg.async_get_entity_id(platform.domain, DOMAIN, old_unique_id)
+
+        # If entity not found in registry, re-add it
+        # This happens when the device_id changed and the old device was deleted
+        if entity_id is None:
+            _LOGGER.info(
+                "Entity with old unique_id %s not found in registry after device_id "
+                "changed from %s to %s, re-adding entity",
+                old_unique_id,
+                old_info.device_id,
+                info.device_id,
+            )
+            entity = entity_type(entry_data, platform.domain, info, state_type)
+            add_entities.append(entity)
+            continue
+
+        updates: dict[str, Any] = {}
+        new_unique_id = build_device_unique_id(device_info.mac_address, info)
+
+        # Update unique_id if it changed
+        if old_unique_id != new_unique_id:
+            updates["new_unique_id"] = new_unique_id
+
+        # Update device assignment
+        if info.device_id:
+            # Entity now belongs to a sub device
+            new_device = dev_reg.async_get_device(
+                identifiers={(DOMAIN, f"{device_info.mac_address}_{info.device_id}")}
+            )
+        else:
+            # Entity now belongs to the main device
+            new_device = dev_reg.async_get_device(
+                connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
+            )
+
+        if new_device:
+            updates["device_id"] = new_device.id
+
+        # Apply all updates at once
+        if updates:
+            ent_reg.async_update_entity(entity_id, **updates)
 
     # Anything still in current_infos is now gone
     if current_infos:
-        device_info = entry_data.device_info
-        if TYPE_CHECKING:
-            assert device_info is not None
         entry_data.async_remove_entities(
             hass, current_infos.values(), device_info.mac_address
         )
@@ -244,11 +300,28 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         self._key = entity_info.key
         self._state_type = state_type
         self._on_static_info_update(entity_info)
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
-        )
+
+        device_name = device_info.name
+        # Determine the device connection based on whether this entity belongs to a sub device
+        if entity_info.device_id:
+            # Entity belongs to a sub device
+            self._attr_device_info = DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{device_info.mac_address}_{entity_info.device_id}")
+                }
+            )
+            # Use the pre-computed device_id_to_name mapping for O(1) lookup
+            device_name = entry_data.device_id_to_name.get(
+                entity_info.device_id, device_info.name
+            )
+        else:
+            # Entity belongs to the main device
+            self._attr_device_info = DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
+            )
+
         if entity_info.name:
-            self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
+            self.entity_id = f"{domain}.{device_name}_{entity_info.name}"
         else:
             # https://github.com/home-assistant/core/issues/132532
             # If name is not set, ESPHome will use the sanitized friendly name
@@ -256,7 +329,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
             # as the entity_id before it is sanitized since the sanitizer
             # is not utf-8 aware. In this case, its always going to be
             # an empty string so we drop the object_id.
-            self.entity_id = f"{domain}.{device_info.name}"
+            self.entity_id = f"{domain}.{device_name}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -290,7 +363,9 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
             static_info = cast(_InfoT, static_info)
             assert device_info
         self._static_info = static_info
-        self._attr_unique_id = build_unique_id(device_info.mac_address, static_info)
+        self._attr_unique_id = build_device_unique_id(
+            device_info.mac_address, static_info
+        )
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
         # https://github.com/home-assistant/core/issues/132532
         # If the name is "", we need to set it to None since otherwise

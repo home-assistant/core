@@ -36,7 +36,6 @@ from .const import (
     CONF_TRANSITION,
     CONF_VALUE,
     CONF_VARIABLE,
-    DEVICE_CONNECTIONS,
     DOMAIN,
     LED_PORTS,
     LED_STATUS,
@@ -49,7 +48,7 @@ from .const import (
     VAR_UNITS,
     VARIABLES,
 )
-from .helpers import DeviceConnectionType, is_states_string
+from .helpers import DeviceConnectionType, LcnConfigEntry, is_states_string
 
 
 class LcnServiceCall:
@@ -68,18 +67,28 @@ class LcnServiceCall:
 
     def get_device_connection(self, service: ServiceCall) -> DeviceConnectionType:
         """Get address connection object."""
+        entries: list[LcnConfigEntry] = self.hass.config_entries.async_loaded_entries(
+            DOMAIN
+        )
         device_id = service.data[CONF_DEVICE_ID]
         device_registry = dr.async_get(self.hass)
-        if not (device := device_registry.async_get(device_id)):
+        if not (device := device_registry.async_get(device_id)) or not (
+            entry := next(
+                (
+                    entry
+                    for entry in entries
+                    if entry.entry_id == device.primary_config_entry
+                ),
+                None,
+            )
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_device_id",
                 translation_placeholders={"device_id": device_id},
             )
 
-        return self.hass.data[DOMAIN][device.primary_config_entry][DEVICE_CONNECTIONS][
-            device_id
-        ]
+        return entry.runtime_data.device_connections[device_id]
 
     async def async_call_service(self, service: ServiceCall) -> ServiceResponse:
         """Execute service call."""

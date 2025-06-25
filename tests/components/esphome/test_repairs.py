@@ -145,12 +145,12 @@ async def test_device_conflict_migration(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    state = hass.states.get("binary_sensor.test_my_binary_sensor")
     assert state is not None
     assert state.state == STATE_ON
     mock_config_entry = device.entry
 
-    ent_reg_entry = entity_registry.async_get("binary_sensor.test_mybinary_sensor")
+    ent_reg_entry = entity_registry.async_get("binary_sensor.test_my_binary_sensor")
     assert ent_reg_entry
     assert ent_reg_entry.unique_id == "11:22:33:44:55:AA-binary_sensor-mybinary_sensor"
     entries = er.async_entries_for_config_entry(
@@ -222,7 +222,7 @@ async def test_device_conflict_migration(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
     assert mock_config_entry.unique_id == "11:22:33:44:55:ab"
-    ent_reg_entry = entity_registry.async_get("binary_sensor.test_mybinary_sensor")
+    ent_reg_entry = entity_registry.async_get("binary_sensor.test_my_binary_sensor")
     assert ent_reg_entry
     assert ent_reg_entry.unique_id == "11:22:33:44:55:AB-binary_sensor-mybinary_sensor"
 

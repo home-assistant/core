@@ -115,6 +115,14 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
                 lambda robot: status.lower() if (status := robot.status_code) else None
             ),
         ),
+        RobotSensorEntityDescription[LitterRobot](
+            key="total_cycles",
+            translation_key="total_cycles",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda robot: robot.cycle_count,
+        ),
     ],
     LitterRobot4: [
         RobotSensorEntityDescription[LitterRobot4](

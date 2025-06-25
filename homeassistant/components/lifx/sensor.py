@@ -10,13 +10,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_RSSI, DOMAIN
-from .coordinator import LIFXUpdateCoordinator
+from .const import ATTR_RSSI
+from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -33,11 +32,11 @@ RSSI_SENSOR = SensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LIFXConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LIFX sensor from config entry."""
-    coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities([LIFXRssiSensor(coordinator, RSSI_SENSOR)])
 
 

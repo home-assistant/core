@@ -5,12 +5,10 @@ from typing import Any
 from linear_garage_door import Linear
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import LinearUpdateCoordinator
+from .coordinator import LinearConfigEntry
 from .entity import LinearEntity
 
 SUPPORTED_SUBDEVICES = ["Light"]
@@ -18,11 +16,11 @@ SUPPORTED_SUBDEVICES = ["Light"]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LinearConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Linear Garage Door cover."""
-    coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     data = coordinator.data
 
     async_add_entities(

@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from automower_ble.mower import Mower
 from bleak import BleakError
 from bleak_retry_connector import close_stale_connections_by_address
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from . import HusqvarnaConfigEntry
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -21,12 +24,10 @@ SCAN_INTERVAL = timedelta(seconds=60)
 class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
     """Class to manage fetching data."""
 
-    config_entry: ConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: HusqvarnaConfigEntry,
         mower: Mower,
         address: str,
         channel_id: str,

@@ -72,7 +72,6 @@ from .const import (
     CONF_ALLOWED_CHAT_IDS,
     CONF_BOT_COUNT,
     CONF_CONFIG_ENTRY_ID,
-    CONF_PROXY_PARAMS,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
     DEFAULT_TRUSTED_NETWORKS,
@@ -117,7 +116,6 @@ CONFIG_SCHEMA = vol.Schema(
                         ),
                         vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
                         vol.Optional(CONF_PROXY_URL): cv.string,
-                        vol.Optional(CONF_PROXY_PARAMS): dict,
                         # webhooks
                         vol.Optional(CONF_URL): cv.url,
                         vol.Optional(

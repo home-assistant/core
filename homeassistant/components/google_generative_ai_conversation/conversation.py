@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Literal
 
 from homeassistant.components import assist_pipeline, conversation
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -22,8 +22,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
-    agent = GoogleGenerativeAIConversationEntity(config_entry)
-    async_add_entities([agent])
+    for subentry in config_entry.subentries.values():
+        if subentry.subentry_type != "conversation":
+            continue
+
+        async_add_entities(
+            [GoogleGenerativeAIConversationEntity(config_entry, subentry)],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class GoogleGenerativeAIConversationEntity(
@@ -35,10 +41,10 @@ class GoogleGenerativeAIConversationEntity(
 
     _attr_supports_streaming = True
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""
-        super().__init__(entry)
-        if self.entry.options.get(CONF_LLM_HASS_API):
+        super().__init__(entry, subentry)
+        if self.subentry.data.get(CONF_LLM_HASS_API):
             self._attr_supported_features = (
                 conversation.ConversationEntityFeature.CONTROL
             )
@@ -70,7 +76,7 @@ class GoogleGenerativeAIConversationEntity(
         chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
         """Call the API."""
-        options = self.entry.options
+        options = self.subentry.data
 
         try:
             await chat_log.async_provide_llm_data(

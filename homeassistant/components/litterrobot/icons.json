@@ -46,6 +46,9 @@
           "motor_fault_short": "mdi:flash-off",
           "motor_ot_amps": "mdi:flash-alert"
         }
+      },
+      "total_cycles": {
+        "default": "mdi:counter"
       }
     },
     "switch": {

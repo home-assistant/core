@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.google_generative_ai_conversation.entity import (
+from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    DEFAULT_CONVERSATION_NAME,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API
@@ -26,6 +27,15 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={
             "api_key": "bla",
         },
+        version=2,
+        subentries_data=[
+            {
+                "data": {},
+                "subentry_type": "conversation",
+                "title": DEFAULT_CONVERSATION_NAME,
+                "unique_id": None,
+            }
+        ],
     )
     entry.runtime_data = Mock()
     entry.add_to_hass(hass)
@@ -38,8 +48,10 @@ async def mock_config_entry_with_assist(
 ) -> MockConfigEntry:
     """Mock a config entry with assist."""
     with patch("google.genai.models.AsyncModels.get"):
-        hass.config_entries.async_update_entry(
-            mock_config_entry, options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST}
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            next(iter(mock_config_entry.subentries.values())),
+            data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
         )
         await hass.async_block_till_done()
     return mock_config_entry
@@ -51,9 +63,10 @@ async def mock_config_entry_with_google_search(
 ) -> MockConfigEntry:
     """Mock a config entry with assist."""
     with patch("google.genai.models.AsyncModels.get"):
-        hass.config_entries.async_update_entry(
+        hass.config_entries.async_update_subentry(
             mock_config_entry,
-            options={
+            next(iter(mock_config_entry.subentries.values())),
+            data={
                 CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
                 CONF_USE_GOOGLE_SEARCH_TOOL: True,
             },

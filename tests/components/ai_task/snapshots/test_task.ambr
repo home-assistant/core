@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_run_text_task_updates_chat_log
+# name: test_run_data_task_updates_chat_log
   list([
     dict({
       'content': '''

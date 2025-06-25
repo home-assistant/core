@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "media_player": {
+      "playstation": {
+        "default": "mdi:sony-playstation"
+      }
+    },
+    "sensor": {
+      "trophy_level": {
+        "default": "mdi:trophy-award"
+      },
+      "trophy_level_progress": {
+        "default": "mdi:trending-up"
+      },
+      "earned_trophies_platinum": {
+        "default": "mdi:trophy"
+      },
+      "earned_trophies_gold": {
+        "default": "mdi:trophy-variant"
+      },
+      "earned_trophies_silver": {
+        "default": "mdi:trophy-variant"
+      },
+      "earned_trophies_bronze": {
+        "default": "mdi:trophy-variant"
+      },
+      "online_id": {
+        "default": "mdi:account"
+      }
+    }
+  }
+}

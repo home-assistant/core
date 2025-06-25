@@ -19,6 +19,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+type LinearConfigEntry = ConfigEntry[LinearUpdateCoordinator]
+
 
 @dataclass
 class LinearDevice:
@@ -32,9 +34,9 @@ class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, LinearDevice]]):
     """DataUpdateCoordinator for Linear."""
 
     _devices: list[dict[str, Any]] | None = None
-    config_entry: ConfigEntry
+    config_entry: LinearConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: LinearConfigEntry) -> None:
         """Initialize DataUpdateCoordinator for Linear."""
         super().__init__(
             hass,

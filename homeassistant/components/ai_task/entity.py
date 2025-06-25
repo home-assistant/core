@@ -18,7 +18,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_SYSTEM_PROMPT, DOMAIN, AITaskEntityFeature
-from .task import GenTextTask, GenTextTaskResult
+from .task import GenDataTask, GenDataTaskResult
 
 
 class AITaskEntity(RestoreEntity):
@@ -56,7 +56,7 @@ class AITaskEntity(RestoreEntity):
     @contextlib.asynccontextmanager
     async def _async_get_ai_task_chat_log(
         self,
-        task: GenTextTask,
+        task: GenDataTask,
     ) -> AsyncGenerator[ChatLog]:
         """Context manager used to manage the ChatLog used during an AI Task."""
         # pylint: disable-next=contextmanager-generator-missing-cleanup
@@ -84,20 +84,20 @@ class AITaskEntity(RestoreEntity):
             yield chat_log
 
     @final
-    async def internal_async_generate_text(
+    async def internal_async_generate_data(
         self,
-        task: GenTextTask,
-    ) -> GenTextTaskResult:
-        """Run a gen text task."""
+        task: GenDataTask,
+    ) -> GenDataTaskResult:
+        """Run a gen data task."""
         self.__last_activity = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
         async with self._async_get_ai_task_chat_log(task) as chat_log:
-            return await self._async_generate_text(task, chat_log)
+            return await self._async_generate_data(task, chat_log)
 
-    async def _async_generate_text(
+    async def _async_generate_data(
         self,
-        task: GenTextTask,
+        task: GenDataTask,
         chat_log: ChatLog,
-    ) -> GenTextTaskResult:
-        """Handle a gen text task."""
+    ) -> GenDataTaskResult:
+        """Handle a gen data task."""
         raise NotImplementedError

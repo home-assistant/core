@@ -124,6 +124,7 @@
     "info": {
       "arch": "CPU architecture",
       "config_dir": "Configuration directory",
+      "container_arch": "Container architecture",
       "dev": "Development",
       "docker": "Docker",
       "hassio": "Supervisor",

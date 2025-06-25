@@ -1110,6 +1110,7 @@ async def test_sentence_trigger_overrides_conversation_agent(
             None,
         )
         assert (intent_end_event is not None) and intent_end_event.data
+        assert intent_end_event.data["processed_locally"] is True
         assert (
             intent_end_event.data["intent_output"]["response"]["speech"]["plain"][
                 "speech"
@@ -1192,6 +1193,7 @@ async def test_prefer_local_intents(
             None,
         )
         assert (intent_end_event is not None) and intent_end_event.data
+        assert intent_end_event.data["processed_locally"] is True
         assert (
             intent_end_event.data["intent_output"]["response"]["speech"]["plain"][
                 "speech"

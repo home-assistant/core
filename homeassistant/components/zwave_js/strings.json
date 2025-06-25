@@ -31,10 +31,10 @@
     },
     "flow_title": "{name}",
     "progress": {
-      "install_addon": "Installation can take several minutes.",
-      "start_addon": "Starting add-on.",
-      "backup_nvm": "Please wait while the network backup completes.",
-      "restore_nvm": "Please wait while the network restore completes."
+      "install_addon": "Installation can take several minutes",
+      "start_addon": "Starting add-on",
+      "backup_nvm": "Please wait while the network backup completes",
+      "restore_nvm": "Please wait while the network restore completes"
     },
     "step": {
       "configure_addon_user": {
@@ -47,7 +47,7 @@
           "s2_unauthenticated_key": "S2 Unauthenticated Key",
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
-        "description": "The add-on will generate security keys if those fields are left empty.",
+        "description": "Select your Z-Wave adapter",
         "title": "Enter the Z-Wave add-on configuration"
       },
       "configure_addon_reconfigure": {
@@ -129,7 +129,7 @@
       },
       "installation_type": {
         "title": "Set up Z-Wave",
-        "description": "In a few steps, we’re going to set up your Home Assistant Connect ZWA-2. Home Assistant can automatically install and configure the recommended Z-Wave setup, or you can customize it.",
+        "description": "In a few steps, we're going to set up your adapter. Home Assistant can automatically install and configure the recommended Z-Wave setup, or you can customize it.",
         "menu_options": {
           "intent_recommended": "Recommended installation",
           "intent_custom": "Custom installation"

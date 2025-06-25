@@ -6,11 +6,12 @@ import logging
 import secrets
 import string
 
+from aiohttp.web_response import Response
 from telegram import Bot, Update
 from telegram.error import NetworkError, TelegramError
-from telegram.ext import ApplicationBuilder, TypeHandler
+from telegram.ext import Application, ApplicationBuilder, TypeHandler
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantRequest, HomeAssistantView
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -87,7 +88,7 @@ class PushBot(BaseTelegramBot):
         """Shutdown the app."""
         await self.stop_application()
 
-    async def _try_to_set_webhook(self):
+    async def _try_to_set_webhook(self) -> bool:
         _LOGGER.debug("Registering webhook URL: %s", self.webhook_url)
         retry_num = 0
         while retry_num < 3:
@@ -103,12 +104,12 @@ class PushBot(BaseTelegramBot):
 
         return False
 
-    async def start_application(self):
+    async def start_application(self) -> None:
         """Handle starting the Application object."""
         await self.application.initialize()
         await self.application.start()
 
-    async def register_webhook(self):
+    async def register_webhook(self) -> bool:
         """Query telegram and register the URL for our webhook."""
         current_status = await self.bot.get_webhook_info()
         # Some logging of Bot current status:
@@ -123,13 +124,13 @@ class PushBot(BaseTelegramBot):
 
         return True
 
-    async def stop_application(self, event=None):
+    async def stop_application(self) -> None:
         """Handle gracefully stopping the Application object."""
         await self.deregister_webhook()
         await self.application.stop()
         await self.application.shutdown()
 
-    async def deregister_webhook(self):
+    async def deregister_webhook(self) -> None:
         """Query telegram and deregister the URL for our webhook."""
         _LOGGER.debug("Deregistering webhook URL")
         try:
@@ -149,7 +150,7 @@ class PushBotView(HomeAssistantView):
         self,
         hass: HomeAssistant,
         bot: Bot,
-        application,
+        application: Application,
         trusted_networks: list[IPv4Network],
         secret_token: str,
     ) -> None:
@@ -160,15 +161,16 @@ class PushBotView(HomeAssistantView):
         self.trusted_networks = trusted_networks
         self.secret_token = secret_token
 
-    async def post(self, request):
+    async def post(self, request: HomeAssistantRequest) -> Response | None:
         """Accept the POST from telegram."""
-        real_ip = ip_address(request.remote)
-        if not any(real_ip in net for net in self.trusted_networks):
-            _LOGGER.warning("Access denied from %s", real_ip)
+        if not request.remote or not any(
+            ip_address(request.remote) in net for net in self.trusted_networks
+        ):
+            _LOGGER.warning("Access denied from %s", request.remote)
             return self.json_message("Access denied", HTTPStatus.UNAUTHORIZED)
         secret_token_header = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
         if secret_token_header is None or self.secret_token != secret_token_header:
-            _LOGGER.warning("Invalid secret token from %s", real_ip)
+            _LOGGER.warning("Invalid secret token from %s", request.remote)
             return self.json_message("Access denied", HTTPStatus.UNAUTHORIZED)
 
         try:

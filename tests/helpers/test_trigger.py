@@ -1,19 +1,31 @@
 """The tests for the trigger helper."""
 
-from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
+    Trigger,
+    TriggerActionType,
+    TriggerInfo,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockModule, mock_integration, mock_platform
 
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
@@ -428,3 +440,82 @@ async def test_pluggable_action(
     remove_attach_2()
     assert not hass.data[DATA_PLUGGABLE_ACTIONS]
     assert not plug_2
+
+
+async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
+    """Test a trigger platform with multiple trigger."""
+
+    class MockTrigger(Trigger):
+        """Mock trigger."""
+
+        def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+            """Initialize trigger."""
+
+        @classmethod
+        async def async_validate_trigger_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+    class MockTrigger1(MockTrigger):
+        """Mock trigger 1."""
+
+        async def async_attach_trigger(
+            self,
+            action: TriggerActionType,
+            trigger_info: TriggerInfo,
+        ) -> CALLBACK_TYPE:
+            """Attach a trigger."""
+            action({"trigger": "test_trigger_1"})
+
+    class MockTrigger2(MockTrigger):
+        """Mock trigger 2."""
+
+        async def async_attach_trigger(
+            self,
+            action: TriggerActionType,
+            trigger_info: TriggerInfo,
+        ) -> CALLBACK_TYPE:
+            """Attach a trigger."""
+            action({"trigger": "test_trigger_2"})
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {
+            "test": MockTrigger1,
+            "test.trig_2": MockTrigger2,
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    config_1 = [{"platform": "test"}]
+    config_2 = [{"platform": "test.trig_2"}]
+    config_3 = [{"platform": "test.unknown_trig"}]
+    assert await async_validate_trigger_config(hass, config_1) == config_1
+    assert await async_validate_trigger_config(hass, config_2) == config_2
+    with pytest.raises(
+        vol.Invalid, match="Invalid trigger 'test.unknown_trig' specified"
+    ):
+        await async_validate_trigger_config(hass, config_3)
+
+    log_cb = MagicMock()
+
+    action_calls = []
+
+    @callback
+    def cb_action(*args):
+        action_calls.append([*args])
+
+    await async_initialize_triggers(hass, config_1, cb_action, "test", "", log_cb)
+    assert action_calls == [[{"trigger": "test_trigger_1"}]]
+    action_calls.clear()
+
+    await async_initialize_triggers(hass, config_2, cb_action, "test", "", log_cb)
+    assert action_calls == [[{"trigger": "test_trigger_2"}]]
+    action_calls.clear()
+
+    with pytest.raises(KeyError):
+        await async_initialize_triggers(hass, config_3, cb_action, "test", "", log_cb)
