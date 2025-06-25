@@ -360,7 +360,7 @@ async def test_firmware_options_flow(
         next_step_id: str,
     ) -> ConfigFlowResult:
         if next_step_id == "start_otbr_addon":
-            next_step_id = "confirm_otbr"
+            next_step_id = "pre_confirm_otbr"
 
         return await getattr(self, f"async_step_{next_step_id}")(user_input={})
 

@@ -174,12 +174,24 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                         "fw_download_failed",
                         description_placeholders={
                             **self._get_translation_placeholders(),
+                            "firmware_name": firmware_name,
                         },
                     ) from err
 
-            fw_manifest = next(
-                fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
-            )
+                return self.async_show_progress_done(next_step_id=next_step_id)
+
+            try:
+                fw_manifest = next(
+                    fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
+                )
+            except StopIteration as exc:
+                raise AbortFlow(
+                    "fw_download_failed",
+                    description_placeholders={
+                        **self._get_translation_placeholders(),
+                        "firmware_name": firmware_name,
+                    },
+                ) from exc
 
             if not firmware_install_required:
                 assert self._probed_firmware_info is not None
@@ -212,6 +224,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     "fw_download_failed",
                     description_placeholders={
                         **self._get_translation_placeholders(),
+                        "firmware_name": firmware_name,
                     },
                 ) from err
 
@@ -271,6 +284,14 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 "addon_name": self._failed_addon_name,
             },
         )
+
+    async def async_step_pre_confirm_zigbee(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pre-confirm Zigbee setup."""
+
+        # This step is necessary to prevent `user_input` from being passed through
+        return await self.async_step_confirm_zigbee()
 
     async def async_step_confirm_zigbee(
         self, user_input: dict[str, Any] | None = None
@@ -466,7 +487,15 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         finally:
             self.addon_start_task = None
 
-        return self.async_show_progress_done(next_step_id="confirm_otbr")
+        return self.async_show_progress_done(next_step_id="pre_confirm_otbr")
+
+    async def async_step_pre_confirm_otbr(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pre-confirm OTBR setup."""
+
+        # This step is necessary to prevent `user_input` from being passed through
+        return await self.async_step_confirm_otbr()
 
     async def async_step_confirm_otbr(
         self, user_input: dict[str, Any] | None = None
