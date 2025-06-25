@@ -28,7 +28,7 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
-        if user_input:
+        if user_input is not None:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             _LOGGER.debug("Connecting to Actron Neo API")
