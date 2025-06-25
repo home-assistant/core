@@ -1,6 +1,6 @@
 {
   "common": {
-    "data_country": "Country code",
+    "data_country": "Country code where your Amazon account is registered.",
     "data_code": "One-time password (OTP code)",
     "data_description_country": "The country of your Amazon account.",
     "data_description_username": "The email address of your Amazon account.",
