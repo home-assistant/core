@@ -1646,6 +1646,7 @@ class ConfigEntriesFlowManager(
             report_usage(
                 "creates a config entry when another entry with the same unique ID "
                 "exists",
+                breaks_in_ha_version="2026.3",
                 core_behavior=ReportBehavior.LOG,
                 core_integration_behavior=ReportBehavior.LOG,
                 custom_integration_behavior=ReportBehavior.LOG,
