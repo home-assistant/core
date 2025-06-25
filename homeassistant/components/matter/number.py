@@ -84,8 +84,8 @@ class MatterLevelControNumber(MatterEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set level value."""
         send_value = int(value)
-        value_convert := self.entity_description.ha_to_native_value:
-        send_value = value_convert(value)
+        if value_convert := self.entity_description.ha_to_native_value:
+            send_value = value_convert(value)
         await self.send_device_command(
             clusters.LevelControl.Commands.MoveToLevel(
                 level=send_value,
