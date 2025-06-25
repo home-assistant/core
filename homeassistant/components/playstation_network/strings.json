@@ -74,6 +74,18 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "show_entity_pictures": "Show entity pictures"
+        },
+        "data_description": {
+          "show_entity_pictures": "Displays authentic PlayStation icons for trophy-related sensors, including bronze, silver, gold, platinum trophies, and trophy level."
+        }
+      }
+    }
+  },
   "exceptions": {
     "not_ready": {
       "message": "Authentication to the PlayStation Network failed."
