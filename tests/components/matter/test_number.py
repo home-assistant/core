@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, call
 
+from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 from matter_server.common import custom_clusters
 from matter_server.common.errors import MatterError
@@ -140,3 +141,24 @@ async def test_pump_level(
     state = hass.states.get("number.mock_pump_setpoint")
     assert state
     assert state.state == "50.0"
+
+    # test set value
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": "number.mock_pump_setpoint",
+            "value": 100,
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.LevelControl.Commands.MoveToLevel(50),
+    )
+    state = hass.states.get("number.mock_pump_setpoint")
+    assert state
+    # 100 * 2 = 200, as the value is multiplied by 2 in the HA to native value conversion
+    assert state.state == "200"
