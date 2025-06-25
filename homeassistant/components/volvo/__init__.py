@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from aiohttp import ClientResponseError
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import VolvoAuthException, VolvoCarsVehicle
@@ -41,8 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
         VolvoMediumIntervalCoordinator(hass, entry, api, vehicle),
     )
 
-    for coordinator in coordinators:
-        await coordinator.async_config_entry_first_refresh()
+    await asyncio.gather(*(c.async_config_entry_first_refresh() for c in coordinators))
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
