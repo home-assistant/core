@@ -19,16 +19,18 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type LuftdatenConfigEntry = ConfigEntry[LuftdatenDataUpdateCoordinator]
+
 
 class LuftdatenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float | int]]):
     """Data update coordinator for Sensor.Community."""
 
-    config_entry: ConfigEntry
+    config_entry: LuftdatenConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: LuftdatenConfigEntry,
         sensor_community: Luftdaten,
     ) -> None:
         """Initialize the coordinator."""
