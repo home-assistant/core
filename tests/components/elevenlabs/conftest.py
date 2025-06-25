@@ -45,11 +45,11 @@ def mock_async_client() -> Generator[AsyncMock]:
             "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
             new=mock_async_client,
         ),
-        patch(  # ← NEW
+        patch(
             "homeassistant.components.elevenlabs.__init__.AsyncElevenLabs",
             new=mock_async_client,
         ),
-        patch(  # ← NEW
+        patch(
             "homeassistant.components.elevenlabs.tts.AsyncElevenLabs",
             new=mock_async_client,
         ),

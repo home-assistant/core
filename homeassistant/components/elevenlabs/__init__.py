@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 
 from elevenlabs import AsyncElevenLabs, Model
 from elevenlabs.core import ApiError
@@ -21,7 +20,6 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_MODEL
 
-_LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.TTS]
 
 
