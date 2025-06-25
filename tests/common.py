@@ -75,6 +75,7 @@ from homeassistant.core import (
 from homeassistant.helpers import (
     area_registry as ar,
     category_registry as cr,
+    condition,
     device_registry as dr,
     entity,
     entity_platform,
@@ -296,6 +297,7 @@ async def async_test_home_assistant(
     # Load the registries
     entity.async_setup(hass)
     loader.async_setup(hass)
+    await condition.async_setup(hass)
     await trigger.async_setup(hass)
 
     # setup translation cache instead of calling translation.async_setup(hass)
