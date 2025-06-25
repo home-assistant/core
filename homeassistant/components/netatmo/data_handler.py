@@ -20,6 +20,7 @@ from pyatmo.modules.device_types import (
 from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -457,12 +458,12 @@ class NetatmoDataHandler:
         _LOGGER.debug("Syncing schedule %s in home %s", schedule_id, home_id)
 
         if not (home := self.account.homes.get(home_id)):
-            _LOGGER.error("Home %s not found", home_id)
-            return
+            raise HomeAssistantError(f"Home {home_id} not found")
 
         if not (schedule := home.schedules.get(schedule_id)):
-            _LOGGER.error("Schedule %s not found in home %s", schedule_id, home_id)
-            return
+            raise HomeAssistantError(
+                f"Schedule {schedule_id} not found in home {home_id}"
+            )
 
         await home.async_sync_schedule(schedule)
         _LOGGER.debug(
