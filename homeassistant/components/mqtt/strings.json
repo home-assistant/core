@@ -992,6 +992,23 @@
       "description": "Reloads MQTT entities from the YAML-configuration."
     }
   },
+  "triggers": {
+    "mqtt": {
+      "name": "MQTT",
+      "description": "When a specific message is received on a given MQTT topic.",
+      "description_configured": "When an MQTT message has been received",
+      "fields": {
+        "payload": {
+          "name": "Payload",
+          "description": "The payload to trigger on."
+        },
+        "topic": {
+          "name": "Topic",
+          "description": "MQTT topic to listen to."
+        }
+      }
+    }
+  },
   "exceptions": {
     "addon_start_failed": {
       "message": "Failed to correctly start {addon} add-on."
