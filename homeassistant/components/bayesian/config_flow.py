@@ -344,7 +344,7 @@ async def _validate_user(
 
 
 def _validate_observation_subentry(
-    obs_type: ObservationTypes | str,
+    obs_type: ObservationTypes,
     user_input: dict[str, Any],
     other_subentries: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
@@ -487,6 +487,78 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for adding and modifying a topic."""
 
+    async def step_common(
+        self,
+        user_input: dict[str, Any] | None,
+        obs_type: ObservationTypes,
+        reconfiguring: bool = False,
+    ) -> SubentryFlowResult:
+        """Use common logic within the named steps."""
+
+        errors: dict[str, str] = {}
+
+        other_subentries = None
+        if obs_type == str(ObservationTypes.NUMERIC_STATE):
+            other_subentries = [
+                dict(se.data) for se in self._get_entry().subentries.values()
+            ]
+        # If we are reconfiguring a subentry we don't want to compare with self
+        if reconfiguring:
+            sub_entry = self._get_reconfigure_subentry()
+            if other_subentries is not None:
+                other_subentries.remove(dict(sub_entry.data))
+
+        if user_input is not None:
+            try:
+                user_input = _validate_observation_subentry(
+                    obs_type,
+                    user_input,
+                    other_subentries=other_subentries,
+                )
+                if reconfiguring:
+                    return self.async_update_and_abort(
+                        self._get_entry(),
+                        sub_entry,
+                        title=user_input.get(CONF_NAME, sub_entry.data[CONF_NAME]),
+                        data_updates=user_input,
+                    )
+                return self.async_create_entry(
+                    title=user_input.get(CONF_NAME),
+                    data=user_input,
+                )
+            except (SchemaFlowError, vol.Invalid) as err:
+                errors["base"] = str(err)
+
+        return self.async_show_form(
+            step_id="reconfigure" if reconfiguring else str(obs_type),
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=_select_observation_schema(obs_type),
+                suggested_values=_get_observation_values_for_editing(sub_entry)
+                if reconfiguring
+                else None,
+            ),
+            errors=errors,
+            description_placeholders={
+                "parent_sensor_name": self._get_entry().title,
+                "device_class_on": translation.async_translate_state(
+                    self.hass,
+                    "on",
+                    BINARY_SENSOR_DOMAIN,
+                    platform=None,
+                    translation_key=None,
+                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
+                ),
+                "device_class_off": translation.async_translate_state(
+                    self.hass,
+                    "off",
+                    BINARY_SENSOR_DOMAIN,
+                    platform=None,
+                    translation_key=None,
+                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
+                ),
+            },
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -502,46 +574,8 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to add a state observation. Function name must be in the format async_step_{observation_type}."""
 
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            try:
-                user_input = _validate_observation_subentry(
-                    ObservationTypes.STATE, user_input
-                )
-                return self.async_create_entry(
-                    title=user_input.get(CONF_NAME),
-                    data=user_input,
-                )
-            except (SchemaFlowError, vol.Invalid) as err:
-                errors["base"] = str(err)
-
-        return self.async_show_form(
-            step_id=str(ObservationTypes.STATE),
-            data_schema=self.add_suggested_values_to_schema(
-                data_schema=STATE_SUBSCHEMA, suggested_values=user_input
-            ),
-            last_step=True,
-            errors=errors,
-            description_placeholders={
-                "parent_sensor_name": self._get_entry().title,
-                "device_class_on": translation.async_translate_state(
-                    self.hass,
-                    "on",
-                    BINARY_SENSOR_DOMAIN,
-                    platform=None,
-                    translation_key=None,
-                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
-                ),
-                "device_class_off": translation.async_translate_state(
-                    self.hass,
-                    "off",
-                    BINARY_SENSOR_DOMAIN,
-                    platform=None,
-                    translation_key=None,
-                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
-                ),
-            },
+        return await self.step_common(
+            user_input=user_input, obs_type=ObservationTypes.STATE
         )
 
     async def async_step_numeric_state(
@@ -549,52 +583,8 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to add a new numeric state observation, (a numeric range). Function name must be in the format async_step_{observation_type}."""
 
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            other_subentries = [
-                dict(subentry.data)
-                for subentry in self._get_entry().subentries.values()
-            ]
-            try:
-                user_input = _validate_observation_subentry(
-                    ObservationTypes.NUMERIC_STATE,
-                    user_input,
-                    other_subentries=other_subentries,
-                )
-                return self.async_create_entry(
-                    title=user_input.get(CONF_NAME),
-                    data=user_input,
-                )
-            except (SchemaFlowError, vol.Invalid) as err:
-                errors["base"] = str(err)
-
-        return self.async_show_form(
-            step_id=str(ObservationTypes.NUMERIC_STATE),
-            data_schema=self.add_suggested_values_to_schema(
-                data_schema=NUMERIC_STATE_SUBSCHEMA, suggested_values=user_input
-            ),
-            last_step=True,
-            errors=errors,
-            description_placeholders={
-                "parent_sensor_name": self._get_entry().title,
-                "device_class_on": translation.async_translate_state(
-                    self.hass,
-                    "on",
-                    BINARY_SENSOR_DOMAIN,
-                    platform=None,
-                    translation_key=None,
-                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
-                ),
-                "device_class_off": translation.async_translate_state(
-                    self.hass,
-                    "off",
-                    BINARY_SENSOR_DOMAIN,
-                    platform=None,
-                    translation_key=None,
-                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
-                ),
-            },
+        return await self.step_common(
+            user_input=user_input, obs_type=ObservationTypes.NUMERIC_STATE
         )
 
     async def async_step_template(
@@ -602,101 +592,19 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to add a new template observation. Function name must be in the format async_step_{observation_type}."""
 
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            try:
-                user_input = _validate_observation_subentry(
-                    ObservationTypes.TEMPLATE, user_input
-                )
-                return self.async_create_entry(
-                    title=user_input.get(CONF_NAME),
-                    data=user_input,
-                )
-            except (SchemaFlowError, vol.Invalid) as err:
-                errors["base"] = str(err)
-
-        return self.async_show_form(
-            step_id=str(ObservationTypes.TEMPLATE),
-            data_schema=self.add_suggested_values_to_schema(
-                data_schema=TEMPLATE_SUBSCHEMA, suggested_values=user_input
-            ),
-            last_step=True,
-            errors=errors,
-            description_placeholders={
-                "parent_sensor_name": self._get_entry().title,
-                "device_class_on": translation.async_translate_state(
-                    self.hass,
-                    "on",
-                    BINARY_SENSOR_DOMAIN,
-                    platform=None,
-                    translation_key=None,
-                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
-                ),
-                "device_class_off": translation.async_translate_state(
-                    self.hass,
-                    "off",
-                    BINARY_SENSOR_DOMAIN,
-                    platform=None,
-                    translation_key=None,
-                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
-                ),
-            },
+        return await self.step_common(
+            user_input=user_input, obs_type=ObservationTypes.TEMPLATE
         )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Enable the reconfigure button for observations. Function name must be async_step_reconfigure to be recognised by hass."""
-        errors: dict[str, str] = {}
 
         sub_entry = self._get_reconfigure_subentry()
-        other_subentries = None
-        if sub_entry.data[CONF_PLATFORM] == str(ObservationTypes.NUMERIC_STATE):
-            other_subentries = [
-                dict(se.data) for se in self._get_entry().subentries.values()
-            ]
-            other_subentries.remove(dict(sub_entry.data))
-        if user_input is not None:
-            try:
-                user_input = _validate_observation_subentry(
-                    sub_entry.data[CONF_PLATFORM],
-                    user_input,
-                    other_subentries=other_subentries,
-                )
-                return self.async_update_and_abort(
-                    self._get_entry(),
-                    sub_entry,
-                    title=user_input.get(CONF_NAME, sub_entry.data[CONF_NAME]),
-                    data_updates=user_input,
-                )
-            except (SchemaFlowError, vol.Invalid) as err:
-                errors["base"] = str(err)
 
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                data_schema=_select_observation_schema(sub_entry.data[CONF_PLATFORM]),
-                suggested_values=_get_observation_values_for_editing(sub_entry),
-            ),
-            errors=errors,
-            description_placeholders={
-                "parent_sensor_name": self._get_entry().title,
-                "device_class_on": translation.async_translate_state(
-                    self.hass,
-                    "on",
-                    BINARY_SENSOR_DOMAIN,
-                    platform=None,
-                    translation_key=None,
-                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
-                ),
-                "device_class_off": translation.async_translate_state(
-                    self.hass,
-                    "off",
-                    BINARY_SENSOR_DOMAIN,
-                    platform=None,
-                    translation_key=None,
-                    device_class=self._get_entry().options.get(CONF_DEVICE_CLASS, None),
-                ),
-            },
+        return await self.step_common(
+            user_input=user_input,
+            obs_type=ObservationTypes(sub_entry.data[CONF_PLATFORM]),
+            reconfiguring=True,
         )
