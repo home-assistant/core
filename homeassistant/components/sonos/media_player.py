@@ -889,14 +889,23 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         entity_registry = er.async_get(self.hass)
         for entity_id in group_members:
             if not (entity_reg_entry := entity_registry.async_get(entity_id)):
-                raise HomeAssistantError(f"Entity {entity_id} not found")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="entity_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
             if not (
                 speaker
                 := self.config_entry.runtime_data.unique_id_speaker_mappings.get(
                     entity_reg_entry.unique_id
                 )
             ):
-                raise HomeAssistantError(f"Speaker not found for {entity_id}")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="speaker_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+
             speakers.append(speaker)
 
         await SonosSpeaker.join_multi(
