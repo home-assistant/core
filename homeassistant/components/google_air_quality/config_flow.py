@@ -42,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 class GoogleAirQaulityApiFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Config flow to handle Google Air Quality OAuth2 authentication."""
+    """Config flow to handle Google Air Quality authentication."""
 
     @classmethod
     @callback
