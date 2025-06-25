@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from olarmconnect import OlarmConnect, OlarmConnectApiError
+from olarmflowclient import OlarmFlowClient, OlarmFlowClientApiError
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
@@ -74,7 +74,7 @@ class OlarmOauth2FlowHandler(
             self._expires_at = data["token"].get("expires_at")
 
             _LOGGER.debug("OAuth2 tokens fetched successfully, fetching devices")
-            olarm_connect_client = OlarmConnect(self._access_token, self._expires_at)
+            olarm_connect_client = OlarmFlowClient(self._access_token, self._expires_at)
 
             try:
                 api_result = await olarm_connect_client.get_devices()
@@ -82,7 +82,7 @@ class OlarmOauth2FlowHandler(
 
                 self._devices = api_result.get("data")
                 self._user_id = api_result.get("userId")
-            except OlarmConnectApiError:
+            except OlarmFlowClientApiError:
                 errors["base"] = "invalid_auth"
                 return self.async_show_form(step_id="user", errors=errors)
             else:
