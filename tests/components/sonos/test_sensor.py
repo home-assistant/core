@@ -60,6 +60,7 @@ async def test_entity_registry_supported(
     assert "sensor.zone_a_power_source" in entity_registry.entities
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_battery_attributes(
     hass: HomeAssistant, async_autosetup_sonos, soco, entity_registry: er.EntityRegistry
 ) -> None:
@@ -96,6 +97,7 @@ async def test_battery_attributes(
     assert result == "Charging Base"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_power_source_unknown_state(
     hass: HomeAssistant,
     async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
@@ -120,6 +122,7 @@ async def test_power_source_unknown_state(
     assert power_source_state.state == STATE_UNKNOWN
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_power_source_none(
     hass: HomeAssistant,
     async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],

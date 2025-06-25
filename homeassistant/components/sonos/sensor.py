@@ -126,6 +126,7 @@ class SonosPowerSourceEntity(SonosEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
     _attr_options = [
         HA_POWER_SOURCE_BATTERY,
         HA_POWER_SOURCE_CHARGING_BASE,
