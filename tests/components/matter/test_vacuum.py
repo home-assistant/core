@@ -93,7 +93,7 @@ async def test_vacuum_actions(
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        command=clusters.OperationalState.Commands.Pause(),
+        command=clusters.RvcOperationalState.Commands.Pause(),
     )
     matter_client.send_device_command.reset_mock()
 
