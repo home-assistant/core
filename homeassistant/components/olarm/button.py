@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add button a config entry."""
 
@@ -63,7 +63,7 @@ def _create_zone_buttons(
 ) -> None:
     """Create zone bypass/unbypass buttons."""
     if coordinator.device_profile is not None and coordinator.device_state is not None:
-        for zone_index in enumerate(coordinator.device_state.get("zones")):
+        for zone_index, _ in enumerate(coordinator.device_state.get("zones")):
             buttons.append(
                 OlarmButton(
                     coordinator,
@@ -304,6 +304,8 @@ def _create_max_output_buttons(
 
 class OlarmButton(ButtonEntity):
     """Define a Button."""
+
+    _attr_name: str
 
     def __init__(
         self,
