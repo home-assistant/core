@@ -112,6 +112,11 @@ async def test_step_user(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "NINA"
+        assert result["data"] == deepcopy(DUMMY_DATA) | {
+            CONF_REGIONS: {
+                "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
+            }
+        }
 
 
 async def test_step_user_no_selection(hass: HomeAssistant) -> None:
