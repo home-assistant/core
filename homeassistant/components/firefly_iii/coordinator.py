@@ -44,6 +44,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
     """Coordinator to manage data updates for Firefly III integration."""
 
     config_entry: FireflyConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, config_entry: FireflyConfigEntry, firefly: Firefly
     ) -> None:
