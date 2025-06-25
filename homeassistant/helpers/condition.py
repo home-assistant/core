@@ -246,16 +246,16 @@ async def async_from_config(
     factory: Any = None
     platform = await _async_get_condition_platform(hass, config)
 
-    if platform is None:
-        for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
-            factory = getattr(sys.modules[__name__], fmt.format(condition), None)
-
-            if factory:
-                break
-    else:
+    if platform is not None:
         condition_descriptors = await platform.async_get_conditions(hass)
         condition_instance = condition_descriptors[condition](hass, config)
         return await condition_instance.async_condition_from_config()
+
+    for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
+        factory = getattr(sys.modules[__name__], fmt.format(condition), None)
+
+        if factory:
+            break
 
     # Check for partials to properly determine if coroutine function
     check_factory = factory
