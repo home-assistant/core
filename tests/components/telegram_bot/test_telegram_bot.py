@@ -830,7 +830,7 @@ async def test_edit_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_MESSAGE,
-            {ATTR_MESSAGE: "mock message", ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
+            {ATTR_MESSAGE: "mock message", ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: 12345},
             blocking=True,
         )
 
@@ -844,7 +844,7 @@ async def test_edit_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_CAPTION,
-            {ATTR_CAPTION: "mock caption", ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
+            {ATTR_CAPTION: "mock caption", ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: 12345},
             blocking=True,
         )
 
@@ -858,7 +858,7 @@ async def test_edit_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_REPLYMARKUP,
-            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 12345, ATTR_MESSAGEID: 12345},
+            {ATTR_KEYBOARD_INLINE: [], ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: 12345},
             blocking=True,
         )
 

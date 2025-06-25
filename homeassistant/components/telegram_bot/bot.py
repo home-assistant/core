@@ -298,10 +298,8 @@ class TelegramNotificationService:
         if target is None:
             return [allowed_chat_ids[0]]
 
-        if isinstance(target, int):
-            return [target]
-
-        return [t for t in target if t in allowed_chat_ids]
+        chat_ids = [target] if isinstance(target, int) else target
+        return [chat_id for chat_id in chat_ids if chat_id in allowed_chat_ids]
 
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
