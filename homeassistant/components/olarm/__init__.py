@@ -36,6 +36,8 @@ from .const import (
 )
 from .coordinator import OlarmFlowClientCoordinator
 
+type OlarmConfigEntry = ConfigEntry[OlarmFlowClientCoordinator]
+
 _PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -114,9 +116,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise ServiceValidationError("Config entry not found")
         if entry.state is not ConfigEntryState.LOADED:
             raise ServiceValidationError("Config entry not loaded")
-        coordinator = cast(
-            OlarmFlowClientCoordinator, entry.runtime_data["coordinator"]
-        )
+        coordinator = entry.runtime_data
         await coordinator.send_device_zone_cmd(
             entry.data["device_id"], "bypass", call.data[ATTR_ZONE_INDEX]
         )
@@ -131,9 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise ServiceValidationError("Config entry not found")
         if entry.state is not ConfigEntryState.LOADED:
             raise ServiceValidationError("Config entry not loaded")
-        coordinator = cast(
-            OlarmFlowClientCoordinator, entry.runtime_data["coordinator"]
-        )
+        coordinator = entry.runtime_data
         await coordinator.send_device_zone_cmd(
             entry.data["device_id"], "unbypass", call.data[ATTR_ZONE_INDEX]
         )
@@ -148,9 +146,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise ServiceValidationError("Config entry not found")
         if entry.state is not ConfigEntryState.LOADED:
             raise ServiceValidationError("Config entry not loaded")
-        coordinator = cast(
-            OlarmFlowClientCoordinator, entry.runtime_data["coordinator"]
-        )
+        coordinator = entry.runtime_data
         await coordinator.send_device_pgm_cmd(
             entry.data["device_id"],
             call.data[ATTR_PGM_ACTION],
@@ -167,9 +163,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise ServiceValidationError("Config entry not found")
         if entry.state is not ConfigEntryState.LOADED:
             raise ServiceValidationError("Config entry not loaded")
-        coordinator = cast(
-            OlarmFlowClientCoordinator, entry.runtime_data["coordinator"]
-        )
+        coordinator = entry.runtime_data
         await coordinator.send_device_ukey_cmd(
             entry.data["device_id"], call.data[ATTR_UKEY_INDEX]
         )
@@ -184,9 +178,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise ServiceValidationError("Config entry not found")
         if entry.state is not ConfigEntryState.LOADED:
             raise ServiceValidationError("Config entry not loaded")
-        coordinator = cast(
-            OlarmFlowClientCoordinator, entry.runtime_data["coordinator"]
-        )
+        coordinator = entry.runtime_data
         await coordinator.send_device_link_output_cmd(
             entry.data["device_id"],
             call.data[ATTR_LINK_ID],
@@ -204,9 +196,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise ServiceValidationError("Config entry not found")
         if entry.state is not ConfigEntryState.LOADED:
             raise ServiceValidationError("Config entry not loaded")
-        coordinator = cast(
-            OlarmFlowClientCoordinator, entry.runtime_data["coordinator"]
-        )
+        coordinator = entry.runtime_data
         await coordinator.send_device_link_relay_cmd(
             entry.data["device_id"],
             call.data[ATTR_LINK_ID],
@@ -224,9 +214,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise ServiceValidationError("Config entry not found")
         if entry.state is not ConfigEntryState.LOADED:
             raise ServiceValidationError("Config entry not loaded")
-        coordinator = cast(
-            OlarmFlowClientCoordinator, entry.runtime_data["coordinator"]
-        )
+        coordinator = entry.runtime_data
         await coordinator.send_device_max_output_cmd(
             entry.data["device_id"],
             call.data[ATTR_OUTPUT_ACTION],
@@ -286,7 +274,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> bool:
     """Set up olarm from a config entry."""
     _LOGGER.debug(
         "Setting up Olarm integration for device: %s", entry.data.get("device_id")
@@ -324,7 +312,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.init_mqtt()
 
         # store coordinator in entry.runtime_data
-        entry.runtime_data = {"coordinator": coordinator}
+        entry.runtime_data = coordinator
 
         _LOGGER.debug("Setting up platforms for Olarm integration")
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
@@ -333,7 +321,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to set up Olarm integration: %s", e)
         # Clean up any partial setup
         if hasattr(entry, "runtime_data") and entry.runtime_data:
-            coordinator = entry.runtime_data.get("coordinator")
+            coordinator = entry.runtime_data
             if coordinator:
                 try:
                     await coordinator.async_stop()
@@ -344,9 +332,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> bool:
     """Unload a config entry."""
-    coordinator = entry.runtime_data["coordinator"]
+    coordinator = entry.runtime_data
 
     # stop coordinator
     await coordinator.async_stop()
