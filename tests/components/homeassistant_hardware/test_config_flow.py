@@ -243,7 +243,14 @@ def mock_firmware_info(
                 checksum="sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
                 size=123,
                 release_notes="Some release notes",
-                metadata={},
+                metadata={
+                    "baudrate": 460800,
+                    "fw_type": "openthread_rcp",
+                    "fw_variant": None,
+                    "metadata_version": 2,
+                    "ot_rcp_version": "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4",
+                    "sdk_version": "4.4.4",
+                },
                 url=TEST_RELEASES_URL / "fake_openthread_rcp_7.4.4.0_variant.gbl",
             ),
             FirmwareMetadata(
@@ -251,7 +258,14 @@ def mock_firmware_info(
                 checksum="sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
                 size=123,
                 release_notes="Some release notes",
-                metadata={},
+                metadata={
+                    "baudrate": 115200,
+                    "ezsp_version": "7.4.4.0",
+                    "fw_type": "zigbee_ncp",
+                    "fw_variant": None,
+                    "metadata_version": 2,
+                    "sdk_version": "4.4.4",
+                },
                 url=TEST_RELEASES_URL / "fake_zigbee_ncp_7.4.4.0_variant.gbl",
             ),
         ],
@@ -263,7 +277,7 @@ def mock_firmware_info(
         probed_firmware_info = FirmwareInfo(
             device="/dev/ttyUSB0",  # Not used
             firmware_type=probe_app_type,
-            firmware_version=None,
+            firmware_version="2.4.4.0",
             owners=[],
             source="probe",
         )

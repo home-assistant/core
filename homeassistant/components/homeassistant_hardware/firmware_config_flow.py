@@ -8,6 +8,8 @@ import logging
 from typing import Any
 
 from ha_silabs_firmware_client import FirmwareUpdateClient
+from universal_silabs_flasher.common import Version
+from universal_silabs_flasher.firmware import NabuCasaMetadata
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -149,15 +151,69 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._device is not None
 
         if not self.firmware_install_task:
+            # We can be sure that firmware needs to be installed if the wrong firmware
+            # is currently installed
+            firmware_install_required = self._probed_firmware_info is None or (
+                self._probed_firmware_info.firmware_type
+                != expected_installed_firmware_type
+            )
+
             session = async_get_clientsession(self.hass)
             client = FirmwareUpdateClient(fw_update_url, session)
-            manifest = await client.async_update_data()
 
-            fw_meta = next(
+            try:
+                manifest = await client.async_update_data()
+            except Exception as err:
+                _LOGGER.warning(
+                    "Failed to fetch firmware update manifest", exc_info=True
+                )
+
+                if firmware_install_required:
+                    raise AbortFlow(
+                        "fw_download_failed",
+                        description_placeholders={
+                            **self._get_translation_placeholders(),
+                        },
+                    ) from err
+
+            fw_manifest = next(
                 fw for fw in manifest.firmwares if fw.filename.startswith(fw_type)
             )
 
-            fw_data = await client.async_fetch_firmware(fw_meta)
+            if not firmware_install_required:
+                assert self._probed_firmware_info is not None
+
+                # See if we need to upgrade
+                fw_metadata = NabuCasaMetadata.from_json(fw_manifest.metadata)
+                fw_version = fw_metadata.get_public_version()
+                probed_fw_version = Version(self._probed_firmware_info.firmware_version)
+
+                if probed_fw_version >= fw_version:
+                    _LOGGER.debug(
+                        "Not upgrading firmware, installed %s is newer than available %s",
+                        probed_fw_version,
+                        fw_version,
+                    )
+                    return self.async_show_progress_done(next_step_id=next_step_id)
+
+            try:
+                fw_data = await client.async_fetch_firmware(fw_manifest)
+            except Exception as err:
+                _LOGGER.warning("Failed to fetch firmware update", exc_info=True)
+
+                # If we cannot download new firmware, we shouldn't block setup
+                if not firmware_install_required:
+                    return self.async_show_progress_done(next_step_id=next_step_id)
+
+                # If we cannot download new firmware but we need this new firmware, we
+                # should fail
+                raise AbortFlow(
+                    "fw_download_failed",
+                    description_placeholders={
+                        **self._get_translation_placeholders(),
+                    },
+                ) from err
+
             self.firmware_install_task = self.hass.async_create_task(
                 async_flash_silabs_firmware(
                     hass=self.hass,
