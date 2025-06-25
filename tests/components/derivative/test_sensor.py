@@ -15,7 +15,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    CoreState,
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 
 async def test_state(hass: HomeAssistant) -> None:
@@ -646,6 +651,50 @@ async def test_total_increasing_reset(hass: HomeAssistant) -> None:
 
     assert actual_times == expected_times
     assert actual_values == expected_values
+
+
+async def test_restore(
+    hass: HomeAssistant,
+) -> None:
+    """Test state and unit are restored on boot."""
+    hass.set_state(CoreState.not_running)
+    restore_state = "10.00"
+    restore_unit = "kWh/h"
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    "sensor.power",
+                    restore_state,
+                    {
+                        "unit_of_measurement": restore_unit,
+                    },
+                ),
+                {
+                    "native_value": restore_state,
+                    "native_unit_of_measurement": restore_unit,
+                },
+            ),
+        ],
+    )
+
+    config = {
+        "platform": "derivative",
+        "name": "power",
+        "source": "sensor.energy",
+        "round": 2,
+        "unit_time": "s",
+    }
+
+    config = {"sensor": config}
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.power")
+    assert state is not None
+    assert state.state == restore_state
+    assert state.attributes.get("unit_of_measurement") == restore_unit
 
 
 async def test_device_id(
