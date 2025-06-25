@@ -185,6 +185,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_WIND_DIRECTION],
         name="Daily forecast wind bearing",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     AemetSensorEntityDescription(
         entity_registry_enabled_default=False,
@@ -192,6 +193,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_WIND_DIRECTION],
         name="Hourly forecast wind bearing",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     AemetSensorEntityDescription(
         entity_registry_enabled_default=False,
@@ -335,6 +337,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         name="Wind bearing",
         native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_WIND_MAX_SPEED,
