@@ -29,8 +29,8 @@ class PlaystationNetworkSensorEntityDescription(SensorEntityDescription):
     """PlayStation Network sensor description."""
 
     value_fn: Callable[[PlaystationNetworkData], StateType | datetime]
-    entity_picture: str | None = None
     available_fn: Callable[[PlaystationNetworkData], bool] = lambda _: True
+    entity_picture: Callable[[PlaystationNetworkData], str | None] | str | None = None
 
 
 class PlaystationNetworkSensor(StrEnum):
@@ -54,6 +54,11 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
         value_fn=(
             lambda psn: psn.trophy_summary.trophy_level if psn.trophy_summary else None
         ),
+        entity_picture=(
+            lambda psn: f"https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/tier_{psn.trophy_summary.tier}.png"
+            if psn.trophy_summary
+            else None
+        ),
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.TROPHY_LEVEL_PROGRESS,
@@ -71,6 +76,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
+        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/platinum.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_GOLD,
@@ -80,6 +86,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
+        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/gold.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_SILVER,
@@ -89,6 +96,7 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
+        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/silver.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_BRONZE,
@@ -98,11 +106,22 @@ SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
             if psn.trophy_summary
             else None
         ),
+        entity_picture="https://cloud.rainbowcastle.de/public.php/dav/files/2cx3soJqfTCSPEf/bronze.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.ONLINE_ID,
         translation_key=PlaystationNetworkSensor.ONLINE_ID,
         value_fn=lambda psn: psn.username,
+        entity_picture=(
+            lambda psn: next(
+                (
+                    pic.get("url")
+                    for pic in psn.profile["personalDetail"].get("profilePictures")
+                    if pic.get("size") == "xl"
+                ),
+                None,
+            )
+        ),
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.LAST_ONLINE,
@@ -155,16 +174,13 @@ class PlaystationNetworkSensorEntity(
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
-        if self.entity_description.key is PlaystationNetworkSensor.ONLINE_ID and (
-            profile_pictures := self.coordinator.data.profile["personalDetail"].get(
-                "profilePictures"
-            )
-        ):
-            return next(
-                (pic.get("url") for pic in profile_pictures if pic.get("size") == "xl"),
-                None,
-            )
 
+        if (entity_picture := self.entity_description.entity_picture) is not None:
+            return (
+                entity_picture(self.coordinator.data)
+                if callable(entity_picture)
+                else entity_picture
+            )
         return super().entity_picture
 
     @property
