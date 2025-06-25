@@ -4245,9 +4245,7 @@ async def test_subentry_reconfigure_export_settings(
     subentry_id: str
     subentry: ConfigSubentry
     subentry_id, subentry = next(iter(config_entry.subentries.items()))
-    result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "device", subentry_id
-    )
+    result = await config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "summary_menu"
 
