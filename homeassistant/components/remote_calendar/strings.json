@@ -25,6 +25,9 @@
     }
   },
   "exceptions": {
+    "timeout": {
+      "message": "The connection timed out. See the debug log for additional details."
+    },
     "unable_to_fetch": {
       "message": "Unable to fetch calendar data. See the debug log for additional details."
     },

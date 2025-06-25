@@ -49,7 +49,13 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         try:
             res = await get_calendar(self._client, self._url)
             res.raise_for_status()
-        except (HTTPError, InvalidURL, TimeoutException) as err:
+        except TimeoutException as err:
+            _LOGGER.debug("%s: %s", self._url, str(err) or type(err).__name__)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+            ) from err
+        except (HTTPError, InvalidURL) as err:
             _LOGGER.debug("%s: %s", self._url, str(err) or type(err).__name__)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
