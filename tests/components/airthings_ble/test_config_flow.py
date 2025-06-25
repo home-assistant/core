@@ -149,7 +149,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Airthings Wave Plus"
+    assert result["title"] == "Airthings Wave Plus (2930123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
 
 
@@ -199,7 +199,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Airthings Wave Plus"
+    assert result["title"] == "Airthings Wave Plus (2930123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
 
 

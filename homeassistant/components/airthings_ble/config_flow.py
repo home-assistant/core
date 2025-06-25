@@ -152,13 +152,14 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             if discovery.device.firmware.need_firmware_upgrade:
                 return self.async_abort(reason="firmware_upgrade_required")
 
+            name = get_name(discovery.device)
             self.context["title_placeholders"] = {
-                "name": discovery.device.name,
+                "name": name,
             }
 
             self._discovered_device = discovery
 
-            return self.async_create_entry(title=discovery.device.name, data={})
+            return self.async_create_entry(title=name, data={})
 
         current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in list(async_discovered_service_info(self.hass)):
