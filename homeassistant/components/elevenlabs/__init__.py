@@ -20,7 +20,12 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_MODEL
 
-PLATFORMS: list[Platform] = [Platform.TTS]
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORMS: list[Platform] = [
+    Platform.STT,
+    Platform.TTS,
+]
 
 
 async def get_model_by_id(client: AsyncElevenLabs, model_id: str) -> Model | None:

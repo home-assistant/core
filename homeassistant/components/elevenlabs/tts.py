@@ -111,8 +111,8 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         self._voice_settings = voice_settings
 
         # Entity attributes
-        self._attr_unique_id = entry_id
-        self._attr_name = title
+        self._attr_unique_id = entry_id + "_TTS"
+        self._attr_name = title + " TTS"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
             manufacturer="ElevenLabs",

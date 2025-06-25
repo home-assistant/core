@@ -25,12 +25,14 @@ from .const import (
     CONF_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
+    CONF_STT_AUTO_LANGUAGE,
     CONF_STYLE,
     CONF_USE_SPEAKER_BOOST,
     CONF_VOICE,
     DEFAULT_MODEL,
     DEFAULT_SIMILARITY,
     DEFAULT_STABILITY,
+    DEFAULT_STT_AUTO_LANGUAGE,
     DEFAULT_STYLE,
     DEFAULT_USE_SPEAKER_BOOST,
     DOMAIN,
@@ -165,6 +167,12 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                             ]
                         )
                     ),
+                    vol.Optional(
+                        CONF_STT_AUTO_LANGUAGE,
+                        default=self.config_entry.options.get(
+                            CONF_STT_AUTO_LANGUAGE, DEFAULT_STT_AUTO_LANGUAGE
+                        ),
+                    ): bool,
                     vol.Required(CONF_CONFIGURE_VOICE, default=False): bool,
                 }
             ),
