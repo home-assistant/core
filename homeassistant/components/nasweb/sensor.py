@@ -17,7 +17,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config: NASwebConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up Sensor platform."""
