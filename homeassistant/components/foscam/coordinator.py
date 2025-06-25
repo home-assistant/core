@@ -1,6 +1,7 @@
 """The foscam coordinator object."""
 
 import asyncio
+from dataclasses import asdict, dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -13,6 +14,30 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, LOGGER
 
 type FoscamConfigEntry = ConfigEntry[FoscamCoordinator]
+
+
+@dataclass
+class FoscamDeviceInfo:
+    """A data class representing the current state and configuration of a Foscam camera device."""
+
+    dev_info: dict
+    product_info: dict
+
+    is_openir: int
+    is_flip: int
+    is_mirror: int
+
+    is_asleep: dict
+    is_openwhitelight: int
+    is_sirenalarm: int
+
+    volume: int
+    speakvolume: int
+    is_turnoffvolume: int
+    is_turnofflight: int
+
+    is_openwdr: int | None = None
+    is_openhdr: int | None = None
 
 
 class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -34,52 +59,91 @@ class FoscamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.session = session
 
-    def gather_all_configs(self):
+    def gather_all_configs(self) -> FoscamDeviceInfo:
         """Get all Foscam configurations."""
-        configs = {}
+        ret_dev_info, dev_info = self.session.get_dev_info()
+        dev_info = dev_info if ret_dev_info == 0 else {}
 
-        ret, dev_info = self.session.get_dev_info()
-        configs["dev_info"] = dev_info
+        ret_product_info, product_info = self.session.get_product_all_info()
+        product_info = product_info if ret_product_info == 0 else {}
 
-        ret, all_info = self.session.get_product_all_info()
-        configs["product_info"] = all_info
+        ret_ir, infra_led_config = self.session.get_infra_led_config()
+        is_openIr = infra_led_config["mode"] if ret_ir == 0 and infra_led_config else 0
 
-        ret, infra_led_config = self.session.get_infra_led_config()
-        configs["is_openIr"] = infra_led_config["mode"]
+        ret_mf, mirror_flip_setting = self.session.get_mirror_and_flip_setting()
+        is_Flip = (
+            mirror_flip_setting["isFlip"] if ret_mf == 0 and mirror_flip_setting else 0
+        )
+        is_Mirror = (
+            mirror_flip_setting["isMirror"]
+            if ret_mf == 0 and mirror_flip_setting
+            else 0
+        )
 
-        ret, mirror_flip_setting = self.session.get_mirror_and_flip_setting()
-        configs["is_Flip"] = mirror_flip_setting["isFlip"]
-        configs["is_Mirror"] = mirror_flip_setting["isMirror"]
+        ret_sleep, sleep_setting = self.session.is_asleep()
+        is_asleep = {"supported": ret_sleep == 0, "status": sleep_setting}
 
-        ret, sleep_setting = self.session.is_asleep()
-        configs["is_asleep"] = {"supported": ret == 0, "status": sleep_setting}
+        ret_wl, is_openWhiteLight = self.session.getWhiteLightBrightness()
+        is_openWhiteLight_val = (
+            is_openWhiteLight["enable"] if ret_wl == 0 and is_openWhiteLight else 0
+        )
 
-        ret, is_openWhiteLight = self.session.getWhiteLightBrightness()
-        configs["is_openWhiteLight"] = is_openWhiteLight["enable"]
+        ret_sc, is_sirenalarm = self.session.getSirenConfig()
+        is_sirenalarm_val = (
+            is_sirenalarm["sirenEnable"] if ret_sc == 0 and is_sirenalarm else 0
+        )
 
-        ret, is_sirenalarm = self.session.getSirenConfig()
-        configs["is_sirenalarm"] = is_sirenalarm["sirenEnable"]
+        ret_vol, Volume = self.session.getAudioVolume()
+        Volume_val = Volume["volume"] if ret_vol == 0 and Volume else 0
 
-        ret, Volume = self.session.getAudioVolume()
-        configs["Volume"] = Volume["volume"]
+        ret_sv, SpeakVolume = self.session.getSpeakVolume()
+        SpeakVolume_val = (
+            SpeakVolume["SpeakVolume"] if ret_sv == 0 and SpeakVolume else 0
+        )
 
-        ret, SpeakVolume = self.session.getSpeakVolume()
-        configs["SpeakVolume"] = SpeakVolume["SpeakVolume"]
+        ret_ves, is_TurnOffVolume = self.session.getVoiceEnableState()
+        is_TurnOffVolume_val = (
+            0 if (ret_ves == 0 and int(is_TurnOffVolume["isEnable"]) == 1) else 1
+        )
 
-        ret, is_TurnOffVolume = self.session.getVoiceEnableState()
-        configs["is_TurnOffVolume"] = 0 if int(is_TurnOffVolume["isEnable"]) == 1 else 1
+        ret_les, is_TurnOffLight = self.session.getLedEnableState()
+        is_TurnOffLight_val = (
+            0 if (ret_les == 0 and int(is_TurnOffLight["isEnable"]) == 1) else 1
+        )
 
-        ret, is_TurnOffLight = self.session.getLedEnableState()
-        configs["is_TurnOffLight"] = 0 if int(is_TurnOffLight["isEnable"]) == 1 else 1
-        if ((1 << 8) & int(all_info["reserve3"])) != 0:
-            ret, is_OpenWdr = self.session.getWdrMode()
-            configs["is_OpenWdr"] = is_OpenWdr["mode"]
+        is_OpenWdr = None
+        is_OpenHdr = None
+        if ((1 << 8) & int(product_info.get("reserve3", "0"))) != 0:
+            ret_wdr, is_OpenWdr_data = self.session.getWdrMode()
+            is_OpenWdr = (
+                is_OpenWdr_data["mode"] if ret_wdr == 0 and is_OpenWdr_data else None
+            )
         else:
-            ret, is_OpenHdr = self.session.getHdrMode()
-            configs["is_OpenHdr"] = is_OpenHdr["mode"]
-        return configs
+            ret_hdr, is_OpenHdr_data = self.session.getHdrMode()
+            is_OpenHdr = (
+                is_OpenHdr_data["mode"] if ret_hdr == 0 and is_OpenHdr_data else None
+            )
+
+        return FoscamDeviceInfo(
+            dev_info=dev_info,
+            product_info=product_info,
+            is_openir=is_openIr,
+            is_flip=is_Flip,
+            is_mirror=is_Mirror,
+            is_asleep=is_asleep,
+            is_openwhitelight=is_openWhiteLight_val,
+            is_sirenalarm=is_sirenalarm_val,
+            volume=Volume_val,
+            speakvolume=SpeakVolume_val,
+            is_turnoffvolume=is_TurnOffVolume_val,
+            is_turnofflight=is_TurnOffLight_val,
+            is_openwdr=is_OpenWdr,
+            is_openhdr=is_OpenHdr,
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(30):
-            return await self.hass.async_add_executor_job(self.gather_all_configs)
+            # 先执行 gather_all_configs 得到 FoscamDeviceInfo 实例
+            dev_info = await self.hass.async_add_executor_job(self.gather_all_configs)
+            return asdict(dev_info)

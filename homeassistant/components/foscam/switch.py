@@ -2,75 +2,316 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
 from .entity import FoscamEntity
 
-FLIP_SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key="is_Flip",
-    name="Flip Switch",
-    icon="mdi:flip-vertical",
-)
 
-MIRROR_SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key="is_Mirror",
-    name="Mirror Switch",
-    icon="mdi:mirror",
-)
+@dataclass(frozen=True)
+class FoscamSwitchEntityDescription(SwitchEntityDescription):
+    """A custom entity description that supports a turn_off function."""
 
-IR_SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key="is_openIr",
-    name="Ir switch",
-    icon="mdi:theme-light-dark",
-)
+    turn_off_fn: Callable[[FoscamGenericSwitch], Awaitable[None]] | None = None
+    turn_on_fn: Callable[[FoscamGenericSwitch], Awaitable[None]] | None = None
 
-SLEEP_SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key="is_asleep",
-    name="sleep switch",
-    icon="mdi:sleep",
-)
 
-WHITE_LIGHT_SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key="is_openWhiteLight",
-    name="WhiteLight switch",
-    icon="mdi:light-flood-down",
-)
+async def flip_off(switch: FoscamGenericSwitch) -> None:
+    """Disable vertical video flipping (flip mode) on the camera asynchronously.
 
-SIREN_ALARM_SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key="is_sirenalarm",
-    name="SirenAlarm switch",
-    icon="mdi:alarm-note",
-)
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
 
-TURN_OFF_VOLUME_SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key="is_TurnOffVolume",
-    name="TurnOffVolume switch",
-    icon="mdi:volume-off",
-)
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.flip_video, 0)
 
-LIGHT_STATUS_SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key="is_TurnOffLight",
-    name="TurnOffLight switch",
-    icon="mdi:lightbulb-fluorescent-tube",
-)
 
-HDR_SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key="is_OpenHdr",
-    name="Hdr switch",
-    icon="mdi:hdr",
-)
+async def mirror_off(switch: FoscamGenericSwitch) -> None:
+    """Disable horizontal video mirroring on the camera asynchronously.
 
-WDR_SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key="is_OpenWdr",
-    name="Wdr switch",
-    icon="mdi:alpha-w-box",
-)
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.mirror_video, 0)
+
+
+async def ir_off(switch: FoscamGenericSwitch) -> None:
+    """Turn off infrared LED lighting on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(
+        switch.coordinator.session.set_infra_led_config, 0
+    )
+    await switch.hass.async_add_executor_job(switch.coordinator.session.open_infra_led)
+
+
+async def wake_up_off(switch: FoscamGenericSwitch) -> None:
+    """Put the camera into sleep mode asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.wake_up)
+
+
+async def white_light_off(switch: FoscamGenericSwitch) -> None:
+    """Turn off the white light of the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.closeWhiteLight)
+
+
+async def siren_off(switch: FoscamGenericSwitch) -> None:
+    """Deactivate the camera's siren alarm asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(
+        switch.coordinator.session.setSirenConfig, 0, 100, 0
+    )
+
+
+async def volume_off(switch: FoscamGenericSwitch) -> None:
+    """Disable audio output (speaker) on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(
+        switch.coordinator.session.setVoiceEnableState, 1
+    )
+
+
+async def light_off(switch: FoscamGenericSwitch) -> None:
+    """Disable status LED indicator on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(
+        switch.coordinator.session.setLedEnableState, 1
+    )
+
+
+async def wdr_off(switch: FoscamGenericSwitch) -> None:
+    """Disable Wide Dynamic Range (WDR) mode on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.setWdrMode, 0)
+
+
+async def hdr_off(switch: FoscamGenericSwitch) -> None:
+    """Disable High Dynamic Range (HDR) mode on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.setHdrMode, 0)
+
+
+async def flip_on(switch: FoscamGenericSwitch) -> None:
+    """Enable vertical video flipping (flip mode) on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.flip_video, 1)
+
+
+async def mirror_on(switch: FoscamGenericSwitch) -> None:
+    """Enable horizontal video mirroring on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.mirror_video, 1)
+
+
+async def ir_on(switch: FoscamGenericSwitch) -> None:
+    """Turn on infrared LED lighting on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(
+        switch.coordinator.session.set_infra_led_config, 1
+    )
+    await switch.hass.async_add_executor_job(switch.coordinator.session.open_infra_led)
+
+
+async def wake_up_on(switch: FoscamGenericSwitch) -> None:
+    """Wake up the camera from sleep mode asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.sleep)
+
+
+async def white_light_on(switch: FoscamGenericSwitch) -> None:
+    """Turn on the white light of the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.openWhiteLight)
+
+
+async def siren_on(switch: FoscamGenericSwitch) -> None:
+    """Activate the camera's siren alarm asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(
+        switch.coordinator.session.setSirenConfig, 1, 100, 0
+    )
+
+
+async def volume_on(switch: FoscamGenericSwitch) -> None:
+    """Enable audio output (speaker) on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(
+        switch.coordinator.session.setVoiceEnableState, 0
+    )
+
+
+async def light_on(switch: FoscamGenericSwitch) -> None:
+    """Enable status LED indicator on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(
+        switch.coordinator.session.setLedEnableState, 0
+    )
+
+
+async def wdr_on(switch: FoscamGenericSwitch) -> None:
+    """Enable Wide Dynamic Range (WDR) mode on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.setWdrMode, 1)
+
+
+async def hdr_on(switch: FoscamGenericSwitch) -> None:
+    """Enable High Dynamic Range (HDR) mode on the camera asynchronously.
+
+    Args:
+        switch: The Foscam switch entity that provides access to the camera session.
+
+    """
+    await switch.hass.async_add_executor_job(switch.coordinator.session.setHdrMode, 1)
+
+
+SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
+    FoscamSwitchEntityDescription(
+        key="is_flip",
+        translation_key="flip_switch",
+        icon="mdi:flip-vertical",
+        turn_off_fn=flip_off,
+        turn_on_fn=flip_on,
+    ),
+    FoscamSwitchEntityDescription(
+        key="is_mirror",
+        translation_key="mirror_switch",
+        icon="mdi:mirror",
+        turn_off_fn=mirror_off,
+        turn_on_fn=mirror_on,
+    ),
+    FoscamSwitchEntityDescription(
+        key="is_openir",
+        translation_key="ir_switch",
+        icon="mdi:theme-light-dark",
+        turn_off_fn=ir_off,
+        turn_on_fn=ir_on,
+    ),
+    FoscamSwitchEntityDescription(
+        key="is_asleep",
+        translation_key="sleep_switch",
+        icon="mdi:sleep",
+        turn_off_fn=wake_up_off,
+        turn_on_fn=wake_up_on,
+    ),
+    FoscamSwitchEntityDescription(
+        key="is_openwhitelight",
+        translation_key="white_light_switch",
+        icon="mdi:light-flood-down",
+        turn_off_fn=white_light_off,
+        turn_on_fn=white_light_on,
+    ),
+    FoscamSwitchEntityDescription(
+        key="is_sirenalarm",
+        translation_key="siren_alarm_switch",
+        icon="mdi:alarm-note",
+        turn_off_fn=siren_off,
+        turn_on_fn=siren_on,
+    ),
+    FoscamSwitchEntityDescription(
+        key="is_turnoffvolume",
+        translation_key="turn_off_volume_switch",
+        icon="mdi:volume-off",
+        turn_off_fn=volume_off,
+        turn_on_fn=volume_on,
+    ),
+    FoscamSwitchEntityDescription(
+        key="is_turnofflight",
+        translation_key="light_status_switch",
+        icon="mdi:lightbulb-fluorescent-tube",
+        turn_off_fn=light_off,
+        turn_on_fn=light_on,
+    ),
+    FoscamSwitchEntityDescription(
+        key="is_openhdr",
+        translation_key="hdr_switch",
+        icon="mdi:hdr",
+        turn_off_fn=hdr_off,
+        turn_on_fn=hdr_on,
+    ),
+    FoscamSwitchEntityDescription(
+        key="is_openwdr",
+        translation_key="wdr_switch",
+        icon="mdi:alpha-w-box",
+        turn_off_fn=wdr_off,
+        turn_on_fn=wdr_on,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -83,159 +324,70 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     await coordinator.async_config_entry_first_refresh()
 
-    if coordinator.data["is_asleep"]["supported"]:
-        async_add_entities([FoscamGenericSwitch(coordinator, SLEEP_SWITCH_DESCRIPTION)])
-    if ((1 << 8) & int(coordinator.data["product_info"]["reserve3"])) != 0:
-        async_add_entities([FoscamGenericSwitch(coordinator, WDR_SWITCH_DESCRIPTION)])
-    else:
-        async_add_entities([FoscamGenericSwitch(coordinator, HDR_SWITCH_DESCRIPTION)])
-    async_add_entities(
-        [
-            FoscamGenericSwitch(coordinator, IR_SWITCH_DESCRIPTION),
-            FoscamGenericSwitch(coordinator, FLIP_SWITCH_DESCRIPTION),
-            FoscamGenericSwitch(coordinator, MIRROR_SWITCH_DESCRIPTION),
-            FoscamGenericSwitch(coordinator, WHITE_LIGHT_SWITCH_DESCRIPTION),
-            FoscamGenericSwitch(coordinator, SIREN_ALARM_SWITCH_DESCRIPTION),
-            FoscamGenericSwitch(coordinator, TURN_OFF_VOLUME_SWITCH_DESCRIPTION),
-            FoscamGenericSwitch(coordinator, LIGHT_STATUS_SWITCH_DESCRIPTION),
-        ]
-    )
+    entities = []
+
+    product_info = coordinator.data["product_info"]
+    reserve3 = product_info.get("reserve3", "0")
+
+    for description in SWITCH_DESCRIPTIONS:
+        if description.key == "is_asleep":
+            if not coordinator.data["is_asleep"]["supported"]:
+                continue
+        elif description.key == "is_OpenHdr":
+            if ((1 << 8) & int(reserve3)) != 0:
+                continue
+        elif description.key == "is_OpenWdr":
+            if ((1 << 8) & int(reserve3)) == 0:
+                continue
+
+        entities.append(FoscamGenericSwitch(coordinator, description))
+    async_add_entities(entities)
 
 
 class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
     """A generic switch class for Foscam entities."""
 
+    entity_description: FoscamSwitchEntityDescription
+
     def __init__(
         self,
         coordinator: FoscamCoordinator,
-        description: SwitchEntityDescription,
+        description: FoscamSwitchEntityDescription,
     ) -> None:
         """Initialize the generic switch."""
-        if coordinator.config_entry is not None:
-            if coordinator.config_entry.entry_id is not None:
-                super().__init__(coordinator, coordinator.config_entry.entry_id)
-                self.entity_description = description
-                self._attr_unique_id = (
-                    f"{coordinator.config_entry.entry_id}_{description.key}"
-                )
-            else:
-                return
-        else:
-            return
-        if coordinator.config_entry.entry_id is not None:
-            self._attr_unique_id = (
-                f"{coordinator.config_entry.entry_id}_{description.key}"
-            )
-        else:
-            return
-        if self.entity_description.key == "is_asleep":
+        config_entry = coordinator.config_entry
+        if config_entry is None:
+            raise ValueError("config_entry must not be None")
+
+        super().__init__(coordinator, config_entry_id=config_entry.entry_id)
+        self.entity_description = description
+        self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
+
+        if description.key == "is_asleep":
             self._state = self.coordinator.data["is_asleep"]["status"]
         else:
-            self._state = self.coordinator.data.get(self.entity_description.key, False)
+            self._state = self.coordinator.data.get(self.entity_description.key)
+
+        key = (
+            description.translation_key or description.key
+        )  # fallback to key if translation_key is None
+        self._attr_name = key.replace("_", " ").title()
 
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return int(self._state) != 0
+        return bool(int(self._state or 0))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
-        if self.entity_description.key == "is_Flip":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.flip_video, 0
-            )
-        elif self.entity_description.key == "is_Mirror":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.mirror_video, 0
-            )
-        elif self.entity_description.key == "is_openIr":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.set_infra_led_config, 0
-            )
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.open_infra_led
-            )
-        elif self.entity_description.key == "is_asleep":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.wake_up, 0
-            )
-        elif self.entity_description.key == "is_openWhiteLight":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.closeWhiteLight
-            )
-        elif self.entity_description.key == "is_sirenalarm":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.setSirenConfig, 0, 100, 0
-            )
-        elif self.entity_description.key == "is_TurnOffVolume":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.setVoiceEnableState, 1
-            )
-        elif self.entity_description.key == "is_TurnOffLight":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.setLedEnableState, 1
-            )
-        elif self.entity_description.key == "is_OpenWdr":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.setWdrMode, 0
-            )
-        elif self.entity_description.key == "is_OpenHdr":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.setHdrMode, 0
-            )
-        if ret != 0:
-            raise HomeAssistantError(f"Error turning off: {ret}")
-        self._state = False
+        if self.entity_description.turn_off_fn:
+            await self.entity_description.turn_off_fn(self)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity."""
-        if self.entity_description.key == "is_Flip":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.flip_video, 1
-            )
-        elif self.entity_description.key == "is_Mirror":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.mirror_video, 1
-            )
-        elif self.entity_description.key == "is_openIr":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.set_infra_led_config, 1
-            )
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.open_infra_led
-            )
-        elif self.entity_description.key == "is_asleep":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.sleep
-            )
-        elif self.entity_description.key == "is_openWhiteLight":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.openWhiteLight
-            )
-        elif self.entity_description.key == "is_sirenalarm":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.setSirenConfig, 1, 100, 0
-            )
-        elif self.entity_description.key == "is_TurnOffVolume":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.setVoiceEnableState, 0
-            )
-        elif self.entity_description.key == "is_TurnOffLight":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.setLedEnableState, 0
-            )
-        elif self.entity_description.key == "is_OpenWdr":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.setWdrMode, 1
-            )
-        elif self.entity_description.key == "is_OpenHdr":
-            ret, _ = await self.hass.async_add_executor_job(
-                self.coordinator.session.setHdrMode, 1
-            )
-        if ret != 0:
-            raise HomeAssistantError(f"Error turning on: {ret}")
-        self._state = True
+        if self.entity_description.turn_on_fn:
+            await self.entity_description.turn_on_fn(self)
         await self.coordinator.async_request_refresh()
 
     @callback
@@ -244,5 +396,5 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
         if self.entity_description.key == "is_asleep":
             self._state = self.coordinator.data["is_asleep"]["status"]
         else:
-            self._state = self.coordinator.data.get(self.entity_description.key, False)
+            self._state = self.coordinator.data.get(self.entity_description.key)
         self.async_write_ha_state()
