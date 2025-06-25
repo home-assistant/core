@@ -7,7 +7,6 @@ from functools import partial
 from typing import Any
 
 from psnawp_api import PSNAWP
-from psnawp_api.core.psnawp_exceptions import PSNAWPNotFoundError
 from psnawp_api.models.client import Client
 from psnawp_api.models.trophies import PlatformType
 from psnawp_api.models.user import User
@@ -120,32 +119,31 @@ class PlaystationNetwork:
 
         if self.legacy_profile:
             presence = self.legacy_profile["profile"].get("presences", [])
-            game_title_info = presence[0] if presence else {}
-            session = SessionData()
+            if (game_title_info := presence[0] if presence else {}) and game_title_info[
+                "onlineStatus"
+            ] == "online":
+                data.available = True
 
-            # If primary console isn't online, check legacy platforms for status
-            if not data.available:
-                data.available = game_title_info["onlineStatus"] == "online"
+                platform = PlatformType(game_title_info["platform"])
 
-            if "npTitleId" in game_title_info:
-                session.title_id = game_title_info["npTitleId"]
-                session.title_name = game_title_info["titleName"]
-                session.format = game_title_info["platform"]
-                session.platform = game_title_info["platform"]
-                session.status = game_title_info["onlineStatus"]
-                if PlatformType(session.format) is PlatformType.PS4:
-                    session.media_image_url = game_title_info["npTitleIconUrl"]
-                elif PlatformType(session.format) is PlatformType.PS3:
-                    try:
-                        title = self.psn.game_title(
-                            session.title_id, platform=PlatformType.PS3, account_id="me"
-                        )
-                    except PSNAWPNotFoundError:
-                        session.media_image_url = None
+                if platform is PlatformType.PS4:
+                    media_image_url = game_title_info.get("npTitleIconUrl")
+                elif platform is PlatformType.PS3 and game_title_info.get("npTitleId"):
+                    media_image_url = self.psn.game_title(
+                        game_title_info["npTitleId"],
+                        platform=PlatformType.PS3,
+                        account_id="me",
+                        np_communication_id="",
+                    ).get_title_icon_url()
+                else:
+                    media_image_url = None
 
-                    if title:
-                        session.media_image_url = title.get_title_icon_url()
-
-            if game_title_info["onlineStatus"] == "online":
-                data.active_sessions[session.platform] = session
+                data.active_sessions[platform] = SessionData(
+                    platform=platform,
+                    title_id=game_title_info.get("npTitleId"),
+                    title_name=game_title_info.get("titleName"),
+                    format=platform,
+                    media_image_url=media_image_url,
+                    status=game_title_info["onlineStatus"],
+                )
         return data
