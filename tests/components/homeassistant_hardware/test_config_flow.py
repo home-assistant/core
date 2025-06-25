@@ -139,7 +139,7 @@ class FakeFirmwareOptionsFlowHandler(BaseFirmwareOptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Install Zigbee firmware."""
-        return await self.async_step_confirm_zigbee()
+        return await self.async_step_pre_confirm_zigbee()
 
     async def async_step_install_thread_firmware(
         self, user_input: dict[str, Any] | None = None
