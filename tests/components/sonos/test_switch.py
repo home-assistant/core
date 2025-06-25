@@ -1,16 +1,20 @@
 """Tests for the Sonos Alarm switch platform."""
 
 from copy import copy
-from datetime import timedelta
+import datetime as dt
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER
+from homeassistant.components.sonos.const import (
+    ATTR_SCHEDULED_TODAY,
+    DATA_SONOS_DISCOVERY_MANAGER,
+)
 from homeassistant.components.sonos.switch import (
     ATTR_DURATION,
     ATTR_ID,
     ATTR_INCLUDE_LINKED_ZONES,
+    ATTR_NEXT_TRIGGER,
     ATTR_PLAY_MODE,
     ATTR_RECURRENCE,
     ATTR_VOLUME,
@@ -67,6 +71,23 @@ async def test_switch_attributes(
     assert alarm_state.attributes.get(ATTR_VOLUME) == 0.25
     assert alarm_state.attributes.get(ATTR_PLAY_MODE) == "SHUFFLE_NOREPEAT"
     assert not alarm_state.attributes.get(ATTR_INCLUDE_LINKED_ZONES)
+
+    alarm_time = dt_util.parse_time(alarm_state.attributes.get(ATTR_TIME))
+    now = dt_util.now()
+    next_alarm_delta_days = 0
+    if alarm_time <= now.time():
+        next_alarm_delta_days = 1
+        assert not alarm_state.attributes.get(ATTR_SCHEDULED_TODAY)
+    else:
+        assert alarm_state.attributes.get(ATTR_SCHEDULED_TODAY)
+
+    assert dt_util.parse_datetime(
+        alarm_state.attributes.get(ATTR_NEXT_TRIGGER)
+    ) == dt.datetime.combine(
+        now + dt.timedelta(days=next_alarm_delta_days),
+        alarm_time,
+        now.tzinfo,
+    )
 
     surround_music_full_volume = entity_registry.entities[
         "switch.zone_a_surround_music_full_volume"
@@ -125,7 +146,7 @@ async def test_switch_attributes(
     with patch.object(hass.data[DATA_SONOS_DISCOVERY_MANAGER], "async_shutdown") as m:
         async_fire_time_changed(
             hass,
-            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+            dt_util.utcnow() + dt.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
         )
         await hass.async_block_till_done(wait_background_tasks=True)
         assert m.called

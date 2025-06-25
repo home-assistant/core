@@ -667,6 +667,22 @@ def alarm_clock_fixture_extended() -> SonosMockAlarmClock:
     )
 
 
+@pytest.fixture(name="alarm_clock_disabled")
+def alarm_clock_fixture_disabled() -> SonosMockAlarmClock:
+    """Create alarmClock fixture."""
+    return SonosMockAlarmClock(
+        {
+            "CurrentAlarmListVersion": "RINCON_test:14",
+            "CurrentAlarmList": "<Alarms>"
+            '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+            'Enabled="0" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
+            'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+            'IncludeLinkedZones="0"/>'
+            "</Alarms>",
+        }
+    )
+
+
 @pytest.fixture(name="speaker_model")
 def speaker_model_fixture(request: pytest.FixtureRequest):
     """Create fixture for the speaker model."""
