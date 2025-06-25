@@ -885,16 +885,16 @@ async def test_if_fires_using_weekday_single(
     service_calls: list[ServiceCall],
 ) -> None:
     """Test for firing on a specific weekday."""
-    # Set time to Monday at 5:00:00
-    monday = dt_util.now().replace(hour=5, minute=0, second=0, microsecond=0)
-    # Find the next Monday
-    days_ahead = 0 - monday.weekday()  # Monday is 0
-    if days_ahead <= 0:  # Target day already happened this week
-        days_ahead += 7
-    monday = monday + timedelta(days=days_ahead)
+    # Freeze time to Monday, January 2, 2023 at 4:59:00
+    now = dt_util.now()
+    monday_before_trigger = now.replace(
+        year=2023, month=1, day=2, hour=4, minute=59, second=0, microsecond=0
+    )
+    monday_trigger = now.replace(
+        year=2023, month=1, day=2, hour=5, minute=0, second=0, microsecond=0
+    )
 
-    time_before_trigger = monday - timedelta(minutes=1)
-    freezer.move_to(time_before_trigger)
+    freezer.move_to(monday_before_trigger)
 
     assert await async_setup_component(
         hass,
@@ -914,15 +914,17 @@ async def test_if_fires_using_weekday_single(
     await hass.async_block_till_done()
 
     # Fire the trigger on Monday
-    async_fire_time_changed(hass, monday + timedelta(seconds=1))
+    async_fire_time_changed(hass, monday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
 
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "time - Monday"
 
     # Fire on Tuesday at the same time - should not trigger
-    tuesday = monday + timedelta(days=1)
-    async_fire_time_changed(hass, tuesday + timedelta(seconds=1))
+    tuesday_trigger = now.replace(
+        year=2023, month=1, day=3, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
 
     # Should still be only 1 call
@@ -935,16 +937,13 @@ async def test_if_fires_using_weekday_multiple(
     service_calls: list[ServiceCall],
 ) -> None:
     """Test for firing on multiple weekdays."""
-    # Set time to Monday at 5:00:00
-    monday = dt_util.now().replace(hour=5, minute=0, second=0, microsecond=0)
-    # Find the next Monday
-    days_ahead = 0 - monday.weekday()  # Monday is 0
-    if days_ahead <= 0:  # Target day already happened this week
-        days_ahead += 7
-    monday = monday + timedelta(days=days_ahead)
+    # Freeze time to Monday, January 2, 2023 at 4:59:00
+    now = dt_util.now()
+    monday_before_trigger = now.replace(
+        year=2023, month=1, day=2, hour=4, minute=59, second=0, microsecond=0
+    )
 
-    time_before_trigger = monday - timedelta(minutes=1)
-    freezer.move_to(time_before_trigger)
+    freezer.move_to(monday_before_trigger)
 
     assert await async_setup_component(
         hass,
@@ -968,27 +967,36 @@ async def test_if_fires_using_weekday_multiple(
     await hass.async_block_till_done()
 
     # Fire on Monday - should trigger
-    async_fire_time_changed(hass, monday + timedelta(seconds=1))
+    monday_trigger = now.replace(
+        year=2023, month=1, day=2, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, monday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert "Monday" in service_calls[0].data["some"]
 
     # Fire on Tuesday - should not trigger
-    tuesday = monday + timedelta(days=1)
-    async_fire_time_changed(hass, tuesday + timedelta(seconds=1))
+    tuesday_trigger = now.replace(
+        year=2023, month=1, day=3, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(service_calls) == 1
 
     # Fire on Wednesday - should trigger
-    wednesday = monday + timedelta(days=2)
-    async_fire_time_changed(hass, wednesday + timedelta(seconds=1))
+    wednesday_trigger = now.replace(
+        year=2023, month=1, day=4, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, wednesday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert "Wednesday" in service_calls[1].data["some"]
 
     # Fire on Friday - should trigger
-    friday = monday + timedelta(days=4)
-    async_fire_time_changed(hass, friday + timedelta(seconds=1))
+    friday_trigger = now.replace(
+        year=2023, month=1, day=6, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, friday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(service_calls) == 3
     assert "Friday" in service_calls[2].data["some"]
@@ -1006,13 +1014,14 @@ async def test_if_fires_using_weekday_with_entity(
         {"input_datetime": {"trigger": {"has_date": False, "has_time": True}}},
     )
 
-    # Set time to Monday at 5:00:00
-    monday = dt_util.now().replace(hour=5, minute=0, second=0, microsecond=0)
-    # Find the next Monday
-    days_ahead = 0 - monday.weekday()  # Monday is 0
-    if days_ahead <= 0:  # Target day already happened this week
-        days_ahead += 7
-    monday = monday + timedelta(days=days_ahead)
+    # Freeze time to Monday, January 2, 2023 at 4:59:00
+    now = dt_util.now()
+    monday_before_trigger = now.replace(
+        year=2023, month=1, day=2, hour=4, minute=59, second=0, microsecond=0
+    )
+    monday_trigger = now.replace(
+        year=2023, month=1, day=2, hour=5, minute=0, second=0, microsecond=0
+    )
 
     await hass.services.async_call(
         "input_datetime",
@@ -1024,8 +1033,7 @@ async def test_if_fires_using_weekday_with_entity(
         blocking=True,
     )
 
-    time_before_trigger = monday - timedelta(minutes=1)
-    freezer.move_to(time_before_trigger)
+    freezer.move_to(monday_before_trigger)
 
     assert await async_setup_component(
         hass,
@@ -1050,7 +1058,7 @@ async def test_if_fires_using_weekday_with_entity(
     await hass.async_block_till_done()
 
     # Fire on Monday - should trigger
-    async_fire_time_changed(hass, monday + timedelta(seconds=1))
+    async_fire_time_changed(hass, monday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
     automation_calls = [call for call in service_calls if call.domain == "test"]
     assert len(automation_calls) == 1
@@ -1058,8 +1066,10 @@ async def test_if_fires_using_weekday_with_entity(
     assert automation_calls[0].data["entity"] == "input_datetime.trigger"
 
     # Fire on Tuesday - should not trigger
-    tuesday = monday + timedelta(days=1)
-    async_fire_time_changed(hass, tuesday + timedelta(seconds=1))
+    tuesday_trigger = now.replace(
+        year=2023, month=1, day=3, hour=5, minute=0, second=0, microsecond=0
+    )
+    async_fire_time_changed(hass, tuesday_trigger + timedelta(seconds=1))
     await hass.async_block_till_done()
     automation_calls = [call for call in service_calls if call.domain == "test"]
     assert len(automation_calls) == 1
