@@ -74,7 +74,7 @@ rules:
   stale-devices:
     status: exempt
     comment: |
-      No dynamic devices possible.
+      Devices are handpicked. See dynamic-devices.
 
   # Platinum
   async-dependency: done
