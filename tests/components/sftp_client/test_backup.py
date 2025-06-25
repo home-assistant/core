@@ -195,6 +195,37 @@ async def test_agents_upload(
     assert sftp_client.client.open.call_count == 2
 
 
+async def test_agents_upload_client_none(
+    hass_client: ClientSessionGenerator,
+    sftp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test agent upload backup."""
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        sftp_client.client = None
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert sftp_client.async_connect.call_count == 2
+
+
 async def test_agents_download(
     hass_client: ClientSessionGenerator,
     sftp_client: AsyncMock,
@@ -307,6 +338,38 @@ async def test_delete_error(
     assert response["success"]
     assert response["result"] == {
         "agent_errors": {f"{DOMAIN}.{mock_config_entry.entry_id}": error}
+    }
+
+
+async def test_delete_client_none(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    sftp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error during delete."""
+
+    with patch(
+        "homeassistant.components.sftp_client.backup.SFTPClientConfigEntryBackupAgent._find_backup_by_id",
+        new_callable=AsyncMock,
+    ) as mock_find_backup:
+        mock_find_backup.return_value = AgentBackup.from_dict(BACKUP_METADATA)
+        sftp_client.client = None
+        client = await hass_ws_client(hass)
+
+        await client.send_json_auto_id(
+            {
+                "type": "backup/delete",
+                "backup_id": BACKUP_METADATA["backup_id"],
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agent_errors": {
+            f"{DOMAIN}.{mock_config_entry.entry_id}": "Failed to connect to SFTP server without a client"
+        }
     }
 
 
