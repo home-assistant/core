@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2025.7.0.dev0"
+version = "2025.8.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -450,7 +450,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
   "error::sqlalchemy.exc.SAWarning",
-  "error:usefixtures\\(\\) in .* without arguments has no effect:UserWarning",  # pytest
+  "error:usefixtures\\(\\) in .* without arguments has no effect:UserWarning", # pytest
 
   # -- HomeAssistant - aiohttp
   # Overwrite web.Application to pass a custom default argument to _make_request
