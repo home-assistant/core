@@ -245,6 +245,7 @@ class OlarmBinarySensor(BinarySensorEntity):
         self.link_id = (
             link_id  # only used for olarm LINKs to track which LINK as can have upto 8
         )
+        self._unsubscribe_dispatcher = None
 
         # set state if zone is active[a] or closed[c] or bypassed[b]
         if (
@@ -271,9 +272,16 @@ class OlarmBinarySensor(BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register the signal listener when the entity is added."""
-        async_dispatcher_connect(
+        await super().async_added_to_hass()
+        self._unsubscribe_dispatcher = async_dispatcher_connect(
             self.hass, "olarm_mqtt_update", self._handle_mqtt_update
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from dispatcher when entity is removed."""
+        if self._unsubscribe_dispatcher:
+            self._unsubscribe_dispatcher()
+        await super().async_will_remove_from_hass()
 
     def _handle_mqtt_update(self, device_id, device_state, device_links, device_io):
         """Handle state updates from MQTT messages."""

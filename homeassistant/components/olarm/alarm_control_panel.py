@@ -83,6 +83,7 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
         self.area_index = area_index
         self.area_state = area_state
         self.area_label = area_label
+        self._unsubscribe_dispatcher = None
 
         # handle areas_state if disarm, stay, sleep, alarm etc..
         if self.area_state in ("disarm", "notready"):
@@ -104,9 +105,16 @@ class OlarmAlarmControlPanel(AlarmControlPanelEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register the signal listener when the entity is added."""
-        async_dispatcher_connect(
+        await super().async_added_to_hass()
+        self._unsubscribe_dispatcher = async_dispatcher_connect(
             self.hass, "olarm_mqtt_update", self._handle_mqtt_update
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from dispatcher when entity is removed."""
+        if self._unsubscribe_dispatcher:
+            self._unsubscribe_dispatcher()
+        await super().async_will_remove_from_hass()
 
     def _handle_mqtt_update(
         self,
