@@ -276,7 +276,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="odometer",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     # recharge-status endpoint
     VolvoSensorDescription(
@@ -317,23 +317,22 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
 
 
 async def async_setup_entry(
-    _: HomeAssistant,
+    hass: HomeAssistant,
     entry: VolvoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
 
     coordinators = entry.runtime_data
+    entities = [
+        VolvoSensor(coordinator, description)
+        for coordinator in coordinators
+        for description in _DESCRIPTIONS
+        if description.api_field in coordinator.data
+        and description.available_fn(coordinator.vehicle)
+    ]
 
-    async_add_entities(
-        [
-            VolvoSensor(coordinator, description)
-            for coordinator in coordinators
-            for description in _DESCRIPTIONS
-            if description.api_field in coordinator.data
-            and description.available_fn(coordinator.vehicle)
-        ]
-    )
+    async_add_entities(entities)
 
 
 class VolvoSensor(VolvoEntity, SensorEntity):
