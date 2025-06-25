@@ -29,7 +29,10 @@ from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_PICTURE
-from .template_entity import TemplateEntity, make_template_entity_common_schema
+from .template_entity import (
+    TemplateEntity,
+    make_template_entity_common_modern_attributes_schema,
+)
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +46,7 @@ IMAGE_SCHEMA = vol.Schema(
         vol.Required(CONF_URL): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
-).extend(make_template_entity_common_schema(DEFAULT_NAME).schema)
+).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
 
 
 IMAGE_CONFIG_SCHEMA = vol.Schema(

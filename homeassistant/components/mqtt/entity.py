@@ -640,8 +640,7 @@ async def cleanup_device_registry(
     entities, triggers or tags.
     """
     # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from . import device_trigger, tag
+    from . import device_trigger, tag  # noqa: PLC0415
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
