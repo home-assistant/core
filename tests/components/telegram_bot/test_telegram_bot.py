@@ -677,13 +677,35 @@ async def test_send_message_with_config_entry(
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # test: send message to invalid chat id
+
+    with pytest.raises(HomeAssistantError) as err:
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
+                ATTR_MESSAGE: "mock message",
+                ATTR_TARGET: 1,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    await hass.async_block_till_done()
+
+    assert err.value.translation_key == "not_allowed_chat_ids"
+    assert err.value.translation_placeholders["chat_ids"] == "1"
+    assert err.value.translation_placeholders["bot_name"] == "Mock Title"
+
+    # test: send message to valid chat id
+
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
         {
             CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
             ATTR_MESSAGE: "mock message",
-            ATTR_TARGET: 1,
+            ATTR_TARGET: 123456,
         },
         blocking=True,
         return_response=True,

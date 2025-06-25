@@ -289,24 +289,21 @@ class TelegramNotificationService:
             inline_message_id = msg_data["inline_message_id"]
         return message_id, inline_message_id
 
-    def _get_target_chat_ids(self, target: Any) -> list[int]:
+    def _get_target_chat_ids(self, target: int | list[int] | None) -> list[int]:
         """Validate chat_id targets or return default target (first).
 
         :param target: optional list of integers ([12234, -12345])
         :return list of chat_id targets (integers)
         """
         allowed_chat_ids: list[int] = self._get_allowed_chat_ids()
-        default_user: int = allowed_chat_ids[0]
-        if target is not None:
-            if isinstance(target, int):
-                target = [target]
-            chat_ids = [t for t in target if t in allowed_chat_ids]
-            if chat_ids:
-                return chat_ids
-            _LOGGER.warning(
-                "Disallowed targets: %s, using default: %s", target, default_user
-            )
-        return [default_user]
+
+        if target is None:
+            return [allowed_chat_ids[0]]
+
+        if isinstance(target, int):
+            return [target]
+
+        return [t for t in target if t in allowed_chat_ids]
 
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
@@ -828,7 +825,7 @@ class TelegramNotificationService:
 
     async def leave_chat(
         self,
-        chat_id: Any = None,
+        chat_id: int | None = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> Any:
@@ -841,8 +838,8 @@ class TelegramNotificationService:
 
     async def set_message_reaction(
         self,
-        chat_id: int,
         reaction: str,
+        chat_id: int | None = None,
         is_big: bool = False,
         context: Context | None = None,
         **kwargs: dict[str, Any],

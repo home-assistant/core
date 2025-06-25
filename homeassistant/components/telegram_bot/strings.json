@@ -895,6 +895,9 @@
     "missing_allowed_chat_ids": {
       "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
     },
+    "not_allowed_chat_ids": {
+      "message": "Invalid targets: {chat_ids}. Please add the chat IDs for {bot_name} first."
+    },
     "missing_input": {
       "message": "{field} is required."
     },

@@ -29,6 +29,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
+    HomeAssistantError,
     ServiceValidationError,
 )
 from homeassistant.helpers import config_validation as cv
@@ -402,12 +403,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 msgtype, context=service.context, **kwargs
             )
 
-        if service.return_response and messages:
+        if service.return_response and messages is not None:
+            target: list[int] | None = service.data.get(ATTR_TARGET)
+            if target is not None:
+                not_allowed_chat_ids = [
+                    chat_id for chat_id in target if chat_id not in messages
+                ]
+                if not_allowed_chat_ids:
+                    raise HomeAssistantError(
+                        f"Invalid targets: {not_allowed_chat_ids}",
+                        translation_domain=DOMAIN,
+                        translation_key="not_allowed_chat_ids",
+                        translation_placeholders={
+                            "chat_ids": ", ".join(
+                                [str(i) for i in not_allowed_chat_ids]
+                            ),
+                            "bot_name": config_entry.title,
+                        },
+                    )
+
             return {
                 "chats": [
                     {"chat_id": cid, "message_id": mid} for cid, mid in messages.items()
                 ]
             }
+
         return None
 
     # Register notification services
