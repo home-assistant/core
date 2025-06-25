@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from google import genai
 from google.genai.errors import APIError, ClientError
@@ -15,12 +14,14 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -45,6 +46,7 @@ from .const import (
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
+    DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -66,7 +68,7 @@ STEP_API_DATA_SCHEMA = vol.Schema(
 
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
-    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
     CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
 }
 
@@ -90,7 +92,7 @@ async def validate_input(data: dict[str, Any]) -> None:
 class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Generative AI Conversation."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_api(
         self, user_input: dict[str, Any] | None = None
@@ -98,6 +100,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(user_input)
             try:
                 await validate_input(user_input)
             except (APIError, Timeout) as err:
@@ -117,7 +120,14 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title="Google Generative AI",
                     data=user_input,
-                    options=RECOMMENDED_OPTIONS,
+                    subentries=[
+                        {
+                            "subentry_type": "conversation",
+                            "data": RECOMMENDED_OPTIONS,
+                            "title": DEFAULT_CONVERSATION_NAME,
+                            "unique_id": None,
+                        }
+                    ],
                 )
         return self.async_show_form(
             step_id="api",
@@ -156,41 +166,72 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    @staticmethod
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
-        """Create the options flow."""
-        return GoogleGenerativeAIOptionsFlow(config_entry)
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {"conversation": ConversationSubentryFlowHandler}
 
 
-class GoogleGenerativeAIOptionsFlow(OptionsFlow):
-    """Google Generative AI config flow options handler."""
+class ConversationSubentryFlowHandler(ConfigSubentryFlow):
+    """Flow for managing conversation subentries."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.last_rendered_recommended = config_entry.options.get(
-            CONF_RECOMMENDED, False
-        )
-        self._genai_client = config_entry.runtime_data
+    last_rendered_recommended = False
 
-    async def async_step_init(
+    @property
+    def _genai_client(self) -> genai.Client:
+        """Return the Google Generative AI client."""
+        return self._get_entry().runtime_data
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == "user"
+
+    async def async_step_set_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
+    ) -> SubentryFlowResult:
+        """Set conversation options."""
+        # abort if entry is not loaded
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
         errors: dict[str, str] = {}
 
-        if user_input is not None:
+        if user_input is None:
+            if self._is_new:
+                options = RECOMMENDED_OPTIONS.copy()
+            else:
+                # If this is a reconfiguration, we need to copy the existing options
+                # so that we can show the current values in the form.
+                options = self._get_reconfigure_subentry().data.copy()
+
+            self.last_rendered_recommended = cast(
+                bool, options.get(CONF_RECOMMENDED, False)
+            )
+
+        else:
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
                 if not user_input.get(CONF_LLM_HASS_API):
                     user_input.pop(CONF_LLM_HASS_API, None)
+                # Don't allow to save options that enable the Google Seearch tool with an Assist API
                 if not (
                     user_input.get(CONF_LLM_HASS_API)
                     and user_input.get(CONF_USE_GOOGLE_SEARCH_TOOL, False) is True
                 ):
-                    # Don't allow to save options that enable the Google Seearch tool with an Assist API
-                    return self.async_create_entry(title="", data=user_input)
+                    if self._is_new:
+                        return self.async_create_entry(
+                            title=user_input.pop(CONF_NAME),
+                            data=user_input,
+                        )
+
+                    return self.async_update_and_abort(
+                        self._get_entry(),
+                        self._get_reconfigure_subentry(),
+                        data=user_input,
+                    )
                 errors[CONF_USE_GOOGLE_SEARCH_TOOL] = "invalid_google_search_option"
 
             # Re-render the options again, now with the recommended options shown/hidden
@@ -199,15 +240,19 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
             options = user_input
 
         schema = await google_generative_ai_config_option_schema(
-            self.hass, options, self._genai_client
+            self.hass, self._is_new, options, self._genai_client
         )
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(schema), errors=errors
+            step_id="set_options", data_schema=vol.Schema(schema), errors=errors
         )
+
+    async_step_reconfigure = async_step_set_options
+    async_step_user = async_step_set_options
 
 
 async def google_generative_ai_config_option_schema(
     hass: HomeAssistant,
+    is_new: bool,
     options: Mapping[str, Any],
     genai_client: genai.Client,
 ) -> dict:
@@ -224,23 +269,32 @@ async def google_generative_ai_config_option_schema(
     ):
         suggested_llm_apis = [suggested_llm_apis]
 
-    schema = {
-        vol.Optional(
-            CONF_PROMPT,
-            description={
-                "suggested_value": options.get(
-                    CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                )
-            },
-        ): TemplateSelector(),
-        vol.Optional(
-            CONF_LLM_HASS_API,
-            description={"suggested_value": suggested_llm_apis},
-        ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
-        vol.Required(
-            CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
-        ): bool,
-    }
+    if is_new:
+        schema: dict[vol.Required | vol.Optional, Any] = {
+            vol.Required(CONF_NAME, default=DEFAULT_CONVERSATION_NAME): str,
+        }
+    else:
+        schema = {}
+
+    schema.update(
+        {
+            vol.Optional(
+                CONF_PROMPT,
+                description={
+                    "suggested_value": options.get(
+                        CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                    )
+                },
+            ): TemplateSelector(),
+            vol.Optional(
+                CONF_LLM_HASS_API,
+                description={"suggested_value": suggested_llm_apis},
+            ): SelectSelector(SelectSelectorConfig(options=hass_apis, multiple=True)),
+            vol.Required(
+                CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False)
+            ): bool,
+        }
+    )
 
     if options.get(CONF_RECOMMENDED):
         return schema

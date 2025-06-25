@@ -53,6 +53,7 @@
         "email": "Email",
         "host": "Host",
         "ip": "IP address",
+        "implementation": "Application Credentials",
         "language": "Language",
         "latitude": "Latitude",
         "llm_hass_api": "Control Home Assistant",
@@ -71,7 +72,8 @@
         "verify_ssl": "Verify SSL certificate"
       },
       "description": {
-        "confirm_setup": "Do you want to start setup?"
+        "confirm_setup": "Do you want to start setup?",
+        "implementation": "The credentials you want to use to authenticate."
       },
       "error": {
         "cannot_connect": "Failed to connect",
