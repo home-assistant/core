@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 7
+MINOR_VERSION: Final = 8
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -40,6 +40,7 @@ PLATFORM_FORMAT: Final = "{platform}.{domain}"
 class Platform(StrEnum):
     """Available entity platforms."""
 
+    AI_TASK = "ai_task"
     AIR_QUALITY = "air_quality"
     ALARM_CONTROL_PANEL = "alarm_control_panel"
     ASSIST_SATELLITE = "assist_satellite"
@@ -562,7 +563,7 @@ ATTR_STATE: Final = "state"
 ATTR_EDITABLE: Final = "editable"
 ATTR_OPTION: Final = "option"
 
-# The entity has been restored with restore state
+# The entity state has been partially restored by the entity registry
 ATTR_RESTORED: Final = "restored"
 
 # Bitfield of supported component features for the entity

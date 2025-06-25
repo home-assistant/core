@@ -11,7 +11,7 @@
           File(name='doorbell_snapshot.jpg', display_name=None, mime_type=None, size_bytes=None, create_time=None, expiration_time=None, update_time=None, sha256_hash=None, uri=None, download_uri=None, state=<FileState.ACTIVE: 'ACTIVE'>, source=None, video_metadata=None, error=None),
           File(name='context.txt', display_name=None, mime_type=None, size_bytes=None, create_time=None, expiration_time=None, update_time=None, sha256_hash=None, uri=None, download_uri=None, state=<FileState.PROCESSING: 'PROCESSING'>, source=None, video_metadata=None, error=None),
         ]),
-        'model': 'models/gemini-2.0-flash',
+        'model': 'models/gemini-2.5-flash',
       }),
     ),
   ])
@@ -28,7 +28,7 @@
           b'some file',
           b'some file',
         ]),
-        'model': 'models/gemini-2.0-flash',
+        'model': 'models/gemini-2.5-flash',
       }),
     ),
   ])
@@ -43,7 +43,7 @@
         'contents': list([
           'Write an opening speech for a Home Assistant release party',
         ]),
-        'model': 'models/gemini-2.0-flash',
+        'model': 'models/gemini-2.5-flash',
       }),
     ),
   ])
@@ -58,7 +58,7 @@
         'contents': list([
           'Write an opening speech for a Home Assistant release party',
         ]),
-        'model': 'models/gemini-2.0-flash',
+        'model': 'models/gemini-2.5-flash',
       }),
     ),
   ])
