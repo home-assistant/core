@@ -6,11 +6,17 @@ import logging
 from typing import cast
 
 import voluptuous as vol
+from olarmflowclient import OlarmFlowClientApiError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -317,19 +323,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
         _LOGGER.debug("Setting up platforms for Olarm integration")
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    except Exception as e:
-        _LOGGER.error("Failed to set up Olarm integration: %s", e)
+    except ConfigEntryNotReady:
+        # Temporary failures (network issues, device offline, etc.) - let Home Assistant retry
+        _LOGGER.debug("Olarm setup not ready, will retry later")
+        raise
+    except ConfigEntryAuthFailed:
+        # Authentication failures - Home Assistant will trigger reauthentication
+        _LOGGER.error("Olarm authentication failed")
+        raise
+    except ConfigEntryError:
+        # Permanent failures - setup will not be retried
+        _LOGGER.error("Permanent error setting up Olarm integration")
+        raise
+    except OlarmFlowClientApiError as ex:
+        # API errors that indicate authentication or permanent issues
+        if "401" in str(ex) or "403" in str(ex) or "unauthorized" in str(ex).lower():
+            _LOGGER.error("Olarm API authentication failed: %s", ex)
+            raise ConfigEntryAuthFailed("Invalid Olarm credentials") from ex
+        else:
+            _LOGGER.warning("Olarm API error during setup: %s", ex)
+            raise ConfigEntryNotReady("Olarm API temporarily unavailable") from ex
+    except (OSError, ConnectionError, TimeoutError) as ex:
+        # Network-related errors that are likely temporary
+        _LOGGER.warning("Network error during Olarm setup: %s", ex)
+        raise ConfigEntryNotReady("Network connection to Olarm failed") from ex
+    except Exception as ex:
+        # Unexpected errors - log and treat as temporary to avoid permanent failure
+        _LOGGER.exception("Unexpected error setting up Olarm integration: %s", ex)
         # Clean up any partial setup
         if hasattr(entry, "runtime_data") and entry.runtime_data:
             coordinator = entry.runtime_data
             if coordinator:
                 try:
                     await coordinator.async_stop()
-                except (OSError, ConnectionError, TimeoutError) as cleanup_error:
+                except Exception as cleanup_error:
                     _LOGGER.error("Error during cleanup: %s", cleanup_error)
-        raise
-    else:
-        return True
+        raise ConfigEntryNotReady("Unexpected error during Olarm setup") from ex
+
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> bool:
