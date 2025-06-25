@@ -94,7 +94,7 @@ async def test_battery_attributes(
         power_source.translation_key,
         None,
     )
-    assert result == "Charging Base"
+    assert result == "Charging base"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
