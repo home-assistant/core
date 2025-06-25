@@ -9,7 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .coordinator import OlarmConnectCoordinator
+from .coordinator import OlarmFlowClientCoordinator
 
 _PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         # setup Olarm Connect coordinator
         coordinator = await hass.async_add_executor_job(
-            OlarmConnectCoordinator,
+            OlarmFlowClientCoordinator,
             hass,
             entry.data["user_id"],
             entry.data["device_id"],

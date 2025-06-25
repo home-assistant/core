@@ -6,7 +6,7 @@ import asyncio
 import logging
 import ssl
 
-from olarmconnect import OlarmConnect, OlarmConnectApiError
+from olarmflowclient import OlarmFlowClient, OlarmFlowClientApiError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -18,7 +18,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class OlarmConnectCoordinator:
+class OlarmFlowClientCoordinator:
     """Manages an individual olarms config entry."""
 
     def __init__(
@@ -48,7 +48,7 @@ class OlarmConnectCoordinator:
         self.device_profile_io = None
 
         # olarm connect client
-        self._olarm_connect_client = OlarmConnect(access_token)
+        self._olarm_connect_client = OlarmFlowClient(access_token)
 
     async def _ensure_valid_token(self):
         """Ensure the access token is valid and refresh if needed."""
@@ -113,7 +113,7 @@ class OlarmConnectCoordinator:
                 },
             )
 
-        except OlarmConnectApiError as e:
+        except OlarmFlowClientApiError as e:
             raise ConfigEntryNotReady("Failed to reach Olarm API") from e
 
     async def send_device_area_cmd(self, device_id, area_status, area_index):
@@ -124,7 +124,7 @@ class OlarmConnectCoordinator:
             method = getattr(self._olarm_connect_client, method_name)
             await method(device_id, area_index + 1)
 
-        except OlarmConnectApiError as e:
+        except OlarmFlowClientApiError as e:
             raise ConfigEntryNotReady("Failed to reach Olarm API") from e
 
     async def send_device_zone_cmd(self, device_id, zone_status, zone_index):
@@ -135,7 +135,7 @@ class OlarmConnectCoordinator:
             method = getattr(self._olarm_connect_client, method_name)
             await method(device_id, zone_index + 1)
 
-        except OlarmConnectApiError as e:
+        except OlarmFlowClientApiError as e:
             raise ConfigEntryNotReady("Failed to reach Olarm API") from e
 
     async def send_device_pgm_cmd(self, device_id, pgm_action, pgm_index):
@@ -146,7 +146,7 @@ class OlarmConnectCoordinator:
             method = getattr(self._olarm_connect_client, method_name)
             await method(device_id, pgm_index + 1)
 
-        except OlarmConnectApiError as e:
+        except OlarmFlowClientApiError as e:
             raise ConfigEntryNotReady("Failed to reach Olarm API") from e
 
     async def send_device_ukey_cmd(self, device_id, ukey_index):
@@ -157,7 +157,7 @@ class OlarmConnectCoordinator:
                 device_id, ukey_index + 1
             )
 
-        except OlarmConnectApiError as e:
+        except OlarmFlowClientApiError as e:
             raise ConfigEntryNotReady("Failed to reach Olarm API") from e
 
     async def send_device_link_output_cmd(
@@ -170,7 +170,7 @@ class OlarmConnectCoordinator:
             method = getattr(self._olarm_connect_client, method_name)
             await method(device_id, link_id, output_index + 1)
 
-        except OlarmConnectApiError as e:
+        except OlarmFlowClientApiError as e:
             raise ConfigEntryNotReady("Failed to reach Olarm API") from e
 
     async def send_device_link_relay_cmd(
@@ -183,7 +183,7 @@ class OlarmConnectCoordinator:
             method = getattr(self._olarm_connect_client, method_name)
             await method(device_id, link_id, output_index + 1)
 
-        except OlarmConnectApiError as e:
+        except OlarmFlowClientApiError as e:
             raise ConfigEntryNotReady("Failed to reach Olarm API") from e
 
     async def send_device_max_output_cmd(self, device_id, output_action, output_index):
@@ -194,7 +194,7 @@ class OlarmConnectCoordinator:
             method = getattr(self._olarm_connect_client, method_name)
             await method(device_id, output_index + 1)
 
-        except OlarmConnectApiError as e:
+        except OlarmFlowClientApiError as e:
             raise ConfigEntryNotReady("Failed to reach Olarm API") from e
 
     async def init_mqtt(self):
